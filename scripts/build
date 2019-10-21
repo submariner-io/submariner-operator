@@ -1,0 +1,5 @@
+#!/bin/bash
+version=${1:-dev}
+
+source $(dirname $0)/lib/debug_functions
+operator-sdk build quay.io/submariner/submariner-operator:$version --verbose
