@@ -1,0 +1,15 @@
+dist: xenial
+language: go
+
+git:
+  depth: 1
+
+services:
+  - docker
+script:
+  - make ci
+deploy:
+  provider: script
+  script: bash scripts/release
+  on:
+    branch: master
