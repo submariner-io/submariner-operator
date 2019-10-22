@@ -1,0 +1,70 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: submarineroperator.v0.1
+  namespace: placeholder
+spec:
+  customresourcedefinitions:
+    owned:
+    - name: endpoints.submariner.io
+      version: v1
+      kind: Endpoint
+      displayName: Submariner endpoints
+    - name: clusters.submariner.io
+      version: v1
+      kind: Cluster
+      displayName: Submariner clusters
+    - name: routeagents.submarier.io
+      version: v1alpha1
+      kind: Routeagent
+
+
+
+
+add_subm_gateway_label?
+verify_subm_gateway_label
+deploy_subm_operator
+      # Deploy SubM Operator
+      deploy_subm_operator cluster$i
+      # Verify SubM CRD
+      verify_subm_crd cluster$i
+      # Verify SubM Operator
+      verify_subm_operator cluster$i
+      # Verify SubM Operator pod
+      verify_subm_op_pod cluster$i
+      # Verify SubM Operator container
+      verify_subm_operator_container cluster$i
+
+      # Collect SubM vars for use in SubM CRs
+      collect_subm_vars cluster$i
+      if [[ $also_engine = true ]]; then
+        # FIXME: Rename all of these submariner-engine or engine, vs submariner
+        # Create SubM CR
+        create_subm_cr cluster$i
+        # Deploy SubM CR
+        deploy_subm_cr cluster$i
+        # Verify SubM CR
+        verify_subm_cr cluster$i
+      fi
+      if [[ $also_routeagent = true ]]; then
+        # Create Routeagent CR
+        create_routeagent_cr cluster$i
+        # Deploy Routeagent CR
+        deploy_routeagent_cr cluster$i
+        # Verify Routeagent CR
+        verify_routeagent_cr cluster$i
+      fi
+
+      if [[ $also_engine = true ]]; then
+        # Verify SubM Engine Pod
+        verify_subm_engine_pod cluster$i
+        # Verify SubM Engine container
+        verify_subm_engine_container cluster$i
+      fi
+      if [[ $also_routeagent = true ]]; then
+        # Verify SubM Routeagent Pods
+        verify_subm_routeagent_pod cluster$i
+        # Verify SubM Routeagent container
+        verify_subm_routeagent_container cluster$i
+      fi
+    done

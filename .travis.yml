@@ -7,7 +7,7 @@ git:
 services:
   - docker
 script:
-  - make ci
+  - make ci e2e status=keep
 deploy:
   provider: script
   script: bash scripts/release

@@ -1,0 +1,11 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorSource
+metadata:
+  name: submariner-operators
+  namespace: marketplace
+spec:
+  type: appregistry
+  endpoint: https://quay.io/cnr
+  registryNamespace: skitt
+  displayName: Submariner (test repository)
+  publisher: Stephen Kitt

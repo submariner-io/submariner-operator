@@ -1,3 +1,4 @@
+status ?= onetime
 
 TARGETS := $(shell ls scripts)
 
@@ -9,7 +10,10 @@ TARGETS := $(shell ls scripts)
 	@mv .dapper.tmp .dapper
 
 $(TARGETS): .dapper
-	./.dapper -m bind $@
+	./.dapper -m bind $@ $(status)
+
+shell: .dapper
+	./.dapper -s -m bind
 
 .DEFAULT_GOAL := ci
 
