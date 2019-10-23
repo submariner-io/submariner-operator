@@ -8,7 +8,8 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} DAPPER_ENV=REPO DAPPE
     LINT_VERSION=v1.16.0 \
     KIND_VERSION=v0.3.0 \
     KUBEFED_VERSION=0.1.0-rc2 \
-    GO_VERSION=1.12.6
+    GO_VERSION=1.12.6 \
+    OPERATOR_SDK_VERSION=0.11.0
 
 RUN rm -f /bin/sh && ln -s /bin/bash /bin/sh
 
@@ -39,17 +40,9 @@ RUN apt-get -q update && \
     curl -LO "https://github.com/kubernetes-sigs/kubefed/releases/download/v${KUBEFED_VERSION}/kubefedctl-${KUBEFED_VERSION}-linux-${ARCH}.tgz" && \
     tar -xzf kubefedctl-${KUBEFED_VERSION}-linux-${ARCH}.tgz && cp kubefedctl /usr/bin/ && chmod a+x /usr/bin/kubefedctl && \
     curl -Lo /usr/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /usr/bin/kind && \
+    curl -Lo /usr/bin/operator-sdk "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk-v${OPERATOR_SDK_VERSION}-x86_64-linux-gnu" && chmod a+x /usr/bin/operator-sdk && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
     GOFLAGS="" go get -v golang.org/x/tools/cmd/goimports
-
-# TODO(mangelajo): the operator-sdk install guide recommends go get -d , but that doesn't pull
-# the sources where we expect. We need to figure out what's going on and remove the git clone
-# hack.
-RUN OP_FRAMEWORK="$GOPATH/src/github.com/operator-framework" && \
-    mkdir -p $OP_FRAMEWORK && cd $OP_FRAMEWORK && \
-    git clone https://github.com/operator-framework/operator-sdk && \
-    cd operator-sdk && git checkout 3a85983ecc72bea079973269db429292141d165a  && \
-    make tidy && GOFLAGS="" make install
 
 WORKDIR ${DAPPER_SOURCE}
 
