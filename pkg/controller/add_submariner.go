@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/submariner-operator/submariner-operator/pkg/controller/submariner"
+	"github.com/submariner-io/submariner-operator/pkg/controller/submariner"
 )
 
 func init() {

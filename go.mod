@@ -1,4 +1,4 @@
-module github.com/submariner-operator/submariner-operator
+module github.com/submariner-io/submariner-operator
 
 require (
 	github.com/coreos/prometheus-operator v0.31.1 // indirect

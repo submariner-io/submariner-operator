@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/submariner-operator/submariner-operator/pkg/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 )
 
 func init() {
