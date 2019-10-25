@@ -1,9 +1,11 @@
-module github.com/submariner-operator/submariner-operator
+module github.com/submariner-io/submariner-operator
 
 require (
 	github.com/coreos/prometheus-operator v0.31.1 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.17.2
+	github.com/onsi/ginkgo v1.10.2
+	github.com/onsi/gomega v1.7.0
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
 	github.com/spf13/pflag v1.0.3
 	k8s.io/api v0.0.0-20190918155943-95b840bb6a1f

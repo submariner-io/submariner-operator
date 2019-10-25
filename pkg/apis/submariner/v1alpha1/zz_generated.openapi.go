@@ -11,9 +11,9 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/submariner-operator/submariner-operator/pkg/apis/submariner/v1alpha1.Submariner":       schema_pkg_apis_submariner_v1alpha1_Submariner(ref),
-		"github.com/submariner-operator/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec":   schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref),
-		"github.com/submariner-operator/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus": schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref),
+		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.Submariner":       schema_pkg_apis_submariner_v1alpha1_Submariner(ref),
+		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec":   schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref),
+		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus": schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref),
 	}
 }
 
@@ -45,19 +45,19 @@ func schema_pkg_apis_submariner_v1alpha1_Submariner(ref common.ReferenceCallback
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-operator/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec"),
+							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-operator/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus"),
+							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/submariner-operator/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec", "github.com/submariner-operator/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec", "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
