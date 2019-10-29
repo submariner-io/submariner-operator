@@ -284,6 +284,15 @@ function cleanup {
     fi
 }
 
+function dump_clusters_on_error {
+    for i in 1 2 3; do
+        echo "Dumping cluster information for cluster$i ==========================="
+        kubectl --context=cluster$i cluster-info dump
+        echo ""
+    done
+    exit 1
+}
+
 ### Main ###
 
 if [[ $1 = clean ]]; then
@@ -322,6 +331,8 @@ create_subm_vars
 verify_subm_broker_secrets
 
 . kind-e2e/lib_operator_deploy_subm.sh
+
+trap dump_clusters_on_error ERR
 
 for i in 2 3; do
     context=cluster$i
