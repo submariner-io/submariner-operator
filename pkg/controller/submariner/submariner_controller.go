@@ -3,6 +3,7 @@ package submariner
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -370,6 +371,10 @@ func newRouteAgentDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet
 	return routeAgentDaemonSet
 }
 
+const (
+	dns1123 = "abcdefghijklmnopqrstuvwxyz0123456789"
+)
+
 //TODO: move to a method on the API definitions, as the example shown by the etcd operator here :
 //      https://github.com/coreos/etcd-operator/blob/8347d27afa18b6c76d4a8bb85ad56a2e60927018/pkg/apis/etcd/v1beta2/cluster.go#L185
 func setSubmarinerDefaults(submariner *submarinerv1alpha1.Submariner) {
@@ -381,6 +386,16 @@ func setSubmarinerDefaults(submariner *submarinerv1alpha1.Submariner) {
 
 	if submariner.Spec.Version == "" {
 		submariner.Spec.Version = "0.0.2"
+	}
+
+	if submariner.Spec.ClusterID == "" {
+		// Cluster ids are used as DNS-1123 subdomains, so it must only contain lowercase alphanumerics, . and -
+		// The cluster id can't start or end with . or -, so we ignore those entirely
+		b := make([]byte, 16)
+		for i := range b {
+			b[i] = dns1123[rand.Intn(len(dns1123))]
+		}
+		submariner.Spec.ClusterID = string(b)
 	}
 
 }
