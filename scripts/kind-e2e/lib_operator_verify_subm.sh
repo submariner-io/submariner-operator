@@ -196,6 +196,7 @@ function verify_subm_engine_pod() {
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:CE_IPSEC_NATTPORT value:$ce_ipsec_nattport"
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.status.phase}' | grep Running
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.metadata.namespace}' | grep $subm_ns
+  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.serviceAccount}' | grep submariner-engine
 }
 
 function verify_subm_engine_deployment() {
@@ -293,8 +294,7 @@ function verify_subm_routeagent_pod() {
     kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..volumeMounts}' | grep "name:host-slash"
     kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..volumeMounts}' | grep "readOnly:true"
 
-    # FIXME: Use submariner-routeagent SA vs submariner-operator when doing Operator deploys
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.serviceAccount}' | grep submariner-operator
+    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.serviceAccount}' | grep submariner-routeagent
 
     kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec..volumes}' | grep "name:host-slash"
     kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec..volumes}' | grep "path:/"
@@ -462,8 +462,7 @@ function verify_subm_engine_secrets() {
   # Show all SubM secrets
   kubectl get secrets -n $subm_ns
 
-  # FIXME: Should use SA specific for Engine, not shared with the operator
-  subm_engine_secret_name=$(kubectl get secrets -n $subm_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$operator_deployment_name')].metadata.name}")
+  subm_engine_secret_name=$(kubectl get secrets -n $subm_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$engine_deployment_name')].metadata.name}")
 
   # Need explicit null check for this var because subsequent commands fail with confusing errors
   if [ -z "$subm_engine_secret_name" ]; then
@@ -501,8 +500,7 @@ function verify_subm_routeagent_secrets() {
   # Show all SubM secrets
   kubectl get secrets -n $subm_ns
 
-  # FIXME: Should use SA specific for Routeagent, not shared with the operator
-  subm_routeagent_secret_name=$(kubectl get secrets -n $subm_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$operator_deployment_name')].metadata.name}")
+  subm_routeagent_secret_name=$(kubectl get secrets -n $subm_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$routeagent_deployment_name')].metadata.name}")
 
   # Need explicit null check for this var because subsequent commands fail with confusing errors
   if [ -z "$subm_routeagent_secret_name" ]; then

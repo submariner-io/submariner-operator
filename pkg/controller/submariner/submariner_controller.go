@@ -102,10 +102,13 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 
 	setSubmarinerDefaults(instance)
 
-	// Create submariner-engine SA
-	//subm_engine_sa := corev1.ServiceAccount{}
-	//subm_engine_sa.Name = "submariner-engine"
-	//reqLogger.Info("Created a new SA", "SA.Name", subm_engine_sa.Name)
+	if err = r.reconcileEngineServiceAccount(instance, reqLogger); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if err = r.reconcileRouteagentServiceAccount(instance, reqLogger); err != nil {
+		return reconcile.Result{}, err
+	}
 
 	if err = r.reconcileEngineDeployment(instance, reqLogger); err != nil {
 		return reconcile.Result{}, err
@@ -171,6 +174,62 @@ func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submarinerv
 
 	reqLogger.Info("Skip reconcile: DaemonSet already exists",
 		"DaemonSet.Namespace", foundDaemonSet.Namespace, "DaemonSet.Name", foundDaemonSet.Name)
+	return nil
+}
+
+func (r *ReconcileSubmariner) reconcileEngineServiceAccount(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
+
+	var err error
+
+	serviceAccount := newEngineServiceAccount(instance)
+
+	// Set Engine instance as the owner and controller
+	if err = controllerutil.SetControllerReference(instance, serviceAccount, r.scheme); err != nil {
+		return err
+	}
+
+	foundServiceAccount := &corev1.ServiceAccount{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: serviceAccount.Name, Namespace: instance.Namespace}, foundServiceAccount)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", serviceAccount.Namespace, "ServiceAccount.Name", serviceAccount.Name)
+		if err = r.client.Create(context.TODO(), serviceAccount); err != nil {
+			return err
+		}
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Skip reconcile: ServiceAccount already exists",
+		"ServiceAccount.Namespace", foundServiceAccount.Namespace, "ServiceAccount.Name", foundServiceAccount.Name)
+	return nil
+}
+
+func (r *ReconcileSubmariner) reconcileRouteagentServiceAccount(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
+
+	var err error
+
+	serviceAccount := newRouteAgentServiceAccount(instance)
+
+	// Set Routeagent instance as the owner and controller
+	if err = controllerutil.SetControllerReference(instance, serviceAccount, r.scheme); err != nil {
+		return err
+	}
+
+	foundServiceAccount := &corev1.ServiceAccount{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: serviceAccount.Name, Namespace: instance.Namespace}, foundServiceAccount)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new ServiceAccount", "ServiceAccount.Namespace", serviceAccount.Namespace, "ServiceAccount.Name", serviceAccount.Name)
+		if err = r.client.Create(context.TODO(), serviceAccount); err != nil {
+			return err
+		}
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Skip reconcile: ServiceAccount already exists",
+		"ServiceAccount.Namespace", foundServiceAccount.Namespace, "ServiceAccount.Name", foundServiceAccount.Name)
 	return nil
 }
 
@@ -275,8 +334,7 @@ func newPodTemplateForCR(cr *submarinerv1alpha1.Submariner) corev1.PodTemplateSp
 					},
 				},
 			},
-			// TODO: Use SA submariner-engine or submariner?
-			ServiceAccountName:            "submariner-operator",
+			ServiceAccountName:            "submariner-engine",
 			HostNetwork:                   true,
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 			RestartPolicy:                 corev1.RestartPolicyAlways,
@@ -353,8 +411,7 @@ func newRouteAgentDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet
 							},
 						},
 					},
-					// TODO: Use SA submariner-routeagent or submariner?
-					ServiceAccountName: "submariner-operator",
+					ServiceAccountName: "submariner-routeagent",
 					HostNetwork:        true,
 					Volumes: []corev1.Volume{
 						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
@@ -365,6 +422,28 @@ func newRouteAgentDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet
 	}
 
 	return routeAgentDaemonSet
+}
+
+// newEngineServiceAccount creates a Routeagent SA object
+func newEngineServiceAccount(cr *submarinerv1alpha1.Submariner) *corev1.ServiceAccount {
+	engineServiceAccount := &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "submariner-engine",
+			Namespace: cr.Namespace,
+		},
+	}
+	return engineServiceAccount
+}
+
+// newRouteAgentServiceAccount creates a Routeagent SA object
+func newRouteAgentServiceAccount(cr *submarinerv1alpha1.Submariner) *corev1.ServiceAccount {
+	routeAgentServiceAccount := &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "submariner-routeagent",
+			Namespace: cr.Namespace,
+		},
+	}
+	return routeAgentServiceAccount
 }
 
 //TODO: move to a method on the API definitions, as the example shown by the etcd operator here :
