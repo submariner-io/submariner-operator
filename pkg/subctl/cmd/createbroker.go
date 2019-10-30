@@ -2,14 +2,18 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 func init() {
@@ -80,5 +84,31 @@ var createBrokerCmd = &cobra.Command{
 			panic(err.Error())
 		}
 		fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
+
+		// Create CRDs
+		fmt.Printf("Creating CRDs\n")
+		apiextensionsClient, err := apiextensionsclientset.NewForConfig(config)
+		//_, err = apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(createClustersCRD())
+		created_clusters_crd, err := apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(createClustersCRD())
+		fmt.Printf("Created CRD:\n", created_clusters_crd)
+
+		// Wait for CRD creation
+		err = wait.Poll(5*time.Second, 60*time.Second, func() (bool, error) {
+			found_clusters_crd, err := apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Get("clusters", metav1.GetOptions{})
+			if err != nil {
+				fmt.Printf("Failed to Get CRDs while waiting for CRD creation\n", err)
+				return false, err
+			}
+
+			for _, cond := range found_clusters_crd.Status.Conditions {
+				switch cond.Type {
+				case apiextensionsv1beta1.Established:
+					if cond.Status == apiextensionsv1beta1.ConditionTrue {
+						return true, err
+					}
+				}
+			}
+			return false, err
+		})
 	},
 }
