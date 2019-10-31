@@ -58,5 +58,6 @@ func parseOS4ClusterNetwork(cr *unstructured.Unstructured) (*ClusterNetwork, err
 		return nil, fmt.Errorf("field serviceNetwork expected, but not found in %v", cr.Object)
 	}
 	result.ServiceCIDRs = append(result.ServiceCIDRs, serviceNetwork)
+	result.NetworkPlugin = "OpenShift"
 	return result, nil
 }
