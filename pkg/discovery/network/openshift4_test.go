@@ -1,8 +1,6 @@
 package network
 
 import (
-	"testing"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	. "github.com/onsi/ginkgo"
@@ -154,9 +152,4 @@ func getClusterNetworkJSONMissingSN() []byte {
     "pluginName": "redhat/openshift-ovs-networkpolicy",
     "vxlanPort": 4789
 }`)
-}
-
-func TestOpenShift4NetworkDiscovery(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "OpenShift4 network discovery")
 }

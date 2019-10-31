@@ -4,6 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+
 	"github.com/spf13/cobra"
 )
 
@@ -33,4 +37,26 @@ func homeDir() string {
 		return h
 	}
 	return os.Getenv("USERPROFILE") // windows
+}
+
+func panicOnError(err error) {
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func getClients() (error, dynamic.Interface, kubernetes.Interface) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	if err != nil {
+		return err, nil, nil
+	}
+	dynClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return err, nil, nil
+	}
+	clientSet, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err, nil, nil
+	}
+	return nil, dynClient, clientSet
 }
