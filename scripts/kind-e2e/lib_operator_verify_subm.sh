@@ -211,17 +211,15 @@ function verify_subm_engine_deployment() {
      fi
    done
 
-   replicas=0
    readyReplicas=0
 
    SECONDS="0"
-   while [ "$readyReplicas" != "$replicas" ] || [ $readyReplicas -le 0 ]; do
+   while [ $readyReplicas -le 0 ]; do
      if [ $SECONDS -gt 120 ]; then
         echo "Timeout waiting for ready replicas of the Deployment"
         exit 1
      else
 
-        replicas=$(kubectl get Deployment submariner -n $subm_ns -o jsonpath='{.status.replicas}')
         readyReplicas=$(kubectl get Deployment submariner -n $subm_ns -o jsonpath='{.status.readyReplicas}')
 
         ((SECONDS+=2))

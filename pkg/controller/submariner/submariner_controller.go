@@ -184,7 +184,10 @@ func newDeploymentForCR(cr *submarinerv1alpha1.Submariner) *appsv1.Deployment {
 		"component": "engine",
 	}
 
-	replicas := int32(1)
+	replicas := int32(cr.Spec.Count)
+	if replicas < 1 {
+		replicas = 1
+	}
 	revisionHistoryLimit := int32(5)
 	progressDeadlineSeconds := int32(600)
 
@@ -381,6 +384,10 @@ func setSubmarinerDefaults(submariner *submarinerv1alpha1.Submariner) {
 
 	if submariner.Spec.Version == "" {
 		submariner.Spec.Version = "0.0.2"
+	}
+
+	if submariner.Spec.Count == 0 {
+		submariner.Spec.Count = 3
 	}
 
 }

@@ -113,7 +113,6 @@ function create_subm_vars() {
   subm_engine_image_repo=local
   subm_engine_image_tag=local
 
-  # FIXME: Actually act on this size request in controller
   subm_engine_size=3
   subm_colorcodes=blue
   subm_debug=false
