@@ -127,7 +127,7 @@ function verify_subm_cr() {
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.ceIPSecPSK}' | grep $SUBMARINER_PSK || true
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.repository}' | grep $subm_engine_image_repo
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.version}' | grep $subm_engine_image_tag
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.size}' | grep $subm_engine_size
+  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.count}' | grep $subm_engine_size
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.broker}' | grep $subm_broker
   echo Generated cluster id:
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.clusterID}'

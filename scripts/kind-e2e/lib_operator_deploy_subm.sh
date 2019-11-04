@@ -130,7 +130,7 @@ function create_subm_cr() {
   # TODO: Use $engine_deployment_name here?
   sed -i "s|name: example-submariner|name: $deployment_name|g" $cr_file
 
-  sed -i "/spec:/a \ \ size: $subm_engine_size" $cr_file
+  sed -i "/spec:/a \ \ count: $subm_engine_size" $cr_file
 
   # These all need to end up in pod container/environment vars
   sed -i "/spec:/a \ \ namespace: $subm_ns" $cr_file
