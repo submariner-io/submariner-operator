@@ -24,7 +24,7 @@ function add_subm_gateway_label() {
 function create_subm_clusters_crd() {
   pushd $subm_op_dir
 
-  clusters_crd_file=deploy/crds/submariner_clusters_crd.yaml
+  clusters_crd_file=deploy/submariner_crds/submariner_clusters_crd.yaml
 
   # TODO: Can/should we create this with Op-SDK?
 cat <<EOF > $clusters_crd_file
@@ -53,7 +53,7 @@ EOF
 function create_subm_endpoints_crd() {
   pushd $subm_op_dir
 
-  endpoints_crd_file=deploy/crds/submariner_endpoints_crd.yaml
+  endpoints_crd_file=deploy/submariner_crds/submariner_endpoints_crd.yaml
 
   # TODO: Can/should we create this with Op-SDK?
 cat <<EOF > $endpoints_crd_file
@@ -91,6 +91,10 @@ function deploy_subm_operator() {
 
   if ! kubectl get crds submariners.submariner.io; then
     kubectl create -f deploy/crds/submariner.io_submariners_crd.yaml
+  fi
+
+  if ! kubectl get crds servicediscoveries.submariner.io; then
+    kubectl create -f deploy/crds/submariner.io_servicediscoveries_crd.yaml
   fi
 
   # Create SubM Operator service account if it doesn't exist
