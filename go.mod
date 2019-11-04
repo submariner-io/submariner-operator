@@ -9,7 +9,7 @@ require (
 	github.com/onsi/gomega v1.7.0
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/pflag v1.0.3
+	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.0.0-20190918155943-95b840bb6a1f
 	k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
