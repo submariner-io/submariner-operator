@@ -80,7 +80,6 @@ spec:
           - ceIPSecPSK
           - clusterCIDR
           - clusterID
-          - count
           - debug
           - namespace
           - natEnabled
