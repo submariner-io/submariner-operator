@@ -101,6 +101,9 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	}
 
 	setSubmarinerDefaults(instance)
+	if err = r.client.Update(context.TODO(), instance); err != nil {
+		return reconcile.Result{}, err
+	}
 
 	// Create submariner-engine SA
 	//subm_engine_sa := corev1.ServiceAccount{}
@@ -371,15 +374,15 @@ func newRouteAgentDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet
 //      https://github.com/coreos/etcd-operator/blob/8347d27afa18b6c76d4a8bb85ad56a2e60927018/pkg/apis/etcd/v1beta2/cluster.go#L185
 func setSubmarinerDefaults(submariner *submarinerv1alpha1.Submariner) {
 
-	spec := submariner.Spec
-	if spec.Repository == "" {
+	if submariner.Spec.Repository == "" {
 		// An empty field is converted to the default upstream submariner repository where all images live
-		spec.Repository = "quay.io/submariner"
+		submariner.Spec.Repository = "quay.io/submariner"
 	}
 
-	if spec.Version == "" {
-		spec.Version = "0.0.2"
+	if submariner.Spec.Version == "" {
+		submariner.Spec.Version = "0.0.2"
 	}
+
 }
 
 const (
