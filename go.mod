@@ -4,7 +4,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.0.4
 	github.com/coreos/prometheus-operator v0.31.1 // indirect
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.17.2
+	github.com/go-openapi/spec v0.19.4
 	github.com/onsi/ginkgo v1.10.3
 	github.com/onsi/gomega v1.7.0
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
