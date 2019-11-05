@@ -6,7 +6,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.17.2
 	github.com/onsi/ginkgo v1.10.3
-	github.com/onsi/gomega v1.7.0
+	github.com/onsi/gomega v1.7.1
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
