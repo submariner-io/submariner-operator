@@ -15,6 +15,12 @@ $(TARGETS): .dapper
 shell: .dapper
 	./.dapper -s -m bind
 
+bin/subctl:  pkg/subctl/operator/crds/crdyamls.go $(shell find pkg/subctl/ -name "*.go")
+	$(MAKE) build-subctl
+
+pkg/subctl/operator/crds/crdyamls.go: deploy/*.yaml deploy/crds/submariner.io*_crd.yaml
+	$(MAKE) generate-embeddedyamls
+
 .DEFAULT_GOAL := ci
 
 .PHONY: $(TARGETS)
