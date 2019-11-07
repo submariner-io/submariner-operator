@@ -80,37 +80,6 @@ EOF
   popd
 }
 
-function deploy_subm_operator() {
-  pushd $subm_op_dir
-
-  # If SubM namespace doesn't exist, create it
-  if ! kubectl get ns $subm_ns; then
-    # Customize namespace definition for subm_ns defined here
-    sed "s|submariner|$subm_ns|g" deploy/namespace.yaml | kubectl create -f -
-  fi
-
-  if ! kubectl get crds submariners.submariner.io; then
-    kubectl create -f deploy/crds/submariner.io_submariners_crd.yaml
-  fi
-
-  # Create SubM Operator service account if it doesn't exist
-  create_resource_if_missing sa submariner-operator deploy/service_account.yaml
-
-  # Create SubM Operator role if it doesn't exist
-  create_resource_if_missing role submariner-operator deploy/role.yaml
-
-  # Create SubM Operator role binding if it doesn't exist
-  create_resource_if_missing rolebinding submariner-operator deploy/role_binding.yaml
-
-  # Create SubM Operator deployment if it doesn't exist
-  create_resource_if_missing deployment submariner-operator scripts/kind-e2e/deploy-operator-local.yaml
-
-  # Wait for SubM Operator pod to be ready
-  kubectl wait --for=condition=Ready pods -l name=submariner-operator --timeout=120s --namespace=$subm_ns
-
-  popd
-}
-
 # FIXME: Call this submariner-engine vs submariner?
 function create_subm_cr() {
   pushd $subm_op_dir
