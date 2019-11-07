@@ -40,6 +40,7 @@ require (
 	k8s.io/klog v0.3.3
 	k8s.io/kube-openapi v0.0.0-20190603182131-db7b694dc208
 	sigs.k8s.io/controller-runtime v0.3.0
+	sigs.k8s.io/yaml v1.1.0
 )
 
 // Pinned to kubernetes-1.14.1

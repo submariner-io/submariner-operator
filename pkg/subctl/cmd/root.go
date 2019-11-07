@@ -6,6 +6,7 @@ import (
 
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/spf13/cobra"
@@ -30,7 +31,16 @@ func init() {
 	} else {
 		rootCmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
 	}
+	rootCmd.PersistentFlags().StringVarP(&operatorImage, "image", "i", DefaultOperatorImage,
+		"the operator image you wish to use")
 }
+
+const (
+	DefaultOperatorImage = "quay.io/submariner/submariner-operator:0.0.1"
+	OperatorNamespace    = "submariner-operator"
+)
+
+var operatorImage string
 
 func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
@@ -59,4 +69,8 @@ func getClients() (error, dynamic.Interface, kubernetes.Interface) {
 		return err, nil, nil
 	}
 	return nil, dynClient, clientSet
+}
+
+func getRestConfig() (*rest.Config, error) {
+	return clientcmd.BuildConfigFromFlags("", kubeConfig)
 }

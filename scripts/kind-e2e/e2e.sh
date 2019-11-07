@@ -122,7 +122,7 @@ function create_subm_vars() {
   ce_ipsec_ikeport=500
   ce_ipsec_nattport=4500
 
-  subm_ns=operators
+  subm_ns=submariner-operator
   subm_broker_ns=submariner-k8s-broker
 }
 
@@ -244,7 +244,7 @@ for i in 2 3; do
     kubectl config use-context $context
 
     # Create CRDs required as prerequisite submariner-engine
-    # TODO: Eventually OLM should handle this
+    # TODO: Eventually OLM and subctl should handle this
     create_subm_endpoints_crd
     verify_endpoints_crd
     create_subm_clusters_crd
@@ -256,7 +256,8 @@ for i in 2 3; do
     verify_subm_gateway_label
 
     # Deploy SubM Operator
-    deploy_subm_operator
+    ../bin/subctl install-operator --image submariner-operator:local \
+                                   --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context
     # Verify SubM CRD
     verify_subm_crd
     # Verify SubM Operator
