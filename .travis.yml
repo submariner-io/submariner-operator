@@ -7,7 +7,6 @@ git:
 services:
   - docker
 script:
-  - make bin/subctl
   - make ci e2e status=keep
 deploy:
   provider: script
