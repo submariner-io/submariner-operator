@@ -10,7 +10,7 @@ import (
 
 type SubctlData struct {
 	BrokerURL   string     `json:"brokerURL"`
-	ClientToken *v1.Secret `omitempty,json:"clientToken`
+	ClientToken *v1.Secret `omitempty,json:"clientToken"`
 	IPSecPSK    *v1.Secret `omitempty,json:"ipsecPSK"`
 }
 
