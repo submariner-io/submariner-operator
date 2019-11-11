@@ -89,6 +89,21 @@ var createBrokerCmd = &cobra.Command{
 			panic(err.Error())
 		}
 
+		// Generate random PSK
+		fmt.Printf("Creating the broker PSK\n")
+		psk, err := broker.GenerateRandomPSK(1024)
+		// TODO: Should we check if error already exists in same way wit this error? /me thinks no
+		if err != nil {
+			panic(err.Error())
+		}
+
+		// Store PSK in secret
+		fmt.Printf("Creating the broker PSK secret\n")
+		_, err = clientset.CoreV1().Secrets("submariner-k8s-broker").Create(broker.NewBrokerPSKSecret(psk))
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			panic(err.Error())
+		}
+
 		// List pods
 		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 		if err != nil {
