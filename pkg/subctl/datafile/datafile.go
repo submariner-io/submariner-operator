@@ -6,6 +6,10 @@ import (
 	"io/ioutil"
 
 	v1 "k8s.io/api/core/v1"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/pkg/broker"
 )
 
 type SubctlData struct {
@@ -51,4 +55,28 @@ func NewFromFile(filename string) (*SubctlData, error) {
 		return nil, err
 	}
 	return NewFromString(string(dat))
+}
+
+func NewFromCluster(restConfig *rest.Config, brokerNamespace string) (*SubctlData, error) {
+
+	clientSet, err := clientset.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+	subCtlData, err := newFromCluster(clientSet, brokerNamespace)
+	subCtlData.BrokerURL = restConfig.Host + restConfig.APIPath
+	return subCtlData, err
+}
+
+func newFromCluster(clientSet clientset.Interface, brokerNamespace string) (*SubctlData, error) {
+	subctlData := &SubctlData{}
+	var err error
+
+	subctlData.ClientToken, err = broker.GetClientTokenSecret(clientSet, brokerNamespace)
+	if err != nil {
+		return nil, err
+	}
+
+	subctlData.IPSecPSK, err = broker.GetIPSECPSKSecret(clientSet, brokerNamespace)
+	return subctlData, err
 }
