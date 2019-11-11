@@ -37,7 +37,7 @@ func updateOrCreateCRD(clientSet *clientset.Clientset, crd *apiextensionsv1beta1
 
 	_, err := clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
 	if err == nil {
-		return true, err
+		return true, nil
 	} else if errors.IsAlreadyExists(err) {
 		existingCrd, err := clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, v1.GetOptions{})
 		if err != nil {
@@ -48,8 +48,9 @@ func updateOrCreateCRD(clientSet *clientset.Clientset, crd *apiextensionsv1beta1
 		if err != nil {
 			return false, fmt.Errorf("failed to update pre-existing CRD %s : %s", crd.Name, err)
 		}
+		return false, nil
 	}
-	return false, nil
+	return false, err
 }
 
 func getSubmarinerCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
