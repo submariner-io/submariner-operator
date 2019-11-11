@@ -18,6 +18,8 @@ func init() {
 	createCmd.AddCommand(createBrokerCmd)
 }
 
+const IPSECPSKBytes = 48 // using base64 this results on a 64 character password
+
 var createBrokerCmd = &cobra.Command{
 	Use:   "broker",
 	Short: "set the broker up",
@@ -89,17 +91,13 @@ var createBrokerCmd = &cobra.Command{
 			panic(err.Error())
 		}
 
-		// Generate random PSK
-		fmt.Printf("Creating the broker PSK\n")
-		psk, err := broker.GenerateRandomPSK(1024)
-		// TODO: Should we check if error already exists in same way wit this error? /me thinks no
+		// Generate and store a psk in secret
+		pskSecret, err := broker.NewBrokerPSKSecret(IPSECPSKBytes)
 		if err != nil {
 			panic(err.Error())
 		}
-
-		// Store PSK in secret
 		fmt.Printf("Creating the broker PSK secret\n")
-		_, err = clientset.CoreV1().Secrets("submariner-k8s-broker").Create(broker.NewBrokerPSKSecret(psk))
+		_, err = clientset.CoreV1().Secrets("submariner-k8s-broker").Create(pskSecret)
 		if err != nil && !apierrors.IsAlreadyExists(err) {
 			panic(err.Error())
 		}
