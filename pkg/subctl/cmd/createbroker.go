@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -49,6 +50,12 @@ var createBrokerCmd = &cobra.Command{
 		if err = broker.Ensure(config, IPSECPSKBytes); err != nil {
 			panic(err)
 		}
+
+		fmt.Printf("* Deploying the submariner operator\n")
+		if err := install.Ensure(config, OperatorNamespace, operatorImage); err != nil {
+			panic(err)
+		}
+
 		// List pods
 		pods, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 		if err != nil {
