@@ -73,7 +73,7 @@ function setup_broker() {
         echo Submariner CRDs already exist, skipping broker creation...
     else
         echo Installing broker on cluster1.
-        ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 create broker
+        ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker --no-dataplane
     fi
 
     SUBMARINER_BROKER_URL=$(kubectl --context=cluster1 -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
@@ -256,8 +256,9 @@ for i in 2 3; do
     verify_subm_gateway_label
 
     # Deploy SubM Operator
-    ../bin/subctl install-operator --image submariner-operator:local \
-                                   --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context
+    ../bin/subctl join --image submariner-operator:local \
+                        --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+                        broker-info.subm
     # Verify SubM CRD
     verify_subm_crd
     # Verify SubM Operator

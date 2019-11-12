@@ -4,10 +4,16 @@ import (
 	"os"
 	"path/filepath"
 
+	"fmt"
+
+	"github.com/AlecAivazis/survey/v2"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/spf13/cobra"
 )
@@ -73,4 +79,52 @@ func getClients() (dynamic.Interface, kubernetes.Interface, error) {
 
 func getRestConfig() (*rest.Config, error) {
 	return clientcmd.BuildConfigFromFlags("", kubeConfig)
+}
+
+func handleNodeLabels() error {
+	_, clientset, err := getClients()
+	panicOnError(err)
+	// List Submariner-labeled nodes
+	selector := labels.SelectorFromSet(labels.Set(map[string]string{"submariner.io/gateway": "true"}))
+	labeledNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: selector.String()})
+	if err != nil {
+		return err
+	}
+	fmt.Printf("There are %d labeled nodes in the cluster\n", len(labeledNodes.Items))
+	for _, node := range labeledNodes.Items {
+		for _, label := range node.GetLabels() {
+			fmt.Printf("Node %s, label %s\n", node.GetName(), label)
+		}
+	}
+	if len(labeledNodes.Items) == 0 {
+		// List all nodes and select one
+		allNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+		fmt.Printf("There are %d nodes in the cluster\n", len(allNodes.Items))
+		allNodeNames := []string{}
+		for _, node := range allNodes.Items {
+			allNodeNames = append(allNodeNames, node.GetName())
+		}
+		var qs = []*survey.Question{
+			{
+				Name: "node",
+				Prompt: &survey.Select{
+					Message: "Which node should be used as the gateway?",
+					Options: allNodeNames},
+			},
+		}
+		answers := struct {
+			Node string
+		}{}
+
+		err = survey.Ask(qs, &answers)
+		if err != nil {
+			return err
+		}
+
+		// TODO label the node
+	}
+	return nil
 }
