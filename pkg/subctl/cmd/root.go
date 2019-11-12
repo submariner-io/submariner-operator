@@ -55,20 +55,20 @@ func panicOnError(err error) {
 	}
 }
 
-func getClients() (error, dynamic.Interface, kubernetes.Interface) {
+func getClients() (dynamic.Interface, kubernetes.Interface, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
-	return nil, dynClient, clientSet
+	return dynClient, clientSet, nil
 }
 
 func getRestConfig() (*rest.Config, error) {

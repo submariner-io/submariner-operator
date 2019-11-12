@@ -23,7 +23,7 @@ func init() {
 
 func clusterInfo(cmd *cobra.Command, args []string) {
 
-	err, dynClient, clientSet := getClients()
+	dynClient, clientSet, err := getClients()
 	panicOnError(err)
 
 	clusterNetwork, err := network.Discover(dynClient, clientSet)
