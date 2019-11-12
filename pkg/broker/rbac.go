@@ -10,20 +10,9 @@ import (
 )
 
 const (
-	SubmarinerBrokerNamespace = "submariner-k8s-broker"
-	submarinerBrokerSA        = "submariner-k8s-broker-client"
-	submarinerBrokerRole      = "submariner-k8s-broker-client"
+	submarinerBrokerSA   = "submariner-k8s-broker-client"
+	submarinerBrokerRole = "submariner-k8s-broker-client"
 )
-
-func NewBrokerNamespace() *v1.Namespace {
-	ns := &v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: SubmarinerBrokerNamespace,
-		},
-	}
-
-	return ns
-}
 
 func NewBrokerSA() *v1.ServiceAccount {
 	sa := &v1.ServiceAccount{
