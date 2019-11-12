@@ -6,9 +6,18 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes/fake"
+
+	"github.com/submariner-io/submariner-operator/pkg/broker"
 )
 
-const testBrokerUrl = "https://my-broker-url:8443"
+const (
+	testBrokerUrl             = "https://my-broker-url:8443"
+	testSASecret              = "test-sa-secret"
+	testToken                 = "i-am-a-token"
+	SubmarinerBrokerNamespace = "submariner-k8s-broker"
+)
 
 var _ = Describe("datafile", func() {
 	When("Doing basic encoding to string", func() {
@@ -41,7 +50,37 @@ var _ = Describe("datafile", func() {
 			_, err := NewFromString("badstring")
 			Expect(err).Should(HaveOccurred())
 		})
+	})
 
+	When("Getting data from cluster", func() {
+
+		var clientSet *fake.Clientset
+		BeforeEach(func() {
+			pskSecret, _ := broker.NewBrokerPSKSecret(32)
+			pskSecret.Namespace = SubmarinerBrokerNamespace
+
+			sa := broker.NewBrokerSA()
+			sa.Namespace = SubmarinerBrokerNamespace
+			sa.Secrets = []v1.ObjectReference{{
+				Name: testSASecret,
+			}}
+
+			saSecret := &v1.Secret{}
+			saSecret.Name = testSASecret
+			saSecret.Namespace = SubmarinerBrokerNamespace
+			saSecret.Data = map[string][]byte{
+				"ca.crt": []byte("i-am-a-cert"),
+				"token":  []byte(testToken)}
+
+			clientSet = fake.NewSimpleClientset(pskSecret, sa, saSecret)
+		})
+
+		It("Should produce a valid structure", func() {
+			subCtlData, err := newFromCluster(clientSet, SubmarinerBrokerNamespace)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(subCtlData.IPSecPSK.Name).To(Equal("submariner-ipsec-psk"))
+			Expect(subCtlData.ClientToken.Name).To(Equal(testSASecret))
+		})
 	})
 })
 
