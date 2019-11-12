@@ -64,6 +64,9 @@ func NewFromCluster(restConfig *rest.Config, brokerNamespace string) (*SubctlDat
 		return nil, err
 	}
 	subCtlData, err := newFromCluster(clientSet, brokerNamespace)
+	if err != nil {
+		return nil, err
+	}
 	subCtlData.BrokerURL = restConfig.Host + restConfig.APIPath
 	return subCtlData, err
 }
