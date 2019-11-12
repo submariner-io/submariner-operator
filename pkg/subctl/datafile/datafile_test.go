@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	testBrokerUrl = "https://my-broker-url:8443"
-	testSASecret  = "test-sa-secret"
-	testToken     = "i-am-a-token"
+	testBrokerUrl             = "https://my-broker-url:8443"
+	testSASecret              = "test-sa-secret"
+	testToken                 = "i-am-a-token"
+	SubmarinerBrokerNamespace = "submariner-k8s-broker"
 )
 
 var _ = Describe("datafile", func() {
@@ -56,17 +57,17 @@ var _ = Describe("datafile", func() {
 		var clientSet *fake.Clientset
 		BeforeEach(func() {
 			pskSecret, _ := broker.NewBrokerPSKSecret(32)
-			pskSecret.Namespace = broker.SubmarinerBrokerNamespace
+			pskSecret.Namespace = SubmarinerBrokerNamespace
 
 			sa := broker.NewBrokerSA()
-			sa.Namespace = broker.SubmarinerBrokerNamespace
+			sa.Namespace = SubmarinerBrokerNamespace
 			sa.Secrets = []v1.ObjectReference{{
 				Name: testSASecret,
 			}}
 
 			saSecret := &v1.Secret{}
 			saSecret.Name = testSASecret
-			saSecret.Namespace = broker.SubmarinerBrokerNamespace
+			saSecret.Namespace = SubmarinerBrokerNamespace
 			saSecret.Data = map[string][]byte{
 				"ca.crt": []byte("i-am-a-cert"),
 				"token":  []byte(testToken)}
@@ -75,9 +76,9 @@ var _ = Describe("datafile", func() {
 		})
 
 		It("Should produce a valid structure", func() {
-			subCtlData, err := newFromCluster(clientSet, broker.SubmarinerBrokerNamespace)
+			subCtlData, err := newFromCluster(clientSet, SubmarinerBrokerNamespace)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(subCtlData.IPSecPSK.Name).To(Equal(broker.IPSECPSKSecretName))
+			Expect(subCtlData.IPSecPSK.Name).To(Equal("submariner-ipsec-psk"))
 			Expect(subCtlData.ClientToken.Name).To(Equal(testSASecret))
 		})
 	})

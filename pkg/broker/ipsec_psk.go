@@ -8,7 +8,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 )
 
-const IPSECPSKSecretName = "submariner-ipsec-psk"
+const ipsecPSKSecretName = "submariner-ipsec-psk"
 
 // generateRandomPSK returns securely generated n-byte array.
 func generateRandomPSK(n int) ([]byte, error) {
@@ -24,19 +24,19 @@ func NewBrokerPSKSecret(bytes int) (*v1.Secret, error) {
 		return nil, err
 	}
 
-	psk_secret_data := make(map[string][]byte)
-	psk_secret_data["psk"] = psk
+	pskSecretData := make(map[string][]byte)
+	pskSecretData["psk"] = psk
 
 	psk_secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: IPSECPSKSecretName,
+			Name: ipsecPSKSecretName,
 		},
-		Data: psk_secret_data,
+		Data: pskSecretData,
 	}
 
 	return psk_secret, nil
 }
 
 func GetIPSECPSKSecret(clientSet clientset.Interface, brokerNamespace string) (*v1.Secret, error) {
-	return clientSet.CoreV1().Secrets(brokerNamespace).Get(IPSECPSKSecretName, metav1.GetOptions{})
+	return clientSet.CoreV1().Secrets(brokerNamespace).Get(ipsecPSKSecretName, metav1.GetOptions{})
 }
