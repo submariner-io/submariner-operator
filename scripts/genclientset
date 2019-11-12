@@ -1,0 +1,13 @@
+#!/bin/bash
+
+source $(dirname $0)/lib/debug_functions
+source $(dirname $0)/lib/version
+
+# This requires a specific version of the code-generator
+# k8s.io/code-generator v0.0.0-20190311093542-50b561225d70
+# (aka kubernetes-1.14.1)
+${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \
+	client,deepcopy \
+	github.com/submariner-io/submariner-operator/pkg/client \
+	github.com/submariner-io/submariner-operator/pkg/apis \
+	submariner:v1alpha1
