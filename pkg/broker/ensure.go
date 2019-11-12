@@ -24,34 +24,36 @@ func Ensure(config *rest.Config, ipsecPSKBytes int) error {
 		return fmt.Errorf("error creating the Endpoint CRD: %s", err)
 	}
 
+	// Create a clientset for the other standard kubernetes resources
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return fmt.Errorf("error creating the core kubernetes clientset: %s", err)
 	}
-	// Create the namespace
 
+	// Create the namespace
 	_, err = clientset.CoreV1().Namespaces().Create(NewBrokerNamespace())
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the broker namespace %s", err)
 	}
-	// Create the SA we need for the broker
 
+	// Create the SA we need for the broker
 	_, err = clientset.CoreV1().ServiceAccounts("submariner-k8s-broker").Create(NewBrokerSA())
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the default broker service account: %s", err)
 	}
-	// Create the role
 
+	// Create the role
 	_, err = clientset.RbacV1().Roles("submariner-k8s-broker").Create(NewBrokerRole())
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating broker role: %s", err)
 	}
-	// Create the role binding
 
+	// Create the role binding
 	_, err = clientset.RbacV1().RoleBindings("submariner-k8s-broker").Create(NewBrokerRoleBinding())
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the broker rolebinding: %s", err)
 	}
+
 	// Generate and store a psk in secret
 	pskSecret, err := NewBrokerPSKSecret(ipsecPSKBytes)
 	if err != nil {
