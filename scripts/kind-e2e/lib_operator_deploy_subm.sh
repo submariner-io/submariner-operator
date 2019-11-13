@@ -103,7 +103,10 @@ function create_subm_cr() {
 
   # These all need to end up in pod container/environment vars
   sed -i "/spec:/a \ \ namespace: $subm_ns" $cr_file
-  if [[ $context = cluster2 ]]; then
+  if [[ $context = cluster1 ]]; then
+    sed -i "/spec:/a \ \ serviceCIDR: $serviceCIDR_cluster1" $cr_file
+    sed -i "/spec:/a \ \ clusterCIDR: $clusterCIDR_cluster1" $cr_file
+  elif [[ $context = cluster2 ]]; then
     sed -i "/spec:/a \ \ serviceCIDR: $serviceCIDR_cluster2" $cr_file
     sed -i "/spec:/a \ \ clusterCIDR: $clusterCIDR_cluster2" $cr_file
   elif [[ $context = cluster3 ]]; then

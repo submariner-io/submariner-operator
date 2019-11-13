@@ -88,7 +88,7 @@ function kind_import_images() {
     docker tag quay.io/submariner/submariner-route-agent:latest submariner-route-agent:local
     docker tag quay.io/submariner/submariner-operator:dev submariner-operator:local
 
-    for i in 2 3; do
+    for i in 1 2 3; do
         echo "Loading submariner images in to cluster${i}..."
         kind --name cluster${i} load docker-image submariner:local
         kind --name cluster${i} load docker-image submariner-route-agent:local
@@ -104,8 +104,10 @@ function create_subm_vars() {
   routeagent_deployment_name=submariner-routeagent
   broker_deployment_name=submariner-k8s-broker
 
+  clusterCIDR_cluster1=10.244.0.0/16
   clusterCIDR_cluster2=10.245.0.0/16
   clusterCIDR_cluster3=10.246.0.0/16
+  serviceCIDR_cluster1=100.94.0.0/16
   serviceCIDR_cluster2=100.95.0.0/16
   serviceCIDR_cluster3=100.96.0.0/16
   natEnabled=false
@@ -162,7 +164,7 @@ function test_with_e2e_tests {
     export KUBECONFIG=$(echo ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster{1..3} | sed 's/ /:/g')
 
     go test -args -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.reportPassed \
-        -dp-context cluster2 -dp-context cluster3  \
+        -dp-context cluster2 -dp-context cluster3 -dp-context cluster1 \
         -report-dir ${DAPPER_SOURCE}/${DAPPER_OUTPUT}/junit 2>&1 | \
         tee ${DAPPER_SOURCE}/${DAPPER_OUTPUT}/e2e-tests.log
 }
@@ -239,7 +241,7 @@ verify_subm_broker_secrets
 
 trap dump_clusters_on_error ERR
 
-for i in 2 3; do
+for i in 1 2 3; do
     context=cluster$i
     kubectl config use-context $context
 
@@ -250,10 +252,12 @@ for i in 2 3; do
     create_subm_clusters_crd
     verify_clusters_crd
 
+    if [ $i != 1 ]; then
     # Add SubM gateway labels
     add_subm_gateway_label
     # Verify SubM gateway labels
     verify_subm_gateway_label
+    fi
 
     # Deploy SubM Operator
     ../bin/subctl join --image submariner-operator:local \
