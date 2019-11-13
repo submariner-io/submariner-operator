@@ -2,9 +2,11 @@ package broker
 
 import (
 	"fmt"
+	"time"
 
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -64,5 +66,35 @@ func Ensure(config *rest.Config, ipsecPSKBytes int) error {
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the IPSEC PSK secret: %s", err)
 	}
-	return nil
+
+	return waitForClientToken(clientset)
+
+}
+
+func waitForClientToken(clientset *kubernetes.Clientset) error {
+
+	// wait for the client token to be ready, while implementing
+	// exponential backoff pattern, it will wait a total of:
+	// sum(n=0..9, 1.2^n * 5) seconds, = 130 seconds
+
+	backoff := wait.Backoff{
+		Steps:    10,
+		Duration: 5 * time.Second,
+		Factor:   1.2,
+		Jitter:   1,
+	}
+
+	var lastErr error
+	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
+		_, lastErr = GetClientTokenSecret(clientset, SubmarinerBrokerNamespace)
+		if lastErr != nil {
+			return false, nil
+		}
+		return true, nil
+	})
+	if err == wait.ErrWaitTimeout {
+		return lastErr
+	}
+
+	return err
 }
