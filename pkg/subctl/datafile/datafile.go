@@ -15,7 +15,7 @@ import (
 type SubctlData struct {
 	BrokerURL   string     `json:"brokerURL"`
 	ClientToken *v1.Secret `omitempty,json:"clientToken"`
-	IPSecPSK    *v1.Secret `omitempty,json:"ipsecPSK"`
+	IPSecPSK    string     `omitempty,json:"ipsecPSK"`
 }
 
 func (data *SubctlData) ToString() (string, error) {
@@ -80,6 +80,6 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace string) (*Sub
 		return nil, err
 	}
 
-	subctlData.IPSecPSK, err = broker.GetIPSECPSKSecret(clientSet, brokerNamespace)
+	subctlData.IPSecPSK, err = broker.GetIPSECPSKString(clientSet, brokerNamespace)
 	return subctlData, err
 }

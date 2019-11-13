@@ -56,7 +56,8 @@ var _ = Describe("datafile", func() {
 
 		var clientSet *fake.Clientset
 		BeforeEach(func() {
-			pskSecret, _ := broker.NewBrokerPSKSecret(32)
+			// FIXME: Use shared var for PSK byte array length everywhere
+			pskSecret, _ := broker.NewBrokerPSKSecret(48)
 			pskSecret.Namespace = SubmarinerBrokerNamespace
 
 			sa := broker.NewBrokerSA()
@@ -78,7 +79,7 @@ var _ = Describe("datafile", func() {
 		It("Should produce a valid structure", func() {
 			subCtlData, err := newFromCluster(clientSet, SubmarinerBrokerNamespace)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(subCtlData.IPSecPSK.Name).To(Equal("submariner-ipsec-psk"))
+			Expect(subCtlData.IPSecPSK).NotTo(BeEmpty())
 			Expect(subCtlData.ClientToken.Name).To(Equal(testSASecret))
 		})
 	})

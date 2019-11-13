@@ -5,7 +5,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const testPSKLen = 32
+// FIXME: Use shared var for PSK byte array length everywhere
+const testPSKLen = 48
 
 var _ = Describe("ipsec_psk handling", func() {
 	When("generateRandonPSK is called", func() {
@@ -26,4 +27,21 @@ var _ = Describe("ipsec_psk handling", func() {
 		})
 	})
 
+	When("NewBrokerPSKByte is called", func() {
+		It("should return psk as a string", func() {
+			psk, err := NewBrokerPSKSecret(testPSKLen)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(psk).To(HaveLen(testPSKLen))
+			// TODO: Assert type is []byte
+		})
+	})
+
+	When("NewBrokerPSKString is called", func() {
+		It("should return psk as a string", func() {
+			psk, err := NewBrokerPSKSecret(testPSKLen)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(psk).To(HaveLen(testPSKLen))
+			// TODO: Assert type is string
+		})
+	})
 })

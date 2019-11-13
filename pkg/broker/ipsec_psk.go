@@ -2,6 +2,7 @@ package broker
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,4 +40,26 @@ func NewBrokerPSKSecret(bytes int) (*v1.Secret, error) {
 
 func GetIPSECPSKSecret(clientSet clientset.Interface, brokerNamespace string) (*v1.Secret, error) {
 	return clientSet.CoreV1().Secrets(brokerNamespace).Get(ipsecPSKSecretName, metav1.GetOptions{})
+}
+
+func GetIPSECPSKBytes(clientSet clientset.Interface, brokerNamespace string) ([]byte, error) {
+	secret, err := GetIPSECPSKSecret(clientSet, brokerNamespace)
+	if err != nil {
+		return nil, err
+	}
+
+	// FIXME: Use shared var for PSK byte array length everywhere
+	psk := make([]byte, 48)
+	err = secret.Unmarshal(psk)
+
+	return psk, err
+}
+
+func GetIPSECPSKString(clientSet clientset.Interface, brokerNamespace string) (string, error) {
+	psk, err := GetIPSECPSKBytes(clientSet, brokerNamespace)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.URLEncoding.EncodeToString(psk), err
 }

@@ -17,6 +17,7 @@ func init() {
 	rootCmd.AddCommand(deployBroker)
 }
 
+// FIXME: Use this var everywhere
 const IPSECPSKBytes = 48 // using base64 this results on a 64 character password
 const brokerDetailsFilename = "broker-info.subm"
 
