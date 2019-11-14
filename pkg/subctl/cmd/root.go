@@ -90,9 +90,7 @@ func handleNodeLabels() error {
 	}
 	fmt.Printf("There are %d labeled nodes in the cluster\n", len(labeledNodes.Items))
 	for _, node := range labeledNodes.Items {
-		for _, label := range node.GetLabels() {
-			fmt.Printf("Node %s, label %s\n", node.GetName(), label)
-		}
+		fmt.Printf("Node %s\n", node.GetName())
 	}
 	if len(labeledNodes.Items) == 0 {
 		// List all nodes and select one
