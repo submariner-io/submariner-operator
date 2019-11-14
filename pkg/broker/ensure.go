@@ -39,19 +39,19 @@ func Ensure(config *rest.Config, ipsecPSKBytes int) error {
 	}
 
 	// Create the SA we need for the broker
-	_, err = clientset.CoreV1().ServiceAccounts("submariner-k8s-broker").Create(NewBrokerSA())
+	_, err = clientset.CoreV1().ServiceAccounts(SubmarinerBrokerNamespace).Create(NewBrokerSA())
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the default broker service account: %s", err)
 	}
 
 	// Create the role
-	_, err = clientset.RbacV1().Roles("submariner-k8s-broker").Create(NewBrokerRole())
+	_, err = clientset.RbacV1().Roles(SubmarinerBrokerNamespace).Create(NewBrokerRole())
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating broker role: %s", err)
 	}
 
 	// Create the role binding
-	_, err = clientset.RbacV1().RoleBindings("submariner-k8s-broker").Create(NewBrokerRoleBinding())
+	_, err = clientset.RbacV1().RoleBindings(SubmarinerBrokerNamespace).Create(NewBrokerRoleBinding())
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the broker rolebinding: %s", err)
 	}
@@ -62,7 +62,7 @@ func Ensure(config *rest.Config, ipsecPSKBytes int) error {
 		return fmt.Errorf("error generating the IPSEC PSK secret: %s", err)
 	}
 
-	_, err = clientset.CoreV1().Secrets("submariner-k8s-broker").Create(pskSecret)
+	_, err = clientset.CoreV1().Secrets(SubmarinerBrokerNamespace).Create(pskSecret)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the IPSEC PSK secret: %s", err)
 	}
