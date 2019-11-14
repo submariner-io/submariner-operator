@@ -37,8 +37,6 @@ func init() {
 	} else {
 		rootCmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
 	}
-	rootCmd.PersistentFlags().StringVarP(&operatorImage, "image", "i", DefaultOperatorImage,
-		"the operator image you wish to use")
 }
 
 const (

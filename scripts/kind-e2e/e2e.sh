@@ -249,22 +249,17 @@ for i in 2 3; do
     verify_subm_gateway_label
 
     # Deploy SubM Operator
-    # TODO skitt Use arrays for the CIDRs
     if [ "${context}" = "cluster2" ]; then
-        ../bin/subctl join --image submariner-operator:local \
+        ../bin/subctl join --operator-image submariner-operator:local \
                         --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
                         --clusterid ${context} \
-                        --servicecidr ${serviceCIDR_cluster2} \
-                        --clustercidr ${clusterCIDR_cluster2} \
                         --repository ${subm_engine_image_repo} \
                         --version ${subm_engine_image_tag} \
                         broker-info.subm
     elif [ "${context}" = "cluster3" ]; then
-        ../bin/subctl join --image submariner-operator:local \
+        ../bin/subctl join --operator-image submariner-operator:local \
                         --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
                         --clusterid ${context} \
-                        --servicecidr ${serviceCIDR_cluster3} \
-                        --clustercidr ${clusterCIDR_cluster3} \
                         --repository ${subm_engine_image_repo} \
                         --version ${subm_engine_image_tag} \
                         broker-info.subm
