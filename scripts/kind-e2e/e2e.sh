@@ -243,22 +243,40 @@ for i in 2 3; do
     context=cluster$i
     kubectl config use-context $context
 
-    # Create CRDs required as prerequisite submariner-engine
-    # TODO: Eventually OLM and subctl should handle this
-    create_subm_endpoints_crd
-    verify_endpoints_crd
-    create_subm_clusters_crd
-    verify_clusters_crd
-
     # Add SubM gateway labels
     add_subm_gateway_label
     # Verify SubM gateway labels
     verify_subm_gateway_label
 
     # Deploy SubM Operator
-    ../bin/subctl join --image submariner-operator:local \
+    # TODO skitt Use arrays for the CIDRs
+    if [ "${context}" = "cluster2" ]; then
+        ../bin/subctl join --image submariner-operator:local \
                         --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+                        --clusterid ${context} \
+                        --servicecidr ${serviceCIDR_cluster2} \
+                        --clustercidr ${clusterCIDR_cluster2} \
+                        --repository ${subm_engine_image_repo} \
+                        --version ${subm_engine_image_tag} \
                         broker-info.subm
+    elif [ "${context}" = "cluster3" ]; then
+        ../bin/subctl join --image submariner-operator:local \
+                        --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+                        --clusterid ${context} \
+                        --servicecidr ${serviceCIDR_cluster3} \
+                        --clustercidr ${clusterCIDR_cluster3} \
+                        --repository ${subm_engine_image_repo} \
+                        --version ${subm_engine_image_tag} \
+                        broker-info.subm
+    else
+        echo Unknown context ${context}
+        exit 1
+    fi
+
+    # Verify shared CRDs
+    verify_endpoints_crd
+    verify_clusters_crd
+
     # Verify SubM CRD
     verify_subm_crd
     # Verify SubM Operator
@@ -269,10 +287,6 @@ for i in 2 3; do
     verify_subm_operator_container
 
     # FIXME: Rename all of these submariner-engine or engine, vs submariner
-    # Create SubM CR
-    create_subm_cr
-    # Deploy SubM CR
-    deploy_subm_cr
     # Verify SubM CR
     verify_subm_cr
     # Verify SubM Engine Deployment
