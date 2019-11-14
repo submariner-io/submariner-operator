@@ -35,12 +35,7 @@ func Execute() error {
 }
 
 func init() {
-	// TODO Read from the KUBECONFIG env var
-	if home := homeDir(); home != "" {
-		rootCmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path(s) to the kubeconfig file(s)")
-	} else {
-		rootCmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
-	}
+	rootCmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", kubeConfigFile(), "absolute path(s) to the kubeconfig file(s)")
 }
 
 const (
@@ -49,6 +44,18 @@ const (
 )
 
 var operatorImage string
+
+func kubeConfigFile() string {
+	var kubeconfig string
+	if kubeconfig = os.Getenv("KUBECONFIG"); kubeconfig != "" {
+		return kubeconfig
+	}
+	if home := homeDir(); home != "" {
+		return filepath.Join(home, ".kube", "config")
+	} else {
+		return ""
+	}
+}
 
 func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
