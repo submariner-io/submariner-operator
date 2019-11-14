@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install"
 )
 
 var disableDataplane bool
@@ -14,6 +14,7 @@ var disableDataplane bool
 func init() {
 	deployBroker.PersistentFlags().BoolVarP(&disableDataplane, "no-dataplane", "n", false,
 		"Don't install the submariner dataplane on the broker")
+	addJoinFlags(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
 
@@ -39,14 +40,7 @@ var deployBroker = &cobra.Command{
 		panicOnError(err)
 
 		if !disableDataplane {
-			err = handleNodeLabels()
-			panicOnError(err)
-
-			//TODO: when operator handles broker, we will also need to install the operator
-			//      but make sure the operator is able to not-handle dataplane, just broker
-			fmt.Printf("* Deploying the submariner operator\n")
-			err = install.Ensure(config, OperatorNamespace, operatorImage)
-			panicOnError(err)
+			joinSubmarinerCluster(subctlData)
 		}
 	},
 }
