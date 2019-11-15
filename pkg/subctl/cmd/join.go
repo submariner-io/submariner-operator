@@ -101,7 +101,7 @@ func getNetworkDetails() *network.ClusterNetwork {
 	networkDetails, err := network.Discover(dynClient, clientSet)
 	if err != nil {
 		fmt.Printf("Error trying to discover network details: %s\n", err)
-	} else {
+	} else if networkDetails != nil {
 		networkDetails.Show()
 	}
 	return networkDetails
