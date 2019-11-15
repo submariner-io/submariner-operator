@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-
 	"github.com/spf13/cobra"
+
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 )
 
 // infoCmd represents the info command
@@ -32,4 +32,5 @@ func clusterInfo(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("cluster network info: %v\n", clusterNetwork)
+
 }
