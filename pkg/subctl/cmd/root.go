@@ -11,6 +11,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -150,8 +151,6 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 // this function was sourced from:
 // https://github.com/kubernetes/kubernetes/blob/a3ccea9d8743f2ff82e41b6c2af6dc2c41dc7b10/test/utils/density_utils.go#L36
 func addLabelsToNode(c kubernetes.Interface, nodeName string, labels map[string]string) error {
-	const retries = 5
-	const retryInterval = 500 * time.Millisecond
 
 	var tokens []string
 	for k, v := range labels {
@@ -161,20 +160,32 @@ func addLabelsToNode(c kubernetes.Interface, nodeName string, labels map[string]
 	labelString := "{" + strings.Join(tokens, ",") + "}"
 	patch := fmt.Sprintf(`{"metadata":{"labels":%v}}`, labelString)
 
-	var err error
-
 	// retry is necessary because nodes get updated every 10 seconds, and a patch can happen
 	// in the middle of an update
-	for attempt := 0; attempt < retries; attempt++ {
-		_, err = c.CoreV1().Nodes().Patch(nodeName, types.MergePatchType, []byte(patch))
-		if err != nil {
-			if !errors.IsConflict(err) {
-				return err
+
+	var lastErr error
+	err := wait.ExponentialBackoff(nodeLabelBackoff, func() (bool, error) {
+		_, lastErr = c.CoreV1().Nodes().Patch(nodeName, types.MergePatchType, []byte(patch))
+		if lastErr != nil {
+			if !errors.IsConflict(lastErr) {
+				return false, lastErr
 			}
+			return false, nil
 		} else {
-			break
+			return true, nil
 		}
-		time.Sleep(retryInterval)
+	})
+
+	if err == wait.ErrWaitTimeout {
+		return lastErr
 	}
+
 	return err
+}
+
+var nodeLabelBackoff wait.Backoff = wait.Backoff{
+	Steps:    10,
+	Duration: 1 * time.Second,
+	Factor:   1.2,
+	Jitter:   1,
 }
