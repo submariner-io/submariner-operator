@@ -20,6 +20,10 @@ var (
 
 func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, error) {
 
+	if dynClient == nil {
+		return nil, nil
+	}
+
 	crClient := dynClient.Resource(openshift4clusterNetworkGVR)
 
 	cr, err := crClient.Get("default", metav1.GetOptions{})
