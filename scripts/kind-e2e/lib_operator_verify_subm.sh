@@ -121,6 +121,8 @@ function verify_subm_cr() {
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.brokerK8sCA}' | grep $SUBMARINER_BROKER_CA
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.brokerK8sRemoteNamespace}' | grep $SUBMARINER_BROKER_NS
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.ceIPSecDebug}' | grep $ce_ipsec_debug
+  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.ceIPSecIKEPort}' | grep $ce_ipsec_ikeport
+  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.ceIPSecNATTPort}' | grep $ce_ipsec_nattport
   # FIXME: Sometimes this changes between runs, causes failures
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.ceIPSecPSK}' | grep $SUBMARINER_PSK || true
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.repository}' | grep $subm_engine_image_repo
@@ -189,6 +191,8 @@ function verify_subm_engine_pod() {
   # FIXME: This changes between some deployment runs and causes failures
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:CE_IPSEC_PSK value:$SUBMARINER_PSK" || true
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:CE_IPSEC_DEBUG value:$ce_ipsec_debug"
+  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:CE_IPSEC_IKEPORT value:$ce_ipsec_ikeport"
+  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:CE_IPSEC_NATTPORT value:$ce_ipsec_nattport"
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.status.phase}' | grep Running
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.metadata.namespace}' | grep $subm_ns
 }

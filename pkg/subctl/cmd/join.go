@@ -19,6 +19,9 @@ var (
 	clusterCIDR string
 	repository  string
 	version     string
+	nattPort    int
+	ikePort     int
+	colorCodes  string
 )
 
 func init() {
@@ -35,6 +38,9 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&version, "version", "", "image version")
 	cmd.Flags().StringVarP(&operatorImage, "operator-image", "o", DefaultOperatorImage,
 		"the operator image you wish to use")
+	cmd.Flags().StringVar(&colorCodes, "colorcodes", "", "color codes")
+	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
+	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
 }
 
 const (
@@ -83,7 +89,8 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	panicOnError(err)
 
 	fmt.Printf("* Deploying Submariner\n")
-	err = deploy.Ensure(config, SubmarinerNamespace, repository, version, clusterID, serviceCIDR, clusterCIDR, subctlData)
+	err = deploy.Ensure(config, SubmarinerNamespace, repository, version,
+		clusterID, serviceCIDR, clusterCIDR, colorCodes, nattPort, ikePort, subctlData)
 	panicOnError(err)
 }
 

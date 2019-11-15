@@ -255,6 +255,9 @@ for i in 2 3; do
                         --clusterid ${context} \
                         --repository ${subm_engine_image_repo} \
                         --version ${subm_engine_image_tag} \
+                        --nattport ${ce_ipsec_nattport} \
+                        --ikeport ${ce_ipsec_ikeport} \
+                        --colorcodes ${subm_colorcodes} \
                         broker-info.subm
     elif [ "${context}" = "cluster3" ]; then
         ../bin/subctl join --operator-image submariner-operator:local \
@@ -262,6 +265,9 @@ for i in 2 3; do
                         --clusterid ${context} \
                         --repository ${subm_engine_image_repo} \
                         --version ${subm_engine_image_tag} \
+                        --nattport ${ce_ipsec_nattport} \
+                        --ikeport ${ce_ipsec_ikeport} \
+                        --colorcodes ${subm_colorcodes} \
                         broker-info.subm
     else
         echo Unknown context ${context}

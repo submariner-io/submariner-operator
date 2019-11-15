@@ -18,7 +18,8 @@ import (
 )
 
 func Ensure(config *rest.Config, submarinerNamespace string, repository string, version string,
-	clusterID string, serviceCIDR string, clusterCIDR string, subctlData *datafile.SubctlData) error {
+	clusterID string, serviceCIDR string, clusterCIDR string, colorCodes string, nattPort int,
+	ikePort int, subctlData *datafile.SubctlData) error {
 
 	// Create the CRDs we need
 	apiext, err := apiextension.NewForConfig(config)
@@ -68,8 +69,8 @@ func Ensure(config *rest.Config, submarinerNamespace string, repository string, 
 	submarinerSpec := submariner.SubmarinerSpec{
 		Repository:               repository,
 		Version:                  version,
-		CeIPSecNATTPort:          0,
-		CeIPSecIKEPort:           0,
+		CeIPSecNATTPort:          nattPort,
+		CeIPSecIKEPort:           ikePort,
 		CeIPSecDebug:             false,
 		CeIPSecPSK:               base64.StdEncoding.EncodeToString(subctlData.IPSecPSK.Data["psk"]),
 		BrokerK8sCA:              base64.StdEncoding.EncodeToString(subctlData.ClientToken.Data["ca.crt"]),
@@ -79,7 +80,7 @@ func Ensure(config *rest.Config, submarinerNamespace string, repository string, 
 		Broker:                   "k8s",
 		NatEnabled:               false,
 		Debug:                    false,
-		ColorCodes:               "blue",
+		ColorCodes:               colorCodes,
 		ClusterID:                clusterID,
 		ServiceCIDR:              serviceCIDR,
 		ClusterCIDR:              clusterCIDR,
