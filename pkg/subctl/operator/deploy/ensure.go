@@ -52,6 +52,18 @@ func Ensure(config *rest.Config, submarinerNamespace string, repository string, 
 		brokerURL = brokerURL[(idx + 3):]
 	}
 
+	if len(repository) == 0 {
+		// Default repository
+		// This is handled in the operator after 0.0.1 (of the operator)
+		repository = "quay.io/submariner"
+	}
+
+	if len(version) == 0 {
+		// Default engine version
+		// This is handled in the operator after 0.0.1 (of the operator)
+		version = "0.0.2"
+	}
+
 	// Populate the Submariner CR for the operator
 	submarinerSpec := submariner.SubmarinerSpec{
 		Repository:               repository,
