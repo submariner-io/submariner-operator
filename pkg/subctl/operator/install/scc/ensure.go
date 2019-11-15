@@ -43,7 +43,7 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	submarinerUser := fmt.Sprintf("system:serviceaccount:%s:%s", namespace, serviceaccount.OperatorServiceAccout)
+	submarinerUser := fmt.Sprintf("system:serviceaccount:%s:%s", namespace, serviceaccount.OperatorServiceAccount)
 
 	for _, user := range users {
 		if submarinerUser == user.(string) {

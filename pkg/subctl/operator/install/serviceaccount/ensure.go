@@ -15,7 +15,7 @@ import (
 
 //go:generate go run generators/yamls2go.go
 
-const OperatorServiceAccout = "submariner-operator"
+const OperatorServiceAccount = "submariner-operator"
 
 //Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
@@ -44,7 +44,7 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 }
 
 func ensureServiceAccount(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	sa := &v1.ServiceAccount{ObjectMeta: v1meta.ObjectMeta{Name: OperatorServiceAccout}}
+	sa := &v1.ServiceAccount{ObjectMeta: v1meta.ObjectMeta{Name: OperatorServiceAccount}}
 	_, err := clientSet.CoreV1().ServiceAccounts(namespace).Create(sa)
 	if err == nil {
 		return true, nil
