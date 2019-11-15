@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
@@ -45,6 +46,14 @@ var joinCmd = &cobra.Command{
 	Short: "connect a cluster to an existing broker",
 	Args:  cobra.ExactArgs(1), // exactly one, the broker data file
 	Run: func(cmd *cobra.Command, args []string) {
+		// Make sure the clusterid is a valid DNS-1123 string
+		if match, _ := regexp.MatchString("^[a-z0-9][a-z0-9.-]*[a-z0-9]$", clusterID); !match {
+			fmt.Printf("Cluster IDs must be valid DNS-1123 names, with only lowercase alphanumerics,\n"+
+				"'.' or '-' (and the first and last characters must be alphanumerics).\n"+
+				"%s doesn't meet these requirements\n", clusterID)
+			return
+		}
+
 		subctlData, err := datafile.NewFromFile(args[0])
 		panicOnError(err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
