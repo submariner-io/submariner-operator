@@ -53,8 +53,8 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface) (*Clu
 		if err == nil && genericNet != nil {
 			return genericNet, nil
 		}
+		return nil, err
 	}
-	return nil, nil
 }
 
 func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.Interface) (*ClusterNetwork, error) {

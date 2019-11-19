@@ -71,6 +71,15 @@ func panicOnError(err error) {
 	}
 }
 
+// exitOnError will print your error nicely and exit
+func exitOnError(format string, err error) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, format, err.Error())
+		fmt.Fprintln(os.Stderr, "")
+		os.Exit(1)
+	}
+}
+
 func getClients() (dynamic.Interface, kubernetes.Interface, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
