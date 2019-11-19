@@ -52,14 +52,6 @@ var joinCmd = &cobra.Command{
 	Short: "connect a cluster to an existing broker",
 	Args:  cobra.ExactArgs(1), // exactly one, the broker data file
 	Run: func(cmd *cobra.Command, args []string) {
-		// Make sure the clusterid is a valid DNS-1123 string
-		if match, _ := regexp.MatchString("^[a-z0-9][a-z0-9.-]*[a-z0-9]$", clusterID); !match {
-			fmt.Printf("Cluster IDs must be valid DNS-1123 names, with only lowercase alphanumerics,\n"+
-				"'.' or '-' (and the first and last characters must be alphanumerics).\n"+
-				"%s doesn't meet these requirements\n", clusterID)
-			return
-		}
-
 		subctlData, err := datafile.NewFromFile(args[0])
 		panicOnError(err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
@@ -68,6 +60,51 @@ var joinCmd = &cobra.Command{
 }
 
 func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
+
+	// Missing information
+	var qs = []*survey.Question{}
+
+	if len(clusterID) == 0 {
+		qs = append(qs, &survey.Question{
+			Name:   "clusterID",
+			Prompt: &survey.Input{Message: "What is your cluster ID?"},
+			Validate: func(val interface{}) error {
+				str, ok := val.(string)
+				if !ok {
+					return nil
+				}
+				return isValidClusterID(str)
+			},
+		})
+	}
+	if len(colorCodes) == 0 {
+		qs = append(qs, &survey.Question{
+			Name:     "colorCodes",
+			Prompt:   &survey.Input{Message: "What color codes should be used (e.g. \"blue\")?"},
+			Validate: survey.Required,
+		})
+	}
+
+	if len(qs) > 0 {
+		answers := struct {
+			ClusterID  string
+			ColorCodes string
+		}{}
+
+		err := survey.Ask(qs, &answers)
+		panicOnError(err)
+
+		if len(answers.ClusterID) > 0 {
+			clusterID = answers.ClusterID
+		}
+		if len(answers.ColorCodes) > 0 {
+			colorCodes = answers.ColorCodes
+		}
+	}
+
+	// Make sure the clusterid is valid (we check twice because this might come from the command line)
+	err := isValidClusterID(clusterID)
+	panicOnError(err)
 
 	config, err := getRestConfig()
 	panicOnError(err)
@@ -152,4 +189,14 @@ func askForCIDR(name string) (string, error) {
 	} else {
 		return answers.Cidr, nil
 	}
+}
+
+func isValidClusterID(clusterID string) error {
+	// Make sure the clusterid is a valid DNS-1123 string
+	if match, _ := regexp.MatchString("^[a-z0-9][a-z0-9.-]*[a-z0-9]$", clusterID); !match {
+		return fmt.Errorf("Cluster IDs must be valid DNS-1123 names, with only lowercase alphanumerics,\n"+
+			"'.' or '-' (and the first and last characters must be alphanumerics).\n"+
+			"%s doesn't meet these requirements\n", clusterID)
+	}
+	return nil
 }
