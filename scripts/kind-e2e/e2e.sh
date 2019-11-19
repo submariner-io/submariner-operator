@@ -258,6 +258,7 @@ for i in 2 3; do
                         --nattport ${ce_ipsec_nattport} \
                         --ikeport ${ce_ipsec_ikeport} \
                         --colorcodes ${subm_colorcodes} \
+			--disable-nat \
                         broker-info.subm
     elif [ "${context}" = "cluster3" ]; then
         ../bin/subctl join --operator-image submariner-operator:local \
@@ -268,6 +269,7 @@ for i in 2 3; do
                         --nattport ${ce_ipsec_nattport} \
                         --ikeport ${ce_ipsec_ikeport} \
                         --colorcodes ${subm_colorcodes} \
+			--disable-nat \
                         broker-info.subm
     else
         echo Unknown context ${context}

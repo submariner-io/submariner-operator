@@ -22,6 +22,7 @@ var (
 	nattPort    int
 	ikePort     int
 	colorCodes  string
+	disableNat  bool
 )
 
 func init() {
@@ -41,6 +42,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&colorCodes, "colorcodes", "blue", "color codes")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
+	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "Disable NAT for IPSEC")
 }
 
 const (
@@ -124,7 +126,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 
 	fmt.Printf("* Deploying Submariner\n")
 	err = deploy.Ensure(config, SubmarinerNamespace, repository, version,
-		clusterID, serviceCIDR, clusterCIDR, colorCodes, nattPort, ikePort, subctlData)
+		clusterID, serviceCIDR, clusterCIDR, colorCodes, nattPort, ikePort, disableNat, subctlData)
 	panicOnError(err)
 }
 
