@@ -19,7 +19,7 @@ import (
 
 func Ensure(config *rest.Config, submarinerNamespace string, repository string, version string,
 	clusterID string, serviceCIDR string, clusterCIDR string, colorCodes string, nattPort int,
-	ikePort int, subctlData *datafile.SubctlData) error {
+	ikePort int, disableNat bool, subctlData *datafile.SubctlData) error {
 
 	// Create the CRDs we need
 	apiext, err := apiextension.NewForConfig(config)
@@ -78,7 +78,7 @@ func Ensure(config *rest.Config, submarinerNamespace string, repository string, 
 		BrokerK8sApiServerToken:  string(subctlData.ClientToken.Data["token"]),
 		BrokerK8sApiServer:       brokerURL,
 		Broker:                   "k8s",
-		NatEnabled:               false,
+		NatEnabled:               !disableNat,
 		Debug:                    false,
 		ColorCodes:               colorCodes,
 		ClusterID:                clusterID,
