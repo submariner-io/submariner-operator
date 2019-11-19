@@ -38,7 +38,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&version, "version", "", "image version")
 	cmd.Flags().StringVarP(&operatorImage, "operator-image", "o", DefaultOperatorImage,
 		"the operator image you wish to use")
-	cmd.Flags().StringVar(&colorCodes, "colorcodes", "", "color codes")
+	cmd.Flags().StringVar(&colorCodes, "colorcodes", "blue", "color codes")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
 }
