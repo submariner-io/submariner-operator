@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"github.com/submariner-io/submariner-operator/pkg/engine"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -12,21 +13,11 @@ import (
 )
 
 func Ensure(config *rest.Config, ipsecPSKBytes int) error {
-	// Create the CRDs we need
-	apiext, err := apiextension.NewForConfig(config)
+	err := engine.Ensure(config)
 	if err != nil {
-		return fmt.Errorf("error creating the api extensions client: %s", err)
-	}
-	_, err = apiext.ApiextensionsV1beta1().CustomResourceDefinitions().Create(NewClustersCRD())
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Cluster CRD: %s", err)
-	}
-	_, err = apiext.ApiextensionsV1beta1().CustomResourceDefinitions().Create(NewEndpointsCRD())
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Endpoint CRD: %s", err)
+		return fmt.Errorf("error setting up the engine requirements: %s", err)
 	}
 
-	// Create a clientset for the other standard kubernetes resources
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return fmt.Errorf("error creating the core kubernetes clientset: %s", err)
