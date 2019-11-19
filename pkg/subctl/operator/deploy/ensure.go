@@ -6,11 +6,10 @@ import (
 	"strings"
 
 	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/broker"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/engine"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 
-	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -21,21 +20,11 @@ func Ensure(config *rest.Config, submarinerNamespace string, repository string, 
 	clusterID string, serviceCIDR string, clusterCIDR string, colorCodes string, nattPort int,
 	ikePort int, disableNat bool, subctlData *datafile.SubctlData) error {
 
-	// Create the CRDs we need
-	apiext, err := apiextension.NewForConfig(config)
+	err := engine.Ensure(config)
 	if err != nil {
-		return fmt.Errorf("error creating the api extensions client: %s", err)
-	}
-	_, err = apiext.ApiextensionsV1beta1().CustomResourceDefinitions().Create(broker.NewClustersCRD())
-	if err != nil && !errors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Cluster CRD: %s", err)
-	}
-	_, err = apiext.ApiextensionsV1beta1().CustomResourceDefinitions().Create(broker.NewEndpointsCRD())
-	if err != nil && !errors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Endpoint CRD: %s", err)
+		return fmt.Errorf("error setting up the engine requirements: %s", err)
 	}
 
-	// Create a clientset for the other standard kubernetes resources
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return fmt.Errorf("error creating the core kubernetes clientset: %s", err)
