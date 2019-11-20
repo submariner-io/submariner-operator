@@ -14,10 +14,14 @@ type ClusterNetwork struct {
 }
 
 func (cn *ClusterNetwork) Show() {
-	fmt.Printf("    Discovered network details:\n")
-	fmt.Printf("        Network plugin:  %s\n", cn.NetworkPlugin)
-	fmt.Printf("        ClusterIP CIDRs: %v\n", cn.ServiceCIDRs)
-	fmt.Printf("        Pod CIDRs:       %v\n", cn.PodCIDRs)
+	if cn == nil {
+		fmt.Println("    No network details discovered")
+	} else {
+		fmt.Printf("    Discovered network details:\n")
+		fmt.Printf("        Network plugin:  %s\n", cn.NetworkPlugin)
+		fmt.Printf("        ClusterIP CIDRs: %v\n", cn.ServiceCIDRs)
+		fmt.Printf("        Pod CIDRs:       %v\n", cn.PodCIDRs)
+	}
 }
 
 func (cn *ClusterNetwork) IsComplete() bool {
