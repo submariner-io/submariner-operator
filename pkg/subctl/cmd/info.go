@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -29,6 +27,6 @@ func clusterInfo(cmd *cobra.Command, args []string) {
 	clusterNetwork, err := network.Discover(dynClient, clientSet)
 	exitOnError("There was an error discovering network details for this cluster: %s", err)
 
-	fmt.Printf("cluster network info: %v\n", clusterNetwork)
+	clusterNetwork.Show()
 
 }
