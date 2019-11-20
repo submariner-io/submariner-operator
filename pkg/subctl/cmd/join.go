@@ -17,15 +17,18 @@ import (
 )
 
 var (
-	clusterID   string
-	serviceCIDR string
-	clusterCIDR string
-	repository  string
-	version     string
-	nattPort    int
-	ikePort     int
-	colorCodes  string
-	disableNat  bool
+	clusterID       string
+	serviceCIDR     string
+	clusterCIDR     string
+	repository      string
+	version         string
+	nattPort        int
+	ikePort         int
+	colorCodes      string
+	disableNat      bool
+	ipsecDebug      bool
+	submarinerDebug bool
+	replicas        int
 )
 
 func init() {
@@ -45,7 +48,10 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&colorCodes, "colorcodes", "blue", "color codes")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
-	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "Disable NAT for IPSEC")
+	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "Disable NAT for IPsec")
+	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "Enable IPsec debugging (verbose logging)")
+	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
+	cmd.Flags().IntVar(&replicas, "replicas", 0, "Set the number of engine replicas (no more than the number of gateway nodes)")
 }
 
 const (
@@ -226,7 +232,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		Version:                  version,
 		CeIPSecNATTPort:          nattPort,
 		CeIPSecIKEPort:           ikePort,
-		CeIPSecDebug:             false,
+		CeIPSecDebug:             ipsecDebug,
 		CeIPSecPSK:               base64.StdEncoding.EncodeToString(subctlData.IPSecPSK.Data["psk"]),
 		BrokerK8sCA:              base64.StdEncoding.EncodeToString(subctlData.ClientToken.Data["ca.crt"]),
 		BrokerK8sRemoteNamespace: string(subctlData.ClientToken.Data["namespace"]),
@@ -234,13 +240,13 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		BrokerK8sApiServer:       brokerURL,
 		Broker:                   "k8s",
 		NatEnabled:               !disableNat,
-		Debug:                    false,
+		Debug:                    submarinerDebug,
 		ColorCodes:               colorCodes,
 		ClusterID:                clusterID,
 		ServiceCIDR:              serviceCIDR,
 		ClusterCIDR:              clusterCIDR,
 		Namespace:                SubmarinerNamespace,
-		Count:                    0,
+		Count:                    int32(replicas),
 	}
 
 	return submarinerSpec
