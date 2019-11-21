@@ -380,7 +380,7 @@ func setSubmarinerDefaults(submariner *submarinerv1alpha1.Submariner) {
 	}
 
 	if submariner.Spec.Version == "" {
-		submariner.Spec.Version = "0.0.2"
+		submariner.Spec.Version = "0.0.3"
 	}
 
 	if submariner.Spec.ColorCodes == "" {

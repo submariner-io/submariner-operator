@@ -51,7 +51,7 @@ func Ensure(config *rest.Config, submarinerNamespace string, repository string, 
 	if len(version) == 0 {
 		// Default engine version
 		// This is handled in the operator after 0.0.1 (of the operator)
-		version = "0.0.2"
+		version = "0.0.3"
 	}
 
 	// Populate the Submariner CR for the operator
