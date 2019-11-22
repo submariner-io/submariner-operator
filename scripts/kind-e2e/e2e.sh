@@ -68,19 +68,6 @@ function setup_custom_cni(){
     done
 }
 
-function setup_broker() {
-    if kubectl --context=cluster1 get crd clusters.submariner.io > /dev/null 2>&1; then
-        echo Submariner CRDs already exist, skipping broker creation...
-    else
-        echo Installing broker on cluster1.
-        ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker --no-dataplane
-    fi
-
-    SUBMARINER_BROKER_URL=$(kubectl --context=cluster1 -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
-    SUBMARINER_BROKER_CA=$(kubectl --context=cluster1 -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
-    SUBMARINER_BROKER_TOKEN=$(kubectl --context=cluster1 -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
-}
-
 function kind_import_images() {
     docker pull quay.io/submariner/submariner:latest
     docker tag quay.io/submariner/submariner:latest submariner:local
@@ -223,7 +210,37 @@ kind_clusters "$@"
 setup_custom_cni
 
 kind_import_images
-setup_broker
+
+. kind-e2e/lib_operator_deploy_subm.sh
+
+for i in 2 3; do
+    context=cluster$i
+    kubectl config use-context $context
+
+    # Add SubM gateway labels
+    add_subm_gateway_label
+done
+
+create_subm_vars
+
+# One-shot deployment
+../bin/subctl deploy \
+    --broker-kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 \
+    --broker-kubecontext cluster1 \
+    --operator-image submariner-operator:local \
+    --cluster-kubeconfigs ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster2,${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster3 \
+    --cluster-kubecontexts cluster2,cluster3 \
+    --clusterids cluster2,cluster3 \
+    --repository ${subm_engine_image_repo} \
+    --version ${subm_engine_image_tag} \
+    --nattport ${ce_ipsec_nattport} \
+    --ikeport ${ce_ipsec_ikeport} \
+    --colorcodes ${subm_colorcodes} \
+    --disable-nat
+
+SUBMARINER_BROKER_URL=$(kubectl --context=cluster1 -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
+SUBMARINER_BROKER_CA=$(kubectl --context=cluster1 -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
+SUBMARINER_BROKER_TOKEN=$(kubectl --context=cluster1 -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
 
 context=cluster1
 kubectl config use-context $context
@@ -232,10 +249,7 @@ kubectl config use-context $context
 # NB: These are also used to verify non-Operator deployments, thereby asserting the two are mostly equivalent
 . kind-e2e/lib_operator_verify_subm.sh
 
-create_subm_vars
 verify_subm_broker_secrets
-
-. kind-e2e/lib_operator_deploy_subm.sh
 
 trap dump_clusters_on_error ERR
 
@@ -243,38 +257,8 @@ for i in 2 3; do
     context=cluster$i
     kubectl config use-context $context
 
-    # Add SubM gateway labels
-    add_subm_gateway_label
     # Verify SubM gateway labels
     verify_subm_gateway_label
-
-    # Deploy SubM Operator
-    if [ "${context}" = "cluster2" ]; then
-        ../bin/subctl join --operator-image submariner-operator:local \
-                        --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
-                        --clusterid ${context} \
-                        --repository ${subm_engine_image_repo} \
-                        --version ${subm_engine_image_tag} \
-                        --nattport ${ce_ipsec_nattport} \
-                        --ikeport ${ce_ipsec_ikeport} \
-                        --colorcodes ${subm_colorcodes} \
-			--disable-nat \
-                        broker-info.subm
-    elif [ "${context}" = "cluster3" ]; then
-        ../bin/subctl join --operator-image submariner-operator:local \
-                        --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
-                        --clusterid ${context} \
-                        --repository ${subm_engine_image_repo} \
-                        --version ${subm_engine_image_tag} \
-                        --nattport ${ce_ipsec_nattport} \
-                        --ikeport ${ce_ipsec_ikeport} \
-                        --colorcodes ${subm_colorcodes} \
-			--disable-nat \
-                        broker-info.subm
-    else
-        echo Unknown context ${context}
-        exit 1
-    fi
 
     # Verify shared CRDs
     verify_endpoints_crd
