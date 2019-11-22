@@ -25,7 +25,7 @@ var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "set the broker up",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := getRestConfig()
+		config, err := getRestConfig(kubeConfig, kubeContext)
 		panicOnError(err)
 
 		fmt.Printf("* Deploying broker\n")
@@ -40,7 +40,7 @@ var deployBroker = &cobra.Command{
 		panicOnError(err)
 
 		if !disableDataplane {
-			joinSubmarinerCluster(subctlData)
+			joinSubmarinerCluster(config, clusterID, subctlData)
 		}
 	},
 }

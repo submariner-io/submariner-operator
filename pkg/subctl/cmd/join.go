@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
@@ -57,11 +58,13 @@ var joinCmd = &cobra.Command{
 		subctlData, err := datafile.NewFromFile(args[0])
 		panicOnError(err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
-		joinSubmarinerCluster(subctlData)
+		config, err := getRestConfig(kubeConfig, kubeContext)
+		panicOnError(err)
+		joinSubmarinerCluster(config, clusterID, subctlData)
 	},
 }
 
-func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
+func joinSubmarinerCluster(config *rest.Config, clusterID string, subctlData *datafile.SubctlData) {
 
 	// Missing information
 	var qs = []*survey.Question{}
@@ -105,10 +108,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 		}
 	}
 
-	config, err := getRestConfig()
-	panicOnError(err)
-
-	err = handleNodeLabels()
+	err := handleNodeLabels(config)
 	panicOnError(err)
 
 	fmt.Printf("* Deploying the submariner operator\n")
@@ -116,23 +116,24 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	panicOnError(err)
 
 	fmt.Printf("* Discovering network details\n")
-	networkDetails := getNetworkDetails()
+	networkDetails := getNetworkDetails(config)
 
-	serviceCIDR, err = getServiceCIDR(serviceCIDR, networkDetails)
+	selectedServiceCIDR, err := getServiceCIDR(serviceCIDR, networkDetails)
 	panicOnError(err)
 
-	clusterCIDR, err = getPodCIDR(clusterCIDR, networkDetails)
+	selectedClusterCIDR, err := getPodCIDR(clusterCIDR, networkDetails)
 	panicOnError(err)
 
 	fmt.Printf("* Deploying Submariner\n")
 	err = deploy.Ensure(config, SubmarinerNamespace, repository, version,
-		clusterID, serviceCIDR, clusterCIDR, colorCodes, nattPort, ikePort, disableNat, subctlData)
+		clusterID, selectedServiceCIDR, selectedClusterCIDR, colorCodes, nattPort,
+		ikePort, disableNat, subctlData)
 	panicOnError(err)
 }
 
-func getNetworkDetails() *network.ClusterNetwork {
+func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 
-	dynClient, clientSet, err := getClients()
+	dynClient, clientSet, err := getClients(config)
 	panicOnError(err)
 	networkDetails, err := network.Discover(dynClient, clientSet)
 	if err != nil {
