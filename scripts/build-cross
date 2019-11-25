@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+source $(dirname $0)/lib/debug_functions
+
+cd $(dirname $0)
+
+GOOS=linux GOARCH=amd64 ./build-subctl
+GOOS=linux GOARCH=386 ./build-subctl
+GOOS=darwin GOARCH=amd64 ./build-subctl
+GOOS=windows GOARCH=amd64 ./build-subctl
+GOOS=windows GOARCH=386 ./build-subctl
