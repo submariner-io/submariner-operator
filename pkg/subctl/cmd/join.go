@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"encoding/base64"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
+	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/deploy"
@@ -125,8 +128,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	panicOnError(err)
 
 	fmt.Printf("* Deploying Submariner\n")
-	err = deploy.Ensure(config, SubmarinerNamespace, repository, version,
-		clusterID, serviceCIDR, clusterCIDR, colorCodes, nattPort, ikePort, disableNat, subctlData)
+	err = deploy.Ensure(config, populateSubmarinerSpec(subctlData))
 	panicOnError(err)
 }
 
@@ -198,4 +200,48 @@ func isValidClusterID(clusterID string) (bool, error) {
 			"%s doesn't meet these requirements\n", clusterID)
 	}
 	return true, nil
+}
+
+func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.SubmarinerSpec {
+	brokerURL := subctlData.BrokerURL
+	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
+		// Submariner doesn't work with a schema prefix
+		brokerURL = brokerURL[(idx + 3):]
+	}
+
+	if len(repository) == 0 {
+		// Default repository
+		// This is handled in the operator after 0.0.1 (of the operator)
+		repository = "quay.io/submariner"
+	}
+
+	if len(version) == 0 {
+		// Default engine version
+		// This is handled in the operator after 0.0.1 (of the operator)
+		version = "0.0.3"
+	}
+
+	submarinerSpec := submariner.SubmarinerSpec{
+		Repository:               repository,
+		Version:                  version,
+		CeIPSecNATTPort:          nattPort,
+		CeIPSecIKEPort:           ikePort,
+		CeIPSecDebug:             false,
+		CeIPSecPSK:               base64.StdEncoding.EncodeToString(subctlData.IPSecPSK.Data["psk"]),
+		BrokerK8sCA:              base64.StdEncoding.EncodeToString(subctlData.ClientToken.Data["ca.crt"]),
+		BrokerK8sRemoteNamespace: string(subctlData.ClientToken.Data["namespace"]),
+		BrokerK8sApiServerToken:  string(subctlData.ClientToken.Data["token"]),
+		BrokerK8sApiServer:       brokerURL,
+		Broker:                   "k8s",
+		NatEnabled:               !disableNat,
+		Debug:                    false,
+		ColorCodes:               colorCodes,
+		ClusterID:                clusterID,
+		ServiceCIDR:              serviceCIDR,
+		ClusterCIDR:              clusterCIDR,
+		Namespace:                SubmarinerNamespace,
+		Count:                    0,
+	}
+
+	return submarinerSpec
 }
