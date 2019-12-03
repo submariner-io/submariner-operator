@@ -44,7 +44,11 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 		panic(err.Error())
 	}
 
-	updateOrCreateSubmariner(submarinerClient, namespace, submariner)
+	_, err = updateOrCreateSubmariner(submarinerClient, namespace, submariner)
+
+	if err != nil {
+		return err
+	}
 
 	fmt.Printf("* Submariner is up and running\n")
 
