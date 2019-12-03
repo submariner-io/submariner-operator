@@ -9,11 +9,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
-func Ensure(config *rest.Config, submarinerSpec submariner.SubmarinerSpec) error {
+func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
 
 	err := engine.Ensure(config)
 	if err != nil {
@@ -42,24 +43,29 @@ func Ensure(config *rest.Config, submarinerSpec submariner.SubmarinerSpec) error
 	if err != nil {
 		panic(err.Error())
 	}
-	_, err = submarinerClient.SubmarinerV1alpha1().Submariners("submariner-operator").Update(submariner)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			_, err = submarinerClient.SubmarinerV1alpha1().Submariners("submariner-operator").Create(submariner)
-		}
-		if err != nil {
-			panic(err.Error())
-		}
-	}
 
-	// TODO follow ensure pattern:
-	// if created, err := crs.Ensure(...); err != nil {
-	//	return err
-	// } else if created {
-	//	fmt.Printf("* Created Submariner CR.\n")
-	// }
+	updateOrCreateSubmariner(submarinerClient, namespace, submariner)
 
 	fmt.Printf("* Submariner is up and running\n")
 
 	return nil
+}
+
+func updateOrCreateSubmariner(clientSet submarinerclientset.Interface, namespace string, submariner *submariner.Submariner) (bool, error) {
+	_, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Create(submariner)
+	if err == nil {
+		return true, nil
+	} else if errors.IsAlreadyExists(err) {
+		existingCfg, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Get(submariner.Name, v1.GetOptions{})
+		if err != nil {
+			return false, fmt.Errorf("failed to get pre-existing cfg %s : %s", submariner.Name, err)
+		}
+		submariner.ResourceVersion = existingCfg.ResourceVersion
+		_, err = clientSet.SubmarinerV1alpha1().Submariners(namespace).Update(submariner)
+		if err != nil {
+			return false, fmt.Errorf("failed to update pre-existing cfg  %s : %s", submariner.Name, err)
+		}
+		return false, nil
+	}
+	return false, err
 }

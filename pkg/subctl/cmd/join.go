@@ -134,7 +134,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	panicOnError(err)
 
 	fmt.Printf("* Deploying Submariner\n")
-	err = deploy.Ensure(config, populateSubmarinerSpec(subctlData))
+	err = deploy.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
 	panicOnError(err)
 }
 
