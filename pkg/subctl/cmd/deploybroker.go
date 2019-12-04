@@ -9,11 +9,11 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 )
 
-var disableDataplane bool
+var enableDataplane bool
 
 func init() {
-	deployBroker.PersistentFlags().BoolVarP(&disableDataplane, "no-dataplane", "n", false,
-		"Don't install the submariner dataplane on the broker")
+	deployBroker.PersistentFlags().BoolVar(&enableDataplane, "dataplane", false,
+		"Install the Submariner dataplane on the broker")
 	addJoinFlags(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
@@ -39,7 +39,7 @@ var deployBroker = &cobra.Command{
 		err = subctlData.WriteToFile(brokerDetailsFilename)
 		panicOnError(err)
 
-		if !disableDataplane {
+		if enableDataplane {
 			joinSubmarinerCluster(subctlData)
 		}
 	},
