@@ -54,10 +54,13 @@ func Ensure(config *rest.Config, operatorNamespace string, operatorImage string)
 		fmt.Printf("* Updated the privileged SCC\n")
 	}
 
+	fmt.Printf("* Deploying the operator...\r")
 	if created, err := deployment.Ensure(config, operatorNamespace, operatorImage); err != nil {
 		return err
 	} else if created {
 		fmt.Printf("* Deployed the operator successfully\n")
+	} else {
+		fmt.Printf("                           \r")
 	}
 
 	fmt.Printf("* The operator is up and running\n")
