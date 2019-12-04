@@ -56,16 +56,12 @@ func Ensure(config *rest.Config, submarinerSpec submariner.SubmarinerSpec) error
 
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return fmt.Errorf("error creating the submariner client set: %s", err)
 	}
-	_, err = submarinerClient.SubmarinerV1alpha1().Submariners("submariner-operator").Update(submariner)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			_, err = submarinerClient.SubmarinerV1alpha1().Submariners("submariner-operator").Create(submariner)
-		}
-		if err != nil {
-			panic(err.Error())
-		}
+
+	_, err = submarinerClient.SubmarinerV1alpha1().Submariners("submariner-operator").Create(submariner)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return fmt.Errorf("error creating the Submariner resource: %s", err)
 	}
 
 	// TODO follow ensure pattern:
