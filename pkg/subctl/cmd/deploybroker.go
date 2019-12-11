@@ -26,10 +26,15 @@ import (
 )
 
 var enableDataplane bool
+var disableDataplane bool
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&enableDataplane, "dataplane", false,
 		"Install the Submariner dataplane on the broker")
+	deployBroker.PersistentFlags().BoolVar(&disableDataplane, "no-dataplane", true,
+		"Don't install the Submariner dataplane on the broker (default)")
+	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
+	panicOnError(err)
 	addJoinFlags(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
