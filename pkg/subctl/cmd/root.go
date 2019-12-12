@@ -147,7 +147,7 @@ func handleNodeLabels() error {
 
 func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, error) {
 	// List all nodes and select one
-	allNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+	allNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
 	if err != nil {
 		return struct{ Node string }{}, err
 	}
