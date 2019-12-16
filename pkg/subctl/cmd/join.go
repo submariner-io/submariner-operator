@@ -80,7 +80,7 @@ var joinCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1), // exactly one, the broker data file
 	Run: func(cmd *cobra.Command, args []string) {
 		subctlData, err := datafile.NewFromFile(args[0])
-		panicOnError(err)
+		exitOnError("Error loading the broker information from the given file", err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
 		joinSubmarinerCluster(subctlData)
 	},
@@ -120,6 +120,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 		}{}
 
 		err := survey.Ask(qs, &answers)
+		// Most likely a programming error
 		panicOnError(err)
 
 		if len(answers.ClusterID) > 0 {
@@ -131,33 +132,33 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	}
 
 	config, err := getRestConfig()
-	panicOnError(err)
+	exitOnError("Unable to determine the Kubernetes connection configuration", err)
 
 	err = handleNodeLabels()
-	panicOnError(err)
+	exitOnError("Unable to set the gateway node up", err)
 
 	fmt.Printf("* Deploying the submariner operator\n")
 	err = install.Ensure(config, OperatorNamespace, operatorImage)
-	panicOnError(err)
+	exitOnError("Error deploying the operator", err)
 
 	fmt.Printf("* Discovering network details\n")
 	networkDetails := getNetworkDetails()
 
 	serviceCIDR, err = getServiceCIDR(serviceCIDR, networkDetails)
-	panicOnError(err)
+	exitOnError("Error determining the service CIDR", err)
 
 	clusterCIDR, err = getPodCIDR(clusterCIDR, networkDetails)
-	panicOnError(err)
+	exitOnError("Error determining the pod CIDR", err)
 
 	fmt.Printf("* Deploying Submariner\n")
 	err = deploy.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
-	panicOnError(err)
+	exitOnError("Error deploying Submariner", err)
 }
 
 func getNetworkDetails() *network.ClusterNetwork {
 
 	dynClient, clientSet, err := getClients()
-	panicOnError(err)
+	exitOnError("Unable to set the Kubernetes cluster connection up", err)
 	networkDetails, err := network.Discover(dynClient, clientSet)
 	if err != nil {
 		fmt.Printf("Error trying to discover network details: %s\n", err)
