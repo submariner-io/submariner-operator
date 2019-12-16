@@ -34,6 +34,7 @@ func init() {
 	deployBroker.PersistentFlags().BoolVar(&disableDataplane, "no-dataplane", true,
 		"Don't install the Submariner dataplane on the broker (default)")
 	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
+	// An error here indicates a programming error (the argument isn’t declared), panic
 	panicOnError(err)
 	addJoinFlags(deployBroker)
 	rootCmd.AddCommand(deployBroker)
@@ -47,18 +48,18 @@ var deployBroker = &cobra.Command{
 	Short: "set the broker up",
 	Run: func(cmd *cobra.Command, args []string) {
 		config, err := getRestConfig()
-		panicOnError(err)
+		exitOnError("The provided kubeconfig is invalid", err)
 
 		fmt.Printf("* Deploying broker\n")
 		err = broker.Ensure(config, IPSECPSKBytes)
-		panicOnError(err)
+		exitOnError("Error deploying the broker", err)
 
 		subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace)
-		panicOnError(err)
+		exitOnError("Error retrieving the broker information", err)
 
 		fmt.Printf("Writing submariner broker data to %s\n", brokerDetailsFilename)
 		err = subctlData.WriteToFile(brokerDetailsFilename)
-		panicOnError(err)
+		exitOnError("Error writing the broker information", err)
 
 		if enableDataplane {
 			joinSubmarinerCluster(subctlData)
