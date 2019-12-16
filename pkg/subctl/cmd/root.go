@@ -119,7 +119,7 @@ func getRestConfig() (*rest.Config, error) {
 
 func handleNodeLabels() error {
 	_, clientset, err := getClients()
-	panicOnError(err)
+	exitOnError("Unable to set the Kubernetes cluster connection up", err)
 	// List Submariner-labeled nodes
 	const submarinerGatewayLabel = "submariner.io/gateway"
 	const trueLabel = "true"
@@ -139,7 +139,7 @@ func handleNodeLabels() error {
 			return err
 		}
 		err = addLabelsToNode(clientset, answer.Node, map[string]string{submarinerGatewayLabel: trueLabel})
-		panicOnError(err)
+		exitOnError("Error labeling the gateway node", err)
 
 	}
 	return nil
@@ -147,7 +147,7 @@ func handleNodeLabels() error {
 
 func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, error) {
 	// List all nodes and select one
-	allNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+	allNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
 	if err != nil {
 		return struct{ Node string }{}, err
 	}
