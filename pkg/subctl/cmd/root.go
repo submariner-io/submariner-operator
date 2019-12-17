@@ -151,7 +151,9 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 	if err != nil {
 		return struct{ Node string }{}, err
 	}
-	fmt.Printf("There are %d nodes in the cluster\n", len(allNodes.Items))
+	if len(allNodes.Items) == 0 {
+		return struct{ Node string }{}, fmt.Errorf("there are no non-master nodes in the cluster")
+	}
 	allNodeNames := []string{}
 	for _, node := range allNodes.Items {
 		allNodeNames = append(allNodeNames, node.GetName())
