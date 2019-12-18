@@ -45,6 +45,7 @@ var (
 	ipsecDebug      bool
 	submarinerDebug bool
 	replicas        int
+	noLabel         bool
 )
 
 func init() {
@@ -68,6 +69,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "Enable IPsec debugging (verbose logging)")
 	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
 	cmd.Flags().IntVar(&replicas, "replicas", 0, "Set the number of engine replicas (no more than the number of gateway nodes)")
+	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
 }
 
 const (
@@ -134,8 +136,10 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	config, err := getRestConfig()
 	exitOnError("Unable to determine the Kubernetes connection configuration", err)
 
-	err = handleNodeLabels()
-	exitOnError("Unable to set the gateway node up", err)
+	if !noLabel {
+		err = handleNodeLabels()
+		exitOnError("Unable to set the gateway node up", err)
+	}
 
 	fmt.Printf("* Deploying the submariner operator\n")
 	err = install.Ensure(config, OperatorNamespace, operatorImage)
