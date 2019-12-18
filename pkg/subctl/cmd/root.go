@@ -138,9 +138,12 @@ func handleNodeLabels() error {
 		if err != nil {
 			return err
 		}
-		err = addLabelsToNode(clientset, answer.Node, map[string]string{submarinerGatewayLabel: trueLabel})
-		exitOnError("Error labeling the gateway node", err)
-
+		if len(answer.Node) == 0 {
+			fmt.Printf("* No available node, skipping labeling\n")
+		} else {
+			err = addLabelsToNode(clientset, answer.Node, map[string]string{submarinerGatewayLabel: trueLabel})
+			exitOnError("Error labeling the gateway node", err)
+		}
 	}
 	return nil
 }
@@ -152,7 +155,7 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 		return struct{ Node string }{}, err
 	}
 	if len(allNodes.Items) == 0 {
-		return struct{ Node string }{}, fmt.Errorf("there are no non-master nodes in the cluster")
+		return struct{ Node string }{}, nil
 	}
 	allNodeNames := []string{}
 	for _, node := range allNodes.Items {
