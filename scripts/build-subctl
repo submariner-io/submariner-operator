@@ -15,7 +15,11 @@ if [ "$debug" = "false" ]; then
 fi
 output=bin/subctl-${VERSION}-${GOOS}-${GOARCH}${GOEXE}
 CGO_ENABLED=0 go build -ldflags "${ldflags}" -o ${output} ./pkg/subctl/main.go
-[ "$debug" = "false" ] && command -v upx > /dev/null && upx ${output} || :
+
+# OSX does not seem to like upx compressed from linux, so disabled
+if [ "$debug" = "false" ] && [ "$GOOS" != "darwin" ]; then
+	command -v upx > /dev/null && upx ${output} || :
+fi
 
 if [ "${GOARCH}" = "$(GOARCH= go env GOARCH)" ] && [ "${GOOS}" = "$(GOOS= go env GOOS)" ]; then
     ln -sf ${output#bin/} bin/subctl
