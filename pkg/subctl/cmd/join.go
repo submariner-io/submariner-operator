@@ -194,7 +194,7 @@ func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (string, err
 				serviceCIDR, nd.ServiceCIDRs[0])
 		}
 		return serviceCIDR, nil
-	} else if len(nd.ServiceCIDRs) > 0 {
+	} else if nd != nil && len(nd.ServiceCIDRs) > 0 {
 		return nd.ServiceCIDRs[0], nil
 	} else {
 		return askForCIDR("ClusterIP service")
