@@ -9,12 +9,12 @@ require (
 	github.com/go-openapi/spec v0.19.5
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
-	github.com/google/btree v1.0.0 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/kr/pty v1.1.8 // indirect
+	github.com/mattn/go-isatty v0.0.10
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.7.1
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
@@ -26,7 +26,6 @@ require (
 	golang.org/x/crypto v0.0.0-20191029031824-8986dd9e96cf // indirect
 	golang.org/x/net v0.0.0-20191028085509-fe3aa8a45271 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	golang.org/x/tools v0.0.0-20191030062658-86caa796c7ab // indirect
 	google.golang.org/api v0.13.0 // indirect
@@ -36,11 +35,12 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	k8s.io/api v0.0.0-20190918195907-bd6ac527cfd2
 	k8s.io/apiextensions-apiserver v0.0.0-20190918201827-3de75813f604
-	k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655
+	k8s.io/apimachinery v0.0.0-20191028221656-72ed19daf4bb
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/klog v0.4.0
 	k8s.io/kube-openapi v0.0.0-20190603182131-db7b694dc208
 	sigs.k8s.io/controller-runtime v0.3.0
+	sigs.k8s.io/kind v0.6.1
 	sigs.k8s.io/yaml v1.1.0
 )
 
