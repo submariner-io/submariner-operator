@@ -18,8 +18,12 @@ package cli
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"sigs.k8s.io/kind/pkg/log"
+
+	"github.com/submariner-io/submariner-operator/pkg/internal/env"
 )
 
 // Status is used to track ongoing status in a CLI, with a nice loading spinner
@@ -31,6 +35,17 @@ type Status struct {
 	// for controlling coloring etc
 	successFormat string
 	failureFormat string
+	// message queues
+	successQueue []string
+	failureQueue []string
+}
+
+func NewStatus() *Status {
+	var writer io.Writer = os.Stderr
+	if env.IsSmartTerminal(writer) {
+		writer = NewSpinner(writer)
+	}
+	return StatusForLogger(NewLogger(writer, 0))
 }
 
 // StatusForLogger returns a new status object for the logger l,
@@ -41,6 +56,8 @@ func StatusForLogger(l log.Logger) *Status {
 		logger:        l,
 		successFormat: " ✓ %s\n",
 		failureFormat: " ✗ %s\n",
+		successQueue:  []string{},
+		failureQueue:  []string{},
 	}
 	// if we're using the CLI logger, check for if it has a spinner setup
 	// and wire the status to that
@@ -86,5 +103,26 @@ func (s *Status) End(success bool) {
 		s.logger.V(0).Infof(s.failureFormat, s.status)
 	}
 
+	for _, message := range s.successQueue {
+		s.logger.V(0).Infof(s.successFormat, message)
+	}
+	for _, message := range s.failureQueue {
+		s.logger.V(0).Infof(s.failureFormat, message)
+	}
+
 	s.status = ""
+	s.successQueue = []string{}
+	s.failureQueue = []string{}
+}
+
+// QueueSuccessMessage queues up a message, which will be displayed once
+// the status ends (using the success format)
+func (s *Status) QueueSuccessMessage(message string) {
+	s.successQueue = append(s.successQueue, message)
+}
+
+// QueueFailureMessage queues up a message, which will be displayed once
+// the status ends (using the failure format)
+func (s *Status) QueueFailureMessage(message string) {
+	s.failureQueue = append(s.failureQueue, message)
 }

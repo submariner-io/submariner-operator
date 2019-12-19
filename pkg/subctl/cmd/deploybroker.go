@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 )
 
@@ -50,8 +51,11 @@ var deployBroker = &cobra.Command{
 		config, err := getRestConfig()
 		exitOnError("The provided kubeconfig is invalid", err)
 
-		fmt.Printf("* Deploying broker\n")
+		status := cli.NewStatus()
+
+		status.Start("Deploying broker")
 		err = broker.Ensure(config, IPSECPSKBytes)
+		status.End(err == nil)
 		exitOnError("Error deploying the broker", err)
 
 		subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace)
