@@ -72,7 +72,7 @@ var _ = Describe("datafile", func() {
 
 		var clientSet *fake.Clientset
 		BeforeEach(func() {
-			pskSecret, _ := broker.NewBrokerPSKSecret(32)
+			pskSecret, _ := newIPSECPSKSecret()
 			pskSecret.Namespace = SubmarinerBrokerNamespace
 
 			sa := broker.NewBrokerSA()
@@ -92,7 +92,7 @@ var _ = Describe("datafile", func() {
 		})
 
 		It("Should produce a valid structure", func() {
-			subCtlData, err := newFromCluster(clientSet, SubmarinerBrokerNamespace)
+			subCtlData, err := newFromCluster(clientSet, SubmarinerBrokerNamespace, "")
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(subCtlData.IPSecPSK.Name).To(Equal("submariner-ipsec-psk"))
 			Expect(subCtlData.ClientToken.Name).To(Equal(testSASecret))

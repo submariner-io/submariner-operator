@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package broker
+package datafile
 
 import (
 	"crypto/rand"
@@ -25,6 +25,7 @@ import (
 )
 
 const ipsecPSKSecretName = "submariner-ipsec-psk"
+const ipsecSecretLength = 48
 
 // generateRandomPSK returns securely generated n-byte array.
 func generateRandomPSK(n int) ([]byte, error) {
@@ -33,9 +34,9 @@ func generateRandomPSK(n int) ([]byte, error) {
 	return psk, err
 }
 
-func NewBrokerPSKSecret(bytes int) (*v1.Secret, error) {
+func newIPSECPSKSecret() (*v1.Secret, error) {
 
-	psk, err := generateRandomPSK(bytes)
+	psk, err := generateRandomPSK(ipsecSecretLength)
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +54,6 @@ func NewBrokerPSKSecret(bytes int) (*v1.Secret, error) {
 	return psk_secret, nil
 }
 
-func GetIPSECPSKSecret(clientSet clientset.Interface, brokerNamespace string) (*v1.Secret, error) {
-	return clientSet.CoreV1().Secrets(brokerNamespace).Get(ipsecPSKSecretName, metav1.GetOptions{})
+func GetIPSECPSKSecret(clientSet clientset.Interface, namespace string) (*v1.Secret, error) {
+	return clientSet.CoreV1().Secrets(namespace).Get(ipsecPSKSecretName, metav1.GetOptions{})
 }

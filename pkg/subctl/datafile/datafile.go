@@ -19,6 +19,7 @@ package datafile
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 
 	v1 "k8s.io/api/core/v1"
@@ -74,13 +75,13 @@ func NewFromFile(filename string) (*SubctlData, error) {
 	return NewFromString(string(dat))
 }
 
-func NewFromCluster(restConfig *rest.Config, brokerNamespace string) (*SubctlData, error) {
+func NewFromCluster(restConfig *rest.Config, brokerNamespace, ipsecSubmFile string) (*SubctlData, error) {
 
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
 		return nil, err
 	}
-	subCtlData, err := newFromCluster(clientSet, brokerNamespace)
+	subCtlData, err := newFromCluster(clientSet, brokerNamespace, ipsecSubmFile)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +89,7 @@ func NewFromCluster(restConfig *rest.Config, brokerNamespace string) (*SubctlDat
 	return subCtlData, err
 }
 
-func newFromCluster(clientSet clientset.Interface, brokerNamespace string) (*SubctlData, error) {
+func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFile string) (*SubctlData, error) {
 	subctlData := &SubctlData{}
 	var err error
 
@@ -97,6 +98,16 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace string) (*Sub
 		return nil, err
 	}
 
-	subctlData.IPSecPSK, err = broker.GetIPSECPSKSecret(clientSet, brokerNamespace)
-	return subctlData, err
+	if ipsecSubmFile != "" {
+		datafile, err := NewFromFile(ipsecSubmFile)
+		if err != nil {
+			return nil, fmt.Errorf("Error happened trying to import IPSEC PSK from subm file: %s: %s", ipsecSubmFile,
+				err.Error())
+		}
+		subctlData.IPSecPSK = datafile.IPSecPSK
+		return subctlData, err
+	} else {
+		subctlData.IPSecPSK, err = newIPSECPSKSecret()
+		return subctlData, err
+	}
 }
