@@ -21,6 +21,7 @@ import (
 
 	"k8s.io/client-go/rest"
 
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/crds"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/deployment"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/namespace"
@@ -28,42 +29,37 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/serviceaccount"
 )
 
-func Ensure(config *rest.Config, operatorNamespace string, operatorImage string) error {
+func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string) error {
 
 	if created, err := crds.Ensure(config); err != nil {
 		return err
 	} else if created {
-		fmt.Printf("* Created operator CRDs.\n")
+		status.QueueSuccessMessage("Created operator CRDs")
 	}
 
 	if created, err := namespace.Ensure(config, operatorNamespace); err != nil {
 		return err
 	} else if created {
-		fmt.Printf("* Created operator namespace: %s\n", operatorNamespace)
+		status.QueueSuccessMessage(fmt.Sprintf("Created operator namespace: %s", operatorNamespace))
 	}
 
 	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
 		return err
 	} else if created {
-		fmt.Printf("* Created operator service account and role\n")
+		status.QueueSuccessMessage("Created operator service account and role")
 	}
 
 	if created, err := scc.Ensure(config, operatorNamespace); err != nil {
 		return err
 	} else if created {
-		fmt.Printf("* Updated the privileged SCC\n")
+		status.QueueSuccessMessage("Updated the privileged SCC")
 	}
 
-	fmt.Printf("* Deploying the operator...\r")
 	if created, err := deployment.Ensure(config, operatorNamespace, operatorImage); err != nil {
 		return err
 	} else if created {
-		fmt.Printf("* Deployed the operator successfully\n")
-	} else {
-		fmt.Printf("                           \r")
+		status.QueueSuccessMessage("Deployed the operator successfully")
 	}
-
-	fmt.Printf("* The operator is up and running\n")
 
 	return nil
 }

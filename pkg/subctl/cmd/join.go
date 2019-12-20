@@ -27,6 +27,7 @@ import (
 
 	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/deploy"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install"
@@ -141,8 +142,11 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 		exitOnError("Unable to set the gateway node up", err)
 	}
 
-	fmt.Printf("* Deploying the submariner operator\n")
-	err = install.Ensure(config, OperatorNamespace, operatorImage)
+	status := cli.NewStatus()
+
+	status.Start("Deploying the Submariner operator")
+	err = install.Ensure(status, config, OperatorNamespace, operatorImage)
+	status.End(err == nil)
 	exitOnError("Error deploying the operator", err)
 
 	fmt.Printf("* Discovering network details\n")
@@ -154,8 +158,9 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	clusterCIDR, err = getPodCIDR(clusterCIDR, networkDetails)
 	exitOnError("Error determining the pod CIDR", err)
 
-	fmt.Printf("* Deploying Submariner\n")
+	status.Start("Deploying Submariner")
 	err = deploy.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
+	status.End(err == nil)
 	exitOnError("Error deploying Submariner", err)
 }
 
@@ -193,7 +198,7 @@ func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (string, err
 				serviceCIDR, nd.ServiceCIDRs[0])
 		}
 		return serviceCIDR, nil
-	} else if len(nd.ServiceCIDRs) > 0 {
+	} else if nd != nil && len(nd.ServiceCIDRs) > 0 {
 		return nd.ServiceCIDRs[0], nil
 	} else {
 		return askForCIDR("ClusterIP service")
