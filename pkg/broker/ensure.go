@@ -28,7 +28,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func Ensure(config *rest.Config, ipsecPSKBytes int) error {
+func Ensure(config *rest.Config) error {
 	err := engine.Ensure(config)
 	if err != nil {
 		return fmt.Errorf("error setting up the engine requirements: %s", err)
@@ -61,17 +61,6 @@ func Ensure(config *rest.Config, ipsecPSKBytes int) error {
 	_, err = clientset.RbacV1().RoleBindings(SubmarinerBrokerNamespace).Create(NewBrokerRoleBinding())
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the broker rolebinding: %s", err)
-	}
-
-	// Generate and store a psk in secret
-	pskSecret, err := NewBrokerPSKSecret(ipsecPSKBytes)
-	if err != nil {
-		return fmt.Errorf("error generating the IPSEC PSK secret: %s", err)
-	}
-
-	_, err = clientset.CoreV1().Secrets(SubmarinerBrokerNamespace).Create(pskSecret)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the IPSEC PSK secret: %s", err)
 	}
 
 	return waitForClientToken(clientset)

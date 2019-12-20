@@ -30,6 +30,7 @@ import (
 var (
 	enableDataplane              bool
 	disableDataplane             bool
+	ipsecSubmFile                string
 	serviceDiscovery             bool
 	serviceDiscoveryImageRepo    string
 	serviceDiscoveryImageVersion string
@@ -49,11 +50,14 @@ func init() {
 	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
 	// An error here indicates a programming error (the argument isn’t declared), panic
 	panicOnError(err)
+
+	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
+		"Import IPSEC PSK from existing submariner broker file, like broker-info.subm")
+
 	addJoinFlags(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
 
-const IPSECPSKBytes = 48 // using base64 this results on a 64 character password
 const brokerDetailsFilename = "broker-info.subm"
 
 var deployBroker = &cobra.Command{
@@ -66,13 +70,37 @@ var deployBroker = &cobra.Command{
 		status := cli.NewStatus()
 
 		status.Start("Deploying broker")
-		err = broker.Ensure(config, IPSECPSKBytes)
+		err = broker.Ensure(config)
 		status.End(err == nil)
 		exitOnError("Error deploying the broker", err)
 
-		subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace)
-		exitOnError("Error retrieving the broker information", err)
+		status.Start(fmt.Sprintf("Creating %s file", brokerDetailsFilename))
+
+		// If deploy-broker is retried we will attempt to re-use the existing IPSEC PSK secret
+		if ipsecSubmFile == "" {
+			if _, err := datafile.NewFromFile(brokerDetailsFilename); err == nil {
+				ipsecSubmFile = brokerDetailsFilename
+				status.QueueSuccessMessage(fmt.Sprintf("Reusing IPSEC PSK from existing %s", brokerDetailsFilename))
+			} else {
+				status.QueueSuccessMessage(fmt.Sprintf("A new IPSEC PSK will be generated for %s", brokerDetailsFilename))
+			}
+		}
+
+		subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace, ipsecSubmFile)
+		exitOnError("Error retrieving preparing the subm data file", err)
+
+		newFilename, err := datafile.BackupIfExists(brokerDetailsFilename)
+		exitOnError("Error backing up the brokerfile", err)
+
+		if newFilename != "" {
+			status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
+		}
+
 		subctlData.ServiceDiscovery = serviceDiscovery
+
+		err = subctlData.WriteToFile(brokerDetailsFilename)
+		status.End(err == nil)
+		exitOnError("Error writing the broker information", err)
 
 		if serviceDiscovery {
 			status.Start("Deploying Service Discovery controller")
@@ -80,10 +108,6 @@ var deployBroker = &cobra.Command{
 			status.End(err == nil)
 			exitOnError("Failed to deploy Service Discovery controller", err)
 		}
-
-		fmt.Printf("Writing submariner broker data to %s\n", brokerDetailsFilename)
-		err = subctlData.WriteToFile(brokerDetailsFilename)
-		exitOnError("Error writing the broker information", err)
 
 		if enableDataplane {
 			joinSubmarinerCluster(subctlData)

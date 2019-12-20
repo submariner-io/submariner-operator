@@ -14,31 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package broker
+package datafile
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-const testPSKLen = 32
-
 var _ = Describe("ipsec_psk handling", func() {
 	When("generateRandonPSK is called", func() {
 		It("should return the amount of entropy requested", func() {
-			psk, err := generateRandomPSK(testPSKLen)
+			psk, err := generateRandomPSK(ipsecSecretLength)
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(psk).To(HaveLen(testPSKLen))
+			Expect(psk).To(HaveLen(ipsecSecretLength))
 		})
 	})
 
 	When("NewBrokerPSKSecret is called", func() {
 		It("should return a secret with a psk data inside", func() {
-			secret, err := NewBrokerPSKSecret(testPSKLen)
+			secret, err := newIPSECPSKSecret()
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(secret.Name).To(Equal("submariner-ipsec-psk"))
 			Expect(secret.Data).To(HaveKey("psk"))
-			Expect(secret.Data["psk"]).To(HaveLen(testPSKLen))
+			Expect(secret.Data["psk"]).To(HaveLen(ipsecSecretLength))
 		})
 	})
 
