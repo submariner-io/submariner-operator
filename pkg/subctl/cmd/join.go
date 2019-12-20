@@ -60,7 +60,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&serviceCIDR, "servicecidr", "", "service CIDR")
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
-	cmd.Flags().StringVar(&imageVersion, "imageVersion", "", "image version")
+	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
 	cmd.Flags().StringVarP(&operatorImage, "operator-image", "o", DefaultOperatorImage,
 		"the operator image you wish to use")
 	cmd.Flags().StringVar(&colorCodes, "colorcodes", "blue", "color codes")
