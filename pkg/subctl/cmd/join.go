@@ -38,7 +38,7 @@ var (
 	serviceCIDR     string
 	clusterCIDR     string
 	repository      string
-	version         string
+	imageVersion    string
 	nattPort        int
 	ikePort         int
 	colorCodes      string
@@ -60,7 +60,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&serviceCIDR, "servicecidr", "", "service CIDR")
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
-	cmd.Flags().StringVar(&version, "version", "", "image version")
+	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
 	cmd.Flags().StringVarP(&operatorImage, "operator-image", "o", DefaultOperatorImage,
 		"the operator image you wish to use")
 	cmd.Flags().StringVar(&colorCodes, "colorcodes", "blue", "color codes")
@@ -247,15 +247,15 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		repository = "quay.io/submariner"
 	}
 
-	if len(version) == 0 {
+	if len(imageVersion) == 0 {
 		// Default engine version
 		// This is handled in the operator after 0.0.1 (of the operator)
-		version = "0.0.3"
+		imageVersion = "0.0.3"
 	}
 
 	submarinerSpec := submariner.SubmarinerSpec{
 		Repository:               repository,
-		Version:                  version,
+		Version:                  imageVersion,
 		CeIPSecNATTPort:          nattPort,
 		CeIPSecIKEPort:           ikePort,
 		CeIPSecDebug:             ipsecDebug,
