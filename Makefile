@@ -19,7 +19,7 @@ shell: .dapper
 bin/subctl: pkg/subctl/operator/install/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go")
 	$(MAKE) build-subctl
 
-pkg/subctl/operator/install/embeddedyamls/yamls.go: $(shell find deploy/ -name "*.yaml")
+pkg/subctl/operator/install/embeddedyamls/yamls.go: pkg/subctl/operator/install/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml")
 	$(MAKE) generate-embeddedyamls
 
 .DEFAULT_GOAL := ci
