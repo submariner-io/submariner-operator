@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package deployment
+package operatorpod
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ const deploymentCheckInterval = 5 * time.Second
 const deploymentWaitTime = 2 * time.Minute
 
 //Ensure the operator is deployed, and running
-func Ensure(restConfig *rest.Config, namespace string, image string) (bool, error) {
+func Ensure(restConfig *rest.Config, namespace string, operatorName string, image string) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
 		return false, err
@@ -50,24 +50,22 @@ func Ensure(restConfig *rest.Config, namespace string, image string) (bool, erro
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
-			Name:      "submariner-operator",
+			Name:      operatorName,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"name": "submariner-operator"}},
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"name": operatorName}},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"name": "submariner-operator",
-					},
+					Labels: map[string]string{"name": operatorName},
 				},
 				Spec: v1.PodSpec{
-					ServiceAccountName: "submariner-operator",
+					ServiceAccountName: operatorName,
 					Containers: []v1.Container{
 						{
-							Name:            "submariner-operator",
+							Name:            operatorName,
 							Image:           image,
-							Command:         []string{"submariner-operator"},
+							Command:         []string{operatorName},
 							ImagePullPolicy: imagePullPolicy,
 							Env: []v1.EnvVar{
 								{
@@ -83,7 +81,7 @@ func Ensure(restConfig *rest.Config, namespace string, image string) (bool, erro
 										},
 									},
 								}, {
-									Name: "OPERATOR_NAME", Value: "submariner-operator",
+									Name: "OPERATOR_NAME", Value: operatorName,
 								},
 							},
 						},

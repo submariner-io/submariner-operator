@@ -31,8 +31,8 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/deploy"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 )
 
 var (
@@ -156,7 +156,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	status := cli.NewStatus()
 
 	status.Start("Deploying the Submariner operator")
-	err = install.Ensure(status, config, OperatorNamespace, operatorImage)
+	err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage)
 	status.End(err == nil)
 	exitOnError("Error deploying the operator", err)
 
@@ -177,7 +177,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	exitOnError("Error determining the pod CIDR", err)
 
 	status.Start("Deploying Submariner")
-	err = deploy.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
+	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
 	status.End(err == nil)
 	exitOnError("Error deploying Submariner", err)
 }

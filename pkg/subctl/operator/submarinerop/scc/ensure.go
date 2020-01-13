@@ -26,7 +26,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/serviceaccount"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/serviceaccount"
 )
 
 var (
