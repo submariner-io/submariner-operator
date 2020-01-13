@@ -6,5 +6,5 @@ source $(dirname $0)/lib/version
 cd $(dirname $0)/..
 
 # embed the CRD yaml files into constants
-go generate pkg/subctl/operator/install/embeddedyamls/generate.go
+go generate pkg/subctl/operator/submarinerop/embeddedyamls/generate.go
 

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package install
+package submarinerop
 
 import (
 	"fmt"
@@ -22,11 +22,11 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/crds"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/deployment"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/namespace"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/scc"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/serviceaccount"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/namespace"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/crds"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/scc"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/serviceaccount"
 )
 
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string) error {
