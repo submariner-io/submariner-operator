@@ -28,12 +28,15 @@ import (
 
 var enableDataplane bool
 var disableDataplane bool
+var enableLighthouse bool
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&enableDataplane, "dataplane", false,
 		"Install the Submariner dataplane on the broker")
 	deployBroker.PersistentFlags().BoolVar(&disableDataplane, "no-dataplane", true,
 		"Don't install the Submariner dataplane on the broker (default)")
+	deployBroker.PersistentFlags().BoolVar(&enableLighthouse, "service-discovery", false,
+		"Enable Multi Cluster Service Discovery")
 	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
 	// An error here indicates a programming error (the argument isn’t declared), panic
 	panicOnError(err)
@@ -58,7 +61,7 @@ var deployBroker = &cobra.Command{
 		status.End(err == nil)
 		exitOnError("Error deploying the broker", err)
 
-		subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace)
+		subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace, enableLighthouse)
 		exitOnError("Error retrieving the broker information", err)
 
 		fmt.Printf("Writing submariner broker data to %s\n", brokerDetailsFilename)

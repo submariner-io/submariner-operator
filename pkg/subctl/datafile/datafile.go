@@ -32,6 +32,7 @@ type SubctlData struct {
 	BrokerURL   string     `json:"brokerURL"`
 	ClientToken *v1.Secret `omitempty,json:"clientToken"`
 	IPSecPSK    *v1.Secret `omitempty,json:"ipsecPSK"`
+	Lighthouse  bool `omitempty,json:"serviceDiscovery"`
 }
 
 func (data *SubctlData) ToString() (string, error) {
@@ -73,7 +74,7 @@ func NewFromFile(filename string) (*SubctlData, error) {
 	return NewFromString(string(dat))
 }
 
-func NewFromCluster(restConfig *rest.Config, brokerNamespace string) (*SubctlData, error) {
+func NewFromCluster(restConfig *rest.Config, brokerNamespace string, enableLighthouse bool) (*SubctlData, error) {
 
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
@@ -84,6 +85,7 @@ func NewFromCluster(restConfig *rest.Config, brokerNamespace string) (*SubctlDat
 		return nil, err
 	}
 	subCtlData.BrokerURL = restConfig.Host + restConfig.APIPath
+	subCtlData.Lighthouse = enableLighthouse
 	return subCtlData, err
 }
 
