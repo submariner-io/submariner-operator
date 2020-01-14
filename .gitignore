@@ -8,3 +8,4 @@ deploy/crds/submariner_endpoints_crd.yaml
 output/
 vendor/
 *.coverprofile
+.idea
