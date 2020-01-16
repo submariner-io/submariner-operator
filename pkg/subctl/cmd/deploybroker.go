@@ -20,15 +20,20 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 )
 
-var enableDataplane bool
-var disableDataplane bool
-var serviceDiscovery bool
+var (
+	enableDataplane              bool
+	disableDataplane             bool
+	serviceDiscovery             bool
+	serviceDiscoveryImageRepo    string
+	serviceDiscoveryImageVersion string
+)
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&enableDataplane, "dataplane", false,
@@ -37,6 +42,10 @@ func init() {
 		"Don't install the Submariner dataplane on the broker (default)")
 	deployBroker.PersistentFlags().BoolVar(&serviceDiscovery, "service-discovery", false,
 		"Enable Multi Cluster Service Discovery")
+	deployBroker.PersistentFlags().StringVar(&serviceDiscoveryImageRepo, "service-discovery-repo", "",
+		"Service Discovery Image repository")
+	deployBroker.PersistentFlags().StringVar(&serviceDiscoveryImageVersion, "service-discovery-version", "",
+		"Service Discovery Image version")
 	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
 	// An error here indicates a programming error (the argument isn’t declared), panic
 	panicOnError(err)
@@ -64,6 +73,13 @@ var deployBroker = &cobra.Command{
 		subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace)
 		exitOnError("Error retrieving the broker information", err)
 		subctlData.ServiceDiscovery = serviceDiscovery
+
+		if serviceDiscovery {
+			status.Start("Deploying Service Discovery controller")
+			err = lighthouse.Ensure(config, serviceDiscoveryImageRepo, serviceDiscoveryImageVersion)
+			status.End(err == nil)
+			exitOnError("Failed to deploy Service Discovery controller", err)
+		}
 
 		fmt.Printf("Writing submariner broker data to %s\n", brokerDetailsFilename)
 		err = subctlData.WriteToFile(brokerDetailsFilename)
