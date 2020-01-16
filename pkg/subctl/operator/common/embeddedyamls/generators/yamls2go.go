@@ -35,6 +35,22 @@ var files = []string{
 	"role_binding.yaml",
 	"service_account.yaml",
 	"lighthouse/crds/multiclusterservices_crd.yaml",
+	"kubefed/clusterrole.yaml",
+	"kubefed/clusterrole_binding.yaml",
+	"kubefed/clusterpropagatedversions.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/dnsendpoints.multiclusterdns.kubefed.k8s.io.crd.yaml",
+	"kubefed/domains.multiclusterdns.kubefed.k8s.io.crd.yaml",
+	"kubefed/federatedservicestatuses.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/federatedtypeconfigs.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/ingressdnsrecords.multiclusterdns.kubefed.k8s.io.crd.yaml",
+	"kubefed/kubefedclusters.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/kubefedconfigs.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/kubefeds.operator.kubefed.io.crd.yaml",
+	"kubefed/propagatedversions.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/replicaschedulingpreferences.scheduling.kubefed.k8s.io.crd.yaml",
+	"kubefed/role.yaml",
+	"kubefed/role_binding.yaml",
+	"kubefed/servicednsrecords.multiclusterdns.kubefed.k8s.io.crd.yaml",
 }
 
 // Reads all .yaml files in the crdDirectory

@@ -1,0 +1,12 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kubefed-operator
+subjects:
+- kind: ServiceAccount
+  name: kubefed-operator
+  namespace: kubefed-operator
+roleRef:
+  kind: ClusterRole
+  name: kubefed-operator
+  apiGroup: rbac.authorization.k8s.io
