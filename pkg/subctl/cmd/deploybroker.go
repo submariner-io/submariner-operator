@@ -20,11 +20,11 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
+	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
 )
 
 var (
