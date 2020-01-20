@@ -43,9 +43,9 @@ func init() {
 		"Don't install the Submariner dataplane on the broker (default)")
 	deployBroker.PersistentFlags().BoolVar(&serviceDiscovery, "service-discovery", false,
 		"Enable Multi Cluster Service Discovery")
-	deployBroker.PersistentFlags().StringVar(&serviceDiscoveryImageRepo, "service-discovery-repo", "",
+	deployBroker.PersistentFlags().StringVar(&serviceDiscoveryImageRepo, "service-discovery-repo", lighthouse.DefaultControllerImageRepo,
 		"Service Discovery Image repository")
-	deployBroker.PersistentFlags().StringVar(&serviceDiscoveryImageVersion, "service-discovery-version", "",
+	deployBroker.PersistentFlags().StringVar(&serviceDiscoveryImageVersion, "service-discovery-version", lighthouse.DefaultControllerImageVersion,
 		"Service Discovery Image version")
 	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
 	// An error here indicates a programming error (the argument isn’t declared), panic
@@ -104,7 +104,7 @@ var deployBroker = &cobra.Command{
 
 		if serviceDiscovery {
 			status.Start("Deploying Service Discovery controller")
-			err = lighthouse.Ensure(config, serviceDiscoveryImageRepo, serviceDiscoveryImageVersion)
+			err = lighthouse.Ensure(status, config, serviceDiscoveryImageRepo, serviceDiscoveryImageVersion, true)
 			status.End(err == nil)
 			exitOnError("Failed to deploy Service Discovery controller", err)
 		}

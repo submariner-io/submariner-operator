@@ -30,6 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
+	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/deploy"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install"
 )
@@ -158,6 +159,13 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	err = install.Ensure(status, config, OperatorNamespace, operatorImage)
 	status.End(err == nil)
 	exitOnError("Error deploying the operator", err)
+
+	if subctlData.ServiceDiscovery {
+		status.Start("Deploying multi cluster service discovery")
+		err = lighthouse.Ensure(status, config, "", "", false)
+		status.End(err == nil)
+		exitOnError("Error deploying multi cluster service discovery", err)
+	}
 
 	fmt.Printf("* Discovering network details\n")
 	networkDetails := getNetworkDetails()
