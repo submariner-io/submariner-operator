@@ -25,7 +25,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 )
 
 //go:generate go run generators/yamls2go.go
