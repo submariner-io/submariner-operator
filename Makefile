@@ -16,10 +16,10 @@ $(TARGETS): .dapper
 shell: .dapper
 	./.dapper -s -m bind
 
-bin/subctl: pkg/subctl/operator/submarinerop/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go")
+bin/subctl: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go")
 	$(MAKE) build-subctl
 
-pkg/subctl/operator/submarinerop/embeddedyamls/yamls.go: pkg/subctl/operator/submarinerop/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml")
+pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml")
 	$(MAKE) generate-embeddedyamls
 
 .DEFAULT_GOAL := ci
