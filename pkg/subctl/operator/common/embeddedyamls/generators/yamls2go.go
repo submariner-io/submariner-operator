@@ -18,9 +18,10 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 )
 
@@ -48,14 +49,19 @@ func main() {
 		"package embeddedyamls\n\nconst (\n")
 	panicOnErr(err)
 
+	re, err := regexp.Compile("`([^`]*)`")
+	panicOnErr(err)
+
 	for _, f := range files {
 
 		_, err = out.WriteString("\t" + constName(f) + " = `")
 		panicOnErr(err)
 
 		fmt.Println(f)
-		f, _ := os.Open(path.Join(yamlsDirectory, f))
-		_, err = io.Copy(out, f)
+		contents, err := ioutil.ReadFile(path.Join(yamlsDirectory, f))
+		panicOnErr(err)
+
+		_, err = out.Write(re.ReplaceAll(contents, []byte("` + \"`$1`\" + `")))
 		panicOnErr(err)
 
 		_, err = out.WriteString("`\n")
