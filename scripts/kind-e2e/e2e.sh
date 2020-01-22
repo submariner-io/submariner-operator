@@ -75,11 +75,9 @@ function setup_broker() {
         echo Submariner CRDs already exist, skipping broker creation...
     else
         echo Installing broker on cluster1.
-        if [[ $lighthouse = true ]]; then
-            echo Service Discovery is enabled
-            ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker --service-discovery
-         fi
-        ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker
+         sd=
+         [[ $lighthouse = true ]] && sd=--service-discovery
+         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker ${sd}
     fi
 
     SUBMARINER_BROKER_URL=$(kubectl --context=cluster1 -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
