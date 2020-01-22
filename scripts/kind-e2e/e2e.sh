@@ -7,7 +7,8 @@ source $(git rev-parse --show-toplevel)/scripts/lib/debug_functions
 
 function kind_clusters() {
     status=$1
-    version=$2
+    lighthouse=$2
+    version=$3
     pids=(-1 -1 -1)
     logs=()
     for i in 1 2 3; do
@@ -69,11 +70,14 @@ function setup_custom_cni(){
 }
 
 function setup_broker() {
+
     if kubectl --context=cluster1 get crd clusters.submariner.io > /dev/null 2>&1; then
         echo Submariner CRDs already exist, skipping broker creation...
     else
         echo Installing broker on cluster1.
-        ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker
+         sd=
+         [[ $lighthouse = true ]] && sd=--service-discovery
+         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker ${sd}
     fi
 
     SUBMARINER_BROKER_URL=$(kubectl --context=cluster1 -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
@@ -202,7 +206,7 @@ if [[ $1 != keep ]]; then
     trap cleanup EXIT
 fi
 
-echo Starting with status: $1, k8s_version: $2.
+echo Starting with status: $1, lighthouse: $2, k8s_version: $3.
 PRJ_ROOT=$(git rev-parse --show-toplevel)
 mkdir -p ${PRJ_ROOT}/output/kind-config/dapper/ ${PRJ_ROOT}/output/kind-config/local-dev/
 SUBMARINER_BROKER_NS=submariner-k8s-broker

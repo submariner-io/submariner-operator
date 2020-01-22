@@ -1,4 +1,5 @@
 status ?= onetime
+lighthouse ?= false
 
 TARGETS := $(shell ls scripts)
 
@@ -10,7 +11,7 @@ TARGETS := $(shell ls scripts)
 	@mv .dapper.tmp .dapper
 
 $(TARGETS): .dapper
-	./.dapper -m bind $@ $(status)
+	./.dapper -m bind $@ $(status) $(lighthouse)
 
 shell: .dapper
 	./.dapper -s -m bind
