@@ -47,7 +47,6 @@ var (
 	disableNat      bool
 	ipsecDebug      bool
 	submarinerDebug bool
-	replicas        int
 	noLabel         bool
 )
 
@@ -71,7 +70,6 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "Disable NAT for IPsec")
 	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "Enable IPsec debugging (verbose logging)")
 	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
-	cmd.Flags().IntVar(&replicas, "replicas", 0, "Set the number of engine replicas (no more than the number of gateway nodes)")
 	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
 }
 
@@ -290,7 +288,6 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		ServiceCIDR:              serviceCIDR,
 		ClusterCIDR:              clusterCIDR,
 		Namespace:                SubmarinerNamespace,
-		Count:                    int32(replicas),
 	}
 
 	return submarinerSpec

@@ -126,7 +126,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	//subm_engine_sa.Name = "submariner-engine"
 	//reqLogger.Info("Created a new SA", "SA.Name", subm_engine_sa.Name)
 
-	if err = r.reconcileEngineDeployment(instance, reqLogger); err != nil {
+	if err = r.reconcileEngineDaemonSet(instance, reqLogger); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -137,42 +137,19 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileSubmariner) reconcileEngineDeployment(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
-
-	var err error
-
-	deployment := newDeploymentForCR(instance)
-	// Set Submariner instance as the owner and controller
-	if err = controllerutil.SetControllerReference(instance, deployment, r.scheme); err != nil {
-		return err
-	}
-	foundDeployment := &appsv1.Deployment{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: deployment.Namespace}, foundDeployment)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Deployment",
-			"Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
-		err = r.client.Create(context.TODO(), deployment)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	} else if err != nil {
-		return err
-	}
-	reqLogger.Info("Skip reconcile: Deployment already exists",
-		"Deployment.Namespace", foundDeployment.Namespace, "Deployment.Name", foundDeployment.Name)
-	return nil
+func (r *ReconcileSubmariner) reconcileEngineDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
+	return r.reconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger)
 }
 
 func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
+	return r.reconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger)
+}
 
+func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger) error {
 	var err error
 
-	daemonSet := newRouteAgentDaemonSet(instance)
-
-	// Set Routeagent instance as the owner and controller
-	if err = controllerutil.SetControllerReference(instance, daemonSet, r.scheme); err != nil {
+	// Set the owner and controller
+	if err = controllerutil.SetControllerReference(owner, daemonSet, r.scheme); err != nil {
 		return err
 	}
 
@@ -193,39 +170,32 @@ func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submarinerv
 	return nil
 }
 
-func newDeploymentForCR(cr *submarinerv1alpha1.Submariner) *appsv1.Deployment {
-
+func newEngineDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {
 	labels := map[string]string{
 		"app":       "submariner-engine",
 		"component": "engine",
 	}
 
-	replicas := int32(1)
 	revisionHistoryLimit := int32(5)
-	progressDeadlineSeconds := int32(600)
 
-	maxSurge := intstr.FromInt(1)
-	maxUnavailable := intstr.FromInt(0)
+	maxUnavailable := intstr.FromInt(1)
 
-	deployment := &appsv1.Deployment{
+	deployment := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:    labels,
 			Namespace: cr.Namespace,
 			Name:      "submariner",
 		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &replicas,
+		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "submariner-engine"}},
 			Template: newPodTemplateForCR(cr),
-			Strategy: appsv1.DeploymentStrategy{
-				RollingUpdate: &appsv1.RollingUpdateDeployment{
-					MaxSurge:       &maxSurge,
+			UpdateStrategy: appsv1.DaemonSetUpdateStrategy{
+				RollingUpdate: &appsv1.RollingUpdateDaemonSet{
 					MaxUnavailable: &maxUnavailable,
 				},
-				Type: appsv1.RollingUpdateDeploymentStrategyType,
+				Type: appsv1.RollingUpdateDaemonSetStrategyType,
 			},
-			RevisionHistoryLimit:    &revisionHistoryLimit,
-			ProgressDeadlineSeconds: &progressDeadlineSeconds,
+			RevisionHistoryLimit: &revisionHistoryLimit,
 		},
 	}
 

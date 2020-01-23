@@ -55,9 +55,6 @@ spec:
               type: string
             colorCodes:
               type: string
-            count:
-              format: int32
-              type: integer
             debug:
               type: boolean
             namespace:
@@ -80,7 +77,6 @@ spec:
           - ceIPSecPSK
           - clusterCIDR
           - clusterID
-          - count
           - debug
           - namespace
           - natEnabled
