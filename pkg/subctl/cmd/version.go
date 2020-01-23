@@ -18,6 +18,8 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -38,6 +40,10 @@ func init() {
 }
 
 func subctlVersion(cmd *cobra.Command, args []string) {
-	fmt.Printf("subctl version: %s\n", version.Version)
-	fmt.Printf("built from git commit id: %s\n", version.Commit)
+	PrintSubctlVersion(os.Stdout)
+}
+
+func PrintSubctlVersion(w io.Writer) {
+	fmt.Fprintf(w, "subctl version: %s\n", version.Version)
+	fmt.Fprintf(w, "built from git commit id: %s\n", version.Commit)
 }

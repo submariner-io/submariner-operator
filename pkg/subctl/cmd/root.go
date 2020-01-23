@@ -84,6 +84,9 @@ func homeDir() string {
 
 func panicOnError(err error) {
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "")
+		PrintSubctlVersion(os.Stderr)
+		fmt.Fprintln(os.Stderr, "")
 		panic(err.Error())
 	}
 }
@@ -92,6 +95,8 @@ func panicOnError(err error) {
 func exitOnError(format string, err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, format, err.Error())
+		fmt.Fprintln(os.Stderr, "")
+		PrintSubctlVersion(os.Stderr)
 		fmt.Fprintln(os.Stderr, "")
 		os.Exit(1)
 	}
