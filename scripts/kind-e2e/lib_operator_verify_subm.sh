@@ -61,7 +61,6 @@ function verify_subm_crd() {
     kubectl get crd $crd_name -o jsonpath='{.spec.validation.openAPIV3Schema.properties.spec.required}' | grep submarinerServicecidr
     kubectl get crd $crd_name -o jsonpath='{.spec.validation.openAPIV3Schema.properties.spec.required}' | grep submarinerClustercidr
     kubectl get crd $crd_name -o jsonpath='{.spec.validation.openAPIV3Schema.properties.spec.required}' | grep submarinerNamespace
-    kubectl get crd $crd_name -o jsonpath='{.spec.validation.openAPIV3Schema.properties.spec.required}' | grep count
   fi
 }
 
@@ -198,43 +197,22 @@ function verify_subm_engine_pod() {
 }
 
 function verify_subm_engine_deployment() {
-  # Simple verification to ensure that the engine deployment has been created and becomes ready
-   SECONDS="0"
-   while ! kubectl get Deployments -l app=$engine_deployment_name -n $subm_ns | grep -q submariner; do
-     if [ $SECONDS -gt 120 ]; then
-        echo "Timeout waiting for engine Deployment creation"
-        exit 1
-     else
-        ((SECONDS+=2))
-        sleep 2
-     fi
-   done
-
-   replicas=0
-   readyReplicas=0
-
-   SECONDS="0"
-   while [ "$readyReplicas" != "$replicas" ] || [ $readyReplicas -le 0 ]; do
-     if [ $SECONDS -gt 120 ]; then
-        echo "Timeout waiting for ready replicas of the Deployment"
-        exit 1
-     else
-
-        replicas=$(kubectl get Deployment submariner -n $subm_ns -o jsonpath='{.status.replicas}')
-        readyReplicas=$(kubectl get Deployment submariner -n $subm_ns -o jsonpath='{.status.readyReplicas}')
-
-        ((SECONDS+=2))
-        sleep 2
-     fi
-   done
+  verify_daemonset $engine_deployment_name submariner
 }
 
 function verify_subm_routeagent_daemonset() {
-  # Simple verification to ensure that the routeagent daemonset has been created and becomes ready
+  verify_daemonset $routeagent_deployment_name submariner-routeagent
+}
+
+function verify_daemonset() {
+  daemonset_app=$1
+  daemonset_name=$2
+
+  # Simple verification to ensure that the daemonset has been created and becomes ready
    SECONDS="0"
-   while ! kubectl get DaemonSets -l app=$routeagent_deployment_name -n $subm_ns | grep -q routeagent; do
+   while ! kubectl get DaemonSets -l app=$daemonset_app -n $subm_ns | grep -q $daemonset_name; do
      if [ $SECONDS -gt 120 ]; then
-        echo "Timeout waiting for route agent DaemonSet creation"
+        echo "Timeout waiting for "$daemonset_app" DaemonSet creation"
         exit 1
      else
         ((SECONDS+=2))
@@ -245,14 +223,14 @@ function verify_subm_routeagent_daemonset() {
    numberReady=-1
    desiredNumberScheduled=0
    SECONDS="0"
-   while [ "$numberReady" != "$desiredNumberScheduled" ] || [ $numberReady -le 1 ]; do
+   while [ "$numberReady" != "$desiredNumberScheduled" ]; do
      if [ $SECONDS -gt 120 ]; then
-        echo "Timeout waiting for a ready state on the daemonset"
+        echo "Timeout waiting for a ready state on the "$daemonset_app" daemonset"
         exit 1
      else
 
-        desiredNumberScheduled=$(kubectl get DaemonSet submariner-routeagent -n $subm_ns -o jsonpath='{.status.desiredNumberScheduled}')
-        numberReady=$(kubectl get DaemonSet submariner-routeagent -n $subm_ns -o jsonpath='{.status.numberReady}')
+        desiredNumberScheduled=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.desiredNumberScheduled}')
+        numberReady=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.numberReady}')
 
         ((SECONDS+=2))
         sleep 2
