@@ -137,8 +137,28 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	return reconcile.Result{}, nil
 }
 
+func (r *ReconcileSubmariner) deletePreExistingEngineDeployment(namespace string, reqLogger logr.Logger) error {
+	foundDeployment := &appsv1.Deployment{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: namespace}, foundDeployment)
+	if err != nil && errors.IsNotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	reqLogger.Info("Deleting existing engine Deployment")
+	return r.client.Delete(context.TODO(), foundDeployment)
+}
+
 func (r *ReconcileSubmariner) reconcileEngineDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
-	return r.reconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger)
+	err := r.reconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger)
+	if err == nil {
+		err = r.deletePreExistingEngineDeployment(instance.Namespace, reqLogger)
+	}
+
+	return err
 }
 
 func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
@@ -158,11 +178,11 @@ func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet 
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new DaemonSet", "DaemonSet.Namespace", daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
 		if err = r.client.Create(context.TODO(), daemonSet); err != nil {
-			return err
+			return fmt.Errorf("Error creating %#v: %v", daemonSet, err)
 		}
 		return nil
 	} else if err != nil {
-		return err
+		return fmt.Errorf("Error getting DaemonSet %s/%s: %v", daemonSet.Namespace, daemonSet.Name, err)
 	}
 
 	reqLogger.Info("Skip reconcile: DaemonSet already exists",
@@ -188,7 +208,7 @@ func newEngineDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {
 		},
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "submariner-engine"}},
-			Template: newPodTemplateForCR(cr),
+			Template: newEnginePodTemplate(cr),
 			UpdateStrategy: appsv1.DaemonSetUpdateStrategy{
 				RollingUpdate: &appsv1.RollingUpdateDaemonSet{
 					MaxUnavailable: &maxUnavailable,
@@ -202,8 +222,8 @@ func newEngineDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {
 	return deployment
 }
 
-// newPodForCR returns a submariner pod with the same fields as the cr
-func newPodTemplateForCR(cr *submarinerv1alpha1.Submariner) corev1.PodTemplateSpec {
+// newEnginePodTemplate returns a submariner pod with the same fields as the cr
+func newEnginePodTemplate(cr *submarinerv1alpha1.Submariner) corev1.PodTemplateSpec {
 	labels := map[string]string{
 		"app": "submariner-engine",
 	}
