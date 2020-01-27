@@ -18,7 +18,6 @@ package cmd
 
 import (
 	"fmt"
-	"os/exec"
 
 	"github.com/spf13/cobra"
 
@@ -108,12 +107,6 @@ var deployBroker = &cobra.Command{
 			err = lighthouse.Ensure(status, config, serviceDiscoveryImageRepo, serviceDiscoveryImageVersion, true)
 			status.End(err == nil)
 			exitOnError("Failed to deploy Service Discovery controller", err)
-
-			status.Start("Federate MultiClusterService CRD")
-			_, err := exec.Command("kubefedctl", "enable", "--kubefed-namespace",
-				"kubefed-operator", "MulticlusterService").CombinedOutput()
-			status.End(err == nil)
-			exitOnError("Failed to federate MultiClusterService CRD", err)
 		}
 
 		if enableDataplane {

@@ -63,6 +63,8 @@ rules:
   - watch
   - list
   - update
+  - create
+  - delete
 - apiGroups:
   - ''
   resources:

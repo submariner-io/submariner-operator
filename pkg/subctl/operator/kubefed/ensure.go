@@ -18,7 +18,12 @@ package kubefed
 
 import (
 	"fmt"
+	"os/exec"
+	"time"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/deployments"
+
+	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -26,15 +31,34 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefedop"
 )
 
-func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string) error {
+const deploymentCheckInterval = 5 * time.Second
+const deploymentWaitTime = 5 * time.Minute
 
-	err := kubefedop.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3")
+func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string, isController bool) error {
+
+	err := kubefedop.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3", isController)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
 	}
 	err = kubefedcr.Ensure(config, "kubefed-operator")
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
+	}
+
+	clientSet, err := clientset.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("error deploying KubeFed: %s", err)
+	}
+
+	if isController {
+		err = deployments.WaitForReady(clientSet, "kubefed-operator", "kubefed-controller-manager", deploymentCheckInterval, deploymentWaitTime)
+		if err != nil {
+			return fmt.Errorf("Error deploying kubefed-controller-manager: %s", err)
+		}
+	}
+	out, err := exec.Command("kubefedctl", "enable", "namespace", "--kubefed-namespace", "kubefed-operator").CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("error enabling namespaces in federation: %s\n%s", err, out)
 	}
 
 	return nil
