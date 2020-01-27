@@ -78,6 +78,7 @@ function setup_broker() {
          sd=
          [[ $lighthouse = true ]] && sd=--service-discovery
          ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker ${sd} |& cat
+         [[ $lighthouse = true ]] && kubefedctl federate namespace default --kubefed-namespace kubefed-operator
     fi
 
     SUBMARINER_BROKER_URL=$(kubectl --context=cluster1 -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
@@ -91,6 +92,13 @@ function kind_import_images() {
     docker pull quay.io/submariner/submariner-route-agent:latest
     docker tag quay.io/submariner/submariner-route-agent:latest submariner-route-agent:local
     docker tag quay.io/submariner/submariner-operator:dev submariner-operator:local
+    if [[ $lighthouse = true ]]; then
+        docker pull quay.io/openshift/kubefed-operator:v0.1.0-rc3
+        docker pull quay.io/kubernetes-multicluster/kubefed:v0.1.0-rc6
+        echo "Loading kubefed images in cluster1"
+        kind --name cluster1 load docker-image quay.io/openshift/kubefed-operator:v0.1.0-rc3
+        kind --name cluster1 load docker-image quay.io/kubernetes-multicluster/kubefed:v0.1.0-rc6
+    fi
 
     for i in 2 3; do
         echo "Loading submariner images in to cluster${i}..."

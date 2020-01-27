@@ -35,6 +35,7 @@ var files = []string{
 	"role_binding.yaml",
 	"service_account.yaml",
 	"lighthouse/crds/multiclusterservices_crd.yaml",
+	"lighthouse/controller.yaml",
 	"kubefed/clusterrole.yaml",
 	"kubefed/clusterrole_binding.yaml",
 	"kubefed/clusterpropagatedversions.core.kubefed.k8s.io.crd.yaml",

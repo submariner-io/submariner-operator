@@ -18,6 +18,7 @@ package crds
 
 import (
 	"fmt"
+	"os/exec"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -47,8 +48,15 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	// Attempt to update or create the CRD definition
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
-	return updateOrCreateCRD(clientSet, crd)
-
+	_, err = updateOrCreateCRD(clientSet, crd)
+	if err != nil {
+		return false, err
+	}
+	out, err := exec.Command("kubefedctl", "enable", "MulticlusterService", "--kubefed-namespace", "kubefed-operator").CombinedOutput()
+	if err != nil {
+		return false, fmt.Errorf("error federating MulticlusterService CRD: %s\n%s", err, out)
+	}
+	return true, nil
 }
 
 func updateOrCreateCRD(clientSet clientset.Interface, crd *apiextensionsv1beta1.CustomResourceDefinition) (bool, error) {
