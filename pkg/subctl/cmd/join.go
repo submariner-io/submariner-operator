@@ -85,7 +85,7 @@ var joinCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		err := checkArgumentPassed(args)
-		exitOnError("Argument missing: %s ", err)
+		exitOnError("Argument missing", err)
 		subctlData, err := datafile.NewFromFile(args[0])
 		exitOnError("Error loading the broker information from the given file", err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
@@ -146,7 +146,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	}
 
 	config, err := getRestConfig()
-	exitOnError("Unable to determine the Kubernetes connection configuration: %s", err)
+	exitOnError("Unable to determine the Kubernetes connection configuration", err)
 
 	if !noLabel {
 		err = handleNodeLabels()

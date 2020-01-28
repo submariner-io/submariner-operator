@@ -41,7 +41,7 @@ func clusterInfo(cmd *cobra.Command, args []string) {
 	panicOnError(err)
 
 	clusterNetwork, err := network.Discover(dynClient, clientSet)
-	exitOnError("There was an error discovering network details for this cluster: %s", err)
+	exitOnError("There was an error discovering network details for this cluster", err)
 
 	clusterNetwork.Show()
 
