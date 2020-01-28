@@ -25,7 +25,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/embeddedyamls"
 )
 
 //go:generate go run generators/yamls2go.go
@@ -73,7 +73,7 @@ func updateOrCreateCRD(clientSet clientset.Interface, crd *apiextensionsv1beta1.
 func getMcsCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(embeddedyamls.Crds_multiclusterservices_crd_yaml, crd); err != nil {
+	if err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_crds_multiclusterservices_crd_yaml, crd); err != nil {
 		return nil, err
 	}
 

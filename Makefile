@@ -16,14 +16,11 @@ $(TARGETS): .dapper
 shell: .dapper
 	./.dapper -s -m bind
 
-bin/subctl: pkg/subctl/operator/install/embeddedyamls/yamls.go pkg/subctl/lighthouse/install/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go")
+bin/subctl: pkg/subctl/operator/install/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go")
 	$(MAKE) build-subctl
 
-pkg/subctl/operator/install/embeddedyamls/yamls.go: deploy/*.yaml deploy/crds/submariner.io*_crd.yaml
+pkg/subctl/operator/install/embeddedyamls/yamls.go: pkg/subctl/operator/install/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml")
 	$(MAKE) generate-embeddedyamls
-
-pkg/subctl/lighthouse/install/embeddedyamls/yamls.go: deploy/lighthouse/crds/*.yaml
-	$(MAKE) generate-lighthouse-embeddedyamls
 
 .DEFAULT_GOAL := ci
 
