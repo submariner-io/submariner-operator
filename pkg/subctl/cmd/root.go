@@ -84,14 +84,19 @@ func homeDir() string {
 
 func panicOnError(err error) {
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "")
+		PrintSubctlVersion(os.Stderr)
+		fmt.Fprintln(os.Stderr, "")
 		panic(err.Error())
 	}
 }
 
-// exitOnError will print your error nicely and exit
-func exitOnError(format string, err error) {
+// exitOnError will print your error nicely and exit in case of error
+func exitOnError(message string, err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, format, err.Error())
+		fmt.Fprintf(os.Stderr, "%s: %s", message, err.Error())
+		fmt.Fprintln(os.Stderr, "")
+		PrintSubctlVersion(os.Stderr)
 		fmt.Fprintln(os.Stderr, "")
 		os.Exit(1)
 	}

@@ -77,7 +77,7 @@ function setup_broker() {
         echo Installing broker on cluster1.
          sd=
          [[ $lighthouse = true ]] && sd=--service-discovery
-         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker ${sd}
+         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker ${sd} |& cat
     fi
 
     SUBMARINER_BROKER_URL=$(kubectl --context=cluster1 -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
@@ -242,7 +242,7 @@ for i in 2 3; do
     verify_subm_gateway_label
 
     # Deploy SubM Operator
-    if [ "${context}" = "cluster2" ]; then
+    if [ "${context}" = "cluster2" ] || [ "${context}" = "cluster3" ]; then
         ../bin/subctl join --operator-image submariner-operator:local \
                         --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
                         --clusterid ${context} \
@@ -252,18 +252,7 @@ for i in 2 3; do
                         --ikeport ${ce_ipsec_ikeport} \
                         --colorcodes ${subm_colorcodes} \
                         --disable-nat \
-                        broker-info.subm
-    elif [ "${context}" = "cluster3" ]; then
-        ../bin/subctl join --operator-image submariner-operator:local \
-                        --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
-                        --clusterid ${context} \
-                        --repository ${subm_engine_image_repo} \
-                        --version ${subm_engine_image_tag} \
-                        --nattport ${ce_ipsec_nattport} \
-                        --ikeport ${ce_ipsec_ikeport} \
-                        --colorcodes ${subm_colorcodes} \
-                        --disable-nat \
-                        broker-info.subm
+                        broker-info.subm |& cat
     else
         echo Unknown context ${context}
         exit 1
@@ -314,7 +303,7 @@ echo "Running subctl a second time to verify if running subctl a second time wor
                 --nattport ${ce_ipsec_nattport} \
                 --ikeport ${ce_ipsec_ikeport} \
                 --colorcodes ${subm_colorcodes} \
-                --disable-nat broker-info.subm
+                --disable-nat broker-info.subm |& cat
 
 deploy_netshoot_cluster2
 deploy_nginx_cluster3

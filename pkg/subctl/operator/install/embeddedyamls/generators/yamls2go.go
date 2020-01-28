@@ -34,6 +34,7 @@ var files = []string{
 	"role.yaml",
 	"role_binding.yaml",
 	"service_account.yaml",
+	"lighthouse/crds/multiclusterservices_crd.yaml",
 }
 
 // Reads all .yaml files in the crdDirectory
