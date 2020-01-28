@@ -197,7 +197,7 @@ function verify_subm_engine_pod() {
 }
 
 function verify_subm_engine_deployment() {
-  verify_daemonset $engine_deployment_name submariner
+  verify_daemonset $engine_deployment_name submariner-gateway
 }
 
 function verify_subm_routeagent_daemonset() {

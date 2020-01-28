@@ -204,7 +204,7 @@ func newEngineDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:    labels,
 			Namespace: cr.Namespace,
-			Name:      "submariner",
+			Name:      "submariner-gateway",
 		},
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "submariner-engine"}},
