@@ -65,6 +65,19 @@ func main() {
 		"package embeddedyamls\n\nconst (\n")
 	panicOnErr(err)
 
+	// Raw string literals can’t contain backticks (which enclose the literals)
+	// and there’s no way to escape them. Some YAML files we need to embed include
+	// backticks... To work around this, without having to deal with all the
+	// subtleties of wrapping arbitrary YAML in interpreted string literals, we
+	// split raw string literals when we encounter backticks in the source YAML,
+	// and add the backtick-enclosed string as an interpreted string:
+	//
+	// `resourceLock:
+	//    description: The type of resource object that is used for locking
+	//      during leader election. Supported options are ` + "`configmaps`" + ` (default)
+	//      and ` + "`endpoints`" + `.
+	//    type: string`
+
 	re, err := regexp.Compile("`([^`]*)`")
 	panicOnErr(err)
 
