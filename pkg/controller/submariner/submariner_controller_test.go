@@ -162,5 +162,5 @@ func getDaemonSet(name string, client client.Client) *appsv1.DaemonSet {
 }
 
 func getEngineDaemonSet(client client.Client) *appsv1.DaemonSet {
-	return getDaemonSet("submariner", client)
+	return getDaemonSet("submariner-gateway", client)
 }
