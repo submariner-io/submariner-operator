@@ -14,23 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package deploy
+package deployment
 
 import (
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/operatorpod"
 )
 
-const (
-	SubmarinerNamespace = "submariner"
-)
-
-func NewSubmarinerNamespace() *v1.Namespace {
-	ns := &v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: SubmarinerNamespace,
-		},
-	}
-
-	return ns
+//Ensure the operator is deployed, and running
+func Ensure(restConfig *rest.Config, namespace string, image string) (bool, error) {
+	return operatorpod.Ensure(restConfig, namespace, "kubefed-operator", image)
 }

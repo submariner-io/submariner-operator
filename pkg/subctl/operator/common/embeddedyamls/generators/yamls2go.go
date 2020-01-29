@@ -18,9 +18,10 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 )
 
@@ -30,11 +31,26 @@ const (
 
 var files = []string{
 	"crds/submariner.io_submariners_crd.yaml",
-	"operator.yaml",
 	"role.yaml",
 	"role_binding.yaml",
 	"service_account.yaml",
 	"lighthouse/crds/multiclusterservices_crd.yaml",
+	"kubefed/clusterrole.yaml",
+	"kubefed/clusterrole_binding.yaml",
+	"kubefed/clusterpropagatedversions.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/dnsendpoints.multiclusterdns.kubefed.k8s.io.crd.yaml",
+	"kubefed/domains.multiclusterdns.kubefed.k8s.io.crd.yaml",
+	"kubefed/federatedservicestatuses.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/federatedtypeconfigs.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/ingressdnsrecords.multiclusterdns.kubefed.k8s.io.crd.yaml",
+	"kubefed/kubefedclusters.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/kubefedconfigs.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/kubefeds.operator.kubefed.io.crd.yaml",
+	"kubefed/propagatedversions.core.kubefed.k8s.io.crd.yaml",
+	"kubefed/replicaschedulingpreferences.scheduling.kubefed.k8s.io.crd.yaml",
+	"kubefed/role.yaml",
+	"kubefed/role_binding.yaml",
+	"kubefed/servicednsrecords.multiclusterdns.kubefed.k8s.io.crd.yaml",
 }
 
 // Reads all .yaml files in the crdDirectory
@@ -49,14 +65,19 @@ func main() {
 		"package embeddedyamls\n\nconst (\n")
 	panicOnErr(err)
 
+	re, err := regexp.Compile("`([^`]*)`")
+	panicOnErr(err)
+
 	for _, f := range files {
 
 		_, err = out.WriteString("\t" + constName(f) + " = `")
 		panicOnErr(err)
 
 		fmt.Println(f)
-		f, _ := os.Open(path.Join(yamlsDirectory, f))
-		_, err = io.Copy(out, f)
+		contents, err := ioutil.ReadFile(path.Join(yamlsDirectory, f))
+		panicOnErr(err)
+
+		_, err = out.Write(re.ReplaceAll(contents, []byte("` + \"`$1`\" + `")))
 		panicOnErr(err)
 
 		_, err = out.WriteString("`\n")

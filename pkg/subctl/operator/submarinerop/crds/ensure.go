@@ -1,5 +1,5 @@
 /*
-© 2020 Red Hat, Inc. and others.
+© 2019 Red Hat, Inc. and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,16 +30,14 @@ import (
 
 //go:generate go run generators/yamls2go.go
 
-// Copied over from operator/install/crds/ensure.go
-
-//Ensure functions updates or installs the multiclusterservives CRDs in the cluster
+//Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
 		return false, err
 	}
 
-	crd, err := getMcsCRD()
+	crd, err := getSubmarinerCRD()
 	if err != nil {
 		return false, err
 	}
@@ -70,10 +68,10 @@ func updateOrCreateCRD(clientSet clientset.Interface, crd *apiextensionsv1beta1.
 	return false, err
 }
 
-func getMcsCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
+func getSubmarinerCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_crds_multiclusterservices_crd_yaml, crd); err != nil {
+	if err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_submariners_crd_yaml, crd); err != nil {
 		return nil, err
 	}
 

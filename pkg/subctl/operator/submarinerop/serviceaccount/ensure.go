@@ -26,7 +26,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 )
 
 //go:generate go run generators/yamls2go.go

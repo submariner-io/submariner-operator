@@ -17,9 +17,13 @@ limitations under the License.
 package lighthouse
 
 import (
+	"fmt"
+
+	"k8s.io/client-go/rest"
+
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install"
-	"k8s.io/client-go/rest"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefedop"
 )
 
 const (
@@ -30,7 +34,10 @@ const (
 
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool) error {
 	image := ""
-	// TBD: Ensure federation
+	err := kubefedop.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3")
+	if err != nil {
+		return fmt.Errorf("error deploying KubeFed: %s", err)
+	}
 	// Ensure lighthouse
 	if isController {
 		image = generateImageName(repo, DefaultControllerImageName, version)

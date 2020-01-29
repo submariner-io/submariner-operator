@@ -25,7 +25,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 )
 
 //go:generate go run generators/yamls2go.go
@@ -37,15 +37,20 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, err
 	}
 
-	crd, err := getSubmarinerCRD()
+	updatedCrds := false
+	crds, err := getKubeFedCRDs()
 	if err != nil {
 		return false, err
 	}
 
-	// Attempt to update or create the CRD definition
-	// TODO(majopela): In the future we may want to report when we have updated the existing
-	//                 CRD definition with new versions
-	return updateOrCreateCRD(clientSet, crd)
+	for _, crd := range crds {
+		updated, err := updateOrCreateCRD(clientSet, crd)
+		if err != nil {
+			return false, err
+		}
+		updatedCrds = updatedCrds || updated
+	}
+	return updatedCrds, nil
 
 }
 
@@ -68,12 +73,33 @@ func updateOrCreateCRD(clientSet clientset.Interface, crd *apiextensionsv1beta1.
 	return false, err
 }
 
-func getSubmarinerCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
-
-	if err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_submariners_crd_yaml, crd); err != nil {
-		return nil, err
+var (
+	kubeFedCRDs = [...]string{
+		embeddedyamls.Kubefed_clusterpropagatedversions_core_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_dnsendpoints_multiclusterdns_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_domains_multiclusterdns_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_federatedservicestatuses_core_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_federatedtypeconfigs_core_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_ingressdnsrecords_multiclusterdns_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_kubefedclusters_core_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_kubefedconfigs_core_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_kubefeds_operator_kubefed_io_crd_yaml,
+		embeddedyamls.Kubefed_propagatedversions_core_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_replicaschedulingpreferences_scheduling_kubefed_k8s_io_crd_yaml,
+		embeddedyamls.Kubefed_servicednsrecords_multiclusterdns_kubefed_k8s_io_crd_yaml,
 	}
+)
 
-	return crd, nil
+func getKubeFedCRDs() ([]*apiextensionsv1beta1.CustomResourceDefinition, error) {
+	var crds = []*apiextensionsv1beta1.CustomResourceDefinition{}
+	for _, crdName := range kubeFedCRDs {
+		crd := &apiextensionsv1beta1.CustomResourceDefinition{}
+
+		if err := embeddedyamls.GetObject(crdName, crd); err != nil {
+			return nil, err
+		}
+
+		crds = append(crds, crd)
+	}
+	return crds, nil
 }

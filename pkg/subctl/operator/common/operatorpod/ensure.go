@@ -14,10 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package deployment
+package operatorpod
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -27,33 +28,67 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/install/embeddedyamls"
 )
 
 const deploymentCheckInterval = 5 * time.Second
 const deploymentWaitTime = 2 * time.Minute
 
 //Ensure the operator is deployed, and running
-func Ensure(restConfig *rest.Config, namespace string, image string) (bool, error) {
+func Ensure(restConfig *rest.Config, namespace string, operatorName string, image string) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
 		return false, err
 	}
 
-	deployment := &appsv1.Deployment{}
-
-	err = embeddedyamls.GetObject(embeddedyamls.Operator_yaml, &deployment)
-
-	deployment.Spec.Template.Spec.Containers[0].Image = image
-
+	replicas := int32(1)
+	imagePullPolicy := v1.PullAlways
 	// If we are running with a local development image, don't try to pull from registry
-	if image == "submariner-operator:local" {
-		deployment.Spec.Template.Spec.Containers[0].ImagePullPolicy = v1.PullIfNotPresent
+	if strings.HasSuffix(image, ":local") {
+		imagePullPolicy = v1.PullIfNotPresent
 	}
 
-	if err != nil {
-		return false, fmt.Errorf("error parsing operator deployment yaml: %s", err)
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      operatorName,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"name": operatorName}},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"name": operatorName},
+				},
+				Spec: v1.PodSpec{
+					ServiceAccountName: operatorName,
+					Containers: []v1.Container{
+						{
+							Name:            operatorName,
+							Image:           image,
+							Command:         []string{operatorName},
+							ImagePullPolicy: imagePullPolicy,
+							Env: []v1.EnvVar{
+								{
+									Name: "WATCH_NAMESPACE", ValueFrom: &v1.EnvVarSource{
+										FieldRef: &v1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								}, {
+									Name: "POD_NAME", ValueFrom: &v1.EnvVarSource{
+										FieldRef: &v1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
+										},
+									},
+								}, {
+									Name: "OPERATOR_NAME", Value: operatorName,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	created, err := createOrUpdateDeployment(clientSet, namespace, deployment)
