@@ -64,7 +64,7 @@ var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "set the broker up",
 	Run: func(cmd *cobra.Command, args []string) {
-		config, err := getRestConfig()
+		config, err := getRestConfig(kubeConfig, kubeContext)
 		exitOnError("The provided kubeconfig is invalid", err)
 
 		status := cli.NewStatus()
@@ -110,7 +110,7 @@ var deployBroker = &cobra.Command{
 		}
 
 		if enableDataplane {
-			joinSubmarinerCluster(subctlData)
+			joinSubmarinerCluster(config, subctlData)
 		}
 	},
 }

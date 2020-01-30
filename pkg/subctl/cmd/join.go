@@ -25,6 +25,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/rest"
 
 	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -87,7 +88,9 @@ var joinCmd = &cobra.Command{
 		subctlData, err := datafile.NewFromFile(args[0])
 		exitOnError("Error loading the broker information from the given file", err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
-		joinSubmarinerCluster(subctlData)
+		config, err := getRestConfig(kubeConfig, kubeContext)
+		exitOnError("Error connecting to the target cluster", err)
+		joinSubmarinerCluster(config, subctlData)
 	},
 }
 
@@ -98,7 +101,7 @@ func checkArgumentPassed(args []string) error {
 	return nil
 }
 
-func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
+func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData) {
 
 	// Missing information
 	var qs = []*survey.Question{}
@@ -143,18 +146,15 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 		}
 	}
 
-	config, err := getRestConfig()
-	exitOnError("Unable to determine the Kubernetes connection configuration", err)
-
 	if !noLabel {
-		err = handleNodeLabels()
+		err := handleNodeLabels(config)
 		exitOnError("Unable to set the gateway node up", err)
 	}
 
 	status := cli.NewStatus()
 
 	status.Start("Deploying the Submariner operator")
-	err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage)
+	err := submarinerop.Ensure(status, config, OperatorNamespace, operatorImage)
 	status.End(err == nil)
 	exitOnError("Error deploying the operator", err)
 
@@ -166,7 +166,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	}
 
 	fmt.Printf("* Discovering network details\n")
-	networkDetails := getNetworkDetails()
+	networkDetails := getNetworkDetails(config)
 
 	serviceCIDR, err = getServiceCIDR(serviceCIDR, networkDetails)
 	exitOnError("Error determining the service CIDR", err)
@@ -180,9 +180,9 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	exitOnError("Error deploying Submariner", err)
 }
 
-func getNetworkDetails() *network.ClusterNetwork {
+func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 
-	dynClient, clientSet, err := getClients()
+	dynClient, clientSet, err := getClients(config)
 	exitOnError("Unable to set the Kubernetes cluster connection up", err)
 	networkDetails, err := network.Discover(dynClient, clientSet)
 	if err != nil {

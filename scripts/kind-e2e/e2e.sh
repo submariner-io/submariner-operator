@@ -77,7 +77,7 @@ function setup_broker() {
         echo Installing broker on cluster1.
          sd=
          [[ $lighthouse = true ]] && sd=--service-discovery
-         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker ${sd} |& cat
+         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 --kubecontext cluster1 deploy-broker ${sd} |& cat
     fi
 
     SUBMARINER_BROKER_URL=$(kubectl --context=cluster1 -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
@@ -245,6 +245,7 @@ for i in 2 3; do
     if [ "${context}" = "cluster2" ] || [ "${context}" = "cluster3" ]; then
         ../bin/subctl join --operator-image submariner-operator:local \
                         --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+                        --kubecontext ${context} \
                         --clusterid ${context} \
                         --repository ${subm_engine_image_repo} \
                         --version ${subm_engine_image_tag} \
@@ -297,6 +298,7 @@ echo "Running subctl a second time to verify if running subctl a second time wor
 
 ../bin/subctl join --operator-image submariner-operator:local \
                 --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+                --kubecontext ${context} \
                 --clusterid ${context} \
                 --repository ${subm_engine_image_repo} \
                 --version ${subm_engine_image_tag} \
