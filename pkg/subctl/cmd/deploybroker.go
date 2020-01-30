@@ -54,6 +54,7 @@ func init() {
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
 		"Import IPSEC PSK from existing submariner broker file, like broker-info.subm")
 
+	addKubeconfigFlag(deployBroker)
 	addJoinFlags(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }

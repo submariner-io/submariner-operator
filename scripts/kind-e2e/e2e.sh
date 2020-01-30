@@ -319,10 +319,9 @@ deploy_nginx_cluster3
 
 test_connection
 
-#TODO(mangelajo): test_with_e2e_tests disabled for now, the day we have an e2e testing image
-#                 we can use it, or we can run our own e2e tests (operator specifics) when
-#                we have them.
-#test_with_e2e_tests
+# run dataplane E2e tests between the two clusters
+../bin/subctl validate ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster2 \
+                       ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster3
 
 if [[ $1 = keep ]]; then
     echo "your 3 virtual clusters are deployed and working properly with your local"
