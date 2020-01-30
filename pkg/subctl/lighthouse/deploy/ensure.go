@@ -23,7 +23,7 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefedop"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefed"
 )
 
 const (
@@ -34,7 +34,8 @@ const (
 
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool) error {
 	image := ""
-	err := kubefedop.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3")
+	// Ensure KubeFed
+	err := kubefed.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3")
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
 	}
