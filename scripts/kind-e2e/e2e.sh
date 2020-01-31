@@ -320,8 +320,9 @@ deploy_nginx_cluster3
 test_connection
 
 # run dataplane E2e tests between the two clusters
-../bin/subctl validate ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster2 \
-                       ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster3
+../bin/subctl verify-connectivity ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster2 \
+                                  ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster3 \
+                                  --verbose
 
 if [[ $1 = keep ]]; then
     echo "your 3 virtual clusters are deployed and working properly with your local"
