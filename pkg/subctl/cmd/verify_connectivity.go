@@ -38,8 +38,8 @@ var (
 func init() {
 	verifyConnectivityCmd.Flags().BoolVar(&verboseConnectivityVerification, "verbose", false, "Produce verbose logs during connectivity verification")
 	verifyConnectivityCmd.Flags().UintVar(&operationTimeout, "operation-timeout", 240, "Operation timeout for K8s API calls")
-	verifyConnectivityCmd.Flags().UintVar(&connectionTimeout, "connection-timeout", 60, "Connection timeout for every check")
-	verifyConnectivityCmd.Flags().UintVar(&connectionAttempts, "connection-attempts", 2, "Connection attempts for every check")
+	verifyConnectivityCmd.Flags().UintVar(&connectionTimeout, "connection-timeout", 60, "The timeout in seconds per connection attempt ")
+	verifyConnectivityCmd.Flags().UintVar(&connectionAttempts, "connection-attempts", 2, "The maximum number of connection attempts")
 	verifyConnectivityCmd.Flags().StringVar(&reportDirectory, "report-dir", ".", "XML report directory")
 
 	rootCmd.AddCommand(verifyConnectivityCmd)
@@ -75,8 +75,8 @@ func configureTestingFramework(args []string) {
 }
 
 func checkValidateArguments(args []string) error {
-	if len(args) < 2 {
-		return fmt.Errorf("validate needs exactly two kubeconfigs to validate connectivity between two clusters")
+	if len(args) != 2 {
+		return fmt.Errorf("Two kubeconfigs must be specified.")
 	}
 	if connectionAttempts < 1 {
 		return fmt.Errorf("--connection-attempts must be >=1")
