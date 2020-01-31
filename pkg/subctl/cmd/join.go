@@ -20,6 +20,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"os/exec"
 	"regexp"
 	"strings"
 
@@ -36,18 +37,19 @@ import (
 )
 
 var (
-	clusterID       string
-	serviceCIDR     string
-	clusterCIDR     string
-	repository      string
-	imageVersion    string
-	nattPort        int
-	ikePort         int
-	colorCodes      string
-	disableNat      bool
-	ipsecDebug      bool
-	submarinerDebug bool
-	noLabel         bool
+	clusterID                 string
+	serviceCIDR               string
+	clusterCIDR               string
+	repository                string
+	imageVersion              string
+	nattPort                  int
+	ikePort                   int
+	colorCodes                string
+	disableNat                bool
+	ipsecDebug                bool
+	submarinerDebug           bool
+	noLabel                   bool
+	kubefedHostClusterContext string
 )
 
 func init() {
@@ -71,6 +73,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "Enable IPsec debugging (verbose logging)")
 	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
 	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
+	cmd.Flags().StringVar(&kubefedHostClusterContext, "kubefed-host-cluster-context", "", "overrides the use of host-cluster-context name in resource names created in the target cluster.")
 }
 
 const (
@@ -163,6 +166,12 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 		err = lighthouse.Ensure(status, config, "", "", false)
 		status.End(err == nil)
 		exitOnError("Error deploying multi cluster service discovery", err)
+
+		status.Start("Joining to Kubefed control plane")
+		_, err := exec.Command("kubefedctl", "join", "--kubefed-namespace", "kubefed-operator",
+			clusterID, "--host-cluster-context", kubefedHostClusterContext).CombinedOutput()
+		status.End(err == nil)
+		exitOnError("Error joining to Kubefed control plane", err)
 	}
 
 	fmt.Printf("* Discovering network details\n")
