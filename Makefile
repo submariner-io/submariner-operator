@@ -16,8 +16,9 @@ $(TARGETS): .dapper vendor/modules.txt
 shell: .dapper
 	./.dapper -s -m bind
 
-bin/subctl: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go")
-	$(MAKE) build-subctl
+build-subctl: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go")
+
+bin/subctl: build-subctl
 
 pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml")
 	$(MAKE) generate-embeddedyamls
