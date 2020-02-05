@@ -32,7 +32,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefedop/rolebinding"
 )
 
-func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string) error {
+func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string, isController bool) error {
 
 	if created, err := crds.Ensure(config); err != nil {
 		return err
@@ -76,10 +76,12 @@ func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, o
 		status.QueueSuccessMessage("Created operator role binding")
 	}
 
-	if created, err := deployment.Ensure(config, operatorNamespace, operatorImage); err != nil {
-		return err
-	} else if created {
-		status.QueueSuccessMessage("Deployed the operator successfully")
+	if isController {
+		if created, err := deployment.Ensure(config, operatorNamespace, operatorImage); err != nil {
+			return err
+		} else if created {
+			status.QueueSuccessMessage("Deployed the operator successfully")
+		}
 	}
 
 	return nil

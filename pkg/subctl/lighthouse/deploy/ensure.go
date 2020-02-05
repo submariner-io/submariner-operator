@@ -19,11 +19,11 @@ package lighthouse
 import (
 	"fmt"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefed"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefed"
 )
 
 const (
@@ -33,14 +33,15 @@ const (
 )
 
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool) error {
-	image := ""
 	// Ensure KubeFed
-	err := kubefed.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3")
+	err := kubefed.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3", isController)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
 	}
+	image := ""
 	// Ensure lighthouse
 	if isController {
+
 		image = generateImageName(repo, DefaultControllerImageName, version)
 	}
 	return install.Ensure(status, config, image, isController)

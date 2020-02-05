@@ -17,21 +17,19 @@ limitations under the License.
 package operatorpod
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/deployments"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 const deploymentCheckInterval = 5 * time.Second
-const deploymentWaitTime = 2 * time.Minute
+const deploymentWaitTime = 5 * time.Minute
 
 //Ensure the operator is deployed, and running
 func Ensure(restConfig *rest.Config, namespace string, operatorName string, image string) (bool, error) {
@@ -91,43 +89,12 @@ func Ensure(restConfig *rest.Config, namespace string, operatorName string, imag
 		},
 	}
 
-	created, err := createOrUpdateDeployment(clientSet, namespace, deployment)
+	created, err := deployments.CreateOrUpdateDeployment(clientSet, namespace, deployment)
 	if err != nil {
 		return false, err
 	}
 
-	err = waitForReadyDeployment(clientSet, namespace, deployment)
+	err = deployments.WaitForReady(clientSet, namespace, deployment.Name, deploymentCheckInterval, deploymentWaitTime)
 
 	return created, err
-}
-
-func createOrUpdateDeployment(clientSet *clientset.Clientset, namespace string, deployment *appsv1.Deployment) (bool, error) {
-
-	_, err := clientSet.AppsV1().Deployments(namespace).Update(deployment)
-	if err == nil {
-		return false, nil
-	} else if !errors.IsNotFound(err) {
-		return false, err
-	}
-	_, err = clientSet.AppsV1().Deployments(namespace).Create(deployment)
-	return true, err
-}
-
-func waitForReadyDeployment(clientSet *clientset.Clientset, namespace string, deployment *appsv1.Deployment) error {
-
-	deployments := clientSet.AppsV1().Deployments(namespace)
-
-	return wait.PollImmediate(deploymentCheckInterval, deploymentWaitTime, func() (bool, error) {
-		dp, err := deployments.Get(deployment.Name, metav1.GetOptions{})
-		if err != nil {
-			return false, fmt.Errorf("error waiting for operator deployment to come up: %s", err)
-		}
-
-		for _, cond := range dp.Status.Conditions {
-			if cond.Type == appsv1.DeploymentAvailable && cond.Status == v1.ConditionTrue {
-				return true, nil
-			}
-		}
-		return false, nil
-	})
 }

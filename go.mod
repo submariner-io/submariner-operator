@@ -6,7 +6,7 @@ require (
 	github.com/coreos/prometheus-operator v0.31.1 // indirect
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.19.5
+	github.com/go-openapi/spec v0.19.6
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/google/btree v1.0.0 // indirect
@@ -17,7 +17,7 @@ require (
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.11.0
-	github.com/onsi/gomega v1.8.1
+	github.com/onsi/gomega v1.9.0
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.5
