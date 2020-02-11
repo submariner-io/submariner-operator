@@ -19,11 +19,12 @@ package lighthouse
 import (
 	"fmt"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefed"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	lighthousedns "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/dns"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefed"
 )
 
 const (
@@ -33,26 +34,46 @@ const (
 )
 
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool) error {
+	repo, version = canonicaliseRepoVersion(repo, version)
+
+	// Ensure DNS
+	err := lighthousedns.Ensure(status, config, repo, version)
+	if err != nil {
+		return fmt.Errorf("error setting DNS up: %s", err)
+	}
+
 	// Ensure KubeFed
-	err := kubefed.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3", isController)
+	err = kubefed.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3", isController)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
 	}
 	image := ""
 	// Ensure lighthouse
 	if isController {
-
 		image = generateImageName(repo, DefaultControllerImageName, version)
 	}
 	return install.Ensure(status, config, image, isController)
 }
 
-func generateImageName(repo string, name string, version string) string {
-	if version == "local" || repo == "" {
-		return name + ":local"
+// canonicaliseRepoVersion returns the canonical repo and version for the given
+// repo and version. If the provided version is local, this enforces a local
+// image (no repo). Otherwise, empty values are replaced with defaults.
+func canonicaliseRepoVersion(repo string, version string) (string, string) {
+	if version == "local" {
+		return "", version
+	}
+	if repo == "" {
+		repo = DefaultControllerImageRepo
 	}
 	if repo[len(repo)-1:] != "/" {
 		repo = repo + "/"
 	}
+	if version == "" {
+		version = DefaultControllerImageVersion
+	}
+	return repo, version
+}
+
+func generateImageName(repo string, name string, version string) string {
 	return repo + name + ":" + version
 }

@@ -32,7 +32,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
-	lighthousedns "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/dns"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 )
@@ -163,11 +162,6 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	exitOnError("Error deploying the operator", err)
 
 	if subctlData.ServiceDiscovery {
-		status.Start("Setting up DNS")
-		err = lighthousedns.Ensure(status, config)
-		status.End(err == nil)
-		exitOnError("Error setting up DNS", err)
-
 		status.Start("Deploying multi cluster service discovery")
 		err = lighthouse.Ensure(status, config, "", "", false)
 		status.End(err == nil)

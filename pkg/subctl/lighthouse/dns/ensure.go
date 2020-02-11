@@ -33,13 +33,13 @@ import (
 )
 
 const (
-	operatorImage           = "quay.io/submariner/lighthouse-cluster-dns-operator:v0.0.1"
-	coreDNSImage            = "quay.io/submariner/lighthouse-coredns:v0.0.1"
+	operatorImage           = "lighthouse-cluster-dns-operator"
+	coreDNSImage            = "lighthouse-coredns"
 	deploymentCheckInterval = 5 * time.Second
 	deploymentWaitTime      = 2 * time.Minute
 )
 
-func Ensure(status *cli.Status, config *rest.Config) error {
+func Ensure(status *cli.Status, config *rest.Config, repo string, version string) error {
 	clientSet, err := clientset.NewForConfig(config)
 	if err != nil {
 		return err
@@ -70,7 +70,7 @@ func Ensure(status *cli.Status, config *rest.Config) error {
 		if cvoReplicas > 0 {
 			status.QueueSuccessMessage("Disabled the cluster version operator")
 		}
-		err = setupOpenShift(status, clientSet)
+		err = setupOpenShift(status, clientSet, repo, version)
 		if err != nil {
 			return err
 		}
@@ -83,7 +83,7 @@ func Ensure(status *cli.Status, config *rest.Config) error {
 		}
 		for i, container := range deployment.Spec.Template.Spec.Containers {
 			if container.Name == "coredns" {
-				deployment.Spec.Template.Spec.Containers[i].Image = coreDNSImage
+				deployment.Spec.Template.Spec.Containers[i].Image = repo + coreDNSImage + ":" + version
 				status.QueueSuccessMessage("Updated CoreDNS deployment")
 			}
 		}
@@ -213,7 +213,7 @@ func setupClusterRole(status *cli.Status, clientSet *clientset.Clientset, name s
 	return nil
 }
 
-func setupOpenShift(status *cli.Status, clientSet *clientset.Clientset) error {
+func setupOpenShift(status *cli.Status, clientSet *clientset.Clientset, repo string, version string) error {
 	// Fix up cluster role
 	err := setupClusterRole(status, clientSet, "openshift-dns-operator", "multicluster", false)
 	if err != nil {
@@ -236,10 +236,10 @@ func setupOpenShift(status *cli.Status, clientSet *clientset.Clientset) error {
 	}
 	for i, container := range deployment.Spec.Template.Spec.Containers {
 		if container.Name == "dns-operator" {
-			deployment.Spec.Template.Spec.Containers[i].Image = operatorImage
+			deployment.Spec.Template.Spec.Containers[i].Image = repo + operatorImage + ":" + version
 			for j, env := range container.Env {
 				if env.Name == "IMAGE" {
-					deployment.Spec.Template.Spec.Containers[i].Env[j].Value = coreDNSImage
+					deployment.Spec.Template.Spec.Containers[i].Env[j].Value = repo + coreDNSImage + ":" + version
 				}
 			}
 			status.QueueSuccessMessage("Updated DNS operator deployment")
