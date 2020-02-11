@@ -42,7 +42,6 @@ func Ensure(status *cli.Status, config *rest.Config, image string, isController 
 		} else if created {
 			status.QueueSuccessMessage("Created lighthouse controller")
 		}
-		status.QueueSuccessMessage("TODO: Create lighthouse controller")
 	}
 
 	return nil
