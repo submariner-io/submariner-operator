@@ -54,8 +54,11 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", kubeConfigFile(), "absolute path(s) to the kubeconfig file(s)")
-	rootCmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
+}
+
+func addKubeconfigFlag(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", kubeConfigFile(), "absolute path(s) to the kubeconfig file(s)")
+	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
 }
 
 const (

@@ -32,6 +32,7 @@ and the relevant network details from your cluster.`,
 }
 
 func init() {
+	addKubeconfigFlag(infoCmd)
 	rootCmd.AddCommand(infoCmd)
 }
 

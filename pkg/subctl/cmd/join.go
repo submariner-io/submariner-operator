@@ -55,6 +55,7 @@ var (
 
 func init() {
 	addJoinFlags(joinCmd)
+	addKubeconfigFlag(joinCmd)
 	rootCmd.AddCommand(joinCmd)
 
 }
