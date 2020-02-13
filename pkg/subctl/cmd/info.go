@@ -38,7 +38,9 @@ func init() {
 
 func clusterInfo(cmd *cobra.Command, args []string) {
 
-	dynClient, clientSet, err := getClients()
+	config, err := getRestConfig(kubeConfig, kubeContext)
+	panicOnError(err)
+	dynClient, clientSet, err := getClients(config)
 	panicOnError(err)
 
 	clusterNetwork, err := network.Discover(dynClient, clientSet)

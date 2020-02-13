@@ -77,7 +77,7 @@ function setup_broker() {
         echo Installing broker on cluster1.
          sd=
          [[ $lighthouse = true ]] && sd=--service-discovery
-         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 deploy-broker ${sd} |& cat
+         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 --kubecontext cluster1 deploy-broker ${sd} |& cat
          [[ $lighthouse = true ]] && kubefedctl federate namespace default --kubefed-namespace kubefed-operator
     fi
 
@@ -253,13 +253,14 @@ for i in 2 3; do
     if [ "${context}" = "cluster2" ] || [ "${context}" = "cluster3" ]; then
         ../bin/subctl join --operator-image submariner-operator:local \
                         --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+                        --kubecontext ${context} \
                         --clusterid ${context} \
                         --repository ${subm_engine_image_repo} \
                         --version ${subm_engine_image_tag} \
                         --nattport ${ce_ipsec_nattport} \
                         --ikeport ${ce_ipsec_ikeport} \
                         --colorcodes ${subm_colorcodes} \
-                        --kubefed-host-cluster-context "cluster1" \
+                        --broker-cluster-context "cluster1" \
                         --disable-nat \
                         broker-info.subm |& cat
     else
@@ -306,6 +307,7 @@ echo "Running subctl a second time to verify if running subctl a second time wor
 
 ../bin/subctl join --operator-image submariner-operator:local \
                 --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+                --kubecontext ${context} \
                 --clusterid ${context} \
                 --repository ${subm_engine_image_repo} \
                 --version ${subm_engine_image_tag} \
