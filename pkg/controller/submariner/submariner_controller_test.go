@@ -2,6 +2,8 @@ package submariner
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"strconv"
 
 	. "github.com/onsi/ginkgo"
@@ -18,7 +20,43 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const submarinerNamespace = "submariner-operator"
+const (
+	submarinerName          = "submariner"
+	submarinerNamespace     = "submariner-operator"
+	engineDaemonSetName     = "submariner-gateway"
+	routeAgentDaemonSetName = "submariner-routeagent"
+)
+
+type failingClient struct {
+	client.Client
+	onCreate reflect.Type
+	onGet    reflect.Type
+	onUpdate reflect.Type
+}
+
+func (c *failingClient) Create(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error {
+	if c.onCreate == reflect.TypeOf(obj) {
+		return fmt.Errorf("Mock Create error")
+	}
+
+	return c.Client.Create(ctx, obj, opts...)
+}
+
+func (c *failingClient) Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+	if c.onGet == reflect.TypeOf(obj) {
+		return fmt.Errorf("Mock Get error")
+	}
+
+	return c.Client.Get(ctx, key, obj)
+}
+
+func (c *failingClient) Update(ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) error {
+	if c.onUpdate == reflect.TypeOf(obj) {
+		return fmt.Errorf("Mock Get error")
+	}
+
+	return c.Client.Update(ctx, obj, opts...)
+}
 
 var _ = BeforeSuite(func() {
 	err := submariner_v1.AddToScheme(scheme.Scheme)
@@ -32,26 +70,32 @@ var _ = Describe("Submariner controller tests", func() {
 func testReconciliation() {
 	var (
 		initClientObjs  []runtime.Object
-		client          client.Client
+		fakeClient      client.Client
 		submariner      *submariner_v1.Submariner
 		reconcileErr    error
 		reconcileResult reconcile.Result
 	)
 
+	newClient := func() client.Client {
+		return fake.NewFakeClientWithScheme(scheme.Scheme, initClientObjs...)
+	}
+
 	BeforeEach(func() {
-		initClientObjs = nil
+		fakeClient = nil
 		submariner = newSubmariner()
+		initClientObjs = []runtime.Object{submariner}
 	})
 
 	JustBeforeEach(func() {
-		initClientObjs = append(initClientObjs, submariner)
-		client = fake.NewFakeClientWithScheme(scheme.Scheme, initClientObjs...)
+		if fakeClient == nil {
+			fakeClient = newClient()
+		}
 
-		controller := &ReconcileSubmariner{client, scheme.Scheme}
+		controller := &ReconcileSubmariner{fakeClient, scheme.Scheme}
 
 		reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
-			Namespace: submariner.Namespace,
-			Name:      submariner.Name,
+			Namespace: submarinerNamespace,
+			Name:      submarinerName,
 		}})
 	})
 
@@ -59,7 +103,7 @@ func testReconciliation() {
 		It("should create it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			verifyEngineDaemonSet(submariner, client)
+			verifyEngineDaemonSet(submariner, fakeClient)
 		})
 	})
 
@@ -74,7 +118,7 @@ func testReconciliation() {
 		It("should return success", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(getEngineDaemonSet(client)).To(Equal(existingDaemonSet))
+			Expect(getDaemonSet(engineDaemonSetName, fakeClient)).To(Equal(existingDaemonSet))
 		})
 	})
 
@@ -91,16 +135,132 @@ func testReconciliation() {
 		It("should delete it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			verifyEngineDaemonSet(submariner, client)
+			verifyEngineDaemonSet(submariner, fakeClient)
 
-			err := client.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: submarinerNamespace}, &appsv1.Deployment{})
+			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: submarinerNamespace}, &appsv1.Deployment{})
 			Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
+		})
+	})
+
+	When("the submariner route-agent DaemonSet doesn't exist", func() {
+		It("should create it", func() {
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+			verifyRouteAgentDaemonSet(submariner, fakeClient)
+		})
+	})
+
+	When("the submariner route-agent DaemonSet already exists", func() {
+		var existingDaemonSet *appsv1.DaemonSet
+
+		BeforeEach(func() {
+			existingDaemonSet = newRouteAgentDaemonSet(submariner)
+			initClientObjs = append(initClientObjs, existingDaemonSet)
+		})
+
+		It("should return success", func() {
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+			Expect(getDaemonSet(routeAgentDaemonSetName, fakeClient)).To(Equal(existingDaemonSet))
+		})
+	})
+
+	When("the Submariner resource doesn't exist", func() {
+		BeforeEach(func() {
+			initClientObjs = nil
+		})
+
+		It("should return success without creating any resources", func() {
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+			expectNoDaemonSet(engineDaemonSetName, fakeClient)
+			expectNoDaemonSet(routeAgentDaemonSetName, fakeClient)
+		})
+	})
+
+	When("the Submariner resource is missing values for certain fields", func() {
+		BeforeEach(func() {
+			submariner.Spec.Repository = ""
+			submariner.Spec.Version = ""
+		})
+
+		It("should update the resource with defaults", func() {
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+
+			updated := &submariner_v1.Submariner{}
+			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
+			Expect(err).To(Succeed())
+
+			Expect(updated.Spec.Repository).To(Equal("quay.io/submariner"))
+			Expect(updated.Spec.Version).To(Equal("0.0.3"))
+		})
+	})
+
+	When("DaemonSet creation fails", func() {
+		BeforeEach(func() {
+			fakeClient = &failingClient{Client: newClient(), onCreate: reflect.TypeOf(&appsv1.DaemonSet{})}
+		})
+
+		It("should return an error", func() {
+			Expect(reconcileErr).To(HaveOccurred())
+		})
+	})
+
+	When("DaemonSet retrieval fails", func() {
+		BeforeEach(func() {
+			fakeClient = &failingClient{Client: newClient(), onGet: reflect.TypeOf(&appsv1.DaemonSet{})}
+		})
+
+		It("should return an error", func() {
+			Expect(reconcileErr).To(HaveOccurred())
+		})
+	})
+
+	When("Submariner resource retrieval fails", func() {
+		BeforeEach(func() {
+			fakeClient = &failingClient{Client: newClient(), onGet: reflect.TypeOf(&submariner_v1.Submariner{})}
+		})
+
+		It("should return an error", func() {
+			Expect(reconcileErr).To(HaveOccurred())
+		})
+	})
+
+	When("Submariner resource update fails", func() {
+		BeforeEach(func() {
+			fakeClient = &failingClient{Client: newClient(), onUpdate: reflect.TypeOf(&submariner_v1.Submariner{})}
+		})
+
+		It("should return an error", func() {
+			Expect(reconcileErr).To(HaveOccurred())
 		})
 	})
 }
 
+func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client client.Client) {
+	daemonSet := expectDaemonSet(routeAgentDaemonSetName, client)
+
+	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-routeagent"))
+	Expect(daemonSet.Spec.Selector).To(Equal(&metav1.LabelSelector{MatchLabels: map[string]string{"app": "submariner-routeagent"}}))
+	Expect(daemonSet.Spec.Template.ObjectMeta.Labels["app"]).To(Equal("submariner-routeagent"))
+	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
+	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(Equal(submariner.Spec.Repository + "/submariner-route-agent:" + submariner.Spec.Version))
+
+	envMap := map[string]string{}
+	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
+		envMap[envVar.Name] = envVar.Value
+	}
+
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Spec.ClusterCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Spec.ServiceCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
+}
+
 func verifyEngineDaemonSet(submariner *submariner_v1.Submariner, client client.Client) {
-	daemonSet := getEngineDaemonSet(client)
+	daemonSet := expectDaemonSet(engineDaemonSetName, client)
 
 	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-engine"))
 	Expect(daemonSet.Spec.Template.ObjectMeta.Labels["app"]).To(Equal("submariner-engine"))
@@ -126,12 +286,13 @@ func verifyEngineDaemonSet(submariner *submariner_v1.Submariner, client client.C
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Spec.ServiceCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Spec.ClusterCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
 
 func newSubmariner() *submariner_v1.Submariner {
 	return &submariner_v1.Submariner{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "submariner",
+			Name:      submarinerName,
 			Namespace: submarinerNamespace,
 		},
 		Spec: submariner_v1.SubmarinerSpec{
@@ -150,17 +311,25 @@ func newSubmariner() *submariner_v1.Submariner {
 			ServiceCIDR:              "100.94.0.0/16",
 			ClusterCIDR:              "10.244.0.0/16",
 			Namespace:                "submariner_ns",
+			Debug:                    true,
 		},
 	}
 }
 
-func getDaemonSet(name string, client client.Client) *appsv1.DaemonSet {
+func getDaemonSet(name string, client client.Client) (*appsv1.DaemonSet, error) {
 	foundDaemonSet := &appsv1.DaemonSet{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: submarinerNamespace}, foundDaemonSet)
+	return foundDaemonSet, err
+}
+
+func expectDaemonSet(name string, client client.Client) *appsv1.DaemonSet {
+	foundDaemonSet, err := getDaemonSet(name, client)
 	Expect(err).To(Succeed())
 	return foundDaemonSet
 }
 
-func getEngineDaemonSet(client client.Client) *appsv1.DaemonSet {
-	return getDaemonSet("submariner-gateway", client)
+func expectNoDaemonSet(name string, client client.Client) {
+	_, err := getDaemonSet(name, client)
+	Expect(err).To(HaveOccurred())
+	Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
 }

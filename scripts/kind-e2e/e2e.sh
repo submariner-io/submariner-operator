@@ -260,7 +260,7 @@ for i in 2 3; do
                         --nattport ${ce_ipsec_nattport} \
                         --ikeport ${ce_ipsec_ikeport} \
                         --colorcodes ${subm_colorcodes} \
-                        --kubefed-host-cluster-context "cluster1" \
+                        --broker-cluster-context "cluster1" \
                         --disable-nat \
                         broker-info.subm |& cat
     else
