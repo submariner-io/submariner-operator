@@ -41,12 +41,7 @@ func init() {
 		"Install the Submariner dataplane on the broker")
 	deployBroker.PersistentFlags().BoolVar(&disableDataplane, "no-dataplane", true,
 		"Don't install the Submariner dataplane on the broker (default)")
-	deployBroker.PersistentFlags().BoolVar(&serviceDiscovery, "service-discovery", false,
-		"Enable Multi Cluster Service Discovery")
-	deployBroker.PersistentFlags().StringVar(&serviceDiscoveryImageRepo, "service-discovery-repo", lighthouse.DefaultControllerImageRepo,
-		"Service Discovery Image repository")
-	deployBroker.PersistentFlags().StringVar(&serviceDiscoveryImageVersion, "service-discovery-version", lighthouse.DefaultControllerImageVersion,
-		"Service Discovery Image version")
+	lighthouse.AddFlags(deployBroker, "service-discovery")
 	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
 	// An error here indicates a programming error (the argument isn’t declared), panic
 	panicOnError(err)

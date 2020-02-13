@@ -19,6 +19,7 @@ package lighthouse
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -28,10 +29,25 @@ import (
 )
 
 const (
-	DefaultControllerImageName    = "lighthouse-controller"
-	DefaultControllerImageRepo    = "quay.io/submariner"
-	DefaultControllerImageVersion = "0.1.0"
+	defaultControllerImageName    = "lighthouse-controller"
+	defaultControllerImageRepo    = "quay.io/submariner"
+	defaultControllerImageVersion = "0.1.0"
 )
+
+var (
+	serviceDiscovery bool
+	imageRepo        string
+	imageVersion     string
+)
+
+func AddFlags(cmd *cobra.Command, prefix string) {
+	cmd.PersistentFlags().BoolVar(&serviceDiscovery, prefix, false,
+		"Enable Multi Cluster Service Discovery")
+	cmd.PersistentFlags().StringVar(&imageRepo, prefix+"-repo", defaultControllerImageRepo,
+		"Service Discovery Image repository")
+	cmd.PersistentFlags().StringVar(&imageVersion, prefix+"-version", defaultControllerImageVersion,
+		"Service Discovery Image version")
+}
 
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool) error {
 	repo, version = canonicaliseRepoVersion(repo, version)
@@ -50,7 +66,7 @@ func Ensure(status *cli.Status, config *rest.Config, repo string, version string
 	image := ""
 	// Ensure lighthouse
 	if isController {
-		image = generateImageName(repo, DefaultControllerImageName, version)
+		image = generateImageName(repo, defaultControllerImageName, version)
 	}
 	return install.Ensure(status, config, image, isController)
 }
@@ -63,13 +79,13 @@ func canonicaliseRepoVersion(repo string, version string) (string, string) {
 		return "", version
 	}
 	if repo == "" {
-		repo = DefaultControllerImageRepo
+		repo = defaultControllerImageRepo
 	}
 	if repo[len(repo)-1:] != "/" {
 		repo = repo + "/"
 	}
 	if version == "" {
-		version = DefaultControllerImageVersion
+		version = defaultControllerImageVersion
 	}
 	return repo, version
 }
