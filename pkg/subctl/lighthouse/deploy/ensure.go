@@ -17,11 +17,15 @@ limitations under the License.
 package lighthouse
 
 import (
+	"encoding/json"
 	"fmt"
+	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/rest"
 
+	"github.com/kubernetes-sigs/kubefed/pkg/version"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	lighthousedns "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/dns"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install"
@@ -32,6 +36,8 @@ const (
 	defaultControllerImageName    = "lighthouse-controller"
 	defaultControllerImageRepo    = "quay.io/submariner"
 	defaultControllerImageVersion = "0.1.0"
+	kubefedVersion                = "v0.1.0-rc3"
+	kubefedctlVersionPrefix       = "kubefedctl version: version.Info"
 )
 
 var (
@@ -49,6 +55,38 @@ func AddFlags(cmd *cobra.Command, prefix string) {
 		"Service Discovery Image version")
 }
 
+func Validate() error {
+	if serviceDiscovery {
+		// Check we can run kubefedctl, and it’s the right version
+		out, err := exec.Command("kubefedctl", "version").CombinedOutput()
+		if err != nil {
+			return err
+		}
+		output := string(out)
+		if !strings.HasPrefix(output, kubefedctlVersionPrefix) {
+			return fmt.Errorf("unable to determine kubefedctl version, please use %s", kubefedVersion)
+		}
+		// We need to tweak the output to make it valid JSON again...
+		output = output[len(kubefedctlVersionPrefix):]
+		output = strings.Replace(output, "Version", "\"gitVersion\"", 1)
+		output = strings.Replace(output, "GitCommit", "\"gitCommit\"", 1)
+		output = strings.Replace(output, "GitTreeState", "\"gitTreeState\"", 1)
+		output = strings.Replace(output, "BuildDate", "\"buildDate\"", 1)
+		output = strings.Replace(output, "GoVersion", "\"goVersion\"", 1)
+		output = strings.Replace(output, "Compiler", "\"compiler\"", 1)
+		output = strings.Replace(output, "Platform", "\"platform\"", 1)
+		v := version.Info{}
+		err = json.Unmarshal([]byte(output), &v)
+		if err != nil {
+			return err
+		}
+		if v.Version != kubefedVersion {
+			return fmt.Errorf("invalid kubefedctl version %s, please use %s", v.Version, kubefedVersion)
+		}
+	}
+	return nil
+}
+
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool) error {
 	repo, version = canonicaliseRepoVersion(repo, version)
 
@@ -59,7 +97,7 @@ func Ensure(status *cli.Status, config *rest.Config, repo string, version string
 	}
 
 	// Ensure KubeFed
-	err = kubefed.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3", isController)
+	err = kubefed.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:"+kubefedVersion, isController)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
 	}
