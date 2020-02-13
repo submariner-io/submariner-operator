@@ -63,6 +63,9 @@ var deployBroker = &cobra.Command{
 		config, err := getRestConfig(kubeConfig, kubeContext)
 		exitOnError("The provided kubeconfig is invalid", err)
 
+		err = lighthouse.Validate()
+		exitOnError("Invalid configuration", err)
+
 		status := cli.NewStatus()
 
 		status.Start("Deploying broker")
