@@ -41,8 +41,9 @@ import (
 )
 
 var (
-	kubeConfig string
-	rootCmd    = &cobra.Command{
+	kubeConfig  string
+	kubeContext string
+	rootCmd     = &cobra.Command{
 		Use:   "subctl",
 		Short: "An installer for Submariner",
 	}
@@ -54,6 +55,7 @@ func Execute() error {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", kubeConfigFile(), "absolute path(s) to the kubeconfig file(s)")
+	rootCmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
 }
 
 const (
@@ -102,11 +104,7 @@ func exitOnError(message string, err error) {
 	}
 }
 
-func getClients() (dynamic.Interface, kubernetes.Interface, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
-	if err != nil {
-		return nil, nil, err
-	}
+func getClients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, error) {
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, nil, err
@@ -118,12 +116,19 @@ func getClients() (dynamic.Interface, kubernetes.Interface, error) {
 	return dynClient, clientSet, nil
 }
 
-func getRestConfig() (*rest.Config, error) {
-	return clientcmd.BuildConfigFromFlags("", kubeConfig)
+func getRestConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error) {
+	rules := clientcmd.NewDefaultClientConfigLoadingRules()
+	rules.ExplicitPath = kubeConfigPath
+	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
+	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
+	if kubeContext != "" {
+		overrides.CurrentContext = kubeContext
+	}
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides).ClientConfig()
 }
 
-func handleNodeLabels() error {
-	_, clientset, err := getClients()
+func handleNodeLabels(config *rest.Config) error {
+	_, clientset, err := getClients(config)
 	exitOnError("Unable to set the Kubernetes cluster connection up", err)
 	// List Submariner-labeled nodes
 	const submarinerGatewayLabel = "submariner.io/gateway"
