@@ -116,7 +116,7 @@ func canonicaliseRepoVersion(repo string, version string) (string, string) {
 		return "", version
 	}
 	if repo == "" {
-		repo = defaultControllerImageRepo
+		repo = versions.DefaultSubmarinerRepo
 	}
 	if repo[len(repo)-1:] != "/" {
 		repo = repo + "/"
