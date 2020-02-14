@@ -32,9 +32,9 @@ Download the latest binary for your operating system and architecture, then inst
 To install for Linux amd64 in `~/.local/bin`:
 
     mkdir -p ~/.local/bin
-    wget https://github.com/submariner-io/submariner-operator/releases/download/v0.0.3/subctl-v0.0.3-linux-amd64
-    install subctl-v0.0.3-linux-amd64 ~/.local/bin/subctl
-    rm subctl-v0.0.3-linux-amd64
+    wget https://github.com/submariner-io/submariner-operator/releases/download/v0.1.0/subctl-v0.1.0-linux-amd64
+    install subctl-v0.1.0 -linux-amd64 ~/.local/bin/subctl
+    rm subctl-v0.1.0-linux-amd64
 If `~/.local/bin` is on your PATH, you will then be able to run subctl.
 
 ## Deployment
@@ -52,7 +52,7 @@ subctl deploy-broker --kubeconfig <PATH-TO-KUBECONFIG-BROKER> --dataplane
 * Join Clusters with Broker - To join all the other clusters with the broker cluster, run using the broker-info.subm generated in the folder from which the previous step was run.
 
 ```
-subctl join --kubeconfig <PATH-TO-KUBECONFIG-DATA-CLLUSTER> broker-info.subm
+subctl join --kubeconfig <PATH-TO-KUBECONFIG-DATA-CLUSTER> broker-info.subm
 ```
 
 ### Submariner with Service Discovery
