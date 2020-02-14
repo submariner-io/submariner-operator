@@ -30,7 +30,7 @@ import (
 const (
 	DefaultControllerImageName    = "lighthouse-controller"
 	DefaultControllerImageRepo    = "quay.io/submariner"
-	DefaultControllerImageVersion = "0.0.1"
+	DefaultControllerImageVersion = "0.1.0"
 )
 
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool) error {

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: lighthouse-controller
-          image: quay.io/submariner/lighthouse-controller:0.0.1
+          image: quay.io/submariner/lighthouse-controller:0.1.0
           command: ["lighthouse-controller"]
           args: ["--kubefed-namespace=kubefed-operator", "-v=4", "-alsologtostderr"]
       serviceAccount: kubdefed-operator     # for production we need to create our own service account and
