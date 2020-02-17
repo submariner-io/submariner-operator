@@ -4,6 +4,7 @@ language: go
 branches:
   only:
   - master
+  - /^v\d+\.\d+\.\d+.*$/
 
 git:
   depth: 1
@@ -13,7 +14,12 @@ services:
 script:
   - make ci e2e status=keep
 deploy:
-  provider: script
-  script: bash scripts/release
-  on:
-    branch: master
+  - provider: script
+    script: bash scripts/release
+    on:
+      branch: master
+  - provider: script
+    script: bash scripts/release $TRAVIS_TAG
+    skip_cleanup: true
+    on:
+      tags: true
