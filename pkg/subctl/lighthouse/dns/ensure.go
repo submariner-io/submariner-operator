@@ -35,6 +35,7 @@ import (
 const (
 	operatorImage           = "lighthouse-cluster-dns-operator"
 	coreDNSImage            = "lighthouse-coredns"
+	openShiftCoreDNSImage   = "openshift-lighthouse-coredns"
 	deploymentCheckInterval = 5 * time.Second
 	deploymentWaitTime      = 2 * time.Minute
 )
@@ -239,7 +240,7 @@ func setupOpenShift(status *cli.Status, clientSet *clientset.Clientset, repo str
 			deployment.Spec.Template.Spec.Containers[i].Image = repo + operatorImage + ":" + version
 			for j, env := range container.Env {
 				if env.Name == "IMAGE" {
-					deployment.Spec.Template.Spec.Containers[i].Env[j].Value = repo + coreDNSImage + ":" + version
+					deployment.Spec.Template.Spec.Containers[i].Env[j].Value = repo + openShiftCoreDNSImage + ":" + version
 				}
 			}
 			status.QueueSuccessMessage("Updated DNS operator deployment")
