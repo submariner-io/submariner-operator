@@ -10,4 +10,4 @@ DOCKER_TAG=${1:-latest}
 echo "$QUAY_PASSWORD" | docker login quay.io -u "$QUAY_USERNAME" --password-stdin
 docker tag quay.io/submariner/submariner-operator:$VERSION quay.io/submariner/submariner-operator:${DOCKER_TAG#"v"}
 docker tag quay.io/submariner/submariner-operator:$VERSION quay.io/submariner/submariner-operator:"${TRAVIS_COMMIT:0:7}"
-for i in $(docker images --format "{{.Repository}}:{{.Tag}}" | grep "quay.io/submariner"); do docker push $i; done
+for i in $(docker images --format "{{.Repository}}:{{.Tag}}" | grep "quay.io/submariner/submariner-operator"); do docker push $i; done
