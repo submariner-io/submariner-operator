@@ -30,14 +30,11 @@ import (
 	lighthousedns "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/dns"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefed"
+	"github.com/submariner-io/submariner-operator/pkg/versions"
 )
 
 const (
-	defaultControllerImageName    = "lighthouse-controller"
-	defaultControllerImageRepo    = "quay.io/submariner"
-	defaultControllerImageVersion = "0.1.0"
-	kubefedVersion                = "v0.1.0-rc3"
-	kubefedctlVersionPrefix       = "kubefedctl version: version.Info"
+	kubefedctlVersionPrefix = "kubefedctl version: version.Info"
 )
 
 var (
@@ -49,9 +46,9 @@ var (
 func AddFlags(cmd *cobra.Command, prefix string) {
 	cmd.PersistentFlags().BoolVar(&serviceDiscovery, prefix, false,
 		"Enable Multi Cluster Service Discovery")
-	cmd.PersistentFlags().StringVar(&imageRepo, prefix+"-repo", defaultControllerImageRepo,
+	cmd.PersistentFlags().StringVar(&imageRepo, prefix+"-repo", versions.DefaultSubmarinerRepo,
 		"Service Discovery Image repository")
-	cmd.PersistentFlags().StringVar(&imageVersion, prefix+"-version", defaultControllerImageVersion,
+	cmd.PersistentFlags().StringVar(&imageVersion, prefix+"-version", versions.DefaultLighthouseVersion,
 		"Service Discovery Image version")
 }
 
@@ -64,7 +61,7 @@ func Validate() error {
 		}
 		output := string(out)
 		if !strings.HasPrefix(output, kubefedctlVersionPrefix) {
-			return fmt.Errorf("unable to determine kubefedctl version, please use %s", kubefedVersion)
+			return fmt.Errorf("unable to determine kubefedctl version, please use %s", versions.KubeFedVersion)
 		}
 		// We need to tweak the output to make it valid JSON again...
 		output = output[len(kubefedctlVersionPrefix):]
@@ -80,8 +77,9 @@ func Validate() error {
 		if err != nil {
 			return err
 		}
-		if v.Version != kubefedVersion {
-			return fmt.Errorf("invalid kubefedctl version %s, please use %s", v.Version, kubefedVersion)
+		if v.Version != versions.KubeFedVersion {
+			return fmt.Errorf("invalid kubefedctl version %s, please use %s", v.Version,
+				versions.KubeFedVersion)
 		}
 	}
 	return nil
@@ -97,14 +95,15 @@ func Ensure(status *cli.Status, config *rest.Config, repo string, version string
 	}
 
 	// Ensure KubeFed
-	err = kubefed.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:"+kubefedVersion, isController)
+	err = kubefed.Ensure(status, config, "kubefed-operator",
+		"quay.io/openshift/kubefed-operator:"+versions.KubeFedVersion, isController)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
 	}
 	image := ""
 	// Ensure lighthouse
 	if isController {
-		image = generateImageName(repo, defaultControllerImageName, version)
+		image = generateImageName(repo, versions.DefaultLighthouseVersion, version)
 	}
 	return install.Ensure(status, config, image, isController)
 }
@@ -117,13 +116,13 @@ func canonicaliseRepoVersion(repo string, version string) (string, string) {
 		return "", version
 	}
 	if repo == "" {
-		repo = defaultControllerImageRepo
+		repo = versions.DefaultSubmarinerRepo
 	}
 	if repo[len(repo)-1:] != "/" {
 		repo = repo + "/"
 	}
 	if version == "" {
-		version = defaultControllerImageVersion
+		version = versions.DefaultLighthouseVersion
 	}
 	return repo, version
 }
