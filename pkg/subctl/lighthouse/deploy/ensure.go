@@ -22,11 +22,12 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/kubernetes-sigs/kubefed/pkg/version"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/rest"
 
-	"github.com/kubernetes-sigs/kubefed/pkg/version"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	lighthousedns "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/dns"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/kubefed"
@@ -34,7 +35,8 @@ import (
 )
 
 const (
-	kubefedctlVersionPrefix = "kubefedctl version: version.Info"
+	defaultControllerImageName = "lighthouse-controller"
+	kubefedctlVersionPrefix    = "kubefedctl version: version.Info"
 )
 
 var (
@@ -50,6 +52,11 @@ func AddFlags(cmd *cobra.Command, prefix string) {
 		"Service Discovery Image repository")
 	cmd.PersistentFlags().StringVar(&imageVersion, prefix+"-version", versions.DefaultLighthouseVersion,
 		"Service Discovery Image version")
+}
+
+func FillSubctlData(subctlData *datafile.SubctlData) error {
+	subctlData.ServiceDiscovery = serviceDiscovery
+	return nil
 }
 
 func Validate() error {
@@ -85,6 +92,13 @@ func Validate() error {
 	return nil
 }
 
+func HandleCommand(status *cli.Status, config *rest.Config, isController bool) error {
+	status.Start("Deploying Service Discovery controller")
+	err := Ensure(status, config, imageRepo, imageVersion, isController)
+	status.End(err == nil)
+	return err
+}
+
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool) error {
 	repo, version = canonicaliseRepoVersion(repo, version)
 
@@ -103,7 +117,7 @@ func Ensure(status *cli.Status, config *rest.Config, repo string, version string
 	image := ""
 	// Ensure lighthouse
 	if isController {
-		image = generateImageName(repo, versions.DefaultLighthouseVersion, version)
+		image = generateImageName(repo, defaultControllerImageName, version)
 	}
 	return install.Ensure(status, config, image, isController)
 }
