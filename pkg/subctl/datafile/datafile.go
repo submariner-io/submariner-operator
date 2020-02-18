@@ -95,7 +95,7 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 	subctlData := &SubctlData{}
 	var err error
 
-	subctlData.ClientToken, err = broker.GetClientTokenSecret(clientSet, brokerNamespace)
+	subctlData.ClientToken, err = broker.GetClientTokenSecret(clientSet, brokerNamespace, "submariner-k8s-broker-client")
 	if err != nil {
 		return nil, err
 	}

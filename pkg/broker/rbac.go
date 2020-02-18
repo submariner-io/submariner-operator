@@ -26,12 +26,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 )
 
-const (
-	submarinerBrokerSA   = "submariner-k8s-broker-client"
-	submarinerBrokerRole = "submariner-k8s-broker-client"
-)
-
-func NewBrokerSA() *v1.ServiceAccount {
+func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
 	sa := &v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: submarinerBrokerSA,
@@ -41,7 +36,7 @@ func NewBrokerSA() *v1.ServiceAccount {
 	return sa
 }
 
-func NewBrokerRole() *rbacv1.Role {
+func NewBrokerRole(submarinerBrokerRole string) *rbacv1.Role {
 	role := &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: submarinerBrokerRole,
@@ -52,13 +47,23 @@ func NewBrokerRole() *rbacv1.Role {
 				Resources: []string{"clusters", "endpoints"},
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 			},
+			rbacv1.PolicyRule{
+				Verbs:     []string{"create", "get", "list", "delete"},
+				APIGroups: []string{""},
+				Resources: []string{"serviceaccounts", "secrets"},
+			},
+			rbacv1.PolicyRule{
+				Verbs:     []string{"create", "get", "list", "delete"},
+				APIGroups: []string{"rbac.authorization.k8s.io"},
+				Resources: []string{"roles", "rolebindings"},
+			},
 		},
 	}
 
 	return role
 }
 
-func NewBrokerRoleBinding() *rbacv1.RoleBinding {
+func NewBrokerRoleBinding(submarinerBrokerRole string, submarinerBrokerSA string) *rbacv1.RoleBinding {
 	binding := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: submarinerBrokerRole,
@@ -80,7 +85,7 @@ func NewBrokerRoleBinding() *rbacv1.RoleBinding {
 	return binding
 }
 
-func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace string) (*v1.Secret, error) {
+func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace string, submarinerBrokerSA string) (*v1.Secret, error) {
 	sa, err := clientSet.CoreV1().ServiceAccounts(brokerNamespace).Get(submarinerBrokerSA, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("ServiceAccount %s get failed: %s", submarinerBrokerSA, err)

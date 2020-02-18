@@ -20,6 +20,9 @@ import (
 	"fmt"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
+	rbac "k8s.io/api/rbac/v1"
+
 	"github.com/submariner-io/submariner-operator/pkg/engine"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,34 +43,33 @@ func Ensure(config *rest.Config) error {
 	}
 
 	// Create the namespace
-	_, err = clientset.CoreV1().Namespaces().Create(NewBrokerNamespace())
+	_, err = CreateNewBrokerNamespace(clientset)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the broker namespace %s", err)
 	}
 
 	// Create the SA we need for the broker
-	_, err = clientset.CoreV1().ServiceAccounts(SubmarinerBrokerNamespace).Create(NewBrokerSA())
+	_, err = CreateNewBrokerSA(clientset, "submariner-k8s-broker-client")
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the default broker service account: %s", err)
 	}
 
 	// Create the role
-	_, err = clientset.RbacV1().Roles(SubmarinerBrokerNamespace).Create(NewBrokerRole())
+	_, err = CreateNewBrokerRole(clientset, "submariner-k8s-broker-client")
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating broker role: %s", err)
 	}
 
 	// Create the role binding
-	_, err = clientset.RbacV1().RoleBindings(SubmarinerBrokerNamespace).Create(NewBrokerRoleBinding())
+	_, err = CreateNewBrokerRoleBinding(clientset, "submariner-k8s-broker-client", "submariner-k8s-broker-client")
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the broker rolebinding: %s", err)
 	}
 
-	return waitForClientToken(clientset)
-
+	return WaitForClientToken(clientset, "submariner-k8s-broker-client")
 }
 
-func waitForClientToken(clientset *kubernetes.Clientset) error {
+func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA string) error {
 
 	// wait for the client token to be ready, while implementing
 	// exponential backoff pattern, it will wait a total of:
@@ -82,7 +84,7 @@ func waitForClientToken(clientset *kubernetes.Clientset) error {
 
 	var lastErr error
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
-		_, lastErr = GetClientTokenSecret(clientset, SubmarinerBrokerNamespace)
+		_, lastErr = GetClientTokenSecret(clientset, SubmarinerBrokerNamespace, submarinerBrokerSA)
 		if lastErr != nil {
 			return false, nil
 		}
@@ -93,4 +95,24 @@ func waitForClientToken(clientset *kubernetes.Clientset) error {
 	}
 
 	return err
+}
+
+func CreateNewBrokerNamespace(clientset *kubernetes.Clientset) (brokernamespace *v1.Namespace, err error) {
+	brokernamespace, err = clientset.CoreV1().Namespaces().Create(NewBrokerNamespace())
+	return brokernamespace, err
+}
+
+func CreateNewBrokerRole(clientset *kubernetes.Clientset, submarinerBrokerRole string) (brokerrole *rbac.Role, err error) {
+	brokerrole, err = clientset.RbacV1().Roles(SubmarinerBrokerNamespace).Create(NewBrokerRole(submarinerBrokerRole))
+	return brokerrole, err
+}
+
+func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, submarinerBrokerRole string, submarinerBrokerSA string) (brokerrolebinding *rbac.RoleBinding, err error) {
+	brokerrolebinding, err = clientset.RbacV1().RoleBindings(SubmarinerBrokerNamespace).Create(NewBrokerRoleBinding(submarinerBrokerRole, submarinerBrokerSA))
+	return brokerrolebinding, err
+}
+
+func CreateNewBrokerSA(clientset *kubernetes.Clientset, submarinerBrokerSA string) (brokerSA *v1.ServiceAccount, err error) {
+	brokerSA, err = clientset.CoreV1().ServiceAccounts(SubmarinerBrokerNamespace).Create(NewBrokerSA(submarinerBrokerSA))
+	return brokerSA, err
 }
