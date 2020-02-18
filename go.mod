@@ -14,6 +14,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/kr/pty v1.1.8 // indirect
+	github.com/kubernetes-sigs/kubefed v0.0.10
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.9.0

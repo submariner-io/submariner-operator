@@ -38,6 +38,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/spf13/cobra"
+
+	"github.com/submariner-io/submariner-operator/pkg/versions"
 )
 
 var (
@@ -62,7 +64,7 @@ func addKubeconfigFlag(cmd *cobra.Command) {
 }
 
 const (
-	DefaultOperatorImage = "quay.io/submariner/submariner-operator:0.0.1"
+	DefaultOperatorImage = versions.DefaultSubmarinerRepo + "/submariner-operator:" + versions.DefaultSubmarinerOperatorVersion
 	OperatorNamespace    = "submariner-operator"
 )
 
