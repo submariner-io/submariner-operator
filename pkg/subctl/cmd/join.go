@@ -35,6 +35,7 @@ import (
 	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
+	"github.com/submariner-io/submariner-operator/pkg/versions"
 )
 
 var (
@@ -270,13 +271,13 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 	if len(repository) == 0 {
 		// Default repository
 		// This is handled in the operator after 0.0.1 (of the operator)
-		repository = "quay.io/submariner"
+		repository = versions.DefaultSubmarinerRepo
 	}
 
 	if len(imageVersion) == 0 {
 		// Default engine version
 		// This is handled in the operator after 0.0.1 (of the operator)
-		imageVersion = "0.0.3"
+		imageVersion = versions.DefaultSubmarinerVersion
 	}
 
 	submarinerSpec := submariner.SubmarinerSpec{

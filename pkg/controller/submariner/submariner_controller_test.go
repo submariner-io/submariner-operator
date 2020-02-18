@@ -9,6 +9,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	submariner_v1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/versions"
+
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -192,8 +194,8 @@ func testReconciliation() {
 			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
 			Expect(err).To(Succeed())
 
-			Expect(updated.Spec.Repository).To(Equal("quay.io/submariner"))
-			Expect(updated.Spec.Version).To(Equal("0.0.3"))
+			Expect(updated.Spec.Repository).To(Equal(versions.DefaultSubmarinerRepo))
+			Expect(updated.Spec.Version).To(Equal(versions.DefaultSubmarinerVersion))
 		})
 	})
 

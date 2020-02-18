@@ -91,7 +91,7 @@ function kind_import_images() {
     docker tag quay.io/submariner/submariner:latest submariner:local
     docker pull quay.io/submariner/submariner-route-agent:latest
     docker tag quay.io/submariner/submariner-route-agent:latest submariner-route-agent:local
-    docker tag quay.io/submariner/submariner-operator:dev submariner-operator:local
+    docker tag quay.io/submariner/submariner-operator:$VERSION submariner-operator:local
     if [[ $lighthouse = true ]]; then
         docker pull quay.io/openshift/kubefed-operator:v0.1.0-rc3
         docker pull quay.io/kubernetes-multicluster/kubefed:v0.1.0-rc6

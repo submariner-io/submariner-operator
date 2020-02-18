@@ -26,6 +26,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/versions"
+
 	corev1 "k8s.io/api/core/v1"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -382,11 +384,11 @@ func setSubmarinerDefaults(submariner *submarinerv1alpha1.Submariner) {
 
 	if submariner.Spec.Repository == "" {
 		// An empty field is converted to the default upstream submariner repository where all images live
-		submariner.Spec.Repository = "quay.io/submariner"
+		submariner.Spec.Repository = versions.DefaultSubmarinerRepo
 	}
 
 	if submariner.Spec.Version == "" {
-		submariner.Spec.Version = "0.0.3"
+		submariner.Spec.Version = versions.DefaultSubmarinerVersion
 	}
 
 	if submariner.Spec.ColorCodes == "" {
