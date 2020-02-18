@@ -26,6 +26,8 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
+
 	"k8s.io/client-go/rest"
 
 	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
@@ -36,6 +38,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
+	submarinerClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 )
 
 var (
@@ -93,6 +96,7 @@ var joinCmd = &cobra.Command{
 		subctlData, err := datafile.NewFromFile(args[0])
 		exitOnError("Error loading the broker information from the given file", err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
+		exitOnError("Error connecting to broker cluster", err)
 		config, err := getRestConfig(kubeConfig, kubeContext)
 		exitOnError("Error connecting to the target cluster", err)
 		joinSubmarinerCluster(config, subctlData)
@@ -188,10 +192,43 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	clusterCIDR, err = getPodCIDR(clusterCIDR, networkDetails)
 	exitOnError("Error determining the pod CIDR", err)
 
+	status.Start("* Discovering multi cluster details")
+	globalNetworks := getGlobalNetworks(subctlData)
+	err = checkOverlappingServiceCidr(globalNetworks)
+	status.End(err == nil)
+	exitOnError("Error validating overlapping CLusterCIDRs", err)
+
 	status.Start("Deploying Submariner")
 	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
 	status.End(err == nil)
 	exitOnError("Error deploying Submariner", err)
+}
+
+func checkOverlappingServiceCidr(networks map[string]*globalnet.GlobalNetwork) error {
+	for k, v := range networks {
+		overlap, err := globalnet.IsOverlappingCIDR(v.ServiceCIDRs, serviceCIDR)
+		if err != nil {
+			return fmt.Errorf("unable to validate overlapping ServiceCIDR: %s", err)
+		}
+		if overlap && k != clusterID {
+			return fmt.Errorf("invalid CIDR: %s overlaps with cluster %s", serviceCIDR, k)
+		}
+	}
+	return nil
+}
+
+func getGlobalNetworks(subctlData *datafile.SubctlData) map[string]*globalnet.GlobalNetwork {
+
+	brokerConfig := subctlData.GetBrokerConfig()
+	brokerSubmClient, err := submarinerClientset.NewForConfig(brokerConfig)
+	exitOnError("Unable to setup submariner connection to broker cluster", err)
+	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
+	globalNetworks, err := globalnet.Discover(brokerSubmClient, brokerNamespace)
+	exitOnError("Error trying to discover multicluster network details", err)
+	if globalNetworks != nil {
+		globalnet.ShowNetworks(globalNetworks)
+	}
+	return globalNetworks
 }
 
 func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
