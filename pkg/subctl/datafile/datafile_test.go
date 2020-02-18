@@ -33,6 +33,7 @@ const (
 	testSASecret              = "submariner-k8s-broker-client-token-abcdef"
 	testToken                 = "i-am-a-token"
 	SubmarinerBrokerNamespace = "submariner-k8s-broker"
+	BrokerSA                  = "submariner-k8s-broker-client"
 )
 
 var _ = Describe("datafile", func() {
@@ -75,7 +76,7 @@ var _ = Describe("datafile", func() {
 			pskSecret, _ := newIPSECPSKSecret()
 			pskSecret.Namespace = SubmarinerBrokerNamespace
 
-			sa := broker.NewBrokerSA()
+			sa := broker.NewBrokerSA(BrokerSA)
 			sa.Namespace = SubmarinerBrokerNamespace
 			sa.Secrets = []v1.ObjectReference{{
 				Name: testSASecret,
