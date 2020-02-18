@@ -28,12 +28,9 @@ import (
 )
 
 var (
-	enableDataplane              bool
-	disableDataplane             bool
-	ipsecSubmFile                string
-	serviceDiscovery             bool
-	serviceDiscoveryImageRepo    string
-	serviceDiscoveryImageVersion string
+	enableDataplane  bool
+	disableDataplane bool
+	ipsecSubmFile    string
 )
 
 func init() {
@@ -41,6 +38,7 @@ func init() {
 		"Install the Submariner dataplane on the broker")
 	deployBroker.PersistentFlags().BoolVar(&disableDataplane, "no-dataplane", true,
 		"Don't install the Submariner dataplane on the broker (default)")
+	// TODO (skitt) make this generic for potentially multiple plugins (see below too)
 	lighthouse.AddFlags(deployBroker, "service-discovery")
 	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
 	// An error here indicates a programming error (the argument isn’t declared), panic
@@ -95,18 +93,15 @@ var deployBroker = &cobra.Command{
 			status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
 		}
 
-		subctlData.ServiceDiscovery = serviceDiscovery
+		err = lighthouse.FillSubctlData(subctlData)
+		exitOnError("Error setting up service discovery information", err)
 
 		err = subctlData.WriteToFile(brokerDetailsFilename)
 		status.End(err == nil)
 		exitOnError("Error writing the broker information", err)
 
-		if serviceDiscovery {
-			status.Start("Deploying Service Discovery controller")
-			err = lighthouse.Ensure(status, config, serviceDiscoveryImageRepo, serviceDiscoveryImageVersion, true)
-			status.End(err == nil)
-			exitOnError("Failed to deploy Service Discovery controller", err)
-		}
+		err = lighthouse.HandleCommand(status, config, true)
+		exitOnError("Error setting up service discovery", err)
 
 		if enableDataplane {
 			joinSubmarinerCluster(config, subctlData)
