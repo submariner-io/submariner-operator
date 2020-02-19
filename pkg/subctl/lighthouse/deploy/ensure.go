@@ -92,14 +92,15 @@ func Validate() error {
 	return nil
 }
 
-func HandleCommand(status *cli.Status, config *rest.Config, isController bool) error {
+func HandleCommand(status *cli.Status, config *rest.Config, isController bool, kubeConfig string, kubeContext string) error {
 	status.Start("Deploying Service Discovery controller")
-	err := Ensure(status, config, imageRepo, imageVersion, isController)
+	err := Ensure(status, config, imageRepo, imageVersion, isController, kubeConfig, kubeContext)
 	status.End(err == nil)
 	return err
 }
 
-func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool) error {
+func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool,
+	kubeConfig string, kubeContext string) error {
 	repo, version = canonicaliseRepoVersion(repo, version)
 
 	// Ensure DNS
@@ -110,7 +111,7 @@ func Ensure(status *cli.Status, config *rest.Config, repo string, version string
 
 	// Ensure KubeFed
 	err = kubefed.Ensure(status, config, "kubefed-operator",
-		"quay.io/openshift/kubefed-operator:"+versions.KubeFedVersion, isController)
+		"quay.io/openshift/kubefed-operator:"+versions.KubeFedVersion, isController, kubeConfig, kubeContext)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
 	}
@@ -119,7 +120,7 @@ func Ensure(status *cli.Status, config *rest.Config, repo string, version string
 	if isController {
 		image = generateImageName(repo, defaultControllerImageName, version)
 	}
-	return install.Ensure(status, config, image, isController)
+	return install.Ensure(status, config, image, isController, kubeConfig)
 }
 
 // canonicaliseRepoVersion returns the canonical repo and version for the given

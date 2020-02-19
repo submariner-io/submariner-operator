@@ -24,19 +24,15 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install/deployment"
 )
 
-func Ensure(status *cli.Status, config *rest.Config, image string, isController bool) error {
+func Ensure(status *cli.Status, config *rest.Config, image string, isController bool, kubeConfig string) error {
 
-	if created, err := crds.Ensure(config); err != nil {
+	if created, err := crds.Ensure(config, kubeConfig); err != nil {
 		return err
 	} else if created {
 		status.QueueSuccessMessage("Created lighthouse CRDs")
 	}
 
 	if isController {
-		//TODO: Install controller
-		//TODO: kubefedctl enable MulticlusterService
-		//TODO: kubectl --context=cluster1 patch clusterrole  -n kube-federation-system  kubefed-role  --type json -p "$(cat ${PRJ_ROOT}/scripts/kind-e2e/config/patch-kubefed-clusterrole.yaml)"
-		//TODO: kubectl --context=cluster1 apply -f ${PRJ_ROOT}/package/lighthouse-controller-deployment.yaml
 		if created, err := deployment.Ensure(config, "kubefed-operator", image); err != nil {
 			return err
 		} else if created {

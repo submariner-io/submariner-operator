@@ -165,13 +165,21 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 
 	if subctlData.ServiceDiscovery {
 		status.Start("Deploying multi cluster service discovery")
-		err = lighthouse.Ensure(status, config, "", "", false)
+		err = lighthouse.Ensure(status, config, "", "", false, kubeConfig, kubeContext)
 		status.End(err == nil)
 		exitOnError("Error deploying multi cluster service discovery", err)
 
 		status.Start("Joining to Kubefed control plane")
-		out, err := exec.Command("kubefedctl", "join", "--kubefed-namespace", "kubefed-operator",
-			clusterID, "--host-cluster-context", brokerClusterContext).CombinedOutput()
+		args := []string{"join"}
+		if kubeConfig != "" {
+			args = append(args, "--kubeconfig", kubeConfig)
+		}
+		if kubeContext != "" {
+			args = append(args, "--cluster-context", kubeContext)
+		}
+		args = append(args, "--kubefed-namespace", "kubefed-operator",
+			clusterID, "--host-cluster-context", brokerClusterContext)
+		out, err := exec.Command("kubefedctl", args...).CombinedOutput()
 		if err != nil {
 			err = fmt.Errorf("kubefedctl join failed: %s\n%s", err, out)
 		}

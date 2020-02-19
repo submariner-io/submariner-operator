@@ -33,9 +33,17 @@ spec:
   scope: Cluster
 `
 
-func Ensure(config *rest.Config, namespace string) error {
+func Ensure(config *rest.Config, namespace string, kubeConfig string, kubeContext string) error {
 
-	cmd := exec.Command("kubectl", "apply", "-n", namespace, "-f", "-")
+	args := []string{}
+	if kubeConfig != "" {
+		args = append(args, "--kubeconfig", kubeConfig)
+	}
+	if kubeContext != "" {
+		args = append(args, "--context", kubeContext)
+	}
+	args = append(args, "apply", "-n", namespace, "-f", "-")
+	cmd := exec.Command("kubectl", args...)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return fmt.Errorf("error setting up kubectl to deploy KubeFed: %s", err)
