@@ -34,7 +34,7 @@ import (
 // Copied over from operator/install/crds/ensure.go
 
 //Ensure functions updates or installs the multiclusterservives CRDs in the cluster
-func Ensure(restConfig *rest.Config) (bool, error) {
+func Ensure(restConfig *rest.Config, kubeConfig string) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
 		return false, err
@@ -52,7 +52,12 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	out, err := exec.Command("kubefedctl", "enable", "MulticlusterService", "--kubefed-namespace", "kubefed-operator").CombinedOutput()
+	args := []string{"enable", "MulticlusterService"}
+	if kubeConfig != "" {
+		args = append(args, "--kubeconfig", kubeConfig)
+	}
+	args = append(args, "--kubefed-namespace", "kubefed-operator")
+	out, err := exec.Command("kubefedctl", args...).CombinedOutput()
 	if err != nil {
 		return false, fmt.Errorf("error federating MulticlusterService CRD: %s\n%s", err, out)
 	}

@@ -100,7 +100,7 @@ var deployBroker = &cobra.Command{
 		status.End(err == nil)
 		exitOnError("Error writing the broker information", err)
 
-		err = lighthouse.HandleCommand(status, config, true)
+		err = lighthouse.HandleCommand(status, config, true, kubeConfig, kubeContext)
 		exitOnError("Error setting up service discovery", err)
 
 		if enableDataplane {

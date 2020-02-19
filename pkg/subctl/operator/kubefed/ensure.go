@@ -34,13 +34,14 @@ import (
 const deploymentCheckInterval = 5 * time.Second
 const deploymentWaitTime = 5 * time.Minute
 
-func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string, isController bool) error {
+func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string, isController bool,
+	kubeConfig string, kubeContext string) error {
 
 	err := kubefedop.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3", isController)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
 	}
-	err = kubefedcr.Ensure(config, "kubefed-operator")
+	err = kubefedcr.Ensure(config, "kubefed-operator", kubeConfig, kubeContext)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
 	}
@@ -56,7 +57,12 @@ func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, o
 			return fmt.Errorf("Error deploying kubefed-controller-manager: %s", err)
 		}
 	}
-	out, err := exec.Command("kubefedctl", "enable", "namespace", "--kubefed-namespace", "kubefed-operator").CombinedOutput()
+	args := []string{"enable", "namespace"}
+	if kubeConfig != "" {
+		args = append(args, "--kubeconfig", kubeConfig)
+	}
+	args = append(args, "--kubefed-namespace", "kubefed-operator")
+	out, err := exec.Command("kubefedctl", args...).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error enabling namespaces in federation: %s\n%s", err, out)
 	}
