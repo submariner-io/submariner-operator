@@ -277,6 +277,8 @@ func newEnginePodTemplate(cr *submarinerv1alpha1.Submariner) corev1.PodTemplateS
 						{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
 						{Name: "SUBMARINER_NATENABLED", Value: strconv.FormatBool(cr.Spec.NatEnabled)},
 						{Name: "SUBMARINER_BROKER", Value: cr.Spec.Broker},
+						{Name: "SUBMARINER_CABLE", Value: cr.Spec.CableType},
+						{Name: "SUBMARINER_DRIVER", Value: cr.Spec.DriverImpl},
 						{Name: "BROKER_K8S_APISERVER", Value: cr.Spec.BrokerK8sApiServer},
 						{Name: "BROKER_K8S_APISERVERTOKEN", Value: cr.Spec.BrokerK8sApiServerToken},
 						{Name: "BROKER_K8S_REMOTENAMESPACE", Value: cr.Spec.BrokerK8sRemoteNamespace},

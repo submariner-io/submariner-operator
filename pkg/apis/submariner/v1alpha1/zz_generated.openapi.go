@@ -176,14 +176,20 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
-					"count": {
+					"cableType": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"driverImpl": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 				},
-				Required: []string{"ceIPSecDebug", "ceIPSecPSK", "brokerK8sCA", "brokerK8sRemoteNamespace", "brokerK8sApiServerToken", "brokerK8sApiServer", "broker", "natEnabled", "debug", "clusterID", "serviceCIDR", "clusterCIDR", "namespace", "count"},
+				Required: []string{"ceIPSecDebug", "ceIPSecPSK", "brokerK8sCA", "brokerK8sRemoteNamespace", "brokerK8sApiServerToken", "brokerK8sApiServer", "broker", "natEnabled", "debug", "clusterID", "serviceCIDR", "clusterCIDR", "namespace", "cableType", "driverImpl"},
 			},
 		},
 	}
