@@ -170,20 +170,20 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
+					"globalCIDR": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
 					"namespace": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
 						},
 					},
-					"count": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
 				},
-				Required: []string{"ceIPSecDebug", "ceIPSecPSK", "brokerK8sCA", "brokerK8sRemoteNamespace", "brokerK8sApiServerToken", "brokerK8sApiServer", "broker", "natEnabled", "debug", "clusterID", "serviceCIDR", "clusterCIDR", "namespace", "count"},
+				Required: []string{"ceIPSecDebug", "ceIPSecPSK", "brokerK8sCA", "brokerK8sRemoteNamespace", "brokerK8sApiServerToken", "brokerK8sApiServer", "broker", "natEnabled", "debug", "clusterID", "serviceCIDR", "clusterCIDR", "namespace"},
 			},
 		},
 	}
