@@ -27,6 +27,7 @@ import (
 type GlobalNetwork struct {
 	GlobalCIDRs  []string
 	ServiceCIDRs []string
+	ClusterCIDRs []string
 	ClusterId    string
 }
 
@@ -36,6 +37,7 @@ func (gn *GlobalNetwork) Show() {
 	} else {
 		fmt.Printf("    Discovered global network details for Cluster %s:\n", gn.ClusterId)
 		fmt.Printf("        ServiceCidrs: %v\n", gn.ServiceCIDRs)
+		fmt.Printf("        ClusterCidrs: %v\n", gn.ClusterCIDRs)
 		fmt.Printf("        Global CIDRs: %v\n", gn.GlobalCIDRs)
 
 	}
@@ -57,6 +59,7 @@ func Discover(client *submarinerClientset.Clientset, namespace string) (map[stri
 		globalNetwork := GlobalNetwork{
 			GlobalCIDRs:  cluster.Spec.GlobalCIDR,
 			ServiceCIDRs: cluster.Spec.ServiceCIDR,
+			ClusterCIDRs: cluster.Spec.ClusterCIDR,
 			ClusterId:    cluster.Spec.ClusterID,
 		}
 		globalNetworks[cluster.Spec.ClusterID] = &globalNetwork

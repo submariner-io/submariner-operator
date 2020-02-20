@@ -24,61 +24,51 @@ import (
 var _ = Describe("IsOverlappingCidr", func() {
 	When("There are no base CIDRs", func() {
 		overlapping, err := IsOverlappingCIDR([]string{}, "10.10.10.0/24")
-		It("Should return false", func() {
-			Expect(overlapping).To(BeFalse())
-		})
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
+		})
+		It("Should return false", func() {
+			Expect(overlapping).To(BeFalse())
 		})
 	})
 
 	When("At least one Base CIDR is superset of new CIDR", func() {
 		overlapping, err := IsOverlappingCIDR([]string{"10.10.0.0/16", "10.20.30.0/24"}, "10.10.10.0/24")
-		It("Should return true", func() {
-			Expect(overlapping).To(BeTrue())
-		})
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
+		})
+		It("Should return true", func() {
+			Expect(overlapping).To(BeTrue())
 		})
 	})
 
 	When("At least one Base CIDR is subset of new CIDR", func() {
 		overlapping, err := IsOverlappingCIDR([]string{"10.10.10.0/24", "10.10.20.0/24"}, "10.10.30.0/16")
-		It("Should return true", func() {
-			Expect(overlapping).To(BeTrue())
-		})
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
-	})
-
-	When("At least one Base CIDR is subset of new CIDR", func() {
-		overlapping, err := IsOverlappingCIDR([]string{"10.10.0.0/16", "10.20.30.0/24"}, "10.10.10.0/24")
 		It("Should return true", func() {
 			Expect(overlapping).To(BeTrue())
-		})
-		It("Should not return error", func() {
-			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 
 	When("New CIDR partially overlaps with at least one Base CIDR", func() {
 		overlapping, err := IsOverlappingCIDR([]string{"10.10.10.0/24"}, "10.10.10.128/22")
-		It("Should return true", func() {
-			Expect(overlapping).To(BeTrue())
-		})
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
+		})
+		It("Should return true", func() {
+			Expect(overlapping).To(BeTrue())
 		})
 	})
 
 	When("New CIDR lies between any two Base CIDR", func() {
 		overlapping, err := IsOverlappingCIDR([]string{"10.10.10.0/24", "10.10.30.0/24"}, "10.10.20.128/24")
-		It("Should return false", func() {
-			Expect(overlapping).To(BeFalse())
-		})
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
+		})
+		It("Should return false", func() {
+			Expect(overlapping).To(BeFalse())
 		})
 	})
 

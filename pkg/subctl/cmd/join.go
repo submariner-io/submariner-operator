@@ -192,11 +192,16 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	clusterCIDR, err = getPodCIDR(clusterCIDR, networkDetails)
 	exitOnError("Error determining the pod CIDR", err)
 
-	status.Start("* Discovering multi cluster details")
+	status.Start("Discovering multi cluster details")
 	globalNetworks := getGlobalNetworks(subctlData)
+
 	err = checkOverlappingServiceCidr(globalNetworks)
 	status.End(err == nil)
-	exitOnError("Error validating overlapping CLusterCIDRs", err)
+	exitOnError("Error validating overlapping ServiceCIDRs", err)
+
+	err = checkOverlappingClusterCidr(globalNetworks)
+	status.End(err == nil)
+	exitOnError("Error validating overlapping ClusterCIDRs", err)
 
 	status.Start("Deploying Submariner")
 	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
@@ -211,7 +216,20 @@ func checkOverlappingServiceCidr(networks map[string]*globalnet.GlobalNetwork) e
 			return fmt.Errorf("unable to validate overlapping ServiceCIDR: %s", err)
 		}
 		if overlap && k != clusterID {
-			return fmt.Errorf("invalid CIDR: %s overlaps with cluster %s", serviceCIDR, k)
+			return fmt.Errorf("invalid service CIDR: %s overlaps with cluster %s", serviceCIDR, k)
+		}
+	}
+	return nil
+}
+
+func checkOverlappingClusterCidr(networks map[string]*globalnet.GlobalNetwork) error {
+	for k, v := range networks {
+		overlap, err := globalnet.IsOverlappingCIDR(v.ClusterCIDRs, clusterCIDR)
+		if err != nil {
+			return fmt.Errorf("unable to validate overlapping ClusterCIDR: %s", err)
+		}
+		if overlap && k != clusterID {
+			return fmt.Errorf("invalid ClusterCIDR: %s overlaps with cluster %s", clusterCIDR, k)
 		}
 	}
 	return nil
@@ -221,10 +239,10 @@ func getGlobalNetworks(subctlData *datafile.SubctlData) map[string]*globalnet.Gl
 
 	brokerConfig := subctlData.GetBrokerConfig()
 	brokerSubmClient, err := submarinerClientset.NewForConfig(brokerConfig)
-	exitOnError("Unable to setup submariner connection to broker cluster", err)
+	exitOnError("Unable to create submariner rest client for broker cluster", err)
 	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
 	globalNetworks, err := globalnet.Discover(brokerSubmClient, brokerNamespace)
-	exitOnError("Error trying to discover multicluster network details", err)
+	exitOnError("Error trying to discover multi-cluster network details", err)
 	if globalNetworks != nil {
 		globalnet.ShowNetworks(globalNetworks)
 	}
