@@ -170,8 +170,11 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 		exitOnError("Error deploying multi cluster service discovery", err)
 
 		status.Start("Joining to Kubefed control plane")
-		_, err := exec.Command("kubefedctl", "join", "--kubefed-namespace", "kubefed-operator",
+		out, err := exec.Command("kubefedctl", "join", "--kubefed-namespace", "kubefed-operator",
 			clusterID, "--host-cluster-context", brokerClusterContext).CombinedOutput()
+		if err != nil {
+			err = fmt.Errorf("kubefedctl join failed: %s\n%s", err, out)
+		}
 		status.End(err == nil)
 		exitOnError("Error joining to Kubefed control plane", err)
 	}
