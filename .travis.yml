@@ -13,7 +13,7 @@ git:
 services:
   - docker
 script:
-  - make ci e2e status=keep
+  - make ci e2e status=keep lighthouse=true
 deploy:
   - provider: script
     script: bash scripts/release
