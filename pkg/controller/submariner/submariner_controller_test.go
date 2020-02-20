@@ -287,6 +287,7 @@ func verifyEngineDaemonSet(submariner *submariner_v1.Submariner, client client.C
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Spec.ServiceCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Spec.ClusterCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_GLOBALCIDR", submariner.Spec.GlobalCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
@@ -312,6 +313,7 @@ func newSubmariner() *submariner_v1.Submariner {
 			ClusterID:                "east",
 			ServiceCIDR:              "100.94.0.0/16",
 			ClusterCIDR:              "10.244.0.0/16",
+			GlobalCIDR:               "169.254.0.0/16",
 			Namespace:                "submariner_ns",
 			Debug:                    true,
 		},

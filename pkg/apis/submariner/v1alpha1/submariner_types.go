@@ -43,6 +43,7 @@ type SubmarinerSpec struct {
 	ClusterID                string `json:"clusterID"`
 	ServiceCIDR              string `json:"serviceCIDR"`
 	ClusterCIDR              string `json:"clusterCIDR"`
+	GlobalCIDR               string `json:"globalCIDR,omitempty"`
 	Namespace                string `json:"namespace"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
