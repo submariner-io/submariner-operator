@@ -16,11 +16,11 @@ require (
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/kubernetes-sigs/kubefed v0.0.10
 	github.com/mattn/go-isatty v0.0.12
-	github.com/onsi/ginkgo v1.11.0
+	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
 	github.com/prometheus/client_golang v1.2.1 // indirect
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v0.0.6
 	github.com/spf13/pflag v1.0.5
 	github.com/submariner-io/submariner v0.0.4-0.20200206161006-1426b56a528b
 	go.opencensus.io v0.22.1 // indirect
@@ -43,7 +43,7 @@ require (
 	k8s.io/kube-openapi v0.0.0-20190603182131-db7b694dc208
 	sigs.k8s.io/controller-runtime v0.3.0
 	sigs.k8s.io/kind v0.7.0
-	sigs.k8s.io/yaml v1.1.0
+	sigs.k8s.io/yaml v1.2.0
 )
 
 // Pinned to kubernetes-1.14.1

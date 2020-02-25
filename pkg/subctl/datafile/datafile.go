@@ -111,3 +111,16 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 		return subctlData, err
 	}
 }
+
+func (data *SubctlData) GetBrokerConfig() *rest.Config {
+	tlsClientconfig := rest.TLSClientConfig{}
+	tlsClientconfig.CAData = data.ClientToken.Data["ca.crt"]
+	bearerToken := data.ClientToken.Data["token"]
+	restConfig := rest.Config{
+		Host:            data.BrokerURL,
+		TLSClientConfig: tlsClientconfig,
+		BearerToken:     string(bearerToken),
+	}
+	return &restConfig
+
+}
