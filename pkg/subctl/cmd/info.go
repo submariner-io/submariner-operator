@@ -39,9 +39,9 @@ func init() {
 func clusterInfo(cmd *cobra.Command, args []string) {
 
 	config, err := getRestConfig(kubeConfig, kubeContext)
-	panicOnError(err)
+	exitOnError("Error connecting to the target cluster", err)
 	dynClient, clientSet, err := getClients(config)
-	panicOnError(err)
+	exitOnError("Error connecting to the target cluster", err)
 
 	clusterNetwork, err := network.Discover(dynClient, clientSet)
 	exitOnError("There was an error discovering network details for this cluster", err)

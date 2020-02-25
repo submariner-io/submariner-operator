@@ -46,12 +46,12 @@ func init() {
 }
 
 var verifyConnectivityCmd = &cobra.Command{
-	Use:   "verify-connectivity",
+	Use:   "verify-connectivity <kubeConfig1> <kubeConfig2>",
 	Short: "Verify connectivity between two clusters",
-	Args:  cobra.ExactArgs(2),
+	Args: func(cmd *cobra.Command, args []string) error {
+		return checkValidateArguments(args)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		err := checkValidateArguments(args)
-		exitOnError("Argument missing", err)
 		configureTestingFramework(args)
 		e2e.RunE2ETests(&testing.T{})
 	},
