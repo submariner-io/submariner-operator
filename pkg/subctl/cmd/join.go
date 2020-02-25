@@ -277,7 +277,7 @@ func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (string, error) 
 				clusterCIDR, nd.PodCIDRs[0])
 		}
 		return clusterCIDR, nil
-	} else if len(nd.PodCIDRs) > 0 {
+	} else if nd != nil && len(nd.PodCIDRs) > 0 {
 		return nd.PodCIDRs[0], nil
 	} else {
 		return askForCIDR("Pod")
