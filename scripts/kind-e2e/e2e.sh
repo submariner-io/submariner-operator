@@ -130,6 +130,7 @@ function create_subm_vars() {
   subm_colorcodes=blue
   subm_debug=false
   subm_broker=k8s
+  subm_cable=ipsec/strongswan
   ce_ipsec_debug=false
   ce_ipsec_ikeport=500
   ce_ipsec_nattport=4500
@@ -250,7 +251,22 @@ for i in 2 3; do
     verify_subm_gateway_label
 
     # Deploy SubM Operator
-    if [ "${context}" = "cluster2" ] || [ "${context}" = "cluster3" ]; then
+    if [ "${context}" = "cluster2" ]; then
+         ../bin/subctl join --operator-image submariner-operator:local \
+                        --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+                        --kubecontext ${context} \
+                        --clusterid ${context} \
+                        --repository ${subm_engine_image_repo} \
+                        --version ${subm_engine_image_tag} \
+                        --nattport ${ce_ipsec_nattport} \
+                        --ikeport ${ce_ipsec_ikeport} \
+                        --colorcodes ${subm_colorcodes} \
+                        --cable-type ${subm_cable} \
+                        --broker-cluster-context "cluster1" \
+                        --disable-nat \
+                        broker-info.subm |& cat
+    elif  [ "${context}" = "cluster3" ]; then
+      # check that cableType will be set to the default value
         ../bin/subctl join --operator-image submariner-operator:local \
                         --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
                         --kubecontext ${context} \
