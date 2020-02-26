@@ -61,6 +61,8 @@ function verify_subm_crd() {
     kubectl get crd $crd_name -o jsonpath='{.spec.validation.openAPIV3Schema.properties.spec.required}' | grep submarinerServicecidr
     kubectl get crd $crd_name -o jsonpath='{.spec.validation.openAPIV3Schema.properties.spec.required}' | grep submarinerClustercidr
     kubectl get crd $crd_name -o jsonpath='{.spec.validation.openAPIV3Schema.properties.spec.required}' | grep submarinerNamespace
+    kubectl get crd $crd_name -o jsonpath='{.spec.validation.openAPIV3Schema.properties.spec.required}' | grep submarinerCableType
+
   fi
 }
 
@@ -130,6 +132,7 @@ function verify_subm_cr() {
   echo Generated cluster id:
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.clusterID}'
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.colorCodes}' | grep $subm_colorcodes
+  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.cableType}' | grep $subm_cable
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.debug}' | grep $subm_debug
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.namespace}' | grep $subm_ns
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.natEnabled}' | grep $natEnabled
@@ -183,6 +186,7 @@ function verify_subm_engine_pod() {
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_DEBUG value:$subm_debug"
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_NATENABLED value:$natEnabled"
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_BROKER value:$subm_broker"
+  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_CABLE value:$subm_cable"
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:BROKER_K8S_APISERVER value:$SUBMARINER_BROKER_URL"
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:BROKER_K8S_APISERVERTOKEN value:$SUBMARINER_BROKER_TOKEN"
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:BROKER_K8S_REMOTENAMESPACE value:$SUBMARINER_BROKER_NS"
@@ -325,6 +329,8 @@ function verify_subm_engine_container() {
   kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_DEBUG=$subm_debug"
   kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "BROKER_K8S_APISERVERTOKEN=$SUBMARINER_BROKER_TOKEN"
   kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "BROKER_K8S_REMOTENAMESPACE=$SUBMARINER_BROKER_NS"
+  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_CABLE=$subm_cable"
+
   if [[ $context = cluster2 ]]; then
     kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_SERVICECIDR=$serviceCIDR_cluster2"
     kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_CLUSTERCIDR=$clusterCIDR_cluster2"
