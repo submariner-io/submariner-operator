@@ -43,11 +43,11 @@ If `~/.local/bin` is on your PATH, you will then be able to run subctl.
 
 To deploy submariner in a two Kubernetes cluster setup follow the below steps
 
-* Deploy Broker with Dataplane - To deploy the Submariner broker along with the data cluster run
+* Deploy Broker with Dataplane - To deploy the Submariner broker along with the dataplane on the same cluster run:
 ```
 subctl deploy-broker --kubeconfig <PATH-TO-KUBECONFIG-BROKER> --dataplane --clusterid  <CLUSTER-ID-FOR-TUNNELS>
 ```
-
+Note, if --dataplane (enabled by default) was set, it is not required to join this cluster, as it was already joined. It is only required to join the other clusters.
 
 * Join Clusters with Broker - To join all the other clusters with the broker cluster, run using the broker-info.subm generated in the folder from which the previous step was run.
 
@@ -66,17 +66,44 @@ The [Lighthouse](https://github.com/submariner-io/lighthouse) project helps in c
 
 To deploy Submariner with Lighthouse follow the below steps.
 
-* Deploy Broker with Dataplane - To deploy the Submariner broker along with the data cluster, run using the broker-info.subm generated in the folder from which the previous step was run.
+* Create a kubeconfig file which has the context of all the clusters (including the Broker cluster). you could use the below command after exporting the kubeconfigs of all the clusters( eg export KUBECONFIG=/home/user/.config/east/auth/kubeconfig-dev:/home/user/.config/west/auth/kubeconfig-dev)
 ```
-subctl deploy-broker --kubeconfig <PATH-TO-KUBECONFIG-BROKER> --dataplane --service-discovery --broker-cluster-context <BROKER-CONTEXT-NAME> --clusterid  <CLUSTER-ID-FOR-TUNNELS>
-```
-
-* Join Clusters with Broker - To join all the other clusters with the broker cluster run using the broker-info.subm generated in the folder from which the previous step was run.
-
-```
-subctl join --kubeconfig <PATH-TO-KUBECONFIG-DATA-CLUSTER> broker-info.subm  --broker-cluster-context <BROKER-CONTEXT-NAME> --clusterid  <CLUSTER-ID-FOR-TUNNELS>
+kubectl config view --flatten > merged_kubeconfig
 ```
 
+Note, if you are using Openshift configs and if it has the default name for users (admin), merging the files will create a conflict. So you can change the name to a meaningful name before running the above command using,
+
+```
+sed -i 's/admin/<NEW-USER-NAME>/' <PATH-TO-KUBECONFIG>
+```
+
+For example,
+
+```
+sed -i 's/admin/east/' /home/user/k8s/.config/east/auth/kubeconfig-dev
+```
+
+* Deploy Broker with Dataplane - To deploy the Submariner broker along with the dataplane on the same cluster run:
+```
+subctl deploy-broker --kubecontext <BROKER-CONTEXT-NAME>  --kubeconfig <PATH-TO-KUBECONFIG-BROKER> --dataplane --service-discovery --broker-cluster-context <BROKER-CONTEXT-NAME> --clusterid  <CLUSTER-ID-FOR-TUNNELS>
+```
+Note, if --dataplane (disabled by default) was set, it is not required to join this cluster, as it was already joined. It is only required to join the other clusters.
+
+For example,
+```
+subctl deploy-broker  --kubecontext west --kubeconfig $WEST  --dataplane --service-discovery --broker-cluster-context west  --clusterid west
+```
+
+* Join Clusters with Broker - To join all the other clusters with the broker cluster run using the broker-info.subm generated in the folder from which the previous step was run and use the merged kubeconfig created in the first step.
+
+```
+subctl join --kubecontext <DATA-CLUSTER-CONTEXT-NAME> --kubeconfig <MERGED-KUBECONFIG> broker-info.subm  --broker-cluster-context <BROKER-CONTEXT-NAME> --clusterid  <CLUSTER-ID-FOR-TUNNELS>
+```
+
+For example,
+```
+subctl join --kubecontext east --kubeconfig merged_kubeconfig broker-info.subm  --broker-cluster-context west --clusterid east
+```
 
 # Development
  
