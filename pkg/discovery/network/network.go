@@ -35,8 +35,8 @@ func (cn *ClusterNetwork) Show() {
 	} else {
 		fmt.Printf("    Discovered network details:\n")
 		fmt.Printf("        Network plugin:  %s\n", cn.NetworkPlugin)
-		fmt.Printf("        ClusterIP CIDRs: %v\n", cn.ServiceCIDRs)
-		fmt.Printf("        Pod CIDRs:       %v\n", cn.PodCIDRs)
+		fmt.Printf("        Service CIDRs: %v\n", cn.ServiceCIDRs)
+		fmt.Printf("        Cluster CIDRs: %v\n", cn.PodCIDRs)
 	}
 }
 
