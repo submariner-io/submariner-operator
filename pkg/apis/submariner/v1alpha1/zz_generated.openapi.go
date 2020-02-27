@@ -176,7 +176,7 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
-					"cableType": {
+					"cableDriver": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

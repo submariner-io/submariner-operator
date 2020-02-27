@@ -52,7 +52,7 @@ var (
 	submarinerDebug      bool
 	noLabel              bool
 	brokerClusterContext string
-	cableType            string
+	cableDriver          string
 )
 
 func init() {
@@ -78,7 +78,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
 	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
 	cmd.Flags().StringVar(&brokerClusterContext, "broker-cluster-context", "", "Broker cluster context")
-	cmd.Flags().StringVar(&cableType, "cable-type", "ipsec/strongswan", "cable[/driver] - Cable type and optional driver implementation")
+	cmd.Flags().StringVar(&cableDriver, "cable-driver", "ipsec/strongswan", "cable[/driver] - Cable type and optional its driver implementation")
 
 }
 
@@ -302,7 +302,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		ServiceCIDR:              serviceCIDR,
 		ClusterCIDR:              clusterCIDR,
 		Namespace:                SubmarinerNamespace,
-		CableType:                cableType,
+		CableDriver:              cableDriver,
 	}
 
 	return submarinerSpec
