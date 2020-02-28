@@ -93,10 +93,13 @@ func Validate() error {
 }
 
 func HandleCommand(status *cli.Status, config *rest.Config, isController bool, kubeConfig string, kubeContext string) error {
-	status.Start("Deploying Service Discovery controller")
-	err := Ensure(status, config, imageRepo, imageVersion, isController, kubeConfig, kubeContext)
-	status.End(err == nil)
-	return err
+	if serviceDiscovery {
+		status.Start("Deploying Service Discovery controller")
+		err := Ensure(status, config, imageRepo, imageVersion, isController, kubeConfig, kubeContext)
+		status.End(err == nil)
+		return err
+	}
+	return nil
 }
 
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool,
