@@ -1,5 +1,6 @@
 status ?= onetime
 lighthouse ?= false
+globalnet ?= false
 
 TARGETS := $(shell ls scripts)
 
@@ -11,7 +12,7 @@ TARGETS := $(shell ls scripts)
 	@mv .dapper.tmp .dapper
 
 $(TARGETS): .dapper vendor/modules.txt
-	./.dapper -m bind $@ $(status) $(lighthouse)
+	./.dapper -m bind $@ $(status) $(lighthouse) $(globalnet)
 
 shell: .dapper
 	./.dapper -s -m bind
