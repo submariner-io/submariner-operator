@@ -136,12 +136,19 @@ function verify_subm_cr() {
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.debug}' | grep $subm_debug
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.namespace}' | grep $subm_ns
   kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.natEnabled}' | grep $natEnabled
+
   if [[ $context = cluster2 ]]; then
     kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.serviceCIDR}' | grep $serviceCIDR_cluster2
     kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.clusterCIDR}' | grep $clusterCIDR_cluster2
+    if [[ $globalnet = true ]]; then
+        kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.globalCIDR}' | grep $globalCIDR_cluster2
+    fi
   elif [[ $context = cluster3 ]]; then
     kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.serviceCIDR}' | grep $serviceCIDR_cluster3
     kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.clusterCIDR}' | grep $clusterCIDR_cluster3
+    if [[ $globalnet = true ]]; then
+        kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.globalCIDR}' | grep $globalCIDR_cluster3
+    fi
   fi
 }
 

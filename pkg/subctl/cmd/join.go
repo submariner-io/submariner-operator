@@ -49,6 +49,7 @@ var (
 	clusterID            string
 	serviceCIDR          string
 	clusterCIDR          string
+	globalCIDR           string
 	repository           string
 	imageVersion         string
 	nattPort             int
@@ -244,13 +245,25 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	status.Start("Discovering multi cluster details")
 	globalNetworks := getGlobalNetworks(subctlData)
 
-	err = checkOverlappingServiceCidr(globalNetworks)
-	status.End(err == nil)
-	exitOnError("Error validating overlapping ServiceCIDRs", err)
-
-	err = checkOverlappingClusterCidr(globalNetworks)
-	status.End(err == nil)
-	exitOnError("Error validating overlapping ClusterCIDRs", err)
+	if subctlData.GlobalnetCidrRange == "" {
+		// Globalnet not enabled
+		err = checkOverlappingServiceCidr(globalNetworks)
+		status.End(err == nil)
+		exitOnError("Error validating overlapping ServiceCIDRs", err)
+		err = checkOverlappingClusterCidr(globalNetworks)
+		status.End(err == nil)
+		exitOnError("Error validating overlapping ClusterCIDRs", err)
+	} else if globalNetworks[clusterID] == nil || globalNetworks[clusterID].GlobalCIDRs == nil || len(globalNetworks[clusterID].GlobalCIDRs) <= 0 {
+		// Globalnet enabled, no globalCidr configured on this cluster
+		globalCIDR, err = globalnet.AllocateGlobalCIDR(globalNetworks, subctlData)
+		status.End(err == nil)
+		status.QueueSuccessMessage(fmt.Sprintf("Allocated GlobalCIDR: %s", globalCIDR))
+		exitOnError("Globalnet failed", err)
+	} else {
+		// Globalnet enabled, globalCidr already configured on this cluster
+		globalCIDR = globalNetworks[clusterID].GlobalCIDRs[0]
+		status.QueueSuccessMessage(fmt.Sprintf("Cluster already has GlobalCIDR allocated: %s", globalNetworks[clusterID].GlobalCIDRs[0]))
+	}
 
 	status.Start("Deploying Submariner")
 	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
@@ -423,6 +436,10 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		ClusterCIDR:              clusterCIDR,
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
+	}
+
+	if globalCIDR != "" {
+		submarinerSpec.GlobalCIDR = globalCIDR
 	}
 
 	return submarinerSpec
