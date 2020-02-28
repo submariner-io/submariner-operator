@@ -8,7 +8,8 @@ source $(git rev-parse --show-toplevel)/scripts/lib/debug_functions
 function kind_clusters() {
     status=$1
     lighthouse=$2
-    version=$3
+    globalnet=$3
+    version=$4
     pids=(-1 -1 -1)
     logs=()
     for i in 1 2 3; do
@@ -78,8 +79,10 @@ function setup_broker() {
         echo Installing broker on cluster1.
          sd=
          [[ $lighthouse = true ]] && sd=--service-discovery
+         gn=
+         [[ $globalnet = true ]] && gn=--globalnet-enable
          set -o pipefail
-         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-merged --kubecontext cluster1 deploy-broker ${sd} |& cat
+         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-merged --kubecontext cluster1 deploy-broker ${sd} ${gn}|& cat
          set +o pipefail
          [[ $lighthouse = true ]] && kubefedctl federate namespace default --kubefed-namespace kubefed-operator
     fi
@@ -124,6 +127,10 @@ function create_subm_vars() {
   serviceCIDR_cluster2=100.95.0.0/16
   serviceCIDR_cluster3=100.96.0.0/16
   natEnabled=false
+  if [[ $globalnet = true ]]; then
+      globalCIDR_cluster2=169.254.0.0/19
+      globalCIDR_cluster3=169.254.32.0/19
+  fi
 
   subm_engine_image_repo=local
   subm_engine_image_tag=local
@@ -216,7 +223,7 @@ if [[ $1 != keep ]]; then
     trap cleanup EXIT
 fi
 
-echo Starting with status: $1, lighthouse: $2, k8s_version: $3.
+echo Starting with status: $1, lighthouse: $2, globalnet: $3 k8s_version: $4.
 PRJ_ROOT=$(git rev-parse --show-toplevel)
 mkdir -p ${PRJ_ROOT}/output/kind-config/dapper/ ${PRJ_ROOT}/output/kind-config/local-dev/
 SUBMARINER_BROKER_NS=submariner-k8s-broker

@@ -17,9 +17,12 @@ limitations under the License.
 package globalnet
 
 import (
+	"encoding/binary"
 	"fmt"
+	"math/bits"
 	"net"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	submarinerClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -31,6 +34,21 @@ type GlobalNetwork struct {
 	ClusterId    string
 }
 
+type GlobalCIDR struct {
+	cidr              string
+	net               *net.IPNet
+	allocatedClusters []*CIDR
+	allocatedCount    int
+}
+
+type CIDR struct {
+	network *net.IPNet
+	size    int
+	lastIp  uint
+}
+
+var globalCidr = GlobalCIDR{allocatedCount: 0}
+
 func (gn *GlobalNetwork) Show() {
 	if gn == nil {
 		fmt.Println("    No global network details discovered")
@@ -39,7 +57,6 @@ func (gn *GlobalNetwork) Show() {
 		fmt.Printf("        ServiceCidrs: %v\n", gn.ServiceCIDRs)
 		fmt.Printf("        ClusterCidrs: %v\n", gn.ClusterCIDRs)
 		fmt.Printf("        Global CIDRs: %v\n", gn.GlobalCIDRs)
-
 	}
 }
 
@@ -82,4 +99,103 @@ func IsOverlappingCIDR(cidrList []string, cidr string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func NewCIDR(cidr string) CIDR {
+	_, network, _ := net.ParseCIDR(cidr)
+	ones, total := network.Mask.Size()
+	size := total - ones
+	lastIp := LastIp(network)
+	clusterCidr := CIDR{network: network, size: size, lastIp: lastIp}
+	return clusterCidr
+}
+
+func LastIp(network *net.IPNet) uint {
+	ones, total := network.Mask.Size()
+	clusterSize := uint(total - ones)
+	firstIpInt := ipToUint(network.IP)
+	lastIpUint := (firstIpInt + 1<<clusterSize) - 1
+	return lastIpUint
+}
+
+func allocateByCidr(cidr string) (uint, error) {
+	requestedIp, requestedNetwork, err := net.ParseCIDR(cidr)
+	if err != nil || !globalCidr.net.Contains(requestedIp) {
+		return 0, fmt.Errorf("%s not a valid subnet of %v\n", cidr, globalCidr.net)
+	}
+	clusterCidr := NewCIDR(cidr)
+	if !globalCidr.net.Contains(uintToIP(clusterCidr.lastIp)) {
+		return 0, fmt.Errorf("%s not a valid subnet of %v\n", cidr, globalCidr.net)
+	}
+	for i := 0; i < globalCidr.allocatedCount; i++ {
+		allocated := globalCidr.allocatedClusters[i]
+		if allocated.network.Contains(requestedIp) {
+			//subset of already allocated, try next
+			return allocated.lastIp, fmt.Errorf("%s subset of already allocated globalCidr %v\n", cidr, allocated.network)
+		}
+		if requestedNetwork.Contains(allocated.network.IP) {
+			//already allocated is subset of requested, no valid lastIp
+			return clusterCidr.lastIp, fmt.Errorf("%s overlaps with already allocated globalCidr %s\n", cidr, allocated.network)
+		}
+	}
+	globalCidr.allocatedClusters = append(globalCidr.allocatedClusters, &clusterCidr)
+	globalCidr.allocatedCount++
+	return 0, nil
+}
+
+func allocateByClusterSize(numSize uint) (string, error) {
+	bitSize := bits.LeadingZeros(0) - bits.LeadingZeros(numSize-1)
+	_, totalbits := globalCidr.net.Mask.Size()
+	clusterPrefix := totalbits - bitSize
+	mask := net.CIDRMask(clusterPrefix, totalbits)
+
+	cidr := fmt.Sprintf("%s/%d", globalCidr.net.IP, clusterPrefix)
+
+	last, err := allocateByCidr(cidr)
+	if err != nil && last == 0 {
+		return "", err
+	}
+	for err != nil {
+		nextNet := net.IPNet{
+			IP:   uintToIP(last + 1),
+			Mask: mask,
+		}
+		cidr = nextNet.String()
+		last, err = allocateByCidr(cidr)
+		if err != nil && last == 0 {
+			return "", fmt.Errorf("allocation not available")
+		}
+	}
+	return cidr, nil
+}
+
+func AllocateGlobalCIDR(globalNetworks map[string]*GlobalNetwork, subctlData *datafile.SubctlData) (string, error) {
+	globalCidr = GlobalCIDR{allocatedCount: 0, cidr: subctlData.GlobalnetCidrRange}
+	_, network, err := net.ParseCIDR(globalCidr.cidr)
+	if err != nil {
+		return "", fmt.Errorf("invalid GlobalCIDR %s configured", globalCidr.cidr)
+	}
+	globalCidr.net = network
+	for _, globalNetwork := range globalNetworks {
+		for _, otherCluster := range globalNetwork.GlobalCIDRs {
+			otherClusterCIDR := NewCIDR(otherCluster)
+			globalCidr.allocatedClusters = append(globalCidr.allocatedClusters, &otherClusterCIDR)
+			globalCidr.allocatedCount++
+		}
+	}
+	return allocateByClusterSize(subctlData.GlobalnetClusterSize)
+}
+
+func ipToUint(ip net.IP) uint {
+	intIp := ip
+	if len(ip) == 16 {
+		intIp = ip[12:16]
+	}
+	return uint(binary.BigEndian.Uint32(intIp))
+}
+
+func uintToIP(ip uint) net.IP {
+	netIp := make(net.IP, 4)
+	binary.BigEndian.PutUint32(netIp, uint32(ip))
+	return netIp
 }
