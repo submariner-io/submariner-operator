@@ -106,14 +106,16 @@ func Ensure(status *cli.Status, config *rest.Config, repo string, version string
 	kubeConfig string, kubeContext string) error {
 	repo, version = canonicaliseRepoVersion(repo, version)
 
-	// Ensure DNS
-	err := lighthousedns.Ensure(status, config, repo, version)
-	if err != nil {
-		return fmt.Errorf("error setting DNS up: %s", err)
+	if !isController {
+		// Ensure DNS
+		err := lighthousedns.Ensure(status, config, repo, version)
+		if err != nil {
+			return fmt.Errorf("error setting DNS up: %s", err)
+		}
 	}
 
 	// Ensure KubeFed
-	err = kubefed.Ensure(status, config, "kubefed-operator",
+	err := kubefed.Ensure(status, config, "kubefed-operator",
 		"quay.io/openshift/kubefed-operator:"+versions.KubeFedVersion, isController, kubeConfig, kubeContext)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)
