@@ -313,7 +313,7 @@ func askForCIDR(name string) (string, error) {
 	if err != nil {
 		return "", err
 	} else {
-		return answers.Cidr, nil
+		return strings.TrimSpace(answers.Cidr), nil
 	}
 }
 
