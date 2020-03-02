@@ -28,6 +28,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 
+	k8serrs "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
 	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
@@ -114,6 +116,23 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 
 	// Missing information
 	var qs = []*survey.Question{}
+
+	if subctlData.ServiceDiscovery {
+		cvoEnabled, err := isOpenShiftCVOEnabled(config)
+		exitOnError("Unable to check for the OpenShift CVO", err)
+		if cvoEnabled {
+			// Out of sequence question so we can abort early
+			disable := false
+			err = survey.AskOne(&survey.Confirm{
+				Message: "Enabling service discovery on OpenShift will disable OpenShift updates, do you want to continue?",
+			}, &disable)
+			// Most likely a programming error
+			panicOnError(err)
+			if !disable {
+				return
+			}
+		}
+	}
 
 	if valid, _ := isValidClusterID(clusterID); !valid {
 		qs = append(qs, &survey.Question{
@@ -325,6 +344,22 @@ func isValidClusterID(clusterID string) (bool, error) {
 			"%s doesn't meet these requirements\n", clusterID)
 	}
 	return true, nil
+}
+
+func isOpenShiftCVOEnabled(config *rest.Config) (bool, error) {
+	_, clientSet, err := getClients(config)
+	if err != nil {
+		return false, err
+	}
+	deployments := clientSet.AppsV1().Deployments("openshift-cluster-version")
+	scale, err := deployments.GetScale("cluster-version-operator", metav1.GetOptions{})
+	if err != nil {
+		if k8serrs.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return scale.Spec.Replicas > 0, nil
 }
 
 func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.SubmarinerSpec {
