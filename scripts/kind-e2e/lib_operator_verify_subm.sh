@@ -215,6 +215,10 @@ function verify_subm_routeagent_daemonset() {
   verify_daemonset $routeagent_deployment_name submariner-routeagent
 }
 
+function verify_subm_globalnet_daemonset() {
+  verify_daemonset $globalnet_deployment_name submariner-globalnet
+}
+
 function verify_daemonset() {
   daemonset_app=$1
   daemonset_name=$2
