@@ -33,6 +33,8 @@ var files = []string{
 	"crds/submariner.io_submariners_crd.yaml",
 	"role.yaml",
 	"role_binding.yaml",
+	"cluster_role.yaml",
+	"cluster_role_binding.yaml",
 	"service_account.yaml",
 	"lighthouse/crds/multiclusterservices_crd.yaml",
 	"lighthouse/controller.yaml",

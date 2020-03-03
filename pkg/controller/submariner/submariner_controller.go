@@ -134,6 +134,12 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
+	if instance.Spec.GlobalCIDR != "" {
+		if err = r.reconcileGlobalnetDaemonSet(instance, reqLogger); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -163,6 +169,10 @@ func (r *ReconcileSubmariner) reconcileEngineDaemonSet(instance *submarinerv1alp
 
 func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
 	return r.reconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger)
+}
+
+func (r *ReconcileSubmariner) reconcileGlobalnetDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
+	return r.reconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger)
 }
 
 func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger) error {
@@ -392,6 +402,75 @@ func newRouteAgentDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet
 	return routeAgentDaemonSet
 }
 
+func newGlobalnetDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {
+	labels := map[string]string{
+		"app":       "submariner-globalnet",
+		"component": "globalnet",
+	}
+
+	matchLabels := map[string]string{
+		"app": "submariner-globalnet",
+	}
+
+	allowPrivilegeEscalation := true
+	privileged := true
+	readOnlyFileSystem := false
+	runAsNonRoot := false
+	security_context_all_cap_allow_escal := corev1.SecurityContext{
+		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
+		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+		Privileged:               &privileged,
+		ReadOnlyRootFilesystem:   &readOnlyFileSystem,
+		RunAsNonRoot:             &runAsNonRoot,
+	}
+
+	terminationGracePeriodSeconds := int64(0)
+
+	globalnetDaemonSet := &appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cr.Namespace,
+			Name:      "submariner-globalnet",
+			Labels:    labels,
+		},
+		Spec: appsv1.DaemonSetSpec{
+			Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:            "submariner-globalnet",
+							Image:           getImagePath(cr, globalnetImage),
+							ImagePullPolicy: "IfNotPresent",
+							SecurityContext: &security_context_all_cap_allow_escal,
+							VolumeMounts: []corev1.VolumeMount{
+								{Name: "host-slash", MountPath: "/host", ReadOnly: true},
+							},
+							Env: []corev1.EnvVar{
+								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
+								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
+								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner,kube-system,operators"},
+							},
+						},
+					},
+					// TODO: Use SA submariner-globalnet or submariner?
+					ServiceAccountName:            "submariner-operator",
+					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
+					HostNetwork:                   true,
+					Volumes: []corev1.Volume{
+						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
+					},
+				},
+			},
+		},
+	}
+
+	return globalnetDaemonSet
+}
+
 //TODO: move to a method on the API definitions, as the example shown by the etcd operator here :
 //      https://github.com/coreos/etcd-operator/blob/8347d27afa18b6c76d4a8bb85ad56a2e60927018/pkg/apis/etcd/v1beta2/cluster.go#L185
 func setSubmarinerDefaults(submariner *submarinerv1alpha1.Submariner) {
@@ -414,6 +493,7 @@ func setSubmarinerDefaults(submariner *submarinerv1alpha1.Submariner) {
 const (
 	routeAgentImage = "submariner-route-agent"
 	engineImage     = "submariner"
+	globalnetImage  = "submariner-globalnet"
 )
 
 func getImagePath(submariner *submarinerv1alpha1.Submariner, componentImage string) string {
