@@ -55,7 +55,17 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	return createdSa || upd || updRb, err
+	upCr, err := ensureClusterRole(clientSet, namespace)
+	if err != nil {
+		return false, err
+	}
+
+	upCrb, err := ensureClusterRoleBinding(clientSet, namespace)
+	if err != nil {
+		return false, err
+	}
+
+	return createdSa || upd || updRb || upCr || upCrb, err
 
 }
 
@@ -126,6 +136,67 @@ func getOperatorRole() (*rbacv1.Role, error) {
 
 	role := &rbacv1.Role{}
 	err := embeddedyamls.GetObject(embeddedyamls.Role_yaml, role)
+	if err != nil {
+		return nil, err
+	}
+	return role, nil
+}
+
+func ensureClusterRole(clientSet *clientset.Clientset, namespace string) (bool, error) {
+	clusterRole, err := getOperatorClusterRole()
+	if err != nil {
+		return false, fmt.Errorf("ClusterRole update or create failed: %s", err)
+	}
+
+	return updateOrCreateClusterRole(clientSet, namespace, clusterRole)
+
+}
+
+func updateOrCreateClusterRole(clientSet *clientset.Clientset, namespace string, clusterRole *rbacv1.ClusterRole) (bool, error) {
+	_, err := clientSet.RbacV1().ClusterRoles().Update(clusterRole)
+	if err == nil {
+		return false, nil
+	} else if !errors.IsNotFound(err) {
+		return false, err
+	}
+	_, err = clientSet.RbacV1().ClusterRoles().Create(clusterRole)
+	return true, err
+}
+
+func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, error) {
+	clusterRoleBinding, err := getOperatorClusterRoleBinding(namespace)
+	if err != nil {
+		return false, fmt.Errorf("clusterRoleBinding update or create failed: %s", err)
+	}
+	return updateOrCreateClusterRoleBinding(clientSet, namespace, clusterRoleBinding)
+}
+
+func updateOrCreateClusterRoleBinding(clientSet *clientset.Clientset, namespace string, clusterRoleBinding *rbacv1.ClusterRoleBinding) (bool, error) {
+	_, err := clientSet.RbacV1().ClusterRoleBindings().Update(clusterRoleBinding)
+	if err == nil {
+		return false, nil
+	} else if !errors.IsNotFound(err) {
+		return false, err
+	}
+	_, err = clientSet.RbacV1().ClusterRoleBindings().Create(clusterRoleBinding)
+	return true, err
+}
+
+func getOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding, error) {
+
+	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
+	err := embeddedyamls.GetObject(embeddedyamls.Cluster_role_binding_yaml, clusterRoleBinding)
+	if err != nil {
+		return nil, err
+	}
+	clusterRoleBinding.Subjects[0].Namespace = namespace
+	return clusterRoleBinding, nil
+}
+
+func getOperatorClusterRole() (*rbacv1.ClusterRole, error) {
+
+	role := &rbacv1.ClusterRole{}
+	err := embeddedyamls.GetObject(embeddedyamls.Cluster_role_yaml, role)
 	if err != nil {
 		return nil, err
 	}
