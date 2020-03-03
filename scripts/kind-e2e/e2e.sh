@@ -251,7 +251,7 @@ for i in 2 3; do
     verify_subm_gateway_label
 
     # Deploy SubM Operator
-    if [ "${context}" = "cluster2" ]; then
+    if [ "${context}" = "cluster2" ] || [ "${context}" = "cluster3" ]; then
          ../bin/subctl join --operator-image submariner-operator:local \
                         --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
                         --kubecontext ${context} \
@@ -262,20 +262,6 @@ for i in 2 3; do
                         --ikeport ${ce_ipsec_ikeport} \
                         --colorcodes ${subm_colorcodes} \
                         --cable-driver ${subm_cabledriver} \
-                        --broker-cluster-context "cluster1" \
-                        --disable-nat \
-                        broker-info.subm |& cat
-    elif  [ "${context}" = "cluster3" ]; then
-      # check that cableDriver will be set to the default value
-        ../bin/subctl join --operator-image submariner-operator:local \
-                        --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
-                        --kubecontext ${context} \
-                        --clusterid ${context} \
-                        --repository ${subm_engine_image_repo} \
-                        --version ${subm_engine_image_tag} \
-                        --nattport ${ce_ipsec_nattport} \
-                        --ikeport ${ce_ipsec_ikeport} \
-                        --colorcodes ${subm_colorcodes} \
                         --broker-cluster-context "cluster1" \
                         --disable-nat \
                         broker-info.subm |& cat

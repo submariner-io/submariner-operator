@@ -81,7 +81,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
 	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
 	cmd.Flags().StringVar(&brokerClusterContext, "broker-cluster-context", "", "Broker cluster context")
-	cmd.Flags().StringVar(&cableDriver, "cable-driver", "ipsec/strongswan", "cable[/driver] - Cable type and optional driver implementation")
+	cmd.Flags().StringVar(&cableDriver, "cable-driver", "", "Cable driver implementation")
 
 }
 
