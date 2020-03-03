@@ -98,6 +98,10 @@ function kind_import_images() {
     docker pull quay.io/submariner/submariner-route-agent:latest
     docker tag quay.io/submariner/submariner-route-agent:latest submariner-route-agent:local
     docker tag quay.io/submariner/submariner-operator:$VERSION submariner-operator:local
+    if [[ $globalnet = true ]]; then
+        docker pull quay.io/submariner/submariner-globalnet:latest
+        docker tag quay.io/submariner/submariner-globalnet:latest submariner-globalnet:local
+    fi
     if [[ $lighthouse = true ]]; then
         docker pull quay.io/openshift/kubefed-operator:v0.1.0-rc3
         docker pull quay.io/kubernetes-multicluster/kubefed:v0.1.0-rc6
@@ -111,6 +115,9 @@ function kind_import_images() {
         kind --name cluster${i} load docker-image submariner:local
         kind --name cluster${i} load docker-image submariner-route-agent:local
         kind --name cluster${i} load docker-image submariner-operator:local
+        if [[ $globalnet = true ]]; then
+            kind --name cluster${i} load docker-image submariner-globalnet:local
+        fi
     done
 }
 
@@ -121,6 +128,7 @@ function create_subm_vars() {
   engine_deployment_name=submariner-engine
   routeagent_deployment_name=submariner-routeagent
   broker_deployment_name=submariner-k8s-broker
+  globalnet_deployment_name=submariner-globalnet
 
   clusterCIDR_cluster2=10.245.0.0/16
   clusterCIDR_cluster3=10.246.0.0/16
@@ -149,8 +157,34 @@ function create_subm_vars() {
   subm_broker_ns=submariner-k8s-broker
 }
 
+function get_globalip() {
+    svcname=$1
+    gip=
+    attempt_counter=0
+    max_attempts=60
+    # It takes a while for globalIp to show up on a service
+    until [[ $gip ]]; do
+        if [[ ${attempt_counter} -eq ${max_attempts} ]];then
+          echo "Max attempts reached, failed to get globalIp!"
+          exit 1
+        fi
+        sleep 1
+        gip=$(kubectl get svc nginx-demo -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
+        attempt_counter=$(($attempt_counter+1))
+    done
+    echo $gip
+}
+
 function test_connection() {
-    nginx_svc_ip_cluster3=$(kubectl --context=cluster3 get svc -l app=nginx-demo | awk 'FNR == 2 {print $3}')
+    if [[ $globalnet = true ]]; then
+        nginx_svc_ip_cluster3=$(get_globalip nginx-demo)
+    else
+        nginx_svc_ip_cluster3=$(kubectl --context=cluster3 get svc -l app=nginx-demo | awk 'FNR == 2 {print $3}')
+    fi
+    if [[ -z "$nginx_svc_ip_cluster3" ]]; then
+        echo "Failed to get nginx-demo IP"
+        exit 1
+    fi
     netshoot_pod=$(kubectl --context=cluster2 get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
 
     echo "Testing connectivity between clusters - $netshoot_pod cluster2 --> $nginx_svc_ip_cluster3 nginx service cluster3"
@@ -313,6 +347,11 @@ for i in 2 3; do
     verify_subm_routeagent_container
     # Verify Routeagent secrets
     verify_subm_routeagent_secrets
+
+    if [[ $globalnet = true ]]; then
+        #Verify SubM Globalnet Daemonset
+        verify_subm_globalnet_daemonset
+    fi
 done
 
 echo "Running subctl a second time to verify if running subctl a second time works fine"
@@ -336,10 +375,13 @@ deploy_nginx_cluster3
 
 test_connection
 
-# run dataplane E2e tests between the two clusters
-../bin/subctl verify-connectivity ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster2 \
-                                  ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster3 \
-                                  --verbose
+# dataplane E2E need to be modified for globalnet
+if [[ $globalnet = false ]]; then
+    # run dataplane E2e tests between the two clusters
+    ../bin/subctl verify-connectivity ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster2 \
+                                      ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster3 \
+                                      --verbose
+fi
 
 if [[ $1 = keep ]]; then
     echo "your 3 virtual clusters are deployed and working properly with your local"
