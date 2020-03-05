@@ -20,6 +20,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -57,6 +59,7 @@ var (
 	submarinerDebug      bool
 	noLabel              bool
 	brokerClusterContext string
+	disableOpenShiftCVO  bool
 )
 
 func init() {
@@ -82,6 +85,8 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
 	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
 	cmd.Flags().StringVar(&brokerClusterContext, "broker-cluster-context", "", "Broker cluster context")
+	cmd.Flags().BoolVar(&disableOpenShiftCVO, "disable-cvo", false,
+		"disable OpenShift's cluster version operator if necessary, without prompting")
 }
 
 const (
@@ -128,7 +133,7 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	// Missing information
 	var qs = []*survey.Question{}
 
-	if subctlData.ServiceDiscovery {
+	if subctlData.ServiceDiscovery && !disableOpenShiftCVO {
 		cvoEnabled, err := isOpenShiftCVOEnabled(config)
 		exitOnError("Unable to check for the OpenShift CVO", err)
 		if cvoEnabled {
@@ -137,6 +142,10 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 			err = survey.AskOne(&survey.Confirm{
 				Message: "Enabling service discovery on OpenShift will disable OpenShift updates, do you want to continue?",
 			}, &disable)
+			if err == io.EOF {
+				fmt.Println("\nsubctl is running non-interactively, please specify --disable-cvo to confirm the above")
+				os.Exit(1)
+			}
 			// Most likely a programming error
 			panicOnError(err)
 			if !disable {
