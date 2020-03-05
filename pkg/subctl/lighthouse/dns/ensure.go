@@ -28,6 +28,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	clientsetifc "k8s.io/client-go/kubernetes/typed/apps/v1"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/util/retry"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 )
@@ -223,32 +224,30 @@ func setupOpenShift(status *cli.Status, clientSet *clientset.Clientset, repo str
 
 	// Update operator deployment
 	deployments := clientSet.AppsV1().Deployments("openshift-dns-operator")
-	if deployments == nil {
-		// Assume we're not on OpenShift
-		return nil
-	}
-	deployment, err := deployments.Get("dns-operator", metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-	if deployment == nil {
-		// Assume we're not on OpenShift
-		return nil
-	}
-	for i, container := range deployment.Spec.Template.Spec.Containers {
-		if container.Name == "dns-operator" {
-			deployment.Spec.Template.Spec.Containers[i].Image = repo + operatorImage + ":" + version
-			for j, env := range container.Env {
-				if env.Name == "IMAGE" {
-					deployment.Spec.Template.Spec.Containers[i].Env[j].Value = repo + openShiftCoreDNSImage + ":" + version
-				}
-			}
-			status.QueueSuccessMessage("Updated DNS operator deployment")
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		deployment, err := deployments.Get("dns-operator", metav1.GetOptions{})
+		if errors.IsNotFound(err) {
+			// Assume we're not on OpenShift
+			return nil
+		} else if err != nil {
+			return err
 		}
-	}
-	_, err = deployments.Update(deployment)
-	if err != nil {
+		for i, container := range deployment.Spec.Template.Spec.Containers {
+			if container.Name == "dns-operator" {
+				deployment.Spec.Template.Spec.Containers[i].Image = repo + operatorImage + ":" + version
+				for j, env := range container.Env {
+					if env.Name == "IMAGE" {
+						deployment.Spec.Template.Spec.Containers[i].Env[j].Value = repo + openShiftCoreDNSImage + ":" + version
+					}
+				}
+				status.QueueSuccessMessage("Updated DNS operator deployment")
+			}
+		}
+		_, err = deployments.Update(deployment)
 		return err
+	})
+	if retryErr != nil {
+		return fmt.Errorf("Error updating dns-operator deployment: %v", retryErr)
 	}
 
 	// Scale DNS operator down and back up
