@@ -93,24 +93,29 @@ func Validate() error {
 }
 
 func HandleCommand(status *cli.Status, config *rest.Config, isController bool, kubeConfig string, kubeContext string) error {
-	status.Start("Deploying Service Discovery controller")
-	err := Ensure(status, config, imageRepo, imageVersion, isController, kubeConfig, kubeContext)
-	status.End(err == nil)
-	return err
+	if serviceDiscovery {
+		status.Start("Deploying Service Discovery controller")
+		err := Ensure(status, config, imageRepo, imageVersion, isController, kubeConfig, kubeContext)
+		status.End(err == nil)
+		return err
+	}
+	return nil
 }
 
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string, isController bool,
 	kubeConfig string, kubeContext string) error {
 	repo, version = canonicaliseRepoVersion(repo, version)
 
-	// Ensure DNS
-	err := lighthousedns.Ensure(status, config, repo, version)
-	if err != nil {
-		return fmt.Errorf("error setting DNS up: %s", err)
+	if !isController {
+		// Ensure DNS
+		err := lighthousedns.Ensure(status, config, repo, version)
+		if err != nil {
+			return fmt.Errorf("error setting DNS up: %s", err)
+		}
 	}
 
 	// Ensure KubeFed
-	err = kubefed.Ensure(status, config, "kubefed-operator",
+	err := kubefed.Ensure(status, config, "kubefed-operator",
 		"quay.io/openshift/kubefed-operator:"+versions.KubeFedVersion, isController, kubeConfig, kubeContext)
 	if err != nil {
 		return fmt.Errorf("error deploying KubeFed: %s", err)

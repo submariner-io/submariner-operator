@@ -10,16 +10,18 @@ import (
 	. "github.com/onsi/gomega"
 	submariner_v1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
-
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/klog"
+	"k8s.io/klog/klogr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 const (
@@ -65,6 +67,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).To(Succeed())
 })
 
+var _ = Describe("", func() {
+	logf.SetLogger(klogr.New())
+	klog.InitFlags(nil)
+})
+
 var _ = Describe("Submariner controller tests", func() {
 	Context("Reconciliation", testReconciliation)
 })
@@ -74,6 +81,7 @@ func testReconciliation() {
 		initClientObjs  []runtime.Object
 		fakeClient      client.Client
 		submariner      *submariner_v1.Submariner
+		controller      *ReconcileSubmariner
 		reconcileErr    error
 		reconcileResult reconcile.Result
 	)
@@ -93,7 +101,7 @@ func testReconciliation() {
 			fakeClient = newClient()
 		}
 
-		controller := &ReconcileSubmariner{fakeClient, scheme.Scheme}
+		controller = &ReconcileSubmariner{fakeClient, scheme.Scheme}
 
 		reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
 			Namespace: submarinerNamespace,
@@ -117,10 +125,21 @@ func testReconciliation() {
 			initClientObjs = append(initClientObjs, existingDaemonSet)
 		})
 
-		It("should return success", func() {
+		It("should update it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(getDaemonSet(engineDaemonSetName, fakeClient)).To(Equal(existingDaemonSet))
+
+			submariner.Spec.ServiceCIDR = "101.96.1.0/16"
+			Expect(fakeClient.Update(context.TODO(), submariner)).To(Succeed())
+
+			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+				Namespace: submarinerNamespace,
+				Name:      submarinerName,
+			}})
+
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+			Expect(expectDaemonSet(engineDaemonSetName, fakeClient)).To(Equal(newEngineDaemonSet(submariner)))
 		})
 	})
 
@@ -160,10 +179,21 @@ func testReconciliation() {
 			initClientObjs = append(initClientObjs, existingDaemonSet)
 		})
 
-		It("should return success", func() {
+		It("should update it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(getDaemonSet(routeAgentDaemonSetName, fakeClient)).To(Equal(existingDaemonSet))
+
+			submariner.Spec.ClusterCIDR = "11.245.1.0/16"
+			Expect(fakeClient.Update(context.TODO(), submariner)).To(Succeed())
+
+			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+				Namespace: submarinerNamespace,
+				Name:      submarinerName,
+			}})
+
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+			Expect(getDaemonSet(routeAgentDaemonSetName, fakeClient)).To(Equal(newRouteAgentDaemonSet(submariner)))
 		})
 	})
 
@@ -287,6 +317,7 @@ func verifyEngineDaemonSet(submariner *submariner_v1.Submariner, client client.C
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Spec.ServiceCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Spec.ClusterCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_GLOBALCIDR", submariner.Spec.GlobalCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
@@ -312,6 +343,8 @@ func newSubmariner() *submariner_v1.Submariner {
 			ClusterID:                "east",
 			ServiceCIDR:              "100.94.0.0/16",
 			ClusterCIDR:              "10.244.0.0/16",
+			GlobalCIDR:               "169.254.0.0/16",
+			ColorCodes:               "red",
 			Namespace:                "submariner_ns",
 			Debug:                    true,
 		},
