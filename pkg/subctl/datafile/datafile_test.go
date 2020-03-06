@@ -30,7 +30,7 @@ import (
 
 const (
 	testBrokerUrl             = "https://my-broker-url:8443"
-	testSASecret              = "test-sa-secret"
+	testSASecret              = "submariner-k8s-broker-client-token-abcdef"
 	testToken                 = "i-am-a-token"
 	SubmarinerBrokerNamespace = "submariner-k8s-broker"
 )
