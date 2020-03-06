@@ -1,4 +1,10 @@
 status ?= onetime
+version ?= 1.14.2
+logging ?= false
+kubefed ?= false
+deploytool ?= helm
+globalnet ?= false
+build_debug ?= false
 lighthouse ?= false
 globalnet ?= false
 
@@ -12,7 +18,7 @@ TARGETS := $(shell ls scripts)
 	@mv .dapper.tmp .dapper
 
 $(TARGETS): .dapper vendor/modules.txt
-	./.dapper -m bind $@ $(status) $(lighthouse) $(globalnet)
+	./.dapper -m bind $@ --status $(status) --k8s_version $(version) --logging $(logging) --kubefed $(kubefed) --deploytool $(deploytool) --globalnet $(globalnet) --build_debug $(build_debug) --lighthouse $(lighthouse)
 
 shell: .dapper
 	./.dapper -s -m bind
