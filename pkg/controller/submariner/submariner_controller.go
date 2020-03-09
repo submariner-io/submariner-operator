@@ -22,19 +22,17 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
-
-	"k8s.io/apimachinery/pkg/util/intstr"
-
+	errorutil "github.com/pkg/errors"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
-
-	corev1 "k8s.io/api/core/v1"
-
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -175,21 +173,35 @@ func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet 
 		return err
 	}
 
-	foundDaemonSet := &appsv1.DaemonSet{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: daemonSet.Name, Namespace: daemonSet.Namespace}, foundDaemonSet)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new DaemonSet", "DaemonSet.Namespace", daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
-		if err = r.client.Create(context.TODO(), daemonSet); err != nil {
-			return fmt.Errorf("Error creating %#v: %v", daemonSet, err)
-		}
-		return nil
-	} else if err != nil {
-		return fmt.Errorf("Error getting DaemonSet %s/%s: %v", daemonSet.Namespace, daemonSet.Name, err)
-	}
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		toUpdate := &appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{
+			Name:      daemonSet.Name,
+			Namespace: daemonSet.Namespace,
+			Labels:    map[string]string{},
+		}}
 
-	reqLogger.Info("Skip reconcile: DaemonSet already exists",
-		"DaemonSet.Namespace", foundDaemonSet.Namespace, "DaemonSet.Name", foundDaemonSet.Name)
-	return nil
+		result, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, toUpdate, func() error {
+			toUpdate.Spec = daemonSet.Spec
+			for k, v := range daemonSet.Labels {
+				toUpdate.Labels[k] = v
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if result == controllerutil.OperationResultCreated {
+			reqLogger.Info("Created a new DaemonSet", "DaemonSet.Namespace", daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
+		} else if result == controllerutil.OperationResultUpdated {
+			reqLogger.Info("Updated existing DaemonSet", "DaemonSet.Namespace", daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
+		}
+
+		return nil
+	})
+
+	return errorutil.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
 }
 
 func newEngineDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {

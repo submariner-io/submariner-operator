@@ -18,6 +18,7 @@ package broker
 
 import (
 	"fmt"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -87,6 +88,13 @@ func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace string)
 	if len(sa.Secrets) < 1 {
 		return nil, fmt.Errorf("ServiceAccount %s does not have any secret", sa.Name)
 	}
-	ref := sa.Secrets[0].Name
-	return clientSet.CoreV1().Secrets(brokerNamespace).Get(ref, metav1.GetOptions{})
+	brokerTokenPrefix := fmt.Sprintf("%s-token-", submarinerBrokerSA)
+
+	for _, secret := range sa.Secrets {
+		if strings.HasPrefix(secret.Name, brokerTokenPrefix) {
+			return clientSet.CoreV1().Secrets(brokerNamespace).Get(secret.Name, metav1.GetOptions{})
+		}
+	}
+
+	return nil, fmt.Errorf("ServiceAccount %s does not have a secret of type token", submarinerBrokerSA)
 }

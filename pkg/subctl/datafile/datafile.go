@@ -30,10 +30,12 @@ import (
 )
 
 type SubctlData struct {
-	BrokerURL        string     `json:"brokerURL"`
-	ClientToken      *v1.Secret `omitempty,json:"clientToken"`
-	IPSecPSK         *v1.Secret `omitempty,json:"ipsecPSK"`
-	ServiceDiscovery bool       `omitempty,json:"serviceDiscovery"`
+	BrokerURL            string     `json:"brokerURL"`
+	ClientToken          *v1.Secret `omitempty,json:"clientToken"`
+	IPSecPSK             *v1.Secret `omitempty,json:"ipsecPSK"`
+	ServiceDiscovery     bool       `omitempty,json:"serviceDiscovery"`
+	GlobalnetCidrRange   string     `omitempty,json:"globalnetCidrRange"`
+	GlobalnetClusterSize uint       `omitempty,json:"globalnetClusterSize"`
 }
 
 func (data *SubctlData) ToString() (string, error) {

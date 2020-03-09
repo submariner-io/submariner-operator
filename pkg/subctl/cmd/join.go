@@ -20,6 +20,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -28,6 +30,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 
+	k8serrs "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
 	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
@@ -56,6 +60,7 @@ var (
 	noLabel              bool
 	brokerClusterContext string
 	cableDriver          string
+	disableOpenShiftCVO  bool
 )
 
 func init() {
@@ -82,7 +87,8 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
 	cmd.Flags().StringVar(&brokerClusterContext, "broker-cluster-context", "", "Broker cluster context")
 	cmd.Flags().StringVar(&cableDriver, "cable-driver", "", "Cable driver implementation")
-
+	cmd.Flags().BoolVar(&disableOpenShiftCVO, "disable-cvo", false,
+		"disable OpenShift's cluster version operator if necessary, without prompting")
 }
 
 const (
@@ -97,6 +103,10 @@ var joinCmd = &cobra.Command{
 		err := checkArgumentPassed(args)
 		exitOnError("Argument missing", err)
 		subctlData, err := datafile.NewFromFile(args[0])
+		if subctlData.ServiceDiscovery {
+			err = checkBrokerContextPassed(brokerClusterContext)
+		}
+		exitOnError("Argument missing", err)
 		exitOnError("Error loading the broker information from the given file", err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
 		exitOnError("Error connecting to broker cluster", err)
@@ -113,10 +123,38 @@ func checkArgumentPassed(args []string) error {
 	return nil
 }
 
+func checkBrokerContextPassed(brokerClusterContext string) error {
+	if brokerClusterContext == "" {
+		return errors.New("brokerClusterContext is not passed")
+	}
+	return nil
+}
+
 func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData) {
 
 	// Missing information
 	var qs = []*survey.Question{}
+
+	if subctlData.ServiceDiscovery && !disableOpenShiftCVO {
+		cvoEnabled, err := isOpenShiftCVOEnabled(config)
+		exitOnError("Unable to check for the OpenShift CVO", err)
+		if cvoEnabled {
+			// Out of sequence question so we can abort early
+			disable := false
+			err = survey.AskOne(&survey.Confirm{
+				Message: "Enabling service discovery on OpenShift will disable OpenShift updates, do you want to continue?",
+			}, &disable)
+			if err == io.EOF {
+				fmt.Println("\nsubctl is running non-interactively, please specify --disable-cvo to confirm the above")
+				os.Exit(1)
+			}
+			// Most likely a programming error
+			panicOnError(err)
+			if !disable {
+				return
+			}
+		}
+	}
 
 	if valid, _ := isValidClusterID(clusterID); !valid {
 		qs = append(qs, &survey.Question{
@@ -316,7 +354,7 @@ func askForCIDR(name string) (string, error) {
 	if err != nil {
 		return "", err
 	} else {
-		return answers.Cidr, nil
+		return strings.TrimSpace(answers.Cidr), nil
 	}
 }
 
@@ -328,6 +366,22 @@ func isValidClusterID(clusterID string) (bool, error) {
 			"%s doesn't meet these requirements\n", clusterID)
 	}
 	return true, nil
+}
+
+func isOpenShiftCVOEnabled(config *rest.Config) (bool, error) {
+	_, clientSet, err := getClients(config)
+	if err != nil {
+		return false, err
+	}
+	deployments := clientSet.AppsV1().Deployments("openshift-cluster-version")
+	scale, err := deployments.GetScale("cluster-version-operator", metav1.GetOptions{})
+	if err != nil {
+		if k8serrs.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return scale.Spec.Replicas > 0, nil
 }
 
 func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.SubmarinerSpec {
