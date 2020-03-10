@@ -51,6 +51,8 @@ function kind_clusters() {
             fi
         done
     fi
+    KUBECONFIG=${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1:${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster2:${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster3 \
+    kubectl config view --flatten > ${PRJ_ROOT}/output/kind-config/dapper/kind-config-merged
 }
 
 function setup_custom_cni(){
@@ -70,14 +72,15 @@ function setup_custom_cni(){
 }
 
 function setup_broker() {
-
     if kubectl --context=cluster1 get crd clusters.submariner.io > /dev/null 2>&1; then
         echo Submariner CRDs already exist, skipping broker creation...
     else
         echo Installing broker on cluster1.
          sd=
          [[ $lighthouse = true ]] && sd=--service-discovery
-         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-cluster1 --kubecontext cluster1 deploy-broker ${sd} |& cat
+         set -o pipefail
+         ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-merged --kubecontext cluster1 deploy-broker ${sd} |& cat
+         set +o pipefail
          [[ $lighthouse = true ]] && kubefedctl federate namespace default --kubefed-namespace kubefed-operator
     fi
 
@@ -130,7 +133,7 @@ function create_subm_vars() {
   subm_colorcodes=blue
   subm_debug=false
   subm_broker=k8s
-  subm_cabledriver=ipsec/strongswan
+  subm_cabledriver=strongswan
   ce_ipsec_debug=false
   ce_ipsec_ikeport=500
   ce_ipsec_nattport=4500
@@ -167,8 +170,6 @@ function update_subm_pods() {
 }
 
 function test_with_e2e_tests {
-    set -o pipefail 
-
     cd ../test/e2e
 
     # Setup the KUBECONFIG env
@@ -252,8 +253,9 @@ for i in 2 3; do
 
     # Deploy SubM Operator
     if [ "${context}" = "cluster2" ] || [ "${context}" = "cluster3" ]; then
-         ../bin/subctl join --operator-image submariner-operator:local \
-                        --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+       set -o pipefail
+        ../bin/subctl join --operator-image submariner-operator:local \
+                        --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-merged \
                         --kubecontext ${context} \
                         --clusterid ${context} \
                         --repository ${subm_engine_image_repo} \
@@ -265,6 +267,7 @@ for i in 2 3; do
                         --broker-cluster-context "cluster1" \
                         --disable-nat \
                         broker-info.subm |& cat
+        set +o pipefail
     else
         echo Unknown context ${context}
         exit 1
@@ -307,8 +310,9 @@ done
 
 echo "Running subctl a second time to verify if running subctl a second time works fine"
 
+set -o pipefail
 ../bin/subctl join --operator-image submariner-operator:local \
-                --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-$context \
+                --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-merged \
                 --kubecontext ${context} \
                 --clusterid ${context} \
                 --repository ${subm_engine_image_repo} \
@@ -316,7 +320,9 @@ echo "Running subctl a second time to verify if running subctl a second time wor
                 --nattport ${ce_ipsec_nattport} \
                 --ikeport ${ce_ipsec_ikeport} \
                 --colorcodes ${subm_colorcodes} \
+                --broker-cluster-context cluster1 \
                 --disable-nat broker-info.subm |& cat
+set +o pipefail
 
 deploy_netshoot_cluster2
 deploy_nginx_cluster3
