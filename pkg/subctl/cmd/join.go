@@ -59,6 +59,7 @@ var (
 	submarinerDebug      bool
 	noLabel              bool
 	brokerClusterContext string
+	cableDriver          string
 	disableOpenShiftCVO  bool
 )
 
@@ -85,6 +86,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
 	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
 	cmd.Flags().StringVar(&brokerClusterContext, "broker-cluster-context", "", "Broker cluster context")
+	cmd.Flags().StringVar(&cableDriver, "cable-driver", "", "Cable driver implementation")
 	cmd.Flags().BoolVar(&disableOpenShiftCVO, "disable-cvo", false,
 		"disable OpenShift's cluster version operator if necessary, without prompting")
 }
@@ -420,6 +422,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		ServiceCIDR:              serviceCIDR,
 		ClusterCIDR:              clusterCIDR,
 		Namespace:                SubmarinerNamespace,
+		CableDriver:              cableDriver,
 	}
 
 	return submarinerSpec

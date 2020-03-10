@@ -41,6 +41,8 @@ spec:
               type: string
             brokerK8sRemoteNamespace:
               type: string
+            cableDriver:
+              type: string
             ceIPSecDebug:
               type: boolean
             ceIPSecIKEPort:
