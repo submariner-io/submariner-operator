@@ -159,9 +159,10 @@ function create_subm_vars() {
 
 function get_globalip() {
     svcname=$1
+    context=$2
     gip=
     attempt_counter=0
-    max_attempts=60
+    max_attempts=30
     # It takes a while for globalIp to show up on a service
     until [[ $gip ]]; do
         if [[ ${attempt_counter} -eq ${max_attempts} ]];then
@@ -169,7 +170,7 @@ function get_globalip() {
           exit 1
         fi
         sleep 1
-        gip=$(kubectl get svc nginx-demo -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
+        gip=$(kubectl --context=$context get svc $svcname -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
         attempt_counter=$(($attempt_counter+1))
     done
     echo $gip
@@ -177,7 +178,7 @@ function get_globalip() {
 
 function test_connection() {
     if [[ $globalnet = true ]]; then
-        nginx_svc_ip_cluster3=$(get_globalip nginx-demo)
+        nginx_svc_ip_cluster3=$(get_globalip nginx-demo cluster3)
     else
         nginx_svc_ip_cluster3=$(kubectl --context=cluster3 get svc -l app=nginx-demo | awk 'FNR == 2 {print $3}')
     fi
