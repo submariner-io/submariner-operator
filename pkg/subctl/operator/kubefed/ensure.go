@@ -61,6 +61,9 @@ func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, o
 	if kubeConfig != "" {
 		args = append(args, "--kubeconfig", kubeConfig)
 	}
+	if kubeContext != "" {
+		args = append(args, "--host-cluster-context", kubeContext)
+	}
 	args = append(args, "--kubefed-namespace", "kubefed-operator")
 	out, err := exec.Command("kubefedctl", args...).CombinedOutput()
 	if err != nil {
