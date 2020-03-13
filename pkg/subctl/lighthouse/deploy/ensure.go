@@ -125,7 +125,7 @@ func Ensure(status *cli.Status, config *rest.Config, repo string, version string
 	if isController {
 		image = generateImageName(repo, defaultControllerImageName, version)
 	}
-	return install.Ensure(status, config, image, isController, kubeConfig)
+	return install.Ensure(status, config, image, isController, kubeConfig, kubeContext)
 }
 
 // canonicaliseRepoVersion returns the canonical repo and version for the given
