@@ -43,7 +43,7 @@ function verify_subm_crd() {
   kubectl get crd $crd_name -o jsonpath='{.metadata.name}' | grep $crd_name
   kubectl get crd $crd_name -o jsonpath='{.spec.scope}' | grep Namespaced
   kubectl get crd $crd_name -o jsonpath='{.spec.group}' | grep submariner.io
-  kubectl get crd $crd_name -o jsonpath='{.spec.version}' | grep v1alpha1
+  kubectl get crd $crd_name -o jsonpath='{.spec.versions[?(.name=="v1alpha1")].name}' | grep v1alpha1
   kubectl get crd $crd_name -o jsonpath='{.spec.names.kind}' | grep Submariner
 
   if [[ $openapi_checks_enabled = true ]]; then
@@ -80,7 +80,7 @@ function verify_endpoints_crd() {
   kubectl get crd $crd_name -o jsonpath='{.spec.scope}' | grep Namespaced
   kubectl get crd $crd_name -o jsonpath='{.spec.group}' | grep submariner.io
   # TODO: Should this version really be v1, or maybe v1alpha1?
-  kubectl get crd $crd_name -o jsonpath='{.spec.version}' | grep v1
+  kubectl get crd $crd_name -o jsonpath='{.spec.versions[?(.name=="v1")].name}' | grep v1
   kubectl get crd $crd_name -o jsonpath='{.spec.names.kind}' | grep Endpoint
   kubectl get crd $crd_name -o jsonpath='{.status.acceptedNames.kind}' | grep Endpoint
 }
@@ -99,7 +99,7 @@ function verify_clusters_crd() {
   kubectl get crd $crd_name -o jsonpath='{.spec.scope}' | grep Namespaced
   kubectl get crd $crd_name -o jsonpath='{.spec.group}' | grep submariner.io
   # TODO: Should this version really be v1, or maybe v1alpha1?
-  kubectl get crd $crd_name -o jsonpath='{.spec.version}' | grep v1
+  kubectl get crd $crd_name -o jsonpath='{.spec.versions[?(.name=="v1")].name}' | grep v1
   kubectl get crd $crd_name -o jsonpath='{.spec.names.kind}' | grep Cluster
   kubectl get crd $crd_name -o jsonpath='{.status.acceptedNames.kind}' | grep Cluster
 }
