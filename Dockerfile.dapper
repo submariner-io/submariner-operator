@@ -1,4 +1,4 @@
-FROM quay.io/submariner/dapper-base
+FROM quay.io/submariner/dapper-base:e791638
 
 ARG DAPPER_HOST_ARCH
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} DAPPER_ENV=REPO DAPPER_ENV=TAG \
