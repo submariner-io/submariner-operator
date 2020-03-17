@@ -139,9 +139,10 @@ func isValidGlobalnetConfig() (bool, error) {
 	}
 	ones, totalbits := network.Mask.Size()
 	availableSize := 1 << uint(totalbits-ones)
+	userClusterSize := globalnetClusterSize
 	globalnetClusterSize = nextPowerOf2(uint32(globalnetClusterSize))
-	if globalnetClusterSize >= uint(availableSize/2) {
-		return false, fmt.Errorf("Cluster size %d, should be <= %d", globalnetClusterSize, availableSize/2)
+	if globalnetClusterSize > uint(availableSize/2) {
+		return false, fmt.Errorf("Cluster size %d, should be <= %d", userClusterSize, availableSize/2)
 	}
 	return true, nil
 }
