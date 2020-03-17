@@ -10,10 +10,15 @@ branches:
 git:
   depth: 1
 
+jobs:
+  include:
+    - env: CMD="make ci e2e status=keep lighthouse=true"
+    - env: CMD="make ci e2e status=keep lighthouse=true globalnet=true"
 services:
   - docker
 script:
-  - make ci e2e status=keep lighthouse=true
+  - set -o pipefail;
+  - $CMD 2>&1
 deploy:
   - provider: script
     script: bash scripts/release

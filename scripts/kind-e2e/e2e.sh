@@ -206,7 +206,7 @@ function test_connection() {
     try_connect $nginx_svc_ip_cluster3
     if [[ $lighthouse = true ]]; then
         try_connect nginx-demo
-        resolved_ip=$(kubectl --context=cluster2 exec ${netshoot_pod} -- ping -c 1 -W 1 nginx-demo | grep PING | awk '{print $3}')
+        resolved_ip=$(kubectl --context=cluster2 exec ${netshoot_pod} -- ping -c 1 -W 1 nginx-demo 2>/dev/null | grep PING | awk '{print $3}')
         # strip the () braces from resolved_ip
         resolved_ip=${resolved_ip:1:-1}
         if [[ "$resolved_ip" != "$nginx_svc_ip_cluster3" ]]; then
