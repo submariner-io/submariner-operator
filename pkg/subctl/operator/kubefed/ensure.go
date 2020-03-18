@@ -32,23 +32,23 @@ import (
 )
 
 const deploymentCheckInterval = 5 * time.Second
-const deploymentWaitTime = 5 * time.Minute
+const deploymentWaitTime = 10 * time.Minute
 
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string, isController bool,
 	kubeConfig string, kubeContext string) error {
 
 	err := kubefedop.Ensure(status, config, "kubefed-operator", "quay.io/openshift/kubefed-operator:v0.1.0-rc3", isController)
 	if err != nil {
-		return fmt.Errorf("error deploying KubeFed: %s", err)
+		return fmt.Errorf("error deploying KubeFed operator: %s", err)
 	}
 	err = kubefedcr.Ensure(config, "kubefed-operator", kubeConfig, kubeContext)
 	if err != nil {
-		return fmt.Errorf("error deploying KubeFed: %s", err)
+		return fmt.Errorf("error deploying KubeFed CR: %s", err)
 	}
 
 	clientSet, err := clientset.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("error deploying KubeFed: %s", err)
+		return fmt.Errorf("error creating kubefed clientset: %s", err)
 	}
 
 	if isController {
