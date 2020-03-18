@@ -45,7 +45,7 @@ func init() {
 	// TODO (skitt) make this generic for potentially multiple plugins (see below too)
 	lighthouse.AddFlags(deployBroker, "service-discovery")
 
-	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet-enable", false,
+	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
 		"Enable support for Overlapping CIDRs in connecting clusters (default disabled)")
 	deployBroker.PersistentFlags().StringVar(&globalnetCidrRange, "globalnet-cidr-range", "169.254.0.0/16",
 		"Global CIDR supernet range for allocating GlobalCIDRs to each cluster")

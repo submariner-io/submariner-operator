@@ -80,7 +80,7 @@ function setup_broker() {
          sd=
          [[ $lighthouse = true ]] && sd=--service-discovery
          gn=
-         [[ $globalnet = true ]] && gn=--globalnet-enable
+         [[ $globalnet = true ]] && gn=--globalnet
          set -o pipefail
          ../bin/subctl --kubeconfig ${PRJ_ROOT}/output/kind-config/dapper/kind-config-merged --kubecontext cluster1 deploy-broker ${sd} ${gn}|& cat
          set +o pipefail
