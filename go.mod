@@ -6,7 +6,7 @@ require (
 	github.com/coreos/prometheus-operator v0.31.1 // indirect
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.19.6
+	github.com/go-openapi/spec v0.19.7
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
@@ -38,7 +38,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	k8s.io/api v0.0.0-20190918195907-bd6ac527cfd2
 	k8s.io/apiextensions-apiserver v0.0.0-20190918201827-3de75813f604
-	k8s.io/apimachinery v0.17.3
+	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/klog v0.4.0
 	k8s.io/kube-openapi v0.0.0-20190603182131-db7b694dc208
