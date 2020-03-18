@@ -38,7 +38,7 @@ const (
 	coreDNSImage            = "lighthouse-coredns"
 	openShiftCoreDNSImage   = "openshift-lighthouse-coredns"
 	deploymentCheckInterval = 5 * time.Second
-	deploymentWaitTime      = 2 * time.Minute
+	deploymentWaitTime      = 10 * time.Minute
 )
 
 func Ensure(status *cli.Status, config *rest.Config, repo string, version string) error {

@@ -29,7 +29,7 @@ import (
 )
 
 const deploymentCheckInterval = 5 * time.Second
-const deploymentWaitTime = 5 * time.Minute
+const deploymentWaitTime = 10 * time.Minute
 
 //Ensure the operator is deployed, and running
 func Ensure(restConfig *rest.Config, namespace string, operatorName string, image string) (bool, error) {

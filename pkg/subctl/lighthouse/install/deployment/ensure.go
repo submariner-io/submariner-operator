@@ -30,7 +30,7 @@ import (
 )
 
 const deploymentCheckInterval = 5 * time.Second
-const deploymentWaitTime = 2 * time.Minute
+const deploymentWaitTime = 10 * time.Minute
 
 //Ensure the lighthouse controller is deployed, and running
 func Ensure(restConfig *rest.Config, namespace string, image string) (bool, error) {
