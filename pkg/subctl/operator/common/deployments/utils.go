@@ -28,18 +28,6 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 )
 
-func CreateOrUpdateDeployment(clientSet *clientset.Clientset, namespace string, deployment *appsv1.Deployment) (bool, error) {
-
-	_, err := clientSet.AppsV1().Deployments(namespace).Update(deployment)
-	if err == nil {
-		return false, nil
-	} else if !errors.IsNotFound(err) {
-		return false, err
-	}
-	_, err = clientSet.AppsV1().Deployments(namespace).Create(deployment)
-	return true, err
-}
-
 func WaitForReady(clientSet *clientset.Clientset, namespace string, deployment string, interval, timeout time.Duration) error {
 
 	deployments := clientSet.AppsV1().Deployments(namespace)

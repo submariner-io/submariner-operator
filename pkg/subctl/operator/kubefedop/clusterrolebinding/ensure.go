@@ -20,11 +20,11 @@ import (
 	"fmt"
 
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
 //go:generate go run generators/yamls2go.go
@@ -40,18 +40,7 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("ClusterRoleBinding update or create failed: %s", err)
 	}
-	return updateOrCreateClusterRoleBinding(clientSet, clusterRoleBinding)
-}
-
-func updateOrCreateClusterRoleBinding(clientSet *clientset.Clientset, clusterRoleBinding *rbacv1.ClusterRoleBinding) (bool, error) {
-	_, err := clientSet.RbacV1().ClusterRoleBindings().Update(clusterRoleBinding)
-	if err == nil {
-		return false, nil
-	} else if !errors.IsNotFound(err) {
-		return false, err
-	}
-	_, err = clientSet.RbacV1().ClusterRoleBindings().Create(clusterRoleBinding)
-	return true, err
+	return utils.CreateOrUpdateClusterRoleBinding(clientSet, clusterRoleBinding)
 }
 
 func getOperatorClusterRoleBinding() (*rbacv1.ClusterRoleBinding, error) {

@@ -21,12 +21,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/deployments"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/deployments"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
 const deploymentCheckInterval = 5 * time.Second
@@ -54,7 +56,7 @@ func Ensure(restConfig *rest.Config, namespace string, image string) (bool, erro
 		return false, fmt.Errorf("error parsing controller deployment yaml: %s", err)
 	}
 
-	created, err := deployments.CreateOrUpdateDeployment(clientSet, namespace, deployment)
+	created, err := utils.CreateOrUpdateDeployment(clientSet, namespace, deployment)
 	if err != nil {
 		return false, err
 	}

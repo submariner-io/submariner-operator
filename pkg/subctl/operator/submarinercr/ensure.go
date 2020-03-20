@@ -28,6 +28,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/util/retry"
 )
 
 func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
@@ -76,16 +77,19 @@ func updateOrCreateSubmariner(clientSet submarinerclientset.Interface, namespace
 	if err == nil {
 		return true, nil
 	} else if errors.IsAlreadyExists(err) {
-		existingCfg, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Get(submariner.Name, v1.GetOptions{})
-		if err != nil {
-			return false, fmt.Errorf("failed to get pre-existing cfg %s : %s", submariner.Name, err)
-		}
-		submariner.ResourceVersion = existingCfg.ResourceVersion
-		_, err = clientSet.SubmarinerV1alpha1().Submariners(namespace).Update(submariner)
-		if err != nil {
-			return false, fmt.Errorf("failed to update pre-existing cfg  %s : %s", submariner.Name, err)
-		}
-		return false, nil
+		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			existingCfg, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Get(submariner.Name, v1.GetOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to get pre-existing cfg %s : %s", submariner.Name, err)
+			}
+			submariner.ResourceVersion = existingCfg.ResourceVersion
+			_, err = clientSet.SubmarinerV1alpha1().Submariners(namespace).Update(submariner)
+			if err != nil {
+				return fmt.Errorf("failed to update pre-existing cfg  %s : %s", submariner.Name, err)
+			}
+			return nil
+		})
+		return false, retryErr
 	}
 	return false, err
 }
