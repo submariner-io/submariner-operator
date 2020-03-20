@@ -22,11 +22,10 @@ import (
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
 //go:generate go run generators/yamls2go.go
@@ -48,7 +47,7 @@ func Ensure(restConfig *rest.Config, kubeConfig string, kubeContext string) (boo
 	// Attempt to update or create the CRD definition
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
-	_, err = updateOrCreateCRD(clientSet, crd)
+	_, err = utils.CreateOrUpdateCRD(clientSet, crd)
 	if err != nil {
 		return false, err
 	}
@@ -65,25 +64,6 @@ func Ensure(restConfig *rest.Config, kubeConfig string, kubeContext string) (boo
 		return false, fmt.Errorf("error federating MulticlusterService CRD: %s\n%s", err, out)
 	}
 	return true, nil
-}
-
-func updateOrCreateCRD(clientSet clientset.Interface, crd *apiextensionsv1beta1.CustomResourceDefinition) (bool, error) {
-	_, err := clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
-	if err == nil {
-		return true, nil
-	} else if errors.IsAlreadyExists(err) {
-		existingCrd, err := clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, v1.GetOptions{})
-		if err != nil {
-			return false, fmt.Errorf("failed to get pre-existing CRD %s : %s", crd.Name, err)
-		}
-		crd.ResourceVersion = existingCrd.ResourceVersion
-		_, err = clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Update(crd)
-		if err != nil {
-			return false, fmt.Errorf("failed to update pre-existing CRD %s : %s", crd.Name, err)
-		}
-		return false, nil
-	}
-	return false, err
 }
 
 func getMcsCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {

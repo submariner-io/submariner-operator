@@ -27,6 +27,7 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
 //go:generate go run generators/yamls2go.go
@@ -88,19 +89,7 @@ func ensureRole(clientSet *clientset.Clientset, namespace string) (bool, error) 
 		return false, fmt.Errorf("Role update or create failed: %s", err)
 	}
 
-	return updateOrCreateRole(clientSet, namespace, role)
-
-}
-
-func updateOrCreateRole(clientSet *clientset.Clientset, namespace string, role *rbacv1.Role) (bool, error) {
-	_, err := clientSet.RbacV1().Roles(namespace).Update(role)
-	if err == nil {
-		return false, nil
-	} else if !errors.IsNotFound(err) {
-		return false, err
-	}
-	_, err = clientSet.RbacV1().Roles(namespace).Create(role)
-	return true, err
+	return utils.CreateOrUpdateRole(clientSet, namespace, role)
 }
 
 func ensureRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, error) {
@@ -108,18 +97,7 @@ func ensureRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, 
 	if err != nil {
 		return false, fmt.Errorf("RoleBinding update or create failed: %s", err)
 	}
-	return updateOrCreateRoleBinding(clientSet, namespace, roleBinding)
-}
-
-func updateOrCreateRoleBinding(clientSet *clientset.Clientset, namespace string, roleBinding *rbacv1.RoleBinding) (bool, error) {
-	_, err := clientSet.RbacV1().RoleBindings(namespace).Update(roleBinding)
-	if err == nil {
-		return false, nil
-	} else if !errors.IsNotFound(err) {
-		return false, err
-	}
-	_, err = clientSet.RbacV1().RoleBindings(namespace).Create(roleBinding)
-	return true, err
+	return utils.CreateOrUpdateRoleBinding(clientSet, namespace, roleBinding)
 }
 
 func getOperatorRoleBinding() (*rbacv1.RoleBinding, error) {
@@ -148,19 +126,8 @@ func ensureClusterRole(clientSet *clientset.Clientset, namespace string) (bool, 
 		return false, fmt.Errorf("ClusterRole update or create failed: %s", err)
 	}
 
-	return updateOrCreateClusterRole(clientSet, namespace, clusterRole)
+	return utils.CreateOrUpdateClusterRole(clientSet, clusterRole)
 
-}
-
-func updateOrCreateClusterRole(clientSet *clientset.Clientset, namespace string, clusterRole *rbacv1.ClusterRole) (bool, error) {
-	_, err := clientSet.RbacV1().ClusterRoles().Update(clusterRole)
-	if err == nil {
-		return false, nil
-	} else if !errors.IsNotFound(err) {
-		return false, err
-	}
-	_, err = clientSet.RbacV1().ClusterRoles().Create(clusterRole)
-	return true, err
 }
 
 func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, error) {
@@ -168,18 +135,7 @@ func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) 
 	if err != nil {
 		return false, fmt.Errorf("clusterRoleBinding update or create failed: %s", err)
 	}
-	return updateOrCreateClusterRoleBinding(clientSet, namespace, clusterRoleBinding)
-}
-
-func updateOrCreateClusterRoleBinding(clientSet *clientset.Clientset, namespace string, clusterRoleBinding *rbacv1.ClusterRoleBinding) (bool, error) {
-	_, err := clientSet.RbacV1().ClusterRoleBindings().Update(clusterRoleBinding)
-	if err == nil {
-		return false, nil
-	} else if !errors.IsNotFound(err) {
-		return false, err
-	}
-	_, err = clientSet.RbacV1().ClusterRoleBindings().Create(clusterRoleBinding)
-	return true, err
+	return utils.CreateOrUpdateClusterRoleBinding(clientSet, clusterRoleBinding)
 }
 
 func getOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding, error) {

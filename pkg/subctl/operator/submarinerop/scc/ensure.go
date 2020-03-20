@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/util/retry"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/serviceaccount"
 )
@@ -46,34 +47,38 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 
 	sccClient := dynClient.Resource(openshiftSCCGVR)
 
-	cr, err := sccClient.Get("privileged", metav1.GetOptions{})
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return false, nil
-		} else {
-			return false, err
+	created := false
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		cr, err := sccClient.Get("privileged", metav1.GetOptions{})
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return nil
+			}
+			return err
 		}
-	}
-	users, found, err := unstructured.NestedSlice(cr.Object, "users")
-	if !found || err != nil {
-		return false, err
-	}
-
-	submarinerUser := fmt.Sprintf("system:serviceaccount:%s:%s", namespace, serviceaccount.OperatorServiceAccount)
-
-	for _, user := range users {
-		if submarinerUser == user.(string) {
-			// the user is already part of the scc
-			return false, nil
+		users, found, err := unstructured.NestedSlice(cr.Object, "users")
+		if !found || err != nil {
+			return err
 		}
-	}
 
-	if err = unstructured.SetNestedSlice(cr.Object, append(users, submarinerUser), "users"); err != nil {
-		return false, err
-	}
+		submarinerUser := fmt.Sprintf("system:serviceaccount:%s:%s", namespace, serviceaccount.OperatorServiceAccount)
 
-	if _, err = sccClient.Update(cr, metav1.UpdateOptions{}); err != nil {
-		return false, fmt.Errorf("Error updating OpenShift privileged SCC: %s", err)
-	}
-	return true, nil
+		for _, user := range users {
+			if submarinerUser == user.(string) {
+				// the user is already part of the scc
+				return nil
+			}
+		}
+
+		if err = unstructured.SetNestedSlice(cr.Object, append(users, submarinerUser), "users"); err != nil {
+			return err
+		}
+
+		if _, err = sccClient.Update(cr, metav1.UpdateOptions{}); err != nil {
+			return fmt.Errorf("Error updating OpenShift privileged SCC: %s", err)
+		}
+		created = true
+		return nil
+	})
+	return created, retryErr
 }
