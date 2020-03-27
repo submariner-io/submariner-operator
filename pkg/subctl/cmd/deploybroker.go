@@ -18,9 +18,9 @@ package cmd
 
 import (
 	"fmt"
-	"net"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -29,12 +29,12 @@ import (
 )
 
 var (
-	enableDataplane      bool
-	disableDataplane     bool
-	ipsecSubmFile        string
-	globalnetEnable      bool
-	globalnetCidrRange   string
-	globalnetClusterSize uint
+	enableDataplane             bool
+	disableDataplane            bool
+	ipsecSubmFile               string
+	globalnetEnable             bool
+	globalnetCidrRange          string
+	defaultGlobalnetClusterSize uint
 )
 
 func init() {
@@ -49,7 +49,7 @@ func init() {
 		"Enable support for Overlapping CIDRs in connecting clusters (default disabled)")
 	deployBroker.PersistentFlags().StringVar(&globalnetCidrRange, "globalnet-cidr-range", "169.254.0.0/16",
 		"Global CIDR supernet range for allocating GlobalCIDRs to each cluster")
-	deployBroker.PersistentFlags().UintVar(&globalnetClusterSize, "globalnet-cluster-size", 8192,
+	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 8192,
 		"Default cluster size for GlobalCIDR allocated to each cluster")
 	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
 	// An error here indicates a programming error (the argument isn’t declared), panic
@@ -113,7 +113,7 @@ var deployBroker = &cobra.Command{
 
 		if globalnetEnable {
 			subctlData.GlobalnetCidrRange = globalnetCidrRange
-			subctlData.GlobalnetClusterSize = globalnetClusterSize
+			subctlData.GlobalnetClusterSize = defaultGlobalnetClusterSize
 		}
 
 		err = subctlData.WriteToFile(brokerDetailsFilename)
@@ -130,31 +130,13 @@ var deployBroker = &cobra.Command{
 }
 
 func isValidGlobalnetConfig() (bool, error) {
+	var err error
 	if !globalnetEnable {
 		return true, nil
 	}
-	_, network, err := net.ParseCIDR(globalnetCidrRange)
-	if err != nil {
+	defaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(globalnetCidrRange, defaultGlobalnetClusterSize)
+	if err != nil || defaultGlobalnetClusterSize <= 0 {
 		return false, err
 	}
-	ones, totalbits := network.Mask.Size()
-	availableSize := 1 << uint(totalbits-ones)
-	userClusterSize := globalnetClusterSize
-	globalnetClusterSize = nextPowerOf2(uint32(globalnetClusterSize))
-	if globalnetClusterSize > uint(availableSize/2) {
-		return false, fmt.Errorf("Cluster size %d, should be <= %d", userClusterSize, availableSize/2)
-	}
-	return true, nil
-}
-
-//Refer: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-func nextPowerOf2(n uint32) uint {
-	n--
-	n |= n >> 1
-	n |= n >> 2
-	n |= n >> 4
-	n |= n >> 8
-	n |= n >> 16
-	n++
-	return uint(n)
+	return true, err
 }

@@ -199,3 +199,31 @@ func uintToIP(ip uint) net.IP {
 	binary.BigEndian.PutUint32(netIp, uint32(ip))
 	return netIp
 }
+
+func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
+
+	_, network, err := net.ParseCIDR(cidrRange)
+	if err != nil {
+		return 0, err
+	}
+	ones, totalbits := network.Mask.Size()
+	availableSize := 1 << uint(totalbits-ones)
+	userClusterSize := clusterSize
+	clusterSize = nextPowerOf2(uint32(clusterSize))
+	if clusterSize > uint(availableSize/2) {
+		return 0, fmt.Errorf("Cluster size %d, should be <= %d", userClusterSize, availableSize/2)
+	}
+	return clusterSize, nil
+}
+
+//Refer: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+func nextPowerOf2(n uint32) uint {
+	n--
+	n |= n >> 1
+	n |= n >> 2
+	n |= n >> 4
+	n |= n >> 8
+	n |= n >> 16
+	n++
+	return uint(n)
+}

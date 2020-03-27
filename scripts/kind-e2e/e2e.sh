@@ -61,10 +61,6 @@ function create_subm_vars() {
 
   declare_cidrs
   natEnabled=false
-  if [[ $globalnet = true ]]; then
-      global_CIDRs['cluster2']='169.254.0.0/19'
-      global_CIDRs['cluster3']='169.254.32.0/19'
-  fi
 
   subm_engine_image_repo="localhost:5000"
   subm_engine_image_tag=local

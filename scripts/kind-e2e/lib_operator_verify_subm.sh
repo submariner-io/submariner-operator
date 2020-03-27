@@ -115,7 +115,6 @@ function verify_subm_cr() {
 
   validate_equals '.spec.serviceCIDR' ${service_CIDRs[$context]}
   validate_equals '.spec.clusterCIDR' ${cluster_CIDRs[$context]}
-  [[ $globalnet != 'true' ]] || validate_equals '.spec.globalCIDR' ${global_CIDRs[$context]}
 }
 
 function verify_subm_op_pod() {
