@@ -21,7 +21,7 @@ require (
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.2.1 // indirect
-	github.com/spf13/cobra v0.0.6
+	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
 	github.com/submariner-io/submariner v0.0.4-0.20200206161006-1426b56a528b
 	go.opencensus.io v0.22.1 // indirect
