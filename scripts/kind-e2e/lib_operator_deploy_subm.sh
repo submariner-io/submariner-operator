@@ -5,8 +5,6 @@ if [ "${0##*/}" = "lib_operator_deploy_subm.sh" ]; then
     exit 1
 fi
 
-openapi_checks_enabled=false
-
 function add_subm_gateway_label() {
   kubectl label node $context-worker "submariner.io/gateway=true" --overwrite
 }
