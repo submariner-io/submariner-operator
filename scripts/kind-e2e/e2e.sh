@@ -81,10 +81,6 @@ function create_subm_vars() {
   globalnet_deployment_name=submariner-globalnet
 
   declare_cidrs
-  clusterCIDR_cluster2=${cluster_CIDRs['cluster2']}
-  clusterCIDR_cluster3=${cluster_CIDRs['cluster3']}
-  serviceCIDR_cluster2=${service_CIDRs['cluster2']}
-  serviceCIDR_cluster3=${service_CIDRs['cluster3']}
   natEnabled=false
   if [[ $globalnet = true ]]; then
       global_CIDRs['cluster2']='169.254.0.0/19'
