@@ -30,59 +30,46 @@ function verify_subm_operator() {
   kubectl get deployments --namespace=$subm_ns submariner-operator
 }
 
-function verify_subm_crd() {
-  crd_name=submariners.submariner.io
+# Uses `jq` to extract the content using the filter given, and matches it to the expected value
+# Make sure $json_file is set to point to the file to check
+function validate_equals() {
+  local json_filter=$1
+  local expected=$2
+  [[ $expected = $(jq -r -M $json_filter $json_file) ]]
+}
+
+function validate_crd() {
+  local crd_name=$1
+  local version=$2
+  local spec_name=$3
 
   # Verify presence of CRD
   kubectl get crds $crd_name
 
   # Show full CRD
-  kubectl get crd $crd_name -o yaml
+  json_file=/tmp/${crd_name}.json
+  kubectl get crd $crd_name -o json | tee $json_file
 
   # Verify details of CRD
-  kubectl get crd $crd_name -o jsonpath='{.metadata.name}' | grep $crd_name
-  kubectl get crd $crd_name -o jsonpath='{.spec.scope}' | grep Namespaced
-  kubectl get crd $crd_name -o jsonpath='{.spec.group}' | grep submariner.io
-  kubectl get crd $crd_name -o jsonpath='{.spec.version}' | grep v1alpha1
-  kubectl get crd $crd_name -o jsonpath='{.spec.names.kind}' | grep Submariner
+  validate_equals '.metadata.name' "$crd_name"
+  validate_equals '.spec.scope' 'Namespaced'
+  validate_equals '.spec.group' 'submariner.io'
+  validate_equals '.spec.version' "$version"
+  validate_equals '.spec.names.kind' "$spec_name"
+}
+
+function verify_subm_crd() {
+  validate_crd 'submariners.submariner.io' 'v1alpha1' 'Submariner'
 }
 
 function verify_endpoints_crd() {
-  crd_name=endpoints.submariner.io
-
-  # Verify presence of CRD
-  kubectl get crds $crd_name
-
-  # Show full CRD
-  kubectl get crd endpoints.submariner.io -o yaml
-
-  # Verify details of CRD
-  kubectl get crd $crd_name -o jsonpath='{.metadata.name}' | grep $crd_name
-  kubectl get crd $crd_name -o jsonpath='{.spec.scope}' | grep Namespaced
-  kubectl get crd $crd_name -o jsonpath='{.spec.group}' | grep submariner.io
-  # TODO: Should this version really be v1, or maybe v1alpha1?
-  kubectl get crd $crd_name -o jsonpath='{.spec.version}' | grep v1
-  kubectl get crd $crd_name -o jsonpath='{.spec.names.kind}' | grep Endpoint
-  kubectl get crd $crd_name -o jsonpath='{.status.acceptedNames.kind}' | grep Endpoint
+  validate_crd 'endpoints.submariner.io' 'v1' 'Endpoint'
+  validate_equals '.status.acceptedNames.kind' 'Endpoint'
 }
 
 function verify_clusters_crd() {
-  crd_name=clusters.submariner.io
-
-  # Verify presence of CRD
-  kubectl get crds $crd_name
-
-  # Show full CRD
-  kubectl get crd clusters.submariner.io -o yaml
-
-  # Verify details of CRD
-  kubectl get crd $crd_name -o jsonpath='{.metadata.name}' | grep $crd_name
-  kubectl get crd $crd_name -o jsonpath='{.spec.scope}' | grep Namespaced
-  kubectl get crd $crd_name -o jsonpath='{.spec.group}' | grep submariner.io
-  # TODO: Should this version really be v1, or maybe v1alpha1?
-  kubectl get crd $crd_name -o jsonpath='{.spec.version}' | grep v1
-  kubectl get crd $crd_name -o jsonpath='{.spec.names.kind}' | grep Cluster
-  kubectl get crd $crd_name -o jsonpath='{.status.acceptedNames.kind}' | grep Cluster
+  validate_crd 'clusters.submariner.io' 'v1' 'Cluster'
+  validate_equals '.status.acceptedNames.kind' 'Cluster'
 }
 
 function verify_subm_cr() {
