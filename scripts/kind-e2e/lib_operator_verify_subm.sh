@@ -275,18 +275,19 @@ function verify_subm_operator_container() {
   subm_operator_pod_name=$(kubectl get pods --namespace=$subm_ns -l name=submariner-operator -o=jsonpath='{.items..metadata.name}')
 
   # Show SubM Operator pod environment variables
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env
+  env_file=/tmp/${subm_operator_pod_name}.env
+  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | tee $env_file
 
   # Verify SubM Operator pod environment variables
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | grep "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | grep "HOSTNAME=$subm_operator_pod_name"
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | grep "OPERATOR=/usr/local/bin/submariner-operator"
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | grep "USER_UID=1001"
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | grep "USER_NAME=submariner-operator"
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | grep "WATCH_NAMESPACE=$subm_ns"
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | grep "POD_NAME=$subm_operator_pod_name"
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | grep "OPERATOR_NAME=submariner-operator"
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | grep "HOME=/"
+  grep "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" $env_file
+  grep "HOSTNAME=$subm_operator_pod_name" $env_file
+  grep "OPERATOR=/usr/local/bin/submariner-operator" $env_file
+  grep "USER_UID=1001" $env_file
+  grep "USER_NAME=submariner-operator" $env_file
+  grep "WATCH_NAMESPACE=$subm_ns" $env_file
+  grep "POD_NAME=$subm_operator_pod_name" $env_file
+  grep "OPERATOR_NAME=submariner-operator" $env_file
+  grep "HOME=/" $env_file
 
   # Verify the operator binary is in the expected place and in PATH
   kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- command -v submariner-operator | grep /usr/local/bin/submariner-operator
@@ -299,32 +300,27 @@ function verify_subm_engine_container() {
   subm_engine_pod_name=$(kubectl get pods --namespace=$subm_ns -l app=$engine_deployment_name -o=jsonpath='{.items..metadata.name}')
 
   # Show SubM Engine pod environment variables
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env
+  env_file=/tmp/${subm_engine_pod_name}.env
+  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | tee $env_file
 
   # Verify SubM Engine pod environment variables
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "HOSTNAME=$context-worker"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "BROKER_K8S_APISERVER=$SUBMARINER_BROKER_URL"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_NAMESPACE=$subm_ns"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_BROKER=$subm_broker"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "BROKER_K8S_CA=$SUBMARINER_BROKER_CA"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "CE_IPSEC_DEBUG=$ce_ipsec_debug"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_DEBUG=$subm_debug"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "BROKER_K8S_APISERVERTOKEN=$SUBMARINER_BROKER_TOKEN"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "BROKER_K8S_REMOTENAMESPACE=$SUBMARINER_BROKER_NS"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_CABLEDRIVER=$subm_cabledriver"
-
-  if [[ $context = cluster2 ]]; then
-    kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_SERVICECIDR=$serviceCIDR_cluster2"
-    kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_CLUSTERCIDR=$clusterCIDR_cluster2"
-  elif [[ $context = cluster3 ]]; then
-    kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_SERVICECIDR=$serviceCIDR_cluster3"
-    kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_CLUSTERCIDR=$clusterCIDR_cluster3"
-  fi
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_COLORCODES=$subm_colorcode"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_NATENABLED=$natEnabled"
+  grep "HOSTNAME=$context-worker" $env_file
+  grep "BROKER_K8S_APISERVER=$SUBMARINER_BROKER_URL" $env_file
+  grep "SUBMARINER_NAMESPACE=$subm_ns" $env_file
+  grep "SUBMARINER_BROKER=$subm_broker" $env_file
+  grep "BROKER_K8S_CA=$SUBMARINER_BROKER_CA" $env_file
+  grep "CE_IPSEC_DEBUG=$ce_ipsec_debug" $env_file
+  grep "SUBMARINER_DEBUG=$subm_debug" $env_file
+  grep "BROKER_K8S_APISERVERTOKEN=$SUBMARINER_BROKER_TOKEN" $env_file
+  grep "BROKER_K8S_REMOTENAMESPACE=$SUBMARINER_BROKER_NS" $env_file
+  grep "SUBMARINER_CABLEDRIVER=$subm_cabledriver" $env_file
+  grep "SUBMARINER_SERVICECIDR=${service_CIDRs[$context]}" $env_file
+  grep "SUBMARINER_CLUSTERCIDR=${cluster_CIDRs[$context]}" $env_file
+  grep "SUBMARINER_COLORCODES=$subm_colorcode" $env_file
+  grep "SUBMARINER_NATENABLED=$natEnabled" $env_file
   # FIXME: This fails on redeploys
-  #kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "CE_IPSEC_PSK=$SUBMARINER_PSK"
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | grep "HOME=/root"
+  #grep "CE_IPSEC_PSK=$SUBMARINER_PSK" $env_file
+  grep "HOME=/root" $env_file
 
   if kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- command -v command; then
     # Verify the engine binary is in the expected place and in PATH
@@ -351,21 +347,17 @@ function verify_subm_routeagent_container() {
     echo "Testing Submariner routeagent container $subm_routeagent_pod_name"
 
     # Show SubM Routeagent pod environment variables
-    kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env
+    env_file=/tmp/${subm_routeagent_pod_name}.env
+    kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | tee $env_file
 
     # Verify SubM Routeagent pod environment variables
-    kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | grep "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-    kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | grep "HOSTNAME=$context-worker"
-    kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_NAMESPACE=$subm_ns"
-    kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_DEBUG=$subm_debug"
-    if [[ $context = cluster2 ]]; then
-      kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_SERVICECIDR=$serviceCIDRcluster2"
-      kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_CLUSTERCIDR=$clusterCIDR_cluster2"
-    elif [[ $context = cluster3 ]]; then
-      kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_SERVICECIDR=$serviceCIDR_cluster3"
-      kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | grep "SUBMARINER_CLUSTERCIDR=$clusterCIDR_cluster3"
-    fi
-    kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- env | grep "HOME=/root"
+    grep "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" $env_file
+    grep "HOSTNAME=$context-worker" $env_file
+    grep "SUBMARINER_NAMESPACE=$subm_ns" $env_file
+    grep "SUBMARINER_DEBUG=$subm_debug" $env_file
+    grep "SUBMARINER_SERVICECIDR=${service_CIDRs[$context]}" $env_file
+    grep "SUBMARINER_CLUSTERCIDR=${cluster_CIDRs[$context]}" $env_file
+    grep "HOME=/root" $env_file
 
     # Verify the routeagent binary is in the expected place and in PATH
     kubectl exec $subm_routeagent_pod_name --namespace=$subm_ns -- command -v submariner-route-agent | grep /usr/local/bin/submariner-route-agent
