@@ -226,6 +226,14 @@ function verify_daemonset() {
    done
 }
 
+validate_pod_container_volume_mount() {
+  local volume_path=$1
+  local volume_name=$2
+  local read_only=$3
+  [[ $(jq -r ".spec.containers[].volumeMounts[] | select(.name==\"${volume_name}\").mountPath" $json_file) = $volume_path ]]
+  [[ $(jq -r ".spec.containers[].volumeMounts[] | select(.name==\"${volume_name}\").readOnly" $json_file) = $read_only ]]
+}
+
 function verify_subm_routeagent_pod() {
   kubectl wait --for=condition=Ready pods -l app=$routeagent_deployment_name --timeout=120s --namespace=$subm_ns
 
@@ -236,40 +244,30 @@ function verify_subm_routeagent_pod() {
   # TODO: Fail if there are zero routeagent pods
   for subm_routeagent_pod_name in "${subm_routeagent_pod_names_array[@]}"; do
     echo "Testing Submariner routeagent pod $subm_routeagent_pod_name"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o json
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..image}' | grep submariner-route-agent:$subm_engine_image_tag
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.capabilities.add}' | grep ALL
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.allowPrivilegeEscalation}' | grep "true"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.privileged}' | grep "true"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.readOnlyRootFilesystem}' | grep "false"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.runAsNonRoot}' | grep "false"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..command}' | grep submariner-route-agent.sh
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}'
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_NAMESPACE value:$subm_ns"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_DEBUG value:$subm_debug"
-    if [[ $context = cluster2 ]]; then
-      kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_SERVICECIDR value:$serviceCIDR_cluster2"
-      kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_CLUSTERCIDR value:$clusterCIDR_cluster2"
-    elif [[ $context = cluster3 ]]; then
-      kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_SERVICECIDR value:$serviceCIDR_cluster3"
-      kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_CLUSTERCIDR value:$clusterCIDR_cluster3"
-    fi
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..volumeMounts}' | grep "mountPath:/host"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..volumeMounts}' | grep "name:host-slash"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..volumeMounts}' | grep "readOnly:true"
+    json_file=/tmp/${subm_engine_pod_name}.json
+    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o json | tee $json_file
+    validate_pod_container_equals 'image' "submariner-route-agent:$subm_engine_image_tag"
+    validate_pod_container_has 'securityContext.capabilities.add' 'ALL'
+    validate_pod_container_equals 'securityContext.allowPrivilegeEscalation' 'true'
+    validate_pod_container_equals 'securityContext.privileged' 'true'
+    validate_pod_container_equals 'securityContext.readOnlyRootFilesystem' 'false'
+    validate_pod_container_equals 'securityContext.runAsNonRoot' 'false'
+    validate_pod_container_has 'command' 'submariner-route-agent.sh'
+
+    jq -r '.spec.containers[].env' $json_file
+    validate_pod_container_env 'SUBMARINER_NAMESPACE' $subm_ns
+    validate_pod_container_env 'SUBMARINER_DEBUG' $subm_debug
+    validate_pod_container_env 'SUBMARINER_SERVICECIDR' ${service_CIDRs[$context]}
+    validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$context]}
+    validate_pod_container_volume_mount '/host' 'host-slash' 'true'
 
     # FIXME: Use submariner-routeagent SA vs submariner-operator when doing Operator deploys
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.serviceAccount}' | grep submariner-operator
+    validate_equals '.spec.serviceAccount' 'submariner-operator'
 
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec..volumes}' | grep "name:host-slash"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec..volumes}' | grep "path:/"
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.status.phase}' | grep Running
-    kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.metadata.namespace}' | grep $subm_ns
-    GRACE_PERIOD=$(kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o jsonpath='{.spec.terminationGracePeriodSeconds}')
-    if [ "$GRACE_PERIOD" != "0" ]; then
-      exit 1
-    fi
-
+    [[ $(jq -r ".spec.volumes[] | select(.name==\"host-slash\").hostPath.path" $json_file) = '/' ]]
+    validate_equals '.status.phase' 'Running'
+    validate_equals '.metadata.namespace' $subm_ns
+    validate_equals '.spec.terminationGracePeriodSeconds' '0'
   done
 }
 
