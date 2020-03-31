@@ -14,11 +14,15 @@ jobs:
   include:
     - env: CMD="make ci e2e status=keep lighthouse=true"
     - env: CMD="make ci e2e status=keep lighthouse=true globalnet=true"
+
+install:
+  - sudo apt-get install moreutils # make ts available
+
 services:
   - docker
 script:
   - set -o pipefail;
-  - $CMD 2>&1
+    $CMD 2>&1 | ts '[%H:%M:%.S]' -s
 deploy:
   - provider: script
     script: bash scripts/release
