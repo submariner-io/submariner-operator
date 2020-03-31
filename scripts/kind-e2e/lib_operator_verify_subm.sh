@@ -125,44 +125,59 @@ function verify_subm_op_pod() {
   # TODO: Verify logs?
 }
 
+function validate_pod_container_equals() {
+  validate_equals ".spec.containers[].${1}" $2
+}
+
+function validate_pod_container_has() {
+  local json_filter=".spec.containers[].${1}"
+  local expected=$2
+  [[ $(jq -r -M $json_filter $json_file) =~ $expected ]]
+}
+
+function validate_pod_container_env() {
+  local var_name=$1
+  local expected=$2
+  [[ $(jq -r -M ".spec.containers[].env[] | select(.name==\"${var_name}\").value" $json_file) = $expected ]]
+}
+
 function verify_subm_engine_pod() {
   kubectl wait --for=condition=Ready pods -l app=$engine_deployment_name --timeout=120s --namespace=$subm_ns
 
   subm_engine_pod_name=$(kubectl get pods --namespace=$subm_ns -l app=$engine_deployment_name -o=jsonpath='{.items..metadata.name}')
 
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o json
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..image}' | grep submariner:local
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.capabilities.add}' | grep ALL
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.allowPrivilegeEscalation}' | grep "true"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.privileged}' | grep "true"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.readOnlyRootFilesystem}' | grep "false"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..securityContext.runAsNonRoot}' | grep "false"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..command}' | grep submariner.sh
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}'
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_NAMESPACE value:$subm_ns"
-  if [[ $context = cluster2 ]]; then
-    kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_SERVICECIDR value:$serviceCIDR_cluster2"
-    kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_CLUSTERCIDR value:$clusterCIDR_cluster2"
-  elif [[ $context = cluster3 ]]; then
-    kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_SERVICECIDR value:$serviceCIDR_cluster3"
-    kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_CLUSTERCIDR value:$clusterCIDR_cluster3"
-  fi
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_COLORCODES value:$subm_colorcodes"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_DEBUG value:$subm_debug"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_NATENABLED value:$natEnabled"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_BROKER value:$subm_broker"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:SUBMARINER_CABLEDRIVER value:$subm_cabledriver"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:BROKER_K8S_APISERVER value:$SUBMARINER_BROKER_URL"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:BROKER_K8S_APISERVERTOKEN value:$SUBMARINER_BROKER_TOKEN"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:BROKER_K8S_REMOTENAMESPACE value:$SUBMARINER_BROKER_NS"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:BROKER_K8S_CA value:$SUBMARINER_BROKER_CA"
+  json_file=/tmp/${subm_engine_pod_name}.json
+  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o json | tee $json_file
+
+  validate_pod_container_equals 'image' 'submariner:local'
+  validate_pod_container_has 'securityContext.capabilities.add' 'ALL'
+  validate_pod_container_equals 'securityContext.allowPrivilegeEscalation' 'true'
+  validate_pod_container_equals 'securityContext.privileged' 'true'
+  validate_pod_container_equals 'securityContext.readOnlyRootFilesystem' 'false'
+  validate_pod_container_equals 'securityContext.runAsNonRoot' 'false'
+  validate_pod_container_has 'command' 'submariner.sh'
+
+  jq -r '.spec.containers[].env' $json_file
+  validate_pod_container_env 'SUBMARINER_NAMESPACE' $subm_ns
+  validate_pod_container_env 'SUBMARINER_SERVICECIDR' ${service_CIDRs[$context]}
+  validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$context]}
+  validate_pod_container_env 'SUBMARINER_COLORCODES' $subm_colorcodes
+  validate_pod_container_env 'SUBMARINER_DEBUG' $subm_debug
+  validate_pod_container_env 'SUBMARINER_NATENABLED' $natEnabled
+  validate_pod_container_env 'SUBMARINER_BROKER' $subm_broker
+  validate_pod_container_env 'SUBMARINER_CABLEDRIVER' $subm_cabledriver
+  validate_pod_container_env 'BROKER_K8S_APISERVER' $SUBMARINER_BROKER_URL
+  validate_pod_container_env 'BROKER_K8S_APISERVERTOKEN' $SUBMARINER_BROKER_TOKEN
+  validate_pod_container_env 'BROKER_K8S_REMOTENAMESPACE' $SUBMARINER_BROKER_NS
+  validate_pod_container_env 'BROKER_K8S_CA' $SUBMARINER_BROKER_CA
   # FIXME: This changes between some deployment runs and causes failures
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:CE_IPSEC_PSK value:$SUBMARINER_PSK" || true
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:CE_IPSEC_DEBUG value:$ce_ipsec_debug"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:CE_IPSEC_IKEPORT value:$ce_ipsec_ikeport"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.spec.containers..env}' | grep "name:CE_IPSEC_NATTPORT value:$ce_ipsec_nattport"
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.status.phase}' | grep Running
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o jsonpath='{.metadata.namespace}' | grep $subm_ns
+  validate_pod_container_env 'CE_IPSEC_PSK' $SUBMARINER_PSK || true
+  validate_pod_container_env 'CE_IPSEC_DEBUG' $ce_ipsec_debug
+  validate_pod_container_env 'CE_IPSEC_IKEPORT' $ce_ipsec_ikeport
+  validate_pod_container_env 'CE_IPSEC_NATTPORT' $ce_ipsec_nattport
+
+  validate_equals '.status.phase' 'Running'
+  validate_equals '.metadata.namespace' $subm_ns
 }
 
 function verify_subm_engine_deployment() {
