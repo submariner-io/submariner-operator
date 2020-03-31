@@ -79,45 +79,35 @@ function verify_subm_cr() {
   kubectl get submariner --namespace=$subm_ns | grep $deployment_name
 
   # Show full SubM CR
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o yaml
+  json_file=/tmp/${deployment_name}.json
+  kubectl get submariner $deployment_name --namespace=$subm_ns -o json | tee $json_file
 
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.metadata.namespace}' | grep $subm_ns
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.apiVersion}' | grep submariner.io/v1alpha1
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.kind}' | grep Submariner
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.metadata.name}' | grep $deployment_name
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{..spec.brokerK8sApiServer}' | grep $SUBMARINER_BROKER_URL
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.brokerK8sApiServerToken}' | grep $SUBMARINER_BROKER_TOKEN
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.brokerK8sCA}' | grep $SUBMARINER_BROKER_CA
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.brokerK8sRemoteNamespace}' | grep $SUBMARINER_BROKER_NS
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.ceIPSecDebug}' | grep $ce_ipsec_debug
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.ceIPSecIKEPort}' | grep $ce_ipsec_ikeport
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.ceIPSecNATTPort}' | grep $ce_ipsec_nattport
+  validate_equals '.metadata.namespace' $subm_ns
+  validate_equals '.apiVersion' 'submariner.io/v1alpha1'
+  validate_equals '.kind' 'Submariner'
+  validate_equals '.metadata.name' $deployment_name
+  validate_equals '.spec.brokerK8sApiServer' $SUBMARINER_BROKER_URL
+  validate_equals '.spec.brokerK8sApiServerToken' $SUBMARINER_BROKER_TOKEN
+  validate_equals '.spec.brokerK8sCA' $SUBMARINER_BROKER_CA
+  validate_equals '.spec.brokerK8sRemoteNamespace' $SUBMARINER_BROKER_NS
+  validate_equals '.spec.ceIPSecDebug' $ce_ipsec_debug
+  validate_equals '.spec.ceIPSecIKEPort' $ce_ipsec_ikeport
+  validate_equals '.spec.ceIPSecNATTPort' $ce_ipsec_nattport
   # FIXME: Sometimes this changes between runs, causes failures
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.ceIPSecPSK}' | grep $SUBMARINER_PSK || true
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.repository}' | grep $subm_engine_image_repo
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.version}' | grep $subm_engine_image_tag
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.broker}' | grep $subm_broker
-  echo Generated cluster id:
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.clusterID}'
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.colorCodes}' | grep $subm_colorcodes
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.cableDriver}' | grep $subm_cabledriver
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.debug}' | grep $subm_debug
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.namespace}' | grep $subm_ns
-  kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.natEnabled}' | grep $natEnabled
+  validate_equals '.spec.ceIPSecPSK' $SUBMARINER_PSK || true
+  validate_equals '.spec.repository' $subm_engine_image_repo
+  validate_equals '.spec.version' $subm_engine_image_tag
+  validate_equals '.spec.broker' $subm_broker
+  echo "Generated cluster id: $(jq -r '.spec.clusterID' $json_file)"
+  validate_equals '.spec.colorCodes' $subm_colorcodes
+  validate_equals '.spec.cableDriver' $subm_cabledriver
+  validate_equals '.spec.debug' $subm_debug
+  validate_equals '.spec.namespace' $subm_ns
+  validate_equals '.spec.natEnabled' $natEnabled
 
-  if [[ $context = cluster2 ]]; then
-    kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.serviceCIDR}' | grep $serviceCIDR_cluster2
-    kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.clusterCIDR}' | grep $clusterCIDR_cluster2
-    if [[ $globalnet = true ]]; then
-        kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.globalCIDR}' | grep $globalCIDR_cluster2
-    fi
-  elif [[ $context = cluster3 ]]; then
-    kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.serviceCIDR}' | grep $serviceCIDR_cluster3
-    kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.clusterCIDR}' | grep $clusterCIDR_cluster3
-    if [[ $globalnet = true ]]; then
-        kubectl get submariner $deployment_name --namespace=$subm_ns -o jsonpath='{.spec.globalCIDR}' | grep $globalCIDR_cluster3
-    fi
-  fi
+  validate_equals '.spec.serviceCIDR' ${service_CIDRs[$context]}
+  validate_equals '.spec.clusterCIDR' ${cluster_CIDRs[$context]}
+  [[ $globalnet != 'true' ]] || validate_equals '.spec.globalCIDR' ${global_CIDRs[$context]}
 }
 
 function verify_subm_op_pod() {

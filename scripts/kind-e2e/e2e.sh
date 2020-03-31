@@ -87,8 +87,8 @@ function create_subm_vars() {
   serviceCIDR_cluster3=${service_CIDRs['cluster3']}
   natEnabled=false
   if [[ $globalnet = true ]]; then
-      globalCIDR_cluster2=169.254.0.0/19
-      globalCIDR_cluster3=169.254.32.0/19
+      global_CIDRs['cluster2']='169.254.0.0/19'
+      global_CIDRs['cluster3']='169.254.32.0/19'
   fi
 
   subm_engine_image_repo=local
