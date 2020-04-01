@@ -12,8 +12,9 @@ git:
 
 jobs:
   include:
-    - env: CMD="make ci e2e status=keep lighthouse=true"
-    - env: CMD="make ci e2e status=keep lighthouse=true globalnet=true"
+    - env: CMD="make ci"
+    - env: CMD="make e2e status=keep lighthouse=true"
+    - env: CMD="make e2e status=keep lighthouse=true globalnet=true"
 
 install:
   - sudo apt-get install moreutils # make ts available
