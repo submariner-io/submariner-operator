@@ -19,6 +19,7 @@ package submariner
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -136,6 +137,25 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 
 	if instance.Spec.GlobalCIDR != "" {
 		if err = r.reconcileGlobalnetDaemonSet(instance, reqLogger); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	// Update the status
+	status := submarinerv1alpha1.SubmarinerStatus{
+		NatEnabled:  instance.Spec.NatEnabled,
+		ColorCodes:  instance.Spec.ColorCodes,
+		ClusterID:   instance.Spec.ClusterID,
+		ServiceCIDR: instance.Spec.ServiceCIDR,
+		ClusterCIDR: instance.Spec.ClusterCIDR,
+		GlobalCIDR:  instance.Spec.GlobalCIDR,
+		CableDriver: instance.Spec.CableDriver, // TODO retrieve this from the engine
+	}
+	if !reflect.DeepEqual(instance.Status, status) {
+		instance.Status = status
+		err := r.client.Status().Update(context.TODO(), instance)
+		if err != nil {
+			reqLogger.Error(err, "failed to update the Submariner status")
 			return reconcile.Result{}, err
 		}
 	}

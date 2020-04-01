@@ -54,6 +54,13 @@ type SubmarinerSpec struct {
 // SubmarinerStatus defines the observed state of Submariner
 // +k8s:openapi-gen=true
 type SubmarinerStatus struct {
+	NatEnabled  bool   `json:"natEnabled"`
+	ColorCodes  string `json:"colorCodes,omitempty"`
+	ClusterID   string `json:"clusterID"`
+	ServiceCIDR string `json:"serviceCIDR"`
+	ClusterCIDR string `json:"clusterCIDR"`
+	GlobalCIDR  string `json:"globalCIDR,omitempty"`
+	CableDriver string `json:"cableDriver,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
