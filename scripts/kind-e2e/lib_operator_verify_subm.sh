@@ -367,116 +367,51 @@ function verify_subm_routeagent_container() {
   done
 }
 
-function verify_subm_broker_secrets() {
-  # Wait for secrets to be created
-  SECONDS="0"
-  while ! kubectl get secret -n $subm_broker_ns | grep -q submariner-; do
-    if [ $SECONDS -gt 30 ]; then
-        echo "Timeout waiting for SubM Secret creation"
-        exit 1
-    else
-        ((SECONDS+=2))
-        sleep 2
+function wait_for_secrets() {
+  local secret_ns=$1
+  for i in {1..30}; do
+    if kubectl get secret -n $secret_ns | grep -q submariner-; then
+      return
     fi
   done
 
-  # Show all SubM broker secrets
-  kubectl get secrets -n $subm_broker_ns
+  echo "Timeout waiting for SubM Secret creation"
+  exit 1
+}
 
-  subm_broker_secret_name=$(kubectl get secrets -n $subm_broker_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$broker_deployment_name-client')].metadata.name}")
+function verify_secrets() {
+  local secret_ns=$1
+  local deployment_name=$2
+  local expected_ca_crt=$3
+  wait_for_secrets $secret_ns
 
-  # Need explicit null check for this var because subsequent commands fail with confusing errors
-  if [ -z "$subm_broker_secret_name" ]; then
-    echo "Failed to find subm_broker_secret_name"
+  # Show all the secrets
+  kubectl get secrets -n $secret_ns
+
+  local secret_name=$(kubectl get secrets -n $secret_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$deployment_name')].metadata.name}")
+  if [[ -z "$secret_name" ]]; then
+    echo "Failed to find the secret's name"
     exit 1
   fi
 
-  # Show all details of SubM Broker secret
-  kubectl get secret $subm_broker_secret_name -n $subm_broker_ns -o yaml
+  # Show all details of the secret
+  json_file=/tmp/$secret_name.json
+  kubectl get secret $secret_name -n $secret_ns -o json | tee $json_file
 
-  # Verify details of SubM Broker secret
-  kubectl get secret $subm_broker_secret_name -n $subm_broker_ns -o jsonpath='{.kind}' | grep Secret
-  kubectl get secret $subm_broker_secret_name -n $subm_broker_ns -o jsonpath='{.type}' | grep "kubernetes.io/service-account-token"
-  kubectl get secret $subm_broker_secret_name -n $subm_broker_ns -o jsonpath='{.metadata.name}' | grep $subm_broker_secret_name
-  kubectl get secret $subm_broker_secret_name -n $subm_broker_ns -o jsonpath='{.metadata.namespace}' | grep $subm_broker_ns
-  # Must use this jsonpath notation to access key with dot.in.name
-  kubectl get secret $subm_broker_secret_name -n $subm_broker_ns -o "jsonpath={.data['ca\.crt']}" | grep $SUBMARINER_BROKER_CA
+  # Verify details of the secret
+  validate_equals '.kind' 'Secret'
+  validate_equals '.type' "kubernetes.io/service-account-token"
+  validate_equals '.metadata.name' $secret_name
+  validate_equals '.metadata.namespace' $secret_ns
+  [[ $(jq -r -M '.data["ca.crt"]' $json_file) =~ $expected_ca_crt ]]
+}
+
+function verify_subm_broker_secrets() {
+  verify_secrets $subm_broker_ns $broker_deployment_name-client $SUBMARINER_BROKER_CA
 }
 
 function verify_subm_engine_secrets() {
-  # Wait for secrets to be created
-  SECONDS="0"
-  while ! kubectl get secret -n $subm_ns | grep -q submariner-; do
-    if [ $SECONDS -gt 30 ]; then
-        echo "Timeout waiting for SubM Secret creation"
-        exit 1
-    else
-        ((SECONDS+=2))
-        sleep 2
-    fi
-  done
-
-  # Show all SubM secrets
-  kubectl get secrets -n $subm_ns
-
-  # FIXME: Should use SA specific for Engine, not shared with the operator
-  subm_engine_secret_name=$(kubectl get secrets -n $subm_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$operator_deployment_name')].metadata.name}")
-
-  # Need explicit null check for this var because subsequent commands fail with confusing errors
-  if [ -z "$subm_engine_secret_name" ]; then
-    echo "Failed to find subm_engine_secret_name"
-    exit 1
-  fi
-
-  # Show all details of SubM Engine secret
-  kubectl get secret $subm_engine_secret_name -n $subm_ns -o yaml
-
-  # Verify details of SubM Engine secret
-  kubectl get secret $subm_engine_secret_name -n $subm_ns -o jsonpath='{.kind}' | grep Secret
-  kubectl get secret $subm_engine_secret_name -n $subm_ns -o jsonpath='{.type}' | grep "kubernetes.io/service-account-token"
-  kubectl get secret $subm_engine_secret_name -n $subm_ns -o jsonpath='{.metadata.name}' | grep $subm_engine_secret_name
-  kubectl get secret $subm_engine_secret_name -n $subm_ns -o jsonpath='{.metadata.namespace}' | grep $subm_ns
-  # Must use this jsonpath notation to access key with dot.in.name
-  # FIXME: There seems to be a strange error where these substantially match, but eventually actually are different
-  kubectl get secret $subm_engine_secret_name -n $subm_ns -o "jsonpath={.data['ca\.crt']}" | grep ${SUBMARINER_BROKER_CA:0:50}
-  #kubectl get secret $subm_engine_secret_name -n $subm_ns -o "jsonpath={.data['ca\.crt']}" | grep ${SUBMARINER_BROKER_CA:0:161}
+  # FIXME: There seems to be a strange error where the CA substantially match, but eventually actually are different
+  verify_secrets $subm_ns $operator_deployment_name ${SUBMARINER_BROKER_CA:0:50}
 }
 
-function verify_subm_routeagent_secrets() {
-  # Wait for secrets to be created
-  SECONDS="0"
-  while ! kubectl get secret -n $subm_ns | grep -q submariner-; do
-    if [ $SECONDS -gt 30 ]; then
-        echo "Timeout waiting for SubM Secret creation"
-        exit 1
-    else
-        ((SECONDS+=2))
-        sleep 2
-    fi
-  done
-
-  # Show all SubM secrets
-  kubectl get secrets -n $subm_ns
-
-  # FIXME: Should use SA specific for Routeagent, not shared with the operator
-  subm_routeagent_secret_name=$(kubectl get secrets -n $subm_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$operator_deployment_name')].metadata.name}")
-
-  # Need explicit null check for this var because subsequent commands fail with confusing errors
-  if [ -z "$subm_routeagent_secret_name" ]; then
-    echo "Failed to find subm_routeagent_secret_name"
-    exit 1
-  fi
-
-  # Show all details of SubM Routeagent secret
-  kubectl get secret $subm_routeagent_secret_name -n $subm_ns -o yaml
-
-  # Verify details of SubM Routeagent secret
-  kubectl get secret $subm_routeagent_secret_name -n $subm_ns -o jsonpath='{.kind}' | grep Secret
-  kubectl get secret $subm_routeagent_secret_name -n $subm_ns -o jsonpath='{.type}' | grep "kubernetes.io/service-account-token"
-  kubectl get secret $subm_routeagent_secret_name -n $subm_ns -o jsonpath='{.metadata.name}' | grep $subm_routeagent_secret_name
-  kubectl get secret $subm_routeagent_secret_name -n $subm_ns -o jsonpath='{.metadata.namespace}' | grep $subm_ns
-  # Must use this jsonpath notation to access key with dot.in.name
-  # FIXME: There seems to be a strange error where these substantially match, but eventually actually are different
-  kubectl get secret $subm_routeagent_secret_name -n $subm_ns -o "jsonpath={.data['ca\.crt']}" | grep ${SUBMARINER_BROKER_CA:0:50}
-  #kubectl get secret $subm_routeagent_secret_name -n $subm_ns -o "jsonpath={.data['ca\.crt']}" | grep ${SUBMARINER_BROKER_CA:0:162}
-}
