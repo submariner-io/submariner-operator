@@ -48,14 +48,6 @@ function kind_import_images() {
     import_image quay.io/submariner/submariner-route-agent
     import_image quay.io/submariner/submariner-operator
     [[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet
-
-    if [[ $lighthouse = true ]]; then
-        docker pull quay.io/openshift/kubefed-operator:v0.1.0-rc3
-        docker pull quay.io/kubernetes-multicluster/kubefed:v0.1.0-rc6
-        echo "Loading kubefed images in cluster1"
-        kind --name cluster1 load docker-image quay.io/openshift/kubefed-operator:v0.1.0-rc3
-        kind --name cluster1 load docker-image quay.io/kubernetes-multicluster/kubefed:v0.1.0-rc6
-    fi
 }
 
 function create_subm_vars() {
