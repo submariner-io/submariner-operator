@@ -88,6 +88,26 @@ spec:
           type: object
         status:
           description: SubmarinerStatus defines the observed state of Submariner
+          properties:
+            cableDriver:
+              type: string
+            clusterCIDR:
+              type: string
+            clusterID:
+              type: string
+            colorCodes:
+              type: string
+            globalCIDR:
+              type: string
+            natEnabled:
+              type: boolean
+            serviceCIDR:
+              type: string
+          required:
+          - clusterCIDR
+          - clusterID
+          - natEnabled
+          - serviceCIDR
           type: object
       type: object
   version: v1alpha1
