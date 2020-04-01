@@ -286,8 +286,6 @@ for i in 2 3; do
     verify_subm_routeagent_pod
     # Verify SubM Routeagent container
     verify_subm_routeagent_container
-    # Verify Routeagent secrets
-    verify_subm_routeagent_secrets
 
     if [[ $globalnet = true ]]; then
         #Verify SubM Globalnet Daemonset
