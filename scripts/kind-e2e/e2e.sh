@@ -19,6 +19,7 @@ set -em
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/version
 source ${SCRIPTS_DIR}/lib/utils
+source ${SCRIPTS_DIR}/lib/deploy_funcs
 
 ### Functions ###
 
@@ -43,15 +44,11 @@ function setup_broker() {
 }
 
 function kind_import_images() {
-    docker pull quay.io/submariner/submariner:latest
-    docker tag quay.io/submariner/submariner:latest submariner:local
-    docker pull quay.io/submariner/submariner-route-agent:latest
-    docker tag quay.io/submariner/submariner-route-agent:latest submariner-route-agent:local
-    docker tag quay.io/submariner/submariner-operator:$VERSION submariner-operator:local
-    if [[ $globalnet = true ]]; then
-        docker pull quay.io/submariner/submariner-globalnet:latest
-        docker tag quay.io/submariner/submariner-globalnet:latest submariner-globalnet:local
-    fi
+    import_image quay.io/submariner/submariner
+    import_image quay.io/submariner/submariner-route-agent
+    import_image quay.io/submariner/submariner-operator
+    [[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet
+
     if [[ $lighthouse = true ]]; then
         docker pull quay.io/openshift/kubefed-operator:v0.1.0-rc3
         docker pull quay.io/kubernetes-multicluster/kubefed:v0.1.0-rc6
@@ -59,16 +56,6 @@ function kind_import_images() {
         kind --name cluster1 load docker-image quay.io/openshift/kubefed-operator:v0.1.0-rc3
         kind --name cluster1 load docker-image quay.io/kubernetes-multicluster/kubefed:v0.1.0-rc6
     fi
-
-    for i in 2 3; do
-        echo "Loading submariner images in to cluster${i}..."
-        kind --name cluster${i} load docker-image submariner:local
-        kind --name cluster${i} load docker-image submariner-route-agent:local
-        kind --name cluster${i} load docker-image submariner-operator:local
-        if [[ $globalnet = true ]]; then
-            kind --name cluster${i} load docker-image submariner-globalnet:local
-        fi
-    done
 }
 
 function create_subm_vars() {
@@ -87,7 +74,7 @@ function create_subm_vars() {
       global_CIDRs['cluster3']='169.254.32.0/19'
   fi
 
-  subm_engine_image_repo=local
+  subm_engine_image_repo="localhost:5000"
   subm_engine_image_tag=local
 
   # FIXME: Actually act on this size request in controller
@@ -236,11 +223,11 @@ for i in 2 3; do
     # Deploy SubM Operator
     if [ "${context}" = "cluster2" ] || [ "${context}" = "cluster3" ]; then
         set -o pipefail
-        ${DAPPER_SOURCE}/bin/subctl join --operator-image submariner-operator:local \
+        ${DAPPER_SOURCE}/bin/subctl join --operator-image "${subm_engine_image_repo}/submariner-operator:local" \
                         --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged \
                         --kubecontext ${context} \
                         --clusterid ${context} \
-                        --repository ${subm_engine_image_repo} \
+                        --repository "${subm_engine_image_repo}" \
                         --version ${subm_engine_image_tag} \
                         --nattport ${ce_ipsec_nattport} \
                         --ikeport ${ce_ipsec_ikeport} \
@@ -296,11 +283,11 @@ done
 echo "Running subctl a second time to verify if running subctl a second time works fine"
 
 set -o pipefail
-${DAPPER_SOURCE}/bin/subctl join --operator-image submariner-operator:local \
+${DAPPER_SOURCE}/bin/subctl join --operator-image "${subm_engine_image_repo}/submariner-operator:local" \
                 --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged \
                 --kubecontext ${context} \
                 --clusterid ${context} \
-                --repository ${subm_engine_image_repo} \
+                --repository "${subm_engine_image_repo}" \
                 --version ${subm_engine_image_tag} \
                 --nattport ${ce_ipsec_nattport} \
                 --ikeport ${ce_ipsec_ikeport} \
