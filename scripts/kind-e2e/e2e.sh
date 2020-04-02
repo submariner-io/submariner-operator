@@ -83,65 +83,22 @@ function create_subm_vars() {
   subm_broker_ns=submariner-k8s-broker
 }
 
-function get_globalip() {
-    svcname=$1
-    context=$2
-    gip=
-    attempt_counter=0
-    max_attempts=30
-    # It takes a while for globalIp to show up on a service
-    until [[ $gip ]]; do
-        if [[ ${attempt_counter} -eq ${max_attempts} ]];then
-          echo "Max attempts reached, failed to get globalIp!"
-          exit 1
-        fi
-        sleep 1
-        gip=$(kubectl --context=$context get svc $svcname -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
-        attempt_counter=$(($attempt_counter+1))
-    done
-    echo $gip
-}
+function connectivity_tests() {
+    local netshoot_pod nginx_svc_ip
+    netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
+    nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
 
-function try_connect() {
-    target=$1
-    netshoot_pod=$(kubectl --context=cluster2 get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
-
-    echo "Testing connectivity between clusters - $netshoot_pod cluster2 --> $target nginx service cluster3"
-
-    attempt_counter=0
-    max_attempts=5
-    until $(kubectl --context=cluster2 exec ${netshoot_pod} -- curl --output /dev/null -m 30 --silent --head --fail ${target}); do
-        if [[ ${attempt_counter} -eq ${max_attempts} ]];then
-          echo "Max attempts reached, connection test failed!"
-          exit 1
-        fi
-        attempt_counter=$(($attempt_counter+1))
-    done
-}
-
-function test_connection() {
-    if [[ $globalnet = true ]]; then
-        nginx_svc_ip_cluster3=$(get_globalip nginx-demo cluster3)
-    else
-        nginx_svc_ip_cluster3=$(kubectl --context=cluster3 get svc -l app=nginx-demo | awk 'FNR == 2 {print $3}')
-    fi
-    if [[ -z "$nginx_svc_ip_cluster3" ]]; then
-        echo "Failed to get nginx-demo IP"
-        exit 1
-    fi
-    try_connect $nginx_svc_ip_cluster3
+    with_retries 5 test_connection "$netshoot_pod" "$nginx_svc_ip"
     if [[ $lighthouse = true ]]; then
-        resolved_ip=$(kubectl --context=cluster2 exec ${netshoot_pod} -- ping -c 1 -W 1 nginx-demo 2>/dev/null | grep PING | awk '{print $3}')
-        # strip the () braces from resolved_ip
-        resolved_ip=${resolved_ip:1:-1}
-        if [[ "$resolved_ip" != "$nginx_svc_ip_cluster3" ]]; then
-            echo "Resolved IP $resolved_ip doesn't match with service ip $nginx_svc_ip_cluster3"
+        resolved_ip=$(kubectl exec "${netshoot_pod}" -- ping -c 1 -W 1 nginx-demo 2>/dev/null \
+                      | grep PING | awk '{print $3}' | tr -d '()')
+        if [[ "$resolved_ip" != "$nginx_svc_ip" ]]; then
+            echo "Resolved IP $resolved_ip doesn't match the service ip $nginx_svc_ip"
             exit 1
         fi
-        try_connect nginx-demo
-    fi
 
-    echo "Connection test was successful!"
+        with_retries 5 test_connection "$netshoot_pod" nginx-demo
+    fi
 }
 
 function update_subm_pods() {
@@ -291,7 +248,7 @@ set +o pipefail
 deploy_netshoot_cluster2
 deploy_nginx_cluster3
 
-test_connection
+with_context cluster2 connectivity_tests
 
 # dataplane E2E need to be modified for globalnet
 if [[ $globalnet = false ]]; then
