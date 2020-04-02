@@ -232,8 +232,8 @@ ${DAPPER_SOURCE}/bin/subctl join --operator-image "${subm_engine_image_repo}/sub
                 --disable-nat broker-info.subm |& cat
 set +o pipefail
 
-deploy_netshoot_cluster2
-deploy_nginx_cluster3
+with_context cluster2 deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
+with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 
 with_context cluster2 connectivity_tests
 
