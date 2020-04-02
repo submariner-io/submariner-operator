@@ -5,6 +5,7 @@ version ?= 1.14.6
 
 TARGETS := $(shell ls scripts)
 SCRIPTS_DIR ?= /opt/shipyard/scripts
+DAPPER_SOURCE ?= .
 
 .dapper:
 	@echo Downloading dapper
@@ -17,7 +18,7 @@ cleanup: .dapper
 	./.dapper -m bind $(SCRIPTS_DIR)/cleanup.sh
 
 clusters: build
-	./.dapper -m bind $(SCRIPTS_DIR)/clusters.sh --k8s_version $(version) --globalnet $(globalnet)
+	./.dapper -m bind $(SCRIPTS_DIR)/clusters.sh --k8s_version $(version) --globalnet $(globalnet) --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings
 
 e2e: clusters
 	./.dapper -m bind scripts/kind-e2e/e2e.sh --status $(status) --lighthouse $(lighthouse) --globalnet $(globalnet)

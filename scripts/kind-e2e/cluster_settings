@@ -1,0 +1,7 @@
+. "${SCRIPTS_DIR}"/lib/source_only
+
+cluster_nodes['cluster1']="control-plane"
+cluster_nodes['cluster2']="control-plane worker"
+cluster_nodes['cluster3']="control-plane worker worker"
+
+cluster_subm['cluster1']="false"
