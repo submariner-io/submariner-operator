@@ -97,15 +97,6 @@ function connectivity_tests() {
     fi
 }
 
-function update_subm_pods() {
-    echo Removing submariner engine pods...
-    kubectl --context=$1 delete pods -n submariner -l app=submariner-engine
-    kubectl --context=$1 wait --for=condition=Ready pods -l app=submariner-engine -n submariner --timeout=60s
-    echo Removing submariner route agent pods...
-    kubectl --context=$1 delete pods -n submariner -l app=submariner-routeagent
-    kubectl --context=$1 wait --for=condition=Ready pods -l app=submariner-routeagent -n submariner --timeout=60s
-}
-
 function test_with_e2e_tests {
     cd ${DAPPER_SOURCE}/test/e2e
 
