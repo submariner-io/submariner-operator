@@ -145,14 +145,12 @@ kubectl config use-context $context
 create_subm_vars
 verify_subm_broker_secrets
 
-. ${DAPPER_SOURCE}/scripts/kind-e2e/lib_operator_deploy_subm.sh
-
 for i in 2 3; do
     context=cluster$i
     kubectl config use-context $context
 
     # Add SubM gateway labels
-    add_subm_gateway_label
+    with_context $context add_subm_gateway_label
     # Verify SubM gateway labels
     verify_subm_gateway_label
 
