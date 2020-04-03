@@ -456,9 +456,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 func createSAPerCluster(clientset *kubernetes.Clientset, brokernamespace string) *v1.Secret {
 	newsa, err := broker.CreateNewBrokerSA(clientset, clusterID+"-submariner-k8s-broker-client")
 	exitOnError("Service account not created", err)
-	newrole, err := broker.CreateNewBrokerRole(clientset, newsa.Name)
-	exitOnError("Role creation failed", err)
-	_, err = broker.CreateNewBrokerRoleBinding(clientset, newrole.Name, newsa.Name)
+	_, err = broker.CreateNewBrokerRoleBinding(clientset, "subctlrole", newsa.Name)
 	exitOnError("Role binding failed", err)
 	clienttoken, err := broker.GetClientTokenSecret(clientset, brokernamespace, newsa.Name)
 	exitOnError("error getting token", err)

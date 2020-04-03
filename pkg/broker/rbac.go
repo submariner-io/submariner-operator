@@ -26,6 +26,10 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 )
 
+const (
+	submarinerBrokerRole = "submariner-k8s-broker-client"
+)
+
 func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
 	sa := &v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
@@ -36,10 +40,11 @@ func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
 	return sa
 }
 
-func NewBrokerRole(submarinerBrokerRole string) *rbacv1.Role {
-	role := &rbacv1.Role{
+// Create a role to bind to cluster specific SA
+func NewSubctlBrokerRole(submarinerSubctlRole string) *rbacv1.Role {
+	subctlrole := &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: submarinerBrokerRole,
+			Name: submarinerSubctlRole,
 		},
 		Rules: []rbacv1.PolicyRule{
 			rbacv1.PolicyRule{
@@ -60,18 +65,46 @@ func NewBrokerRole(submarinerBrokerRole string) *rbacv1.Role {
 		},
 	}
 
-	return role
+	return subctlrole
 }
 
-func NewBrokerRoleBinding(submarinerBrokerRole string, submarinerBrokerSA string) *rbacv1.RoleBinding {
-	binding := &rbacv1.RoleBinding{
+// Create a role for Broker SA to bind to
+func NewClusterBrokerRole() *rbacv1.Role {
+	clusterbrokerrole := &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: submarinerBrokerRole,
+		},
+		Rules: []rbacv1.PolicyRule{
+			rbacv1.PolicyRule{
+				APIGroups: []string{"submariner.io"},
+				Resources: []string{"clusters", "endpoints"},
+				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
+			},
+			rbacv1.PolicyRule{
+				Verbs:     []string{"create", "delete"},
+				APIGroups: []string{""},
+				Resources: []string{"serviceaccounts"},
+			},
+			rbacv1.PolicyRule{
+				Verbs:     []string{"create", "delete"},
+				APIGroups: []string{"rbac.authorization.k8s.io"},
+				Resources: []string{"roles", "rolebindings"},
+			},
+		},
+	}
+
+	return clusterbrokerrole
+}
+
+func NewBrokerRoleBinding(submarinerRole string, submarinerBrokerSA string) *rbacv1.RoleBinding {
+	binding := &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: submarinerRole,
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
 			Kind:     "Role",
-			Name:     submarinerBrokerRole,
+			Name:     submarinerRole,
 		},
 		Subjects: []rbacv1.Subject{
 			rbacv1.Subject{

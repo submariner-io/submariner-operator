@@ -54,10 +54,16 @@ func Ensure(config *rest.Config) error {
 		return fmt.Errorf("error creating the default broker service account: %s", err)
 	}
 
-	// Create the role
-	_, err = CreateNewBrokerRole(clientset, "submariner-k8s-broker-client")
+	// Create the broker role
+	_, err = CreateNewClusterBrokerRole(clientset)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating broker role: %s", err)
+	}
+
+	// Create the subctl role
+	_, err = CreateNewSubctlBrokerRole(clientset, "subctlrole")
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		return fmt.Errorf("error creating subctl role: %s", err)
 	}
 
 	// Create the role binding
@@ -102,9 +108,14 @@ func CreateNewBrokerNamespace(clientset *kubernetes.Clientset) (brokernamespace 
 	return brokernamespace, err
 }
 
-func CreateNewBrokerRole(clientset *kubernetes.Clientset, submarinerBrokerRole string) (brokerrole *rbac.Role, err error) {
-	brokerrole, err = clientset.RbacV1().Roles(SubmarinerBrokerNamespace).Create(NewBrokerRole(submarinerBrokerRole))
+func CreateNewClusterBrokerRole(clientset *kubernetes.Clientset) (brokerrole *rbac.Role, err error) {
+	brokerrole, err = clientset.RbacV1().Roles(SubmarinerBrokerNamespace).Create(NewClusterBrokerRole())
 	return brokerrole, err
+}
+
+func CreateNewSubctlBrokerRole(clientset *kubernetes.Clientset, role string) (subctlrole *rbac.Role, err error) {
+	subctlrole, err = clientset.RbacV1().Roles(SubmarinerBrokerNamespace).Create(NewSubctlBrokerRole(role))
+	return subctlrole, err
 }
 
 func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, submarinerBrokerRole string, submarinerBrokerSA string) (brokerrolebinding *rbac.RoleBinding, err error) {
