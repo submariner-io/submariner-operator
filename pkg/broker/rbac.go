@@ -91,7 +91,7 @@ func NewBrokerClusterRole() *rbacv1.Role {
 func NewBrokerRoleBinding(serviceAccount, role string) *rbacv1.RoleBinding {
 	binding := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: role,
+			Name: fmt.Sprintf("%s-%s", serviceAccount, role),
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",

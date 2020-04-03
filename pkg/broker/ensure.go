@@ -87,17 +87,17 @@ func createBrokerClusterRoleAndDefaultSA(clientset *kubernetes.Clientset) error 
 // CreateSAForCluster creates a new SA, and binds it to the submariner cluster role
 func CreateSAForCluster(clientset *kubernetes.Clientset, clusterID string) (*v1.Secret, error) {
 	newsa, err := CreateNewBrokerSA(clientset, fmt.Sprintf(submarinerBrokerClusterSAFmt, clusterID))
-	if err != nil {
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, fmt.Errorf("error creating cluster sa: %s", err)
 	}
 
 	_, err = CreateNewBrokerRoleBinding(clientset, newsa.Name, submarinerBrokerClusterRole)
-	if err != nil {
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, fmt.Errorf("error binding sa to cluster role: %s", err)
 	}
 
 	clientToken, err := WaitForClientToken(clientset, newsa.Name)
-	if err != nil {
+	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, fmt.Errorf("error getting cluster sa token: %s", err)
 	}
 	return clientToken, nil
