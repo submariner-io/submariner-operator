@@ -270,11 +270,14 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 		status.QueueSuccessMessage(fmt.Sprintf("Cluster already has GlobalCIDR allocated: %s", globalNetworks[clusterID].GlobalCIDRs[0]))
 	}
 
+	status.Start("Creating SA for cluster")
+	brokerAdminClientset, err := kubernetes.NewForConfig(subctlData.GetBrokerAdministratorConfig())
+	exitOnError("Error retrieving broker admin config", err)
+	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID)
+	status.End(err == nil)
+	exitOnError("Error creating SA for cluster", err)
+
 	status.Start("Deploying Submariner")
-	brokerconfig := subctlData.GetBrokerConfig()
-	brokerclientset, err := kubernetes.NewForConfig(brokerconfig)
-	exitOnError("Error retrieving broker config", err)
-	clienttoken = createSAPerCluster(brokerclientset, broker.SubmarinerBrokerNamespace)
 	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
 	status.End(err == nil)
 	exitOnError("Error deploying Submariner", err)
@@ -308,7 +311,7 @@ func checkOverlappingClusterCidr(networks map[string]*globalnet.GlobalNetwork) e
 
 func getGlobalNetworks(subctlData *datafile.SubctlData) map[string]*globalnet.GlobalNetwork {
 
-	brokerConfig := subctlData.GetBrokerConfig()
+	brokerConfig := subctlData.GetBrokerAdministratorConfig()
 	brokerSubmClient, err := submarinerClientset.NewForConfig(brokerConfig)
 	exitOnError("Unable to create submariner rest client for broker cluster", err)
 	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
@@ -451,16 +454,4 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		submarinerSpec.GlobalCIDR = globalCIDR
 	}
 	return submarinerSpec
-}
-
-func createSAPerCluster(clientset *kubernetes.Clientset, brokernamespace string) *v1.Secret {
-	newsa, err := broker.CreateNewBrokerSA(clientset, clusterID+"-submariner-k8s-broker-client")
-	exitOnError("Service account not created", err)
-	_, err = broker.CreateNewBrokerRoleBinding(clientset, "subctlrole", newsa.Name)
-	exitOnError("Role binding failed", err)
-	clienttoken, err := broker.GetClientTokenSecret(clientset, brokernamespace, newsa.Name)
-	exitOnError("error getting token", err)
-
-	return clienttoken
-
 }
