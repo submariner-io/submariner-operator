@@ -44,7 +44,7 @@ func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
 	return sa
 }
 
-// Create a role to bind to cluster specific SA
+// Create a role to bind to Broker SA
 func NewBrokerAdminRole() *rbacv1.Role {
 	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
@@ -71,7 +71,7 @@ func NewBrokerAdminRole() *rbacv1.Role {
 
 }
 
-// Create a role for Broker Cluster SAs to bind to
+// Create a role for each Cluster SAs to bind to
 func NewBrokerClusterRole() *rbacv1.Role {
 	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{

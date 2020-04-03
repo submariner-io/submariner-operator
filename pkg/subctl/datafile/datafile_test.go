@@ -30,10 +30,10 @@ import (
 
 const (
 	testBrokerUrl             = "https://my-broker-url:8443"
-	testSASecret              = "submariner-k8s-broker-client-token-abcdef"
+	testSASecret              = "submariner-k8s-broker-admin-token-abcdef"
 	testToken                 = "i-am-a-token"
 	SubmarinerBrokerNamespace = "submariner-k8s-broker"
-	BrokerSA                  = "submariner-k8s-broker-client"
+	BrokerSA                  = "submariner-k8s-broker-admin"
 )
 
 var _ = Describe("datafile", func() {
@@ -88,7 +88,6 @@ var _ = Describe("datafile", func() {
 			saSecret.Data = map[string][]byte{
 				"ca.crt": []byte("i-am-a-cert"),
 				"token":  []byte(testToken)}
-
 			clientSet = fake.NewSimpleClientset(pskSecret, sa, saSecret)
 		})
 
