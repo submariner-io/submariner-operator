@@ -95,7 +95,7 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 	subctlData := &SubctlData{}
 	var err error
 
-	subctlData.ClientToken, err = broker.GetClientTokenSecret(clientSet, brokerNamespace, "submariner-k8s-broker-client")
+	subctlData.ClientToken, err = broker.GetClientTokenSecret(clientSet, brokerNamespace, broker.SubmarinerBrokerAdminSA)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 	}
 }
 
-func (data *SubctlData) GetBrokerConfig() *rest.Config {
+func (data *SubctlData) GetBrokerAdministratorConfig() *rest.Config {
 	tlsClientconfig := rest.TLSClientConfig{}
 	tlsClientconfig.CAData = data.ClientToken.Data["ca.crt"]
 	bearerToken := data.ClientToken.Data["token"]

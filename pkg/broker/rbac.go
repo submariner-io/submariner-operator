@@ -27,7 +27,11 @@ import (
 )
 
 const (
-	submarinerBrokerRole = "submariner-k8s-broker-client"
+	submarinerBrokerClusterRole      = "submariner-k8s-broker-cluster"
+	submarinerBrokerAdminRole        = "submariner-k8s-broker-admin"
+	SubmarinerBrokerAdminSA          = "submariner-k8s-broker-admin"
+	submarinerBrokerClusterSAFmt     = "cluster-%s"
+	submarinerBrokerClusterDefaultSA = "submariner-k8s-broker-client" // for backwards compatibility with documentation
 )
 
 func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
@@ -41,16 +45,16 @@ func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
 }
 
 // Create a role to bind to cluster specific SA
-func NewSubctlBrokerRole(submarinerSubctlRole string) *rbacv1.Role {
-	subctlrole := &rbacv1.Role{
+func NewBrokerAdminRole() *rbacv1.Role {
+	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: submarinerSubctlRole,
+			Name: submarinerBrokerAdminRole,
 		},
 		Rules: []rbacv1.PolicyRule{
 			rbacv1.PolicyRule{
+				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"submariner.io"},
 				Resources: []string{"clusters", "endpoints"},
-				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 			},
 			rbacv1.PolicyRule{
 				Verbs:     []string{"create", "get", "list", "delete"},
@@ -60,56 +64,44 @@ func NewSubctlBrokerRole(submarinerSubctlRole string) *rbacv1.Role {
 			rbacv1.PolicyRule{
 				Verbs:     []string{"create", "get", "list", "delete"},
 				APIGroups: []string{"rbac.authorization.k8s.io"},
-				Resources: []string{"roles", "rolebindings"},
+				Resources: []string{"rolebindings"},
 			},
 		},
 	}
 
-	return subctlrole
 }
 
-// Create a role for Broker SA to bind to
-func NewClusterBrokerRole() *rbacv1.Role {
-	clusterbrokerrole := &rbacv1.Role{
+// Create a role for Broker Cluster SAs to bind to
+func NewBrokerClusterRole() *rbacv1.Role {
+	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: submarinerBrokerRole,
+			Name: submarinerBrokerClusterRole,
 		},
 		Rules: []rbacv1.PolicyRule{
 			rbacv1.PolicyRule{
+				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"submariner.io"},
 				Resources: []string{"clusters", "endpoints"},
-				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
-			},
-			rbacv1.PolicyRule{
-				Verbs:     []string{"create", "delete"},
-				APIGroups: []string{""},
-				Resources: []string{"serviceaccounts"},
-			},
-			rbacv1.PolicyRule{
-				Verbs:     []string{"create", "delete"},
-				APIGroups: []string{"rbac.authorization.k8s.io"},
-				Resources: []string{"roles", "rolebindings"},
 			},
 		},
 	}
-
-	return clusterbrokerrole
 }
 
-func NewBrokerRoleBinding(submarinerRole string, submarinerBrokerSA string) *rbacv1.RoleBinding {
+// Create a role for to bind the cluster admin (subctl) SA
+func NewBrokerRoleBinding(serviceAccount, role string) *rbacv1.RoleBinding {
 	binding := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: submarinerRole,
+			Name: role,
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
 			Kind:     "Role",
-			Name:     submarinerRole,
+			Name:     role,
 		},
 		Subjects: []rbacv1.Subject{
 			rbacv1.Subject{
 				Namespace: "submariner-k8s-broker",
-				Name:      submarinerBrokerSA,
+				Name:      serviceAccount,
 				Kind:      "ServiceAccount",
 			},
 		},
