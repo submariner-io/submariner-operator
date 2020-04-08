@@ -50,7 +50,7 @@ func init() {
 	deployBroker.PersistentFlags().StringVar(&globalnetCidrRange, "globalnet-cidr-range", "169.254.0.0/16",
 		"Global CIDR supernet range for allocating GlobalCIDRs to each cluster")
 	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 8192,
-		"Default cluster size for GlobalCIDR allocated to each cluster")
+		"Default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
 	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
 	// An error here indicates a programming error (the argument isn’t declared), panic
 	panicOnError(err)
