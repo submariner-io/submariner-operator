@@ -97,7 +97,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&disableOpenShiftCVO, "disable-cvo", false,
 		"disable OpenShift's cluster version operator if necessary, without prompting")
 	cmd.Flags().UintVar(&globalnetClusterSize, "globalnet-cluster-size", 0,
-		"Cluster size for GlobalCIDR allocated to this cluster")
+		"Cluster size for GlobalCIDR allocated to this cluster (amount of global IPs)")
 }
 
 const (
