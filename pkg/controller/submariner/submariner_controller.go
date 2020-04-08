@@ -25,6 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	errorutil "github.com/pkg/errors"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
+	submarinerv1alpha1clientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -54,7 +55,9 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileSubmariner{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	client, _ := submarinerv1alpha1clientset.NewForConfig(mgr.GetConfig())
+	return &ReconcileSubmariner{submClientSet : client,
+		client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -90,8 +93,9 @@ var _ reconcile.Reconciler = &ReconcileSubmariner{}
 type ReconcileSubmariner struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	submClientSet submarinerv1alpha1clientset.Interface
+	client        client.Client
+	scheme        *runtime.Scheme
 }
 
 // Reconcile reads that state of the cluster for a Submariner object and makes changes based on the state read
@@ -168,6 +172,10 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
 			reqLogger.Error(err, "failed to update the Submariner status")
+        }
+
+	if instance.Spec.ServiceDiscoveryEnabled {
+		if err = r.reconcileServiceDiscoverCR(instance, reqLogger); err != nil {
 			return reconcile.Result{}, err
 		}
 	}
@@ -249,6 +257,15 @@ func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet 
 	}
 
 	return daemonSet, errorutil.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
+}
+
+func (r *ReconcileSubmariner) reconcileServiceDiscoverCR(submariner *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
+	sd := newServiceDiscoveryCR(submariner)
+	_, err := r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Create(sd)
+	if err != nil {
+		reqLogger.Error(err, "Error creating service discovery CR")
+	}
+	return err
 }
 
 func newEngineDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {
@@ -507,6 +524,30 @@ func newGlobalnetDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet 
 	}
 
 	return globalnetDaemonSet
+}
+
+func newServiceDiscoveryCR(cr *submarinerv1alpha1.Submariner) *submarinerv1alpha1.ServiceDiscovery {
+
+	deployment := &submarinerv1alpha1.ServiceDiscovery{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cr.Namespace,
+			Name:      "service-discovery",
+		},
+		Spec: submarinerv1alpha1.ServiceDiscoverySpec{
+			Version:                  cr.Spec.Version,
+			Repository:               cr.Spec.Repository,
+			BrokerK8sCA:              cr.Spec.BrokerK8sCA,
+			BrokerK8sRemoteNamespace: cr.Spec.BrokerK8sRemoteNamespace,
+			BrokerK8sApiServerToken:  cr.Spec.BrokerK8sApiServerToken,
+			BrokerK8sApiServer:       cr.Spec.BrokerK8sApiServer,
+			Debug:                    cr.Spec.Debug,
+			Broker:                   cr.Spec.Broker,
+			ClusterID:                cr.Spec.ClusterID,
+			Namespace:                cr.Spec.Namespace,
+		},
+	}
+
+	return deployment
 }
 
 //TODO: move to a method on the API definitions, as the example shown by the etcd operator here :

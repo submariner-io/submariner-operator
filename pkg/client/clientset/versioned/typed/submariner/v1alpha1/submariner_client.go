@@ -27,12 +27,17 @@ import (
 
 type SubmarinerV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	ServiceDiscoveriesGetter
 	SubmarinersGetter
 }
 
 // SubmarinerV1alpha1Client is used to interact with features provided by the submariner.io group.
 type SubmarinerV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *SubmarinerV1alpha1Client) ServiceDiscoveries(namespace string) ServiceDiscoveryInterface {
+	return newServiceDiscoveries(c, namespace)
 }
 
 func (c *SubmarinerV1alpha1Client) Submariners(namespace string) SubmarinerInterface {

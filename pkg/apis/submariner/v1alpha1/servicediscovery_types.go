@@ -1,5 +1,5 @@
 /*
-© 2019 Red Hat, Inc. and others.
+© 2020 Red Hat, Inc. and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,55 +17,35 @@ limitations under the License.
 package v1alpha1
 
 import (
-	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// SubmarinerSpec defines the desired state of Submariner
+// ServiceDiscoverySpec defines the desired state of ServiceDiscovery
 // +k8s:openapi-gen=true
-type SubmarinerSpec struct {
+type ServiceDiscoverySpec struct {
 	Version                  string `json:"version,omitempty"`
 	Repository               string `json:"repository,omitempty"`
-	CeIPSecNATTPort          int    `json:"ceIPSecNATTPort,omitempty"`
-	CeIPSecIKEPort           int    `json:"ceIPSecIKEPort,omitempty"`
-	CeIPSecDebug             bool   `json:"ceIPSecDebug"`
-	CeIPSecPSK               string `json:"ceIPSecPSK"`
 	BrokerK8sCA              string `json:"brokerK8sCA"`
 	BrokerK8sRemoteNamespace string `json:"brokerK8sRemoteNamespace"`
 	BrokerK8sApiServerToken  string `json:"brokerK8sApiServerToken"`
 	BrokerK8sApiServer       string `json:"brokerK8sApiServer"`
-	Broker                   string `json:"broker"`
-	NatEnabled               bool   `json:"natEnabled"`
-	Debug                    bool   `json:"debug"`
-	ColorCodes               string `json:"colorCodes,omitempty"`
-	ClusterID                string `json:"clusterID"`
-	ServiceCIDR              string `json:"serviceCIDR"`
-	ClusterCIDR              string `json:"clusterCIDR"`
-	GlobalCIDR               string `json:"globalCIDR,omitempty"`
-	Namespace                string `json:"namespace"`
-	CableDriver              string `json:"cableDriver,omitempty"`
+	SubmarinerName           string `json:"submarinerName,omitempty"`
 	ServiceDiscoveryEnabled  bool   `json:"serviceDiscoveryEnabled,omitempty"`
+	Debug                    bool   `json:"debug"`
+	Broker                   string `json:"broker"`
+	ClusterID                string `json:"clusterID"`
+	Namespace                string `json:"namespace"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
-// SubmarinerStatus defines the observed state of Submariner
+// ServiceDiscoveryStatus defines the observed state of ServiceDiscovery
 // +k8s:openapi-gen=true
-type SubmarinerStatus struct {
-	NatEnabled                bool                    `json:"natEnabled"`
-	ColorCodes                string                  `json:"colorCodes,omitempty"`
-	ClusterID                 string                  `json:"clusterID"`
-	ServiceCIDR               string                  `json:"serviceCIDR"`
-	ClusterCIDR               string                  `json:"clusterCIDR"`
-	GlobalCIDR                string                  `json:"globalCIDR,omitempty"`
-	CableDriver               string                  `json:"cableDriver,omitempty"`
-	EngineDaemonSetStatus     *appsv1.DaemonSetStatus `json:"engineDaemonSetStatus,omitempty"`
-	RouteAgentDaemonSetStatus *appsv1.DaemonSetStatus `json:"routeAgentDaemonSetStatus,omitempty"`
-	GlobalnetDaemonSetStatus  *appsv1.DaemonSetStatus `json:"globalnetDaemonSetStatus,omitempty"`
+type ServiceDiscoveryStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -73,28 +53,28 @@ type SubmarinerStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Submariner is the Schema for the submariners API
+// ServiceDiscovery is the Schema for the servicediscoveries API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=submariners,scope=Namespaced
+// +kubebuilder:resource:path=servicediscoveries,scope=Namespaced
 // +genclient
-type Submariner struct {
+type ServiceDiscovery struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   SubmarinerSpec   `json:"spec,omitempty"`
-	Status SubmarinerStatus `json:"status,omitempty"`
+	Spec   ServiceDiscoverySpec   `json:"spec,omitempty"`
+	Status ServiceDiscoveryStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// SubmarinerList contains a list of Submariner
-type SubmarinerList struct {
+// ServiceDiscoveryList contains a list of ServiceDiscovery
+type ServiceDiscoveryList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Submariner `json:"items"`
+	Items           []ServiceDiscovery `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Submariner{}, &SubmarinerList{})
+	SchemeBuilder.Register(&ServiceDiscovery{}, &ServiceDiscoveryList{})
 }

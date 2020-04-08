@@ -188,6 +188,12 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
+					"serviceDiscoveryEnabled": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 				},
 				Required: []string{"ceIPSecDebug", "ceIPSecPSK", "brokerK8sCA", "brokerK8sRemoteNamespace", "brokerK8sApiServerToken", "brokerK8sApiServer", "broker", "natEnabled", "debug", "clusterID", "serviceCIDR", "clusterCIDR", "namespace"},
 			},
