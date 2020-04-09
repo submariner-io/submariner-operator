@@ -11,9 +11,141 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.Submariner":       schema_pkg_apis_submariner_v1alpha1_Submariner(ref),
-		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec":   schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref),
-		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus": schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref),
+		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscovery":       schema_pkg_apis_submariner_v1alpha1_ServiceDiscovery(ref),
+		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoverySpec":   schema_pkg_apis_submariner_v1alpha1_ServiceDiscoverySpec(ref),
+		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoveryStatus": schema_pkg_apis_submariner_v1alpha1_ServiceDiscoveryStatus(ref),
+		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.Submariner":             schema_pkg_apis_submariner_v1alpha1_Submariner(ref),
+		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec":         schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref),
+		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus":       schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref),
+	}
+}
+
+func schema_pkg_apis_submariner_v1alpha1_ServiceDiscovery(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceDiscovery is the Schema for the servicediscoveries API",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoverySpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoveryStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoverySpec", "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoveryStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_submariner_v1alpha1_ServiceDiscoverySpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceDiscoverySpec defines the desired state of ServiceDiscovery",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"version": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"repository": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"brokerK8sCA": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"brokerK8sRemoteNamespace": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"brokerK8sApiServerToken": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"brokerK8sApiServer": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"debug": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"broker": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"clusterID": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"namespace": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+				Required: []string{"brokerK8sCA", "brokerK8sRemoteNamespace", "brokerK8sApiServerToken", "brokerK8sApiServer", "debug", "broker", "clusterID", "namespace"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_submariner_v1alpha1_ServiceDiscoveryStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceDiscoveryStatus defines the observed state of ServiceDiscovery",
+				Type:        []string{"object"},
+			},
+		},
 	}
 }
 

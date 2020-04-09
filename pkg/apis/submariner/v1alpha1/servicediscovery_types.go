@@ -21,7 +21,7 @@ import (
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// NOTE: json tags are required.  Any new fields you add 	must have json tags for the fields to be serialized.
 
 // ServiceDiscoverySpec defines the desired state of ServiceDiscovery
 // +k8s:openapi-gen=true
@@ -32,8 +32,6 @@ type ServiceDiscoverySpec struct {
 	BrokerK8sRemoteNamespace string `json:"brokerK8sRemoteNamespace"`
 	BrokerK8sApiServerToken  string `json:"brokerK8sApiServerToken"`
 	BrokerK8sApiServer       string `json:"brokerK8sApiServer"`
-	SubmarinerName           string `json:"submarinerName,omitempty"`
-	ServiceDiscoveryEnabled  bool   `json:"serviceDiscoveryEnabled,omitempty"`
 	Debug                    bool   `json:"debug"`
 	Broker                   string `json:"broker"`
 	ClusterID                string `json:"clusterID"`

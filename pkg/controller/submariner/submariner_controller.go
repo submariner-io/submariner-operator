@@ -56,7 +56,7 @@ func Add(mgr manager.Manager) error {
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	client, _ := submarinerv1alpha1clientset.NewForConfig(mgr.GetConfig())
-	return &ReconcileSubmariner{submClientSet : client,
+	return &ReconcileSubmariner{submClientSet: client,
 		client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
@@ -175,7 +175,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
         }
 
 	if instance.Spec.ServiceDiscoveryEnabled {
-		if err = r.reconcileServiceDiscovery(instance, reqLogger); err != nil {
+		if err = r.reconcileServiceDiscovery(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
 			return reconcile.Result{}, err
 		}
 	}
@@ -259,13 +259,31 @@ func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet 
 	return daemonSet, errorutil.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
 }
 
-func (r *ReconcileSubmariner) reconcileServiceDiscoverCR(submariner *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
-	sd := newServiceDiscoveryCR(submariner)
-	_, err := r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Create(sd)
-	if err != nil {
-		reqLogger.Error(err, "Error creating service discovery CR")
-	}
-	return err
+func (r *ReconcileSubmariner)reconcileServiceDiscovery(submariner *submarinerv1alpha1.Submariner, reqLogger logr.Logger, isEnabled bool) error {
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		if isEnabled {
+			sd := newServiceDiscoveryCR(submariner)
+			existing, err := r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Get(serviceDiscoveryCrName, metav1.GetOptions{})
+			if err != nil {
+				_, err = r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Create(sd)
+			} else {
+				if reflect.DeepEqual(existing, sd) {
+					// No need to issue the update if the resource didn't change
+					return nil
+				}
+				_, err = r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Update(sd)
+			}
+			if err != nil {
+				reqLogger.Error(err, "Error creating service discovery CR")
+			}
+			return err
+		} else {
+			err := r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Delete(serviceDiscoveryCrName, &metav1.DeleteOptions{})
+			return err
+		}
+	})
+	
+	return errorutil.WithMessagef(err, "error creating or updating Service Discovery CR %s/%s", submariner.Namespace)
 }
 
 func newEngineDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {
@@ -531,7 +549,7 @@ func newServiceDiscoveryCR(cr *submarinerv1alpha1.Submariner) *submarinerv1alpha
 	deployment := &submarinerv1alpha1.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
-			Name:      "service-discovery",
+			Name:      serviceDiscoveryCrName,
 		},
 		Spec: submarinerv1alpha1.ServiceDiscoverySpec{
 			Version:                  cr.Spec.Version,
@@ -573,6 +591,7 @@ const (
 	routeAgentImage = "submariner-route-agent"
 	engineImage     = "submariner"
 	globalnetImage  = "submariner-globalnet"
+	serviceDiscoveryCrName = "service-discovery"
 )
 
 func getImagePath(submariner *submarinerv1alpha1.Submariner, componentImage string) string {

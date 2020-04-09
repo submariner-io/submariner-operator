@@ -3,10 +3,11 @@ package servicediscovery
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -22,11 +23,6 @@ import (
 )
 
 var log = logf.Log.WithName("controller_servicediscovery")
-
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
 
 // Add creates a new ServiceDiscovery Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -55,7 +51,6 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
 	// Watch for changes to secondary resource Pods and requeue the owner ServiceDiscovery
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
@@ -81,8 +76,6 @@ type ReconcileServiceDiscovery struct {
 
 // Reconcile reads that state of the cluster for a ServiceDiscovery object and makes changes based on the state read
 // and what is in the ServiceDiscovery.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
@@ -175,7 +168,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 							Name:            "submariner-lighthouse-agent",
 							Image:           getImagePath(cr, serviceDiscoveryImage),
 							ImagePullPolicy: "IfNotPresent",
-							SecurityContext: &security_context_all_cap_allow_escal,
+							SecurityContext: &securityContext,
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-slash", MountPath: "/host", ReadOnly: true},
 							},
@@ -183,10 +176,15 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner,kube-system,operators"},
+								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
+								{Name: "BROKER_K8S_APISERVER", Value: cr.Spec.BrokerK8sApiServer},
+								{Name: "BROKER_K8S_APISERVERTOKEN", Value: cr.Spec.BrokerK8sApiServerToken},
+								{Name: "BROKER_K8S_REMOTENAMESPACE", Value: cr.Spec.BrokerK8sRemoteNamespace},
+								{Name: "BROKER_K8S_CA", Value: cr.Spec.BrokerK8sCA},
+								{Name: "SUBMARINER_BROKER", Value: cr.Spec.Broker},
 							},
 						},
 					},
-					// TODO: Use SA submariner-globalnet or submariner?
 					ServiceAccountName:            "submariner-operator",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
@@ -203,7 +201,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 }
 
 const (
-	serviceDiscoveryImage  = "lighthouse-agent"
+	serviceDiscoveryImage = "lighthouse-agent"
 )
 
 func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, componentImage string) string {

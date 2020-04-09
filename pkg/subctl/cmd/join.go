@@ -458,7 +458,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		ClusterCIDR:              clusterCIDR,
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
-                ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
+		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
 	}
 
 	if globalCIDR != "" {

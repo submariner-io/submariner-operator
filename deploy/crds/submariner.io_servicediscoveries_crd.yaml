@@ -49,10 +49,6 @@ spec:
               type: string
             repository:
               type: string
-            serviceDiscoveryEnabled:
-              type: boolean
-            submarinerName:
-              type: string
             version:
               type: string
           required:
