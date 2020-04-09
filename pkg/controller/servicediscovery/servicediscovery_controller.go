@@ -12,7 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	. "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -70,7 +70,7 @@ var _ reconcile.Reconciler = &ReconcileServiceDiscovery{}
 type ReconcileServiceDiscovery struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
+	client Client
 	scheme *runtime.Scheme
 }
 
@@ -91,7 +91,13 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			return reconcile.Result{}, nil
+			daemonSet := &appsv1.DaemonSet{}
+			opts := []DeleteAllOfOption{
+				InNamespace(request.NamespacedName.Namespace),
+				MatchingLabels{"app": appName},
+			}
+			err := r.client.DeleteAllOf(context.TODO(), daemonSet, opts...)
+			return reconcile.Result{}, err
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
@@ -133,7 +139,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 	}
 
 	matchLabels := map[string]string{
-		"app": "submariner-lighthouse-agent",
+		"app": appName,
 	}
 
 	allowPrivilegeEscalation := true
@@ -181,7 +187,6 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 								{Name: "BROKER_K8S_APISERVERTOKEN", Value: cr.Spec.BrokerK8sApiServerToken},
 								{Name: "BROKER_K8S_REMOTENAMESPACE", Value: cr.Spec.BrokerK8sRemoteNamespace},
 								{Name: "BROKER_K8S_CA", Value: cr.Spec.BrokerK8sCA},
-								{Name: "SUBMARINER_BROKER", Value: cr.Spec.Broker},
 							},
 						},
 					},
@@ -202,6 +207,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 
 const (
 	serviceDiscoveryImage = "lighthouse-agent"
+	appName               = "submariner-lighthouse-agent"
 )
 
 func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, componentImage string) string {

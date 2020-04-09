@@ -31,8 +31,6 @@ spec:
         spec:
           description: ServiceDiscoverySpec defines the desired state of ServiceDiscovery
           properties:
-            broker:
-              type: string
             brokerK8sApiServer:
               type: string
             brokerK8sApiServerToken:
@@ -52,7 +50,6 @@ spec:
             version:
               type: string
           required:
-          - broker
           - brokerK8sApiServer
           - brokerK8sApiServerToken
           - brokerK8sCA

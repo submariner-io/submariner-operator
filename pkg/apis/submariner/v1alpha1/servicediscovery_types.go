@@ -33,7 +33,6 @@ type ServiceDiscoverySpec struct {
 	BrokerK8sApiServerToken  string `json:"brokerK8sApiServerToken"`
 	BrokerK8sApiServer       string `json:"brokerK8sApiServer"`
 	Debug                    bool   `json:"debug"`
-	Broker                   string `json:"broker"`
 	ClusterID                string `json:"clusterID"`
 	Namespace                string `json:"namespace"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster

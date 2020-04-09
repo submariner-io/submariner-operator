@@ -25,7 +25,6 @@ import (
 	"github.com/go-logr/logr"
 	errorutil "github.com/pkg/errors"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
-	submarinerv1alpha1clientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -55,9 +54,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	client, _ := submarinerv1alpha1clientset.NewForConfig(mgr.GetConfig())
-	return &ReconcileSubmariner{submClientSet: client,
-		client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileSubmariner{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -93,9 +90,8 @@ var _ reconcile.Reconciler = &ReconcileSubmariner{}
 type ReconcileSubmariner struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	submClientSet submarinerv1alpha1clientset.Interface
-	client        client.Client
-	scheme        *runtime.Scheme
+	client client.Client
+	scheme *runtime.Scheme
 }
 
 // Reconcile reads that state of the cluster for a Submariner object and makes changes based on the state read
@@ -174,12 +170,9 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 			reqLogger.Error(err, "failed to update the Submariner status")
         }
 
-	if instance.Spec.ServiceDiscoveryEnabled {
-		if err = r.reconcileServiceDiscovery(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
-			return reconcile.Result{}, err
-		}
+	if err = r.reconcileServiceDiscovery(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
+		return reconcile.Result{}, err
 	}
-
 	return reconcile.Result{}, nil
 }
 
@@ -259,30 +252,37 @@ func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet 
 	return daemonSet, errorutil.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
 }
 
-func (r *ReconcileSubmariner)reconcileServiceDiscovery(submariner *submarinerv1alpha1.Submariner, reqLogger logr.Logger, isEnabled bool) error {
+func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submarinerv1alpha1.Submariner, reqLogger logr.Logger, isEnabled bool) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		sdExisting := &submarinerv1alpha1.ServiceDiscovery{}
 		if isEnabled {
 			sd := newServiceDiscoveryCR(submariner)
-			existing, err := r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Get(serviceDiscoveryCrName, metav1.GetOptions{})
+			//existing, err := r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Get(serviceDiscoveryCrName, metav1.GetOptions{})
+			err := r.client.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: submariner.Namespace}, sdExisting)
 			if err != nil {
-				_, err = r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Create(sd)
+				err = r.client.Create(context.TODO(), sd)
 			} else {
-				if reflect.DeepEqual(existing, sd) {
+				if reflect.DeepEqual(sdExisting, sd) {
 					// No need to issue the update if the resource didn't change
 					return nil
 				}
-				_, err = r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Update(sd)
+				err = r.client.Update(context.TODO(), sd)
 			}
 			if err != nil {
 				reqLogger.Error(err, "Error creating service discovery CR")
 			}
 			return err
 		} else {
-			err := r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Delete(serviceDiscoveryCrName, &metav1.DeleteOptions{})
-			return err
+			err := r.client.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: submariner.Namespace}, sdExisting)
+			//Delete if exists
+			if err == nil {
+				err = r.client.Delete(context.TODO(), sdExisting)
+				return err
+			}
+			return nil
 		}
 	})
-	
+
 	return errorutil.WithMessagef(err, "error reconciling the Service Discovery CR")
 }
 
@@ -559,7 +559,6 @@ func newServiceDiscoveryCR(cr *submarinerv1alpha1.Submariner) *submarinerv1alpha
 			BrokerK8sApiServerToken:  cr.Spec.BrokerK8sApiServerToken,
 			BrokerK8sApiServer:       cr.Spec.BrokerK8sApiServer,
 			Debug:                    cr.Spec.Debug,
-			Broker:                   cr.Spec.Broker,
 			ClusterID:                cr.Spec.ClusterID,
 			Namespace:                cr.Spec.Namespace,
 		},
@@ -588,9 +587,9 @@ func setSubmarinerDefaults(submariner *submarinerv1alpha1.Submariner) {
 }
 
 const (
-	routeAgentImage = "submariner-route-agent"
-	engineImage     = "submariner"
-	globalnetImage  = "submariner-globalnet"
+	routeAgentImage        = "submariner-route-agent"
+	engineImage            = "submariner"
+	globalnetImage         = "submariner-globalnet"
 	serviceDiscoveryCrName = "service-discovery"
 )
 
