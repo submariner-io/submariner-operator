@@ -175,7 +175,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
         }
 
 	if instance.Spec.ServiceDiscoveryEnabled {
-		if err = r.reconcileServiceDiscoverCR(instance, reqLogger); err != nil {
+		if err = r.reconcileServiceDiscovery(instance, reqLogger); err != nil {
 			return reconcile.Result{}, err
 		}
 	}

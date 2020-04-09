@@ -147,7 +147,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 	privileged := true
 	readOnlyFileSystem := false
 	runAsNonRoot := false
-	security_context_all_cap_allow_escal := corev1.SecurityContext{
+	securityContext := corev1.SecurityContext{
 		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
 		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 		Privileged:               &privileged,
