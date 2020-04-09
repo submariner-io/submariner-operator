@@ -283,7 +283,7 @@ func (r *ReconcileSubmariner)reconcileServiceDiscovery(submariner *submarinerv1a
 		}
 	})
 	
-	return errorutil.WithMessagef(err, "error creating or updating Service Discovery CR %s/%s", submariner.Namespace)
+	return errorutil.WithMessagef(err, "error reconciling the Service Discovery CR")
 }
 
 func newEngineDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {
