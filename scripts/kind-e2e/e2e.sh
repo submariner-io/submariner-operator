@@ -20,6 +20,7 @@ source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/version
 source ${SCRIPTS_DIR}/lib/utils
 source ${SCRIPTS_DIR}/lib/deploy_funcs
+source ${DAPPER_SOURCE}/scripts/kind-e2e/cluster_settings
 
 ### Functions ###
 
