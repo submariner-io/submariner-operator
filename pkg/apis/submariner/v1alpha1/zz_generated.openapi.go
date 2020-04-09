@@ -244,9 +244,26 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 							Format: "",
 						},
 					},
+					"engineDaemonSetStatus": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
+						},
+					},
+					"routeAgentDaemonSetStatus": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
+						},
+					},
+					"globalnetDaemonSetStatus": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
+						},
+					},
 				},
 				Required: []string{"natEnabled", "clusterID", "serviceCIDR", "clusterCIDR"},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/api/apps/v1.DaemonSetStatus"},
 	}
 }
