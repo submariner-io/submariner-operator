@@ -10,17 +10,12 @@ rules:
   - pods
   - services
   - namespaces
+  - nodes
   verbs:
   - get
   - list
   - watch
   - update
-- apiGroups:
-  - '*'
-  resources:
-  - nodes
-  verbs:
-  - 'get'
 - apiGroups:
   - submariner.io
   resources:
