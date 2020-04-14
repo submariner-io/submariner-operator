@@ -37,7 +37,7 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, err
 	}
 
-	crd, err := getSubmarinerCRD()
+	submarinerCrd, err := getSubmarinerCRD()
 	if err != nil {
 		return false, err
 	}
@@ -45,8 +45,13 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	// Attempt to update or create the CRD definition
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
-	return updateOrCreateCRD(clientSet, crd)
+	submarinerResult, err := updateOrCreateCRD(clientSet, submarinerCrd)
+	if err != nil {
+		return submarinerResult, err
+	}
 
+	gatewaysResult, err := updateOrCreateCRD(clientSet, getGatewaysCRD())
+	return (submarinerResult || gatewaysResult), err
 }
 
 func updateOrCreateCRD(clientSet clientset.Interface, crd *apiextensionsv1beta1.CustomResourceDefinition) (bool, error) {
@@ -76,4 +81,26 @@ func getSubmarinerCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) 
 	}
 
 	return crd, nil
+}
+
+// TODO Move this to the operator
+func getGatewaysCRD() *apiextensionsv1beta1.CustomResourceDefinition {
+	crd := &apiextensionsv1beta1.CustomResourceDefinition{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "gateways.submariner.io",
+		},
+		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
+			Group: "submariner.io",
+			Scope: apiextensionsv1beta1.NamespaceScoped,
+			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
+				Plural:   "gateways",
+				Singular: "gateway",
+				ListKind: "GatewayList",
+				Kind:     "Gateway",
+			},
+			Version: "v1",
+		},
+	}
+
+	return crd
 }
