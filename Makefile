@@ -1,32 +1,22 @@
-status ?= onetime
+build_debug ?= false
 lighthouse ?= false
-globalnet ?= false
-version ?= 1.14.6
 
-TARGETS := $(shell ls scripts)
-SCRIPTS_DIR ?= /opt/shipyard/scripts
+ifneq (,$(DAPPER_HOST_ARCH))
 
-.dapper:
-	@echo Downloading dapper
-	@curl -sL https://releases.rancher.com/dapper/latest/dapper-`uname -s`-`uname -m` > .dapper.tmp
-	@@chmod +x .dapper.tmp
-	@./.dapper.tmp -v
-	@mv .dapper.tmp .dapper
+# Running in Dapper
 
-cleanup: .dapper
-	./.dapper -m bind $(SCRIPTS_DIR)/cleanup.sh
+include $(SHIPYARD_DIR)/Makefile.inc
+
+TARGETS := $(shell ls -p scripts | grep -v -e /)
+CLUSTERS_ARGS = --cluster_settings scripts/kind-e2e/cluster_settings
 
 clusters: build
-	./.dapper -m bind $(SCRIPTS_DIR)/clusters.sh --k8s_version $(version) --globalnet $(globalnet) --cluster_settings scripts/kind-e2e/cluster_settings
 
 e2e: clusters
-	./.dapper -m bind scripts/kind-e2e/e2e.sh --status $(status) --lighthouse $(lighthouse) --globalnet $(globalnet)
+	scripts/kind-e2e/e2e.sh --status $(status) --lighthouse $(lighthouse) --globalnet $(globalnet)
 
-$(TARGETS): .dapper vendor/modules.txt
-	./.dapper -m bind $@
-
-shell: .dapper
-	./.dapper -s -m bind
+$(TARGETS): vendor/modules.txt
+	./scripts/$@ --build_debug $(build_debug)
 
 build-subctl: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go")
 
@@ -35,9 +25,15 @@ bin/subctl: build-subctl
 pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml")
 	$(MAKE) generate-embeddedyamls
 
-vendor/modules.txt: .dapper go.mod
-	./.dapper -m bind vendor
-
-.DEFAULT_GOAL := ci
-
 .PHONY: $(TARGETS)
+
+else
+
+# Not running in Dapper
+
+include Makefile.dapper
+
+endif
+
+# Disable rebuilding Makefile
+Makefile Makefile.dapper Makefile.inc: ;
