@@ -38,6 +38,13 @@ function validate_equals() {
   [[ $expected = $(jq -r -M $json_filter $json_file) ]]
 }
 
+function validate_not_equals() {
+  local json_filter=$1
+  local expected=$2
+  [[ $expected != $(jq -r -M $json_filter $json_file) ]]
+}
+
+
 function validate_crd() {
   local crd_name=$1
   local version=$2
@@ -87,7 +94,8 @@ function verify_subm_cr() {
   validate_equals '.kind' 'Submariner'
   validate_equals '.metadata.name' $deployment_name
   validate_equals '.spec.brokerK8sApiServer' $SUBMARINER_BROKER_URL
-  validate_equals '.spec.brokerK8sApiServerToken' $SUBMARINER_BROKER_TOKEN
+  # every cluster must have it's own token / SA
+  validate_not_equals '.spec.brokerK8sApiServerToken' $SUBMARINER_BROKER_TOKEN
   validate_equals '.spec.brokerK8sCA' $SUBMARINER_BROKER_CA
   validate_equals '.spec.brokerK8sRemoteNamespace' $SUBMARINER_BROKER_NS
   validate_equals '.spec.ceIPSecDebug' $ce_ipsec_debug
@@ -107,7 +115,6 @@ function verify_subm_cr() {
 
   validate_equals '.spec.serviceCIDR' ${service_CIDRs[$context]}
   validate_equals '.spec.clusterCIDR' ${cluster_CIDRs[$context]}
-  [[ $globalnet != 'true' ]] || validate_equals '.spec.globalCIDR' ${global_CIDRs[$context]}
 }
 
 function verify_subm_op_pod() {
@@ -167,7 +174,6 @@ function verify_subm_engine_pod() {
   validate_pod_container_env 'SUBMARINER_BROKER' $subm_broker
   validate_pod_container_env 'SUBMARINER_CABLEDRIVER' $subm_cabledriver
   validate_pod_container_env 'BROKER_K8S_APISERVER' $SUBMARINER_BROKER_URL
-  validate_pod_container_env 'BROKER_K8S_APISERVERTOKEN' $SUBMARINER_BROKER_TOKEN
   validate_pod_container_env 'BROKER_K8S_REMOTENAMESPACE' $SUBMARINER_BROKER_NS
   validate_pod_container_env 'BROKER_K8S_CA' $SUBMARINER_BROKER_CA
   # FIXME: This changes between some deployment runs and causes failures
@@ -311,7 +317,6 @@ function verify_subm_engine_container() {
   grep "BROKER_K8S_CA=$SUBMARINER_BROKER_CA" $env_file
   grep "CE_IPSEC_DEBUG=$ce_ipsec_debug" $env_file
   grep "SUBMARINER_DEBUG=$subm_debug" $env_file
-  grep "BROKER_K8S_APISERVERTOKEN=$SUBMARINER_BROKER_TOKEN" $env_file
   grep "BROKER_K8S_REMOTENAMESPACE=$SUBMARINER_BROKER_NS" $env_file
   grep "SUBMARINER_CABLEDRIVER=$subm_cabledriver" $env_file
   grep "SUBMARINER_SERVICECIDR=${service_CIDRs[$context]}" $env_file

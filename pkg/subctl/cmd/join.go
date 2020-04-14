@@ -28,6 +28,10 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
+
+	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 
 	k8serrs "k8s.io/apimachinery/pkg/api/errors"
@@ -62,6 +66,8 @@ var (
 	brokerClusterContext string
 	cableDriver          string
 	disableOpenShiftCVO  bool
+	clienttoken          *v1.Secret
+	globalnetClusterSize uint
 )
 
 func init() {
@@ -90,6 +96,8 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&cableDriver, "cable-driver", "", "Cable driver implementation")
 	cmd.Flags().BoolVar(&disableOpenShiftCVO, "disable-cvo", false,
 		"disable OpenShift's cluster version operator if necessary, without prompting")
+	cmd.Flags().UintVar(&globalnetClusterSize, "globalnet-cluster-size", 0,
+		"Cluster size for GlobalCIDR allocated to this cluster (amount of global IPs)")
 }
 
 const (
@@ -196,6 +204,13 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 			colorCodes = answers.ColorCodes
 		}
 	}
+	if subctlData.GlobalnetCidrRange != "" && globalnetClusterSize != 0 && globalnetClusterSize != subctlData.GlobalnetClusterSize {
+		clusterSize, err := globalnet.GetValidClusterSize(subctlData.GlobalnetCidrRange, globalnetClusterSize)
+		if err != nil || clusterSize == 0 {
+			exitOnError("Invalid globalnet-cluster-size", err)
+		}
+		subctlData.GlobalnetClusterSize = clusterSize
+	}
 
 	if !noLabel {
 		err := handleNodeLabels(config)
@@ -265,6 +280,13 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 		status.QueueSuccessMessage(fmt.Sprintf("Cluster already has GlobalCIDR allocated: %s", globalNetworks[clusterID].GlobalCIDRs[0]))
 	}
 
+	status.Start("Creating SA for cluster")
+	brokerAdminClientset, err := kubernetes.NewForConfig(subctlData.GetBrokerAdministratorConfig())
+	exitOnError("Error retrieving broker admin config", err)
+	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID)
+	status.End(err == nil)
+	exitOnError("Error creating SA for cluster", err)
+
 	status.Start("Deploying Submariner")
 	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
 	status.End(err == nil)
@@ -299,7 +321,7 @@ func checkOverlappingClusterCidr(networks map[string]*globalnet.GlobalNetwork) e
 
 func getGlobalNetworks(subctlData *datafile.SubctlData) map[string]*globalnet.GlobalNetwork {
 
-	brokerConfig := subctlData.GetBrokerConfig()
+	brokerConfig := subctlData.GetBrokerAdministratorConfig()
 	brokerSubmClient, err := submarinerClientset.NewForConfig(brokerConfig)
 	exitOnError("Unable to create submariner rest client for broker cluster", err)
 	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
@@ -425,7 +447,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		CeIPSecPSK:               base64.StdEncoding.EncodeToString(subctlData.IPSecPSK.Data["psk"]),
 		BrokerK8sCA:              base64.StdEncoding.EncodeToString(subctlData.ClientToken.Data["ca.crt"]),
 		BrokerK8sRemoteNamespace: string(subctlData.ClientToken.Data["namespace"]),
-		BrokerK8sApiServerToken:  string(subctlData.ClientToken.Data["token"]),
+		BrokerK8sApiServerToken:  string(clienttoken.Data["token"]),
 		BrokerK8sApiServer:       brokerURL,
 		Broker:                   "k8s",
 		NatEnabled:               !disableNat,
@@ -441,6 +463,5 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 	if globalCIDR != "" {
 		submarinerSpec.GlobalCIDR = globalCIDR
 	}
-
 	return submarinerSpec
 }
