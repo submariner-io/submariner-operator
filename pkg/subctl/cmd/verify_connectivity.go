@@ -22,9 +22,10 @@ import (
 
 	"github.com/onsi/ginkgo/config"
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner/test/e2e"
+
+	"github.com/submariner-io/shipyard/test/e2e"
+	"github.com/submariner-io/shipyard/test/e2e/framework"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
-	"github.com/submariner-io/submariner/test/e2e/framework"
 )
 
 var (

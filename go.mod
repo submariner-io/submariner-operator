@@ -8,11 +8,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.19.7
 	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
-	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3 // indirect
-	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/kubernetes-sigs/kubefed v0.0.10
 	github.com/mattn/go-isatty v0.0.12
@@ -23,11 +19,10 @@ require (
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/submariner v0.0.4-0.20200206161006-1426b56a528b
+	github.com/submariner-io/shipyard v0.0.0-20200416084120-97f62b652ea2
+	github.com/submariner-io/submariner v0.2.0-rc0.0.20200415152156-e31a5cff1992
 	go.opencensus.io v0.22.1 // indirect
 	go.uber.org/zap v1.12.0 // indirect
-	golang.org/x/crypto v0.0.0-20191029031824-8986dd9e96cf // indirect
-	golang.org/x/net v0.0.0-20191028085509-fe3aa8a45271 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	golang.org/x/tools v0.0.0-20191030062658-86caa796c7ab // indirect
