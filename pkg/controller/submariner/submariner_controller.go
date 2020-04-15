@@ -168,7 +168,9 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
 			reqLogger.Error(err, "failed to update the Submariner status")
-        }
+			return reconcile.Result{}, err
+		}
+	}
 
 	if err = r.reconcileServiceDiscovery(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
 		return reconcile.Result{}, err
@@ -254,32 +256,29 @@ func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet 
 
 func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submarinerv1alpha1.Submariner, reqLogger logr.Logger, isEnabled bool) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		sdExisting := &submarinerv1alpha1.ServiceDiscovery{}
 		if isEnabled {
 			sd := newServiceDiscoveryCR(submariner)
-			//existing, err := r.submClientSet.SubmarinerV1alpha1().ServiceDiscoveries(submariner.Namespace).Get(serviceDiscoveryCrName, metav1.GetOptions{})
-			err := r.client.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: submariner.Namespace}, sdExisting)
+			result, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, sd, func() error {
+				return nil
+			})
 			if err != nil {
-				err = r.client.Create(context.TODO(), sd)
-			} else {
-				if reflect.DeepEqual(sdExisting, sd) {
-					// No need to issue the update if the resource didn't change
-					return nil
-				}
-				err = r.client.Update(context.TODO(), sd)
+				return err
 			}
-			if err != nil {
-				reqLogger.Error(err, "Error creating service discovery CR")
+			if result == controllerutil.OperationResultCreated {
+				reqLogger.Info("Created Service Discover CR", "Namespace", sd.Namespace, "Name", sd.Name)
+			} else if result == controllerutil.OperationResultUpdated {
+				reqLogger.Info("Updated Service Discover CR", "Namespace", sd.Namespace, "Name", sd.Name)
 			}
 			return err
 		} else {
-			err := r.client.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: submariner.Namespace}, sdExisting)
-			//Delete if exists
-			if err == nil {
-				err = r.client.Delete(context.TODO(), sdExisting)
-				return err
+			sdExisting := &submarinerv1alpha1.ServiceDiscovery{}
+			err := r.client.Delete(context.TODO(), sdExisting)
+			if errors.IsNotFound(err) {
+				return nil
+			} else if err == nil {
+				reqLogger.Info("Deleted Service Discover CR", "Namespace", submariner.Namespace)
 			}
-			return nil
+			return err
 		}
 	})
 

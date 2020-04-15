@@ -48,14 +48,14 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return submarinerResult, err
 	}
 
-	crd, err = getServiceDiscoveryCRD()
+	crd, err := getServiceDiscoveryCRD()
 	if err != nil {
 		return false, err
 	}
 
 	serviceDiscoveryResult, err :=  utils.CreateOrUpdateCRD(clientSet, crd)
 	if err != nil {
-		return serviceDiscoveryResult, serviceDiscoveryErr
+		return serviceDiscoveryResult, err
 	}
 
 	gatewaysResult, err := utils.CreateOrUpdateCRD(clientSet, getGatewaysCRD())

@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/go-logr/logr"
+	errorutil "github.com/pkg/errors"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	. "sigs.k8s.io/controller-runtime/pkg/client"
+	"k8s.io/client-go/util/retry"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -70,7 +72,7 @@ var _ reconcile.Reconciler = &ReconcileServiceDiscovery{}
 type ReconcileServiceDiscovery struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client Client
+	client client.Client
 	scheme *runtime.Scheme
 }
 
@@ -92,9 +94,9 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			daemonSet := &appsv1.DaemonSet{}
-			opts := []DeleteAllOfOption{
-				InNamespace(request.NamespacedName.Namespace),
-				MatchingLabels{"app": appName},
+			opts := []client.DeleteAllOfOption{
+				client.InNamespace(request.NamespacedName.Namespace),
+				client.MatchingLabels{"app": appName},
 			}
 			err := r.client.DeleteAllOf(context.TODO(), daemonSet, opts...)
 			return reconcile.Result{}, err
@@ -103,33 +105,34 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, err
 	}
 
-	// Create Lighthouse-agent
-	lighthouseAgent := newLighthouseAgent(instance)
-
-	// Set ServiceDiscovery instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, lighthouseAgent, r.scheme); err != nil {
+	if err = r.reconcileLighthouseAgent(instance, reqLogger); err != nil {
 		return reconcile.Result{}, err
 	}
-
-	// Check if this lighthouse-agent already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: lighthouseAgent.Name, Namespace: lighthouseAgent.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new lighthouse-agent", "Pod.Namespace", lighthouseAgent.Namespace, "Pod.Name", lighthouseAgent.Name)
-		err = r.client.Create(context.TODO(), lighthouseAgent)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// Lighthouse-agent created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// lighthouse-agent already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileServiceDiscovery) reconcileLighthouseAgent(submariner *submarinerv1alpha1.ServiceDiscovery, reqLogger logr.Logger) error {
+	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		lightHouseAgent := newLighthouseAgent(submariner)
+		// Set ServiceDiscovery instance as the owner and controller
+		if err := controllerutil.SetControllerReference(submariner, lightHouseAgent, r.scheme); err != nil {
+			return err
+		}
+		result, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, lightHouseAgent, func() error {
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		if result == controllerutil.OperationResultCreated {
+			reqLogger.Info("Created Service Discover CR", "Namespace", lightHouseAgent.Namespace, "Name", lightHouseAgent.Name)
+		} else if result == controllerutil.OperationResultUpdated {
+			reqLogger.Info("Updated Service Discover CR", "Namespace", lightHouseAgent.Namespace, "Name", lightHouseAgent.Name)
+		}
+		return err
+	})
+
+	return errorutil.WithMessagef(err, "error reconciling the Service Discovery CR")
 }
 
 func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonSet {
