@@ -25,6 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	errorutil "github.com/pkg/errors"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -194,7 +195,7 @@ func (r *ReconcileSubmariner) deletePreExistingEngineDeployment(namespace string
 }
 
 func (r *ReconcileSubmariner) reconcileEngineDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
-	daemonSet, err := r.reconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger)
+	daemonSet, err := helpers.ReconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger, r.client, r.scheme)
 	if err == nil {
 		err = r.deletePreExistingEngineDeployment(instance.Namespace, reqLogger)
 	}
@@ -203,55 +204,11 @@ func (r *ReconcileSubmariner) reconcileEngineDaemonSet(instance *submarinerv1alp
 }
 
 func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
-	return r.reconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger)
+	return helpers.ReconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger, r.client, r.scheme)
 }
 
 func (r *ReconcileSubmariner) reconcileGlobalnetDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
-	return r.reconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger)
-}
-
-func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
-	var err error
-
-	// Set the owner and controller
-	if err = controllerutil.SetControllerReference(owner, daemonSet, r.scheme); err != nil {
-		return nil, err
-	}
-
-	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		toUpdate := &appsv1.DaemonSet{ObjectMeta: metav1.ObjectMeta{
-			Name:      daemonSet.Name,
-			Namespace: daemonSet.Namespace,
-			Labels:    map[string]string{},
-		}}
-
-		result, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, toUpdate, func() error {
-			toUpdate.Spec = daemonSet.Spec
-			for k, v := range daemonSet.Labels {
-				toUpdate.Labels[k] = v
-			}
-			return nil
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if result == controllerutil.OperationResultCreated {
-			reqLogger.Info("Created a new DaemonSet", "DaemonSet.Namespace", daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
-		} else if result == controllerutil.OperationResultUpdated {
-			reqLogger.Info("Updated existing DaemonSet", "DaemonSet.Namespace", daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
-		}
-
-		return nil
-	})
-
-	// Update the status from the server
-	if err == nil {
-		err = r.client.Get(context.TODO(), types.NamespacedName{Namespace: daemonSet.Namespace, Name: daemonSet.Name}, daemonSet)
-	}
-
-	return daemonSet, errorutil.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
+	return helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger, r.client, r.scheme)
 }
 
 func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submarinerv1alpha1.Submariner, reqLogger logr.Logger, isEnabled bool) error {
@@ -259,24 +216,46 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submarinerv1
 		if isEnabled {
 			sd := newServiceDiscoveryCR(submariner)
 			result, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, sd, func() error {
-				return nil
+				sd := &submarinerv1alpha1.ServiceDiscovery{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: submariner.Namespace,
+						Name:      serviceDiscoveryCrName,
+					},
+				}
+
+				_, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, sd, func() error {
+					sd.Spec = submarinerv1alpha1.ServiceDiscoverySpec{
+						Version:                  submariner.Spec.Version,
+						Repository:               submariner.Spec.Repository,
+						BrokerK8sCA:              submariner.Spec.BrokerK8sCA,
+						BrokerK8sRemoteNamespace: submariner.Spec.BrokerK8sRemoteNamespace,
+						BrokerK8sApiServerToken:  submariner.Spec.BrokerK8sApiServerToken,
+						BrokerK8sApiServer:       submariner.Spec.BrokerK8sApiServer,
+						Debug:                    submariner.Spec.Debug,
+						ClusterID:                submariner.Spec.ClusterID,
+						Namespace:                submariner.Spec.Namespace,
+					}
+					return nil
+				})
+				return err
+
 			})
 			if err != nil {
 				return err
 			}
 			if result == controllerutil.OperationResultCreated {
-				reqLogger.Info("Created Service Discover CR", "Namespace", sd.Namespace, "Name", sd.Name)
+				reqLogger.Info("Created Service Discovery CR", "Namespace", sd.Namespace, "Name", sd.Name)
 			} else if result == controllerutil.OperationResultUpdated {
-				reqLogger.Info("Updated Service Discover CR", "Namespace", sd.Namespace, "Name", sd.Name)
+				reqLogger.Info("Updated Service Discovery CR", "Namespace", sd.Namespace, "Name", sd.Name)
 			}
 			return err
 		} else {
-			sdExisting := &submarinerv1alpha1.ServiceDiscovery{}
+			sdExisting := newServiceDiscoveryCR(submariner)
 			err := r.client.Delete(context.TODO(), sdExisting)
 			if errors.IsNotFound(err) {
 				return nil
 			} else if err == nil {
-				reqLogger.Info("Deleted Service Discover CR", "Namespace", submariner.Namespace)
+				reqLogger.Info("Deleted Service Discovery CR", "Namespace", submariner.Namespace)
 			}
 			return err
 		}

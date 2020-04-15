@@ -5,18 +5,15 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/go-logr/logr"
-	errorutil "github.com/pkg/errors"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -53,8 +50,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource Pods and requeue the owner ServiceDiscovery
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	// Watch for changes to secondary resource DaemonSet and requeue the owner ServiceDiscovery
+	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &submarinerv1alpha1.ServiceDiscovery{},
 	})
@@ -104,35 +101,12 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-
-	if err = r.reconcileLighthouseAgent(instance, reqLogger); err != nil {
+	lightHouseAgent := newLighthouseAgent(instance)
+	if _, err = helpers.ReconcileDaemonSet(instance, lightHouseAgent, reqLogger,
+		r.client, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 	return reconcile.Result{}, nil
-}
-
-func (r *ReconcileServiceDiscovery) reconcileLighthouseAgent(submariner *submarinerv1alpha1.ServiceDiscovery, reqLogger logr.Logger) error {
-	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		lightHouseAgent := newLighthouseAgent(submariner)
-		// Set ServiceDiscovery instance as the owner and controller
-		if err := controllerutil.SetControllerReference(submariner, lightHouseAgent, r.scheme); err != nil {
-			return err
-		}
-		result, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, lightHouseAgent, func() error {
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-		if result == controllerutil.OperationResultCreated {
-			reqLogger.Info("Created Service Discover CR", "Namespace", lightHouseAgent.Namespace, "Name", lightHouseAgent.Name)
-		} else if result == controllerutil.OperationResultUpdated {
-			reqLogger.Info("Updated Service Discover CR", "Namespace", lightHouseAgent.Namespace, "Name", lightHouseAgent.Name)
-		}
-		return err
-	})
-
-	return errorutil.WithMessagef(err, "error reconciling the Service Discovery CR")
 }
 
 func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonSet {
