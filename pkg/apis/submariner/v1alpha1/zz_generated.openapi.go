@@ -201,7 +201,69 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 			SchemaProps: spec.SchemaProps{
 				Description: "SubmarinerStatus defines the observed state of Submariner",
 				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"natEnabled": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"colorCodes": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"clusterID": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"serviceCIDR": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"clusterCIDR": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"globalCIDR": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"cableDriver": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"engineDaemonSetStatus": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
+						},
+					},
+					"routeAgentDaemonSetStatus": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
+						},
+					},
+					"globalnetDaemonSetStatus": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
+						},
+					},
+				},
+				Required: []string{"natEnabled", "clusterID", "serviceCIDR", "clusterCIDR"},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/api/apps/v1.DaemonSetStatus"},
 	}
 }

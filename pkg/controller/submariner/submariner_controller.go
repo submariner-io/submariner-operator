@@ -19,6 +19,7 @@ package submariner
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -70,8 +71,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource Pods and requeue the owner Submariner
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	// Watch for changes to secondary resource DaemonSets and requeue the owner Submariner
+	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &submarinerv1alpha1.Submariner{},
 	})
@@ -126,16 +127,47 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	//subm_engine_sa.Name = "submariner-engine"
 	//reqLogger.Info("Created a new SA", "SA.Name", subm_engine_sa.Name)
 
-	if err = r.reconcileEngineDaemonSet(instance, reqLogger); err != nil {
+	engineDaemonSet, err := r.reconcileEngineDaemonSet(instance, reqLogger)
+	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	if err = r.reconcileRouteagentDaemonSet(instance, reqLogger); err != nil {
+	routeagentDaemonSet, err := r.reconcileRouteagentDaemonSet(instance, reqLogger)
+	if err != nil {
 		return reconcile.Result{}, err
 	}
 
+	var globalnetDaemonSet *appsv1.DaemonSet
 	if instance.Spec.GlobalCIDR != "" {
-		if err = r.reconcileGlobalnetDaemonSet(instance, reqLogger); err != nil {
+		if globalnetDaemonSet, err = r.reconcileGlobalnetDaemonSet(instance, reqLogger); err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	// Update the status
+	status := submarinerv1alpha1.SubmarinerStatus{
+		NatEnabled:  instance.Spec.NatEnabled,
+		ColorCodes:  instance.Spec.ColorCodes,
+		ClusterID:   instance.Spec.ClusterID,
+		ServiceCIDR: instance.Spec.ServiceCIDR,
+		ClusterCIDR: instance.Spec.ClusterCIDR,
+		GlobalCIDR:  instance.Spec.GlobalCIDR,
+		CableDriver: instance.Spec.CableDriver, // TODO retrieve this from the engine
+	}
+	if engineDaemonSet != nil {
+		status.EngineDaemonSetStatus = &engineDaemonSet.Status
+	}
+	if routeagentDaemonSet != nil {
+		status.RouteAgentDaemonSetStatus = &routeagentDaemonSet.Status
+	}
+	if globalnetDaemonSet != nil {
+		status.GlobalnetDaemonSetStatus = &globalnetDaemonSet.Status
+	}
+	if !reflect.DeepEqual(instance.Status, status) {
+		instance.Status = status
+		err := r.client.Status().Update(context.TODO(), instance)
+		if err != nil {
+			reqLogger.Error(err, "failed to update the Submariner status")
 			return reconcile.Result{}, err
 		}
 	}
@@ -158,29 +190,29 @@ func (r *ReconcileSubmariner) deletePreExistingEngineDeployment(namespace string
 	return r.client.Delete(context.TODO(), foundDeployment)
 }
 
-func (r *ReconcileSubmariner) reconcileEngineDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
-	err := r.reconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger)
+func (r *ReconcileSubmariner) reconcileEngineDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
+	daemonSet, err := r.reconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger)
 	if err == nil {
 		err = r.deletePreExistingEngineDeployment(instance.Namespace, reqLogger)
 	}
 
-	return err
+	return daemonSet, err
 }
 
-func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
+func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
 	return r.reconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger)
 }
 
-func (r *ReconcileSubmariner) reconcileGlobalnetDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) error {
+func (r *ReconcileSubmariner) reconcileGlobalnetDaemonSet(instance *submarinerv1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
 	return r.reconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger)
 }
 
-func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger) error {
+func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
 	var err error
 
 	// Set the owner and controller
 	if err = controllerutil.SetControllerReference(owner, daemonSet, r.scheme); err != nil {
-		return err
+		return nil, err
 	}
 
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -211,7 +243,12 @@ func (r *ReconcileSubmariner) reconcileDaemonSet(owner metav1.Object, daemonSet 
 		return nil
 	})
 
-	return errorutil.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
+	// Update the status from the server
+	if err == nil {
+		err = r.client.Get(context.TODO(), types.NamespacedName{Namespace: daemonSet.Namespace, Name: daemonSet.Name}, daemonSet)
+	}
+
+	return daemonSet, errorutil.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
 }
 
 func newEngineDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet {
