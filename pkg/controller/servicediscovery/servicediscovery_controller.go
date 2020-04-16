@@ -23,6 +23,11 @@ import (
 
 var log = logf.Log.WithName("controller_servicediscovery")
 
+const (
+	serviceDiscoveryImage = "lighthouse-agent"
+	deploymentName        = "submariner-lighthouse-agent"
+)
+
 // Add creates a new ServiceDiscovery Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
@@ -50,8 +55,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to secondary resource DaemonSet and requeue the owner ServiceDiscovery
-	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForOwner{
+	// Watch for changes to secondary resource Deployment and requeue the owner ServiceDiscovery
+	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &submarinerv1alpha1.ServiceDiscovery{},
 	})
@@ -90,33 +95,33 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
-			daemonSet := &appsv1.DaemonSet{}
+			deployment := &appsv1.Deployment{}
 			opts := []client.DeleteAllOfOption{
 				client.InNamespace(request.NamespacedName.Namespace),
-				client.MatchingLabels{"app": appName},
+				client.MatchingLabels{"app": deploymentName},
 			}
-			err := r.client.DeleteAllOf(context.TODO(), daemonSet, opts...)
+			err := r.client.DeleteAllOf(context.TODO(), deployment, opts...)
 			return reconcile.Result{}, err
 		}
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 	lightHouseAgent := newLighthouseAgent(instance)
-	if _, err = helpers.ReconcileDaemonSet(instance, lightHouseAgent, reqLogger,
+	if _, err = helpers.ReconcileDeployment(instance, lightHouseAgent, reqLogger,
 		r.client, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
 	return reconcile.Result{}, nil
 }
 
-func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonSet {
+func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
+	replicas := int32(1)
 	labels := map[string]string{
-		"app":       "submariner-lighthouse-agent",
+		"app":       deploymentName,
 		"component": "lighthouse-agent",
 	}
-
 	matchLabels := map[string]string{
-		"app": appName,
+		"app": deploymentName,
 	}
 
 	allowPrivilegeEscalation := true
@@ -133,14 +138,17 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 
 	terminationGracePeriodSeconds := int64(0)
 
-	serviceDiscoveryDaemonSet := &appsv1.DaemonSet{
+	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
-			Name:      "submariner-lighthouse-agent",
+			Name:      deploymentName,
 			Labels:    labels,
 		},
-		Spec: appsv1.DaemonSetSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: matchLabels,
+			},
+			Replicas: &replicas,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -167,10 +175,10 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 							},
 						},
 					},
+
 					ServiceAccountName:            "submariner-operator",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
-					HostNetwork:                   true,
 					Volumes: []corev1.Volume{
 						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
 					},
@@ -178,14 +186,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.DaemonS
 			},
 		},
 	}
-
-	return serviceDiscoveryDaemonSet
 }
-
-const (
-	serviceDiscoveryImage = "lighthouse-agent"
-	appName               = "submariner-lighthouse-agent"
-)
 
 func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, componentImage string) string {
 	var path string

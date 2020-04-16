@@ -59,3 +59,48 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 
 	return daemonSet, errorutil.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
 }
+
+func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, reqLogger logr.Logger,
+	client client.Client, scheme *runtime.Scheme) (*appsv1.Deployment, error) {
+	var err error
+
+	// Set the owner and controller
+	if err = controllerutil.SetControllerReference(owner, deployment, scheme); err != nil {
+		return nil, err
+	}
+
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		toUpdate := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{
+			Name:      deployment.Name,
+			Namespace: deployment.Namespace,
+			Labels:    map[string]string{},
+		}}
+
+		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
+			toUpdate.Spec = deployment.Spec
+			for k, v := range deployment.Labels {
+				toUpdate.Labels[k] = v
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if result == controllerutil.OperationResultCreated {
+			reqLogger.Info("Created a new Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
+		} else if result == controllerutil.OperationResultUpdated {
+			reqLogger.Info("Updated existing Deployment", "Deployment.Namespace", deployment.Namespace, "Deployment.Name", deployment.Name)
+		}
+
+		return nil
+	})
+
+	// Update the status from the server
+	if err == nil {
+		err = client.Get(context.TODO(), types.NamespacedName{Namespace: deployment.Namespace, Name: deployment.Name}, deployment)
+	}
+
+	return deployment, errorutil.WithMessagef(err, "error creating or updating Deployment %s/%s", deployment.Namespace, deployment.Name)
+}

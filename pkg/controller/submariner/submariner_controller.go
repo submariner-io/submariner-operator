@@ -214,15 +214,8 @@ func (r *ReconcileSubmariner) reconcileGlobalnetDaemonSet(instance *submarinerv1
 func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submarinerv1alpha1.Submariner, reqLogger logr.Logger, isEnabled bool) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if isEnabled {
-			sd := newServiceDiscoveryCR(submariner)
+			sd := newServiceDiscoveryCR(submariner.Namespace)
 			result, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, sd, func() error {
-				sd := &submarinerv1alpha1.ServiceDiscovery{
-					ObjectMeta: metav1.ObjectMeta{
-						Namespace: submariner.Namespace,
-						Name:      serviceDiscoveryCrName,
-					},
-				}
-
 				_, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, sd, func() error {
 					sd.Spec = submarinerv1alpha1.ServiceDiscoverySpec{
 						Version:                  submariner.Spec.Version,
@@ -250,7 +243,7 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submarinerv1
 			}
 			return err
 		} else {
-			sdExisting := newServiceDiscoveryCR(submariner)
+			sdExisting := newServiceDiscoveryCR(submariner.Namespace)
 			err := r.client.Delete(context.TODO(), sdExisting)
 			if errors.IsNotFound(err) {
 				return nil
@@ -522,27 +515,14 @@ func newGlobalnetDaemonSet(cr *submarinerv1alpha1.Submariner) *appsv1.DaemonSet 
 	return globalnetDaemonSet
 }
 
-func newServiceDiscoveryCR(cr *submarinerv1alpha1.Submariner) *submarinerv1alpha1.ServiceDiscovery {
+func newServiceDiscoveryCR(namespace string) *submarinerv1alpha1.ServiceDiscovery {
 
-	deployment := &submarinerv1alpha1.ServiceDiscovery{
+	return &submarinerv1alpha1.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: cr.Namespace,
+			Namespace: namespace,
 			Name:      serviceDiscoveryCrName,
 		},
-		Spec: submarinerv1alpha1.ServiceDiscoverySpec{
-			Version:                  cr.Spec.Version,
-			Repository:               cr.Spec.Repository,
-			BrokerK8sCA:              cr.Spec.BrokerK8sCA,
-			BrokerK8sRemoteNamespace: cr.Spec.BrokerK8sRemoteNamespace,
-			BrokerK8sApiServerToken:  cr.Spec.BrokerK8sApiServerToken,
-			BrokerK8sApiServer:       cr.Spec.BrokerK8sApiServer,
-			Debug:                    cr.Spec.Debug,
-			ClusterID:                cr.Spec.ClusterID,
-			Namespace:                cr.Spec.Namespace,
-		},
 	}
-
-	return deployment
 }
 
 //TODO: move to a method on the API definitions, as the example shown by the etcd operator here :

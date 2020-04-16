@@ -53,7 +53,7 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, err
 	}
 
-	serviceDiscoveryResult, err :=  utils.CreateOrUpdateCRD(clientSet, crd)
+	serviceDiscoveryResult, err := utils.CreateOrUpdateCRD(clientSet, crd)
 	if err != nil {
 		return serviceDiscoveryResult, err
 	}
