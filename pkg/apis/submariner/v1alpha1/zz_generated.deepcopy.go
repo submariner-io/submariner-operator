@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	submarineriov1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	v1 "k8s.io/api/apps/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -211,6 +212,11 @@ func (in *SubmarinerStatus) DeepCopyInto(out *SubmarinerStatus) {
 	if in.GlobalnetDaemonSetStatus != nil {
 		in, out := &in.GlobalnetDaemonSetStatus, &out.GlobalnetDaemonSetStatus
 		*out = new(v1.DaemonSetStatus)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.GatewayList != nil {
+		in, out := &in.GatewayList, &out.GatewayList
+		*out = new(submarineriov1.GatewayList)
 		(*in).DeepCopyInto(*out)
 	}
 	return
