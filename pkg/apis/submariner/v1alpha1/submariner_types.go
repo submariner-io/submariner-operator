@@ -19,6 +19,8 @@ package v1alpha1
 import (
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -62,10 +64,10 @@ type SubmarinerStatus struct {
 	ServiceCIDR               string                  `json:"serviceCIDR"`
 	ClusterCIDR               string                  `json:"clusterCIDR"`
 	GlobalCIDR                string                  `json:"globalCIDR,omitempty"`
-	CableDriver               string                  `json:"cableDriver,omitempty"`
 	EngineDaemonSetStatus     *appsv1.DaemonSetStatus `json:"engineDaemonSetStatus,omitempty"`
 	RouteAgentDaemonSetStatus *appsv1.DaemonSetStatus `json:"routeAgentDaemonSetStatus,omitempty"`
 	GlobalnetDaemonSetStatus  *appsv1.DaemonSetStatus `json:"globalnetDaemonSetStatus,omitempty"`
+	GatewayList               *submv1.GatewayList     `json:"gatewayList,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
