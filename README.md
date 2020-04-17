@@ -111,7 +111,7 @@ subctl join --kubecontext east --kubeconfig merged_kubeconfig broker-info.subm  
  
  You can compile the operator image running:
 ```bash
-make build
+make build-operator
 ```
 
 The source code can be validated (golint, gofmt, unit testing) running:
