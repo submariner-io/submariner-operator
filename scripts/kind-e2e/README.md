@@ -38,7 +38,7 @@ make ci e2e
 If you want to minimize runtime another option is to skip unit tests and source
 code validation:
 ```bash
-make build package e2e
+make build-all package e2e
 ```
 
 To test specific k8s version, additional **version** parameter can be passed to **make e2e** command.
@@ -76,7 +76,7 @@ kubectl config list-contexts
 You should be able to see 3 contexts. From this stage you can interact with the clusters
 as with any normal k8s cluster.
 
-**NOTE**: Each time **make e2e status=keep** command is executed, the local code will be build, pushed to kind clusters
+**NOTE**: Each time **make e2e status=keep** command is executed, the local code will be built, pushed to kind clusters
 as docker images, submariner will be redeployed on the clusters from pushed images and E2E tests will be executed.
 This mode allows the developers to test their local code fast on a very close to real world scenario setup.
 

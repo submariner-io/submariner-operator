@@ -59,6 +59,7 @@ var verifyConnectivityCmd = &cobra.Command{
 }
 
 func configureTestingFramework(args []string) {
+	framework.TestContext.KubeConfig = ""
 	framework.TestContext.KubeConfigs = args
 	framework.TestContext.OperationTimeout = operationTimeout
 	framework.TestContext.ConnectionTimeout = connectionTimeout

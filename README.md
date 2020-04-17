@@ -117,7 +117,7 @@ Docker setup. You will also need GNU Make.
  
  You can compile the operator image running:
 ```bash
-make build
+make build-operator
 ```
 
 The source code can be validated (golint, gofmt, unit testing) running:
