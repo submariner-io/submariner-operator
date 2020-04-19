@@ -25,23 +25,25 @@ source ${DAPPER_SOURCE}/scripts/kind-e2e/cluster_settings
 ### Functions ###
 
 function setup_broker() {
-    if kubectl --context=cluster1 get crd clusters.submariner.io > /dev/null 2>&1; then
+    if kubectl get crd clusters.submariner.io > /dev/null 2>&1; then
         echo Submariner CRDs already exist, skipping broker creation...
-    else
-        echo Installing broker on cluster1.
-         sd=
-         [[ $lighthouse = true ]] && sd=--service-discovery
-         gn=
-         [[ $globalnet = true ]] && gn=--globalnet
-         set -o pipefail
-         ${DAPPER_SOURCE}/bin/subctl --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged --kubecontext cluster1 deploy-broker ${sd} ${gn}|& cat
-         set +o pipefail
-         [[ $lighthouse = true ]] && kubefedctl federate namespace default --kubefed-namespace kubefed-operator
+        return
     fi
 
-    SUBMARINER_BROKER_URL=$(kubectl --context=cluster1 -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
-    SUBMARINER_BROKER_CA=$(kubectl --context=cluster1 -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
-    SUBMARINER_BROKER_TOKEN=$(kubectl --context=cluster1 -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
+    echo Installing broker on ${cluster}.
+    local sd gn
+    [[ $lighthouse = true ]] && sd=--service-discovery
+    [[ $globalnet = true ]] && gn=--globalnet
+    set -o pipefail
+    ${DAPPER_SOURCE}/bin/subctl --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged --kubecontext ${cluster} deploy-broker ${sd} ${gn}|& cat
+    set +o pipefail
+    [[ $lighthouse != true ]] || kubefedctl federate namespace default --kubefed-namespace kubefed-operator
+}
+
+function broker_vars() {
+    SUBMARINER_BROKER_URL=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
+    SUBMARINER_BROKER_CA=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
+    SUBMARINER_BROKER_TOKEN=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
 }
 
 function kind_import_images() {
@@ -134,7 +136,8 @@ declare_kubeconfig
 kubectl config view --flatten > ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged
 
 kind_import_images
-setup_broker
+with_context cluster1 setup_broker
+with_context cluster1 broker_vars
 
 context=cluster1
 kubectl config use-context $context
