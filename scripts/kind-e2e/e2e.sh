@@ -82,6 +82,29 @@ function create_subm_vars() {
     subm_broker_ns=submariner-k8s-broker
 }
 
+function deploy_subm() {
+    # Add SubM gateway labels
+    add_subm_gateway_label
+    # Verify SubM gateway labels
+    verify_subm_gateway_label
+
+    set -o pipefail
+    ${DAPPER_SOURCE}/bin/subctl join --operator-image "${subm_engine_image_repo}/submariner-operator:local" \
+                    --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged \
+                    --kubecontext ${cluster} \
+                    --clusterid ${cluster} \
+                    --repository "${subm_engine_image_repo}" \
+                    --version ${subm_engine_image_tag} \
+                    --nattport ${ce_ipsec_nattport} \
+                    --ikeport ${ce_ipsec_ikeport} \
+                    --colorcodes ${subm_colorcodes} \
+                    --cable-driver ${subm_cabledriver} \
+                    --broker-cluster-context "cluster1" \
+                    --disable-nat \
+                    broker-info.subm |& cat
+    set +o pipefail
+}
+
 function connectivity_tests() {
     local netshoot_pod nginx_svc_ip
     netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
@@ -139,92 +162,28 @@ kind_import_images
 with_context cluster1 setup_broker
 with_context cluster1 broker_vars
 
-context=cluster1
-kubectl config use-context $context
-
 # Import functions for testing with Operator
 # NB: These are also used to verify non-Operator deployments, thereby asserting the two are mostly equivalent
 . ${DAPPER_SOURCE}/scripts/kind-e2e/lib_operator_verify_subm.sh
 
 create_subm_vars
-verify_subm_broker_secrets
+with_context cluster1 verify_subm_broker_secrets
 
-for i in 2 3; do
-    context=cluster$i
-    kubectl config use-context $context
+if [[ $globalnet = "true" ]]; then
+    run_sequential "2 3" deploy_subm
+else
+    run_parallel "2 3" deploy_subm
+fi
 
-    # Add SubM gateway labels
-    with_context $context add_subm_gateway_label
-    # Verify SubM gateway labels
-    verify_subm_gateway_label
-
-    # Deploy SubM Operator
-    if [ "${context}" = "cluster2" ] || [ "${context}" = "cluster3" ]; then
-        set -o pipefail
-        ${DAPPER_SOURCE}/bin/subctl join --operator-image "${subm_engine_image_repo}/submariner-operator:local" \
-                        --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged \
-                        --kubecontext ${context} \
-                        --clusterid ${context} \
-                        --repository "${subm_engine_image_repo}" \
-                        --version ${subm_engine_image_tag} \
-                        --nattport ${ce_ipsec_nattport} \
-                        --ikeport ${ce_ipsec_ikeport} \
-                        --colorcodes ${subm_colorcodes} \
-                        --cable-driver ${subm_cabledriver} \
-                        --broker-cluster-context "cluster1" \
-                        --disable-nat \
-                        broker-info.subm |& cat
-        set +o pipefail
-    else
-        echo Unknown context ${context}
-        exit 1
-    fi
-
-    # Verify shared CRDs
-    verify_endpoints_crd
-    verify_clusters_crd
-
-    # Verify SubM CRD
-    verify_subm_crd
-    # Verify SubM Operator
-    verify_subm_operator
-    # Verify SubM Operator pod
-    verify_subm_op_pod
-    # Verify SubM Operator container
-    verify_subm_operator_container
-
-    # FIXME: Rename all of these submariner-engine or engine, vs submariner
-    # Verify SubM CR
-    verify_subm_cr
-    # Verify SubM Engine Deployment
-    verify_subm_engine_deployment
-    # Verify SubM Engine Pod
-    verify_subm_engine_pod
-    # Verify SubM Engine container
-    verify_subm_engine_container
-    # Verify Engine secrets
-    verify_subm_engine_secrets
-
-    # Verify SubM Routeagent DaemonSet
-    verify_subm_routeagent_daemonset
-    # Verify SubM Routeagent Pods
-    verify_subm_routeagent_pod
-    # Verify SubM Routeagent container
-    verify_subm_routeagent_container
-
-    if [[ $globalnet = true ]]; then
-        #Verify SubM Globalnet Daemonset
-        verify_subm_globalnet_daemonset
-    fi
-done
+run_parallel "2 3" verify_subm_deployed
 
 echo "Running subctl a second time to verify if running subctl a second time works fine"
 
 set -o pipefail
 ${DAPPER_SOURCE}/bin/subctl join --operator-image "${subm_engine_image_repo}/submariner-operator:local" \
                 --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged \
-                --kubecontext ${context} \
-                --clusterid ${context} \
+                --kubecontext cluster3 \
+                --clusterid cluster3 \
                 --repository "${subm_engine_image_repo}" \
                 --version ${subm_engine_image_tag} \
                 --nattport ${ce_ipsec_nattport} \
