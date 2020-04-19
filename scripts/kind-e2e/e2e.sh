@@ -54,32 +54,32 @@ function kind_import_images() {
 }
 
 function create_subm_vars() {
-  # FIXME A better name might be submariner-engine, but just kinda-matching submariner-<random hash> name used by Helm/upstream tests
-  deployment_name=submariner
-  operator_deployment_name=submariner-operator
-  engine_deployment_name=submariner-engine
-  routeagent_deployment_name=submariner-routeagent
-  broker_deployment_name=submariner-k8s-broker
-  globalnet_deployment_name=submariner-globalnet
+    # FIXME A better name might be submariner-engine, but just kinda-matching submariner-<random hash> name used by Helm/upstream tests
+    deployment_name=submariner
+    operator_deployment_name=submariner-operator
+    engine_deployment_name=submariner-engine
+    routeagent_deployment_name=submariner-routeagent
+    broker_deployment_name=submariner-k8s-broker
+    globalnet_deployment_name=submariner-globalnet
 
-  declare_cidrs
-  natEnabled=false
+    declare_cidrs
+    natEnabled=false
 
-  subm_engine_image_repo="localhost:5000"
-  subm_engine_image_tag=local
+    subm_engine_image_repo="localhost:5000"
+    subm_engine_image_tag=local
 
-  # FIXME: Actually act on this size request in controller
-  subm_engine_size=3
-  subm_colorcodes=blue
-  subm_debug=false
-  subm_broker=k8s
-  subm_cabledriver=strongswan
-  ce_ipsec_debug=false
-  ce_ipsec_ikeport=500
-  ce_ipsec_nattport=4500
+    # FIXME: Actually act on this size request in controller
+    subm_engine_size=3
+    subm_colorcodes=blue
+    subm_debug=false
+    subm_broker=k8s
+    subm_cabledriver=strongswan
+    ce_ipsec_debug=false
+    ce_ipsec_ikeport=500
+    ce_ipsec_nattport=4500
 
-  subm_ns=submariner-operator
-  subm_broker_ns=submariner-k8s-broker
+    subm_ns=submariner-operator
+    subm_broker_ns=submariner-k8s-broker
 }
 
 function connectivity_tests() {
