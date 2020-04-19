@@ -35,7 +35,11 @@ function verify_subm_operator() {
 function validate_equals() {
   local json_filter=$1
   local expected=$2
-  [[ $expected = $(jq -r -M $json_filter $json_file) ]]
+  local actual=$(jq -r -M $json_filter $json_file)
+  if [[ $expected != $actual ]]; then
+     echo "Expected ${expected@Q} but got ${actual@Q}"
+     return 1
+  fi
 }
 
 function validate_not_equals() {
