@@ -178,20 +178,7 @@ fi
 run_parallel "2 3" verify_subm_deployed
 
 echo "Running subctl a second time to verify if running subctl a second time works fine"
-
-set -o pipefail
-${DAPPER_SOURCE}/bin/subctl join --operator-image "${subm_engine_image_repo}/submariner-operator:local" \
-                --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged \
-                --kubecontext cluster3 \
-                --clusterid cluster3 \
-                --repository "${subm_engine_image_repo}" \
-                --version ${subm_engine_image_tag} \
-                --nattport ${ce_ipsec_nattport} \
-                --ikeport ${ce_ipsec_ikeport} \
-                --colorcodes ${subm_colorcodes} \
-                --broker-cluster-context cluster1 \
-                --disable-nat broker-info.subm |& cat
-set +o pipefail
+with_context cluster3 deploy_subm
 
 with_context cluster2 deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
 with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
