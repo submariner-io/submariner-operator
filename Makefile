@@ -13,7 +13,7 @@ CLUSTERS_ARGS = --cluster_settings scripts/kind-e2e/cluster_settings
 clusters: build
 
 e2e: clusters
-	scripts/kind-e2e/e2e.sh --status $(status) --lighthouse $(lighthouse) --globalnet $(globalnet)
+	scripts/kind-e2e/e2e.sh --lighthouse $(lighthouse) --globalnet $(globalnet)
 
 $(TARGETS): vendor/modules.txt
 	./scripts/$@ --build_debug $(build_debug)
