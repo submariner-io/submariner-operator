@@ -241,38 +241,24 @@ function verify_subm_globalnet_daemonset() {
   verify_daemonset $globalnet_deployment_name submariner-globalnet
 }
 
+function daemonset_created() {
+  kubectl get DaemonSet $daemonset_name -n $subm_ns > /dev/null 2>&1
+}
+
+function daemonset_deployed() {
+  local daemonset_name=$1
+  local desiredNumberScheduled=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.desiredNumberScheduled}')
+  local numberReady=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.numberReady}')
+  [[ "$numberReady" = "$desiredNumberScheduled" ]]
+}
+
 function verify_daemonset() {
   daemonset_app=$1
   daemonset_name=$2
 
   # Simple verification to ensure that the daemonset has been created and becomes ready
-   SECONDS="0"
-   while ! kubectl get DaemonSets -l app=$daemonset_app -n $subm_ns | grep -q $daemonset_name; do
-     if [ $SECONDS -gt 120 ]; then
-        echo "Timeout waiting for "$daemonset_app" DaemonSet creation"
-        exit 1
-     else
-        ((SECONDS+=2))
-        sleep 2
-     fi
-   done
-
-   numberReady=-1
-   desiredNumberScheduled=0
-   SECONDS="0"
-   while [ "$numberReady" != "$desiredNumberScheduled" ]; do
-     if [ $SECONDS -gt 120 ]; then
-        echo "Timeout waiting for a ready state on the "$daemonset_app" daemonset"
-        exit 1
-     else
-
-        desiredNumberScheduled=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.desiredNumberScheduled}')
-        numberReady=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.numberReady}')
-
-        ((SECONDS+=2))
-        sleep 2
-     fi
-   done
+  with_retries 60 daemonset_created
+  with_retries 120 daemonset_deployed
 }
 
 validate_pod_container_volume_mount() {
