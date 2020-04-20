@@ -176,7 +176,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 						},
 					},
 
-					ServiceAccountName:            "submariner-operator",
+					ServiceAccountName:            "submariner-lighthouse",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
 					Volumes: []corev1.Volume{

@@ -19,13 +19,6 @@ package crds
 import (
 	"fmt"
 	"os/exec"
-
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/client-go/rest"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
 //go:generate go run generators/yamls2go.go
@@ -33,24 +26,7 @@ import (
 // Copied over from operator/install/crds/ensure.go
 
 //Ensure functions updates or installs the multiclusterservives CRDs in the cluster
-func Ensure(restConfig *rest.Config, kubeConfig string, kubeContext string) (bool, error) {
-	clientSet, err := clientset.NewForConfig(restConfig)
-	if err != nil {
-		return false, err
-	}
-
-	crd, err := getMcsCRD()
-	if err != nil {
-		return false, err
-	}
-
-	// Attempt to update or create the CRD definition
-	// TODO(majopela): In the future we may want to report when we have updated the existing
-	//                 CRD definition with new versions
-	_, err = utils.CreateOrUpdateCRD(clientSet, crd)
-	if err != nil {
-		return false, err
-	}
+func Ensure(kubeConfig string, kubeContext string) (bool, error) {
 	args := []string{"enable", "MulticlusterService"}
 	if kubeConfig != "" {
 		args = append(args, "--kubeconfig", kubeConfig)
@@ -64,14 +40,4 @@ func Ensure(restConfig *rest.Config, kubeConfig string, kubeContext string) (boo
 		return false, fmt.Errorf("error federating MulticlusterService CRD: %s\n%s", err, out)
 	}
 	return true, nil
-}
-
-func getMcsCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
-
-	if err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_crds_multiclusterservices_crd_yaml, crd); err != nil {
-		return nil, err
-	}
-
-	return crd, nil
 }
