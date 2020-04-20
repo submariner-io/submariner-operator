@@ -32,7 +32,10 @@ import (
 
 //go:generate go run generators/yamls2go.go
 
-const OperatorServiceAccount = "submariner-operator"
+const (
+	OperatorServiceAccount   = "submariner-operator"
+	LighthouseServiceAccount = "submariner-lighthouse"
+)
 
 //Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
@@ -73,47 +76,76 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 func ensureServiceAccount(clientSet *clientset.Clientset, namespace string) (bool, error) {
 	sa := &v1.ServiceAccount{ObjectMeta: v1meta.ObjectMeta{Name: OperatorServiceAccount}}
 	_, err := clientSet.CoreV1().ServiceAccounts(namespace).Create(sa)
+	if errors.IsAlreadyExists(err) {
+		return false, nil
+	} else if err != nil {
+		return false, fmt.Errorf("Operator serviceAccount creation failed: %s", err)
+	}
+
+	sa = &v1.ServiceAccount{ObjectMeta: v1meta.ObjectMeta{Name: LighthouseServiceAccount}}
+	_, err = clientSet.CoreV1().ServiceAccounts(namespace).Create(sa)
 	if err == nil {
 		return true, nil
 	} else if errors.IsAlreadyExists(err) {
 		return false, nil
 	} else {
-		return false, fmt.Errorf("ServiceAccount creation failed: %s", err)
+		return false, fmt.Errorf("Lighthouse serviceAccount creation failed: %s", err)
 	}
 
 }
 
 func ensureRole(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	role, err := getOperatorRole()
+	role, err := getRole(embeddedyamls.Role_yaml)
 	if err != nil {
-		return false, fmt.Errorf("Role update or create failed: %s", err)
+		return false, fmt.Errorf("Operator role update or create failed: %s", err)
+	}
+
+	_, err = utils.CreateOrUpdateRole(clientSet, namespace, role)
+	if err != nil {
+		return false, fmt.Errorf("Operator role update or create failed: %s", err)
+	}
+
+	role, err = getRole(embeddedyamls.Lighthouse_role_yaml)
+	if err != nil {
+		return false, fmt.Errorf("Lighthouse Role update or create failed: %s", err)
 	}
 
 	return utils.CreateOrUpdateRole(clientSet, namespace, role)
 }
 
 func ensureRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	roleBinding, err := getOperatorRoleBinding()
+	roleBinding, err := getRoleBinding(embeddedyamls.Role_binding_yaml)
 	if err != nil {
-		return false, fmt.Errorf("RoleBinding update or create failed: %s", err)
+		return false, fmt.Errorf("Operator roleBinding update or create failed: %s", err)
+	}
+
+	_, err = utils.CreateOrUpdateRoleBinding(clientSet, namespace, roleBinding)
+
+	if err != nil {
+		return false, fmt.Errorf("Operator RoleBinding update or create failed: %s", err)
+	}
+
+	roleBinding, err = getRoleBinding(embeddedyamls.Lighthouse_role_binding_yaml)
+	if err != nil {
+		return false, fmt.Errorf("Lighthouse RoleBinding update or create failed: %s", err)
 	}
 	return utils.CreateOrUpdateRoleBinding(clientSet, namespace, roleBinding)
 }
 
-func getOperatorRoleBinding() (*rbacv1.RoleBinding, error) {
+func getRoleBinding(roleBindingName string) (*rbacv1.RoleBinding, error) {
 
 	roleBinding := &rbacv1.RoleBinding{}
-	err := embeddedyamls.GetObject(embeddedyamls.Role_binding_yaml, roleBinding)
+	err := embeddedyamls.GetObject(roleBindingName, roleBinding)
 	if err != nil {
 		return nil, err
 	}
 	return roleBinding, nil
 }
 
-func getOperatorRole() (*rbacv1.Role, error) {
+func getRole(roleName string) (*rbacv1.Role, error) {
 
 	role := &rbacv1.Role{}
-	err := embeddedyamls.GetObject(embeddedyamls.Role_yaml, role)
+	err := embeddedyamls.GetObject(roleName, role)
 	if err != nil {
 		return nil, err
 	}

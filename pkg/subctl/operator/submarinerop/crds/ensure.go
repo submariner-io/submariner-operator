@@ -58,6 +58,15 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return serviceDiscoveryResult, err
 	}
 
+	mcscrd, err := getMcsCRD()
+	if err != nil {
+		return false, err
+	}
+	mcsCRDResult, err := utils.CreateOrUpdateCRD(clientSet, mcscrd)
+	if err != nil {
+		return mcsCRDResult, err
+	}
+
 	gatewaysResult, err := utils.CreateOrUpdateCRD(clientSet, getGatewaysCRD())
 	return (submarinerResult || gatewaysResult), err
 }
@@ -98,6 +107,16 @@ func getServiceDiscoveryCRD() (*apiextensionsv1beta1.CustomResourceDefinition, e
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 
 	if err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_servicediscoveries_crd_yaml, crd); err != nil {
+		return nil, err
+	}
+
+	return crd, nil
+}
+
+func getMcsCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
+	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
+
+	if err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_crds_multiclusterservices_crd_yaml, crd); err != nil {
 		return nil, err
 	}
 

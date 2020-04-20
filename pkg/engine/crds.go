@@ -41,6 +41,10 @@ func Ensure(config *rest.Config) error {
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the Endpoint CRD: %s", err)
 	}
+	_, err = apiext.ApiextensionsV1beta1().CustomResourceDefinitions().Create(getMcsCRD())
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return fmt.Errorf("error creating the MultiClusterService CRD: %s", err)
+	}
 	return nil
 }
 
@@ -78,6 +82,27 @@ func newClustersCRD() *apiextensions.CustomResourceDefinition {
 				Singular: "cluster",
 				ListKind: "ClusterList",
 				Kind:     "Cluster",
+			},
+			Version: "v1",
+		},
+	}
+
+	return crd
+}
+
+func getMcsCRD() *apiextensions.CustomResourceDefinition {
+	crd := &apiextensions.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "multiclusterservices.lighthouse.submariner.io",
+		},
+		Spec: apiextensions.CustomResourceDefinitionSpec{
+			Group: "lighthouse.submariner.io",
+			Scope: apiextensions.NamespaceScoped,
+			Names: apiextensions.CustomResourceDefinitionNames{
+				Plural:   "multiclusterservices",
+				Singular: "multiclusterservice",
+				ListKind: "MultiClusterServiceList",
+				Kind:     "MultiClusterService",
 			},
 			Version: "v1",
 		},

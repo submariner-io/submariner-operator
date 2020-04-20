@@ -26,7 +26,7 @@ import (
 
 func Ensure(status *cli.Status, config *rest.Config, image string, isController bool, kubeConfig string, kubeContext string) error {
 
-	if created, err := crds.Ensure(config, kubeConfig, kubeContext); err != nil {
+	if created, err := crds.Ensure(kubeConfig, kubeContext); err != nil {
 		return err
 	} else if created {
 		status.QueueSuccessMessage("Created lighthouse CRDs")
