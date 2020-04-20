@@ -28,6 +28,10 @@ type FakeSubmarinerV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeSubmarinerV1alpha1) ServiceDiscoveries(namespace string) v1alpha1.ServiceDiscoveryInterface {
+	return &FakeServiceDiscoveries{c, namespace}
+}
+
 func (c *FakeSubmarinerV1alpha1) Submariners(namespace string) v1alpha1.SubmarinerInterface {
 	return &FakeSubmariners{c, namespace}
 }

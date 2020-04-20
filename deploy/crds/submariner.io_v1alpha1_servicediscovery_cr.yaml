@@ -1,0 +1,7 @@
+apiVersion: submariner.io/v1alpha1
+kind: ServiceDiscovery
+metadata:
+  name: example-servicediscovery
+spec:
+  # Add fields here
+  size: 3

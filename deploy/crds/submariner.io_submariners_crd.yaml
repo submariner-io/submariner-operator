@@ -69,6 +69,8 @@ spec:
               type: string
             serviceCIDR:
               type: string
+            serviceDiscoveryEnabled:
+              type: boolean
             version:
               type: string
           required:

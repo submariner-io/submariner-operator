@@ -101,7 +101,7 @@ func testReconciliation() {
 			fakeClient = newClient()
 		}
 
-		controller = &ReconcileSubmariner{fakeClient, scheme.Scheme}
+		controller = &ReconcileSubmariner{client: fakeClient, scheme: scheme.Scheme}
 
 		reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
 			Namespace: submarinerNamespace,
