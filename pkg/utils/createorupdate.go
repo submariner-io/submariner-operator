@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	extendedclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -153,6 +154,27 @@ func CreateOrUpdateRoleBinding(clientSet clientset.Interface, namespace string, 
 			_, err = clientSet.RbacV1().RoleBindings(namespace).Update(roleBinding)
 			if err != nil {
 				return fmt.Errorf("failed to update pre-existing role binding %s : %v", roleBinding.Name, err)
+			}
+			return nil
+		})
+		return false, retryErr
+	}
+	return true, err
+}
+
+func CreateOrUpdateServiceAccount(clientSet clientset.Interface, namespace string, sa *corev1.ServiceAccount) (bool, error) {
+	_, err := clientSet.CoreV1().ServiceAccounts(namespace).Create(sa)
+	if err != nil && errors.IsAlreadyExists(err) {
+		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			existingSa, err := clientSet.CoreV1().ServiceAccounts(namespace).Get(sa.Name, v1.GetOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to retrieve pre-existing service account %s : %v", sa.Name, err)
+			}
+			sa.ResourceVersion = existingSa.ResourceVersion
+			// Potentially retried
+			_, err = clientSet.CoreV1().ServiceAccounts(namespace).Update(sa)
+			if err != nil {
+				return fmt.Errorf("failed to update pre-existing service account %s : %v", sa.Name, err)
 			}
 			return nil
 		})
