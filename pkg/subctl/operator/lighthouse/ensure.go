@@ -40,3 +40,4 @@ func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string) (
 
 	return true, nil
 }
+
