@@ -43,6 +43,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
+	lighthouseop "github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
