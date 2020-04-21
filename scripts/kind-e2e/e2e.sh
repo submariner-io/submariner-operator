@@ -49,7 +49,9 @@ function kind_import_images() {
     import_image quay.io/submariner/submariner
     import_image quay.io/submariner/submariner-route-agent
     import_image quay.io/submariner/submariner-operator
+    import_image quay.io/submariner/lighthouse-agent
     [[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet
+
 }
 
 function create_subm_vars() {

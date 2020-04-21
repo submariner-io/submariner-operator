@@ -23,6 +23,7 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/namespace"
+	lighthouseop "github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/crds"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/scc"
@@ -53,6 +54,12 @@ func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, o
 		return err
 	} else if created {
 		status.QueueSuccessMessage("Updated the privileged SCC")
+	}
+
+	if created, err := lighthouseop.Ensure(status, config, operatorNamespace); err != nil {
+		return err
+	} else if created {
+		status.QueueSuccessMessage("Created Lighthouse service accounts and roles")
 	}
 
 	if created, err := deployment.Ensure(config, operatorNamespace, operatorImage); err != nil {

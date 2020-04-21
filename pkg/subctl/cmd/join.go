@@ -218,7 +218,6 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	}
 
 	status := cli.NewStatus()
-
 	status.Start("Deploying the Submariner operator")
 	err := submarinerop.Ensure(status, config, OperatorNamespace, operatorImage)
 	status.End(err == nil)

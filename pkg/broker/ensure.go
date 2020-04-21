@@ -24,6 +24,7 @@ import (
 	rbac "k8s.io/api/rbac/v1"
 
 	"github.com/submariner-io/submariner-operator/pkg/engine"
+	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -35,6 +36,11 @@ func Ensure(config *rest.Config) error {
 	err := engine.Ensure(config)
 	if err != nil {
 		return fmt.Errorf("error setting up the engine requirements: %s", err)
+	}
+
+	err = lighthouse.Ensure(config)
+	if err != nil {
+		return fmt.Errorf("error setting up the lighthouse requirements: %s", err)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
