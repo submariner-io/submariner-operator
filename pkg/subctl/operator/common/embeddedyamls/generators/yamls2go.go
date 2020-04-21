@@ -31,6 +31,7 @@ const (
 
 var files = []string{
 	"crds/submariner.io_submariners_crd.yaml",
+	"crds/submariner.io_servicediscoveries_crd.yaml",
 	"role.yaml",
 	"role_binding.yaml",
 	"cluster_role.yaml",

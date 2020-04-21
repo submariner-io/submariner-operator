@@ -106,12 +106,18 @@ subctl join --kubecontext east --kubeconfig merged_kubeconfig broker-info.subm  
 ```
 
 # Development
- 
+
+## Prerequisites
+
+The build environment uses
+[Dapper](https://github.com/rancher/dapper), which requires a working
+Docker setup. You will also need GNU Make.
+
 ## Build Operator
  
  You can compile the operator image running:
 ```bash
-make build
+make build-operator
 ```
 
 The source code can be validated (golint, gofmt, unit testing) running:

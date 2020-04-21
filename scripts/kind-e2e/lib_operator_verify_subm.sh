@@ -6,7 +6,7 @@ if [ "${0##*/}" = "lib_operator_verify_subm.sh" ]; then
 fi
 
 function verify_subm_gateway_label() {
-  kubectl get node $context-worker -o jsonpath='{.metadata.labels}' | grep submariner.io/gateway:true
+  kubectl get node $cluster-worker -o jsonpath='{.metadata.labels}' | grep submariner.io/gateway:true
 }
 
 function verify_subm_operator() {
@@ -30,12 +30,55 @@ function verify_subm_operator() {
   kubectl get deployments --namespace=$subm_ns submariner-operator
 }
 
+function verify_subm_deployed() {
+    # Verify shared CRDs
+    verify_endpoints_crd
+    verify_clusters_crd
+
+    # Verify SubM CRD
+    verify_subm_crd
+    # Verify SubM Operator
+    verify_subm_operator
+    # Verify SubM Operator pod
+    verify_subm_op_pod
+    # Verify SubM Operator container
+    verify_subm_operator_container
+
+    # FIXME: Rename all of these submariner-engine or engine, vs submariner
+    # Verify SubM CR
+    verify_subm_cr
+    # Verify SubM Engine Deployment
+    verify_subm_engine_deployment
+    # Verify SubM Engine Pod
+    verify_subm_engine_pod
+    # Verify SubM Engine container
+    verify_subm_engine_container
+    # Verify Engine secrets
+    verify_subm_engine_secrets
+
+    # Verify SubM Routeagent DaemonSet
+    verify_subm_routeagent_daemonset
+    # Verify SubM Routeagent Pods
+    verify_subm_routeagent_pod
+    # Verify SubM Routeagent container
+    verify_subm_routeagent_container
+
+    if [[ $globalnet = true ]]; then
+        #Verify SubM Globalnet Daemonset
+        verify_subm_globalnet_daemonset
+    fi
+}
+
 # Uses `jq` to extract the content using the filter given, and matches it to the expected value
 # Make sure $json_file is set to point to the file to check
 function validate_equals() {
   local json_filter=$1
   local expected=$2
-  [[ $expected = $(jq -r -M $json_filter $json_file) ]]
+  local actual=$(jq -r -M $json_filter $json_file)
+  if [[ $expected != $actual ]]; then
+     echo "Expected ${expected@Q} but got ${actual@Q}"
+     return 1
+  fi
 }
 
 function validate_not_equals() {
@@ -54,7 +97,7 @@ function validate_crd() {
   kubectl get crds $crd_name
 
   # Show full CRD
-  json_file=/tmp/${crd_name}.json
+  json_file=/tmp/${crd_name}.${cluster}.json
   kubectl get crd $crd_name -o json | tee $json_file
 
   # Verify details of CRD
@@ -86,7 +129,7 @@ function verify_subm_cr() {
   kubectl get submariner --namespace=$subm_ns | grep $deployment_name
 
   # Show full SubM CR
-  json_file=/tmp/${deployment_name}.json
+  json_file=/tmp/${deployment_name}.${cluster}.json
   kubectl get submariner $deployment_name --namespace=$subm_ns -o json | tee $json_file
 
   validate_equals '.metadata.namespace' $subm_ns
@@ -113,8 +156,8 @@ function verify_subm_cr() {
   validate_equals '.spec.namespace' $subm_ns
   validate_equals '.spec.natEnabled' $natEnabled
 
-  validate_equals '.spec.serviceCIDR' ${service_CIDRs[$context]}
-  validate_equals '.spec.clusterCIDR' ${cluster_CIDRs[$context]}
+  validate_equals '.spec.serviceCIDR' ${service_CIDRs[$cluster]}
+  validate_equals '.spec.clusterCIDR' ${cluster_CIDRs[$cluster]}
 }
 
 function verify_subm_op_pod() {
@@ -153,7 +196,7 @@ function verify_subm_engine_pod() {
 
   subm_engine_pod_name=$(kubectl get pods --namespace=$subm_ns -l app=$engine_deployment_name -o=jsonpath='{.items..metadata.name}')
 
-  json_file=/tmp/${subm_engine_pod_name}.json
+  json_file=/tmp/${subm_engine_pod_name}.${cluster}.json
   kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o json | tee $json_file
 
   validate_pod_container_equals 'image' "${subm_engine_image_repo}/submariner:local"
@@ -166,8 +209,8 @@ function verify_subm_engine_pod() {
 
   jq -r '.spec.containers[].env' $json_file
   validate_pod_container_env 'SUBMARINER_NAMESPACE' $subm_ns
-  validate_pod_container_env 'SUBMARINER_SERVICECIDR' ${service_CIDRs[$context]}
-  validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$context]}
+  validate_pod_container_env 'SUBMARINER_SERVICECIDR' ${service_CIDRs[$cluster]}
+  validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$cluster]}
   validate_pod_container_env 'SUBMARINER_COLORCODES' $subm_colorcodes
   validate_pod_container_env 'SUBMARINER_DEBUG' $subm_debug
   validate_pod_container_env 'SUBMARINER_NATENABLED' $natEnabled
@@ -198,38 +241,24 @@ function verify_subm_globalnet_daemonset() {
   verify_daemonset $globalnet_deployment_name submariner-globalnet
 }
 
+function daemonset_created() {
+  kubectl get DaemonSet $daemonset_name -n $subm_ns > /dev/null 2>&1
+}
+
+function daemonset_deployed() {
+  local daemonset_name=$1
+  local desiredNumberScheduled=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.desiredNumberScheduled}')
+  local numberReady=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.numberReady}')
+  [[ "$numberReady" = "$desiredNumberScheduled" ]]
+}
+
 function verify_daemonset() {
   daemonset_app=$1
   daemonset_name=$2
 
   # Simple verification to ensure that the daemonset has been created and becomes ready
-   SECONDS="0"
-   while ! kubectl get DaemonSets -l app=$daemonset_app -n $subm_ns | grep -q $daemonset_name; do
-     if [ $SECONDS -gt 120 ]; then
-        echo "Timeout waiting for "$daemonset_app" DaemonSet creation"
-        exit 1
-     else
-        ((SECONDS+=2))
-        sleep 2
-     fi
-   done
-
-   numberReady=-1
-   desiredNumberScheduled=0
-   SECONDS="0"
-   while [ "$numberReady" != "$desiredNumberScheduled" ]; do
-     if [ $SECONDS -gt 120 ]; then
-        echo "Timeout waiting for a ready state on the "$daemonset_app" daemonset"
-        exit 1
-     else
-
-        desiredNumberScheduled=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.desiredNumberScheduled}')
-        numberReady=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.numberReady}')
-
-        ((SECONDS+=2))
-        sleep 2
-     fi
-   done
+  with_retries 60 daemonset_created
+  with_retries 120 daemonset_deployed
 }
 
 validate_pod_container_volume_mount() {
@@ -250,7 +279,7 @@ function verify_subm_routeagent_pod() {
   # TODO: Fail if there are zero routeagent pods
   for subm_routeagent_pod_name in "${subm_routeagent_pod_names_array[@]}"; do
     echo "Testing Submariner routeagent pod $subm_routeagent_pod_name"
-    json_file=/tmp/${subm_engine_pod_name}.json
+    json_file=/tmp/${subm_engine_pod_name}.${cluster}.json
     kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o json | tee $json_file
     validate_pod_container_equals 'image' "${subm_engine_image_repo}/submariner-route-agent:$subm_engine_image_tag"
     validate_pod_container_has 'securityContext.capabilities.add' 'ALL'
@@ -263,8 +292,8 @@ function verify_subm_routeagent_pod() {
     jq -r '.spec.containers[].env' $json_file
     validate_pod_container_env 'SUBMARINER_NAMESPACE' $subm_ns
     validate_pod_container_env 'SUBMARINER_DEBUG' $subm_debug
-    validate_pod_container_env 'SUBMARINER_SERVICECIDR' ${service_CIDRs[$context]}
-    validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$context]}
+    validate_pod_container_env 'SUBMARINER_SERVICECIDR' ${service_CIDRs[$cluster]}
+    validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$cluster]}
     validate_pod_container_volume_mount '/host' 'host-slash' 'true'
 
     # FIXME: Use submariner-routeagent SA vs submariner-operator when doing Operator deploys
@@ -310,7 +339,7 @@ function verify_subm_engine_container() {
   kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | tee $env_file
 
   # Verify SubM Engine pod environment variables
-  grep "HOSTNAME=$context-worker" $env_file
+  grep "HOSTNAME=$cluster-worker" $env_file
   grep "BROKER_K8S_APISERVER=$SUBMARINER_BROKER_URL" $env_file
   grep "SUBMARINER_NAMESPACE=$subm_ns" $env_file
   grep "SUBMARINER_BROKER=$subm_broker" $env_file
@@ -319,8 +348,8 @@ function verify_subm_engine_container() {
   grep "SUBMARINER_DEBUG=$subm_debug" $env_file
   grep "BROKER_K8S_REMOTENAMESPACE=$SUBMARINER_BROKER_NS" $env_file
   grep "SUBMARINER_CABLEDRIVER=$subm_cabledriver" $env_file
-  grep "SUBMARINER_SERVICECIDR=${service_CIDRs[$context]}" $env_file
-  grep "SUBMARINER_CLUSTERCIDR=${cluster_CIDRs[$context]}" $env_file
+  grep "SUBMARINER_SERVICECIDR=${service_CIDRs[$cluster]}" $env_file
+  grep "SUBMARINER_CLUSTERCIDR=${cluster_CIDRs[$cluster]}" $env_file
   grep "SUBMARINER_COLORCODES=$subm_colorcode" $env_file
   grep "SUBMARINER_NATENABLED=$natEnabled" $env_file
   # FIXME: This fails on redeploys
@@ -357,11 +386,11 @@ function verify_subm_routeagent_container() {
 
     # Verify SubM Routeagent pod environment variables
     grep "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" $env_file
-    grep "HOSTNAME=$context-worker" $env_file
+    grep "HOSTNAME=$cluster-worker" $env_file
     grep "SUBMARINER_NAMESPACE=$subm_ns" $env_file
     grep "SUBMARINER_DEBUG=$subm_debug" $env_file
-    grep "SUBMARINER_SERVICECIDR=${service_CIDRs[$context]}" $env_file
-    grep "SUBMARINER_CLUSTERCIDR=${cluster_CIDRs[$context]}" $env_file
+    grep "SUBMARINER_SERVICECIDR=${service_CIDRs[$cluster]}" $env_file
+    grep "SUBMARINER_CLUSTERCIDR=${cluster_CIDRs[$cluster]}" $env_file
     grep "HOME=/root" $env_file
 
     # Verify the routeagent binary is in the expected place and in PATH
@@ -400,7 +429,7 @@ function verify_secrets() {
   fi
 
   # Show all details of the secret
-  json_file=/tmp/$secret_name.json
+  json_file=/tmp/$secret_name.${cluster}.json
   kubectl get secret $secret_name -n $secret_ns -o json | tee $json_file
 
   # Verify details of the secret
