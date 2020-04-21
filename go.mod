@@ -10,7 +10,6 @@ require (
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3 // indirect
 	github.com/kr/pty v1.1.8 // indirect
-	github.com/kubernetes-sigs/kubefed v0.0.10
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
