@@ -19,7 +19,6 @@ package crds
 import (
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
@@ -35,51 +34,44 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, err
 	}
 
-	submarinerCrd, err := getSubmarinerCRD()
+	crd, err := getServiceDiscoveryCRD()
 	if err != nil {
 		return false, err
 	}
 
-	// Attempt to update or create the CRD definition
-	// TODO(majopela): In the future we may want to report when we have updated the existing
-	//                 CRD definition with new versions
-	submarinerResult, err := utils.CreateOrUpdateCRD(clientSet, submarinerCrd)
+	serviceDiscoveryResult, err := utils.CreateOrUpdateCRD(clientSet, crd)
 	if err != nil {
-		return submarinerResult, err
+		return serviceDiscoveryResult, err
 	}
 
-	gatewaysResult, err := utils.CreateOrUpdateCRD(clientSet, getGatewaysCRD())
-	return (submarinerResult || gatewaysResult), err
+	mcscrd, err := getMcsCRD()
+	if err != nil {
+		return false, err
+	}
+	mcsCRDResult, err := utils.CreateOrUpdateCRD(clientSet, mcscrd)
+	if err != nil {
+		return mcsCRDResult, err
+	}
+
+	return (serviceDiscoveryResult || mcsCRDResult), err
 }
 
-func getSubmarinerCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
+func getServiceDiscoveryCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_submariners_crd_yaml, crd); err != nil {
+	if err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_servicediscoveries_crd_yaml, crd); err != nil {
 		return nil, err
 	}
 
 	return crd, nil
 }
 
-// TODO Move this to the operator
-func getGatewaysCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{
-		ObjectMeta: v1.ObjectMeta{
-			Name: "gateways.submariner.io",
-		},
-		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group: "submariner.io",
-			Scope: apiextensionsv1beta1.NamespaceScoped,
-			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-				Plural:   "gateways",
-				Singular: "gateway",
-				ListKind: "GatewayList",
-				Kind:     "Gateway",
-			},
-			Version: "v1",
-		},
+func getMcsCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
+	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
+
+	if err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_crds_multiclusterservices_crd_yaml, crd); err != nil {
+		return nil, err
 	}
 
-	return crd
+	return crd, nil
 }
