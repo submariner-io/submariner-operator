@@ -36,7 +36,6 @@ function setup_broker() {
     [[ $lighthouse = true ]] && sd=--service-discovery
     [[ $globalnet = true ]] && gn=--globalnet
     ${DAPPER_SOURCE}/bin/subctl --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged --kubecontext ${cluster} deploy-broker ${sd} ${gn}|& cat
-    [[ $lighthouse != true ]] || kubefedctl federate namespace default --kubefed-namespace kubefed-operator
 }
 
 function broker_vars() {
@@ -99,7 +98,6 @@ function deploy_subm() {
                     --ikeport ${ce_ipsec_ikeport} \
                     --colorcodes ${subm_colorcodes} \
                     --cable-driver ${subm_cabledriver} \
-                    --broker-cluster-context "cluster1" \
                     --disable-nat \
                     broker-info.subm |& cat
 }
