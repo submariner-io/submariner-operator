@@ -17,12 +17,12 @@ limitations under the License.
 package crds
 
 import (
+	lighthouse "github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
 //go:generate go run generators/yamls2go.go
@@ -44,7 +44,7 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return serviceDiscoveryResult, err
 	}
 
-	mcsCrd, err := utils.GetMcsCRD()
+	mcsCrd, err := lighthouse.GetMcsCRD()
 	if err != nil {
 		return false, err
 	}
