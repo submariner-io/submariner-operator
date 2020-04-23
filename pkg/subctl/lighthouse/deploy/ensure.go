@@ -54,7 +54,7 @@ func Validate() error {
 
 func HandleCommand(status *cli.Status, config *rest.Config, isController bool, kubeConfig string, kubeContext string) error {
 	if serviceDiscovery {
-		status.Start("Deploying Service Discovery controller")
+		status.Start("Setting up Service Discovery")
 		err := Ensure(status, config, imageRepo, imageVersion, isController, kubeConfig, kubeContext)
 		status.End(err == nil)
 		return err
