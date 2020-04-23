@@ -14,6 +14,7 @@ lighthouse="${FLAGS_lighthouse}"
 status="${FLAGS_status}"
 echo "Running with: globalnet=${globalnet}, lighthouse=${lighthouse}, status=${status}"
 
+set -o pipefail
 set -em
 
 source ${SCRIPTS_DIR}/lib/debug_functions
@@ -34,10 +35,7 @@ function setup_broker() {
     local sd gn
     [[ $lighthouse = true ]] && sd=--service-discovery
     [[ $globalnet = true ]] && gn=--globalnet
-    set -o pipefail
     ${DAPPER_SOURCE}/bin/subctl --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged --kubecontext ${cluster} deploy-broker ${sd} ${gn}|& cat
-    set +o pipefail
-    [[ $lighthouse != true ]] || kubefedctl federate namespace default --kubefed-namespace kubefed-operator
 }
 
 function broker_vars() {
@@ -50,7 +48,9 @@ function kind_import_images() {
     import_image quay.io/submariner/submariner
     import_image quay.io/submariner/submariner-route-agent
     import_image quay.io/submariner/submariner-operator
+    import_image quay.io/submariner/lighthouse-agent
     [[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet
+
 }
 
 function create_subm_vars() {
@@ -88,7 +88,6 @@ function deploy_subm() {
     # Verify SubM gateway labels
     verify_subm_gateway_label
 
-    set -o pipefail
     ${DAPPER_SOURCE}/bin/subctl join --operator-image "${subm_engine_image_repo}/submariner-operator:local" \
                     --kubeconfig ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged \
                     --kubecontext ${cluster} \
@@ -99,10 +98,8 @@ function deploy_subm() {
                     --ikeport ${ce_ipsec_ikeport} \
                     --colorcodes ${subm_colorcodes} \
                     --cable-driver ${subm_cabledriver} \
-                    --broker-cluster-context "cluster1" \
                     --disable-nat \
                     broker-info.subm |& cat
-    set +o pipefail
 }
 
 function connectivity_tests() {
@@ -112,7 +109,7 @@ function connectivity_tests() {
 
     with_retries 5 test_connection "$netshoot_pod" "$nginx_svc_ip"
     if [[ $lighthouse = true ]]; then
-        resolved_ip=$(kubectl exec "${netshoot_pod}" -- ping -c 1 -W 1 nginx-demo 2>/dev/null \
+        resolved_ip=$((kubectl exec "${netshoot_pod}" -- ping -c 1 -W 1 nginx-demo 2>/dev/null || :) \
                       | grep PING | awk '{print $3}' | tr -d '()')
         if [[ "$resolved_ip" != "$nginx_svc_ip" ]]; then
             echo "Resolved IP $resolved_ip doesn't match the service ip $nginx_svc_ip"
@@ -153,7 +150,7 @@ fi
 PRJ_ROOT=$(git rev-parse --show-toplevel)
 SUBMARINER_BROKER_NS=submariner-k8s-broker
 # FIXME: This can change and break re-running deployments
-SUBMARINER_PSK=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+SUBMARINER_PSK=$((LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom || :) | head -c 64)
 declare_kubeconfig
 
 kubectl config view --flatten > ${PRJ_ROOT}/output/kubeconfigs/kind-config-merged

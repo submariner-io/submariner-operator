@@ -1,5 +1,5 @@
 /*
-© 2020 Red Hat, Inc. and others.
+© 2019 Red Hat, Inc. and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,31 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package install
+package lighthouseop
 
 import (
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install/crds"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/install/deployment"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/crds"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/serviceaccount"
 )
 
-func Ensure(status *cli.Status, config *rest.Config, image string, isController bool, kubeConfig string, kubeContext string) error {
+func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string) (bool, error) {
 
-	if created, err := crds.Ensure(config, kubeConfig, kubeContext); err != nil {
-		return err
+	if created, err := crds.Ensure(config); err != nil {
+		return created, err
 	} else if created {
 		status.QueueSuccessMessage("Created lighthouse CRDs")
 	}
 
-	if isController {
-		if created, err := deployment.Ensure(config, "kubefed-operator", image); err != nil {
-			return err
-		} else if created {
-			status.QueueSuccessMessage("Created lighthouse controller")
-		}
+	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
+		return created, err
+	} else if created {
+		status.QueueSuccessMessage("Created lighthouse service account and role")
 	}
 
-	return nil
+	return true, nil
 }

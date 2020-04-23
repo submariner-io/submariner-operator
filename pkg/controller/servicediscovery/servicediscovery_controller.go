@@ -124,18 +124,6 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 		"app": deploymentName,
 	}
 
-	allowPrivilegeEscalation := true
-	privileged := true
-	readOnlyFileSystem := false
-	runAsNonRoot := false
-	securityContext := corev1.SecurityContext{
-		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
-		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-		Privileged:               &privileged,
-		ReadOnlyRootFilesystem:   &readOnlyFileSystem,
-		RunAsNonRoot:             &runAsNonRoot,
-	}
-
 	terminationGracePeriodSeconds := int64(0)
 
 	return &appsv1.Deployment{
@@ -159,10 +147,6 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 							Name:            "submariner-lighthouse-agent",
 							Image:           getImagePath(cr, serviceDiscoveryImage),
 							ImagePullPolicy: "IfNotPresent",
-							SecurityContext: &securityContext,
-							VolumeMounts: []corev1.VolumeMount{
-								{Name: "host-slash", MountPath: "/host", ReadOnly: true},
-							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
@@ -176,12 +160,8 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 						},
 					},
 
-					ServiceAccountName:            "submariner-operator",
+					ServiceAccountName:            "submariner-lighthouse",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
-					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
-					Volumes: []corev1.Volume{
-						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
-					},
 				},
 			},
 		},

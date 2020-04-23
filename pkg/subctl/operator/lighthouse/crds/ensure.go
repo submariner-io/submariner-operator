@@ -1,5 +1,5 @@
 /*
-© 2020 Red Hat, Inc. and others.
+© 2019 Red Hat, Inc. and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,17 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package clusterrolebinding
+package crds
 
 import (
-	"fmt"
-
-	rbacv1 "k8s.io/api/rbac/v1"
-	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-
+	lighthouse "github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
+	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/client-go/rest"
 )
 
 //go:generate go run generators/yamls2go.go
@@ -36,19 +34,34 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, err
 	}
 
-	clusterRoleBinding, err := getOperatorClusterRoleBinding()
+	crd, err := getServiceDiscoveryCRD()
 	if err != nil {
-		return false, fmt.Errorf("ClusterRoleBinding update or create failed: %s", err)
+		return false, err
 	}
-	return utils.CreateOrUpdateClusterRoleBinding(clientSet, clusterRoleBinding)
+
+	serviceDiscoveryResult, err := utils.CreateOrUpdateCRD(clientSet, crd)
+	if err != nil {
+		return serviceDiscoveryResult, err
+	}
+
+	mcsCrd, err := lighthouse.GetMcsCRD()
+	if err != nil {
+		return false, err
+	}
+	mcsCRDResult, err := utils.CreateOrUpdateCRD(clientSet, mcsCrd)
+	if err != nil {
+		return mcsCRDResult, err
+	}
+
+	return (serviceDiscoveryResult || mcsCRDResult), err
 }
 
-func getOperatorClusterRoleBinding() (*rbacv1.ClusterRoleBinding, error) {
+func getServiceDiscoveryCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
+	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 
-	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
-	err := embeddedyamls.GetObject(embeddedyamls.Kubefed_clusterrole_binding_yaml, clusterRoleBinding)
-	if err != nil {
+	if err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_servicediscoveries_crd_yaml, crd); err != nil {
 		return nil, err
 	}
-	return clusterRoleBinding, nil
+
+	return crd, nil
 }
