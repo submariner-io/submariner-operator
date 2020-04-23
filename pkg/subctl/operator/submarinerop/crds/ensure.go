@@ -78,6 +78,14 @@ func getGatewaysCRD() *apiextensionsv1beta1.CustomResourceDefinition {
 				Kind:     "Gateway",
 			},
 			Version: "v1",
+			AdditionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
+					Name:        "ha-status",
+					Type:        "string",
+					Description: "High availability status of the Gateway",
+					JSONPath:    ".status.haStatus",
+				},
+			},
 		},
 	}
 
