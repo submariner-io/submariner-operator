@@ -137,14 +137,14 @@ You will be able to run subctl using ./bin/subctl from the submariner-operator d
 ## Testing
 To run end-to-end tests:
 ```
-make e2e
+make e2e cleanup
 ```
  
 ## Setup development environment 
 You will need docker installed in your system, and at least 8GB of RAM. Run:
 
  ```
- make e2e status=keep
+ make e2e
  ```
  
  

@@ -5,14 +5,12 @@
 source /usr/share/shflags/shflags
 DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_string 'lighthouse' 'false' "Deploy with lighthouse"
-DEFINE_string 'status' 'onetime' "Status flag (onetime, create, keep, clean)"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
 globalnet="${FLAGS_globalnet}"
 lighthouse="${FLAGS_lighthouse}"
-status="${FLAGS_status}"
-echo "Running with: globalnet=${globalnet}, lighthouse=${lighthouse}, status=${status}"
+echo "Running with: globalnet=${globalnet}, lighthouse=${lighthouse}"
 
 set -o pipefail
 set -em
@@ -129,23 +127,7 @@ function test_with_e2e_tests {
         tee ${DAPPER_OUTPUT}/e2e-tests.log
 }
 
-function cleanup {
-    "${SCRIPTS_DIR}"/cleanup.sh
-}
-
 ### Main ###
-
-if [[ $status = clean ]]; then
-    cleanup
-    exit 0
-elif [[ $status = onetime ]]; then
-    echo Status $status: Will cleanup on EXIT signal
-    trap cleanup EXIT
-elif [[ $status != keep && $status != create ]]; then
-    echo Unknown status: $status
-    cleanup
-    exit 1
-fi
 
 PRJ_ROOT=$(git rev-parse --show-toplevel)
 SUBMARINER_BROKER_NS=submariner-k8s-broker
@@ -190,13 +172,12 @@ if [[ $globalnet = false ]]; then
                                       --verbose
 fi
 
-if [[ ${status} = keep ]]; then
-    echo "your 3 virtual clusters are deployed and working properly with your local"
-    echo "submariner source code, and can be accessed with:"
-    echo ""
-    echo "export KUBECONFIG=\$(echo \$(git rev-parse --show-toplevel)/output/kubeconfigs/kind-config-cluster{1..3} | sed 's/ /:/g')"
-    echo ""
-    echo "$ kubectl config use-context cluster1 # or cluster2, cluster3.."
-    echo ""
-    echo "to cleanup, just run: make e2e status=clean"
-fi
+cat << EOM
+Your 3 virtual clusters are deployed and working properly with your local submariner source code, and can be accessed with:
+
+export KUBECONFIG=\$(echo \$(git rev-parse --show-toplevel)/output/kubeconfigs/kind-config-cluster{1..3} | sed 's/ /:/g')
+
+$ kubectl config use-context cluster1 # or cluster2, cluster3..
+
+To clean evertyhing up, just run: make cleanup
+EOM
