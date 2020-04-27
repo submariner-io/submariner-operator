@@ -1,6 +1,5 @@
 build_debug ?= false
 lighthouse ?= false
-status ?= onetime
 
 ifneq (,$(DAPPER_HOST_ARCH))
 
@@ -9,12 +8,16 @@ ifneq (,$(DAPPER_HOST_ARCH))
 include $(SHIPYARD_DIR)/Makefile.inc
 
 TARGETS := $(shell ls -p scripts | grep -v -e /)
-CLUSTERS_ARGS = --cluster_settings scripts/kind-e2e/cluster_settings
+CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings
+CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
+DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --cable_driver strongswan
 
 clusters: build-all
 
-e2e: clusters
-	scripts/kind-e2e/e2e.sh --lighthouse $(lighthouse) --globalnet $(globalnet)
+deploy: clusters preload_images
+
+e2e: deploy
+	scripts/kind-e2e/e2e.sh
 
 $(TARGETS): vendor/modules.txt
 	./scripts/$@ --build_debug $(build_debug)

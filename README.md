@@ -143,10 +143,9 @@ make e2e cleanup
 ## Setup development environment 
 You will need docker installed in your system, and at least 8GB of RAM. Run:
 
- ```
- make e2e
- ```
- 
+```
+make deploy
+```
  
 
 # Reference

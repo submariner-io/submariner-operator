@@ -25,7 +25,7 @@ Optional useful tools for troubleshooting:
 
 To run the tests simply execute the following:
 ```bash
-make build-all package e2e
+make e2e
 ```
 
 To test with a specific k8s version, an additional **version** parameter can be passed to **make e2e** command:
@@ -52,8 +52,7 @@ kubectl config list-contexts
 You should be able to see 3 contexts. From this stage you can interact with the clusters
 as with any normal k8s cluster.
 
-
-**NOTE**: Each time **make e2e** command is executed, the local code will be built, pushed to kind clusters
+**NOTE**: Each time **make e2e** command is executed, the local code will be build, pushed to kind clusters
 as docker images, submariner will be redeployed on the clusters from pushed images and E2E tests will be executed.
 This mode allows the developers to test their local code fast on a very close to real world scenario setup.
 
@@ -65,6 +64,7 @@ make deploy
 ```
 
 #### Cleanup
+
 At any time you can run a cleanup command that will remove all the kind clusters.
 
 ```bash
