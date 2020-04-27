@@ -13,8 +13,12 @@ git:
 jobs:
   include:
     - env: CMD="make ci"
-    - env: CMD="make e2e lighthouse=true"
-    - env: CMD="make e2e lighthouse=true globalnet=true" DEPLOY=true
+    - env: CMD="make e2e"
+           DEPLOY_ARGS="--deploytool_broker_args '--service-discovery'"
+           RELEASE=true
+    - env: CMD="make e2e"
+           CLUSTERS_ARGS="--globalnet true"
+           DEPLOY_ARGS="${CLUSTERS_ARGS} --deploytool_broker_args '--service-discovery'"
 
 install:
   - sudo apt-get install moreutils # make ts available
@@ -24,15 +28,19 @@ services:
 script:
   - set -o pipefail;
     $CMD 2>&1 | ts '[%H:%M:%.S]' -s
+after_success:
+  - echo "Testing cleaning up clusters";
+    set -o pipefail;
+    make cleanup 2>&1 | ts '[%H:%M:%.S]' -s
 deploy:
   - provider: script
     script: bash scripts/release
     on:
       branch: master
-      condition: $DEPLOY = true
+      condition: $RELEASE = true
   - provider: script
     script: bash scripts/release $TRAVIS_TAG
     skip_cleanup: true
     on:
       tags: true
-      condition: $DEPLOY = true
+      condition: $RELEASE = true

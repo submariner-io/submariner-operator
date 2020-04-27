@@ -9,6 +9,41 @@ function verify_subm_gateway_label() {
   kubectl get node $cluster-worker -o jsonpath='{.metadata.labels}' | grep submariner.io/gateway:true
 }
 
+function broker_vars() {
+    SUBMARINER_BROKER_URL=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
+    SUBMARINER_BROKER_CA=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
+    SUBMARINER_BROKER_TOKEN=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
+}
+
+function create_subm_vars() {
+    # FIXME A better name might be submariner-engine, but just kinda-matching submariner-<random hash> name used by Helm/upstream tests
+    deployment_name=submariner
+    operator_deployment_name=submariner-operator
+    engine_deployment_name=submariner-engine
+    routeagent_deployment_name=submariner-routeagent
+    broker_deployment_name=submariner-k8s-broker
+    globalnet_deployment_name=submariner-globalnet
+
+    declare_cidrs
+    natEnabled=false
+
+    subm_engine_image_repo="localhost:5000"
+    subm_engine_image_tag=local
+
+    # FIXME: Actually act on this size request in controller
+    subm_engine_size=3
+    subm_colorcodes=blue
+    subm_debug=false
+    subm_broker=k8s
+    subm_cabledriver=strongswan
+    ce_ipsec_debug=false
+    ce_ipsec_ikeport=500
+    ce_ipsec_nattport=4500
+
+    subm_ns=submariner-operator
+    SUBMARINER_BROKER_NS=submariner-k8s-broker
+}
+
 function verify_subm_operator() {
   # Verify SubM namespace (ignore SubM Broker ns)
   kubectl get ns $subm_ns
@@ -31,6 +66,7 @@ function verify_subm_operator() {
 }
 
 function verify_subm_deployed() {
+
     # Verify shared CRDs
     verify_endpoints_crd
     verify_clusters_crd
@@ -144,8 +180,6 @@ function verify_subm_cr() {
   validate_equals '.spec.ceIPSecDebug' $ce_ipsec_debug
   validate_equals '.spec.ceIPSecIKEPort' $ce_ipsec_ikeport
   validate_equals '.spec.ceIPSecNATTPort' $ce_ipsec_nattport
-  # FIXME: Sometimes this changes between runs, causes failures
-  validate_equals '.spec.ceIPSecPSK' $SUBMARINER_PSK || true
   validate_equals '.spec.repository' $subm_engine_image_repo
   validate_equals '.spec.version' $subm_engine_image_tag
   validate_equals '.spec.broker' $subm_broker
@@ -219,8 +253,6 @@ function verify_subm_engine_pod() {
   validate_pod_container_env 'BROKER_K8S_APISERVER' $SUBMARINER_BROKER_URL
   validate_pod_container_env 'BROKER_K8S_REMOTENAMESPACE' $SUBMARINER_BROKER_NS
   validate_pod_container_env 'BROKER_K8S_CA' $SUBMARINER_BROKER_CA
-  # FIXME: This changes between some deployment runs and causes failures
-  validate_pod_container_env 'CE_IPSEC_PSK' $SUBMARINER_PSK || true
   validate_pod_container_env 'CE_IPSEC_DEBUG' $ce_ipsec_debug
   validate_pod_container_env 'CE_IPSEC_IKEPORT' $ce_ipsec_ikeport
   validate_pod_container_env 'CE_IPSEC_NATTPORT' $ce_ipsec_nattport
@@ -352,8 +384,6 @@ function verify_subm_engine_container() {
   grep "SUBMARINER_CLUSTERCIDR=${cluster_CIDRs[$cluster]}" $env_file
   grep "SUBMARINER_COLORCODES=$subm_colorcode" $env_file
   grep "SUBMARINER_NATENABLED=$natEnabled" $env_file
-  # FIXME: This fails on redeploys
-  #grep "CE_IPSEC_PSK=$SUBMARINER_PSK" $env_file
   grep "HOME=/root" $env_file
 
   if kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- command -v command; then
@@ -441,7 +471,7 @@ function verify_secrets() {
 }
 
 function verify_subm_broker_secrets() {
-  verify_secrets $subm_broker_ns $broker_deployment_name-client $SUBMARINER_BROKER_CA
+  verify_secrets $SUBMARINER_BROKER_NS $broker_deployment_name-client $SUBMARINER_BROKER_CA
 }
 
 function verify_subm_engine_secrets() {
