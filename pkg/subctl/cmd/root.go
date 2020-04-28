@@ -17,12 +17,11 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
 	"k8s.io/apimachinery/pkg/api/errors"
