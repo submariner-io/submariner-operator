@@ -24,7 +24,7 @@ import (
 
 var _ = Describe("IsOverlappingCidr", func() {
 	When("There are no base CIDRs", func() {
-		overlapping, err := IsOverlappingCIDR([]string{}, "10.10.10.0/24")
+		overlapping, err := isOverlappingCIDR([]string{}, "10.10.10.0/24")
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -34,7 +34,7 @@ var _ = Describe("IsOverlappingCidr", func() {
 	})
 
 	When("At least one Base CIDR is superset of new CIDR", func() {
-		overlapping, err := IsOverlappingCIDR([]string{"10.10.0.0/16", "10.20.30.0/24"}, "10.10.10.0/24")
+		overlapping, err := isOverlappingCIDR([]string{"10.10.0.0/16", "10.20.30.0/24"}, "10.10.10.0/24")
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -44,7 +44,7 @@ var _ = Describe("IsOverlappingCidr", func() {
 	})
 
 	When("At least one Base CIDR is subset of new CIDR", func() {
-		overlapping, err := IsOverlappingCIDR([]string{"10.10.10.0/24", "10.10.20.0/24"}, "10.10.30.0/16")
+		overlapping, err := isOverlappingCIDR([]string{"10.10.10.0/24", "10.10.20.0/24"}, "10.10.30.0/16")
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -54,7 +54,7 @@ var _ = Describe("IsOverlappingCidr", func() {
 	})
 
 	When("New CIDR partially overlaps with at least one Base CIDR", func() {
-		overlapping, err := IsOverlappingCIDR([]string{"10.10.10.0/24"}, "10.10.10.128/22")
+		overlapping, err := isOverlappingCIDR([]string{"10.10.10.0/24"}, "10.10.10.128/22")
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -64,7 +64,7 @@ var _ = Describe("IsOverlappingCidr", func() {
 	})
 
 	When("New CIDR lies between any two Base CIDR", func() {
-		overlapping, err := IsOverlappingCIDR([]string{"10.10.10.0/24", "10.10.30.0/24"}, "10.10.20.128/24")
+		overlapping, err := isOverlappingCIDR([]string{"10.10.10.0/24", "10.10.30.0/24"}, "10.10.20.128/24")
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -74,14 +74,14 @@ var _ = Describe("IsOverlappingCidr", func() {
 	})
 
 	When("At least one Base CIDR is invalid", func() {
-		_, err := IsOverlappingCIDR([]string{"10.10.10.0/33", "10.10.30.0/24"}, "10.10.20.128/24")
+		_, err := isOverlappingCIDR([]string{"10.10.10.0/33", "10.10.30.0/24"}, "10.10.20.128/24")
 		It("Should return error", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
 	When("New CIDR is invalid", func() {
-		_, err := IsOverlappingCIDR([]string{"10.10.10.0/24", "10.10.30.0/24"}, "10.10.20.300/24")
+		_, err := isOverlappingCIDR([]string{"10.10.10.0/24", "10.10.30.0/24"}, "10.10.20.300/24")
 		It("Should return error", func() {
 			Expect(err).To(HaveOccurred())
 		})

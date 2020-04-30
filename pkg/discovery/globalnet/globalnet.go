@@ -18,10 +18,12 @@ package globalnet
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/bits"
 	"net"
 
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	submarinerClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,7 +49,24 @@ type CIDR struct {
 	lastIp  uint
 }
 
+type Config struct {
+	GlobalnetClusterSize uint
+	GlobalnetCIDR        string
+	ServiceCIDR          string
+	ClusterCIDR          string
+	ClusterID            string
+}
+
+type overlapType int
+
+const (
+	cluster overlapType = iota
+	service
+	global
+)
+
 var globalCidr = GlobalCIDR{allocatedCount: 0}
+var status = cli.NewStatus()
 
 func (gn *GlobalNetwork) Show() {
 	if gn == nil {
@@ -84,7 +103,7 @@ func Discover(client *submarinerClientset.Clientset, namespace string) (map[stri
 	return globalNetworks, nil
 }
 
-func IsOverlappingCIDR(cidrList []string, cidr string) (bool, error) {
+func isOverlappingCIDR(cidrList []string, cidr string) (bool, error) {
 	_, newNet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return false, err
@@ -226,4 +245,145 @@ func nextPowerOf2(n uint32) uint {
 	n |= n >> 16
 	n++
 	return uint(n)
+}
+
+func CheckOverlappingCidr(networks map[string]*GlobalNetwork, overlappingFor overlapType, netconfig Config) error {
+	var cidrlist []string
+	var cidr string
+	for k, v := range networks {
+		switch overlappingFor {
+		case cluster:
+			cidrlist = v.ClusterCIDRs
+			cidr = netconfig.ClusterCIDR
+		case service:
+			cidrlist = v.ServiceCIDRs
+			cidr = netconfig.ServiceCIDR
+		case global:
+			cidrlist = v.GlobalCIDRs
+			cidr = netconfig.GlobalnetCIDR
+		}
+		overlap, err := isOverlappingCIDR(cidrlist, cidr)
+		if err != nil {
+			return fmt.Errorf("unable to validate overlapping CIDR: %s", err)
+		}
+		if overlap && k != netconfig.ClusterID {
+			return fmt.Errorf("invalid CIDR: %s overlaps with cluster %s", cidr, k)
+		}
+	}
+	return nil
+}
+
+func isCIDRPreConfigured(clusterID string, globalNetworks map[string]*GlobalNetwork) bool {
+	// GlobalCIDR is not pre-configured
+	if globalNetworks[clusterID] == nil || globalNetworks[clusterID].GlobalCIDRs == nil || len(globalNetworks[clusterID].GlobalCIDRs) <= 0 {
+		return false
+	}
+	// GlobalCIDR is pre-configured
+	return true
+}
+
+func ValidateGlobalnetConfiguration(subctlData *datafile.SubctlData, netconfig Config) (error, string, uint) {
+	status.Start("Validating Globalnet configurations")
+	globalnetClusterSize := netconfig.GlobalnetClusterSize
+	globalnetCIDR := netconfig.GlobalnetCIDR
+	if subctlData.GlobalnetCidrRange != "" && globalnetClusterSize != 0 && globalnetClusterSize != subctlData.GlobalnetClusterSize {
+		clusterSize, err := GetValidClusterSize(subctlData.GlobalnetCidrRange, globalnetClusterSize)
+		if err != nil || clusterSize == 0 {
+			return fmt.Errorf("Invalid globalnet-cluster-size %s", err), "", 0
+		}
+		subctlData.GlobalnetClusterSize = clusterSize
+	}
+
+	if globalnetCIDR != "" && globalnetClusterSize != 0 {
+		err := errors.New("Both globalnet-cluster-size and globalnet-cidr can't be specified. Specify either one.\n")
+		return fmt.Errorf("%s", err), "", 0
+	}
+
+	if globalnetCIDR != "" {
+		_, _, err := net.ParseCIDR(globalnetCIDR)
+		if err != nil {
+			return fmt.Errorf("Specified globalnet-cidr is invalid: %s", err), globalnetCIDR, globalnetClusterSize
+		}
+	}
+
+	if subctlData.GlobalnetCidrRange == "" {
+		if globalnetCIDR != "" {
+			status.QueueSuccessMessage("globalnet is not enabled on Broker. Ignoring specified globalnet-cidr")
+			globalnetCIDR = ""
+		} else if globalnetClusterSize != 0 {
+			status.QueueSuccessMessage("globalnet is not enabled on Broker. Ignoring specified globalnet-cluster-size")
+			globalnetClusterSize = 0
+		}
+	}
+	status.End(true)
+	return nil, globalnetCIDR, globalnetClusterSize
+}
+
+func GetGlobalNetworks(subctlData *datafile.SubctlData) (map[string]*GlobalNetwork, error) {
+
+	brokerConfig := subctlData.GetBrokerAdministratorConfig()
+	brokerSubmClient, err := submarinerClientset.NewForConfig(brokerConfig)
+	if err != nil {
+		return nil, err
+	}
+	// exitOnError("Unable to create submariner rest client for broker cluster", err)
+	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
+	globalNetworks, err := Discover(brokerSubmClient, brokerNamespace)
+	if err != nil {
+		return nil, err
+	}
+	// exitOnError("Error trying to discover multi-cluster network details", err)
+	if globalNetworks != nil {
+		ShowNetworks(globalNetworks)
+	}
+	return globalNetworks, nil
+}
+
+func AssignGlobalnetIPs(subctlData *datafile.SubctlData, globalNetworks map[string]*GlobalNetwork, netconfig Config) (string, error) {
+	status.Start("Assigning Globalnet IPs")
+	globalnetCIDR := netconfig.GlobalnetCIDR
+	clusterID := netconfig.ClusterID
+	if globalnetCIDR == "" {
+		// Globalnet enabled, GlobalCIDR not specified by the user
+		if isCIDRPreConfigured(clusterID, globalNetworks) {
+			// globalCidr already configured on this cluster
+			globalnetCIDR = globalNetworks[clusterID].GlobalCIDRs[0]
+			status.QueueSuccessMessage(fmt.Sprintf("Cluster already has GlobalCIDR allocated: %s", globalNetworks[clusterID].GlobalCIDRs[0]))
+		} else {
+			// no globalCidr configured on this cluster
+			globalnetCIDR, err := AllocateGlobalCIDR(globalNetworks, subctlData)
+			if err != nil {
+				return "", fmt.Errorf("Globalnet failed %s", err)
+			}
+			status.QueueSuccessMessage(fmt.Sprintf("Allocated GlobalCIDR: %s", globalnetCIDR))
+		}
+	} else {
+		// Globalnet enabled, globalnetCIDR specified by user
+		if isCIDRPreConfigured(clusterID, globalNetworks) {
+			// globalCidr pre-configured on this cluster
+			globalnetCIDR = globalNetworks[clusterID].GlobalCIDRs[0]
+			status.QueueSuccessMessage(fmt.Sprintf("Pre-configured GlobalCIDR %s detected. Not changing it.", globalnetCIDR))
+		} else {
+			// globalCidr as specified by the user
+			err := CheckOverlappingCidr(globalNetworks, global, netconfig)
+			if err != nil {
+				return "", fmt.Errorf("Error validating overlapping GlobalCIDRs %s %s", globalnetCIDR, err)
+			}
+			status.QueueSuccessMessage(fmt.Sprintf("GlobalCIDR is: %s", globalnetCIDR))
+		}
+	}
+	status.End(true)
+	return globalnetCIDR, nil
+}
+
+func CheckForOverlappingCIDRs(globalNetworks map[string]*GlobalNetwork, netconfig Config) error {
+	err := CheckOverlappingCidr(globalNetworks, service, netconfig)
+	if err != nil {
+		return err
+	}
+	err = CheckOverlappingCidr(globalNetworks, cluster, netconfig)
+	if err != nil {
+		return err
+	}
+	return nil
 }
