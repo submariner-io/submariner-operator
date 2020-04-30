@@ -17,7 +17,7 @@ jobs:
            DEPLOY_ARGS="--deploytool_broker_args '--service-discovery'"
            RELEASE=true
     - env: CMD="make e2e"
-           CLUSTERS_ARGS="--globalnet true"
+           CLUSTERS_ARGS="--globalnet"
            DEPLOY_ARGS="${CLUSTERS_ARGS} --deploytool_broker_args '--service-discovery'"
 
 install:
