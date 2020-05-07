@@ -21,9 +21,8 @@ import (
 	"io"
 	"os"
 
-	"sigs.k8s.io/kind/pkg/log"
-
 	"github.com/submariner-io/submariner-operator/pkg/internal/env"
+	"github.com/submariner-io/submariner-operator/pkg/internal/log"
 )
 
 // Status is used to track ongoing status in a CLI, with a nice loading spinner
