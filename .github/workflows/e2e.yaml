@@ -19,6 +19,8 @@ jobs:
         lighthouse: ['', 'lighthouse']
     steps:
       - uses: actions/checkout@master
+        with:
+          fetch-depth: ''
 
       - name: Reclaim free space!
         run: |
