@@ -10,7 +10,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@master
         with:
-          fetch-depth: ''
+          fetch-depth: 0
 
       - name: Generate the artifacts
         run: make build-cross

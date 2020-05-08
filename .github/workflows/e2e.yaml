@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
         with:
-          fetch-depth: ''
+          fetch-depth: 0
 
       - name: Reclaim free space!
         run: |
