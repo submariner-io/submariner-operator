@@ -45,5 +45,5 @@ func subctlVersion(cmd *cobra.Command, args []string) {
 
 func PrintSubctlVersion(w io.Writer) {
 	fmt.Fprintf(w, "subctl version: %s\n", version.Version)
-	fmt.Fprintf(w, "built from git ref: %s\n", version.GitRef)
+	fmt.Fprintf(w, "built from git commit id: %s\n", version.Commit)
 }

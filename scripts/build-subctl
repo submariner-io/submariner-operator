@@ -9,9 +9,9 @@ debug=${1:-false}
 cd $(dirname $0)/..
 mkdir -p bin
 echo Building subctl version $VERSION for ${GOOS:=$(go env GOOS)}/${GOARCH:=$(go env GOARCH)}
-GIT_REF="$(git describe --tags)"
+GIT_COMMIT="$(git rev-parse --verify 'HEAD^{commit}')"
 ldflags="-X github.com/submariner-io/submariner-operator/pkg/version.Version=${VERSION} "
-ldflags="${ldflags} -X github.com/submariner-io/submariner-operator/pkg/version.GitRef=${GIT_REF}"
+ldflags="${ldflags} -X github.com/submariner-io/submariner-operator/pkg/version.Commit=${GIT_COMMIT}"
 
 if [ "$debug" = "false" ]; then
     ldflags="-s -w ${ldflags}"
