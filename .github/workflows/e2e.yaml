@@ -21,6 +21,7 @@ jobs:
       - uses: actions/checkout@master
         with:
           fetch-depth: 0
+      - run: git fetch origin +refs/tags/*:refs/tags/*
 
       - name: Reclaim free space!
         run: |

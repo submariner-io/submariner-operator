@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@master
         with:
           fetch-depth: 0
-
+      - run: git fetch origin +refs/tags/*:refs/tags/*
       - name: Generate the artifacts
         run: make build-cross
       - name: Upload the artifacts
