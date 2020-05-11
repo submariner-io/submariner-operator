@@ -662,6 +662,8 @@ github.com/submariner-io/submariner v0.3.0-rc1 h1:ik3RTHHX+9Ukl04WEnlFwdlmmybTqO
 github.com/submariner-io/submariner v0.3.0-rc1/go.mod h1:3gKfQELxRRvKYCkPAuqgcNVtYZN5DBBdcgsElDRGkao=
 github.com/submariner-io/submariner v0.3.0-rc2 h1:s1T/b9DQKC+ZrdopRSM7uHpS17VmXRpfeKRR0IJBGMc=
 github.com/submariner-io/submariner v0.3.0-rc2/go.mod h1:3gKfQELxRRvKYCkPAuqgcNVtYZN5DBBdcgsElDRGkao=
+github.com/submariner-io/submariner v0.3.0 h1:7qYiKvFQTGiM/QqRdXtgHMnwaIVebOVvNn3BXSZ48CA=
+github.com/submariner-io/submariner v0.3.0/go.mod h1:3gKfQELxRRvKYCkPAuqgcNVtYZN5DBBdcgsElDRGkao=
 github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07/go.mod h1:kDXzergiv9cbyO7IOYJZWg1U88JhDg3PB6klq9Hg2pA=
 github.com/technosophos/moniker v0.0.0-20180509230615-a5dbd03a2245/go.mod h1:O1c8HleITsZqzNZDjSNzirUGsMT0oGu9LhHKoJrqO+A=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20171017195756-830351dc03c6/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=

@@ -8,7 +8,7 @@ branches:
   - /^release-\d+.\d+.*$/
  
 git:
-  depth: 1
+  depth: false
 
 jobs:
   include:

@@ -1,0 +1,44 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v**'
+
+name: End to End Tests
+jobs:
+  e2e:
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        globalnet: ['', '--globalnet']
+        lighthouse: ['', 'lighthouse']
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+      - run: git fetch origin +refs/tags/*:refs/tags/*
+
+      - name: Reclaim free space!
+        run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          docker system prune --volumes --all --force
+          df -h
+          free -h
+
+      - name: Run E2E deployment and tests
+        env:
+          CLUSTERS_ARGS: ${{ matrix.globalnet }}
+          DEPLOY_ARGS: ${{ matrix.globalnet }}
+        run: |
+          [[ -z "${{ matrix.lighthouse }}" ]] || DEPLOY_ARGS+=" --deploytool_broker_args '--service-discovery'"
+          make e2e
+
+      - name: Post Mortem
+        if: failure()
+        run: make post-mortem
