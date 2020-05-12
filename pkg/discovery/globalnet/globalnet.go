@@ -308,14 +308,14 @@ func ValidateGlobalnetConfiguration(subctlData *datafile.SubctlData, netconfig C
 
 	if subctlData.GlobalnetCidrRange == "" {
 		if globalnetCIDR != "" {
-			status.QueueSuccessMessage("globalnet is not enabled on Broker. Ignoring specified globalnet-cidr")
+			status.QueueWarningMessage("globalnet is not enabled on Broker. Ignoring specified globalnet-cidr")
 			globalnetCIDR = ""
 		} else if globalnetClusterSize != 0 {
-			status.QueueSuccessMessage("globalnet is not enabled on Broker. Ignoring specified globalnet-cluster-size")
+			status.QueueWarningMessage("globalnet is not enabled on Broker. Ignoring specified globalnet-cluster-size")
 			globalnetClusterSize = 0
 		}
 	}
-	status.End(true)
+	status.End(cli.Success)
 	return nil, globalnetCIDR, globalnetClusterSize
 }
 
@@ -348,7 +348,7 @@ func AssignGlobalnetIPs(subctlData *datafile.SubctlData, globalNetworks map[stri
 		if isCIDRPreConfigured(clusterID, globalNetworks) {
 			// globalCidr already configured on this cluster
 			globalnetCIDR = globalNetworks[clusterID].GlobalCIDRs[0]
-			status.QueueSuccessMessage(fmt.Sprintf("Cluster already has GlobalCIDR allocated: %s", globalNetworks[clusterID].GlobalCIDRs[0]))
+			status.QueueWarningMessage(fmt.Sprintf("Cluster already has GlobalCIDR allocated: %s", globalNetworks[clusterID].GlobalCIDRs[0]))
 		} else {
 			// no globalCidr configured on this cluster
 			globalnetCIDR, err := AllocateGlobalCIDR(globalNetworks, subctlData)
@@ -362,7 +362,7 @@ func AssignGlobalnetIPs(subctlData *datafile.SubctlData, globalNetworks map[stri
 		if isCIDRPreConfigured(clusterID, globalNetworks) {
 			// globalCidr pre-configured on this cluster
 			globalnetCIDR = globalNetworks[clusterID].GlobalCIDRs[0]
-			status.QueueSuccessMessage(fmt.Sprintf("Pre-configured GlobalCIDR %s detected. Not changing it.", globalnetCIDR))
+			status.QueueWarningMessage(fmt.Sprintf("Pre-configured GlobalCIDR %s detected. Not changing it.", globalnetCIDR))
 		} else {
 			// globalCidr as specified by the user
 			err := CheckOverlappingCidr(globalNetworks, global, netconfig)
@@ -372,7 +372,7 @@ func AssignGlobalnetIPs(subctlData *datafile.SubctlData, globalNetworks map[stri
 			status.QueueSuccessMessage(fmt.Sprintf("GlobalCIDR is: %s", globalnetCIDR))
 		}
 	}
-	status.End(true)
+	status.End(cli.Success)
 	return globalnetCIDR, nil
 }
 
