@@ -201,7 +201,7 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	}
 
 	var err error
-	fmt.Printf("* Discovering network details\n")
+	status.Start("Discovering network details")
 	networkDetails := getNetworkDetails(config)
 
 	serviceCIDR, err = getServiceCIDR(serviceCIDR, networkDetails)
@@ -230,13 +230,13 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 
 	status.Start("Deploying the Submariner operator")
 	err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage)
-	status.End(err == nil)
+	status.End(cli.CheckForError(err))
 	exitOnError("Error deploying the operator", err)
 
 	if subctlData.ServiceDiscovery {
 		status.Start("Deploying multi cluster service discovery")
 		err = lighthouse.Ensure(status, config, "", "", false, kubeConfig, kubeContext)
-		status.End(err == nil)
+		status.End(cli.CheckForError(err))
 		exitOnError("Error deploying multi cluster service discovery", err)
 	}
 
@@ -244,12 +244,18 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	brokerAdminClientset, err := kubernetes.NewForConfig(subctlData.GetBrokerAdministratorConfig())
 	exitOnError("Error retrieving broker admin config", err)
 	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID)
-	status.End(err == nil)
+	status.End(cli.CheckForError(err))
 	exitOnError("Error creating SA for cluster", err)
 
 	status.Start("Deploying Submariner")
 	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
-	status.End(err == nil)
+	if err == nil {
+		status.QueueSuccessMessage("Submariner is up and running")
+		status.End(cli.Success)
+	} else {
+		status.QueueFailureMessage("Submariner deployment failed")
+		status.End(cli.Failure)
+	}
 	exitOnError("Error deploying Submariner", err)
 }
 
@@ -259,7 +265,7 @@ func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 	exitOnError("Unable to set the Kubernetes cluster connection up", err)
 	networkDetails, err := network.Discover(dynClient, clientSet)
 	if err != nil {
-		fmt.Printf("Error trying to discover network details: %s\n", err)
+		status.QueueWarningMessage(fmt.Sprintf("Error trying to discover network details: %s", err))
 	} else if networkDetails != nil {
 		networkDetails.Show()
 	}
@@ -269,8 +275,8 @@ func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (string, error) {
 	if clusterCIDR != "" {
 		if nd != nil && len(nd.PodCIDRs) > 0 && nd.PodCIDRs[0] != clusterCIDR {
-			fmt.Printf("WARNING: your provided cluster CIDR for the pods (%s) does not match discovered (%s)\n",
-				clusterCIDR, nd.PodCIDRs[0])
+			status.QueueWarningMessage(fmt.Sprintf("Your provided cluster CIDR for the pods (%s) does not match discovered (%s)\n",
+				clusterCIDR, nd.PodCIDRs[0]))
 		}
 		return clusterCIDR, nil
 	} else if nd != nil && len(nd.PodCIDRs) > 0 {
@@ -283,8 +289,8 @@ func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (string, error) 
 func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (string, error) {
 	if serviceCIDR != "" {
 		if nd != nil && len(nd.ServiceCIDRs) > 0 && nd.ServiceCIDRs[0] != serviceCIDR {
-			fmt.Printf("WARNING: your provided service CIDR (%s) does not match discovered (%s)\n",
-				serviceCIDR, nd.ServiceCIDRs[0])
+			status.QueueWarningMessage(fmt.Sprintf("Your provided service CIDR (%s) does not match discovered (%s)\n",
+				serviceCIDR, nd.ServiceCIDRs[0]))
 		}
 		return serviceCIDR, nil
 	} else if nd != nil && len(nd.ServiceCIDRs) > 0 {

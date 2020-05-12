@@ -83,7 +83,7 @@ var deployBroker = &cobra.Command{
 		status := cli.NewStatus()
 		status.Start("Deploying broker")
 		err = broker.Ensure(config)
-		status.End(err == nil)
+		status.End(cli.CheckForError(err))
 		exitOnError("Error deploying the broker", err)
 
 		status.Start(fmt.Sprintf("Creating %s file", brokerDetailsFilename))
@@ -92,7 +92,7 @@ var deployBroker = &cobra.Command{
 		if ipsecSubmFile == "" {
 			if _, err := datafile.NewFromFile(brokerDetailsFilename); err == nil {
 				ipsecSubmFile = brokerDetailsFilename
-				status.QueueSuccessMessage(fmt.Sprintf("Reusing IPsec PSK from existing %s", brokerDetailsFilename))
+				status.QueueWarningMessage(fmt.Sprintf("Reusing IPsec PSK from existing %s", brokerDetailsFilename))
 			} else {
 				status.QueueSuccessMessage(fmt.Sprintf("A new IPsec PSK will be generated for %s", brokerDetailsFilename))
 			}
@@ -117,7 +117,7 @@ var deployBroker = &cobra.Command{
 		}
 
 		err = subctlData.WriteToFile(brokerDetailsFilename)
-		status.End(err == nil)
+		status.End(cli.CheckForError(err))
 		exitOnError("Error writing the broker information", err)
 
 		if enableDataplane {

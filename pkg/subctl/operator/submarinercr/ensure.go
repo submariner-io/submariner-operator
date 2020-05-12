@@ -19,16 +19,16 @@ package submarinercr
 import (
 	"fmt"
 
-	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/engine"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
+
+	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/engine"
 )
 
 func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
@@ -66,8 +66,6 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("* Submariner is up and running\n")
 
 	return nil
 }
