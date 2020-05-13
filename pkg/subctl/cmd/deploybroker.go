@@ -132,7 +132,7 @@ func isValidGlobalnetConfig() (bool, error) {
 		return true, nil
 	}
 	defaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(globalnetCidrRange, defaultGlobalnetClusterSize)
-	if err != nil || defaultGlobalnetClusterSize <= 0 {
+	if err != nil || defaultGlobalnetClusterSize == 0 {
 		return false, err
 	}
 	return true, err
