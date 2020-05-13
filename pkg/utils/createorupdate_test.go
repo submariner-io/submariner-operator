@@ -42,7 +42,7 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 	BeforeEach(func() {
 		clusterRole = &rbacv1.ClusterRole{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Cluster_role_yaml, clusterRole)
+		err := embeddedyamls.GetObject(embeddedyamls.Submariner_globalnet_cluster_role_yaml, clusterRole)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 	})
@@ -80,7 +80,7 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 	BeforeEach(func() {
 		clusterRoleBinding = &rbacv1.ClusterRoleBinding{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Cluster_role_binding_yaml, clusterRoleBinding)
+		err := embeddedyamls.GetObject(embeddedyamls.Submariner_globalnet_cluster_role_binding_yaml, clusterRoleBinding)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 	})
