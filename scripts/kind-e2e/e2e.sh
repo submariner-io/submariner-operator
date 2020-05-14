@@ -13,6 +13,7 @@ source ${DAPPER_SOURCE}/scripts/kind-e2e/cluster_settings
 
 [[ ! ${DEPLOY_ARGS} =~ "--globalnet" ]] || globalnet=true
 [[ ! ${DEPLOY_ARGS} =~ "--service-discovery" ]] || lighthouse=true
+timeout="2m" # Used by deploy_resource
 
 ### Functions ###
 
