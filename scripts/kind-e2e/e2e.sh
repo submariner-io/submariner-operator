@@ -34,15 +34,6 @@ function connectivity_tests() {
     fi
 }
 
-function test_with_e2e_tests {
-    cd ${DAPPER_SOURCE}/test/e2e
-
-    go test -args -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.reportPassed \
-        -dp-context cluster2 -dp-context cluster3  \
-        -report-dir ${DAPPER_OUTPUT}/junit 2>&1 | \
-        tee ${DAPPER_OUTPUT}/e2e-tests.log
-}
-
 ### Main ###
 
 declare_kubeconfig
