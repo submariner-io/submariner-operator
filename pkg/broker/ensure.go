@@ -38,7 +38,7 @@ func Ensure(config *rest.Config) error {
 		return fmt.Errorf("error setting up the engine requirements: %s", err)
 	}
 
-	err = lighthouse.Ensure(config)
+	_, err = lighthouse.Ensure(config, lighthouse.BrokerCluster)
 	if err != nil {
 		return fmt.Errorf("error setting up the lighthouse requirements: %s", err)
 	}
