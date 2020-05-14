@@ -28,6 +28,8 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
+
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 )
 
 func CreateOrUpdateClusterRole(clientSet clientset.Interface, clusterRole *rbacv1.ClusterRole) (bool, error) {
@@ -97,6 +99,17 @@ func CreateOrUpdateCRD(clientSet extendedclientset.Interface, crd *apiextensions
 		return false, retryErr
 	}
 	return false, err
+}
+
+func CreateOrUpdateEmbeddedCRD(clientSet extendedclientset.Interface, crdYaml string) (bool, error) {
+
+	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
+
+	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
+		return false, fmt.Errorf("Error extracting embedded CRD: %s", err)
+	}
+
+	return CreateOrUpdateCRD(clientSet, crd)
 }
 
 func CreateOrUpdateDeployment(clientSet clientset.Interface, namespace string, deployment *appsv1.Deployment) (bool, error) {

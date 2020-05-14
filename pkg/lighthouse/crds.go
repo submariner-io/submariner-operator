@@ -3,37 +3,42 @@ package lighthouse
 import (
 	"fmt"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
+)
+
+const (
+	BrokerCluster = true
+	DataCluster   = false
 )
 
 // Ensure ensures that the required resources are deployed on the target system
-// The resources handled here are the lighthouse CRDs: MultiClusterService
-func Ensure(config *rest.Config) error {
+// The resources handled here are the lighthouse CRDs: MultiClusterService and ServiceExport
+func Ensure(config *rest.Config, isBroker bool) (bool, error) {
 	clientSet, err := clientset.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("error creating the api extensions client: %s", err)
+		return false, fmt.Errorf("error creating the api extensions client: %s", err)
 	}
-	mcsCrd, err := GetMcsCRD()
+	installedMCS, err := utils.CreateOrUpdateEmbeddedCRD(clientSet,
+		embeddedyamls.Lighthouse_crds_multiclusterservices_crd_yaml)
 	if err != nil {
-		return fmt.Errorf("error creating the MultiClusterService CRD: %s", err)
+		return installedMCS, fmt.Errorf("Error creating the MultiClusterServices CRD: %s", err)
 	}
-	_, err = utils.CreateOrUpdateCRD(clientSet, mcsCrd)
+
+	// The broker does not need the ServiceExport
+	if isBroker {
+		return installedMCS, nil
+	}
+
+	installedSE, err := utils.CreateOrUpdateEmbeddedCRD(clientSet,
+		embeddedyamls.Lighthouse_crds_serviceexport_crd_yaml)
+
 	if err != nil {
-		return fmt.Errorf("error creating the MultiClusterService CRD: %s", err)
-	}
-	return nil
-}
-
-func GetMcsCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
-
-	if err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_crds_multiclusterservices_crd_yaml, crd); err != nil {
-		return nil, err
+		return installedSE, fmt.Errorf("Error creating the ServiceExport CRD: %s", err)
 	}
 
-	return crd, nil
+	return installedMCS || installedSE, nil
 }
