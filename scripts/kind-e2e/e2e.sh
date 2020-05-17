@@ -43,9 +43,9 @@ declare_kubeconfig
 . ${DAPPER_SOURCE}/scripts/kind-e2e/lib_operator_verify_subm.sh
 
 create_subm_vars
-with_context cluster1 broker_vars
+with_context "$broker" broker_vars
 
-with_context cluster1 verify_subm_broker_secrets
+with_context "$broker" verify_subm_broker_secrets
 
 run_subm_clusters verify_subm_deployed
 
@@ -65,13 +65,5 @@ if [[ $globalnet != true ]]; then
                                       --verbose
 fi
 
-cat << EOM
-Your 3 virtual clusters are deployed and working properly with your local source code, and can be accessed with:
-
-export KUBECONFIG=\$(echo \$(git rev-parse --show-toplevel)/output/kubeconfigs/kind-config-cluster{1..3} | sed 's/ /:/g')
-
-$ kubectl config use-context cluster1 # or cluster2, cluster3..
-
-To clean evertyhing up, just run: make cleanup
-EOM
+print_clusters_message
 
