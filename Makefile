@@ -1,4 +1,3 @@
-build_debug ?= false
 lighthouse ?= false
 
 ifneq (,$(DAPPER_HOST_ARCH))
@@ -20,7 +19,7 @@ e2e: deploy
 	scripts/kind-e2e/e2e.sh
 
 $(TARGETS): vendor/modules.txt
-	./scripts/$@ --build_debug $(build_debug)
+	./scripts/$@
 
 build-subctl: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go")
 
