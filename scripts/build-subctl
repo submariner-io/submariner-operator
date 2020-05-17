@@ -1,28 +1,21 @@
 #!/bin/bash
 set -e
 
-source $(dirname $0)/lib/debug_functions
-source $(dirname $0)/lib/version
+source ${SCRIPTS_DIR}/lib/debug_functions
+source ${SCRIPTS_DIR}/lib/version
 
-debug=${1:-false}
+cd ${DAPPER_SOURCE}
 
-cd $(dirname $0)/..
-mkdir -p bin
 echo Building subctl version $VERSION for ${GOOS:=$(go env GOOS)}/${GOARCH:=$(go env GOARCH)}
 GIT_REF="$(git describe --tags)"
 ldflags="-X github.com/submariner-io/submariner-operator/pkg/version.Version=${VERSION} "
 ldflags="${ldflags} -X github.com/submariner-io/submariner-operator/pkg/version.GitRef=${GIT_REF}"
 
-if [ "$debug" = "false" ]; then
-    ldflags="-s -w ${ldflags}"
-fi
-output=bin/subctl-${VERSION}-${GOOS}-${GOARCH}${GOEXE}
-CGO_ENABLED=0 go build -ldflags "${ldflags}" -o ${output} ./pkg/subctl/main.go
-
 # OSX does not seem to like upx compressed from linux, so disabled
-if [ "$debug" = "false" ] && [ "$GOOS" != "darwin" ]; then
-	command -v upx > /dev/null && upx ${output} || :
-fi
+[ "$GOOS" != "darwin" ] || upxflag="--noupx"
+
+output=bin/subctl-${VERSION}-${GOOS}-${GOARCH}${GOEXE}
+${SCRIPTS_DIR}/compile.sh --ldflags "$ldflags" $upxflag $output ./pkg/subctl/main.go "$@"
 
 if [ "${GOARCH}" = "$(GOARCH= go env GOARCH)" ] && [ "${GOOS}" = "$(GOOS= go env GOOS)" ]; then
     ln -sf ${output#bin/} bin/subctl
