@@ -22,15 +22,12 @@ function connectivity_tests() {
     netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
     nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
 
-    if [[ $lighthouse = true ]]; then
-        resolved_ip=$((kubectl exec "${netshoot_pod}" -- ping -c 1 -W 1 nginx-demo 2>/dev/null || :) \
-                      | grep PING | awk '{print $3}' | tr -d '()')
-        if [[ "$resolved_ip" != "$nginx_svc_ip" ]]; then
-            echo "Resolved IP $resolved_ip doesn't match the service ip $nginx_svc_ip"
-            exit 1
-        fi
-
-        with_retries 5 test_connection "$netshoot_pod" nginx-demo
+    [[ "${lighthouse}" = "true" ]] || return 0
+    resolved_ip=$((kubectl exec "${netshoot_pod}" -- ping -c 1 -W 1 nginx-demo 2>/dev/null || :) \
+                  | grep PING | awk '{print $3}' | tr -d '()')
+    if [[ "$resolved_ip" != "$nginx_svc_ip" ]]; then
+        echo "Resolved IP $resolved_ip doesn't match the service ip $nginx_svc_ip"
+        exit 1
     fi
 }
 
@@ -58,11 +55,11 @@ with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 with_context cluster2 connectivity_tests
 
 # dataplane E2E need to be modified for globalnet
-if [[ $globalnet != true ]]; then
-    # run dataplane E2e tests between the two clusters
-    ${DAPPER_SOURCE}/bin/subctl verify-connectivity ${DAPPER_OUTPUT}/kubeconfigs/kind-config-cluster2 \
-                                      ${DAPPER_OUTPUT}/kubeconfigs/kind-config-cluster3 \
-                                      --verbose
+if [[ "${globalnet}" != "true" ]]; then
+    # run dataplane E2E tests between the two clusters
+    ${DAPPER_SOURCE}/bin/subctl verify-connectivity --verbose \
+        ${KUBECONFIGS_DIR}/kind-config-cluster2 \
+        ${KUBECONFIGS_DIR}/kind-config-cluster3
 fi
 
 print_clusters_message
