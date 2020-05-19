@@ -18,11 +18,10 @@ package lighthousedns
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	rbacv1 "k8s.io/api/rbac/v1"
-	errors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
@@ -35,7 +34,6 @@ import (
 
 const (
 	operatorImage           = "lighthouse-cluster-dns-operator"
-	coreDNSImage            = "lighthouse-coredns"
 	openShiftCoreDNSImage   = "openshift-lighthouse-coredns"
 	deploymentCheckInterval = 5 * time.Second
 	deploymentWaitTime      = 10 * time.Minute
@@ -77,112 +75,9 @@ func Ensure(status *cli.Status, config *rest.Config, repo string, version string
 			return err
 		}
 	} else {
-		// Update CoreDNS deployment
-		deployments := clientSet.AppsV1().Deployments("kube-system")
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			deployment, err := deployments.Get("coredns", metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-			for i, container := range deployment.Spec.Template.Spec.Containers {
-				if container.Name == "coredns" {
-					deployment.Spec.Template.Spec.Containers[i].Image = repo + coreDNSImage + ":" + version
-					status.QueueSuccessMessage("Updated CoreDNS deployment")
-				}
-			}
-			// Potentially retried
-			_, err = deployments.Update(deployment)
-			return err
-		})
-		if retryErr != nil {
-			return fmt.Errorf("Error updating CoreDNS deployment: %v", retryErr)
-		}
-
-		// Update CoreDNS ConfigMap
-		err = updateCoreDNSConfigMap(status, clientSet)
-		if err != nil {
-			return err
-		}
+		return nil
 	}
 
-	return nil
-}
-
-func updateCoreDNSConfigMap(status *cli.Status, clientSet *clientset.Clientset) error {
-	configMaps := clientSet.CoreV1().ConfigMaps("kube-system")
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		configMap, err := configMaps.Get("coredns", metav1.GetOptions{})
-		if err != nil {
-			return err
-		}
-		/* The ConfigMap stores a “Corefile” entry which looks like
-			.:53 {
-				errors
-				health
-				ready
-				kubernetes cluster.local in-addr.arpa ip6.arpa {
-					pods insecure
-					fallthrough in-addr.arpa ip6.arpa
-					ttl 30
-				}
-				prometheus :9153
-				forward . /etc/resolv.conf
-				cache 30
-				loop
-				reload
-				loadbalance
-			}
-		   We change it to remove the fallthrough limitation in the kubernetes entry,
-		   and to add a lighthouse entry:
-				lighthouse cluster.local {
-					fallthrough
-				}
-		*/
-		corefile := configMap.Data["Corefile"]
-		if strings.Contains(corefile, "lighthouse") {
-			// Assume this means we've already set the ConfigMap up
-			return nil
-		}
-		lines := strings.Split(corefile, "\n")
-		newLines := []string{}
-		inKubernetesSection := false
-		clusterName := ""
-		indent := 0
-		for _, line := range lines {
-			skipLine := false
-			if strings.Contains(line, "kubernetes") {
-				// We’re in the Kubernetes section
-				inKubernetesSection = true
-				// Extract the cluster name, we’ll use it later
-				fields := strings.Fields(line)
-				clusterName = fields[1]
-			} else if inKubernetesSection && strings.Contains(line, "fallthrough") {
-				// Strip the fallthrough line
-				indent = strings.Index(line, "fallthrough")
-				newLines = append(newLines, strings.Repeat(" ", indent)+"fallthrough")
-				skipLine = true
-			} else if inKubernetesSection && strings.Contains(line, "}") {
-				// End of the Kubernetes section, we’ll append our section
-				inKubernetesSection = false
-				newLines = append(newLines, line)
-				skipLine = true
-				newLines = append(newLines, strings.Replace(line, "}", "lighthouse "+clusterName+" {", 1))
-				newLines = append(newLines, strings.Repeat(" ", indent)+"fallthrough")
-				newLines = append(newLines, line)
-			}
-			if !skipLine {
-				newLines = append(newLines, line)
-			}
-		}
-		configMap.Data["Corefile"] = strings.Join(newLines, "\n")
-		// Potentially retried
-		_, err = configMaps.Update(configMap)
-		return err
-	})
-	if retryErr != nil {
-		return fmt.Errorf("Error updating CoreDNS config map: %v", retryErr)
-	}
-	status.QueueSuccessMessage("Updated CoreDNS configmap")
 	return nil
 }
 

@@ -37,6 +37,8 @@ var files = []string{
 	"service_account.yaml",
 	"submariner/globalnet_cluster_role.yaml",
 	"submariner/globalnet_cluster_role_binding.yaml",
+	"cluster_role.yaml",
+	"cluster_role_binding.yaml",
 	"lighthouse/crds/multiclusterservices_crd.yaml",
 	"lighthouse/crds/serviceexport_crd.yaml",
 	"lighthouse/cluster_role_binding.yaml",
