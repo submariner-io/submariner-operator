@@ -65,7 +65,7 @@ func StatusForLogger(l log.Logger) *Status {
 		logger:        l,
 		successFormat: " ✓ %s\n",
 		failureFormat: " ✗ %s\n",
-		warningFormat: " ⚠ %s\n",
+		warningFormat: " ⚠ WARNING %s\n",
 		successQueue:  []string{},
 		failureQueue:  []string{},
 		warningQueue:  []string{},
@@ -78,7 +78,7 @@ func StatusForLogger(l log.Logger) *Status {
 			// use colored success / failure / warning messages
 			s.successFormat = " \x1b[32m✓\x1b[0m %s\n"
 			s.failureFormat = " \x1b[31m✗\x1b[0m %s\n"
-			s.warningFormat = " \x1b[33m⚠\x1b[0m %s\n"
+			s.warningFormat = " \x1b[33m⚠ WARNING\x1b[0m %s\n"
 		}
 	}
 	return s
