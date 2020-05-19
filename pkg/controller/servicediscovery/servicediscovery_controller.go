@@ -2,8 +2,10 @@ package servicediscovery
 
 import (
 	"context"
+	goerrors "errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
@@ -12,6 +14,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -24,8 +30,14 @@ import (
 var log = logf.Log.WithName("controller_servicediscovery")
 
 const (
-	serviceDiscoveryImage = "lighthouse-agent"
+	componentName         = "submariner-lighthouse"
 	deploymentName        = "submariner-lighthouse-agent"
+	lighthouseCoreDNSName = "submariner-lighthouse-coredns"
+)
+
+const (
+	serviceDiscoveryImage  = "lighthouse-agent"
+	lighthouseCoreDNSImage = "lighthouse-coredns"
 )
 
 // Add creates a new ServiceDiscovery Controller and adds it to the Manager. The Manager will set fields on the Controller
@@ -36,9 +48,11 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
+	k8sclient, _ := clientset.NewForConfig(mgr.GetConfig())
 	return &ReconcileServiceDiscovery{
-		client: mgr.GetClient(),
-		scheme: mgr.GetScheme()}
+		client:       mgr.GetClient(),
+		scheme:       mgr.GetScheme(),
+		k8sClientSet: k8sclient}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -74,8 +88,9 @@ var _ reconcile.Reconciler = &ReconcileServiceDiscovery{}
 type ReconcileServiceDiscovery struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client       client.Client
+	scheme       *runtime.Scheme
+	k8sClientSet *clientset.Clientset
 }
 
 // Reconcile reads that state of the cluster for a ServiceDiscovery object and makes changes based on the state read
@@ -111,6 +126,36 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 		r.client, r.scheme); err != nil {
 		return reconcile.Result{}, err
 	}
+
+	ligthhouseConfigMap := newLigthhouseConfigMap(instance)
+	if _, err = helpers.ReconcileConfigMap(instance, ligthhouseConfigMap, reqLogger,
+		r.client, r.scheme); err != nil {
+		log.Error(err, "Error creating the lighthouseCoreDNS configMap")
+		return reconcile.Result{}, err
+	}
+
+	ligthhouseCoreDNSDeployment := newLigthhouseCoreDNSDeployment(instance)
+	if _, err = helpers.ReconcileDeployment(instance, ligthhouseCoreDNSDeployment, reqLogger,
+		r.client, r.scheme); err != nil {
+		log.Error(err, "Error creating the lighthouseCoreDNS deployment")
+		return reconcile.Result{}, err
+	}
+
+	ligthhouseCoreDNSService := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace}, ligthhouseCoreDNSService)
+	if errors.IsNotFound(err) {
+		ligthhouseCoreDNSService = newLigthhouseCoreDNSService(instance)
+		if _, err = helpers.ReconcileService(instance, ligthhouseCoreDNSService, reqLogger,
+			r.client, r.scheme); err != nil {
+			log.Error(err, "Error creating the lighthouseCoreDNS service")
+			return reconcile.Result{}, err
+		}
+	}
+	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	return reconcile.Result{}, nil
 }
 
@@ -118,7 +163,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 	replicas := int32(1)
 	labels := map[string]string{
 		"app":       deploymentName,
-		"component": "lighthouse-agent",
+		"component": componentName,
 	}
 	matchLabels := map[string]string{
 		"app": deploymentName,
@@ -166,6 +211,160 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 			},
 		},
 	}
+}
+
+func newLigthhouseConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
+	labels := map[string]string{
+		"app":       lighthouseCoreDNSName,
+		"component": componentName,
+	}
+	expectedCorefile := `supercluster.local:53 {
+lighthouse
+errors
+health
+ready
+}
+`
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      lighthouseCoreDNSName,
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Data: map[string]string{
+			"Corefile": expectedCorefile,
+		},
+	}
+}
+
+func newLigthhouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
+	replicas := int32(2)
+	labels := map[string]string{
+		"app":       lighthouseCoreDNSName,
+		"component": componentName,
+	}
+	matchLabels := map[string]string{
+		"app": lighthouseCoreDNSName,
+	}
+
+	terminationGracePeriodSeconds := int64(0)
+	defaultMode := int32(420)
+
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cr.Namespace,
+			Name:      lighthouseCoreDNSName,
+			Labels:    labels,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: matchLabels,
+			},
+			Replicas: &replicas,
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:            lighthouseCoreDNSName,
+							Image:           getImagePath(cr, lighthouseCoreDNSImage),
+							ImagePullPolicy: "IfNotPresent",
+							Args: []string{
+								"-conf",
+								"/etc/coredns/Corefile",
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{Name: "config-volume", MountPath: "/etc/coredns", ReadOnly: true},
+							},
+						},
+					},
+
+					ServiceAccountName:            "submariner-lighthouse",
+					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					Volumes: []corev1.Volume{
+						{Name: "config-volume", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
+							LocalObjectReference: corev1.LocalObjectReference{Name: lighthouseCoreDNSName},
+							Items: []corev1.KeyToPath{
+								{Key: "Corefile", Path: "Corefile"},
+							},
+							DefaultMode: &defaultMode,
+						}}},
+					},
+				},
+			},
+		},
+	}
+}
+
+func newLigthhouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.Service {
+	labels := map[string]string{
+		"app":       lighthouseCoreDNSName,
+		"component": componentName,
+	}
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cr.Namespace,
+			Name:      lighthouseCoreDNSName,
+			Labels:    labels,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{{
+				Name:     "udp",
+				Protocol: "UDP",
+				Port:     53,
+				TargetPort: intstr.IntOrString{Type: intstr.Int,
+					IntVal: 53},
+			}},
+			Type: corev1.ServiceTypeClusterIP,
+			Selector: map[string]string{
+				"app": lighthouseCoreDNSName,
+			},
+		},
+	}
+}
+
+func updateDNSConfigMap(client client.Client, k8sclientSet *clientset.Clientset, cr *submarinerv1alpha1.ServiceDiscovery) error {
+	configMaps := k8sclientSet.CoreV1().ConfigMaps("kube-system")
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		configMap, err := configMaps.Get("coredns", metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+		/* This entry will be added to config map
+		# lighthouse
+		supercluster.local:53 {
+		    forward . 2.2.2.2:5353
+		}
+		*/
+		corefile := configMap.Data["Corefile"]
+		if strings.Contains(corefile, "lighthouse") {
+			// Assume this means we've already set the ConfigMap up
+			return nil
+		}
+		lighthouseDnsService := &corev1.Service{}
+		err = client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDnsService)
+		if err != nil || lighthouseDnsService.Spec.ClusterIP == "" {
+			return goerrors.New("lighthouseDnsService ClusterIp should be available")
+		}
+		expectedCorefile := `#lighthouse
+supercluster.local {
+forward . `
+		expectedCorefile = expectedCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
+		coreFile := configMap.Data["Corefile"]
+		if strings.Contains(coreFile, "supercluster") {
+			// Assume this means we've already set the ConfigMap up
+			return nil
+		}
+		coreFile = expectedCorefile + coreFile
+		log.Info("Updated coredns CoreFile " + coreFile)
+		configMap.Data["Corefile"] = coreFile
+		// Potentially retried
+		_, err = configMaps.Update(configMap)
+		return err
+	})
+	return retryErr
 }
 
 func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, componentImage string) string {

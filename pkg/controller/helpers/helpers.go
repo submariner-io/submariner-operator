@@ -10,6 +10,7 @@ import (
 	"github.com/go-logr/logr"
 	errorutil "github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -103,4 +104,94 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 	}
 
 	return deployment, errorutil.WithMessagef(err, "error creating or updating Deployment %s/%s", deployment.Namespace, deployment.Name)
+}
+
+func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLogger logr.Logger,
+	client client.Client, scheme *runtime.Scheme) (*corev1.ConfigMap, error) {
+	var err error
+
+	// Set the owner and controller
+	if err = controllerutil.SetControllerReference(owner, configMap, scheme); err != nil {
+		return nil, err
+	}
+
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		toUpdate := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
+			Name:      configMap.Name,
+			Namespace: configMap.Namespace,
+			Labels:    map[string]string{},
+		}}
+
+		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
+			toUpdate.Data = configMap.Data
+			for k, v := range configMap.Labels {
+				toUpdate.Labels[k] = v
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if result == controllerutil.OperationResultCreated {
+			reqLogger.Info("Created a new ConfigMap", "ConfigMap.Namespace", configMap.Namespace, "ConfigMap.Name", configMap.Name)
+		} else if result == controllerutil.OperationResultUpdated {
+			reqLogger.Info("Updated existing ConfigMap", "ConfigMap.Namespace", configMap.Namespace, "ConfigMap.Name", configMap.Name)
+		}
+
+		return nil
+	})
+
+	// Update the status from the server
+	if err == nil {
+		err = client.Get(context.TODO(), types.NamespacedName{Namespace: configMap.Namespace, Name: configMap.Name}, configMap)
+	}
+
+	return configMap, errorutil.WithMessagef(err, "error creating or updating ConfigMap %s/%s", configMap.Namespace, configMap.Name)
+}
+
+func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger logr.Logger,
+	client client.Client, scheme *runtime.Scheme) (*corev1.Service, error) {
+	var err error
+
+	// Set the owner and controller
+	if err = controllerutil.SetControllerReference(owner, service, scheme); err != nil {
+		return nil, err
+	}
+
+	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		toUpdate := &corev1.Service{ObjectMeta: metav1.ObjectMeta{
+			Name:      service.Name,
+			Namespace: service.Namespace,
+			Labels:    map[string]string{},
+		}}
+
+		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
+			toUpdate.Spec = service.Spec
+			for k, v := range service.Labels {
+				toUpdate.Labels[k] = v
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if result == controllerutil.OperationResultCreated {
+			reqLogger.Info("Created a new Service", "Service.Namespace", service.Namespace, "Service.Name", service.Name)
+		} else if result == controllerutil.OperationResultUpdated {
+			reqLogger.Info("Updated existing Service", "Service.Namespace", service.Namespace, "Service.Name", service.Name)
+		}
+
+		return nil
+	})
+
+	// Update the status from the server
+	if err == nil {
+		err = client.Get(context.TODO(), types.NamespacedName{Namespace: service.Namespace, Name: service.Name}, service)
+	}
+
+	return service, errorutil.WithMessagef(err, "error creating or updating Service %s/%s", service.Namespace, service.Name)
 }
