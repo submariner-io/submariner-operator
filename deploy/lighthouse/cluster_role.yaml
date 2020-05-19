@@ -17,7 +17,7 @@ rules:
 - apiGroups:
   - lighthouse.submariner.io
   resources:
-  - multiclusterservices
+  - "*"
   verbs:
   - create
   - get

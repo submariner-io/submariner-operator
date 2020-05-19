@@ -10,10 +10,16 @@
 	@./.dapper.tmp -v
 	@mv .dapper.tmp .dapper
 
+invoke_dapper = ./.dapper -m bind make $1 $(MAKEFLAGS)
+
 %: .dapper
-	./.dapper -m bind $(MAKE) $@ $(MAKEFLAGS)
+	$(call invoke_dapper,$@)
+
+# Ensure that files in the current directory don't hide Dapper targets
+$(wildcard [^M]*): .dapper
+	$(call invoke_dapper,$@)
 
 shell: .dapper
 	./.dapper -m bind -s
 
-.PHONY: shell
+.PHONY: shell $(wildcard [^M]*)

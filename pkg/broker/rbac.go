@@ -69,7 +69,7 @@ func NewBrokerAdminRole() *rbacv1.Role {
 			rbacv1.PolicyRule{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"lighthouse.submariner.io"},
-				Resources: []string{"multiclusterservices"},
+				Resources: []string{"*"},
 			},
 		},
 	}
@@ -91,7 +91,7 @@ func NewBrokerClusterRole() *rbacv1.Role {
 			rbacv1.PolicyRule{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"lighthouse.submariner.io"},
-				Resources: []string{"multiclusterservices"},
+				Resources: []string{"*"},
 			},
 		},
 	}
