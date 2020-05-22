@@ -77,8 +77,6 @@ function verify_subm_deployed() {
     verify_subm_operator
     # Verify SubM Operator pod
     verify_subm_op_pod
-    # Verify SubM Operator container
-    verify_subm_operator_container
 
     # FIXME: Rename all of these submariner-engine or engine, vs submariner
     # Verify SubM CR
@@ -336,31 +334,6 @@ function verify_subm_routeagent_pod() {
     validate_equals '.metadata.namespace' $subm_ns
     validate_equals '.spec.terminationGracePeriodSeconds' '0'
   done
-}
-
-function verify_subm_operator_container() {
-  subm_operator_pod_name=$(kubectl get pods --namespace=$subm_ns -l name=submariner-operator -o=jsonpath='{.items..metadata.name}')
-
-  # Show SubM Operator pod environment variables
-  env_file=/tmp/${subm_operator_pod_name}.env
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- env | tee $env_file
-
-  # Verify SubM Operator pod environment variables
-  grep "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" $env_file
-  grep "HOSTNAME=$subm_operator_pod_name" $env_file
-  grep "OPERATOR=/usr/local/bin/submariner-operator" $env_file
-  grep "USER_UID=1001" $env_file
-  grep "USER_NAME=submariner-operator" $env_file
-  grep "WATCH_NAMESPACE=$subm_ns" $env_file
-  grep "POD_NAME=$subm_operator_pod_name" $env_file
-  grep "OPERATOR_NAME=submariner-operator" $env_file
-  grep "HOME=/" $env_file
-
-  # Verify the operator binary is in the expected place and in PATH
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- command -v submariner-operator | grep /usr/local/bin/submariner-operator
-
-  # Verify the operator entry script is in the expected place and in PATH
-  kubectl exec $subm_operator_pod_name --namespace=$subm_ns -- command -v entrypoint | grep /usr/local/bin/entrypoint
 }
 
 function verify_subm_engine_container() {
