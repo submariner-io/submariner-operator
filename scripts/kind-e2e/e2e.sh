@@ -54,13 +54,10 @@ with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 
 with_context cluster2 connectivity_tests
 
-# dataplane E2E need to be modified for globalnet
-if [[ "${globalnet}" != "true" ]]; then
-    # run dataplane E2E tests between the two clusters
-    ${DAPPER_SOURCE}/bin/subctl verify-connectivity --verbose \
-        ${KUBECONFIGS_DIR}/kind-config-cluster2 \
-        ${KUBECONFIGS_DIR}/kind-config-cluster3
-fi
+# run dataplane E2E tests between the two clusters
+${DAPPER_SOURCE}/bin/subctl verify-connectivity --verbose \
+    ${KUBECONFIGS_DIR}/kind-config-cluster2 \
+    ${KUBECONFIGS_DIR}/kind-config-cluster3
 
 print_clusters_message
 
