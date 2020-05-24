@@ -1,21 +1,10 @@
-# shellcheck shell=bash
-# shellcheck disable=SC2034 # We declare some shared variables here
-# shellcheck source=scripts/shared/lib/source_only
 . "${SCRIPTS_DIR}"/lib/source_only
 
-# Map of cluster names to a space separated string, representing a list of nodes to deploy.
-# Possible node types are 'control-plane' and 'worker'.
-# e.g. cluster_nodes['multi-master']="control-plane control-plane worker worker worker"
-declare -gA cluster_nodes
-
-cluster_nodes['cluster1']="control-plane"
+# We need a minimal setup to verify the deployment works
+clusters=('cluster1' 'cluster2')
+cluster_nodes['cluster1']="control-plane worker worker"
 cluster_nodes['cluster2']="control-plane worker worker"
-cluster_nodes['cluster3']="control-plane worker worker"
 
-# Map of cluster names to values specifying if submariner should be installed.
-# Only "true" string means its installed, otherwise it's not.
-declare -gA cluster_subm
+cluster_cni=( ['cluster1']="weave" ['cluster2']="weave" )
 
-cluster_subm['cluster1']="false"
-cluster_subm['cluster2']="true"
-cluster_subm['cluster3']="true"
+cluster_subm=( ['cluster1']="true" ['cluster2']="true" )

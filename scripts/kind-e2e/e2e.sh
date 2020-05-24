@@ -15,8 +15,6 @@ source ${DAPPER_SOURCE}/scripts/kind-e2e/cluster_settings
 [[ ! ${DEPLOY_ARGS} =~ "--service-discovery" ]] || lighthouse=true
 timeout="2m" # Used by deploy_resource
 
-### Functions ###
-
 ### Main ###
 
 declare_kubeconfig
@@ -33,7 +31,7 @@ with_context "$broker" verify_subm_broker_secrets
 run_subm_clusters verify_subm_deployed
 
 echo "Running subctl a second time to verify if running subctl a second time works fine"
-with_context cluster3 subctl_install_subm
+with_context cluster2 subctl_install_subm
 
 if [[ "$lighthouse" == "true" ]]; then
     verify="--only service-discovery"
@@ -48,8 +46,8 @@ fi
 
 # run dataplane E2E tests between the two clusters
 ${DAPPER_SOURCE}/bin/subctl verify ${verify} ${subm_ns} --verbose \
-    ${KUBECONFIGS_DIR}/kind-config-cluster2 \
-    ${KUBECONFIGS_DIR}/kind-config-cluster3
+    ${KUBECONFIGS_DIR}/kind-config-cluster1 \
+    ${KUBECONFIGS_DIR}/kind-config-cluster2
 
 print_clusters_message
 
