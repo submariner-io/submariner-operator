@@ -49,8 +49,9 @@ run_subm_clusters verify_subm_deployed
 echo "Running subctl a second time to verify if running subctl a second time works fine"
 with_context cluster3 subctl_install_subm
 
-with_context cluster2 deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
 with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+[[ "${lighthouse}" = "true" ]] && with_context cluster3 kubectl apply -f "${DAPPER_SOURCE}/scripts/kind-e2e/nginx-demo-export.yaml"
+with_context cluster2 deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
 
 with_context cluster2 connectivity_tests
 
