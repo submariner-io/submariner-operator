@@ -17,12 +17,18 @@ timeout="2m" # Used by deploy_resource
 
 ### Functions ###
 
-function connectivity_tests() {
+function service_discovery_tests() {
+    with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+    with_context cluster3 kubectl apply -f "${DAPPER_SOURCE}/scripts/kind-e2e/nginx-demo-export.yaml"
+    deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
+
     local netshoot_pod nginx_svc_ip
     netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
     nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
+    with_retries 5 attempt_service_discovery
+}
 
-    [[ "${lighthouse}" = "true" ]] || return 0
+function attempt_service_discovery() {
     resolved_ip=$((kubectl exec "${netshoot_pod}" -- ping -c 1 -W 1 nginx-demo 2>/dev/null || :) \
                   | grep PING | awk '{print $3}' | tr -d '()')
     if [[ "$resolved_ip" != "$nginx_svc_ip" ]]; then
@@ -49,11 +55,9 @@ run_subm_clusters verify_subm_deployed
 echo "Running subctl a second time to verify if running subctl a second time works fine"
 with_context cluster3 subctl_install_subm
 
-with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
-[[ "${lighthouse}" = "true" ]] && with_context cluster3 kubectl apply -f "${DAPPER_SOURCE}/scripts/kind-e2e/nginx-demo-export.yaml"
-with_context cluster2 deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
-
-with_context cluster2 connectivity_tests
+if [[ "${lighthouse}" = "true" ]]; then
+    with_context cluster2 service_discovery_tests
+fi
 
 # dataplane E2E need to be modified for globalnet
 if [[ "${globalnet}" != "true" ]]; then
