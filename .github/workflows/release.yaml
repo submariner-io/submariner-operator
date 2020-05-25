@@ -43,4 +43,4 @@ jobs:
           RELEASE_ARGS: submariner-operator
         run: |
           [[ $GITHUB_REF =~ "/tags/" ]] && RELEASE_ARGS+=" --tag ${GITHUB_REF##*/}"
-          make build-operator release
+          make operator-image release

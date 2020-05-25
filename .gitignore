@@ -1,6 +1,7 @@
 .dapper
 bin/
 build/_output/
+dist/
 deploy/crds/submariner-cr-cluster2.yaml
 deploy/crds/submariner-cr-cluster3.yaml
 deploy/crds/submariner_clusters_crd.yaml
