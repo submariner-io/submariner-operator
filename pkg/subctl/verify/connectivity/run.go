@@ -14,32 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package verifyconnectivity
 
 import (
 	"testing"
-
-	"github.com/spf13/cobra"
 
 	"github.com/submariner-io/shipyard/test/e2e"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/framework"
 )
 
-func init() {
-	addVerifyFlags(verifyConnectivityCmd)
-	rootCmd.AddCommand(verifyConnectivityCmd)
-}
-
-var verifyConnectivityCmd = &cobra.Command{
-	Deprecated: "Use verify --connectivity",
-	Use:        "verify-connectivity <kubeConfig1> <kubeConfig2>",
-	Short:      "Verify connectivity between two clusters",
-	Args: func(cmd *cobra.Command, args []string) error {
-		return checkValidateArguments(args)
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		configureTestingFramework(args)
-		e2e.RunE2ETests(&testing.T{})
-	},
+func RunE2E(t *testing.T) {
+	e2e.RunE2ETests(t)
 }
