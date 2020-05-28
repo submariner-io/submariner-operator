@@ -15,7 +15,7 @@ jobs:
       - name: Generate the Artifacts
         run: |
           make build-cross
-          echo "::set-env name=BINARIES::$(find bin/ -type f -printf '%p ')"
+          echo "::set-env name=BINARIES::$(find bin/ -type f -name "*.tar.xz" -printf '%p ')"
 
       - name: Update the Release
         uses: johnwbyrd/update-release@master
