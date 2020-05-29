@@ -19,8 +19,8 @@ require (
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/lighthouse v0.3.1-0.20200529100003-0396f214fb58
-	github.com/submariner-io/shipyard v0.0.0-20200424120554-752db6dc1c90
+	github.com/submariner-io/lighthouse v0.3.1-0.20200602062531-e543dc06e0d1
+	github.com/submariner-io/shipyard v0.3.1-0.20200601145424-a852b26ec741
 	github.com/submariner-io/submariner v0.3.1-0.20200515132708-8214b2793bbd
 	go.opencensus.io v0.22.1 // indirect
 	go.uber.org/zap v1.12.0 // indirect

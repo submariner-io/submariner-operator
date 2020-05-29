@@ -22,10 +22,12 @@ import (
 
 	"github.com/onsi/ginkgo/config"
 	"github.com/spf13/cobra"
+	_ "github.com/submariner-io/lighthouse/test/e2e/discovery"
+	_ "github.com/submariner-io/lighthouse/test/e2e/framework"
+	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
-
-	verifyconnectivity "github.com/submariner-io/submariner-operator/pkg/subctl/verify/connectivity"
-	verifyservicediscovery "github.com/submariner-io/submariner-operator/pkg/subctl/verify/servicediscovery"
+	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
+	_ "github.com/submariner-io/submariner/test/e2e/framework"
 )
 
 var (
@@ -64,13 +66,24 @@ var verifyCmd = &cobra.Command{
 		return checkValidateArguments(args)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		testType := ""
 		configureTestingFramework(args)
-		if verifyConnectivity || verifyAll {
-			verifyconnectivity.RunE2E(&testing.T{})
+
+		if verifyConnectivity && verifyServiceDiscovery {
+			verifyAll = true
 		}
-		if verifyServiceDiscovery || verifyAll {
-			config.GinkgoConfig.FocusString = "discovery"
-			verifyservicediscovery.RunE2E(&testing.T{})
+		if verifyAll {
+			testType = "All"
+			config.GinkgoConfig.FocusString = "\\[dataplane|\\[discovery"
+		} else if verifyConnectivity {
+			testType = "Connectivity"
+			config.GinkgoConfig.FocusString = "\\[dataplane"
+		} else if verifyServiceDiscovery {
+			testType = "Discovery"
+			config.GinkgoConfig.FocusString = "\\[discovery"
+		}
+		if !e2e.RunE2ETests(&testing.T{}) {
+			exitWithErrorMsg(fmt.Sprintf("[%s] E2E failed", testType))
 		}
 	},
 }
@@ -89,7 +102,6 @@ func configureTestingFramework(args []string) {
 	// the cluster IDs that will be registered in the Cluster CRDs by submariner
 	framework.TestContext.ClusterIDs = []string{"ClusterA", "ClusterB"}
 
-	config.GinkgoConfig.FocusString = "dataplane"
 	config.DefaultReporterConfig.Verbose = verboseConnectivityVerification
 	config.DefaultReporterConfig.SlowSpecThreshold = 60
 }
