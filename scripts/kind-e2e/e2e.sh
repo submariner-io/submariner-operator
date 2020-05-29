@@ -41,8 +41,13 @@ if [[ "$lighthouse" == "true" ]]; then
 fi
 echo "Verify is set to: $verify"
 
+subm_ns=""
+if [[ -n "$SUBM_NS" ]]; then
+    subm_ns="--submariner-namespace=$SUBM_NS"
+fi
+
 # run dataplane E2E tests between the two clusters
-${DAPPER_SOURCE}/bin/subctl verify ${verify} --verbose \
+${DAPPER_SOURCE}/bin/subctl verify ${verify} ${subm_ns} --verbose \
     ${KUBECONFIGS_DIR}/kind-config-cluster2 \
     ${KUBECONFIGS_DIR}/kind-config-cluster3
 
