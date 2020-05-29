@@ -19,7 +19,7 @@ package verifyservicediscovery
 import (
 	"testing"
 
-	_ "github.com/submariner-io/lighthouse/test/e2e/dataplane"
+	_ "github.com/submariner-io/lighthouse/test/e2e/discovery"
 	"github.com/submariner-io/shipyard/test/e2e"
 )
 

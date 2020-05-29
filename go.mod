@@ -7,7 +7,6 @@ require (
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.19.7
-	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
@@ -18,13 +17,12 @@ require (
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/lighthouse v0.3.1-0.20200521062404-6d5bf9939fef
+	github.com/submariner-io/lighthouse v0.3.1-0.20200529100003-0396f214fb58
 	github.com/submariner-io/shipyard v0.0.0-20200424120554-752db6dc1c90
 	github.com/submariner-io/submariner v0.3.1-0.20200515132708-8214b2793bbd
 	go.opencensus.io v0.22.1 // indirect
 	go.uber.org/zap v1.12.0 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/api v0.13.0 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/genproto v0.0.0-20191028173616-919d9bdd9fe6 // indirect
