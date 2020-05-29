@@ -101,12 +101,16 @@ func panicOnError(err error) {
 // exitOnError will print your error nicely and exit in case of error
 func exitOnError(message string, err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s: %s", message, err.Error())
-		fmt.Fprintln(os.Stderr, "")
-		PrintSubctlVersion(os.Stderr)
-		fmt.Fprintln(os.Stderr, "")
-		os.Exit(1)
+		exitWithErrorMsg(fmt.Sprintf("%s: %s", message, err))
 	}
+}
+
+func exitWithErrorMsg(message string) {
+	fmt.Fprintln(os.Stderr, message)
+	fmt.Fprintln(os.Stderr, "")
+	PrintSubctlVersion(os.Stderr)
+	fmt.Fprintln(os.Stderr, "")
+	os.Exit(1)
 }
 
 func getClients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, error) {

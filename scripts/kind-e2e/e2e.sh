@@ -35,11 +35,9 @@ run_subm_clusters verify_subm_deployed
 echo "Running subctl a second time to verify if running subctl a second time works fine"
 with_context cluster3 subctl_install_subm
 
-verify="--connectivity"
 if [[ "$lighthouse" == "true" ]]; then
-    verify="--all"
+    verify="--service-discovery"
 fi
-echo "Verify is set to: $verify"
 
 subm_ns=""
 if [[ -n "$SUBM_NS" ]]; then
