@@ -11,7 +11,7 @@ require (
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.12.1
-	github.com/onsi/gomega v1.10.0
+	github.com/onsi/gomega v1.10.1
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.2.1 // indirect
