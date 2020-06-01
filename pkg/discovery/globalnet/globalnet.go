@@ -343,6 +343,7 @@ func AssignGlobalnetIPs(subctlData *datafile.SubctlData, globalNetworks map[stri
 	status.Start("Assigning Globalnet IPs")
 	globalnetCIDR := netconfig.GlobalnetCIDR
 	clusterID := netconfig.ClusterID
+	var err error
 	if globalnetCIDR == "" {
 		// Globalnet enabled, GlobalCIDR not specified by the user
 		if isCIDRPreConfigured(clusterID, globalNetworks) {
@@ -351,7 +352,7 @@ func AssignGlobalnetIPs(subctlData *datafile.SubctlData, globalNetworks map[stri
 			status.QueueWarningMessage(fmt.Sprintf("Cluster already has GlobalCIDR allocated: %s", globalNetworks[clusterID].GlobalCIDRs[0]))
 		} else {
 			// no globalCidr configured on this cluster
-			globalnetCIDR, err := AllocateGlobalCIDR(globalNetworks, subctlData)
+			globalnetCIDR, err = AllocateGlobalCIDR(globalNetworks, subctlData)
 			if err != nil {
 				return "", fmt.Errorf("Globalnet failed %s", err)
 			}
