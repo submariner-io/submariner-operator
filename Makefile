@@ -6,10 +6,12 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
+VERSION := $(shell . scripts/lib/version; echo $$VERSION)
+
 TARGETS := $(shell ls -p scripts | grep -v -e /)
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings
 CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
-DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --deploytool_submariner_args '--cable-driver strongswan'
+DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --deploytool_submariner_args '--cable-driver strongswan --operator-image localhost:5000/submariner-operator:local'
 
 clusters: build-all
 

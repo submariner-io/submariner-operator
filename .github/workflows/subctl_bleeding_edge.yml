@@ -1,0 +1,26 @@
+on:
+  push:
+    branches: [master]
+name: Release Subctl Bleeding Edge
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+
+      - run: git fetch origin +refs/tags/*:refs/tags/*
+
+      - name: Generate the Artifacts
+        run: |
+          make build-cross
+          echo "::set-env name=BINARIES::$(find bin/ -type f -name "*.tar.xz" -printf '%p ')"
+
+      - name: Update the Release
+        uses: johnwbyrd/update-release@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release: Bleeding edge
+          tag: latest
+          files: ${{ env.BINARIES }}

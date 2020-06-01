@@ -5,7 +5,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
     DAPPER_ENV="REPO TAG CLUSTERS_ARGS DEPLOY_ARGS" \
     DAPPER_SOURCE=/go/src/github.com/submariner-io/submariner-operator DAPPER_DOCKER_SOCKET=true \
     OPERATOR_SDK_VERSION=0.12.0 GOROOT=/usr/lib/golang
-ENV DAPPER_OUTPUT=${DAPPER_SOURCE}/output
+ENV DAPPER_OUTPUT=${DAPPER_SOURCE}/output PATH=${DAPPER_SOURCE}/bin/:${PATH}
 
 RUN curl -Lo /usr/bin/operator-sdk "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk-v${OPERATOR_SDK_VERSION}-x86_64-linux-gnu" && \
     chmod a+x /usr/bin/operator-sdk

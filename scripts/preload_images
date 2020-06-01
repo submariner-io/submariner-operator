@@ -10,4 +10,5 @@ import_image quay.io/submariner/submariner-route-agent
 import_image quay.io/submariner/submariner-operator
 import_image quay.io/submariner/lighthouse-agent
 import_image quay.io/submariner/submariner-globalnet
+import_image quay.io/submariner/lighthouse-coredns
 
