@@ -22,5 +22,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release: Bleeding edge
-          tag: latest
+          tag: devel
           files: ${{ env.BINARIES }}

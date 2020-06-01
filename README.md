@@ -12,6 +12,18 @@ Please refer the quickstart guides:
 * [OpenShift AWS With Service Discovery](https://submariner-io.github.io/quickstart/openshiftsd)
 * [OpenShift With Service Discovery And GlobalNet](https://submariner-io.github.io/quickstart/openshiftgn/)
 
+# Subctl Releases
+
+## Latest Stable Release
+
+This release has the latest stable binaries:
+[latest release](https://github.com/submariner-io/submariner-operator/releases/latest)
+
+## Latest Merged Release
+
+This release is constantly updated with the latest code, and might be unstable:
+[devel release](https://github.com/submariner-io/submariner-operator/releases/tag/devel)
+
 # Development
 
 ## Prerequisites
