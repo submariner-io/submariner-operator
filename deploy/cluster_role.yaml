@@ -14,3 +14,12 @@ rules:
       - list
       - watch
       - update
+  - apiGroups:
+      - operator.openshift.io
+    resources:
+      - dnses
+    verbs:
+      - get
+      - list
+      - watch
+      - update

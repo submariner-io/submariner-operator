@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-logr/logr"
+	operatorv1 "github.com/openshift/api/operator/v1"
+	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
 	appsv1 "k8s.io/api/apps/v1"
@@ -20,6 +23,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -30,9 +34,10 @@ import (
 var log = logf.Log.WithName("controller_servicediscovery")
 
 const (
-	componentName         = "submariner-lighthouse"
-	deploymentName        = "submariner-lighthouse-agent"
-	lighthouseCoreDNSName = "submariner-lighthouse-coredns"
+	componentName                 = "submariner-lighthouse"
+	deploymentName                = "submariner-lighthouse-agent"
+	lighthouseCoreDNSName         = "submariner-lighthouse-coredns"
+	defaultOpenShiftDNSController = "default"
 )
 
 const (
@@ -48,11 +53,13 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	k8sclient, _ := clientset.NewForConfig(mgr.GetConfig())
+	k8sClient, _ := clientset.NewForConfig(mgr.GetConfig())
+	operatorClient, _ := operatorclient.NewClient(mgr.GetConfig())
 	return &ReconcileServiceDiscovery{
-		client:       mgr.GetClient(),
-		scheme:       mgr.GetScheme(),
-		k8sClientSet: k8sclient}
+		client:            mgr.GetClient(),
+		scheme:            mgr.GetScheme(),
+		k8sClientSet:      k8sClient,
+		operatorClientSet: operatorClient}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -88,9 +95,10 @@ var _ reconcile.Reconciler = &ReconcileServiceDiscovery{}
 type ReconcileServiceDiscovery struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client       client.Client
-	scheme       *runtime.Scheme
-	k8sClientSet *clientset.Clientset
+	client            client.Client
+	scheme            *runtime.Scheme
+	k8sClientSet      *clientset.Clientset
+	operatorClientSet client.Client
 }
 
 // Reconcile reads that state of the cluster for a ServiceDiscovery object and makes changes based on the state read
@@ -153,7 +161,8 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 	}
 	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance)
 	if err != nil {
-		return reconcile.Result{}, err
+		//Try to update Openshift-DNS
+		return reconcile.Result{}, updateOpenshiftClusterDNSOperator(instance, r.client, r.operatorClientSet, reqLogger)
 	}
 
 	return reconcile.Result{}, nil
@@ -249,6 +258,8 @@ func newLigthhouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 
 	terminationGracePeriodSeconds := int64(0)
 	defaultMode := int32(420)
+	allowPrivilegeEscalation := false
+	readOnlyRootFilesystem := true
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -277,6 +288,14 @@ func newLigthhouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "config-volume", MountPath: "/etc/coredns", ReadOnly: true},
+							},
+							SecurityContext: &corev1.SecurityContext{
+								Capabilities: &corev1.Capabilities{
+									Add:  []corev1.Capability{"net_bind_service"},
+									Drop: []corev1.Capability{"all"},
+								},
+								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
 							},
 						},
 					},
@@ -362,6 +381,38 @@ forward . `
 		configMap.Data["Corefile"] = coreFile
 		// Potentially retried
 		_, err = configMaps.Update(configMap)
+		return err
+	})
+	return retryErr
+}
+
+func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDiscovery, client client.Client, operatorClient client.Client, reqLogger logr.Logger) error {
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		dnsOperator := &operatorv1.DNS{}
+		if err := client.Get(context.TODO(), types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
+			return err
+		}
+		forwardServers := dnsOperator.Spec.Servers
+		lighthouseDnsService := &corev1.Service{}
+		err := operatorClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace}, lighthouseDnsService)
+		if err != nil || lighthouseDnsService.Spec.ClusterIP == "" {
+			return goerrors.New("lighthouseDnsService ClusterIp should be available")
+		}
+		lighthouseServer := operatorv1.Server{
+			Name:  "lighthouse",
+			Zones: []string{"supercluster.local"},
+			ForwardPlugin: operatorv1.ForwardPlugin{
+				Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
+			},
+		}
+		forwardServers = append(forwardServers, lighthouseServer)
+		dnsOperator.Spec.Servers = forwardServers
+		result, err := controllerutil.CreateOrUpdate(context.TODO(), operatorClient, dnsOperator, func() error {
+			return nil
+		})
+		if result == controllerutil.OperationResultUpdated {
+			reqLogger.Info("Updated Cluster DNS Operator", "DnsOperator.Name", dnsOperator.Name)
+		}
 		return err
 	})
 	return retryErr
