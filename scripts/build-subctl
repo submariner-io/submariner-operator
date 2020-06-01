@@ -22,5 +22,5 @@ if [ "${GOARCH}" = "$(GOARCH= go env GOARCH)" ] && [ "${GOOS}" = "$(GOOS= go env
 fi
 
 if [ "${PACK_SUBCTL}" = "true" ]; then
-  tar -cJf subctl-${VERSION}-${GOOS}-${GOARCH}.tar.xz --transform "s/^bin/subctl-${VERSION}/" ${output}
+  tar -cJf bin/subctl-${VERSION}-${GOOS}-${GOARCH}.tar.xz --transform "s/^bin/subctl-${VERSION}/" ${output}
 fi
