@@ -18,8 +18,11 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"strings"
 	"testing"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/onsi/ginkgo/config"
 	"github.com/spf13/cobra"
 	_ "github.com/submariner-io/lighthouse/test/e2e/discovery"
@@ -28,24 +31,23 @@ import (
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/framework"
+	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
 )
 
 var (
-	verifyConnectivity              bool
-	verifyServiceDiscovery          bool
-	verifyAll                       bool
 	verboseConnectivityVerification bool
 	operationTimeout                uint
 	connectionTimeout               uint
 	connectionAttempts              uint
 	reportDirectory                 string
 	submarinerNamespace             string
+	verifyOnly                      string
+	enableDisruptive                bool
 )
 
 func init() {
-	verifyCmd.Flags().BoolVar(&verifyConnectivity, "connectivity", true, "verify connectivity between two clusters")
-	verifyCmd.Flags().BoolVar(&verifyServiceDiscovery, "service-discovery", false, "verify service-discovery between two clusters")
-	verifyCmd.Flags().BoolVar(&verifyAll, "all", false, "verify connectivity and service-discovery between two clusters")
+	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
+	verifyCmd.Flags().BoolVar(&enableDisruptive, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
 	addVerifyFlags(verifyCmd)
 	rootCmd.AddCommand(verifyCmd)
 }
@@ -61,27 +63,37 @@ func addVerifyFlags(cmd *cobra.Command) {
 
 var verifyCmd = &cobra.Command{
 	Use:   "verify <kubeConfig1> <kubeConfig2>",
-	Short: "Verify connectivity/service-discovery between two clusters",
+	Short: "Run verifications between two clusters",
+	Long: `The verify command is controlled by the --verify-only and --enable-disruptive flags,
+all verifications in --enable-only will be executed, but the disruptive ones, like gateway
+failover testing will be excluded filtered out unless --enable-disruptive is provided. If in
+interactive mode the user will be asked about running disruptive testing.`,
 	Args: func(cmd *cobra.Command, args []string) error {
-		return checkValidateArguments(args)
+		if err := checkValidateArguments(args); err != nil {
+			return err
+		}
+		return checkVerifyArguments()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		testType := ""
 		configureTestingFramework(args)
 
-		if verifyConnectivity && verifyServiceDiscovery {
-			verifyAll = true
+		if !enableDisruptive && hasDisruptiveVerification(verifyOnly) {
+			err := survey.AskOne(&survey.Confirm{
+				Message: "Do you want to perform disruptive verifications like gateway-failover?",
+			}, &enableDisruptive)
+			if err == io.EOF {
+				fmt.Println(`
+subctl is running non-interactively, disruptive verifications are disabled, please use
+--enable-disruptive if you want to run disruptive verifications, like gateway-failover`)
+			}
 		}
-		if verifyAll {
-			testType = "All"
-			config.GinkgoConfig.FocusString = "\\[dataplane|\\[discovery"
-		} else if verifyConnectivity {
-			testType = "Connectivity"
-			config.GinkgoConfig.FocusString = "\\[dataplane"
-		} else if verifyServiceDiscovery {
-			testType = "Discovery"
-			config.GinkgoConfig.FocusString = "\\[discovery"
-		}
+
+		patterns, verifications, _ := getVerifyPatterns(verifyOnly)
+		config.GinkgoConfig.FocusString = strings.Join(patterns, "|")
+
+		fmt.Printf("Performing the following verifications: %s\n", strings.Join(verifications, ", "))
+
 		if !e2e.RunE2ETests(&testing.T{}) {
 			exitWithErrorMsg(fmt.Sprintf("[%s] E2E failed", testType))
 		}
@@ -118,4 +130,90 @@ func checkValidateArguments(args []string) error {
 		return fmt.Errorf("--connection-timeout must be >=60")
 	}
 	return nil
+}
+
+func checkVerifyArguments() error {
+	if _, _, err := getVerifyPatterns(verifyOnly); err != nil {
+		return err
+	}
+	return nil
+}
+
+var verifyE2EPatterns = map[string]string{
+	"connectivity":      "\\[dataplane",
+	"service-discovery": "\\[discovery",
+}
+
+var verifyE2EDisruptivePatterns = map[string]string{
+	"gateway-failover": "\\[redundancy",
+}
+
+type verificationType int
+
+const (
+	disruptiveVerification = iota
+	normalVerification
+	unknownVerification
+)
+
+func hasDisruptiveVerification(csv string) bool {
+	verifications := strings.Split(csv, ",")
+	for _, verification := range verifications {
+		verification = strings.Trim(strings.ToLower(verification), " ")
+		if _, ok := verifyE2EDisruptivePatterns[verification]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func getAllVerifyKeys() []string {
+	keys := []string{}
+
+	for k := range verifyE2EPatterns {
+		keys = append(keys, k)
+	}
+	for k := range verifyE2EDisruptivePatterns {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func getVerifyPattern(key string) (verificationType, string) {
+	if pattern, ok := verifyE2EPatterns[key]; ok {
+		return normalVerification, pattern
+	}
+	if pattern, ok := verifyE2EDisruptivePatterns[key]; ok {
+		return disruptiveVerification, pattern
+	}
+	return unknownVerification, ""
+}
+
+func getVerifyPatterns(csv string) ([]string, []string, error) {
+
+	outputPatterns := []string{}
+	outputVerifications := []string{}
+
+	verifications := strings.Split(csv, ",")
+	for _, verification := range verifications {
+		verification = strings.Trim(strings.ToLower(verification), " ")
+		vtype, pattern := getVerifyPattern(verification)
+		switch vtype {
+		case unknownVerification:
+			return nil, nil, fmt.Errorf("unknown verification pattern: %s", pattern)
+		case normalVerification:
+			outputPatterns = append(outputPatterns, pattern)
+			outputVerifications = append(outputVerifications, verification)
+		case disruptiveVerification:
+			if enableDisruptive {
+				outputPatterns = append(outputPatterns, pattern)
+				outputVerifications = append(outputVerifications, verification)
+			}
+		}
+	}
+
+	if len(outputPatterns) == 0 {
+		return nil, nil, fmt.Errorf("No verification to be performed, try --enable-disruptive")
+	}
+	return outputPatterns, outputVerifications, nil
 }
