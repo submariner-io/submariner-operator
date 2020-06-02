@@ -21,6 +21,7 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/crds"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/serviceaccount"
 )
 
@@ -36,6 +37,12 @@ func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string) (
 		return created, err
 	} else if created {
 		status.QueueSuccessMessage("Created lighthouse service account and role")
+	}
+
+	if created, err := scc.Ensure(config, operatorNamespace); err != nil {
+		return created, err
+	} else if created {
+		status.QueueSuccessMessage("Updated the privileged SCC")
 	}
 
 	return true, nil

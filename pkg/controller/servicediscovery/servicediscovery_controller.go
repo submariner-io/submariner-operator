@@ -368,7 +368,7 @@ func updateDNSConfigMap(client client.Client, k8sclientSet *clientset.Clientset,
 			return goerrors.New("lighthouseDnsService ClusterIp should be available")
 		}
 		expectedCorefile := `#lighthouse
-supercluster.local {
+supercluster.local:53 {
 forward . `
 		expectedCorefile = expectedCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
 		coreFile := configMap.Data["Corefile"]
@@ -407,9 +407,20 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 		}
 		forwardServers = append(forwardServers, lighthouseServer)
 		dnsOperator.Spec.Servers = forwardServers
-		result, err := controllerutil.CreateOrUpdate(context.TODO(), operatorClient, dnsOperator, func() error {
+
+		toUpdate := &operatorv1.DNS{ObjectMeta: metav1.ObjectMeta{
+			Name:   dnsOperator.Name,
+			Labels: dnsOperator.Labels,
+		}}
+
+		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
+			toUpdate.Spec = dnsOperator.Spec
+			for k, v := range dnsOperator.Labels {
+				toUpdate.Labels[k] = v
+			}
 			return nil
 		})
+
 		if result == controllerutil.OperationResultUpdated {
 			reqLogger.Info("Updated Cluster DNS Operator", "DnsOperator.Name", dnsOperator.Name)
 		}
