@@ -1,5 +1,3 @@
-lighthouse ?= false
-
 ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
@@ -10,8 +8,17 @@ VERSION := $(shell . scripts/lib/version; echo $$VERSION)
 
 TARGETS := $(shell ls -p scripts | grep -v -e /)
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings
-CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
-DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --deploytool_submariner_args '--cable-driver strongswan --operator-image localhost:5000/submariner-operator:local'
+override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
+override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --deploytool_submariner_args '--cable-driver strongswan --operator-image localhost:5000/submariner-operator:local'
+export DEPLOY_ARGS
+
+# Process extra flags from the `using=a,b,c` optional flag
+
+ifneq (,$(filter lighthouse,$(_using)))
+override DEPLOY_ARGS += --deploytool_broker_args '--service-discovery'
+endif
+
+# Targets to make
 
 clusters: build-all
 
