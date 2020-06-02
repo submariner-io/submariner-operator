@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        globalnet: ['', '--globalnet']
+        globalnet: ['', 'globalnet']
         lighthouse: ['', 'lighthouse']
     steps:
       - uses: actions/checkout@master
@@ -30,12 +30,8 @@ jobs:
           free -h
 
       - name: Run E2E deployment and tests
-        env:
-          CLUSTERS_ARGS: ${{ matrix.globalnet }}
-          DEPLOY_ARGS: ${{ matrix.globalnet }}
         run: |
-          [[ -z "${{ matrix.lighthouse }}" ]] || DEPLOY_ARGS+=" --deploytool_broker_args '--service-discovery'"
-          make e2e
+          make e2e using="${{ matrix.globalnet }} ${{ matrix.lighthouse }}"
 
       - name: Post Mortem
         if: failure()
