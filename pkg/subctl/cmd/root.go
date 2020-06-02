@@ -66,6 +66,8 @@ func addKubeconfigFlag(cmd *cobra.Command) {
 const (
 	DefaultOperatorImage = versions.DefaultSubmarinerRepo + "/submariner-operator:" + versions.DefaultSubmarinerOperatorVersion
 	OperatorNamespace    = "submariner-operator"
+	// TODO: Changing the NS breaks connection tests of non-OLM deploys, but "operators" NS is required by OLM
+	//OperatorNamespace    = "operators"
 )
 
 var operatorImage string

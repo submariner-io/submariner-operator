@@ -28,45 +28,60 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/serviceaccount"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/subscription"
 )
 
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string) error {
 
-	if created, err := crds.Ensure(config); err != nil {
-		return err
-	} else if created {
-		status.QueueSuccessMessage("Created operator CRDs")
-	}
+	olmInstalled, _ := subscription.Available(config)
+	if olmInstalled {
+		if created, err := namespace.Ensure(config, operatorNamespace); err != nil {
+			return err
+		} else if created {
+			status.QueueSuccessMessage(fmt.Sprintf("Created operator namespace: %s", operatorNamespace))
+		}
 
-	if created, err := namespace.Ensure(config, operatorNamespace); err != nil {
-		return err
-	} else if created {
-		status.QueueSuccessMessage(fmt.Sprintf("Created operator namespace: %s", operatorNamespace))
-	}
+		if created, err := subscription.Ensure(config, operatorNamespace); err != nil {
+			return err
+		} else if created {
+			status.QueueSuccessMessage("Created operator subscription")
+		}
+	} else {
+		if created, err := crds.Ensure(config); err != nil {
+			return err
+		} else if created {
+			status.QueueSuccessMessage("Created operator CRDs")
+		}
 
-	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
-		return err
-	} else if created {
-		status.QueueSuccessMessage("Created operator service account and role")
-	}
+		if created, err := namespace.Ensure(config, operatorNamespace); err != nil {
+			return err
+		} else if created {
+			status.QueueSuccessMessage(fmt.Sprintf("Created operator namespace: %s", operatorNamespace))
+		}
 
-	if created, err := scc.Ensure(config, operatorNamespace); err != nil {
-		return err
-	} else if created {
-		status.QueueSuccessMessage("Updated the privileged SCC")
-	}
+		if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
+			return err
+		} else if created {
+			status.QueueSuccessMessage("Created operator service account and role")
+		}
 
-	if created, err := lighthouseop.Ensure(status, config, operatorNamespace); err != nil {
-		return err
-	} else if created {
-		status.QueueSuccessMessage("Created Lighthouse service accounts and roles")
-	}
+		if created, err := scc.Ensure(config, operatorNamespace); err != nil {
+			return err
+		} else if created {
+			status.QueueSuccessMessage("Updated the privileged SCC")
+		}
 
-	if created, err := deployment.Ensure(config, operatorNamespace, operatorImage); err != nil {
-		return err
-	} else if created {
-		status.QueueSuccessMessage("Deployed the operator successfully")
-	}
+		if created, err := lighthouseop.Ensure(status, config, operatorNamespace); err != nil {
+			return err
+		} else if created {
+			status.QueueSuccessMessage("Created Lighthouse service accounts and roles")
+		}
 
+		if created, err := deployment.Ensure(config, operatorNamespace, operatorImage); err != nil {
+			return err
+		} else if created {
+			status.QueueSuccessMessage("Deployed the operator successfully")
+		}
+	}
 	return nil
 }

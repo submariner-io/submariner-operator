@@ -19,6 +19,8 @@ package utils
 import (
 	"fmt"
 
+	olmv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/apis/operators/v1alpha1"
+	olmclientv1alpha1 "github.com/operator-framework/operator-lifecycle-manager/pkg/api/client/clientset/versioned/typed/operators/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -188,6 +190,27 @@ func CreateOrUpdateServiceAccount(clientSet clientset.Interface, namespace strin
 			_, err = clientSet.CoreV1().ServiceAccounts(namespace).Update(sa)
 			if err != nil {
 				return fmt.Errorf("failed to update pre-existing service account %s : %v", sa.Name, err)
+			}
+			return nil
+		})
+		return false, retryErr
+	}
+	return true, err
+}
+
+func CreateOrUpdateSubscription(clientSet olmclientv1alpha1.OperatorsV1alpha1Interface, namespace string, sub *olmv1alpha1.Subscription) (bool, error) {
+	_, err := clientSet.Subscriptions(namespace).Create(sub)
+	if err != nil && errors.IsAlreadyExists(err) {
+		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			existingSub, err := clientSet.Subscriptions(namespace).Get(sub.Name, v1.GetOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to retrieve pre-existing subscription %s : %v", sub.Name, err)
+			}
+			sub.ResourceVersion = existingSub.ResourceVersion
+			// Potentially retried
+			_, err = clientSet.Subscriptions(namespace).Update(sub)
+			if err != nil {
+				return fmt.Errorf("failed to update pre-existing service account %s : %v", sub.Name, err)
 			}
 			return nil
 		})
