@@ -36,9 +36,9 @@ echo "Running subctl a second time to verify if running subctl a second time wor
 with_context cluster3 subctl_install_subm
 
 if [[ "$lighthouse" == "true" ]]; then
-    verify="--verify-only service-discovery"
+    verify="--only service-discovery"
 else
-    verify="--verify-only connectivity"
+    verify="--only connectivity"
 fi
 
 subm_ns=""
