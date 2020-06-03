@@ -369,6 +369,9 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 					Image:           getImagePath(cr, engineImage),
 					Command:         []string{"submariner.sh"},
 					SecurityContext: &security_context_all_caps_privilaged,
+					VolumeMounts: []corev1.VolumeMount{
+						{Name: "host-slash", MountPath: "/host", ReadOnly: true},
+					},
 					Env: []corev1.EnvVar{
 						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Spec.ClusterCIDR},
