@@ -398,6 +398,9 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 			RestartPolicy:                 corev1.RestartPolicyAlways,
 			DNSPolicy:                     corev1.DNSClusterFirst,
+			Volumes: []corev1.Volume{
+				{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
+			},
 		},
 	}
 	if cr.Spec.CeIPSecIKEPort != 0 {
