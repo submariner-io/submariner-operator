@@ -44,7 +44,6 @@ download_command() {
 get=$(download_command)
 
 get_subctl_release_url() {
-
   local draft_filter="cat"
   local url
   case ${VERSION} in
