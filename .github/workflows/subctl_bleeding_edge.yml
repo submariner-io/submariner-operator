@@ -17,6 +17,13 @@ jobs:
           make build-cross
           echo "::set-env name=BINARIES::$(find bin/ -type f -name '*.tar.xz' -printf '%p ')"
 
+      - name: Bump the devel tag
+        uses: richardsimko/update-tag@v1.0.3
+        with:
+          tag_name: devel
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Update the Release
         uses: johnwbyrd/update-release@master
         with:
