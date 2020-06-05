@@ -38,6 +38,7 @@ const (
 	deploymentName                = "submariner-lighthouse-agent"
 	lighthouseCoreDNSName         = "submariner-lighthouse-coredns"
 	defaultOpenShiftDNSController = "default"
+	lighthouseForwardPluginName   = "lighthouse"
 )
 
 const (
@@ -392,14 +393,22 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 		if err := client.Get(context.TODO(), types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
 			return err
 		}
+
 		forwardServers := dnsOperator.Spec.Servers
+		for _, forwardServer := range forwardServers {
+			if forwardServer.Name == lighthouseForwardPluginName {
+				reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
+				return nil
+			}
+		}
+
 		lighthouseDnsService := &corev1.Service{}
 		err := operatorClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace}, lighthouseDnsService)
 		if err != nil || lighthouseDnsService.Spec.ClusterIP == "" {
 			return goerrors.New("lighthouseDnsService ClusterIp should be available")
 		}
 		lighthouseServer := operatorv1.Server{
-			Name:  "lighthouse",
+			Name:  lighthouseForwardPluginName,
 			Zones: []string{"supercluster.local"},
 			ForwardPlugin: operatorv1.ForwardPlugin{
 				Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
