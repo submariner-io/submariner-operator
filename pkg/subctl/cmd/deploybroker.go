@@ -29,8 +29,6 @@ import (
 )
 
 var (
-	enableDataplane             bool
-	disableDataplane            bool
 	ipsecSubmFile               string
 	globalnetEnable             bool
 	globalnetCidrRange          string
@@ -38,11 +36,6 @@ var (
 )
 
 func init() {
-	deployBroker.PersistentFlags().BoolVar(&enableDataplane, "dataplane", false,
-		"Install the Submariner dataplane on the broker")
-	deployBroker.PersistentFlags().BoolVar(&disableDataplane, "no-dataplane", true,
-		"Don't install the Submariner dataplane on the broker (default)")
-	// TODO (skitt) make this generic for potentially multiple plugins (see below too)
 	lighthouse.AddFlags(deployBroker, "service-discovery")
 
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
@@ -51,15 +44,11 @@ func init() {
 		"Global CIDR supernet range for allocating GlobalCIDRs to each cluster")
 	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 8192,
 		"Default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
-	err := deployBroker.PersistentFlags().MarkHidden("no-dataplane")
-	// An error here indicates a programming error (the argument isn’t declared), panic
-	panicOnError(err)
 
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
 		"Import IPsec PSK from existing submariner broker file, like broker-info.subm")
 
 	addKubeconfigFlag(deployBroker)
-	addJoinFlags(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
 
@@ -120,9 +109,6 @@ var deployBroker = &cobra.Command{
 		status.End(cli.CheckForError(err))
 		exitOnError("Error writing the broker information", err)
 
-		if enableDataplane {
-			joinSubmarinerCluster(config, subctlData)
-		}
 	},
 }
 
