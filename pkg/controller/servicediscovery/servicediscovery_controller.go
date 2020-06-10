@@ -394,19 +394,27 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 			return err
 		}
 
-		forwardServers := dnsOperator.Spec.Servers
-		for _, forwardServer := range forwardServers {
-			if forwardServer.Name == lighthouseForwardPluginName {
-				reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
-				return nil
-			}
-		}
-
 		lighthouseDnsService := &corev1.Service{}
 		err := operatorClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace}, lighthouseDnsService)
 		if err != nil || lighthouseDnsService.Spec.ClusterIP == "" {
 			return goerrors.New("lighthouseDnsService ClusterIp should be available")
 		}
+
+		forwardServers := dnsOperator.Spec.Servers
+		for i, forwardServer := range forwardServers {
+			if forwardServer.Name == lighthouseForwardPluginName {
+				for _, upstreams := range forwardServer.ForwardPlugin.Upstreams {
+					if upstreams == lighthouseDnsService.Spec.ClusterIP {
+						reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
+						return nil
+					}
+				}
+				//ClusterIP of Lighthouse DNS Server changed hence removing the current entry.
+				forwardServers = append(forwardServers[:i], forwardServers[i+1:]...)
+				reqLogger.Info("ClusterIP of Lighthouse DNS server changed, hence updating Cluster DNS Operator CR")
+			}
+		}
+
 		lighthouseServer := operatorv1.Server{
 			Name:  lighthouseForwardPluginName,
 			Zones: []string{"supercluster.local"},
