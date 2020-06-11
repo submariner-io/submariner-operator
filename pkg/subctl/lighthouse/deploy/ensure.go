@@ -19,34 +19,12 @@ package lighthouse
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	lighthousedns "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/dns"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
 )
-
-var (
-	serviceDiscovery bool
-	imageRepo        string
-	imageVersion     string
-)
-
-func AddFlags(cmd *cobra.Command, prefix string) {
-	cmd.PersistentFlags().BoolVar(&serviceDiscovery, prefix, false,
-		"Enable Multi Cluster Service Discovery")
-	cmd.PersistentFlags().StringVar(&imageRepo, prefix+"-repo", versions.DefaultSubmarinerRepo,
-		"Service Discovery Image repository")
-	cmd.PersistentFlags().StringVar(&imageVersion, prefix+"-version", versions.DefaultLighthouseVersion,
-		"Service Discovery Image version")
-}
-
-func FillSubctlData(subctlData *datafile.SubctlData) error {
-	subctlData.ServiceDiscovery = serviceDiscovery
-	return nil
-}
 
 func Validate() error {
 	return nil

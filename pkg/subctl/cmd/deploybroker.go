@@ -33,10 +33,10 @@ var (
 	globalnetEnable             bool
 	globalnetCidrRange          string
 	defaultGlobalnetClusterSize uint
+	serviceDiscovery            bool
 )
 
 func init() {
-	lighthouse.AddFlags(deployBroker, "service-discovery")
 
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
 		"Enable support for Overlapping CIDRs in connecting clusters (default disabled)")
@@ -47,6 +47,9 @@ func init() {
 
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
 		"Import IPsec PSK from existing submariner broker file, like broker-info.subm")
+
+	deployBroker.PersistentFlags().BoolVar(&serviceDiscovery, "service-discovery", false,
+		"Enable Multi Cluster Service Discovery")
 
 	addKubeconfigFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
@@ -97,7 +100,8 @@ var deployBroker = &cobra.Command{
 			status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
 		}
 
-		err = lighthouse.FillSubctlData(subctlData)
+		subctlData.ServiceDiscovery = serviceDiscovery
+
 		exitOnError("Error setting up service discovery information", err)
 
 		if globalnetEnable {
