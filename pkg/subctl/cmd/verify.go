@@ -64,10 +64,17 @@ func addVerifyFlags(cmd *cobra.Command) {
 var verifyCmd = &cobra.Command{
 	Use:   "verify <kubeConfig1> <kubeConfig2>",
 	Short: "Run verifications between two clusters",
-	Long: `The verify command is controlled by the --verify-only and --enable-disruptive flags,
-all verifications in --enable-only will be executed, but the disruptive ones, like gateway
-failover testing will be excluded filtered out unless --enable-disruptive is provided. If in
-interactive mode the user will be asked about running disruptive testing.`,
+	Long: `This command performs various tests to verify that a Submariner deployment between two clusters
+is functioning properly. The verifications performed are controlled by the --only and --enable-disruptive
+flags. All verifications listed in --only are performed with special handling for those deemed as disruptive.
+A disruptive verification is one that changes the state of the clusters as a side effect. If running the
+command interactively, you will be prompted for confirmation to perform disruptive verifications unless
+the --enable-disruptive flag is also specified. If running non-interactively (that is with no stdin),
+--enable-disruptive must be specified otherwise disruptive verifications are skipped.
+
+The following verifications are deemed disruptive:
+
+    ` + strings.Join(disruptiveVerificationNames(), "\n    "),
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := checkValidateArguments(args); err != nil {
 			return err
@@ -78,14 +85,16 @@ interactive mode the user will be asked about running disruptive testing.`,
 		testType := ""
 		configureTestingFramework(args)
 
-		if !enableDisruptive && hasDisruptiveVerification(verifyOnly) {
+		disruptive := extractDisruptiveVerifications(verifyOnly)
+		if !enableDisruptive && len(disruptive) > 0 {
 			err := survey.AskOne(&survey.Confirm{
-				Message: "Do you want to perform disruptive verifications like gateway-failover?",
+				Message: fmt.Sprintf("You have specified disruptive verifications (%s). Are you sure you want to run them?",
+					strings.Join(disruptive, ",")),
 			}, &enableDisruptive)
 			if err == io.EOF {
-				fmt.Println(`
-subctl is running non-interactively, disruptive verifications are disabled, please use
---enable-disruptive if you want to run disruptive verifications, like gateway-failover`)
+				fmt.Printf(`
+You have specified disruptive verifications (%s) but subctl is running non-interactively and thus cannot
+prompt for confirmation therefore you must specify --enable-disruptive to run them.`, strings.Join(disruptive, ","))
 			}
 		}
 
@@ -156,15 +165,25 @@ const (
 	unknownVerification
 )
 
-func hasDisruptiveVerification(csv string) bool {
+func disruptiveVerificationNames() []string {
+	var names []string
+	for n := range verifyE2EDisruptivePatterns {
+		names = append(names, n)
+	}
+
+	return names
+}
+
+func extractDisruptiveVerifications(csv string) []string {
+	var disruptive []string
 	verifications := strings.Split(csv, ",")
 	for _, verification := range verifications {
 		verification = strings.Trim(strings.ToLower(verification), " ")
 		if _, ok := verifyE2EDisruptivePatterns[verification]; ok {
-			return true
+			disruptive = append(disruptive, verification)
 		}
 	}
-	return false
+	return disruptive
 }
 
 func getAllVerifyKeys() []string {
