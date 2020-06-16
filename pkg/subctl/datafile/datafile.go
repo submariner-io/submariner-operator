@@ -120,21 +120,26 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 
 func (data *SubctlData) GetBrokerAdministratorConfig() (*rest.Config, error) {
 	// We need to try a connection to determine whether the trust chain needs to be provided
-	config := data.getBrokerAdministratorConfig(false)
+	config, err := data.getAndCheckBrokerAdministratorConfig(false)
+	if err != nil {
+		if urlError, ok := err.(*url.Error); ok {
+			if _, ok := urlError.Unwrap().(x509.UnknownAuthorityError); ok {
+				// Certificate error, try with the trust chain
+				config, err = data.getAndCheckBrokerAdministratorConfig(true)
+			}
+		}
+	}
+	return config, err
+}
+
+func (data *SubctlData) getAndCheckBrokerAdministratorConfig(private bool) (*rest.Config, error) {
+	config := data.getBrokerAdministratorConfig(private)
 	clientset, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
 		return config, err
 	}
 	// The point of the broker client is to access Submariner data, we know we should able to list clusters
 	_, err = clientset.SubmarinerV1().Clusters(string(data.ClientToken.Data["namespace"])).List(metav1.ListOptions{})
-	if err != nil {
-		if urlError, ok := err.(*url.Error); ok {
-			if _, ok := urlError.Unwrap().(x509.UnknownAuthorityError); ok {
-				// Certificate error, try with the trust chain
-				return data.getBrokerAdministratorConfig(true), nil
-			}
-		}
-	}
 	return config, err
 }
 
