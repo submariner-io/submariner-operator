@@ -10,7 +10,11 @@
 	@./.dapper.tmp -v
 	@mv .dapper.tmp .dapper
 
-invoke_dapper = ./.dapper -m bind make $1 $(MAKEFLAGS)
+ifeq (,$(MAKEFLAGS))
+invoke_dapper = +./.dapper -m bind make -- $1
+else
+invoke_dapper = +./.dapper -m bind make -$(MAKEFLAGS) -- $1
+endif
 
 %: .dapper
 	$(call invoke_dapper,$@)

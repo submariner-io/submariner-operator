@@ -19,7 +19,9 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -91,10 +93,13 @@ The following verifications are deemed disruptive:
 				Message: fmt.Sprintf("You have specified disruptive verifications (%s). Are you sure you want to run them?",
 					strings.Join(disruptive, ",")),
 			}, &enableDisruptive)
-			if err == io.EOF {
+
+			if isNonInteractive(err) {
 				fmt.Printf(`
 You have specified disruptive verifications (%s) but subctl is running non-interactively and thus cannot
 prompt for confirmation therefore you must specify --enable-disruptive to run them.`, strings.Join(disruptive, ","))
+			} else {
+				exitWithErrorMsg(fmt.Sprintf("Prompt failure: %#v", err))
 			}
 		}
 
@@ -112,6 +117,22 @@ prompt for confirmation therefore you must specify --enable-disruptive to run th
 			exitWithErrorMsg(fmt.Sprintf("[%s] E2E failed", testType))
 		}
 	},
+}
+
+func isNonInteractive(err error) bool {
+	if err == io.EOF {
+		return true
+	}
+
+	if pathError, ok := err.(*os.PathError); ok {
+		if syserr, ok := pathError.Err.(syscall.Errno); ok {
+			if pathError.Path == "/dev/stdin" && (syserr == syscall.EBADF || syserr == syscall.EINVAL) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func configureTestingFramework(args []string) {
