@@ -321,7 +321,10 @@ func ValidateGlobalnetConfiguration(subctlData *datafile.SubctlData, netconfig C
 
 func GetGlobalNetworks(subctlData *datafile.SubctlData) (map[string]*GlobalNetwork, error) {
 
-	brokerConfig := subctlData.GetBrokerAdministratorConfig()
+	brokerConfig, err := subctlData.GetBrokerAdministratorConfig()
+	if err != nil {
+		return nil, err
+	}
 	brokerSubmClient, err := submarinerClientset.NewForConfig(brokerConfig)
 	if err != nil {
 		return nil, err

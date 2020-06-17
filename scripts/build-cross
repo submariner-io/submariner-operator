@@ -10,7 +10,6 @@ cd $(dirname $0)
 export PACK_SUBCTL=true
 
 GOOS=linux GOARCH=amd64 ./build-subctl
-GOOS=linux GOARCH=386 ./build-subctl
+GOOS=linux GOARCH=arm64 ./build-subctl
 GOOS=darwin GOARCH=amd64 ./build-subctl
 GOOS=windows GOARCH=amd64 ./build-subctl
-GOOS=windows GOARCH=386 ./build-subctl

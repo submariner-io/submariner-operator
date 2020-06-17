@@ -213,8 +213,10 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	}
 
 	status.Start("Creating SA for cluster")
-	brokerAdminClientset, err := kubernetes.NewForConfig(subctlData.GetBrokerAdministratorConfig())
+	brokerAdminConfig, err := subctlData.GetBrokerAdministratorConfig()
 	exitOnError("Error retrieving broker admin config", err)
+	brokerAdminClientset, err := kubernetes.NewForConfig(brokerAdminConfig)
+	exitOnError("Error retrieving broker admin connection", err)
 	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID)
 	status.End(cli.CheckForError(err))
 	exitOnError("Error creating SA for cluster", err)
