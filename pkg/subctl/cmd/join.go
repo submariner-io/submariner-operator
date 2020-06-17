@@ -226,6 +226,12 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 		// Globalnet enabled
 		globalnetCIDR, err = globalnet.AssignGlobalnetIPs(subctlData, globalNetworks, netconfig)
 		exitOnError("Error assigning Globalnet IPs", err)
+		// Populate configmap with the globalnetCIDR
+		data := map[string]string{
+			clusterID: globalnetCIDR,
+		}
+		//update configmap with GlobalCIDR
+		// Idea is to use https://github.com/submariner-io/submariner-operator/pull/392/files#diff-65c5019f178760383095caa20f2531a4R118 to sync it
 	}
 
 	status.Start("Deploying the Submariner operator")

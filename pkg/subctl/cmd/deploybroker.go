@@ -20,6 +20,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
@@ -35,7 +37,10 @@ var (
 	globalnetEnable             bool
 	globalnetCidrRange          string
 	defaultGlobalnetClusterSize uint
+	GlobalCIDRConfigMap         *v1.ConfigMap
 )
+
+const GlobalCIDRConfigMapName = "global-cidr"
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&enableDataplane, "dataplane", false,
@@ -114,6 +119,8 @@ var deployBroker = &cobra.Command{
 		if globalnetEnable {
 			subctlData.GlobalnetCidrRange = globalnetCidrRange
 			subctlData.GlobalnetClusterSize = defaultGlobalnetClusterSize
+			GlobalCIDRConfigMap, err = broker.CreateConfigMap(config, GlobalCIDRConfigMapName, broker.SubmarinerBrokerNamespace)
+			status.QueueFailureMessage(fmt.Sprintf("Error creating GlobalCIDR configmap %s", err))
 		}
 
 		err = subctlData.WriteToFile(brokerDetailsFilename)
