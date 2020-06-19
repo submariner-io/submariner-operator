@@ -81,7 +81,17 @@ generate-embeddedyamls: pkg/subctl/operator/common/embeddedyamls/yamls.go
 pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml") vendor/modules.txt
 	go generate pkg/subctl/operator/common/embeddedyamls/generate.go
 
-.PHONY: $(TARGETS) test validate build ci clean generate-embeddedyamls operator-image
+# generate-clientset generates the clientset for the Submariner APIs
+# It needs to be run when the Submariner APIs change
+generate-clientset:
+	git clone https://github.com/kubernetes/code-generator -b release-1.14 $${GOPATH}/src/k8s.io/code-generator
+	GO111MODULE=off $${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \
+		client,deepcopy \
+		github.com/submariner-io/submariner-operator/pkg/client \
+		github.com/submariner-io/submariner-operator/pkg/apis \
+		submariner:v1alpha1
+
+.PHONY: $(TARGETS) test validate build ci clean generate-clientset generate-embeddedyamls operator-image
 
 else
 
