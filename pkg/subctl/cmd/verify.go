@@ -103,7 +103,12 @@ prompt for confirmation therefore you must specify --enable-disruptive to run th
 			}
 		}
 
-		patterns, verifications, _ := getVerifyPatterns(verifyOnly)
+		patterns, verifications, err := getVerifyPatterns(verifyOnly, enableDisruptive)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
 		config.GinkgoConfig.FocusString = strings.Join(patterns, "|")
 
 		fmt.Printf("Performing the following verifications: %s\n", strings.Join(verifications, ", "))
@@ -163,7 +168,7 @@ func checkValidateArguments(args []string) error {
 }
 
 func checkVerifyArguments() error {
-	if _, _, err := getVerifyPatterns(verifyOnly); err != nil {
+	if _, _, err := getVerifyPatterns(verifyOnly, true); err != nil {
 		return err
 	}
 	return nil
@@ -229,7 +234,7 @@ func getVerifyPattern(key string) (verificationType, string) {
 	return unknownVerification, ""
 }
 
-func getVerifyPatterns(csv string) ([]string, []string, error) {
+func getVerifyPatterns(csv string, includeDisruptive bool) ([]string, []string, error) {
 
 	outputPatterns := []string{}
 	outputVerifications := []string{}
@@ -240,12 +245,12 @@ func getVerifyPatterns(csv string) ([]string, []string, error) {
 		vtype, pattern := getVerifyPattern(verification)
 		switch vtype {
 		case unknownVerification:
-			return nil, nil, fmt.Errorf("unknown verification pattern: %s", pattern)
+			return nil, nil, fmt.Errorf("Unknown verification %q", verification)
 		case normalVerification:
 			outputPatterns = append(outputPatterns, pattern)
 			outputVerifications = append(outputVerifications, verification)
 		case disruptiveVerification:
-			if enableDisruptive {
+			if includeDisruptive {
 				outputPatterns = append(outputPatterns, pattern)
 				outputVerifications = append(outputVerifications, verification)
 			}
@@ -253,7 +258,7 @@ func getVerifyPatterns(csv string) ([]string, []string, error) {
 	}
 
 	if len(outputPatterns) == 0 {
-		return nil, nil, fmt.Errorf("No verification to be performed, try --enable-disruptive")
+		return nil, nil, fmt.Errorf("Please specify at least one verification to be performed")
 	}
 	return outputPatterns, outputVerifications, nil
 }
