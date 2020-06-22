@@ -21,7 +21,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/submariner-io/lighthouse v0.4.0-rc2
 	github.com/submariner-io/shipyard v0.3.1-0.20200604152443-d185e59a7388
-	github.com/submariner-io/submariner v0.4.0-rc2
+	github.com/submariner-io/submariner v0.4.0-rc3
 	go.opencensus.io v0.22.1 // indirect
 	google.golang.org/api v0.13.0 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
