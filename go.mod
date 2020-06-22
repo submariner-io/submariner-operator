@@ -19,6 +19,7 @@ require (
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/submariner-io/lighthouse v0.4.0-rc2
 	github.com/submariner-io/shipyard v0.3.1-0.20200604152443-d185e59a7388
 	github.com/submariner-io/submariner v0.4.0-rc2
