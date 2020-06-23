@@ -189,6 +189,170 @@ spec:
               - numberMisscheduled
               - numberReady
               type: object
+            gatewayList:
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                items:
+                  items:
+                    properties:
+                      apiVersion:
+                        description: 'APIVersion defines the versioned schema of this
+                          representation of an object. Servers should convert recognized
+                          schemas to the latest internal value, and may reject unrecognized
+                          values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                        type: string
+                      kind:
+                        description: 'Kind is a string value representing the REST
+                          resource this object represents. Servers may infer this
+                          from the endpoint the client submits requests to. Cannot
+                          be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                        type: string
+                      metadata:
+                        type: object
+                      status:
+                        properties:
+                          connections:
+                            items:
+                              properties:
+                                endpoint:
+                                  properties:
+                                    backend:
+                                      type: string
+                                    backend_config:
+                                      additionalProperties:
+                                        type: string
+                                      type: object
+                                    cable_name:
+                                      type: string
+                                    cluster_id:
+                                      type: string
+                                    hostname:
+                                      type: string
+                                    nat_enabled:
+                                      type: boolean
+                                    private_ip:
+                                      type: string
+                                    public_ip:
+                                      type: string
+                                    subnets:
+                                      items:
+                                        type: string
+                                      type: array
+                                  required:
+                                  - backend
+                                  - cable_name
+                                  - cluster_id
+                                  - hostname
+                                  - nat_enabled
+                                  - private_ip
+                                  - public_ip
+                                  - subnets
+                                  type: object
+                                status:
+                                  type: string
+                                statusMessage:
+                                  type: string
+                              required:
+                              - endpoint
+                              - status
+                              - statusMessage
+                              type: object
+                            type: array
+                          haStatus:
+                            type: string
+                          localEndpoint:
+                            properties:
+                              backend:
+                                type: string
+                              backend_config:
+                                additionalProperties:
+                                  type: string
+                                type: object
+                              cable_name:
+                                type: string
+                              cluster_id:
+                                type: string
+                              hostname:
+                                type: string
+                              nat_enabled:
+                                type: boolean
+                              private_ip:
+                                type: string
+                              public_ip:
+                                type: string
+                              subnets:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - backend
+                            - cable_name
+                            - cluster_id
+                            - hostname
+                            - nat_enabled
+                            - private_ip
+                            - public_ip
+                            - subnets
+                            type: object
+                          statusFailure:
+                            type: string
+                          version:
+                            type: string
+                        required:
+                        - connections
+                        - haStatus
+                        - localEndpoint
+                        - statusFailure
+                        - version
+                        type: object
+                    required:
+                    - status
+                    type: object
+                  type: array
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: ListMeta describes metadata that synthetic resources
+                    must have, including lists and various status objects. A resource
+                    may have only one of {ObjectMeta, ListMeta}.
+                  properties:
+                    continue:
+                      description: continue may be set if the user set a limit on
+                        the number of items returned, and indicates that the server
+                        has more data available. The value is opaque and may be used
+                        to issue another request to the endpoint that served this
+                        list to retrieve the next set of available objects. Continuing
+                        a consistent list may not be possible if the server configuration
+                        has changed or more than a few minutes have passed. The resourceVersion
+                        field returned when using this continue value will be identical
+                        to the value in the first response, unless you have received
+                        this token from an error message.
+                      type: string
+                    resourceVersion:
+                      description: 'String that identifies the server''s internal
+                        version of this object that can be used by clients to determine
+                        when objects have changed. Value must be treated as opaque
+                        by clients and passed unmodified back to the server. Populated
+                        by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency'
+                      type: string
+                    selfLink:
+                      description: selfLink is a URL representing this object. Populated
+                        by the system. Read-only.
+                      type: string
+                  type: object
+              required:
+              - items
+              - metadata
+              type: object
             globalCIDR:
               type: string
             globalnetDaemonSetStatus:
