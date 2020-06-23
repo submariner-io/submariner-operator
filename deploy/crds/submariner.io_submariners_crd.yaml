@@ -91,8 +91,6 @@ spec:
         status:
           description: SubmarinerStatus defines the observed state of Submariner
           properties:
-            cableDriver:
-              type: string
             clusterCIDR:
               type: string
             clusterID:

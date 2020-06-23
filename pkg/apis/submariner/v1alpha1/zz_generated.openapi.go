@@ -370,12 +370,6 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 							Format: "",
 						},
 					},
-					"cableDriver": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
 					"engineDaemonSetStatus": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
