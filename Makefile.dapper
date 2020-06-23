@@ -10,13 +10,10 @@
 	@./.dapper.tmp -v
 	@mv .dapper.tmp .dapper
 
-ifeq (,$(MAKEFLAGS))
 invoke_dapper = +./.dapper -m bind make -- $1
-else
-invoke_dapper = +./.dapper -m bind make -$(MAKEFLAGS) -- $1
-endif
 
 %: .dapper
+	@echo Invoking Dapper, MAKEFLAGS=$(MAKEFLAGS)
 	$(call invoke_dapper,$@)
 
 # Ensure that files in the current directory don't hide Dapper targets
