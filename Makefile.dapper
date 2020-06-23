@@ -13,6 +13,7 @@
 invoke_dapper = +./.dapper -m bind make -- $1
 
 %: .dapper
+	@echo Invoking Dapper, MAKEFLAGS=$(MAKEFLAGS)
 	$(call invoke_dapper,$@)
 
 # Ensure that files in the current directory don't hide Dapper targets
