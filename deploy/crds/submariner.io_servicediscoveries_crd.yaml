@@ -43,6 +43,8 @@ spec:
               type: string
             debug:
               type: boolean
+            globalnetEnabled:
+              type: boolean
             namespace:
               type: string
             repository:
