@@ -35,6 +35,7 @@ type ServiceDiscoverySpec struct {
 	Debug                    bool   `json:"debug"`
 	ClusterID                string `json:"clusterID"`
 	Namespace                string `json:"namespace"`
+	GlobalnetEnabled         bool   `json:"globalnetEnabled,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html

@@ -125,6 +125,12 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscoverySpec(ref common.Referen
 							Format: "",
 						},
 					},
+					"globalnetEnabled": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 				},
 				Required: []string{"brokerK8sCA", "brokerK8sRemoteNamespace", "brokerK8sApiServerToken", "brokerK8sApiServer", "debug", "clusterID", "namespace"},
 			},

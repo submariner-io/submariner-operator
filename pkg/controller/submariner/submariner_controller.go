@@ -264,6 +264,9 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submopv1a1.S
 						ClusterID:                submariner.Spec.ClusterID,
 						Namespace:                submariner.Spec.Namespace,
 					}
+					if submariner.Spec.GlobalCIDR != "" {
+						sd.Spec.GlobalnetEnabled = true
+					}
 					return nil
 				})
 				return err
