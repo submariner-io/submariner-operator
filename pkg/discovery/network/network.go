@@ -19,14 +19,19 @@ package network
 import (
 	"fmt"
 
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 )
 
 type ClusterNetwork struct {
 	PodCIDRs      []string
 	ServiceCIDRs  []string
 	NetworkPlugin string
+	GlobalCIDR    string
 }
 
 func (cn *ClusterNetwork) Show() {
@@ -35,8 +40,11 @@ func (cn *ClusterNetwork) Show() {
 	} else {
 		fmt.Printf("    Discovered network details:\n")
 		fmt.Printf("        Network plugin:  %s\n", cn.NetworkPlugin)
-		fmt.Printf("        Service CIDRs: %v\n", cn.ServiceCIDRs)
-		fmt.Printf("        Cluster CIDRs: %v\n", cn.PodCIDRs)
+		fmt.Printf("        Service CIDRs:   %v\n", cn.ServiceCIDRs)
+		fmt.Printf("        Cluster CIDRs:   %v\n", cn.PodCIDRs)
+		if cn.GlobalCIDR != "" {
+			fmt.Printf("        Global CIDR:     %v\n", cn.GlobalCIDR)
+		}
 	}
 }
 
@@ -44,9 +52,10 @@ func (cn *ClusterNetwork) IsComplete() bool {
 	return cn != nil && len(cn.ServiceCIDRs) > 0 && len(cn.PodCIDRs) > 0
 }
 
-func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-
+func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submClient submarinerclientset.Interface, operatorNamespace string) (*ClusterNetwork, error) {
 	discovery, err := networkPluginsDiscovery(dynClient, clientSet)
+	globalCIDR, _ := getGlobalCIDRs(submClient, operatorNamespace)
+	discovery.GlobalCIDR = globalCIDR
 
 	if err == nil && discovery != nil {
 		if discovery.IsComplete() {
@@ -95,4 +104,17 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 	}
 
 	return nil, nil
+}
+
+func getGlobalCIDRs(submClient submarinerclientset.Interface, operatorNamespace string) (string, error) {
+	if submClient == nil {
+		return "", nil
+	}
+	existingCfg, err := submClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	globalCIDR := existingCfg.Spec.GlobalCIDR
+	return globalCIDR, nil
 }

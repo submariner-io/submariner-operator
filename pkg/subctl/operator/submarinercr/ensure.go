@@ -31,6 +31,10 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/engine"
 )
 
+const (
+	SubmarinerName = "submariner"
+)
+
 func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
 
 	err := engine.Ensure(config)
@@ -51,7 +55,7 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 
 	submariner := &submariner.Submariner{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "submariner",
+			Name: SubmarinerName,
 		},
 		Spec: submarinerSpec,
 	}
