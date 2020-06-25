@@ -12,6 +12,7 @@ override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --deploytool_submariner_args '--cable-driver strongswan --operator-image localhost:5000/submariner-operator:local'
 export DEPLOY_ARGS
 override UNIT_TEST_ARGS += cmd pkg/internal
+override VALIDATE_ARGS += --skip-dirs pkg/client
 
 # Process extra flags from the `using=a,b,c` optional flag
 
@@ -40,7 +41,7 @@ bin/subctl: build-subctl
 pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml")
 	$(MAKE) generate-embeddedyamls
 
-.PHONY: $(TARGETS) test
+.PHONY: $(TARGETS) test validate
 
 else
 
