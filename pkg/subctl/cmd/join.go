@@ -183,22 +183,34 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	clusterCIDR, err = getPodCIDR(clusterCIDR, networkDetails)
 	exitOnError("Error determining the pod CIDR", err)
 
+	brokerAdminConfig, err := subctlData.GetBrokerAdministratorConfig()
+	exitOnError("Error retrieving broker admin config", err)
+	brokerAdminClientset, err := kubernetes.NewForConfig(brokerAdminConfig)
+	exitOnError("Error retrieving broker admin connection", err)
+	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
+
 	status.Start("Discovering multi cluster details")
-	globalNetworks, err := globalnet.GetGlobalNetworks(subctlData)
-	exitOnError("Error getting Global network details", err)
+	globalnetInfo, err := globalnet.GetGlobalNetworks(brokerAdminClientset, brokerNamespace)
+	exitOnError("Error reading Global network details on Broker", err)
 
-	netconfig := globalnet.Config{ClusterID: clusterID, GlobalnetCIDR: globalnetCIDR, ServiceCIDR: serviceCIDR, ClusterCIDR: clusterCIDR, GlobalnetClusterSize: globalnetClusterSize}
-	err, globalnetCIDR, globalnetClusterSize = globalnet.ValidateGlobalnetConfiguration(subctlData, netconfig)
-	exitOnError("Error validating Globalnet configurations", err)
+	netconfig := globalnet.Config{ClusterID: clusterID, GlobalnetCIDR: globalnetCIDR,
+		ServiceCIDR: serviceCIDR, ClusterCIDR: clusterCIDR, GlobalnetClusterSize: globalnetClusterSize}
+	globalnetCIDR, err = globalnet.ValidateGlobalnetConfiguration(globalnetInfo, netconfig)
+	exitOnError("Error validating Globalnet configuration", err)
 
-	if subctlData.GlobalnetCidrRange == "" {
-		// Globalnet not enabled
-		err = globalnet.CheckForOverlappingCIDRs(globalNetworks, netconfig)
-		exitOnError("Overlapping CIDRs found", err)
-	} else {
-		// Globalnet enabled
-		globalnetCIDR, err = globalnet.AssignGlobalnetIPs(subctlData, globalNetworks, netconfig)
+	if globalnetInfo.GlobalnetEnabled {
+		globalnetCIDR, err = globalnet.AssignGlobalnetIPs(globalnetInfo, netconfig)
 		exitOnError("Error assigning Globalnet IPs", err)
+
+		if globalnetInfo.GlobalCidrInfo[clusterID] == nil ||
+			(globalnetInfo.GlobalCidrInfo[clusterID] != nil && globalnetInfo.GlobalCidrInfo[clusterID].GlobalCIDRs[0] != globalnetCIDR) {
+			var newClusterInfo broker.ClusterInfo
+			newClusterInfo.ClusterId = clusterID
+			newClusterInfo.GlobalCidr = []string{globalnetCIDR}
+
+			err = broker.UpdateGlobalnetConfigMap(brokerAdminClientset, brokerNamespace, newClusterInfo)
+			exitOnError("Error updating Globalnet configMap on Broker", err)
+		}
 	}
 
 	status.Start("Deploying the Submariner operator")
@@ -214,10 +226,6 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	}
 
 	status.Start("Creating SA for cluster")
-	brokerAdminConfig, err := subctlData.GetBrokerAdministratorConfig()
-	exitOnError("Error retrieving broker admin config", err)
-	brokerAdminClientset, err := kubernetes.NewForConfig(brokerAdminConfig)
-	exitOnError("Error retrieving broker admin connection", err)
 	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID)
 	status.End(cli.CheckForError(err))
 	exitOnError("Error creating SA for cluster", err)
