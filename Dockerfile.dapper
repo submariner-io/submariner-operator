@@ -12,5 +12,5 @@ RUN curl -Lo /usr/bin/operator-sdk "https://github.com/operator-framework/operat
 
 WORKDIR ${DAPPER_SOURCE}
 
-ENTRYPOINT ["./scripts/entry"]
-CMD ["ci"]
+ENTRYPOINT ["/opt/shipyard/scripts/entry"]
+CMD ["sh"]
