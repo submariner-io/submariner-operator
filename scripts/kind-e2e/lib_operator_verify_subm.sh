@@ -77,8 +77,8 @@ function verify_subm_deployed() {
     verify_subm_operator
     # Verify SubM Operator pod
     verify_subm_op_pod
-    # Verify SubM Operator container
-    verify_subm_operator_container
+    # We don't verify the operator container, it only contains the
+    # operator binary
 
     # FIXME: Rename all of these submariner-engine or engine, vs submariner
     # Verify SubM CR
@@ -336,13 +336,6 @@ function verify_subm_routeagent_pod() {
     validate_equals '.metadata.namespace' $subm_ns
     validate_equals '.spec.terminationGracePeriodSeconds' '10'
   done
-}
-
-function verify_subm_operator_container() {
-  subm_operator_pod_name=$(kubectl get pods --namespace=$subm_ns -l name=submariner-operator -o=jsonpath='{.items..metadata.name}')
-
-  # The operator container only contains the operator binary now,
-  # there's nothing to verify
 }
 
 function verify_subm_engine_container() {
