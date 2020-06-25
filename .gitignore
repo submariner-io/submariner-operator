@@ -10,3 +10,4 @@ vendor/
 *.coverprofile
 .idea
 .shflags
+junit.xml
