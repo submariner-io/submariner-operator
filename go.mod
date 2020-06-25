@@ -19,7 +19,7 @@ require (
 	github.com/prometheus/client_golang v1.2.1 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/lighthouse v0.4.0
+	github.com/submariner-io/lighthouse v0.4.1
 	github.com/submariner-io/shipyard v0.4.0
 	github.com/submariner-io/submariner v0.4.1
 	go.opencensus.io v0.22.1 // indirect
