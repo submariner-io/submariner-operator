@@ -24,6 +24,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/klog"
+
+	"github.com/submariner-io/submariner-operator/pkg/log"
 )
 
 var (
@@ -43,8 +45,10 @@ func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, er
 	crClient := dynClient.Resource(openshift4clusterNetworkGVR)
 
 	cr, err := crClient.Get("default", metav1.GetOptions{})
+
 	if err != nil {
-		klog.Info("Attempted network discovery for OpenShift4, no clusternetworks CRD")
+		klog.V(log.TRACE).Infof("Attempted network discovery for OpenShift4, no clusternetworks CRD: %s", err)
+
 		return nil, nil
 	}
 

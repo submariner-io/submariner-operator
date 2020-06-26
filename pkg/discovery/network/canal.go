@@ -19,10 +19,12 @@ package network
 import (
 	"encoding/json"
 
+	"github.com/submariner-io/submariner-operator/pkg/log"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/klog"
 )
 
 func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
@@ -35,6 +37,9 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 	//        name: flannel-cfg
 	cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get("canal-config", metav1.GetOptions{})
 	if err != nil {
+
+		klog.V(log.TRACE).Infof("Looking up for canal: %s", err)
+
 		if errors.IsNotFound(err) {
 			return nil, nil
 		}

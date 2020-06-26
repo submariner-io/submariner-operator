@@ -18,6 +18,9 @@ package network
 
 import (
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/klog"
+
+	"github.com/submariner-io/submariner-operator/pkg/log"
 )
 
 func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
@@ -25,6 +28,7 @@ func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, erro
 	weaveNetPod, err := findPod(clientSet, "name=weave-net")
 
 	if err != nil || weaveNetPod == nil {
+		klog.V(log.TRACE).Infof("looking up for weave-net pod: %s", err)
 		return nil, err
 	}
 
@@ -48,6 +52,7 @@ func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, erro
 
 	clusterIPRange, err := findClusterIPRange(clientSet)
 	if err == nil && clusterIPRange != "" {
+		klog.V(log.TRACE).Infof("looking up for ClusterIP range for weave-net: %s", err)
 		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
 	}
 

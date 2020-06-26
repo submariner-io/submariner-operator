@@ -18,6 +18,9 @@ package network
 
 import (
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/klog"
+
+	"github.com/submariner-io/submariner-operator/pkg/log"
 )
 
 func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
@@ -28,12 +31,14 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 
 	podIPRange, err := findPodIPRangeKubeController(clientSet)
 	if err != nil {
+		klog.V(log.TRACE).Infof("looking up for ClusterCIDR range from kube controller: %s", err)
 		return nil, err
 	}
 
 	if podIPRange == "" {
 		podIPRange, err = findPodIPRangeKubeProxy(clientSet)
 		if err != nil {
+			klog.V(log.TRACE).Infof("finding for ClusterCIDR from kube proxy: %s", err)
 			return nil, err
 		}
 	}
@@ -48,6 +53,7 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 	clusterIPRange, err := findClusterIPRange(clientSet)
 
 	if err != nil {
+		klog.V(log.TRACE).Infof("looking up for ServiceCIDR range: %s", err)
 		return nil, err
 	}
 
