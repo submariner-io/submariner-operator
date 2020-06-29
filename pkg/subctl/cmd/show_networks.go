@@ -21,10 +21,9 @@ func init() {
 
 func showNetwork(cmd *cobra.Command, args []string) {
 	config, err := getRestConfig(kubeConfig, kubeContext)
-
-	exitOnError("Error connecting to the target cluster", err)
+	exitOnError("Error getting REST config for cluster", err)
 	dynClient, clientSet, err := getClients(config)
-	exitOnError("Error connecting to the target cluster", err)
+	exitOnError("Error creating clients for cluster", err)
 
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
 	exitOnError("Unable to get the Submariner client", err)
