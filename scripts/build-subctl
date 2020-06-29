@@ -9,9 +9,7 @@ cd ${DAPPER_SOURCE}
 PACK_SUBCTL="${PACK_SUBCTL:-false}"
 
 echo Building subctl version $VERSION for ${GOOS:=$(go env GOOS)}/${GOARCH:=$(go env GOARCH)}
-GIT_REF="$(git describe --tags)"
-ldflags="-X github.com/submariner-io/submariner-operator/pkg/version.Version=${VERSION} "
-ldflags="${ldflags} -X github.com/submariner-io/submariner-operator/pkg/version.GitRef=${GIT_REF}"
+ldflags="-X github.com/submariner-io/submariner-operator/pkg/version.Version=${VERSION}"
 
 output=bin/subctl-${VERSION}-${GOOS}-${GOARCH}${GOEXE}
 
