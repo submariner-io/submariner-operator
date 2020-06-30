@@ -63,7 +63,7 @@ func testDiscoverCanalFlannelWith(objects ...runtime.Object) *ClusterNetwork {
 func testDiscoverWith(objects ...runtime.Object) *ClusterNetwork {
 
 	clientSet := fake.NewSimpleClientset(objects...)
-	clusterNet, err := Discover(nil, clientSet)
+	clusterNet, err := Discover(nil, clientSet, nil, "")
 	Expect(err).NotTo(HaveOccurred())
 	return clusterNet
 }
