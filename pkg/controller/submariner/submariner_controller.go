@@ -145,7 +145,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
-	setSubmarinerDefaults(instance)
+	instance.SetDefaults()
 	if err = r.client.Update(context.TODO(), instance); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -604,25 +604,6 @@ func newServiceDiscoveryCR(namespace string) *submopv1a1.ServiceDiscovery {
 			Name:      ServiceDiscoveryCrName,
 		},
 	}
-}
-
-//TODO: move to a method on the API definitions, as the example shown by the etcd operator here :
-//      https://github.com/coreos/etcd-operator/blob/8347d27afa18b6c76d4a8bb85ad56a2e60927018/pkg/apis/etcd/v1beta2/cluster.go#L185
-func setSubmarinerDefaults(submariner *submopv1a1.Submariner) {
-
-	if submariner.Spec.Repository == "" {
-		// An empty field is converted to the default upstream submariner repository where all images live
-		submariner.Spec.Repository = versions.DefaultSubmarinerRepo
-	}
-
-	if submariner.Spec.Version == "" {
-		submariner.Spec.Version = versions.DefaultSubmarinerVersion
-	}
-
-	if submariner.Spec.ColorCodes == "" {
-		submariner.Spec.ColorCodes = "blue"
-	}
-
 }
 
 const (
