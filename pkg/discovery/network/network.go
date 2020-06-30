@@ -54,10 +54,10 @@ func (cn *ClusterNetwork) IsComplete() bool {
 
 func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submClient submarinerclientset.Interface, operatorNamespace string) (*ClusterNetwork, error) {
 	discovery, err := networkPluginsDiscovery(dynClient, clientSet)
-	globalCIDR, _ := getGlobalCIDRs(submClient, operatorNamespace)
-	discovery.GlobalCIDR = globalCIDR
 
 	if err == nil && discovery != nil {
+		globalCIDR, _ := getGlobalCIDRs(submClient, operatorNamespace)
+		discovery.GlobalCIDR = globalCIDR
 		if discovery.IsComplete() {
 			return discovery, nil
 		} else {
