@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	errorutil "github.com/pkg/errors"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -31,6 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -41,11 +44,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+
 	submopv1a1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/versions"
-	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
 var log = logf.Log.WithName("controller_submariner")
@@ -62,7 +66,17 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileSubmariner{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+
+	reconciler := &ReconcileSubmariner{
+		client:         mgr.GetClient(),
+		scheme:         mgr.GetScheme(),
+		clientSet:      kubernetes.NewForConfigOrDie(mgr.GetConfig()),
+		dynClient:      dynamic.NewForConfigOrDie(mgr.GetConfig()),
+		submClient:     submarinerclientset.NewForConfigOrDie(mgr.GetConfig()),
+		clusterNetwork: nil,
+	}
+
+	return reconciler
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -116,8 +130,12 @@ var _ reconcile.Reconciler = &ReconcileSubmariner{}
 type ReconcileSubmariner struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client         client.Client
+	scheme         *runtime.Scheme
+	clientSet      kubernetes.Interface
+	submClient     submarinerclientset.Interface
+	dynClient      dynamic.Interface
+	clusterNetwork *network.ClusterNetwork
 }
 
 // Reconcile reads that state of the cluster for a Submariner object and makes changes based on the state read
@@ -145,11 +163,19 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
+	initialStatus := instance.Status.DeepCopy()
+
 	instance.SetDefaults()
+
 	if err = r.client.Update(context.TODO(), instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
+	// discovery is performed after Update to avoid storing the discovery in the
+	// struct beyond status
+	if err = r.discoverNetwork(instance); err != nil {
+		return reconcile.Result{}, err
+	}
 	// Create submariner-engine SA
 	//subm_engine_sa := corev1.ServiceAccount{}
 	//subm_engine_sa.Name = "submariner-engine"
@@ -199,27 +225,22 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		recordNoConnections()
 	}
 
-	// Update the status
-	status := submopv1a1.SubmarinerStatus{
-		NatEnabled:  instance.Spec.NatEnabled,
-		ColorCodes:  instance.Spec.ColorCodes,
-		ClusterID:   instance.Spec.ClusterID,
-		ServiceCIDR: instance.Spec.ServiceCIDR,
-		ClusterCIDR: instance.Spec.ClusterCIDR,
-		GlobalCIDR:  instance.Spec.GlobalCIDR,
-		Gateways:    gateways,
-	}
+	instance.Status.NatEnabled = instance.Spec.NatEnabled
+	instance.Status.ColorCodes = instance.Spec.ColorCodes
+	instance.Status.ClusterID = instance.Spec.ClusterID
+	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
+	instance.Status.Gateways = gateways
+
 	if engineDaemonSet != nil {
-		status.EngineDaemonSetStatus = &engineDaemonSet.Status
+		instance.Status.EngineDaemonSetStatus = &engineDaemonSet.Status
 	}
 	if routeagentDaemonSet != nil {
-		status.RouteAgentDaemonSetStatus = &routeagentDaemonSet.Status
+		instance.Status.RouteAgentDaemonSetStatus = &routeagentDaemonSet.Status
 	}
 	if globalnetDaemonSet != nil {
-		status.GlobalnetDaemonSetStatus = &globalnetDaemonSet.Status
+		instance.Status.GlobalnetDaemonSetStatus = &globalnetDaemonSet.Status
 	}
-	if !reflect.DeepEqual(instance.Status, status) {
-		instance.Status = status
+	if !reflect.DeepEqual(instance.Status, initialStatus) {
 		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
 			reqLogger.Error(err, "failed to update the Submariner status")
@@ -413,8 +434,8 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 					},
 					Env: []corev1.EnvVar{
 						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
-						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Spec.ClusterCIDR},
-						{Name: "SUBMARINER_SERVICECIDR", Value: cr.Spec.ServiceCIDR},
+						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
+						{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
 						{Name: "SUBMARINER_GLOBALCIDR", Value: cr.Spec.GlobalCIDR},
 						{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 						{Name: "SUBMARINER_COLORCODES", Value: cr.Spec.ColorCodes},
@@ -507,8 +528,8 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
-								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Spec.ClusterCIDR},
-								{Name: "SUBMARINER_SERVICECIDR", Value: cr.Spec.ServiceCIDR},
+								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
+								{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
 								{Name: "SUBMARINER_GLOBALCIDR", Value: cr.Spec.GlobalCIDR},
 							},
 						},
