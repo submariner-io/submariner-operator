@@ -19,6 +19,7 @@ package network
 import (
 	"fmt"
 
+	"github.com/go-logr/logr"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -48,6 +49,13 @@ func (cn *ClusterNetwork) Show() {
 	}
 }
 
+func (cn *ClusterNetwork) Log(logger logr.Logger) {
+	logger.Info("Discovered K8s network details",
+		"plugin", cn.NetworkPlugin,
+		"clusterCIDRs", cn.PodCIDRs,
+		"serviceCIDRs", cn.ServiceCIDRs)
+}
+
 func (cn *ClusterNetwork) IsComplete() bool {
 	return cn != nil && len(cn.ServiceCIDRs) > 0 && len(cn.PodCIDRs) > 0
 }
@@ -56,6 +64,7 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submC
 	discovery, err := networkPluginsDiscovery(dynClient, clientSet)
 
 	if err == nil && discovery != nil {
+		// TODO: The other branch of this if will not try to find the globalCIDRs
 		globalCIDR, _ := getGlobalCIDRs(submClient, operatorNamespace)
 		discovery.GlobalCIDR = globalCIDR
 		if discovery.IsComplete() {

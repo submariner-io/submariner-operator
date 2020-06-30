@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	submariner_v1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -76,6 +77,12 @@ var _ = Describe("Submariner controller tests", func() {
 	Context("Reconciliation", testReconciliation)
 })
 
+const testDetectedServiceCIDR = "100.94.0.0/16"
+const testDetectedClusterCIDR = "10.244.0.0/16"
+
+const testConfiguredServiceCIDR = "192.168.66.0/24"
+const testConfiguredClusterCIDR = "192.168.67.0/24"
+
 func testReconciliation() {
 	var (
 		initClientObjs  []runtime.Object
@@ -84,6 +91,7 @@ func testReconciliation() {
 		controller      *ReconcileSubmariner
 		reconcileErr    error
 		reconcileResult reconcile.Result
+		clusterNetwork  *network.ClusterNetwork
 	)
 
 	newClient := func() client.Client {
@@ -101,7 +109,17 @@ func testReconciliation() {
 			fakeClient = newClient()
 		}
 
-		controller = &ReconcileSubmariner{client: fakeClient, scheme: scheme.Scheme}
+		clusterNetwork = &network.ClusterNetwork{
+			NetworkPlugin: "fake",
+			ServiceCIDRs:  []string{testDetectedServiceCIDR},
+			PodCIDRs:      []string{testDetectedClusterCIDR},
+		}
+
+		controller = &ReconcileSubmariner{
+			client:         fakeClient,
+			scheme:         scheme.Scheme,
+			clusterNetwork: clusterNetwork,
+		}
 
 		reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
 			Namespace: submarinerNamespace,
@@ -109,11 +127,46 @@ func testReconciliation() {
 		}})
 	})
 
+	When("the network details are not provided", func() {
+		It("should use the detected network", func() {
+			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+				Namespace: submarinerNamespace,
+				Name:      submarinerName,
+			}})
+			updated := &submariner_v1.Submariner{}
+			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updated.Status.ServiceCIDR).To(Equal(testDetectedServiceCIDR))
+			Expect(updated.Status.ClusterCIDR).To(Equal(testDetectedClusterCIDR))
+		})
+	})
+
+	When("the network details are provided", func() {
+		It("should use the provided ones instead of the detected ones", func() {
+
+			submariner.Spec.ServiceCIDR = testConfiguredServiceCIDR
+			submariner.Spec.ClusterCIDR = testConfiguredClusterCIDR
+
+			Expect(fakeClient.Update(context.TODO(), submariner)).To(Succeed())
+
+			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+				Namespace: submarinerNamespace,
+				Name:      submarinerName,
+			}})
+
+			updated := &submariner_v1.Submariner{}
+			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updated.Status.ServiceCIDR).To(Equal(testConfiguredServiceCIDR))
+			Expect(updated.Status.ClusterCIDR).To(Equal(testConfiguredClusterCIDR))
+		})
+	})
+
 	When("the submariner engine DaemonSet doesn't exist", func() {
 		It("should create it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			verifyEngineDaemonSet(submariner, fakeClient)
+			verifyEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
 		})
 	})
 
@@ -139,7 +192,8 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(engineDaemonSetName, fakeClient)).To(Equal(newEngineDaemonSet(submariner)))
+			Expect(expectDaemonSet(engineDaemonSetName, fakeClient)).To(
+				Equal(newEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork))))
 		})
 	})
 
@@ -156,7 +210,7 @@ func testReconciliation() {
 		It("should delete it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			verifyEngineDaemonSet(submariner, fakeClient)
+			verifyEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
 
 			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: submarinerNamespace}, &appsv1.Deployment{})
 			Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
@@ -167,7 +221,7 @@ func testReconciliation() {
 		It("should create it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			verifyRouteAgentDaemonSet(submariner, fakeClient)
+			verifyRouteAgentDaemonSet(withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
 		})
 	})
 
@@ -175,7 +229,7 @@ func testReconciliation() {
 		var existingDaemonSet *appsv1.DaemonSet
 
 		BeforeEach(func() {
-			existingDaemonSet = newRouteAgentDaemonSet(submariner)
+			existingDaemonSet = newRouteAgentDaemonSet(withNetworkDiscovery(submariner, clusterNetwork))
 			initClientObjs = append(initClientObjs, existingDaemonSet)
 		})
 
@@ -193,7 +247,8 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(getDaemonSet(routeAgentDaemonSetName, fakeClient)).To(Equal(newRouteAgentDaemonSet(submariner)))
+			Expect(getDaemonSet(routeAgentDaemonSetName, fakeClient)).To(Equal(newRouteAgentDaemonSet(
+				withNetworkDiscovery(submariner, clusterNetwork))))
 		})
 	})
 
@@ -286,8 +341,8 @@ func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client clie
 
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Spec.ClusterCIDR))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Spec.ServiceCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Status.ClusterCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Status.ServiceCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
 
@@ -315,8 +370,8 @@ func verifyEngineDaemonSet(submariner *submariner_v1.Submariner, client client.C
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_BROKER", submariner.Spec.Broker))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NATENABLED", strconv.FormatBool(submariner.Spec.NatEnabled)))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Spec.ServiceCIDR))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Spec.ClusterCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Status.ServiceCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Status.ClusterCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_GLOBALCIDR", submariner.Spec.GlobalCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
@@ -341,13 +396,35 @@ func newSubmariner() *submariner_v1.Submariner {
 			Broker:                   "k8s",
 			NatEnabled:               true,
 			ClusterID:                "east",
-			ServiceCIDR:              "100.94.0.0/16",
-			ClusterCIDR:              "10.244.0.0/16",
+			ServiceCIDR:              "",
+			ClusterCIDR:              "",
 			GlobalCIDR:               "169.254.0.0/16",
 			ColorCodes:               "red",
 			Namespace:                "submariner_ns",
 			Debug:                    true,
 		},
+	}
+}
+
+func withNetworkDiscovery(submariner *submariner_v1.Submariner, clusterNetwork *network.ClusterNetwork) *submariner_v1.Submariner {
+	submariner.Status.ClusterCIDR = getClusterCIDR(submariner, clusterNetwork)
+	submariner.Status.ServiceCIDR = getServiceCIDR(submariner, clusterNetwork)
+	return submariner
+}
+
+func getClusterCIDR(submariner *submariner_v1.Submariner, clusterNetwork *network.ClusterNetwork) string {
+	if submariner.Spec.ClusterCIDR != "" {
+		return submariner.Spec.ClusterCIDR
+	} else {
+		return clusterNetwork.PodCIDRs[0]
+	}
+}
+
+func getServiceCIDR(submariner *submariner_v1.Submariner, clusterNetwork *network.ClusterNetwork) string {
+	if submariner.Spec.ServiceCIDR != "" {
+		return submariner.Spec.ServiceCIDR
+	} else {
+		return clusterNetwork.ServiceCIDRs[0]
 	}
 }
 
