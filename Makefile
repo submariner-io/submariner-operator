@@ -69,8 +69,9 @@ bin/subctl-%: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg
 	GOOS=$${components[-2]}; \
 	GOARCH=$${components[-1]}; \
 	export GOARCH GOOS; \
+	source $(SCRIPTS_DIR)/lib/version; \
 	$(SCRIPTS_DIR)/compile.sh \
-		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
+		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$${VERSION}" \
 		--noupx $@ ./pkg/subctl/main.go
 
 ci: generate-embeddedyamls validate test build
