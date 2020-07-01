@@ -11,6 +11,8 @@ CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/clu
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --deploytool_submariner_args '--cable-driver strongswan --operator-image localhost:5000/submariner-operator:local'
 export DEPLOY_ARGS
+override UNIT_TEST_ARGS += cmd pkg/internal
+override VALIDATE_ARGS += --skip-dirs pkg/client
 
 # Process extra flags from the `using=a,b,c` optional flag
 
@@ -27,6 +29,8 @@ deploy: clusters preload_images
 e2e: deploy
 	scripts/kind-e2e/e2e.sh
 
+test: unit-test
+
 $(TARGETS): vendor/modules.txt
 	./scripts/$@
 
@@ -37,7 +41,7 @@ bin/subctl: build-subctl
 pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml")
 	$(MAKE) generate-embeddedyamls
 
-.PHONY: $(TARGETS)
+.PHONY: $(TARGETS) test validate
 
 else
 
