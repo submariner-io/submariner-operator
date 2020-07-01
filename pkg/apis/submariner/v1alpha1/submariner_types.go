@@ -63,8 +63,8 @@ type SubmarinerStatus struct {
 	NatEnabled                bool                    `json:"natEnabled"`
 	ColorCodes                string                  `json:"colorCodes,omitempty"`
 	ClusterID                 string                  `json:"clusterID"`
-	ServiceCIDR               string                  `json:"serviceCIDR"`
-	ClusterCIDR               string                  `json:"clusterCIDR"`
+	ServiceCIDR               string                  `json:"serviceCIDR,omitempty"`
+	ClusterCIDR               string                  `json:"clusterCIDR,omitempty"`
 	GlobalCIDR                string                  `json:"globalCIDR,omitempty"`
 	EngineDaemonSetStatus     *appsv1.DaemonSetStatus `json:"engineDaemonSetStatus,omitempty"`
 	RouteAgentDaemonSetStatus *appsv1.DaemonSetStatus `json:"routeAgentDaemonSetStatus,omitempty"`
