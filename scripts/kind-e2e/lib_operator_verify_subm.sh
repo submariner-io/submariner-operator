@@ -334,7 +334,7 @@ function verify_subm_routeagent_pod() {
     [[ $(jq -r ".spec.volumes[] | select(.name==\"host-slash\").hostPath.path" $json_file) = '/' ]]
     validate_equals '.status.phase' 'Running'
     validate_equals '.metadata.namespace' $subm_ns
-    validate_equals '.spec.terminationGracePeriodSeconds' '10'
+    validate_equals '.spec.terminationGracePeriodSeconds' '1'
   done
 }
 
