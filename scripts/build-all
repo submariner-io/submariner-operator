@@ -1,8 +1,0 @@
-#!/bin/bash
-
-source $(dirname $0)/lib/debug_functions
-source $(dirname $0)/lib/version
-
-$(dirname $0)/build-operator
-$(dirname $0)/generate-embeddedyamls
-$(dirname $0)/build-subctl
