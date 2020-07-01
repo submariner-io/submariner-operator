@@ -354,7 +354,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 		RunAsNonRoot:             &runAsNonRoot}
 
 	// Create Pod
-	terminationGracePeriodSeconds := int64(10)
+	terminationGracePeriodSeconds := int64(1)
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,
@@ -446,7 +446,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 		RunAsNonRoot:             &runAsNonRoot,
 	}
 
-	terminationGracePeriodSeconds := int64(10)
+	terminationGracePeriodSeconds := int64(1)
 
 	routeAgentDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -518,7 +518,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 		RunAsNonRoot:             &runAsNonRoot,
 	}
 
-	terminationGracePeriodSeconds := int64(10)
+	terminationGracePeriodSeconds := int64(2)
 
 	globalnetDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
