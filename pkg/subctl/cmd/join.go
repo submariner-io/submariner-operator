@@ -178,10 +178,10 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	status.Start("Discovering network details")
 	networkDetails := getNetworkDetails(config)
 
-	serviceCIDR, err = getServiceCIDR(serviceCIDR, networkDetails)
+	serviceCIDR, serviceCIDRautoDetected, err := getServiceCIDR(serviceCIDR, networkDetails)
 	exitOnError("Error determining the service CIDR", err)
 
-	clusterCIDR, err = getPodCIDR(clusterCIDR, networkDetails)
+	clusterCIDR, clusterCIDRautoDetected, err := getPodCIDR(clusterCIDR, networkDetails)
 	exitOnError("Error determining the pod CIDR", err)
 
 	brokerAdminConfig, err := subctlData.GetBrokerAdministratorConfig()
@@ -190,7 +190,15 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	exitOnError("Error retrieving broker admin connection", err)
 	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
 
-	err = AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace)
+	netconfig := globalnet.Config{ClusterID: clusterID,
+		GlobalnetCIDR:           globalnetCIDR,
+		ServiceCIDR:             serviceCIDR,
+		ServiceCIDRAutoDetected: serviceCIDRautoDetected,
+		ClusterCIDR:             clusterCIDR,
+		ClusterCIDRAutoDetected: clusterCIDRautoDetected,
+		GlobalnetClusterSize:    globalnetClusterSize}
+
+	err = AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace, &netconfig)
 	exitOnError("Error Discovering multi cluster details", err)
 
 	status.Start("Deploying the Submariner operator")
@@ -212,7 +220,7 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	exitOnError("Error creating SA for cluster", err)
 
 	status.Start("Deploying Submariner")
-	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData))
+	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData, netconfig))
 	if err == nil {
 		status.QueueSuccessMessage("Submariner is up and running")
 		status.End(cli.Success)
@@ -223,7 +231,8 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	exitOnError("Error deploying Submariner", err)
 }
 
-func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clientset, brokerNamespace string) error {
+func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clientset, brokerNamespace string,
+	netconfig *globalnet.Config) error {
 	status.Start("Discovering multi cluster details")
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		globalnetInfo, globalnetConfigMap, err := globalnet.GetGlobalNetworks(brokerAdminClientset, brokerNamespace)
@@ -231,15 +240,13 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 			return fmt.Errorf("error reading Global network details on Broker: %s", err)
 		}
 
-		netconfig := globalnet.Config{ClusterID: clusterID, GlobalnetCIDR: globalnetCIDR,
-			ServiceCIDR: serviceCIDR, ClusterCIDR: clusterCIDR, GlobalnetClusterSize: globalnetClusterSize}
-		globalnetCIDR, err = globalnet.ValidateGlobalnetConfiguration(globalnetInfo, netconfig)
+		netconfig.GlobalnetCIDR, err = globalnet.ValidateGlobalnetConfiguration(globalnetInfo, *netconfig)
 		if err != nil {
 			return fmt.Errorf("error validating Globalnet configuration: %s", err)
 		}
 
 		if globalnetInfo.GlobalnetEnabled {
-			globalnetCIDR, err = globalnet.AssignGlobalnetIPs(globalnetInfo, netconfig)
+			netconfig.GlobalnetCIDR, err = globalnet.AssignGlobalnetIPs(globalnetInfo, *netconfig)
 			if err != nil {
 				return fmt.Errorf("error assigning Globalnet IPs: %s", err)
 			}
@@ -276,31 +283,34 @@ func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 	return networkDetails
 }
 
-func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (string, error) {
+func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (CIDR string, autodetected bool, err error) {
 	if clusterCIDR != "" {
 		if nd != nil && len(nd.PodCIDRs) > 0 && nd.PodCIDRs[0] != clusterCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided cluster CIDR for the pods (%s) does not match discovered (%s)\n",
 				clusterCIDR, nd.PodCIDRs[0]))
 		}
-		return clusterCIDR, nil
+		return clusterCIDR, false, nil
 	} else if nd != nil && len(nd.PodCIDRs) > 0 {
-		return nd.PodCIDRs[0], nil
+		return nd.PodCIDRs[0], true, nil
 	} else {
-		return askForCIDR("Pod")
+		CIDR, err = askForCIDR("Pod")
+		return CIDR, false, err
 	}
 }
 
-func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (string, error) {
+func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (CIDR string, autodetected bool, err error) {
 	if serviceCIDR != "" {
 		if nd != nil && len(nd.ServiceCIDRs) > 0 && nd.ServiceCIDRs[0] != serviceCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided service CIDR (%s) does not match discovered (%s)\n",
 				serviceCIDR, nd.ServiceCIDRs[0]))
 		}
-		return serviceCIDR, nil
+		return serviceCIDR, false, nil
 	} else if nd != nil && len(nd.ServiceCIDRs) > 0 {
-		return nd.ServiceCIDRs[0], nil
+		return nd.ServiceCIDRs[0], true, nil
+
 	} else {
-		return askForCIDR("ClusterIP service")
+		CIDR, err = askForCIDR("ClusterIP service")
+		return CIDR, false, err
 	}
 }
 
@@ -333,7 +343,7 @@ func isValidClusterID(clusterID string) (bool, error) {
 	return true, nil
 }
 
-func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.SubmarinerSpec {
+func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet.Config) submariner.SubmarinerSpec {
 	brokerURL := subctlData.BrokerURL
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
@@ -346,6 +356,18 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		// Default engine version
 		// This is handled in the operator after 0.0.1 (of the operator)
 		crImageVersion = versions.DefaultSubmarinerVersion
+	}
+
+	// if our network discovery code was capable of discovering those CIDRs
+	// we don't need to explicitly set it in the operator
+	crServiceCIDR := ""
+	if !netconfig.ServiceCIDRAutoDetected {
+		crServiceCIDR = netconfig.ServiceCIDR
+	}
+
+	crClusterCIDR := ""
+	if !netconfig.ClusterCIDRAutoDetected {
+		crClusterCIDR = netconfig.ClusterCIDR
 	}
 
 	submarinerSpec := submariner.SubmarinerSpec{
@@ -364,14 +386,14 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		Debug:                    submarinerDebug,
 		ColorCodes:               colorCodes,
 		ClusterID:                clusterID,
-		ServiceCIDR:              serviceCIDR,
-		ClusterCIDR:              clusterCIDR,
+		ServiceCIDR:              crServiceCIDR,
+		ClusterCIDR:              crClusterCIDR,
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
 	}
-	if globalnetCIDR != "" {
-		submarinerSpec.GlobalCIDR = globalnetCIDR
+	if netconfig.GlobalnetCIDR != "" {
+		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR
 	}
 	return submarinerSpec
 }
