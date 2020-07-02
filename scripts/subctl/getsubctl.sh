@@ -93,10 +93,12 @@ install_subctl() {
   echo "${bin_file} has been installed as ${dest}"
   printf "This provides "
   ${dest} version
-  echo ""
-  echo "please update your path (and consider adding it to ~/.profile):
-  export PATH=\$PATH:${destdir}
-  "
+  if [ "$(command -v subctl)" != "${dest}" ]; then
+    echo ""
+    echo "please update your path (and consider adding it to ~/.profile):
+    export PATH=\$PATH:${destdir}
+    "
+  fi
 }
 
 VERSION="${VERSION:-latest}"
