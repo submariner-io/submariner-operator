@@ -91,7 +91,13 @@ generate-clientset:
 		github.com/submariner-io/submariner-operator/pkg/apis \
 		submariner:v1alpha1
 
-.PHONY: $(TARGETS) test validate build ci clean generate-clientset generate-embeddedyamls operator-image
+# generate-operator-api updates the generated operator code
+# It needs to be run when the CRDs or APIs change
+generate-operator-api:
+	operator-sdk generate k8s
+	operator-sdk generate openapi
+
+.PHONY: $(TARGETS) test validate build ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image
 
 else
 
