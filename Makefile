@@ -33,7 +33,7 @@ GOOS = $(shell go env GOOS)
 
 clusters: build
 
-deploy: clusters preload_images
+deploy: clusters preload-images
 
 e2e: deploy
 	scripts/kind-e2e/e2e.sh
@@ -97,7 +97,16 @@ generate-operator-api:
 	operator-sdk generate k8s
 	operator-sdk generate openapi
 
-.PHONY: $(TARGETS) test validate build ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image
+preload-images:
+	source $(SCRIPTS_DIR)/lib/debug_functions; \
+	source $(SCRIPTS_DIR)/lib/version; \
+	source $(SCRIPTS_DIR)/lib/deploy_funcs; \
+	set -e; \
+	for image in submariner submariner-route-agent submariner-operator lighthouse-agent submariner-globalnet lighthouse-coredns; do \
+		import_image quay.io/submariner/$${image}; \
+	done
+
+.PHONY: $(TARGETS) test validate build ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
 
 else
 
