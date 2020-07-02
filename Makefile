@@ -4,8 +4,11 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
-VERSION := $(shell . ${SCRIPTS_DIR}/lib/version; echo $$VERSION)
+override CALCULATED_VERSION := $(shell . ${SCRIPTS_DIR}/lib/version; echo $$VERSION)
+VERSION ?= $(CALCULATED_VERSION)
 DEV_VERSION := $(shell . ${SCRIPTS_DIR}/lib/version; echo $$DEV_VERSION)
+
+export VERSION DEV_VERSION
 
 CROSS_TARGETS := linux-amd64 linux-arm64 windows-amd64.exe darwin-amd64
 BINARIES := bin/subctl
@@ -63,15 +66,15 @@ dist/subctl-%.tar.xz: bin/subctl-%
 # Versions may include hyphens so it's easier to use $(VERSION) than to extract them from the target
 bin/subctl-%: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg/subctl/ -name "*.go") vendor/modules.txt
 	mkdir -p bin
+# We want the calculated version here, not the potentially-overridden target version
 	target=$@; \
 	target=$${target%.exe}; \
 	components=($$(echo $${target//-/ })); \
 	GOOS=$${components[-2]}; \
 	GOARCH=$${components[-1]}; \
 	export GOARCH GOOS; \
-	source $(SCRIPTS_DIR)/lib/version; \
 	$(SCRIPTS_DIR)/compile.sh \
-		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$${VERSION}" \
+		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION)" \
 		--noupx $@ ./pkg/subctl/main.go
 
 ci: generate-embeddedyamls validate test build
@@ -99,7 +102,6 @@ generate-operator-api:
 
 preload-images:
 	source $(SCRIPTS_DIR)/lib/debug_functions; \
-	source $(SCRIPTS_DIR)/lib/version; \
 	source $(SCRIPTS_DIR)/lib/deploy_funcs; \
 	set -e; \
 	for image in submariner submariner-route-agent submariner-operator lighthouse-agent submariner-globalnet lighthouse-coredns; do \
