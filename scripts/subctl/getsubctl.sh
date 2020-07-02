@@ -91,6 +91,8 @@ install_subctl() {
 
   bin_file=$(basename "${bin}")
   echo "${bin_file} has been installed as ${dest}"
+  printf "This provides "
+  ${dest} version
   echo ""
   echo "please update your path (and consider adding it to ~/.profile):
   export PATH=\$PATH:${destdir}
