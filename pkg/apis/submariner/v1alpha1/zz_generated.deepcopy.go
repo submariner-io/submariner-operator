@@ -214,10 +214,16 @@ func (in *SubmarinerStatus) DeepCopyInto(out *SubmarinerStatus) {
 		*out = new(v1.DaemonSetStatus)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.GatewayList != nil {
-		in, out := &in.GatewayList, &out.GatewayList
-		*out = new(submarineriov1.GatewayList)
-		(*in).DeepCopyInto(*out)
+	if in.Gateways != nil {
+		in, out := &in.Gateways, &out.Gateways
+		*out = new([]submarineriov1.Gateway)
+		if **in != nil {
+			in, out := *in, *out
+			*out = make([]submarineriov1.Gateway, len(*in))
+			for i := range *in {
+				(*in)[i].DeepCopyInto(&(*out)[i])
+			}
+		}
 	}
 	return
 }
