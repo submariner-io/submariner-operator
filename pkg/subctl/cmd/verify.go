@@ -94,12 +94,14 @@ The following verifications are deemed disruptive:
 					strings.Join(disruptive, ",")),
 			}, &enableDisruptive)
 
-			if isNonInteractive(err) {
-				fmt.Printf(`
+			if err != nil {
+				if isNonInteractive(err) {
+					fmt.Printf(`
 You have specified disruptive verifications (%s) but subctl is running non-interactively and thus cannot
 prompt for confirmation therefore you must specify --enable-disruptive to run them.`, strings.Join(disruptive, ","))
-			} else {
-				exitWithErrorMsg(fmt.Sprintf("Prompt failure: %#v", err))
+				} else {
+					exitWithErrorMsg(fmt.Sprintf("Prompt failure: %#v", err))
+				}
 			}
 		}
 
