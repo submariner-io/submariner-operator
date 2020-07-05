@@ -57,7 +57,7 @@ func NewBrokerAdminRole() *rbacv1.Role {
 				Resources: []string{"clusters", "endpoints"},
 			},
 			rbacv1.PolicyRule{
-				Verbs:     []string{"create", "get", "list", "patch", "update", "delete"},
+				Verbs:     []string{"create", "get", "list", "update", "delete"},
 				APIGroups: []string{""},
 				Resources: []string{"serviceaccounts", "secrets", "configmaps"},
 			},

@@ -24,6 +24,7 @@ import (
 	"math/bits"
 	"net"
 
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
@@ -273,34 +274,34 @@ func ValidateGlobalnetConfiguration(globalnetInfo *GlobalnetInfo, netconfig Conf
 	return globalnetCIDR, nil
 }
 
-func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace string) (*GlobalnetInfo, error) {
+func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace string) (*GlobalnetInfo, *v1.ConfigMap, error) {
 	configMap, err := broker.GetGlobalnetConfigMap(k8sClientset, brokerNamespace)
 	if err != nil {
-		return nil, fmt.Errorf("error reading configMap: %s", err)
+		return nil, nil, fmt.Errorf("error reading configMap: %s", err)
 	}
 
 	globalnetInfo := GlobalnetInfo{}
 	err = json.Unmarshal([]byte(configMap.Data[broker.GlobalnetStatusKey]), &globalnetInfo.GlobalnetEnabled)
 	if err != nil {
-		return nil, fmt.Errorf("error reading globalnetEnabled status: %s", err)
+		return nil, nil, fmt.Errorf("error reading globalnetEnabled status: %s", err)
 	}
 
 	if globalnetInfo.GlobalnetEnabled {
 		err = json.Unmarshal([]byte(configMap.Data[broker.GlobalnetClusterSize]), &globalnetInfo.GlobalnetClusterSize)
 		if err != nil {
-			return nil, fmt.Errorf("error reading GlobalnetClusterSize: %s", err)
+			return nil, nil, fmt.Errorf("error reading GlobalnetClusterSize: %s", err)
 		}
 
 		err = json.Unmarshal([]byte(configMap.Data[broker.GlobalnetCidrRange]), &globalnetInfo.GlobalnetCidrRange)
 		if err != nil {
-			return nil, fmt.Errorf("error reading GlobalnetCidrRange: --> %s", err)
+			return nil, nil, fmt.Errorf("error reading GlobalnetCidrRange: --> %s", err)
 		}
 	}
 
 	var clusterInfo []broker.ClusterInfo
 	err = json.Unmarshal([]byte(configMap.Data[broker.ClusterInfoKey]), &clusterInfo)
 	if err != nil {
-		return nil, fmt.Errorf("error reading globalnet clusterInfo: %s", err)
+		return nil, nil, fmt.Errorf("error reading globalnet clusterInfo: %s", err)
 	}
 
 	var globalNetworks = make(map[string]*GlobalNetwork)
@@ -315,7 +316,7 @@ func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace strin
 	}
 
 	globalnetInfo.GlobalCidrInfo = globalNetworks
-	return &globalnetInfo, nil
+	return &globalnetInfo, configMap, nil
 }
 
 func AssignGlobalnetIPs(globalnetInfo *GlobalnetInfo, netconfig Config) (string, error) {
