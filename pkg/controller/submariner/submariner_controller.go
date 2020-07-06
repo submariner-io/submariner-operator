@@ -88,9 +88,18 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to the gateway status
-	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestForOwner{
-		OwnerType: &submopv1a1.Submariner{},
+	// Watch for changes to the gateway status in the same namespace
+	mapFn := handler.ToRequestsFunc(
+		func(a handler.MapObject) []reconcile.Request {
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      "submariner",
+					Namespace: a.Meta.GetNamespace(),
+				}},
+			}
+		})
+	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestsFromMapFunc{
+		ToRequests: mapFn,
 	})
 	if err != nil {
 		log.Error(err, "error watching gateways")
