@@ -226,16 +226,22 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 	status.Start("Discovering multi cluster details")
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		globalnetInfo, globalnetConfigMap, err := globalnet.GetGlobalNetworks(brokerAdminClientset, brokerNamespace)
-		exitOnError("Error reading Global network details on Broker", err)
+		if err != nil {
+			return fmt.Errorf("error reading Global network details on Broker: %s", err)
+		}
 
 		netconfig := globalnet.Config{ClusterID: clusterID, GlobalnetCIDR: globalnetCIDR,
 			ServiceCIDR: serviceCIDR, ClusterCIDR: clusterCIDR, GlobalnetClusterSize: globalnetClusterSize}
 		globalnetCIDR, err = globalnet.ValidateGlobalnetConfiguration(globalnetInfo, netconfig)
-		exitOnError("Error validating Globalnet configuration", err)
+		if err != nil {
+			return fmt.Errorf("error validating Globalnet configuration: %s", err)
+		}
 
 		if globalnetInfo.GlobalnetEnabled {
 			globalnetCIDR, err = globalnet.AssignGlobalnetIPs(globalnetInfo, netconfig)
-			exitOnError("Error assigning Globalnet IPs", err)
+			if err != nil {
+				return fmt.Errorf("error assigning Globalnet IPs: %s", err)
+			}
 
 			if globalnetInfo.GlobalCidrInfo[clusterID] == nil ||
 				globalnetInfo.GlobalCidrInfo[clusterID].GlobalCIDRs[0] != globalnetCIDR {
@@ -244,7 +250,7 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 				newClusterInfo.GlobalCidr = []string{globalnetCIDR}
 
 				err = broker.UpdateGlobalnetConfigMap(brokerAdminClientset, brokerNamespace, globalnetConfigMap, newClusterInfo)
-				exitOnError("Error updating Globalnet configMap on Broker", err)
+				return err
 			}
 		}
 		return err
