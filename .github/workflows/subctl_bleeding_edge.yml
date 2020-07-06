@@ -14,8 +14,8 @@ jobs:
 
       - name: Generate the Artifacts
         run: |
-          make build-cross
-          echo "::set-env name=BINARIES::$(find bin/ -type f -name '*.tar.xz' -printf '%p ')"
+          make build-cross VERSION=devel
+          echo "::set-env name=BINARIES::$(find dist/ -type f -name '*.tar.xz' -printf '%p ')"
 
       - name: Bump the devel tag
         uses: richardsimko/update-tag@v1.0.3
@@ -28,6 +28,6 @@ jobs:
         uses: johnwbyrd/update-release@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release: Bleeding edge
+          release: Cutting Edge
           tag: devel
           files: ${{ env.BINARIES }}

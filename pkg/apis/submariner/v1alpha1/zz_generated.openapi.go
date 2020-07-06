@@ -391,9 +391,16 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
 						},
 					},
-					"gatewayList": {
+					"gateways": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.GatewayList"),
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.Gateway"),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -401,6 +408,6 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.GatewayList", "k8s.io/api/apps/v1.DaemonSetStatus"},
+			"github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.Gateway", "k8s.io/api/apps/v1.DaemonSetStatus"},
 	}
 }

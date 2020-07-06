@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/util/retry"
@@ -52,6 +53,10 @@ var log = logf.Log.WithName("controller_submariner")
 // Add creates a new Submariner Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
+	// These are required so that we can retrieve Gateway objects using the dynamic client
+	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "Gateway"), &submv1.Gateway{})
+	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "GatewayList"), &submv1.GatewayList{})
+	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "ListOptions"), &metav1.ListOptions{})
 	return add(mgr, newReconciler(mgr))
 }
 
@@ -83,9 +88,18 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to the gateway status
-	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestForOwner{
-		OwnerType: &submopv1a1.Submariner{},
+	// Watch for changes to the gateway status in the same namespace
+	mapFn := handler.ToRequestsFunc(
+		func(a handler.MapObject) []reconcile.Request {
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      "submariner",
+					Namespace: a.Meta.GetNamespace(),
+				}},
+			}
+		})
+	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestsFromMapFunc{
+		ToRequests: mapFn,
 	})
 	if err != nil {
 		log.Error(err, "error watching gateways")
@@ -160,7 +174,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	gateways, err := r.retrieveGateways(instance, request.Namespace)
 	if err != nil {
 		// Not fatal
-		log.Error(err, "error retrieving gateway")
+		log.Error(err, "error retrieving gateways")
 	}
 
 	// Update the status
@@ -171,7 +185,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		ServiceCIDR: instance.Spec.ServiceCIDR,
 		ClusterCIDR: instance.Spec.ClusterCIDR,
 		GlobalCIDR:  instance.Spec.GlobalCIDR,
-		GatewayList: gateways,
+		Gateways:    gateways,
 	}
 	if engineDaemonSet != nil {
 		status.EngineDaemonSetStatus = &engineDaemonSet.Status
@@ -197,7 +211,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace string) (*submv1.GatewayList, error) {
+func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace string) (*[]submv1.Gateway, error) {
 	foundGateways := &submv1.GatewayList{}
 	err := r.client.List(context.TODO(), foundGateways, client.InNamespace(namespace))
 	if err != nil && errors.IsNotFound(err) {
@@ -212,7 +226,7 @@ func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace st
 			return nil, err
 		}
 	}
-	return foundGateways, nil
+	return &foundGateways.Items, nil
 }
 
 func (r *ReconcileSubmariner) deletePreExistingEngineDeployment(namespace string, reqLogger logr.Logger) error {

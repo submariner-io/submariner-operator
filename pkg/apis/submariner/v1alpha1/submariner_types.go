@@ -67,7 +67,7 @@ type SubmarinerStatus struct {
 	EngineDaemonSetStatus     *appsv1.DaemonSetStatus `json:"engineDaemonSetStatus,omitempty"`
 	RouteAgentDaemonSetStatus *appsv1.DaemonSetStatus `json:"routeAgentDaemonSetStatus,omitempty"`
 	GlobalnetDaemonSetStatus  *appsv1.DaemonSetStatus `json:"globalnetDaemonSetStatus,omitempty"`
-	GatewayList               *submv1.GatewayList     `json:"gatewayList,omitempty"`
+	Gateways                  *[]submv1.Gateway       `json:"gateways,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
