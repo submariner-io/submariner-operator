@@ -1,4 +1,4 @@
-// +build tools
+// +build tools test do not merge
 
 /*
 © 2019 Red Hat, Inc. and others.
