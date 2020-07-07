@@ -18,7 +18,6 @@ package submariner
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strconv"
 
@@ -44,6 +43,7 @@ import (
 
 	submopv1a1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
@@ -611,18 +611,5 @@ const (
 )
 
 func getImagePath(submariner *submopv1a1.Submariner, componentImage string) string {
-	var path string
-	spec := submariner.Spec
-
-	// If the repository is "local" we don't append it on the front of the image,
-	// a local repository is used for development, testing and CI when we inject
-	// images in the cluster, for example submariner:local, or submariner-route-agent:local
-	if spec.Repository == "local" {
-		path = componentImage
-	} else {
-		path = fmt.Sprintf("%s/%s", spec.Repository, componentImage)
-	}
-
-	path = fmt.Sprintf("%s:%s", path, spec.Version)
-	return path
+	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage)
 }
