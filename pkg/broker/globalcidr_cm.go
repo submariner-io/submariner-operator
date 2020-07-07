@@ -89,12 +89,10 @@ func UpdateGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace stri
 	}
 
 	exists := false
-	if len(clusterInfo) > 0 {
-		for k, value := range clusterInfo {
-			if value.ClusterId == newCluster.ClusterId {
-				clusterInfo[k].GlobalCidr = newCluster.GlobalCidr
-				exists = true
-			}
+	for k, value := range clusterInfo {
+		if value.ClusterId == newCluster.ClusterId {
+			clusterInfo[k].GlobalCidr = newCluster.GlobalCidr
+			exists = true
 		}
 	}
 

@@ -305,14 +305,12 @@ func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace strin
 	}
 
 	var globalNetworks = make(map[string]*GlobalNetwork)
-	if len(clusterInfo) > 0 {
-		for _, cluster := range clusterInfo {
-			globalNetwork := GlobalNetwork{
-				GlobalCIDRs: cluster.GlobalCidr,
-				ClusterId:   cluster.ClusterId,
-			}
-			globalNetworks[cluster.ClusterId] = &globalNetwork
+	for _, cluster := range clusterInfo {
+		globalNetwork := GlobalNetwork{
+			GlobalCIDRs: cluster.GlobalCidr,
+			ClusterId:   cluster.ClusterId,
 		}
+		globalNetworks[cluster.ClusterId] = &globalNetwork
 	}
 
 	globalnetInfo.GlobalCidrInfo = globalNetworks
