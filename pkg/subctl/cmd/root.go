@@ -38,8 +38,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/spf13/cobra"
-
-	"github.com/submariner-io/submariner-operator/pkg/versions"
 )
 
 var (
@@ -64,11 +62,8 @@ func addKubeconfigFlag(cmd *cobra.Command) {
 }
 
 const (
-	DefaultOperatorImage = versions.DefaultSubmarinerRepo + "/submariner-operator:" + versions.DefaultSubmarinerOperatorVersion
-	OperatorNamespace    = "submariner-operator"
+	OperatorNamespace = "submariner-operator"
 )
-
-var operatorImage string
 
 func kubeConfigFile() string {
 	var kubeconfig string

@@ -30,6 +30,8 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
+	"github.com/submariner-io/submariner-operator/pkg/images"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 
 	"k8s.io/client-go/rest"
 
@@ -76,8 +78,6 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
-	cmd.Flags().StringVarP(&operatorImage, "operator-image", "o", DefaultOperatorImage,
-		"the operator image you wish to use")
 	cmd.Flags().StringVar(&colorCodes, "colorcodes", "blue", "color codes")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
@@ -202,7 +202,8 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	}
 
 	status.Start("Deploying the Submariner operator")
-	err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage)
+
+	err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage())
 	status.End(cli.CheckForError(err))
 	exitOnError("Error deploying the operator", err)
 
@@ -353,4 +354,15 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		submarinerSpec.GlobalCIDR = globalnetCIDR
 	}
 	return submarinerSpec
+}
+
+func operatorImage() string {
+
+	version := imageVersion
+
+	if imageVersion == "" {
+		version = versions.DefaultSubmarinerOperatorVersion
+	}
+
+	return images.GetImagePath(repository, version, deployment.OperatorName)
 }
