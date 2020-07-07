@@ -105,6 +105,8 @@ preload-images:
 		import_image quay.io/submariner/$${image}; \
 	done
 
+validate: pkg/subctl/operator/common/embeddedyamls/yamls.go
+
 .PHONY: test validate build ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
 
 else
