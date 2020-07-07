@@ -579,7 +579,7 @@ func newServiceDiscoveryCR(namespace string) *submopv1a1.ServiceDiscovery {
 	return &submopv1a1.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
-			Name:      serviceDiscoveryCrName,
+			Name:      ServiceDiscoveryCrName,
 		},
 	}
 }
@@ -607,7 +607,7 @@ const (
 	routeAgentImage        = "submariner-route-agent"
 	engineImage            = "submariner"
 	globalnetImage         = "submariner-globalnet"
-	serviceDiscoveryCrName = "service-discovery"
+	ServiceDiscoveryCrName = "service-discovery"
 )
 
 func getImagePath(submariner *submopv1a1.Submariner, componentImage string) string {
