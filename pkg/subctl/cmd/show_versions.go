@@ -62,8 +62,7 @@ func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageI
 	var image string
 	var version string
 	if len(img) < 2 {
-		image = ""
-		version = img[0]
+		image = img[0]
 	} else {
 		image = img[0]
 		version = img[1]
