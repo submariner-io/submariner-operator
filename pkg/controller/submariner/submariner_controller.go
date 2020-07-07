@@ -126,6 +126,8 @@ type ReconcileSubmariner struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	recordReconciliation()
+
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Submariner")
 
@@ -175,6 +177,26 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	if err != nil {
 		// Not fatal
 		log.Error(err, "error retrieving gateways")
+	}
+
+	if gateways != nil {
+		recordGateways(len(*gateways))
+		// Clear the connections so we don’t remember stale status information
+		recordNoConnections()
+		for _, gateway := range *gateways {
+			for j := range gateway.Status.Connections {
+				recordConnection(
+					gateway.Status.LocalEndpoint.ClusterID,
+					gateway.Status.LocalEndpoint.Hostname,
+					gateway.Status.Connections[j].Endpoint.ClusterID,
+					gateway.Status.Connections[j].Endpoint.Hostname,
+					string(gateway.Status.Connections[j].Status),
+				)
+			}
+		}
+	} else {
+		recordGateways(0)
+		recordNoConnections()
 	}
 
 	// Update the status
