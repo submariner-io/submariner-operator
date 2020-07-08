@@ -76,7 +76,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterID, "clusterid", "", "cluster ID used to identify the tunnels")
 	cmd.Flags().StringVar(&serviceCIDR, "servicecidr", "", "service CIDR")
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
-	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
+	cmd.Flags().StringVar(&repository, "repository", versions.DefaultSubmarinerRepo, "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
 	cmd.Flags().StringVar(&colorCodes, "colorcodes", "blue", "color codes")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
@@ -316,21 +316,17 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData) submariner.Submarin
 		brokerURL = brokerURL[(idx + 3):]
 	}
 
-	if len(repository) == 0 {
-		// Default repository
-		// This is handled in the operator after 0.0.1 (of the operator)
-		repository = versions.DefaultSubmarinerRepo
-	}
+	crImageVersion := imageVersion
 
 	if len(imageVersion) == 0 {
 		// Default engine version
 		// This is handled in the operator after 0.0.1 (of the operator)
-		imageVersion = versions.DefaultSubmarinerVersion
+		crImageVersion = versions.DefaultSubmarinerVersion
 	}
 
 	submarinerSpec := submariner.SubmarinerSpec{
 		Repository:               repository,
-		Version:                  imageVersion,
+		Version:                  crImageVersion,
 		CeIPSecNATTPort:          nattPort,
 		CeIPSecIKEPort:           ikePort,
 		CeIPSecDebug:             ipsecDebug,
