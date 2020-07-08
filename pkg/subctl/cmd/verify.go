@@ -163,8 +163,8 @@ func checkValidateArguments(args []string) error {
 		return fmt.Errorf("--connection-attempts must be >=1")
 	}
 
-	if connectionTimeout < 60 {
-		return fmt.Errorf("--connection-timeout must be >=60")
+	if connectionTimeout < 20 {
+		return fmt.Errorf("--connection-timeout must be >=20")
 	}
 	return nil
 }

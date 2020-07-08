@@ -45,7 +45,7 @@ if [[ -n "$SUBM_NS" ]]; then
 fi
 
 # run dataplane E2E tests between the two clusters
-${DAPPER_SOURCE}/bin/subctl verify ${verify} ${subm_ns} --verbose \
+${DAPPER_SOURCE}/bin/subctl verify ${verify} ${subm_ns} --verbose --connection-timeout 20 --connection-attempts 4 \
     ${KUBECONFIGS_DIR}/kind-config-cluster1 \
     ${KUBECONFIGS_DIR}/kind-config-cluster2
 

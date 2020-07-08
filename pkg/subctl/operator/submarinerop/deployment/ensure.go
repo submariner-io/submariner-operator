@@ -22,7 +22,11 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/operatorpod"
 )
 
+const (
+	OperatorName = "submariner-operator"
+)
+
 //Ensure the operator is deployed, and running
 func Ensure(restConfig *rest.Config, namespace string, image string) (bool, error) {
-	return operatorpod.Ensure(restConfig, namespace, "submariner-operator", image)
+	return operatorpod.Ensure(restConfig, namespace, OperatorName, image)
 }

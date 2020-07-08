@@ -18,7 +18,6 @@ package submariner
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strconv"
 
@@ -44,6 +43,7 @@ import (
 
 	submopv1a1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
@@ -88,9 +88,18 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to the gateway status
-	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestForOwner{
-		OwnerType: &submopv1a1.Submariner{},
+	// Watch for changes to the gateway status in the same namespace
+	mapFn := handler.ToRequestsFunc(
+		func(a handler.MapObject) []reconcile.Request {
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      "submariner",
+					Namespace: a.Meta.GetNamespace(),
+				}},
+			}
+		})
+	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestsFromMapFunc{
+		ToRequests: mapFn,
 	})
 	if err != nil {
 		log.Error(err, "error watching gateways")
@@ -117,6 +126,8 @@ type ReconcileSubmariner struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	recordReconciliation()
+
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Submariner")
 
@@ -166,6 +177,26 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	if err != nil {
 		// Not fatal
 		log.Error(err, "error retrieving gateways")
+	}
+
+	if gateways != nil {
+		recordGateways(len(*gateways))
+		// Clear the connections so we don’t remember stale status information
+		recordNoConnections()
+		for _, gateway := range *gateways {
+			for j := range gateway.Status.Connections {
+				recordConnection(
+					gateway.Status.LocalEndpoint.ClusterID,
+					gateway.Status.LocalEndpoint.Hostname,
+					gateway.Status.Connections[j].Endpoint.ClusterID,
+					gateway.Status.Connections[j].Endpoint.Hostname,
+					string(gateway.Status.Connections[j].Status),
+				)
+			}
+		}
+	} else {
+		recordGateways(0)
+		recordNoConnections()
 	}
 
 	// Update the status
@@ -354,7 +385,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 		RunAsNonRoot:             &runAsNonRoot}
 
 	// Create Pod
-	terminationGracePeriodSeconds := int64(10)
+	terminationGracePeriodSeconds := int64(1)
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,
@@ -446,7 +477,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 		RunAsNonRoot:             &runAsNonRoot,
 	}
 
-	terminationGracePeriodSeconds := int64(10)
+	terminationGracePeriodSeconds := int64(1)
 
 	routeAgentDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -518,7 +549,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 		RunAsNonRoot:             &runAsNonRoot,
 	}
 
-	terminationGracePeriodSeconds := int64(10)
+	terminationGracePeriodSeconds := int64(2)
 
 	globalnetDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -570,7 +601,7 @@ func newServiceDiscoveryCR(namespace string) *submopv1a1.ServiceDiscovery {
 	return &submopv1a1.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
-			Name:      serviceDiscoveryCrName,
+			Name:      ServiceDiscoveryCrName,
 		},
 	}
 }
@@ -598,22 +629,9 @@ const (
 	routeAgentImage        = "submariner-route-agent"
 	engineImage            = "submariner"
 	globalnetImage         = "submariner-globalnet"
-	serviceDiscoveryCrName = "service-discovery"
+	ServiceDiscoveryCrName = "service-discovery"
 )
 
 func getImagePath(submariner *submopv1a1.Submariner, componentImage string) string {
-	var path string
-	spec := submariner.Spec
-
-	// If the repository is "local" we don't append it on the front of the image,
-	// a local repository is used for development, testing and CI when we inject
-	// images in the cluster, for example submariner:local, or submariner-route-agent:local
-	if spec.Repository == "local" {
-		path = componentImage
-	} else {
-		path = fmt.Sprintf("%s/%s", spec.Repository, componentImage)
-	}
-
-	path = fmt.Sprintf("%s:%s", path, spec.Version)
-	return path
+	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage)
 }

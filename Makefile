@@ -14,10 +14,9 @@ CROSS_TARGETS := linux-amd64 linux-arm64 windows-amd64.exe darwin-amd64
 BINARIES := bin/subctl
 CROSS_BINARIES := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,bin/subctl-$(VERSION)-%,$(cross)))
 CROSS_TARBALLS := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,dist/subctl-$(VERSION)-%.tar.xz,$(cross)))
-TARGETS := $(shell ls -p scripts | grep -v -e /)
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
-override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --deploytool_submariner_args '--cable-driver strongswan --operator-image localhost:5000/submariner-operator:local'
+override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --deploytool_submariner_args '--cable-driver strongswan'
 export DEPLOY_ARGS
 override UNIT_TEST_ARGS += cmd pkg/internal
 override VALIDATE_ARGS += --skip-dirs pkg/client
@@ -42,9 +41,6 @@ e2e: deploy
 	scripts/kind-e2e/e2e.sh
 
 test: unit-test
-
-$(TARGETS): vendor/modules.txt
-	./scripts/$@
 
 clean:
 	rm -f $(BINARIES) $(CROSS_BINARIES) $(CROSS_TARBALLS)
@@ -103,12 +99,15 @@ generate-operator-api:
 preload-images:
 	source $(SCRIPTS_DIR)/lib/debug_functions; \
 	source $(SCRIPTS_DIR)/lib/deploy_funcs; \
+	source $(SCRIPTS_DIR)/lib/version; \
 	set -e; \
 	for image in submariner submariner-route-agent submariner-operator lighthouse-agent submariner-globalnet lighthouse-coredns; do \
 		import_image quay.io/submariner/$${image}; \
 	done
 
-.PHONY: $(TARGETS) test validate build ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
+validate: pkg/subctl/operator/common/embeddedyamls/yamls.go
+
+.PHONY: test validate build ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
 
 else
 

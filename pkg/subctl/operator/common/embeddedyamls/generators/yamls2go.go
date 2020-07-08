@@ -41,6 +41,7 @@ var files = []string{
 	"cluster_role_binding.yaml",
 	"lighthouse/crds/multiclusterservices_crd.yaml",
 	"lighthouse/crds/serviceexport_crd.yaml",
+	"lighthouse/crds/serviceimport_crd.yaml",
 	"lighthouse/cluster_role_binding.yaml",
 	"lighthouse/cluster_role.yaml",
 }
