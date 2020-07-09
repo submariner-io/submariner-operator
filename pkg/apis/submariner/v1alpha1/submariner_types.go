@@ -75,6 +75,8 @@ type SubmarinerStatus struct {
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
+const DefaultColorCode = "blue"
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Submariner is the Schema for the submariners API
@@ -114,6 +116,6 @@ func (submariner *Submariner) SetDefaults() {
 	}
 
 	if submariner.Spec.ColorCodes == "" {
-		submariner.Spec.ColorCodes = "blue"
+		submariner.Spec.ColorCodes = DefaultColorCode
 	}
 }
