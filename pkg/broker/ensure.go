@@ -25,6 +25,7 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/engine"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -119,8 +120,8 @@ func createBrokerAdministratorRoleAndSA(clientset *kubernetes.Clientset) error {
 	}
 
 	// Create the broker admin role
-	_, err = CreateNewBrokerAdminRole(clientset)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
+	_, err = CreateOrUpdateBrokerAdminRole(clientset)
+	if err != nil {
 		return fmt.Errorf("error creating subctl role: %s", err)
 	}
 
@@ -169,8 +170,8 @@ func CreateNewClusterBrokerRole(clientset *kubernetes.Clientset) (brokerrole *rb
 	return clientset.RbacV1().Roles(SubmarinerBrokerNamespace).Create(NewBrokerClusterRole())
 }
 
-func CreateNewBrokerAdminRole(clientset *kubernetes.Clientset) (brokerAdminRole *rbac.Role, err error) {
-	return clientset.RbacV1().Roles(SubmarinerBrokerNamespace).Create(NewBrokerAdminRole())
+func CreateOrUpdateBrokerAdminRole(clientset *kubernetes.Clientset) (created bool, err error) {
+	return utils.CreateOrUpdateRole(clientset, SubmarinerBrokerNamespace, NewBrokerAdminRole())
 }
 
 func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, serviceAccount, role string) (brokerRoleBinding *rbac.RoleBinding, err error) {
