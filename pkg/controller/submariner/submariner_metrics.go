@@ -30,12 +30,6 @@ const (
 )
 
 var (
-	reconciliationsCounter = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "submariner_reconciliations",
-			Help: "Number of reconciliations processed",
-		},
-	)
 	gatewaysGauge = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "submariner_gateways",
@@ -57,11 +51,7 @@ var (
 )
 
 func init() {
-	metrics.Registry.MustRegister(reconciliationsCounter, gatewaysGauge, connectionsGauge)
-}
-
-func recordReconciliation() {
-	reconciliationsCounter.Inc()
+	metrics.Registry.MustRegister(gatewaysGauge, connectionsGauge)
 }
 
 func recordGateways(count int) {
