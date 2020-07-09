@@ -77,7 +77,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&repository, "repository", versions.DefaultSubmarinerRepo, "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
-	cmd.Flags().StringVar(&colorCodes, "colorcodes", "blue", "color codes")
+	cmd.Flags().StringVar(&colorCodes, "colorcodes", submariner.DefaultColorCode, "color codes")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
 	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "Disable NAT for IPsec")
