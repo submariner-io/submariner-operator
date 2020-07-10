@@ -86,13 +86,19 @@ func isOverlappingCIDR(cidrList []string, cidr string) (bool, error) {
 	return false, nil
 }
 
-func NewCIDR(cidr string) CIDR {
-	_, network, _ := net.ParseCIDR(cidr)
+func NewCIDR(cidr string) (CIDR, error) {
+	clusterCidr := CIDR{}
+	_, network, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return clusterCidr, fmt.Errorf("invalid cidr %q passed as input", cidr)
+	}
 	ones, total := network.Mask.Size()
 	size := total - ones
 	lastIp := LastIp(network)
-	clusterCidr := CIDR{network: network, size: size, lastIp: lastIp}
-	return clusterCidr
+	clusterCidr.network = network
+	clusterCidr.size = size
+	clusterCidr.lastIp = lastIp
+	return clusterCidr, nil
 }
 
 func LastIp(network *net.IPNet) uint {
@@ -108,7 +114,11 @@ func allocateByCidr(cidr string) (uint, error) {
 	if err != nil || !globalCidr.net.Contains(requestedIp) {
 		return 0, fmt.Errorf("%s not a valid subnet of %v\n", cidr, globalCidr.net)
 	}
-	clusterCidr := NewCIDR(cidr)
+	clusterCidr, err := NewCIDR(cidr)
+	if err != nil {
+		return 0, err
+	}
+
 	if !globalCidr.net.Contains(uintToIP(clusterCidr.lastIp)) {
 		return 0, fmt.Errorf("%s not a valid subnet of %v\n", cidr, globalCidr.net)
 	}
@@ -163,7 +173,10 @@ func AllocateGlobalCIDR(globalnetInfo *GlobalnetInfo) (string, error) {
 	globalCidr.net = network
 	for _, globalNetwork := range globalnetInfo.GlobalCidrInfo {
 		for _, otherCluster := range globalNetwork.GlobalCIDRs {
-			otherClusterCIDR := NewCIDR(otherCluster)
+			otherClusterCIDR, err := NewCIDR(otherCluster)
+			if err != nil {
+				return "", err
+			}
 			globalCidr.allocatedClusters = append(globalCidr.allocatedClusters, &otherClusterCIDR)
 			globalCidr.allocatedCount++
 		}

@@ -252,10 +252,10 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 			}
 
 			if globalnetInfo.GlobalCidrInfo[clusterID] == nil ||
-				globalnetInfo.GlobalCidrInfo[clusterID].GlobalCIDRs[0] != globalnetCIDR {
+				globalnetInfo.GlobalCidrInfo[clusterID].GlobalCIDRs[0] != netconfig.GlobalnetCIDR {
 				var newClusterInfo broker.ClusterInfo
 				newClusterInfo.ClusterId = clusterID
-				newClusterInfo.GlobalCidr = []string{globalnetCIDR}
+				newClusterInfo.GlobalCidr = []string{netconfig.GlobalnetCIDR}
 
 				err = broker.UpdateGlobalnetConfigMap(brokerAdminClientset, brokerNamespace, globalnetConfigMap, newClusterInfo)
 				return err
