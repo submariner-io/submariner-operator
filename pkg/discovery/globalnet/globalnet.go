@@ -87,17 +87,14 @@ func isOverlappingCIDR(cidrList []string, cidr string) (bool, error) {
 }
 
 func NewCIDR(cidr string) (CIDR, error) {
-	clusterCidr := CIDR{}
 	_, network, err := net.ParseCIDR(cidr)
 	if err != nil {
-		return clusterCidr, fmt.Errorf("invalid cidr %q passed as input", cidr)
+		return CIDR{}, fmt.Errorf("invalid cidr %q passed as input", cidr)
 	}
 	ones, total := network.Mask.Size()
 	size := total - ones
 	lastIp := LastIp(network)
-	clusterCidr.network = network
-	clusterCidr.size = size
-	clusterCidr.lastIp = lastIp
+	clusterCidr := CIDR{network: network, size: size, lastIp: lastIp}
 	return clusterCidr, nil
 }
 
@@ -114,8 +111,9 @@ func allocateByCidr(cidr string) (uint, error) {
 	if err != nil || !globalCidr.net.Contains(requestedIp) {
 		return 0, fmt.Errorf("%s not a valid subnet of %v\n", cidr, globalCidr.net)
 	}
-	clusterCidr, err := NewCIDR(cidr)
-	if err != nil {
+
+	var clusterCidr CIDR
+	if clusterCidr, err = NewCIDR(cidr); err != nil {
 		return 0, err
 	}
 
