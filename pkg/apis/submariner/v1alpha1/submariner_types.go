@@ -21,6 +21,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+
+	"github.com/submariner-io/submariner-operator/pkg/versions"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -61,8 +63,8 @@ type SubmarinerStatus struct {
 	NatEnabled                bool                    `json:"natEnabled"`
 	ColorCodes                string                  `json:"colorCodes,omitempty"`
 	ClusterID                 string                  `json:"clusterID"`
-	ServiceCIDR               string                  `json:"serviceCIDR"`
-	ClusterCIDR               string                  `json:"clusterCIDR"`
+	ServiceCIDR               string                  `json:"serviceCIDR,omitempty"`
+	ClusterCIDR               string                  `json:"clusterCIDR,omitempty"`
 	GlobalCIDR                string                  `json:"globalCIDR,omitempty"`
 	EngineDaemonSetStatus     *appsv1.DaemonSetStatus `json:"engineDaemonSetStatus,omitempty"`
 	RouteAgentDaemonSetStatus *appsv1.DaemonSetStatus `json:"routeAgentDaemonSetStatus,omitempty"`
@@ -99,4 +101,21 @@ type SubmarinerList struct {
 
 func init() {
 	SchemeBuilder.Register(&Submariner{}, &SubmarinerList{})
+}
+
+func (submariner *Submariner) SetDefaults() {
+
+	if submariner.Spec.Repository == "" {
+		// An empty field is converted to the default upstream submariner repository where all images live
+		submariner.Spec.Repository = versions.DefaultSubmarinerRepo
+	}
+
+	if submariner.Spec.Version == "" {
+		submariner.Spec.Version = versions.DefaultSubmarinerVersion
+	}
+
+	if submariner.Spec.ColorCodes == "" {
+		submariner.Spec.ColorCodes = "blue"
+	}
+
 }
