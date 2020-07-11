@@ -31,9 +31,11 @@ import (
 	_ "github.com/submariner-io/lighthouse/test/e2e/framework"
 	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
-	_ "github.com/submariner-io/submariner/test/e2e/framework"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -52,6 +54,8 @@ func init() {
 	verifyCmd.Flags().BoolVar(&enableDisruptive, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
 	addVerifyFlags(verifyCmd)
 	rootCmd.AddCommand(verifyCmd)
+
+	framework.AddBeforeSuite(detectGlobalnet)
 }
 
 func addVerifyFlags(cmd *cobra.Command) {
@@ -262,4 +266,15 @@ func getVerifyPatterns(csv string, includeDisruptive bool) ([]string, []string, 
 		return nil, nil, fmt.Errorf("Please specify at least one verification to be performed")
 	}
 	return outputPatterns, outputVerifications, nil
+}
+
+func detectGlobalnet() {
+	submarinerClient, err := submarinerclientset.NewForConfig(framework.RestConfigs[framework.ClusterA])
+	exitOnError("Error creating submariner client: %v", err)
+
+	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName,
+		v1.GetOptions{})
+	exitOnError("Error obtaining Submariner resource: %v", err)
+
+	framework.TestContext.GlobalnetEnabled = submariner.Spec.GlobalCIDR != ""
 }
