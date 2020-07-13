@@ -23,9 +23,8 @@ import (
 // showCmd represents the show command
 var showCmd = &cobra.Command{
 	Use:   "show",
-	Short: "Get information on your cluster related to submariner",
-	Long: `This command shows the status of submariner in your cluster,
-and the relevant network details from your cluster.`,
+	Short: "Show information about submariner",
+	Long:  `This command shows information about some aspect of the submariner deployment in a cluster.`,
 }
 
 func init() {
