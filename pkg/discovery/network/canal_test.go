@@ -53,7 +53,6 @@ var _ = Describe("discoverCanalFlannelNetwork", func() {
 })
 
 func testDiscoverCanalFlannelWith(objects ...runtime.Object) *ClusterNetwork {
-
 	clientSet := fake.NewSimpleClientset(objects...)
 	clusterNet, err := discoverCanalFlannelNetwork(clientSet)
 	Expect(err).NotTo(HaveOccurred())
@@ -61,7 +60,6 @@ func testDiscoverCanalFlannelWith(objects ...runtime.Object) *ClusterNetwork {
 }
 
 func testDiscoverWith(objects ...runtime.Object) *ClusterNetwork {
-
 	clientSet := fake.NewSimpleClientset(objects...)
 	clusterNet, err := Discover(nil, clientSet, nil, "")
 	Expect(err).NotTo(HaveOccurred())

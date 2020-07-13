@@ -35,7 +35,6 @@ var (
 )
 
 func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, error) {
-
 	if dynClient == nil {
 		return nil, nil
 	}
@@ -52,7 +51,6 @@ func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, er
 }
 
 func parseOS4ClusterNetwork(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
-
 	result := &ClusterNetwork{}
 	clusterNetworks, found, err := unstructured.NestedSlice(cr.Object, "clusterNetworks")
 	if err != nil {

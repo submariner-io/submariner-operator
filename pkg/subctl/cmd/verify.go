@@ -237,7 +237,6 @@ func getVerifyPattern(key string) (verificationType, string) {
 }
 
 func getVerifyPatterns(csv string, includeDisruptive bool) ([]string, []string, error) {
-
 	outputPatterns := []string{}
 	outputVerifications := []string{}
 

@@ -26,7 +26,6 @@ import (
 )
 
 func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-
 	// TODO: this must be smarter, looking for the canal daemonset, with labels k8s-app=canal
 	//  and then the reference on the container volumes:
 	//   - configMap:

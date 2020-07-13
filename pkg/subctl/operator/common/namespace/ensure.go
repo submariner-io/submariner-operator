@@ -44,5 +44,4 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	} else {
 		return false, err
 	}
-
 }

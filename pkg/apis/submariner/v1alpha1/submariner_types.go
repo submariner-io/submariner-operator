@@ -104,7 +104,6 @@ func init() {
 }
 
 func (submariner *Submariner) SetDefaults() {
-
 	if submariner.Spec.Repository == "" {
 		// An empty field is converted to the default upstream submariner repository where all images live
 		submariner.Spec.Repository = versions.DefaultSubmarinerRepo
@@ -117,5 +116,4 @@ func (submariner *Submariner) SetDefaults() {
 	if submariner.Spec.ColorCodes == "" {
 		submariner.Spec.ColorCodes = "blue"
 	}
-
 }

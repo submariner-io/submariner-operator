@@ -63,7 +63,6 @@ func NewFromString(str string) (*SubctlData, error) {
 }
 
 func (data *SubctlData) WriteToFile(filename string) error {
-
 	dataStr, err := data.ToString()
 	if err != nil {
 		return err
@@ -85,7 +84,6 @@ func NewFromFile(filename string) (*SubctlData, error) {
 }
 
 func NewFromCluster(restConfig *rest.Config, brokerNamespace, ipsecSubmFile string) (*SubctlData, error) {
-
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
 		return nil, err

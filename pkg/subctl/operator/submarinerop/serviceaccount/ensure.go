@@ -67,7 +67,6 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	}
 
 	return createdSa || upd || updRb || upCr || upCrb, err
-
 }
 
 func ensureServiceAccount(clientSet *clientset.Clientset, namespace string) (bool, error) {
@@ -80,7 +79,6 @@ func ensureServiceAccount(clientSet *clientset.Clientset, namespace string) (boo
 	} else {
 		return false, fmt.Errorf("ServiceAccount creation failed: %s", err)
 	}
-
 }
 
 func ensureRole(clientSet *clientset.Clientset, namespace string) (bool, error) {
@@ -101,7 +99,6 @@ func ensureRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, 
 }
 
 func getOperatorRoleBinding() (*rbacv1.RoleBinding, error) {
-
 	roleBinding := &rbacv1.RoleBinding{}
 	err := embeddedyamls.GetObject(embeddedyamls.Role_binding_yaml, roleBinding)
 	if err != nil {
@@ -111,7 +108,6 @@ func getOperatorRoleBinding() (*rbacv1.RoleBinding, error) {
 }
 
 func getOperatorRole() (*rbacv1.Role, error) {
-
 	role := &rbacv1.Role{}
 	err := embeddedyamls.GetObject(embeddedyamls.Role_yaml, role)
 	if err != nil {
@@ -135,7 +131,6 @@ func ensureClusterRole(clientSet *clientset.Clientset, namespace string) (bool, 
 		return false, fmt.Errorf("lighthouseClusterRole update or create failed: %s", err)
 	}
 	return utils.CreateOrUpdateClusterRole(clientSet, lighthouseClusterRole)
-
 }
 
 func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, error) {
@@ -156,7 +151,6 @@ func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) 
 }
 
 func getOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding, error) {
-
 	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
 	err := embeddedyamls.GetObject(embeddedyamls.Submariner_globalnet_cluster_role_binding_yaml, clusterRoleBinding)
 	if err != nil {
@@ -167,7 +161,6 @@ func getOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding
 }
 
 func getLighthouseOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding, error) {
-
 	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
 	err := embeddedyamls.GetObject(embeddedyamls.Cluster_role_binding_yaml, clusterRoleBinding)
 	if err != nil {
@@ -178,7 +171,6 @@ func getLighthouseOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterR
 }
 
 func getOperatorClusterRole() (*rbacv1.ClusterRole, error) {
-
 	role := &rbacv1.ClusterRole{}
 	err := embeddedyamls.GetObject(embeddedyamls.Submariner_globalnet_cluster_role_yaml, role)
 	if err != nil {
@@ -188,7 +180,6 @@ func getOperatorClusterRole() (*rbacv1.ClusterRole, error) {
 }
 
 func getLighthouseOperatorClusterRole() (*rbacv1.ClusterRole, error) {
-
 	role := &rbacv1.ClusterRole{}
 	err := embeddedyamls.GetObject(embeddedyamls.Cluster_role_yaml, role)
 	if err != nil {

@@ -73,7 +73,6 @@ func NewBrokerAdminRole() *rbacv1.Role {
 			},
 		},
 	}
-
 }
 
 // Create a role for each Cluster SAs to bind to

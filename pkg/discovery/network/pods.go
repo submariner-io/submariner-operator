@@ -25,7 +25,6 @@ import (
 )
 
 func findPodCommandParameter(clientSet kubernetes.Interface, labelSelector, parameter string) (string, error) {
-
 	pod, err := findPod(clientSet, labelSelector)
 
 	if err != nil || pod == nil {

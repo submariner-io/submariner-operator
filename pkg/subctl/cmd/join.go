@@ -70,7 +70,6 @@ func init() {
 	addJoinFlags(joinCmd)
 	addKubeconfigFlag(joinCmd)
 	rootCmd.AddCommand(joinCmd)
-
 }
 
 func addJoinFlags(cmd *cobra.Command) {
@@ -125,7 +124,6 @@ func checkArgumentPassed(args []string) error {
 var status = cli.NewStatus()
 
 func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData) {
-
 	// Missing information
 	var qs = []*survey.Question{}
 
@@ -267,7 +265,6 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 }
 
 func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
-
 	dynClient, clientSet, err := getClients(config)
 	exitOnError("Unable to set the Kubernetes cluster connection up", err)
 
@@ -307,7 +304,6 @@ func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (CIDR string
 		return serviceCIDR, false, nil
 	} else if nd != nil && len(nd.ServiceCIDRs) > 0 {
 		return nd.ServiceCIDRs[0], true, nil
-
 	} else {
 		CIDR, err = askForCIDR("ClusterIP service")
 		return CIDR, false, err
@@ -399,7 +395,6 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 }
 
 func operatorImage() string {
-
 	version := imageVersion
 
 	if imageVersion == "" {

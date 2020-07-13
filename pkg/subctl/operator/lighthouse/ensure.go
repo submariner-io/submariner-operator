@@ -26,7 +26,6 @@ import (
 )
 
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string) (bool, error) {
-
 	if created, err := crds.Ensure(config); err != nil {
 		return created, err
 	} else if created {

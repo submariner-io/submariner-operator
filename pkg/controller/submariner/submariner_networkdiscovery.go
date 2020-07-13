@@ -8,7 +8,6 @@ import (
 )
 
 func (r *ReconcileSubmariner) getClusterNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
-
 	const UnknownPlugin = "unknown"
 
 	// If a previously cached discovery exists, use that
@@ -31,7 +30,6 @@ func (r *ReconcileSubmariner) getClusterNetwork(submariner *submopv1a1.Submarine
 }
 
 func (r *ReconcileSubmariner) discoverNetwork(submariner *submopv1a1.Submariner) (err error) {
-
 	clusterNetwork, err := r.getClusterNetwork(submariner)
 	submariner.Status.ClusterCIDR = getCIDR(
 		"Cluster",
@@ -50,7 +48,6 @@ func (r *ReconcileSubmariner) discoverNetwork(submariner *submopv1a1.Submariner)
 }
 
 func getCIDR(CIDRtype string, currentCIDR string, detectedCIDRs []string) string {
-
 	detected := getFirstCIDR(CIDRtype, detectedCIDRs)
 
 	if currentCIDR == "" {
