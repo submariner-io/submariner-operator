@@ -389,14 +389,14 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 		"app": "submariner-engine",
 	}
 
-	// Create privilaged security context for Engine pod
+	// Create privileged security context for Engine pod
 	// FIXME: Seems like these have to be a var, so can pass pointer to bool var to SecurityContext. Cleaner option?
 	allowPrivilegeEscalation := true
 	privileged := true
 	runAsNonRoot := false
 	readOnlyRootFilesystem := false
 
-	security_context_all_caps_privilaged := corev1.SecurityContext{
+	security_context_all_caps_privileged := corev1.SecurityContext{
 		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
 		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 		Privileged:               &privileged,
@@ -426,7 +426,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 					Name:            "submariner",
 					Image:           getImagePath(cr, engineImage),
 					Command:         []string{"submariner.sh"},
-					SecurityContext: &security_context_all_caps_privilaged,
+					SecurityContext: &security_context_all_caps_privileged,
 					VolumeMounts: []corev1.VolumeMount{
 						{Name: "host-slash", MountPath: "/host", ReadOnly: true},
 					},
