@@ -25,3 +25,11 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - lighthouse.submariner.io
+  resources:
+  - serviceexports
+  verbs:
+  - get
+  - list
+  - watch
