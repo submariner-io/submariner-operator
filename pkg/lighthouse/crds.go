@@ -30,7 +30,7 @@ func Ensure(config *rest.Config, isBroker bool) (bool, error) {
 	}
 
 	installedSI, err := utils.CreateOrUpdateEmbeddedCRD(clientSet,
-		embeddedyamls.Lighthouse_crds_serviceexport_crd_yaml)
+		embeddedyamls.Lighthouse_crds_serviceimport_crd_yaml)
 	if err != nil {
 		return installedSI, fmt.Errorf("Error creating the ServiceImport CRD: %s", err)
 	}
