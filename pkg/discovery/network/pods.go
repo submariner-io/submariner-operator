@@ -19,6 +19,7 @@ package network
 import (
 	"strings"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -55,7 +56,7 @@ func findPod(clientSet kubernetes.Interface, labelSelector string) (*v1.Pod, err
 	})
 
 	if err != nil || len(pods.Items) == 0 {
-		return nil, err
+		return nil, errors.WithMessagef(err, "error listing Pods by label selector %q", labelSelector)
 	}
 	return &pods.Items[0], nil
 }

@@ -19,8 +19,9 @@ package network
 import (
 	"encoding/json"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -34,10 +35,10 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 	//        name: flannel-cfg
 	cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get("canal-config", metav1.GetOptions{})
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, errors.WithMessage(err, "error obtaining the \"canal-config\" ConfigMap")
 	}
 
 	podCIDR := extractPodCIDRFromNetConfigJSON(cm)
@@ -53,7 +54,11 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 
 	// Try to networkPluginsDiscovery the service CIDRs using the generic functions
 	genNetwork, err := discoverGenericNetwork(clientSet)
-	if err != nil && genNetwork != nil {
+	if err != nil {
+		return nil, err
+	}
+
+	if genNetwork != nil {
 		clusterNetwork.ServiceCIDRs = genNetwork.ServiceCIDRs
 	}
 
