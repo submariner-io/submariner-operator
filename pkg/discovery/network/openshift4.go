@@ -19,11 +19,12 @@ package network
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/klog"
 )
 
 var (
@@ -43,8 +44,10 @@ func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, er
 
 	cr, err := crClient.Get("default", metav1.GetOptions{})
 	if err != nil {
-		klog.Info("Attempted network discovery for OpenShift4, no clusternetworks CRD")
-		return nil, nil
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return nil, errors.WithMessage(err, "error obtaining the default OpenShift4 ClusterNetworks resource")
 	}
 
 	return parseOS4ClusterNetwork(cr)
@@ -56,7 +59,7 @@ func parseOS4ClusterNetwork(cr *unstructured.Unstructured) (*ClusterNetwork, err
 	if err != nil {
 		return nil, err
 	} else if !found {
-		return nil, fmt.Errorf("field clusterNetworks expected, but not found in %v", cr.Object)
+		return nil, fmt.Errorf("field clusterNetworks expected, but not found in ClusterNetworks resource: %v", cr.Object)
 	}
 	for _, clusterNetwork := range clusterNetworks {
 		clusterNetworkMap, _ := clusterNetwork.(map[string]interface{})
@@ -65,7 +68,7 @@ func parseOS4ClusterNetwork(cr *unstructured.Unstructured) (*ClusterNetwork, err
 		if err != nil {
 			return nil, err
 		} else if !found {
-			return nil, fmt.Errorf("field CIDR expected, but not found in %v", clusterNetworkMap)
+			return nil, fmt.Errorf("field CIDR expected, but not found in cluster network: %v", clusterNetworkMap)
 		}
 		result.PodCIDRs = append(result.PodCIDRs, cidr)
 	}
@@ -73,7 +76,7 @@ func parseOS4ClusterNetwork(cr *unstructured.Unstructured) (*ClusterNetwork, err
 	if err != nil {
 		return nil, err
 	} else if !found {
-		return nil, fmt.Errorf("field serviceNetwork expected, but not found in %v", cr.Object)
+		return nil, fmt.Errorf("field serviceNetwork expected, but not found in ClusterNetworks resource: %v", cr.Object)
 	}
 	result.ServiceCIDRs = append(result.ServiceCIDRs, serviceNetwork)
 	result.NetworkPlugin = "OpenShift"

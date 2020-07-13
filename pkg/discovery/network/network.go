@@ -62,53 +62,57 @@ func (cn *ClusterNetwork) IsComplete() bool {
 
 func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submClient submarinerclientset.Interface, operatorNamespace string) (*ClusterNetwork, error) {
 	discovery, err := networkPluginsDiscovery(dynClient, clientSet)
+	if err != nil {
+		return nil, err
+	}
 
-	if err == nil && discovery != nil {
+	if discovery != nil {
 		// TODO: The other branch of this if will not try to find the globalCIDRs
 		globalCIDR, _ := getGlobalCIDRs(submClient, operatorNamespace)
 		discovery.GlobalCIDR = globalCIDR
 		if discovery.IsComplete() {
 			return discovery, nil
-		} else {
-			// If the info we got from the non-generic plugins is incomplete
-			// try to complete with the generic discovery mechanisms
+		}
+
+		// If the info we got from the non-generic plugins is incomplete
+		// try to complete with the generic discovery mechanisms
+		if len(discovery.ServiceCIDRs) == 0 || len(discovery.PodCIDRs) == 0 {
 			genericNet, err := discoverGenericNetwork(clientSet)
-			if genericNet == nil || err != nil {
-				return discovery, nil
+			if err != nil {
+				return nil, err
 			}
 
-			if len(discovery.ServiceCIDRs) == 0 {
-				discovery.ServiceCIDRs = genericNet.ServiceCIDRs
+			if genericNet != nil {
+				if len(discovery.ServiceCIDRs) == 0 {
+					discovery.ServiceCIDRs = genericNet.ServiceCIDRs
+				}
+				if len(discovery.PodCIDRs) == 0 {
+					discovery.PodCIDRs = genericNet.PodCIDRs
+				}
 			}
-			if len(discovery.PodCIDRs) == 0 {
-				discovery.PodCIDRs = genericNet.PodCIDRs
-			}
-			return discovery, nil
 		}
-	} else {
-		// If nothing specific was discovered, use the generic discovery
-		genericNet, err := discoverGenericNetwork(clientSet)
-		if err == nil && genericNet != nil {
-			return genericNet, nil
-		}
-		return nil, err
+
+		return discovery, nil
 	}
+
+	// If nothing specific was discovered, use the generic discovery
+	return discoverGenericNetwork(clientSet)
 }
 
 func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	osClusterNet, err := discoverOpenShift4Network(dynClient)
-	if err == nil && osClusterNet != nil {
-		return osClusterNet, nil
+	if err != nil || osClusterNet != nil {
+		return osClusterNet, err
 	}
 
 	weaveClusterNet, err := discoverWeaveNetwork(clientSet)
-	if err == nil && weaveClusterNet != nil {
-		return weaveClusterNet, nil
+	if err != nil || weaveClusterNet != nil {
+		return weaveClusterNet, err
 	}
 
 	canalClusterNet, err := discoverCanalFlannelNetwork(clientSet)
-	if err == nil && canalClusterNet != nil {
-		return canalClusterNet, nil
+	if err != nil || canalClusterNet != nil {
+		return canalClusterNet, err
 	}
 
 	return nil, nil

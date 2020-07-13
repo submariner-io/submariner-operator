@@ -55,7 +55,7 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 	}
 
 	if len(clusterNetwork.PodCIDRs) > 0 || len(clusterNetwork.ServiceCIDRs) > 0 {
-		return clusterNetwork, err
+		return clusterNetwork, nil
 	}
 
 	return nil, nil
