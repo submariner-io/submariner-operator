@@ -93,7 +93,6 @@ func CreateOrUpdateCRD(clientSet extendedclientset.Interface, crd *apiextensions
 }
 
 func CreateOrUpdateEmbeddedCRD(clientSet extendedclientset.Interface, crdYaml string) (bool, error) {
-
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 
 	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {

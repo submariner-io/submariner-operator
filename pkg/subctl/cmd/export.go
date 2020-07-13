@@ -52,8 +52,8 @@ func init() {
 
 func addServiceExportFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&serviceNamespace, "namespace", "n", "", "Namespace of the service to be exported")
-
 }
+
 func exportService(cmd *cobra.Command, args []string) {
 	err := validateArguments(args)
 	exitOnError("Insufficient arguments", err)
@@ -91,7 +91,6 @@ func exportService(cmd *cobra.Command, args []string) {
 	}
 	exitOnError("Failed to export Service", err)
 	fmt.Fprintln(os.Stdout, "Service exported successfully")
-
 }
 
 func validateArguments(args []string) error {

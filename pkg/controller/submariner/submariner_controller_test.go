@@ -143,7 +143,6 @@ func testReconciliation() {
 
 	When("the network details are provided", func() {
 		It("should use the provided ones instead of the detected ones", func() {
-
 			submariner.Spec.ServiceCIDR = testConfiguredServiceCIDR
 			submariner.Spec.ClusterCIDR = testConfiguredClusterCIDR
 

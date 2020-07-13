@@ -21,7 +21,6 @@ import (
 )
 
 func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-
 	clusterNetwork := &ClusterNetwork{
 		NetworkPlugin: "generic",
 	}

@@ -29,7 +29,6 @@ import (
 )
 
 func WaitForReady(clientSet *clientset.Clientset, namespace string, deployment string, interval, timeout time.Duration) error {
-
 	deployments := clientSet.AppsV1().Deployments(namespace)
 
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {

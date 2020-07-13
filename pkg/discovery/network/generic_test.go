@@ -161,7 +161,6 @@ var _ = Describe("discoverGenericNetwork", func() {
 })
 
 func testDiscoverGenericWith(objects ...runtime.Object) *ClusterNetwork {
-
 	clientSet := fake.NewSimpleClientset(objects...)
 	clusterNet, err := discoverGenericNetwork(clientSet)
 	Expect(err).NotTo(HaveOccurred())

@@ -58,13 +58,11 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	}
 
 	return createdSa || upCr || upCrb, err
-
 }
 
 func ensureServiceAccount(clientSet *clientset.Clientset, namespace string) (bool, error) {
 	sa := &v1.ServiceAccount{ObjectMeta: v1meta.ObjectMeta{Name: LighthouseServiceAccount}}
 	return utils.CreateOrUpdateServiceAccount(clientSet, namespace, sa)
-
 }
 
 func ensureClusterRole(clientSet *clientset.Clientset, namespace string) (bool, error) {
@@ -74,7 +72,6 @@ func ensureClusterRole(clientSet *clientset.Clientset, namespace string) (bool, 
 	}
 
 	return utils.CreateOrUpdateClusterRole(clientSet, clusterRole)
-
 }
 
 func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, error) {
@@ -86,7 +83,6 @@ func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) 
 }
 
 func getOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding, error) {
-
 	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
 	err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_cluster_role_binding_yaml, clusterRoleBinding)
 	if err != nil {
@@ -97,7 +93,6 @@ func getOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding
 }
 
 func getOperatorClusterRole() (*rbacv1.ClusterRole, error) {
-
 	role := &rbacv1.ClusterRole{}
 	err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_cluster_role_yaml, role)
 	if err != nil {

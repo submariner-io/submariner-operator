@@ -66,7 +66,6 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-
 	reconciler := &ReconcileSubmariner{
 		client:         mgr.GetClient(),
 		scheme:         mgr.GetScheme(),
@@ -325,7 +324,6 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submopv1a1.S
 					return nil
 				})
 				return err
-
 			})
 			if err != nil {
 				return err
@@ -616,7 +614,6 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 }
 
 func newServiceDiscoveryCR(namespace string) *submopv1a1.ServiceDiscovery {
-
 	return &submopv1a1.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,

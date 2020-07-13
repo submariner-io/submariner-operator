@@ -96,7 +96,6 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submC
 }
 
 func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-
 	osClusterNet, err := discoverOpenShift4Network(dynClient)
 	if err == nil && osClusterNet != nil {
 		return osClusterNet, nil

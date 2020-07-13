@@ -35,7 +35,6 @@ func generateRandomPSK(n int) ([]byte, error) {
 }
 
 func newIPSECPSKSecret() (*v1.Secret, error) {
-
 	psk, err := generateRandomPSK(ipsecSecretLength)
 	if err != nil {
 		return nil, err

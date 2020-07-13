@@ -197,7 +197,6 @@ func uintToIP(ip uint) net.IP {
 }
 
 func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
-
 	_, network, err := net.ParseCIDR(cidrRange)
 	if err != nil {
 		return 0, err
