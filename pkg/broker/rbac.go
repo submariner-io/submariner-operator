@@ -51,22 +51,22 @@ func NewBrokerAdminRole() *rbacv1.Role {
 			Name: submarinerBrokerAdminRole,
 		},
 		Rules: []rbacv1.PolicyRule{
-			rbacv1.PolicyRule{
+			{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"submariner.io"},
 				Resources: []string{"clusters", "endpoints"},
 			},
-			rbacv1.PolicyRule{
+			{
 				Verbs:     []string{"create", "get", "list", "update", "delete"},
 				APIGroups: []string{""},
 				Resources: []string{"serviceaccounts", "secrets", "configmaps"},
 			},
-			rbacv1.PolicyRule{
+			{
 				Verbs:     []string{"create", "get", "list", "delete"},
 				APIGroups: []string{"rbac.authorization.k8s.io"},
 				Resources: []string{"rolebindings"},
 			},
-			rbacv1.PolicyRule{
+			{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"lighthouse.submariner.io"},
 				Resources: []string{"*"},
@@ -83,12 +83,12 @@ func NewBrokerClusterRole() *rbacv1.Role {
 			Name: submarinerBrokerClusterRole,
 		},
 		Rules: []rbacv1.PolicyRule{
-			rbacv1.PolicyRule{
+			{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"submariner.io"},
 				Resources: []string{"clusters", "endpoints"},
 			},
-			rbacv1.PolicyRule{
+			{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"lighthouse.submariner.io"},
 				Resources: []string{"*"},
@@ -109,7 +109,7 @@ func NewBrokerRoleBinding(serviceAccount, role string) *rbacv1.RoleBinding {
 			Name:     role,
 		},
 		Subjects: []rbacv1.Subject{
-			rbacv1.Subject{
+			{
 				Namespace: "submariner-k8s-broker",
 				Name:      serviceAccount,
 				Kind:      "ServiceAccount",
