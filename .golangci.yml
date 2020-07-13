@@ -28,7 +28,7 @@ linters:
     #- gochecknoinits
     #- gocritic
     - gocyclo
-    #- gofmt
+    - gofmt
     - goimports
     #- golint
     #- gosec
