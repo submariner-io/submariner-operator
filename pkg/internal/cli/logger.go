@@ -115,13 +115,11 @@ func addDebugHeader(buf *bytes.Buffer) {
 	if !ok {
 		file = "???"
 		line = 1
-	} else {
-		if slash := strings.LastIndex(file, "/"); slash >= 0 {
-			path := file
-			file = path[slash+1:]
-			if dirsep := strings.LastIndex(path[:slash], "/"); dirsep >= 0 {
-				file = path[dirsep+1:]
-			}
+	} else if slash := strings.LastIndex(file, "/"); slash >= 0 {
+		path := file
+		file = path[slash+1:]
+		if dirsep := strings.LastIndex(path[:slash], "/"); dirsep >= 0 {
+			file = path[dirsep+1:]
 		}
 	}
 	buf.Grow(len(file) + 11) // we know at least this many bytes are needed

@@ -164,13 +164,13 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 
 	instance.SetDefaults()
 
-	if err = r.client.Update(context.TODO(), instance); err != nil {
+	if err := r.client.Update(context.TODO(), instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// discovery is performed after Update to avoid storing the discovery in the
 	// struct beyond status
-	if err = r.discoverNetwork(instance); err != nil {
+	if err := r.discoverNetwork(instance); err != nil {
 		return reconcile.Result{}, err
 	}
 	// Create submariner-engine SA
@@ -245,7 +245,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		}
 	}
 
-	if err = r.reconcileServiceDiscovery(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
+	if err := r.reconcileServiceDiscovery(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
 		return reconcile.Result{}, err
 	}
 	return reconcile.Result{}, nil
@@ -262,7 +262,7 @@ func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace st
 	}
 	// Ensure we’ll get updates
 	for i := range foundGateways.Items {
-		if err = controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.scheme); err != nil {
+		if err := controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.scheme); err != nil {
 			return nil, err
 		}
 	}

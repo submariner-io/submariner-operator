@@ -272,7 +272,7 @@ func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 	return networkDetails
 }
 
-func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (CIDR string, autodetected bool, err error) {
+func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (cidrType string, autodetected bool, err error) {
 	if clusterCIDR != "" {
 		if nd != nil && len(nd.PodCIDRs) > 0 && nd.PodCIDRs[0] != clusterCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided cluster CIDR for the pods (%s) does not match discovered (%s)\n",
@@ -282,12 +282,12 @@ func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (CIDR string, au
 	} else if nd != nil && len(nd.PodCIDRs) > 0 {
 		return nd.PodCIDRs[0], true, nil
 	} else {
-		CIDR, err = askForCIDR("Pod")
-		return CIDR, false, err
+		cidrType, err = askForCIDR("Pod")
+		return cidrType, false, err
 	}
 }
 
-func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (CIDR string, autodetected bool, err error) {
+func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (cidrType string, autodetected bool, err error) {
 	if serviceCIDR != "" {
 		if nd != nil && len(nd.ServiceCIDRs) > 0 && nd.ServiceCIDRs[0] != serviceCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided service CIDR (%s) does not match discovered (%s)\n",
@@ -297,8 +297,8 @@ func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (CIDR string
 	} else if nd != nil && len(nd.ServiceCIDRs) > 0 {
 		return nd.ServiceCIDRs[0], true, nil
 	} else {
-		CIDR, err = askForCIDR("ClusterIP service")
-		return CIDR, false, err
+		cidrType, err = askForCIDR("ClusterIP service")
+		return cidrType, false, err
 	}
 }
 

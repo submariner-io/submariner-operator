@@ -242,7 +242,7 @@ func CheckOverlappingCidrs(globalnetInfo *GlobalnetInfo, netconfig Config) error
 
 func isCIDRPreConfigured(clusterID string, globalNetworks map[string]*GlobalNetwork) bool {
 	// GlobalCIDR is not pre-configured
-	if globalNetworks[clusterID] == nil || globalNetworks[clusterID].GlobalCIDRs == nil || len(globalNetworks[clusterID].GlobalCIDRs) <= 0 {
+	if globalNetworks[clusterID] == nil || globalNetworks[clusterID].GlobalCIDRs == nil || len(globalNetworks[clusterID].GlobalCIDRs) == 0 {
 		return false
 	}
 	// GlobalCIDR is pre-configured
