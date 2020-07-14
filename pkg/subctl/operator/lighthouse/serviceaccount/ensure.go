@@ -47,7 +47,7 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	upCr, err := ensureClusterRole(clientSet, namespace)
+	upCr, err := ensureClusterRole(clientSet)
 	if err != nil {
 		return false, err
 	}
@@ -65,7 +65,7 @@ func ensureServiceAccount(clientSet *clientset.Clientset, namespace string) (boo
 	return utils.CreateOrUpdateServiceAccount(clientSet, namespace, sa)
 }
 
-func ensureClusterRole(clientSet *clientset.Clientset, namespace string) (bool, error) {
+func ensureClusterRole(clientSet *clientset.Clientset) (bool, error) {
 	clusterRole, err := getOperatorClusterRole()
 	if err != nil {
 		return false, fmt.Errorf("ClusterRole update or create failed: %s", err)
