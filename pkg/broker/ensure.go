@@ -170,7 +170,8 @@ func CreateOrUpdateBrokerAdminRole(clientset *kubernetes.Clientset) (created boo
 	return utils.CreateOrUpdateRole(clientset, SubmarinerBrokerNamespace, NewBrokerAdminRole())
 }
 
-func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, serviceAccount, role string) (brokerRoleBinding *rbac.RoleBinding, err error) {
+func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, serviceAccount, role string) (brokerRoleBinding *rbac.RoleBinding,
+	err error) {
 	return clientset.RbacV1().RoleBindings(SubmarinerBrokerNamespace).Create(
 		NewBrokerRoleBinding(serviceAccount, role),
 	)

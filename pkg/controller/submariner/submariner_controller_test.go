@@ -331,7 +331,8 @@ func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client cont
 	Expect(daemonSet.Spec.Selector).To(Equal(&metav1.LabelSelector{MatchLabels: map[string]string{"app": "submariner-routeagent"}}))
 	Expect(daemonSet.Spec.Template.ObjectMeta.Labels["app"]).To(Equal("submariner-routeagent"))
 	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
-	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(Equal(submariner.Spec.Repository + "/submariner-route-agent:" + submariner.Spec.Version))
+	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(Equal(submariner.Spec.Repository + "/submariner-route-agent:" +
+		submariner.Spec.Version))
 
 	envMap := map[string]string{}
 	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
