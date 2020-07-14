@@ -72,7 +72,8 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 	return nil
 }
 
-func updateOrCreateSubmariner(clientSet submarinerclientset.Interface, namespace string, submarinerCR *submariner.Submariner) (bool, error) {
+func updateOrCreateSubmariner(clientSet submarinerclientset.Interface, namespace string, submarinerCR *submariner.Submariner) (bool,
+	error) {
 	_, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Create(submarinerCR)
 	if err == nil {
 		return true, nil

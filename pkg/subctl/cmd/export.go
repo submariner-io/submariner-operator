@@ -37,8 +37,9 @@ var (
 	exportServiceCmd = &cobra.Command{
 		Use:   "service",
 		Short: "Exports a Service to other clusters",
-		Long:  "This command creates a ServiceExport resource with a given name which causes the Service of the same name to be accessible to other clusters",
-		Run:   exportService,
+		Long: "This command creates a ServiceExport resource with a given name which causes the Service of the same name to be accessible" +
+			" to other clusters",
+		Run: exportService,
 	}
 	serviceNamespace string
 )

@@ -37,7 +37,7 @@ linters:
     - govet
     - ineffassign
     #- interfacer
-    #- lll
+    - lll
     - misspell
     - maligned
     - nakedret
@@ -51,3 +51,9 @@ linters:
     - unused
     - varcheck
     - whitespace
+issues:
+  exclude-rules:
+    # Ignore long (due to links) auto-generated YAML lines
+    - linters:
+        - lll
+      path: "pkg/subctl/operator/common/embeddedyamls/yamls.go"

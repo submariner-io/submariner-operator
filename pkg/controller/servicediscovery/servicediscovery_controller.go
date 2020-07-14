@@ -151,7 +151,8 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 	}
 
 	ligthhouseCoreDNSService := &corev1.Service{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace}, ligthhouseCoreDNSService)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
+		ligthhouseCoreDNSService)
 	if errors.IsNotFound(err) {
 		ligthhouseCoreDNSService = newLigthhouseCoreDNSService(instance)
 		if _, err = helpers.ReconcileService(instance, ligthhouseCoreDNSService, reqLogger,
@@ -388,7 +389,8 @@ forward . `
 	return retryErr
 }
 
-func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDiscovery, client, operatorClient controllerClient.Client, reqLogger logr.Logger) error {
+func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDiscovery, client, operatorClient controllerClient.Client,
+	reqLogger logr.Logger) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		dnsOperator := &operatorv1.DNS{}
 		if err := client.Get(context.TODO(), types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
@@ -396,7 +398,8 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 		}
 
 		lighthouseDnsService := &corev1.Service{}
-		err := operatorClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace}, lighthouseDnsService)
+		err := operatorClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
+			lighthouseDnsService)
 		if err != nil || lighthouseDnsService.Spec.ClusterIP == "" {
 			return goerrors.New("lighthouseDnsService ClusterIp should be available")
 		}

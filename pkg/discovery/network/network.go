@@ -60,7 +60,8 @@ func (cn *ClusterNetwork) IsComplete() bool {
 	return cn != nil && len(cn.ServiceCIDRs) > 0 && len(cn.PodCIDRs) > 0
 }
 
-func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submClient submarinerclientset.Interface, operatorNamespace string) (*ClusterNetwork, error) {
+func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submClient submarinerclientset.Interface,
+	operatorNamespace string) (*ClusterNetwork, error) {
 	discovery, err := networkPluginsDiscovery(dynClient, clientSet)
 	if err != nil {
 		return nil, err
