@@ -35,6 +35,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
+	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -274,7 +275,15 @@ func detectGlobalnet() {
 
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName,
 		v1.GetOptions{})
-	exitOnError("Error obtaining Submariner resource: %v", err)
+	if errors.IsNotFound(err) {
+		exitWithErrorMsg(`
+The Submariner resource was not found. Either submariner has not been deployed in this cluster or was deployed using helm.
+This command only supports submariner deployed using the operator via 'subctl join'.`)
+	}
+
+	if err != nil {
+		exitOnError("Error obtaining Submariner resource: %v", err)
+	}
 
 	framework.TestContext.GlobalnetEnabled = submariner.Spec.GlobalCIDR != ""
 }
