@@ -41,7 +41,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
-	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
@@ -204,13 +203,6 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage())
 	status.End(cli.CheckForError(err))
 	exitOnError("Error deploying the operator", err)
-
-	if subctlData.ServiceDiscovery {
-		status.Start("Deploying multi cluster service discovery")
-		err = lighthouse.Ensure(status, config, "", "", false, kubeConfig, kubeContext)
-		status.End(cli.CheckForError(err))
-		exitOnError("Error deploying multi cluster service discovery", err)
-	}
 
 	status.Start("Creating SA for cluster")
 	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID)
