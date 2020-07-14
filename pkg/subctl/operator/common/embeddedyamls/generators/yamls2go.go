@@ -70,8 +70,7 @@ func main() {
 	//      and ` + "`endpoints`" + `.
 	//    type: string`
 
-	re, err := regexp.Compile("`([^`]*)`")
-	panicOnErr(err)
+	re := regexp.MustCompile("`([^`]*)`")
 
 	for _, f := range files {
 		_, err = out.WriteString("\t" + constName(f) + " = `")

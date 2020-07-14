@@ -51,7 +51,7 @@ func UpateSCC(restConfig *rest.Config, namespace string, name string) (bool, err
 			}
 		}
 
-		if err = unstructured.SetNestedSlice(cr.Object, append(users, submarinerUser), "users"); err != nil {
+		if err := unstructured.SetNestedSlice(cr.Object, append(users, submarinerUser), "users"); err != nil {
 			return err
 		}
 

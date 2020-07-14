@@ -21,7 +21,7 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 	var err error
 
 	// Set the owner and controller
-	if err = controllerutil.SetControllerReference(owner, daemonSet, scheme); err != nil {
+	if err := controllerutil.SetControllerReference(owner, daemonSet, scheme); err != nil {
 		return nil, err
 	}
 
@@ -66,7 +66,7 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 	var err error
 
 	// Set the owner and controller
-	if err = controllerutil.SetControllerReference(owner, deployment, scheme); err != nil {
+	if err := controllerutil.SetControllerReference(owner, deployment, scheme); err != nil {
 		return nil, err
 	}
 
@@ -111,7 +111,7 @@ func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLog
 	var err error
 
 	// Set the owner and controller
-	if err = controllerutil.SetControllerReference(owner, configMap, scheme); err != nil {
+	if err := controllerutil.SetControllerReference(owner, configMap, scheme); err != nil {
 		return nil, err
 	}
 
@@ -156,7 +156,7 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 	var err error
 
 	// Set the owner and controller
-	if err = controllerutil.SetControllerReference(owner, service, scheme); err != nil {
+	if err := controllerutil.SetControllerReference(owner, service, scheme); err != nil {
 		return nil, err
 	}
 

@@ -56,12 +56,12 @@ func Ensure(config *rest.Config) error {
 	}
 
 	// Create administrator SA, Role, and bind them
-	if err = createBrokerAdministratorRoleAndSA(clientset); err != nil {
+	if err := createBrokerAdministratorRoleAndSA(clientset); err != nil {
 		return err
 	}
 
 	// Create cluster Role, and a default account for backwards compatibility, also bind it
-	if err = createBrokerClusterRoleAndDefaultSA(clientset); err != nil {
+	if err := createBrokerClusterRoleAndDefaultSA(clientset); err != nil {
 		return err
 	}
 	_, err = WaitForClientToken(clientset, SubmarinerBrokerAdminSA)
