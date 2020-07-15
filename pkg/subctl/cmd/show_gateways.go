@@ -10,27 +10,17 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type gatewaysStatus struct {
+type gatewayStatus struct {
 	node        string
 	haStatus    submv1.HAStatus
 	connections string
 	summary     string
 }
 
-func newGatewayStatusFrom(node string, haStatus submv1.HAStatus, connections string, summary string) gatewaysStatus {
-	v := gatewaysStatus{
-		node:        node,
-		haStatus:    haStatus,
-		connections: connections,
-		summary:     summary,
-	}
-	return v
-}
-
 var showGatewaysCmd = &cobra.Command{
 	Use:   "gateways",
-	Short: "Get information on your gateways related to submariner",
-	Long:  `This command shows the status of submariner gateways in your cluster.`,
+	Short: "Show submariner gateway summary information",
+	Long:  `This command shows summary information about the submariner gateways in a cluster.`,
 	Run:   showGateways,
 }
 
@@ -38,7 +28,7 @@ func init() {
 	showCmd.AddCommand(showGatewaysCmd)
 }
 
-func getGatewaysStatus(status []gatewaysStatus) []gatewaysStatus {
+func getGatewaysStatus() []gatewayStatus {
 	config, err := getRestConfig(kubeConfig, kubeContext)
 	exitOnError("Error getting REST config for cluster", err)
 
@@ -55,6 +45,7 @@ func getGatewaysStatus(status []gatewaysStatus) []gatewaysStatus {
 		exitWithErrorMsg("no gateways found")
 	}
 
+	var status []gatewayStatus
 	for _, gateway := range *gateways {
 		haStatus := gateway.Status.HAStatus
 		enpoint := gateway.Status.LocalEndpoint.Hostname
@@ -73,21 +64,26 @@ func getGatewaysStatus(status []gatewaysStatus) []gatewaysStatus {
 			summary = gateway.Status.StatusFailure
 		}
 		connectionString := fmt.Sprintf("%d/%d", countConnected, totalConnections)
-		status = append(status, newGatewayStatusFrom(enpoint, haStatus, connectionString, summary))
+		status = append(status,
+			gatewayStatus{
+				node:        enpoint,
+				haStatus:    haStatus,
+				connections: connectionString,
+				summary:     summary,
+			})
 	}
 
 	return status
 }
 
 func showGateways(cmd *cobra.Command, args []string) {
-	var status []gatewaysStatus
-	status = getGatewaysStatus(status)
+	status := getGatewaysStatus()
 	printGateways(status)
 }
 
-func printGateways(gateways []gatewaysStatus) {
+func printGateways(gateways []gatewayStatus) {
 	template := "%-20s%-16s%-16s%-32s\n"
-	fmt.Printf(template, "NODE", "HA-STATUS", "CONNSCTIONS", "SUMMARY")
+	fmt.Printf(template, "NODE", "HA STATUS", "CONNECTIONS", "SUMMARY")
 	for _, item := range gateways {
 		fmt.Printf(
 			template,
