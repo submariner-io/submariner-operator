@@ -17,7 +17,7 @@ type endpointStatus struct {
 	endpointType string
 }
 
-func newEndpointsStatusFrom(clusterId string, endpointIp string, publicIp string, cableDriver string, endpointType string) endpointStatus {
+func newEndpointsStatusFrom(clusterId, endpointIp, publicIp, cableDriver, endpointType string) endpointStatus {
 	return endpointStatus{
 		clusterId:    clusterId,
 		endpointIp:   endpointIp,
