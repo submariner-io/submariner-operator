@@ -5,7 +5,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/go-logr/logr"
 	errorutil "github.com/pkg/errors"
@@ -17,7 +17,7 @@ import (
 )
 
 func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger,
-	client client.Client, scheme *runtime.Scheme) (*appsv1.DaemonSet, error) {
+	client controllerClient.Client, scheme *runtime.Scheme) (*appsv1.DaemonSet, error) {
 	var err error
 
 	// Set the owner and controller
@@ -62,7 +62,7 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 }
 
 func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, reqLogger logr.Logger,
-	client client.Client, scheme *runtime.Scheme) (*appsv1.Deployment, error) {
+	client controllerClient.Client, scheme *runtime.Scheme) (*appsv1.Deployment, error) {
 	var err error
 
 	// Set the owner and controller
@@ -107,7 +107,7 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 }
 
 func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLogger logr.Logger,
-	client client.Client, scheme *runtime.Scheme) (*corev1.ConfigMap, error) {
+	client controllerClient.Client, scheme *runtime.Scheme) (*corev1.ConfigMap, error) {
 	var err error
 
 	// Set the owner and controller
@@ -152,7 +152,7 @@ func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLog
 }
 
 func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger logr.Logger,
-	client client.Client, scheme *runtime.Scheme) (*corev1.Service, error) {
+	client controllerClient.Client, scheme *runtime.Scheme) (*corev1.Service, error) {
 	var err error
 
 	// Set the owner and controller

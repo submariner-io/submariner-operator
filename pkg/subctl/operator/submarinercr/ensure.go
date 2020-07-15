@@ -52,7 +52,7 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 		return fmt.Errorf("error creating the Submariner namespace %s", err)
 	}
 
-	submariner := &submariner.Submariner{
+	submarinerCR := &submariner.Submariner{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SubmarinerName,
 		},
@@ -64,7 +64,7 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 		panic(err.Error())
 	}
 
-	_, err = updateOrCreateSubmariner(submarinerClient, namespace, submariner)
+	_, err = updateOrCreateSubmariner(submarinerClient, namespace, submarinerCR)
 
 	if err != nil {
 		return err
@@ -73,20 +73,20 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 	return nil
 }
 
-func updateOrCreateSubmariner(clientSet submarinerclientset.Interface, namespace string, submariner *submariner.Submariner) (bool, error) {
-	_, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Create(submariner)
+func updateOrCreateSubmariner(clientSet submarinerclientset.Interface, namespace string, submarinerCR *submariner.Submariner) (bool, error) {
+	_, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Create(submarinerCR)
 	if err == nil {
 		return true, nil
 	} else if errors.IsAlreadyExists(err) {
 		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingCfg, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Get(submariner.Name, v1.GetOptions{})
+			existingCfg, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Get(submarinerCR.Name, v1.GetOptions{})
 			if err != nil {
-				return fmt.Errorf("failed to get pre-existing cfg %s : %s", submariner.Name, err)
+				return fmt.Errorf("failed to get pre-existing cfg %s : %s", submarinerCR.Name, err)
 			}
-			submariner.ResourceVersion = existingCfg.ResourceVersion
-			_, err = clientSet.SubmarinerV1alpha1().Submariners(namespace).Update(submariner)
+			submarinerCR.ResourceVersion = existingCfg.ResourceVersion
+			_, err = clientSet.SubmarinerV1alpha1().Submariners(namespace).Update(submarinerCR)
 			if err != nil {
-				return fmt.Errorf("failed to update pre-existing cfg  %s : %s", submariner.Name, err)
+				return fmt.Errorf("failed to update pre-existing cfg  %s : %s", submarinerCR.Name, err)
 			}
 			return nil
 		})

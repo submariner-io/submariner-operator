@@ -2,7 +2,7 @@ linters-settings:
   gocritic:
     enabled-tags:
       - diagnostic
-      #- opinionated
+      - opinionated
       #- performance
       #- style
     disabled-checks:

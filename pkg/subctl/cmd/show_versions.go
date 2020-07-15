@@ -32,7 +32,7 @@ type versionImageInfo struct {
 	version   string
 }
 
-func newVersionInfoFrom(image string, component string, version string) versionImageInfo {
+func newVersionInfoFrom(image, component, version string) versionImageInfo {
 	v := versionImageInfo{
 		component: component,
 		image:     image,

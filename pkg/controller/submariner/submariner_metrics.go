@@ -62,7 +62,7 @@ func recordNoConnections() {
 	connectionsGauge.Reset()
 }
 
-func recordConnection(localCluster string, localHostname string, remoteCluster string, remoteHostname string, status string) {
+func recordConnection(localCluster, localHostname, remoteCluster, remoteHostname, status string) {
 	connectionsGauge.With(prometheus.Labels{
 		connectionsLocalClusterLabel:   localCluster,
 		connectionsLocalHostnameLabel:  localHostname,

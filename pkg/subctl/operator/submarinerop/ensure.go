@@ -30,7 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/serviceaccount"
 )
 
-func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string, operatorImage string) error {
+func Ensure(status *cli.Status, config *rest.Config, operatorNamespace, operatorImage string) error {
 	if created, err := crds.Ensure(config); err != nil {
 		return err
 	} else if created {

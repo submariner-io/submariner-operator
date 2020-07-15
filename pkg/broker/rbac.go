@@ -119,7 +119,7 @@ func NewBrokerRoleBinding(serviceAccount, role string) *rbacv1.RoleBinding {
 	return binding
 }
 
-func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace string, submarinerBrokerSA string) (*v1.Secret, error) {
+func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submarinerBrokerSA string) (*v1.Secret, error) {
 	sa, err := clientSet.CoreV1().ServiceAccounts(brokerNamespace).Get(submarinerBrokerSA, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("ServiceAccount %s get failed: %s", submarinerBrokerSA, err)

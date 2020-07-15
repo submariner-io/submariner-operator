@@ -135,12 +135,12 @@ func (data *SubctlData) GetBrokerAdministratorConfig() (*rest.Config, error) {
 
 func (data *SubctlData) getAndCheckBrokerAdministratorConfig(private bool) (*rest.Config, error) {
 	config := data.getBrokerAdministratorConfig(private)
-	clientset, err := submarinerClientset.NewForConfig(config)
+	submClientset, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
 		return config, err
 	}
 	// The point of the broker client is to access Submariner data, we know we should able to list clusters
-	_, err = clientset.SubmarinerV1().Clusters(string(data.ClientToken.Data["namespace"])).List(metav1.ListOptions{})
+	_, err = submClientset.SubmarinerV1().Clusters(string(data.ClientToken.Data["namespace"])).List(metav1.ListOptions{})
 	return config, err
 }
 
