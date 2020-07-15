@@ -20,21 +20,10 @@ type connectionStatus struct {
 	status      submv1.ConnectionStatus
 }
 
-func newConnectionsStatusFrom(gateway string, cluster string, remoteIp string, cableDriver string, subnets string, status submv1.ConnectionStatus) connectionStatus {
-	return connectionStatus{
-		gateway:     gateway,
-		cluster:     cluster,
-		remoteIp:    remoteIp,
-		cableDriver: cableDriver,
-		subnets:     subnets,
-		status:      status,
-	}
-}
-
 var showConnectionsCmd = &cobra.Command{
 	Use:   "connections",
 	Short: "Show cluster connectivity information",
-	Long:  `This command shows information about submariner endpoint connections with other cluster.`,
+	Long:  `This command shows information about submariner endpoint connections with other clusters.`,
 	Run:   showConnections,
 }
 
@@ -42,7 +31,7 @@ func init() {
 	showCmd.AddCommand(showConnectionsCmd)
 }
 
-func getConnectionsStatus(status []connectionStatus) []connectionStatus {
+func getConnectionsStatus() []connectionStatus {
 	config, err := getRestConfig(kubeConfig, kubeContext)
 	exitOnError("Error getting REST config for cluster", err)
 
@@ -58,17 +47,19 @@ func getConnectionsStatus(status []connectionStatus) []connectionStatus {
 	if gateways == nil {
 		exitWithErrorMsg("No endpoints found")
 	}
-
+	var status []connectionStatus
 	for _, gateway := range *gateways {
 		for _, connection := range gateway.Status.Connections {
 			subnets := strings.Join(connection.Endpoint.Subnets, ", ")
 
-			status = append(status, newConnectionsStatusFrom(connection.Endpoint.Hostname,
-				connection.Endpoint.ClusterID,
-				connection.Endpoint.PrivateIP,
-				connection.Endpoint.Backend,
-				subnets,
-				connection.Status))
+			status = append(status, connectionStatus{
+				gateway:     connection.Endpoint.Hostname,
+				cluster:     connection.Endpoint.ClusterID,
+				remoteIp:    connection.Endpoint.PrivateIP,
+				cableDriver: connection.Endpoint.Backend,
+				subnets:     subnets,
+				status:      connection.Status,
+			})
 		}
 	}
 
@@ -76,8 +67,7 @@ func getConnectionsStatus(status []connectionStatus) []connectionStatus {
 }
 
 func showConnections(cmd *cobra.Command, args []string) {
-	var status []connectionStatus
-	status = getConnectionsStatus(status)
+	status := getConnectionsStatus()
 	printConnections(status)
 }
 
