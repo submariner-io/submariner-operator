@@ -35,7 +35,7 @@ const (
 	LighthouseServiceAccount = "submariner-lighthouse"
 )
 
-//Ensure functions updates or installs the operator CRDs in the cluster
+// Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {

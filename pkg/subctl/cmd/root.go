@@ -156,7 +156,7 @@ func handleNodeLabels(config *rest.Config) error {
 		if err != nil {
 			return err
 		}
-		if len(answer.Node) == 0 {
+		if answer.Node == "" {
 			fmt.Printf("* No worker node found to label as the gateway\n")
 		} else {
 			err = addLabelsToNode(clientset, answer.Node, map[string]string{submarinerGatewayLabel: trueLabel})
