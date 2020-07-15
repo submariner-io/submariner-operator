@@ -83,6 +83,8 @@ function verify_subm_deployed() {
     # FIXME: Rename all of these submariner-engine or engine, vs submariner
     # Verify SubM CR
     verify_subm_cr
+    # Verify Subm CR status
+    verify_subm_cr_status_with_retries
     # Verify SubM Engine Deployment
     verify_subm_engine_deployment
     # Verify SubM Engine Pod
@@ -158,6 +160,28 @@ function verify_clusters_crd() {
   validate_equals '.status.acceptedNames.kind' 'Cluster'
 }
 
+# retries are necessary for the status field, which can take some seconds to fill up
+# properly by the operator
+function verify_subm_cr_status_with_retries() {
+  function verify_subm_cr_status_() {
+    if ! verify_subm_cr_status; then
+      sleep 5 && return 1
+    fi
+    return 0
+  }
+  with_retries 5 verify_subm_cr_status_
+}
+
+function verify_subm_cr_status() {
+
+  json_file=/tmp/${deployment_name}.${cluster}.json
+  kubectl get submariner $deployment_name --namespace=$subm_ns -o json > $json_file
+
+  validate_equals '.status.serviceCIDR' ${service_CIDRs[$cluster]}
+  validate_equals '.status.clusterCIDR' ${cluster_CIDRs[$cluster]}
+
+}
+
 function verify_subm_cr() {
   # TODO: Use $engine_deployment_name here?
 
@@ -190,8 +214,6 @@ function verify_subm_cr() {
   validate_equals '.spec.namespace' $subm_ns
   validate_equals '.spec.natEnabled' $natEnabled
 
-  validate_equals '.spec.serviceCIDR' ${service_CIDRs[$cluster]}
-  validate_equals '.spec.clusterCIDR' ${cluster_CIDRs[$cluster]}
 }
 
 function verify_subm_op_pod() {
@@ -334,7 +356,7 @@ function verify_subm_routeagent_pod() {
     [[ $(jq -r ".spec.volumes[] | select(.name==\"host-slash\").hostPath.path" $json_file) = '/' ]]
     validate_equals '.status.phase' 'Running'
     validate_equals '.metadata.namespace' $subm_ns
-    validate_equals '.spec.terminationGracePeriodSeconds' '10'
+    validate_equals '.spec.terminationGracePeriodSeconds' '1'
   done
 }
 

@@ -36,7 +36,6 @@ const (
 )
 
 func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
-
 	err := engine.Ensure(config)
 	if err != nil {
 		return fmt.Errorf("error setting up the engine requirements: %s", err)

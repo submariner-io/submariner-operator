@@ -41,6 +41,7 @@ var files = []string{
 	"cluster_role_binding.yaml",
 	"lighthouse/crds/multiclusterservices_crd.yaml",
 	"lighthouse/crds/serviceexport_crd.yaml",
+	"lighthouse/crds/serviceimport_crd.yaml",
 	"lighthouse/cluster_role_binding.yaml",
 	"lighthouse/cluster_role.yaml",
 }
@@ -48,7 +49,6 @@ var files = []string{
 // Reads all .yaml files in the crdDirectory
 // and encodes them as constants in crdyamls.go
 func main() {
-
 	fmt.Println("Generating yamls.go")
 	out, err := os.Create("yamls.go")
 	panicOnErr(err)
@@ -74,7 +74,6 @@ func main() {
 	panicOnErr(err)
 
 	for _, f := range files {
-
 		_, err = out.WriteString("\t" + constName(f) + " = `")
 		panicOnErr(err)
 
@@ -87,7 +86,6 @@ func main() {
 
 		_, err = out.WriteString("`\n")
 		panicOnErr(err)
-
 	}
 	_, err = out.WriteString(")\n")
 	panicOnErr(err)

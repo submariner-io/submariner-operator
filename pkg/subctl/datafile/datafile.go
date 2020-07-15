@@ -34,12 +34,15 @@ import (
 )
 
 type SubctlData struct {
-	BrokerURL            string     `json:"brokerURL"`
-	ClientToken          *v1.Secret `omitempty,json:"clientToken"`
-	IPSecPSK             *v1.Secret `omitempty,json:"ipsecPSK"`
-	ServiceDiscovery     bool       `omitempty,json:"serviceDiscovery"`
-	GlobalnetCidrRange   string     `omitempty,json:"globalnetCidrRange"`
-	GlobalnetClusterSize uint       `omitempty,json:"globalnetClusterSize"`
+	BrokerURL        string     `json:"brokerURL"`
+	ClientToken      *v1.Secret `omitempty,json:"clientToken"`
+	IPSecPSK         *v1.Secret `omitempty,json:"ipsecPSK"`
+	ServiceDiscovery bool       `omitempty,json:"serviceDiscovery"`
+	// Todo (revisit): The following values are moved from the broker-info.subm file to configMap
+	// on the Broker. This needs to be revisited to support seamless upgrades.
+	// https://github.com/submariner-io/submariner-operator/issues/504
+	// GlobalnetCidrRange   string `omitempty,json:"globalnetCidrRange"`
+	// GlobalnetClusterSize uint   `omitempty,json:"globalnetClusterSize"`
 }
 
 func (data *SubctlData) ToString() (string, error) {
@@ -60,7 +63,6 @@ func NewFromString(str string) (*SubctlData, error) {
 }
 
 func (data *SubctlData) WriteToFile(filename string) error {
-
 	dataStr, err := data.ToString()
 	if err != nil {
 		return err
@@ -82,7 +84,6 @@ func NewFromFile(filename string) (*SubctlData, error) {
 }
 
 func NewFromCluster(restConfig *rest.Config, brokerNamespace, ipsecSubmFile string) (*SubctlData, error) {
-
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
 		return nil, err

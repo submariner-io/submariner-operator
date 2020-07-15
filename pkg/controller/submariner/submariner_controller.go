@@ -18,19 +18,22 @@ package submariner
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strconv"
 
 	"github.com/go-logr/logr"
 	errorutil "github.com/pkg/errors"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -41,10 +44,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+
 	submopv1a1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
-	"github.com/submariner-io/submariner-operator/pkg/versions"
-	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 )
 
 var log = logf.Log.WithName("controller_submariner")
@@ -52,12 +57,25 @@ var log = logf.Log.WithName("controller_submariner")
 // Add creates a new Submariner Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
+	// These are required so that we can retrieve Gateway objects using the dynamic client
+	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "Gateway"), &submv1.Gateway{})
+	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "GatewayList"), &submv1.GatewayList{})
+	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "ListOptions"), &metav1.ListOptions{})
 	return add(mgr, newReconciler(mgr))
 }
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileSubmariner{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	reconciler := &ReconcileSubmariner{
+		client:         mgr.GetClient(),
+		scheme:         mgr.GetScheme(),
+		clientSet:      kubernetes.NewForConfigOrDie(mgr.GetConfig()),
+		dynClient:      dynamic.NewForConfigOrDie(mgr.GetConfig()),
+		submClient:     submarinerclientset.NewForConfigOrDie(mgr.GetConfig()),
+		clusterNetwork: nil,
+	}
+
+	return reconciler
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -83,9 +101,18 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to the gateway status
-	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestForOwner{
-		OwnerType: &submopv1a1.Submariner{},
+	// Watch for changes to the gateway status in the same namespace
+	mapFn := handler.ToRequestsFunc(
+		func(a handler.MapObject) []reconcile.Request {
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      "submariner",
+					Namespace: a.Meta.GetNamespace(),
+				}},
+			}
+		})
+	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestsFromMapFunc{
+		ToRequests: mapFn,
 	})
 	if err != nil {
 		log.Error(err, "error watching gateways")
@@ -102,8 +129,12 @@ var _ reconcile.Reconciler = &ReconcileSubmariner{}
 type ReconcileSubmariner struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client client.Client
-	scheme *runtime.Scheme
+	client         client.Client
+	scheme         *runtime.Scheme
+	clientSet      kubernetes.Interface
+	submClient     submarinerclientset.Interface
+	dynClient      dynamic.Interface
+	clusterNetwork *network.ClusterNetwork
 }
 
 // Reconcile reads that state of the cluster for a Submariner object and makes changes based on the state read
@@ -129,11 +160,19 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
-	setSubmarinerDefaults(instance)
+	initialStatus := instance.Status.DeepCopy()
+
+	instance.SetDefaults()
+
 	if err = r.client.Update(context.TODO(), instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
+	// discovery is performed after Update to avoid storing the discovery in the
+	// struct beyond status
+	if err = r.discoverNetwork(instance); err != nil {
+		return reconcile.Result{}, err
+	}
 	// Create submariner-engine SA
 	//subm_engine_sa := corev1.ServiceAccount{}
 	//subm_engine_sa.Name = "submariner-engine"
@@ -160,30 +199,45 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	gateways, err := r.retrieveGateways(instance, request.Namespace)
 	if err != nil {
 		// Not fatal
-		log.Error(err, "error retrieving gateway")
+		log.Error(err, "error retrieving gateways")
 	}
 
-	// Update the status
-	status := submopv1a1.SubmarinerStatus{
-		NatEnabled:  instance.Spec.NatEnabled,
-		ColorCodes:  instance.Spec.ColorCodes,
-		ClusterID:   instance.Spec.ClusterID,
-		ServiceCIDR: instance.Spec.ServiceCIDR,
-		ClusterCIDR: instance.Spec.ClusterCIDR,
-		GlobalCIDR:  instance.Spec.GlobalCIDR,
-		GatewayList: gateways,
+	if gateways != nil {
+		recordGateways(len(*gateways))
+		// Clear the connections so we don’t remember stale status information
+		recordNoConnections()
+		for _, gateway := range *gateways {
+			for j := range gateway.Status.Connections {
+				recordConnection(
+					gateway.Status.LocalEndpoint.ClusterID,
+					gateway.Status.LocalEndpoint.Hostname,
+					gateway.Status.Connections[j].Endpoint.ClusterID,
+					gateway.Status.Connections[j].Endpoint.Hostname,
+					string(gateway.Status.Connections[j].Status),
+				)
+			}
+		}
+	} else {
+		recordGateways(0)
+		recordNoConnections()
 	}
+
+	instance.Status.NatEnabled = instance.Spec.NatEnabled
+	instance.Status.ColorCodes = instance.Spec.ColorCodes
+	instance.Status.ClusterID = instance.Spec.ClusterID
+	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
+	instance.Status.Gateways = gateways
+
 	if engineDaemonSet != nil {
-		status.EngineDaemonSetStatus = &engineDaemonSet.Status
+		instance.Status.EngineDaemonSetStatus = &engineDaemonSet.Status
 	}
 	if routeagentDaemonSet != nil {
-		status.RouteAgentDaemonSetStatus = &routeagentDaemonSet.Status
+		instance.Status.RouteAgentDaemonSetStatus = &routeagentDaemonSet.Status
 	}
 	if globalnetDaemonSet != nil {
-		status.GlobalnetDaemonSetStatus = &globalnetDaemonSet.Status
+		instance.Status.GlobalnetDaemonSetStatus = &globalnetDaemonSet.Status
 	}
-	if !reflect.DeepEqual(instance.Status, status) {
-		instance.Status = status
+	if !reflect.DeepEqual(instance.Status, initialStatus) {
 		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
 			reqLogger.Error(err, "failed to update the Submariner status")
@@ -197,7 +251,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace string) (*submv1.GatewayList, error) {
+func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace string) (*[]submv1.Gateway, error) {
 	foundGateways := &submv1.GatewayList{}
 	err := r.client.List(context.TODO(), foundGateways, client.InNamespace(namespace))
 	if err != nil && errors.IsNotFound(err) {
@@ -212,7 +266,7 @@ func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace st
 			return nil, err
 		}
 	}
-	return foundGateways, nil
+	return &foundGateways.Items, nil
 }
 
 func (r *ReconcileSubmariner) deletePreExistingEngineDeployment(namespace string, reqLogger logr.Logger) error {
@@ -270,7 +324,6 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submopv1a1.S
 					return nil
 				})
 				return err
-
 			})
 			if err != nil {
 				return err
@@ -334,14 +387,14 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 		"app": "submariner-engine",
 	}
 
-	// Create privilaged security context for Engine pod
+	// Create privileged security context for Engine pod
 	// FIXME: Seems like these have to be a var, so can pass pointer to bool var to SecurityContext. Cleaner option?
 	allowPrivilegeEscalation := true
 	privileged := true
 	runAsNonRoot := false
 	readOnlyRootFilesystem := false
 
-	security_context_all_caps_privilaged := corev1.SecurityContext{
+	security_context_all_caps_privileged := corev1.SecurityContext{
 		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
 		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 		Privileged:               &privileged,
@@ -349,7 +402,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 		RunAsNonRoot:             &runAsNonRoot}
 
 	// Create Pod
-	terminationGracePeriodSeconds := int64(10)
+	terminationGracePeriodSeconds := int64(1)
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,
@@ -371,14 +424,14 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 					Name:            "submariner",
 					Image:           getImagePath(cr, engineImage),
 					Command:         []string{"submariner.sh"},
-					SecurityContext: &security_context_all_caps_privilaged,
+					SecurityContext: &security_context_all_caps_privileged,
 					VolumeMounts: []corev1.VolumeMount{
 						{Name: "host-slash", MountPath: "/host", ReadOnly: true},
 					},
 					Env: []corev1.EnvVar{
 						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
-						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Spec.ClusterCIDR},
-						{Name: "SUBMARINER_SERVICECIDR", Value: cr.Spec.ServiceCIDR},
+						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
+						{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
 						{Name: "SUBMARINER_GLOBALCIDR", Value: cr.Spec.GlobalCIDR},
 						{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 						{Name: "SUBMARINER_COLORCODES", Value: cr.Spec.ColorCodes},
@@ -441,7 +494,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 		RunAsNonRoot:             &runAsNonRoot,
 	}
 
-	terminationGracePeriodSeconds := int64(10)
+	terminationGracePeriodSeconds := int64(1)
 
 	routeAgentDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -471,8 +524,8 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
-								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Spec.ClusterCIDR},
-								{Name: "SUBMARINER_SERVICECIDR", Value: cr.Spec.ServiceCIDR},
+								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
+								{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
 								{Name: "SUBMARINER_GLOBALCIDR", Value: cr.Spec.GlobalCIDR},
 							},
 						},
@@ -513,7 +566,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 		RunAsNonRoot:             &runAsNonRoot,
 	}
 
-	terminationGracePeriodSeconds := int64(10)
+	terminationGracePeriodSeconds := int64(2)
 
 	globalnetDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -561,54 +614,21 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 }
 
 func newServiceDiscoveryCR(namespace string) *submopv1a1.ServiceDiscovery {
-
 	return &submopv1a1.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
-			Name:      serviceDiscoveryCrName,
+			Name:      ServiceDiscoveryCrName,
 		},
 	}
-}
-
-//TODO: move to a method on the API definitions, as the example shown by the etcd operator here :
-//      https://github.com/coreos/etcd-operator/blob/8347d27afa18b6c76d4a8bb85ad56a2e60927018/pkg/apis/etcd/v1beta2/cluster.go#L185
-func setSubmarinerDefaults(submariner *submopv1a1.Submariner) {
-
-	if submariner.Spec.Repository == "" {
-		// An empty field is converted to the default upstream submariner repository where all images live
-		submariner.Spec.Repository = versions.DefaultSubmarinerRepo
-	}
-
-	if submariner.Spec.Version == "" {
-		submariner.Spec.Version = versions.DefaultSubmarinerVersion
-	}
-
-	if submariner.Spec.ColorCodes == "" {
-		submariner.Spec.ColorCodes = "blue"
-	}
-
 }
 
 const (
 	routeAgentImage        = "submariner-route-agent"
 	engineImage            = "submariner"
 	globalnetImage         = "submariner-globalnet"
-	serviceDiscoveryCrName = "service-discovery"
+	ServiceDiscoveryCrName = "service-discovery"
 )
 
 func getImagePath(submariner *submopv1a1.Submariner, componentImage string) string {
-	var path string
-	spec := submariner.Spec
-
-	// If the repository is "local" we don't append it on the front of the image,
-	// a local repository is used for development, testing and CI when we inject
-	// images in the cluster, for example submariner:local, or submariner-route-agent:local
-	if spec.Repository == "local" {
-		path = componentImage
-	} else {
-		path = fmt.Sprintf("%s/%s", spec.Repository, componentImage)
-	}
-
-	path = fmt.Sprintf("%s:%s", path, spec.Version)
-	return path
+	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage)
 }

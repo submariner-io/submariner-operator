@@ -1,10 +1,11 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: submariner-operator:lighthouse
+  name: submariner-operator
 rules:
   # submariner-operator updates the config map of core-dns to forward requests to
-  # supercluster.local to Lighthouse DNS
+  # supercluster.local to Lighthouse DNS, also looks at existing configmaps
+  # to figure out network settings
   - apiGroups:
       - ""
     resources:
@@ -14,6 +15,15 @@ rules:
       - list
       - watch
       - update
+  - apiGroups: # pods and services are looked up to figure out network settings
+      - ""
+    resources:
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
   - apiGroups:
       - operator.openshift.io
     resources:
@@ -23,3 +33,10 @@ rules:
       - list
       - watch
       - update
+  - apiGroups:
+      - network.openshift.io
+    resources:
+      - clusternetworks
+    verbs:
+      - get
+      - list

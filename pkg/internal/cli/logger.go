@@ -32,9 +32,9 @@ import (
 // Logger is the kind cli's log.Logger implementation
 type Logger struct {
 	writer     io.Writer
+	bufferPool *bufferPool
 	writerMu   sync.Mutex
 	verbosity  log.Level
-	bufferPool *bufferPool
 	// kind special additions
 	isSmartWriter bool
 }

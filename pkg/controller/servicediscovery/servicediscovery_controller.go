@@ -207,6 +207,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner,kube-system,operators"},
 								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
+								{Name: "SUBMARINER_GLOBALNET_ENABLED", Value: strconv.FormatBool(cr.Spec.GlobalnetEnabled)},
 								{Name: "BROKER_K8S_APISERVER", Value: cr.Spec.BrokerK8sApiServer},
 								{Name: "BROKER_K8S_APISERVERTOKEN", Value: cr.Spec.BrokerK8sApiServerToken},
 								{Name: "BROKER_K8S_REMOTENAMESPACE", Value: cr.Spec.BrokerK8sRemoteNamespace},

@@ -45,10 +45,7 @@ func CreateOrUpdateClusterRole(clientSet clientset.Interface, clusterRole *rbacv
 			clusterRole.ResourceVersion = existingClusterRole.ResourceVersion
 			// Potentially retried
 			_, err = clientSet.RbacV1().ClusterRoles().Update(clusterRole)
-			if err != nil {
-				return fmt.Errorf("failed to update pre-existing cluster role %s : %v", clusterRole.Name, err)
-			}
-			return nil
+			return err
 		})
 		return false, retryErr
 	}
@@ -68,10 +65,7 @@ func CreateOrUpdateClusterRoleBinding(clientSet clientset.Interface, clusterRole
 			clusterRoleBinding.ResourceVersion = existingClusterRoleBinding.ResourceVersion
 			// Potentially retried
 			_, err = clientSet.RbacV1().ClusterRoleBindings().Update(clusterRoleBinding)
-			if err != nil {
-				return fmt.Errorf("failed to update pre-existing cluster role binding %s : %v", clusterRoleBinding.Name, err)
-			}
-			return nil
+			return err
 		})
 		return false, retryErr
 	}
@@ -91,10 +85,7 @@ func CreateOrUpdateCRD(clientSet extendedclientset.Interface, crd *apiextensions
 			crd.ResourceVersion = existingCrd.ResourceVersion
 			// Potentially retried
 			_, err = clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Update(crd)
-			if err != nil {
-				return fmt.Errorf("failed to update pre-existing CRD %s : %v", crd.Name, err)
-			}
-			return nil
+			return err
 		})
 		return false, retryErr
 	}
@@ -102,7 +93,6 @@ func CreateOrUpdateCRD(clientSet extendedclientset.Interface, crd *apiextensions
 }
 
 func CreateOrUpdateEmbeddedCRD(clientSet extendedclientset.Interface, crdYaml string) (bool, error) {
-
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 
 	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
@@ -123,10 +113,7 @@ func CreateOrUpdateDeployment(clientSet clientset.Interface, namespace string, d
 			deployment.ResourceVersion = existingDeployment.ResourceVersion
 			// Potentially retried
 			_, err = clientSet.AppsV1().Deployments(namespace).Update(deployment)
-			if err != nil {
-				return fmt.Errorf("failed to update pre-existing deployment %s : %v", deployment.Name, err)
-			}
-			return nil
+			return err
 		})
 		return false, retryErr
 	}
@@ -144,10 +131,7 @@ func CreateOrUpdateRole(clientSet clientset.Interface, namespace string, role *r
 			role.ResourceVersion = existingRole.ResourceVersion
 			// Potentially retried
 			_, err = clientSet.RbacV1().Roles(namespace).Update(role)
-			if err != nil {
-				return fmt.Errorf("failed to update pre-existing role %s : %v", role.Name, err)
-			}
-			return nil
+			return err
 		})
 		return false, retryErr
 	}
@@ -165,10 +149,7 @@ func CreateOrUpdateRoleBinding(clientSet clientset.Interface, namespace string, 
 			roleBinding.ResourceVersion = existingRoleBinding.ResourceVersion
 			// Potentially retried
 			_, err = clientSet.RbacV1().RoleBindings(namespace).Update(roleBinding)
-			if err != nil {
-				return fmt.Errorf("failed to update pre-existing role binding %s : %v", roleBinding.Name, err)
-			}
-			return nil
+			return err
 		})
 		return false, retryErr
 	}
@@ -186,10 +167,7 @@ func CreateOrUpdateServiceAccount(clientSet clientset.Interface, namespace strin
 			sa.ResourceVersion = existingSa.ResourceVersion
 			// Potentially retried
 			_, err = clientSet.CoreV1().ServiceAccounts(namespace).Update(sa)
-			if err != nil {
-				return fmt.Errorf("failed to update pre-existing service account %s : %v", sa.Name, err)
-			}
-			return nil
+			return err
 		})
 		return false, retryErr
 	}

@@ -21,7 +21,6 @@ import (
 )
 
 func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-
 	weaveNetPod, err := findPod(clientSet, "name=weave-net")
 
 	if err != nil || weaveNetPod == nil {

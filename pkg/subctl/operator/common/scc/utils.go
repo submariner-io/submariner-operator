@@ -21,7 +21,6 @@ var (
 )
 
 func UpateSCC(restConfig *rest.Config, namespace string, name string) (bool, error) {
-
 	dynClient, err := dynamic.NewForConfig(restConfig)
 	if err != nil {
 		return false, err

@@ -20,12 +20,13 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
-	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
 )
 
 var (
@@ -34,10 +35,10 @@ var (
 	globalnetCidrRange          string
 	defaultGlobalnetClusterSize uint
 	serviceDiscovery            bool
+	GlobalCIDRConfigMap         *v1.ConfigMap
 )
 
 func init() {
-
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
 		"Enable support for Overlapping CIDRs in connecting clusters (default disabled)")
 	deployBroker.PersistentFlags().StringVar(&globalnetCidrRange, "globalnet-cidr-range", "169.254.0.0/16",
@@ -68,9 +69,6 @@ var deployBroker = &cobra.Command{
 
 		config, err := getRestConfig(kubeConfig, kubeContext)
 		exitOnError("The provided kubeconfig is invalid", err)
-
-		err = lighthouse.Validate()
-		exitOnError("Invalid configuration", err)
 
 		status := cli.NewStatus()
 		status.Start("Deploying broker")
@@ -104,10 +102,9 @@ var deployBroker = &cobra.Command{
 
 		exitOnError("Error setting up service discovery information", err)
 
-		if globalnetEnable {
-			subctlData.GlobalnetCidrRange = globalnetCidrRange
-			subctlData.GlobalnetClusterSize = defaultGlobalnetClusterSize
-		}
+		err = broker.CreateGlobalnetConfigMap(config, globalnetEnable, globalnetCidrRange,
+			defaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace)
+		exitOnError("Error creating globalCIDR configmap on Broker", err)
 
 		err = subctlData.WriteToFile(brokerDetailsFilename)
 		status.End(cli.CheckForError(err))

@@ -22,10 +22,17 @@ func Ensure(config *rest.Config, isBroker bool) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error creating the api extensions client: %s", err)
 	}
+
 	installedMCS, err := utils.CreateOrUpdateEmbeddedCRD(clientSet,
 		embeddedyamls.Lighthouse_crds_multiclusterservices_crd_yaml)
 	if err != nil {
 		return installedMCS, fmt.Errorf("Error creating the MultiClusterServices CRD: %s", err)
+	}
+
+	installedSI, err := utils.CreateOrUpdateEmbeddedCRD(clientSet,
+		embeddedyamls.Lighthouse_crds_serviceimport_crd_yaml)
+	if err != nil {
+		return installedSI, fmt.Errorf("Error creating the ServiceImport CRD: %s", err)
 	}
 
 	// The broker does not need the ServiceExport

@@ -2,7 +2,7 @@ module github.com/submariner-io/submariner-operator
 
 require (
 	cloud.google.com/go v0.47.0 // indirect
-	github.com/AlecAivazis/survey/v2 v2.0.7
+	github.com/AlecAivazis/survey/v2 v2.0.8
 	github.com/coreos/prometheus-operator v0.31.1 // indirect
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
@@ -10,13 +10,13 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
-	github.com/onsi/ginkgo v1.13.0
+	github.com/onsi/ginkgo v1.14.0
 	github.com/onsi/gomega v1.10.1
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.2.1 // indirect
+	github.com/prometheus/client_golang v1.2.1
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
 	github.com/submariner-io/lighthouse v0.4.1

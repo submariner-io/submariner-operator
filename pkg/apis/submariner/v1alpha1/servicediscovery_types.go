@@ -26,15 +26,15 @@ import (
 // ServiceDiscoverySpec defines the desired state of ServiceDiscovery
 // +k8s:openapi-gen=true
 type ServiceDiscoverySpec struct {
-	Version                  string `json:"version,omitempty"`
-	Repository               string `json:"repository,omitempty"`
+	BrokerK8sApiServer       string `json:"brokerK8sApiServer"`
+	BrokerK8sApiServerToken  string `json:"brokerK8sApiServerToken"`
 	BrokerK8sCA              string `json:"brokerK8sCA"`
 	BrokerK8sRemoteNamespace string `json:"brokerK8sRemoteNamespace"`
-	BrokerK8sApiServerToken  string `json:"brokerK8sApiServerToken"`
-	BrokerK8sApiServer       string `json:"brokerK8sApiServer"`
-	Debug                    bool   `json:"debug"`
 	ClusterID                string `json:"clusterID"`
 	Namespace                string `json:"namespace"`
+	Repository               string `json:"repository,omitempty"`
+	Version                  string `json:"version,omitempty"`
+	Debug                    bool   `json:"debug"`
 	GlobalnetEnabled         bool   `json:"globalnetEnabled,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -57,11 +57,10 @@ type ServiceDiscoveryStatus struct {
 // +kubebuilder:resource:path=servicediscoveries,scope=Namespaced
 // +genclient
 type ServiceDiscovery struct {
-	metav1.TypeMeta   `json:",inline"`
+	Status            ServiceDiscoveryStatus `json:"status,omitempty"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   ServiceDiscoverySpec   `json:"spec,omitempty"`
-	Status ServiceDiscoveryStatus `json:"status,omitempty"`
+	Spec              ServiceDiscoverySpec `json:"spec,omitempty"`
+	metav1.TypeMeta   `json:",inline"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

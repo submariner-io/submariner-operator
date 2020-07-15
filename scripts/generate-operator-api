@@ -1,7 +1,0 @@
-#!/bin/bash
-
-source ${SCRIPTS_DIR}/lib/debug_functions
-
-operator-sdk generate k8s
-operator-sdk generate openapi
-

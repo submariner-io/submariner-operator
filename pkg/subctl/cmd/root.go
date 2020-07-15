@@ -38,8 +38,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/spf13/cobra"
-
-	"github.com/submariner-io/submariner-operator/pkg/versions"
 )
 
 var (
@@ -64,11 +62,8 @@ func addKubeconfigFlag(cmd *cobra.Command) {
 }
 
 const (
-	DefaultOperatorImage = versions.DefaultSubmarinerRepo + "/submariner-operator:" + versions.DefaultSubmarinerOperatorVersion
-	OperatorNamespace    = "submariner-operator"
+	OperatorNamespace = "submariner-operator"
 )
-
-var operatorImage string
 
 func kubeConfigFile() string {
 	var kubeconfig string
@@ -126,6 +121,10 @@ func getClients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, e
 }
 
 func getRestConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error) {
+	return getClientConfig(kubeConfigPath, kubeContext).ClientConfig()
+}
+
+func getClientConfig(kubeConfigPath string, kubeContext string) clientcmd.ClientConfig {
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
 	rules.ExplicitPath = kubeConfigPath
 	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
@@ -133,7 +132,7 @@ func getRestConfig(kubeConfigPath string, kubeContext string) (*rest.Config, err
 	if kubeContext != "" {
 		overrides.CurrentContext = kubeContext
 	}
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides).ClientConfig()
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
 }
 
 func handleNodeLabels(config *rest.Config) error {
@@ -201,7 +200,6 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 // this function was sourced from:
 // https://github.com/kubernetes/kubernetes/blob/a3ccea9d8743f2ff82e41b6c2af6dc2c41dc7b10/test/utils/density_utils.go#L36
 func addLabelsToNode(c kubernetes.Interface, nodeName string, labels map[string]string) error {
-
 	var tokens []string
 	for k, v := range labels {
 		tokens = append(tokens, fmt.Sprintf("\"%s\":\"%s\"", k, v))
