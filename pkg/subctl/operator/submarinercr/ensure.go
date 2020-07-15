@@ -21,7 +21,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
@@ -79,7 +78,7 @@ func updateOrCreateSubmariner(clientSet submarinerclientset.Interface, namespace
 		return true, nil
 	} else if errors.IsAlreadyExists(err) {
 		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingCfg, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Get(submarinerCR.Name, v1.GetOptions{})
+			existingCfg, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Get(submarinerCR.Name, metav1.GetOptions{})
 			if err != nil {
 				return fmt.Errorf("failed to get pre-existing cfg %s : %s", submarinerCR.Name, err)
 			}

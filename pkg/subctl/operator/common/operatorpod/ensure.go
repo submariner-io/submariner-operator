@@ -33,7 +33,7 @@ import (
 const deploymentCheckInterval = 5 * time.Second
 const deploymentWaitTime = 10 * time.Minute
 
-//Ensure the operator is deployed, and running
+// Ensure the operator is deployed, and running
 func Ensure(restConfig *rest.Config, namespace, operatorName, image string) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {

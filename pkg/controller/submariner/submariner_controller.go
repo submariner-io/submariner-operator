@@ -173,10 +173,6 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	if err := r.discoverNetwork(instance); err != nil {
 		return reconcile.Result{}, err
 	}
-	// Create submariner-engine SA
-	//subm_engine_sa := corev1.ServiceAccount{}
-	//subm_engine_sa.Name = "submariner-engine"
-	//reqLogger.Info("Created a new SA", "SA.Name", subm_engine_sa.Name)
 
 	engineDaemonSet, err := r.reconcileEngineDaemonSet(instance, reqLogger)
 	if err != nil {

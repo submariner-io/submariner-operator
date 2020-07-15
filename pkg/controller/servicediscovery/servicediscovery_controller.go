@@ -162,7 +162,7 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 	}
 	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance)
 	if err != nil {
-		//Try to update Openshift-DNS
+		// Try to update Openshift-DNS
 		return reconcile.Result{}, updateOpenshiftClusterDNSOperator(instance, r.client, r.operatorClientSet, reqLogger)
 	}
 
@@ -410,7 +410,7 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 						return nil
 					}
 				}
-				//ClusterIP of Lighthouse DNS Server changed hence removing the current entry.
+				// ClusterIP of Lighthouse DNS Server changed hence removing the current entry.
 				forwardServers = append(forwardServers[:i], forwardServers[i+1:]...)
 				reqLogger.Info("ClusterIP of Lighthouse DNS server changed, hence updating Cluster DNS Operator CR")
 			}

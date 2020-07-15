@@ -140,7 +140,7 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 			},
 		})
 	}
-	if len(colorCodes) == 0 {
+	if colorCodes == "" {
 		qs = append(qs, &survey.Question{
 			Name:     "colorCodes",
 			Prompt:   &survey.Input{Message: "What color codes should be used (e.g. \"blue\")?"},
@@ -340,7 +340,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 
 	crImageVersion := imageVersion
 
-	if len(imageVersion) == 0 {
+	if imageVersion == "" {
 		// Default engine version
 		// This is handled in the operator after 0.0.1 (of the operator)
 		crImageVersion = versions.DefaultSubmarinerVersion
