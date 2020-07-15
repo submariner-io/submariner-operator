@@ -38,7 +38,7 @@ func init() {
 	showCmd.AddCommand(showEndpointsCmd)
 }
 
-func getEndpointsStatus(status []endpointStatus) []endpointStatus {
+func getEndpointsStatus() []endpointStatus {
 	config, err := getRestConfig(kubeConfig, kubeContext)
 	exitOnError("Error getting REST config for cluster", err)
 
@@ -54,6 +54,8 @@ func getEndpointsStatus(status []endpointStatus) []endpointStatus {
 	if gateways == nil {
 		exitWithErrorMsg("No endpoints found")
 	}
+
+	var status []endpointStatus
 
 	for _, gateway := range *gateways {
 		status = append(status, newEndpointsStatusFrom(
@@ -77,8 +79,7 @@ func getEndpointsStatus(status []endpointStatus) []endpointStatus {
 }
 
 func showEndpoints(cmd *cobra.Command, args []string) {
-	var status []endpointStatus
-	status = getEndpointsStatus(status)
+	status := getEndpointsStatus()
 	printEndpoints(status)
 }
 
