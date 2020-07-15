@@ -11,10 +11,9 @@ import (
 )
 
 type gatewayStatus struct {
-	node        string
-	haStatus    submv1.HAStatus
-	connections string
-	summary     string
+	node     string
+	haStatus submv1.HAStatus
+	summary  string
 }
 
 var showGatewaysCmd = &cobra.Command{
@@ -58,18 +57,20 @@ func getGatewaysStatus() []gatewayStatus {
 		}
 
 		var summary string
-		if totalConnections > 0 && totalConnections == countConnected {
-			summary = "All connections OK"
-		} else {
+		if gateway.Status.StatusFailure != "" {
 			summary = gateway.Status.StatusFailure
+		} else if totalConnections == 0 {
+			summary = "There are no connections"
+		} else if totalConnections == countConnected {
+			summary = fmt.Sprintf("All connections (%d) are established", totalConnections)
+		} else {
+			summary = fmt.Sprintf("%d connections out of %d are established", totalConnections, countConnected)
 		}
-		connectionString := fmt.Sprintf("%d/%d", countConnected, totalConnections)
 		status = append(status,
 			gatewayStatus{
-				node:        enpoint,
-				haStatus:    haStatus,
-				connections: connectionString,
-				summary:     summary,
+				node:     enpoint,
+				haStatus: haStatus,
+				summary:  summary,
 			})
 	}
 
@@ -82,14 +83,13 @@ func showGateways(cmd *cobra.Command, args []string) {
 }
 
 func printGateways(gateways []gatewayStatus) {
-	template := "%-20s%-16s%-16s%-32s\n"
-	fmt.Printf(template, "NODE", "HA STATUS", "CONNECTIONS", "SUMMARY")
+	template := "%-20s%-16s%-32s\n"
+	fmt.Printf(template, "NODE", "HA STATUS", "SUMMARY")
 	for _, item := range gateways {
 		fmt.Printf(
 			template,
 			item.node,
 			item.haStatus,
-			item.connections,
 			item.summary)
 	}
 }
