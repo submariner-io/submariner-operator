@@ -64,7 +64,7 @@ func getGatewaysStatus() []gatewayStatus {
 		} else if totalConnections == countConnected {
 			summary = fmt.Sprintf("All connections (%d) are established", totalConnections)
 		} else {
-			summary = fmt.Sprintf("%d connections out of %d are established", totalConnections, countConnected)
+			summary = fmt.Sprintf("%d connections out of %d are established", countConnected, totalConnections)
 		}
 		status = append(status,
 			gatewayStatus{
