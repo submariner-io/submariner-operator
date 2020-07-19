@@ -9,6 +9,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 )
 
 type connectionStatus struct {
@@ -31,12 +32,11 @@ func init() {
 	showCmd.AddCommand(showConnectionsCmd)
 }
 
-func getConnectionsStatus() []connectionStatus {
-	config, err := getRestConfig(kubeConfig, kubeContext)
-	exitOnError("Error getting REST config for cluster", err)
-
+func getConnectionsStatus(config *rest.Config) []connectionStatus {
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
 	exitOnError("Unable to get the Submariner client", err)
+
+	var status []connectionStatus
 
 	existingCfg, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
 	if err != nil {
@@ -47,7 +47,7 @@ func getConnectionsStatus() []connectionStatus {
 	if gateways == nil {
 		exitWithErrorMsg("No endpoints found")
 	}
-	var status []connectionStatus
+
 	for _, gateway := range *gateways {
 		for _, connection := range gateway.Status.Connections {
 			subnets := strings.Join(connection.Endpoint.Subnets, ", ")
@@ -67,7 +67,18 @@ func getConnectionsStatus() []connectionStatus {
 }
 
 func showConnections(cmd *cobra.Command, args []string) {
-	status := getConnectionsStatus()
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
+	exitOnError("Error getting REST config for cluster", err)
+	for _, item := range configs {
+		fmt.Println()
+		fmt.Printf("Showing information for cluster %q:\n", item.context)
+		status := getConnectionsStatus(item.config)
+		printConnections(status)
+	}
+}
+
+func showConnectionsFromConfig(config *rest.Config) {
+	status := getConnectionsStatus(config)
 	printConnections(status)
 }
 

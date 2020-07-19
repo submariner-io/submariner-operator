@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"k8s.io/client-go/rest"
 )
 
 // showNetworksCmd represents the show networks command
@@ -20,8 +23,17 @@ func init() {
 }
 
 func showNetwork(cmd *cobra.Command, args []string) {
-	config, err := getRestConfig(kubeConfig, kubeContext)
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
 	exitOnError("Error getting REST config for cluster", err)
+
+	for _, item := range configs {
+		fmt.Println()
+		fmt.Printf("Showing network details for cluster %q:\n", item.context)
+		showNetworkSingleCluster(item.config)
+	}
+}
+
+func showNetworkSingleCluster(config *rest.Config) {
 	dynClient, clientSet, err := getClients(config)
 	exitOnError("Error creating clients for cluster", err)
 

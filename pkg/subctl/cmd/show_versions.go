@@ -11,6 +11,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 
 	"k8s.io/client-go/kubernetes"
 )
@@ -86,9 +87,8 @@ func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface,
 	return versions, nil
 }
 
-func getVersions(versions []versionImageInfo) []versionImageInfo {
-	config, err := getRestConfig(kubeConfig, kubeContext)
-	exitOnError("Error connecting to the target cluster", err)
+func getVersions(config *rest.Config) []versionImageInfo {
+	var versions []versionImageInfo
 
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
 	exitOnError("Unable to get Submariner client", err)
@@ -109,8 +109,15 @@ func getVersions(versions []versionImageInfo) []versionImageInfo {
 }
 
 func showVersions(cmd *cobra.Command, args []string) {
-	var versions []versionImageInfo
-	versions = getVersions(versions)
+	config, err := getRestConfig(kubeConfig, kubeContext)
+	exitOnError("Error connecting to the target cluster", err)
+
+	versions := getVersions(config)
+	printVersions(versions)
+}
+
+func showVersionsFromConfig(config *rest.Config) {
+	versions := getVersions(config)
 	printVersions(versions)
 }
 
