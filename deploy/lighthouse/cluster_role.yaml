@@ -25,3 +25,11 @@ rules:
   - watch
   - update
   - delete
+- apiGroups:
+    - submariner.io
+  resources:
+    - "gateways"
+  verbs:
+    - get
+    - list
+    - watch
