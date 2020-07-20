@@ -16,7 +16,7 @@ require (
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-sdk v0.10.1-0.20191007233534-070d931e130a
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.2.1
+	github.com/prometheus/client_golang v1.7.1
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
 	github.com/submariner-io/lighthouse v0.5.0
