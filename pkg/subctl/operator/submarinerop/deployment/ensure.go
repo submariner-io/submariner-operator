@@ -26,7 +26,7 @@ const (
 	OperatorName = "submariner-operator"
 )
 
-//Ensure the operator is deployed, and running
-func Ensure(restConfig *rest.Config, namespace string, image string) (bool, error) {
+// Ensure the operator is deployed, and running
+func Ensure(restConfig *rest.Config, namespace, image string) (bool, error) {
 	return operatorpod.Ensure(restConfig, namespace, OperatorName, image)
 }

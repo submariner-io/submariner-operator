@@ -123,11 +123,11 @@ func allocateByCidr(cidr string) (uint, error) {
 	for i := 0; i < globalCidr.allocatedCount; i++ {
 		allocated := globalCidr.allocatedClusters[i]
 		if allocated.network.Contains(requestedIp) {
-			//subset of already allocated, try next
+			// subset of already allocated, try next
 			return allocated.lastIp, fmt.Errorf("%s subset of already allocated globalCidr %v\n", cidr, allocated.network)
 		}
 		if requestedNetwork.Contains(allocated.network.IP) {
-			//already allocated is subset of requested, no valid lastIp
+			// already allocated is subset of requested, no valid lastIp
 			return clusterCidr.lastIp, fmt.Errorf("%s overlaps with already allocated globalCidr %s\n", cidr, allocated.network)
 		}
 	}
@@ -242,7 +242,7 @@ func CheckOverlappingCidrs(globalnetInfo *GlobalnetInfo, netconfig Config) error
 
 func isCIDRPreConfigured(clusterID string, globalNetworks map[string]*GlobalNetwork) bool {
 	// GlobalCIDR is not pre-configured
-	if globalNetworks[clusterID] == nil || globalNetworks[clusterID].GlobalCIDRs == nil || len(globalNetworks[clusterID].GlobalCIDRs) <= 0 {
+	if globalNetworks[clusterID] == nil || globalNetworks[clusterID].GlobalCIDRs == nil || len(globalNetworks[clusterID].GlobalCIDRs) == 0 {
 		return false
 	}
 	// GlobalCIDR is pre-configured

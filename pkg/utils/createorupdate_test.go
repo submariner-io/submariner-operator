@@ -27,7 +27,6 @@ import (
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	extendedfakeclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
@@ -53,7 +52,7 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdClusterRole, err := client.RbacV1().ClusterRoles().Get(clusterRole.Name, v1.GetOptions{})
+			createdClusterRole, err := client.RbacV1().ClusterRoles().Get(clusterRole.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdClusterRole.ObjectMeta.Name).Should(Equal("submariner-operator:globalnet"))
 		})
@@ -91,7 +90,7 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdClusterRoleBinding, err := client.RbacV1().ClusterRoleBindings().Get(clusterRoleBinding.Name, v1.GetOptions{})
+			createdClusterRoleBinding, err := client.RbacV1().ClusterRoleBindings().Get(clusterRoleBinding.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdClusterRoleBinding.ObjectMeta.Name).Should(Equal("submariner-operator:globalnet"))
 		})
@@ -128,7 +127,7 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdCrd, err := client.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, v1.GetOptions{})
+			createdCrd, err := client.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdCrd.Spec.Names.Kind).Should(Equal("Submariner"))
 		})
@@ -175,7 +174,7 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdDeployment, err := client.AppsV1().Deployments(namespace).Get(deployment.Name, v1.GetOptions{})
+			createdDeployment, err := client.AppsV1().Deployments(namespace).Get(deployment.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdDeployment.ObjectMeta.Name).Should(Equal(name))
 		})
@@ -214,7 +213,7 @@ var _ = Describe("CreateOrUpdateRole", func() {
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdRole, err := client.RbacV1().Roles(namespace).Get(role.Name, v1.GetOptions{})
+			createdRole, err := client.RbacV1().Roles(namespace).Get(role.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdRole.ObjectMeta.Name).Should(Equal("submariner-operator"))
 		})
@@ -253,7 +252,7 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdRoleBinding, err := client.RbacV1().RoleBindings(namespace).Get(roleBinding.Name, v1.GetOptions{})
+			createdRoleBinding, err := client.RbacV1().RoleBindings(namespace).Get(roleBinding.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdRoleBinding.ObjectMeta.Name).Should(Equal("submariner-operator"))
 		})

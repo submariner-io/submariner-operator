@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog"
 	"k8s.io/klog/klogr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -33,13 +33,13 @@ const (
 )
 
 type failingClient struct {
-	client.Client
+	controllerClient.Client
 	onCreate reflect.Type
 	onGet    reflect.Type
 	onUpdate reflect.Type
 }
 
-func (c *failingClient) Create(ctx context.Context, obj runtime.Object, opts ...client.CreateOption) error {
+func (c *failingClient) Create(ctx context.Context, obj runtime.Object, opts ...controllerClient.CreateOption) error {
 	if c.onCreate == reflect.TypeOf(obj) {
 		return fmt.Errorf("Mock Create error")
 	}
@@ -47,7 +47,7 @@ func (c *failingClient) Create(ctx context.Context, obj runtime.Object, opts ...
 	return c.Client.Create(ctx, obj, opts...)
 }
 
-func (c *failingClient) Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+func (c *failingClient) Get(ctx context.Context, key controllerClient.ObjectKey, obj runtime.Object) error {
 	if c.onGet == reflect.TypeOf(obj) {
 		return fmt.Errorf("Mock Get error")
 	}
@@ -55,7 +55,7 @@ func (c *failingClient) Get(ctx context.Context, key client.ObjectKey, obj runti
 	return c.Client.Get(ctx, key, obj)
 }
 
-func (c *failingClient) Update(ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) error {
+func (c *failingClient) Update(ctx context.Context, obj runtime.Object, opts ...controllerClient.UpdateOption) error {
 	if c.onUpdate == reflect.TypeOf(obj) {
 		return fmt.Errorf("Mock Get error")
 	}
@@ -86,7 +86,7 @@ const testConfiguredClusterCIDR = "192.168.67.0/24"
 func testReconciliation() {
 	var (
 		initClientObjs  []runtime.Object
-		fakeClient      client.Client
+		fakeClient      controllerClient.Client
 		submariner      *submariner_v1.Submariner
 		controller      *ReconcileSubmariner
 		reconcileErr    error
@@ -94,7 +94,7 @@ func testReconciliation() {
 		clusterNetwork  *network.ClusterNetwork
 	)
 
-	newClient := func() client.Client {
+	newClient := func() controllerClient.Client {
 		return fake.NewFakeClientWithScheme(scheme.Scheme, initClientObjs...)
 	}
 
@@ -324,7 +324,7 @@ func testReconciliation() {
 	})
 }
 
-func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client client.Client) {
+func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client controllerClient.Client) {
 	daemonSet := expectDaemonSet(routeAgentDaemonSetName, client)
 
 	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-routeagent"))
@@ -345,7 +345,7 @@ func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client clie
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
 
-func verifyEngineDaemonSet(submariner *submariner_v1.Submariner, client client.Client) {
+func verifyEngineDaemonSet(submariner *submariner_v1.Submariner, client controllerClient.Client) {
 	daemonSet := expectDaemonSet(engineDaemonSetName, client)
 
 	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-engine"))
@@ -427,19 +427,19 @@ func getServiceCIDR(submariner *submariner_v1.Submariner, clusterNetwork *networ
 	}
 }
 
-func getDaemonSet(name string, client client.Client) (*appsv1.DaemonSet, error) {
+func getDaemonSet(name string, client controllerClient.Client) (*appsv1.DaemonSet, error) {
 	foundDaemonSet := &appsv1.DaemonSet{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: submarinerNamespace}, foundDaemonSet)
 	return foundDaemonSet, err
 }
 
-func expectDaemonSet(name string, client client.Client) *appsv1.DaemonSet {
+func expectDaemonSet(name string, client controllerClient.Client) *appsv1.DaemonSet {
 	foundDaemonSet, err := getDaemonSet(name, client)
 	Expect(err).To(Succeed())
 	return foundDaemonSet
 }
 
-func expectNoDaemonSet(name string, client client.Client) {
+func expectNoDaemonSet(name string, client controllerClient.Client) {
 	_, err := getDaemonSet(name, client)
 	Expect(err).To(HaveOccurred())
 	Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
