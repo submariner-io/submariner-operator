@@ -120,11 +120,11 @@ func getClients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, e
 	return dynClient, clientSet, nil
 }
 
-func getRestConfig(kubeConfigPath string, kubeContext string) (*rest.Config, error) {
+func getRestConfig(kubeConfigPath, kubeContext string) (*rest.Config, error) {
 	return getClientConfig(kubeConfigPath, kubeContext).ClientConfig()
 }
 
-func getClientConfig(kubeConfigPath string, kubeContext string) clientcmd.ClientConfig {
+func getClientConfig(kubeConfigPath, kubeContext string) clientcmd.ClientConfig {
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
 	rules.ExplicitPath = kubeConfigPath
 	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
@@ -156,7 +156,7 @@ func handleNodeLabels(config *rest.Config) error {
 		if err != nil {
 			return err
 		}
-		if len(answer.Node) == 0 {
+		if answer.Node == "" {
 			fmt.Printf("* No worker node found to label as the gateway\n")
 		} else {
 			err = addLabelsToNode(clientset, answer.Node, map[string]string{submarinerGatewayLabel: trueLabel})
@@ -199,9 +199,9 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 
 // this function was sourced from:
 // https://github.com/kubernetes/kubernetes/blob/a3ccea9d8743f2ff82e41b6c2af6dc2c41dc7b10/test/utils/density_utils.go#L36
-func addLabelsToNode(c kubernetes.Interface, nodeName string, labels map[string]string) error {
+func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[string]string) error {
 	var tokens []string
-	for k, v := range labels {
+	for k, v := range labelsToAdd {
 		tokens = append(tokens, fmt.Sprintf("\"%s\":\"%s\"", k, v))
 	}
 

@@ -47,14 +47,14 @@ func (r *ReconcileSubmariner) discoverNetwork(submariner *submopv1a1.Submariner)
 	return err
 }
 
-func getCIDR(CIDRtype string, currentCIDR string, detectedCIDRs []string) string {
-	detected := getFirstCIDR(CIDRtype, detectedCIDRs)
+func getCIDR(cidrType, currentCIDR string, detectedCIDRs []string) string {
+	detected := getFirstCIDR(cidrType, detectedCIDRs)
 
 	if currentCIDR == "" {
 		if detected != "" {
-			log.Info("Using detected CIDR", "type", CIDRtype, "CIDR", detected)
+			log.Info("Using detected CIDR", "type", cidrType, "CIDR", detected)
 		} else {
-			log.Info("No detected CIDR", "type", CIDRtype)
+			log.Info("No detected CIDR", "type", cidrType)
 		}
 		return detected
 	}
@@ -63,12 +63,12 @@ func getCIDR(CIDRtype string, currentCIDR string, detectedCIDRs []string) string
 		log.Error(
 			fmt.Errorf("there is a mismatch between the detected and configured CIDRs"),
 			"The configured CIDR will take precedence",
-			"type", CIDRtype, "configured", currentCIDR, "detected", detected)
+			"type", cidrType, "configured", currentCIDR, "detected", detected)
 	}
 	return currentCIDR
 }
 
-func getFirstCIDR(CIDRtype string, detectedCIDRs []string) string {
+func getFirstCIDR(cidrType string, detectedCIDRs []string) string {
 	CIDRlen := len(detectedCIDRs)
 
 	if CIDRlen > 1 {

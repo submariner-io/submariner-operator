@@ -28,7 +28,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 )
 
-func WaitForReady(clientSet *clientset.Clientset, namespace string, deployment string, interval, timeout time.Duration) error {
+func WaitForReady(clientSet *clientset.Clientset, namespace, deployment string, interval, timeout time.Duration) error {
 	deployments := clientSet.AppsV1().Deployments(namespace)
 
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {
