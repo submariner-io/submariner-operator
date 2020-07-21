@@ -495,6 +495,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 	}
 
 	terminationGracePeriodSeconds := int64(1)
+	maxUnavailable := intstr.FromString("100%")
 
 	routeAgentDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -504,6 +505,12 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 		},
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
+			UpdateStrategy: appsv1.DaemonSetUpdateStrategy{
+				RollingUpdate: &appsv1.RollingUpdateDaemonSet{
+					MaxUnavailable: &maxUnavailable,
+				},
+				Type: appsv1.RollingUpdateDaemonSetStrategyType,
+			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
