@@ -142,7 +142,6 @@ function validate_crd() {
   validate_equals '.metadata.name' "$crd_name"
   validate_equals '.spec.scope' 'Namespaced'
   validate_equals '.spec.group' 'submariner.io'
-  validate_equals '.spec.version' "$version"
   validate_equals '.spec.names.kind' "$spec_name"
 }
 
