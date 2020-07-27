@@ -33,13 +33,12 @@ type versionImageInfo struct {
 	version    string
 }
 
-func newVersionInfoFrom(repository string, component string, version string) versionImageInfo {
-	v := versionImageInfo{
+func newVersionInfoFrom(repository, component, version string) versionImageInfo {
+	return versionImageInfo{
 		component:  component,
 		repository: repository,
 		version:    version,
 	}
-	return v
 }
 
 func getSubmarinerVersion(submarinerClient submarinerclientset.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
@@ -48,12 +47,27 @@ func getSubmarinerVersion(submarinerClient submarinerclientset.Interface, versio
 		return nil, err
 	}
 
-	repository := existingCfg.Spec.Repository
-	if strings.Contains(repository, "localhost") && !strings.Contains(repository, submarinercr.SubmarinerName) {
-		repository += "/" + submarinercr.SubmarinerName
-	}
-	versions = append(versions, newVersionInfoFrom(repository, submarinercr.SubmarinerName, existingCfg.Spec.Version))
+	versions = append(versions, newVersionInfoFrom(existingCfg.Spec.Repository, submarinercr.SubmarinerName, existingCfg.Spec.Version))
 	return versions, nil
+}
+
+func parseOperatorImage(operatorImage string) (string, string) {
+	i := strings.LastIndex(operatorImage, ":")
+	var repository string
+	var version string
+	if i == -1 {
+		repository = operatorImage
+	} else {
+		repository = operatorImage[:i]
+		version = operatorImage[i+1:]
+	}
+
+	suffix := "/" + deployment.OperatorName
+	j := strings.LastIndex(repository, suffix)
+	if j != -1 {
+		repository = repository[:j]
+	}
+	return version, repository
 }
 
 func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
@@ -63,16 +77,7 @@ func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageI
 	}
 
 	operatorFullImageStr := operatorConfig.Spec.Template.Spec.Containers[0].Image
-	i := strings.LastIndex(operatorFullImageStr, ":")
-	var repository string
-	var version string
-	if i == -1 {
-		repository = operatorFullImageStr
-	} else {
-		repository = operatorFullImageStr[:i]
-		version = operatorFullImageStr[i+1:]
-	}
-
+	version, repository := parseOperatorImage(operatorFullImageStr)
 	versions = append(versions, newVersionInfoFrom(repository, deployment.OperatorName, version))
 	return versions, nil
 }
