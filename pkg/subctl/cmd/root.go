@@ -18,7 +18,6 @@ package cmd
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -57,32 +56,13 @@ func init() {
 }
 
 func addKubeconfigFlag(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", kubeConfigFile(), "absolute path(s) to the kubeconfig file(s)")
+	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
 	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
 }
 
 const (
 	OperatorNamespace = "submariner-operator"
 )
-
-func kubeConfigFile() string {
-	var kubeconfig string
-	if kubeconfig = os.Getenv("KUBECONFIG"); kubeconfig != "" {
-		return kubeconfig
-	}
-	if home := homeDir(); home != "" {
-		return filepath.Join(home, ".kube", "config")
-	} else {
-		return ""
-	}
-}
-
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
-}
 
 func panicOnError(err error) {
 	if err != nil {
