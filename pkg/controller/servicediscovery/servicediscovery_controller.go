@@ -230,7 +230,7 @@ func newLigthhouseConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.Con
 		"app":       lighthouseCoreDNSName,
 		"component": componentName,
 	}
-	expectedCorefile := `supercluster.local:53 {
+	expectedCorefile := `clusterset.local:53 {
 lighthouse
 errors
 health
@@ -356,7 +356,7 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.
 		}
 		/* This entry will be added to config map
 		# lighthouse
-		supercluster.local:53 {
+		clusterset.local:53 {
 		    forward . 2.2.2.2:5353
 		}
 		*/
@@ -371,11 +371,11 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.
 			return goerrors.New("lighthouseDnsService ClusterIp should be available")
 		}
 		expectedCorefile := `#lighthouse
-supercluster.local:53 {
+clusterset.local:53 {
 forward . `
 		expectedCorefile = expectedCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
 		coreFile := configMap.Data["Corefile"]
-		if strings.Contains(coreFile, "supercluster") {
+		if strings.Contains(coreFile, "clusterset") {
 			// Assume this means we've already set the ConfigMap up
 			return nil
 		}
@@ -421,7 +421,7 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 
 		lighthouseServer := operatorv1.Server{
 			Name:  lighthouseForwardPluginName,
-			Zones: []string{"supercluster.local"},
+			Zones: []string{"clusterset.local"},
 			ForwardPlugin: operatorv1.ForwardPlugin{
 				Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
 			},
