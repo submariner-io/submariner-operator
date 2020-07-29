@@ -191,8 +191,8 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(engineDaemonSetName, fakeClient)).To(
-				Equal(newEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork))))
+			Expect(expectDaemonSet(engineDaemonSetName, fakeClient).Spec).To(
+				Equal(newEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork)).Spec))
 		})
 	})
 
@@ -226,8 +226,8 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(getDaemonSet(routeAgentDaemonSetName, fakeClient)).To(Equal(newRouteAgentDaemonSet(
-				withNetworkDiscovery(submariner, clusterNetwork))))
+			Expect(expectDaemonSet(routeAgentDaemonSetName, fakeClient).Spec).To(Equal(newRouteAgentDaemonSet(
+				withNetworkDiscovery(submariner, clusterNetwork)).Spec))
 		})
 	})
 
