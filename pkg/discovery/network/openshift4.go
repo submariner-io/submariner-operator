@@ -43,8 +43,8 @@ func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, er
 
 	cr, err := crClient.Get("default", metav1.GetOptions{})
 	if err != nil {
-		klog.Info("Attempted network discovery for OpenShift4, no clusternetworks CRD")
-		return nil, nil
+		klog.Infof("Attempted network discovery for OpenShift4, no clusternetworks CRD: %v", err)
+		return nil, err
 	}
 
 	return parseOS4ClusterNetwork(cr)
