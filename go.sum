@@ -271,8 +271,6 @@ github.com/go-openapi/spec v0.17.0/go.mod h1:XkF/MOi14NmjsfZ8VtAKf8pIlbZzyoTvZsd
 github.com/go-openapi/spec v0.17.2 h1:eb2NbuCnoe8cWAxhtK6CfMWUYmiFEZJ9Hx3Z2WRwJ5M=
 github.com/go-openapi/spec v0.17.2/go.mod h1:XkF/MOi14NmjsfZ8VtAKf8pIlbZzyoTvZsdfssdxcBI=
 github.com/go-openapi/spec v0.19.3/go.mod h1:FpwSN1ksY1eteniUU7X0N/BgJ7a4WvBFVA8Lj9mJglo=
-github.com/go-openapi/spec v0.19.8 h1:qAdZLh1r6QF/hI/gTq+TJTvsQUodZsM7KLqkAJdiJNg=
-github.com/go-openapi/spec v0.19.8/go.mod h1:Hm2Jr4jv8G1ciIAo+frC/Ft+rR2kQDh8JHKHb3gWUSk=
 github.com/go-openapi/spec v0.19.9 h1:9z9cbFuZJ7AcvOHKIY+f6Aevb4vObNDkTEyoMfO7rAc=
 github.com/go-openapi/spec v0.19.9/go.mod h1:vqK/dIdLGCosfvYsQV3WfC7N3TiZSnGY2RZKoFK7X28=
 github.com/go-openapi/strfmt v0.17.0/go.mod h1:P82hnJI0CXkErkXi8IKjPbNBM6lV6+5pLP5l494TcyU=
@@ -790,8 +788,11 @@ github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJy
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/submariner-io/admiral v0.5.0 h1:TaGc0hrB9WOSY2IWXBA3LfZC7c/FDDlTmiEfUah5hIs=
 github.com/submariner-io/admiral v0.5.0/go.mod h1:cBv1Zvfai117idhYv5WPxTZEsgWQfeSqwPpxo0EMZXg=
+github.com/submariner-io/admiral v0.6.0-pre1/go.mod h1:cBv1Zvfai117idhYv5WPxTZEsgWQfeSqwPpxo0EMZXg=
 github.com/submariner-io/lighthouse v0.5.0 h1:Co/lZljlYM4u8265k1OAQx8K9cgIGOxWH9tXjMsyM7o=
 github.com/submariner-io/lighthouse v0.5.0/go.mod h1:dqQYt2Z/H3vgo/wT9u0VjDlNYQgAcKsEq9IJmpoQFzE=
+github.com/submariner-io/lighthouse v0.5.1-0.20200731121810-5b4789ff4871 h1:nnf3KcVRxT5JbHmxdOpQ4zzhOkOvDgOYzmbBb0L0XOc=
+github.com/submariner-io/lighthouse v0.5.1-0.20200731121810-5b4789ff4871/go.mod h1:zdTjz5c09A2nOZ1NyYVYjNUBLgFng2KBi2LAtbItgUs=
 github.com/submariner-io/shipyard v0.5.0 h1:o4kTCubLFLeh+PaBDac1J7zNY3JKWwj7QrMLNb4g/p8=
 github.com/submariner-io/shipyard v0.5.0/go.mod h1:2OrKoDmJSo1jVurxiVH9FqGFmDwshIU7Vgu9pFLBsYo=
 github.com/submariner-io/submariner v0.5.0 h1:dHUcH1nR6i/7zNnX43qt8XH89MlZzUiS3J0eBk9WhCc=
