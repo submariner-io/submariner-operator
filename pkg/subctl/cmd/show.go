@@ -42,20 +42,17 @@ func init() {
 
 func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, error) {
 	var restConfigs []restConfig
-	rules := clientcmd.NewDefaultClientConfigLoadingRules()
 
-	kubeConfigPath, useExplicitPath := kubeConfigFile(kubeConfigPath)
+	rules := clientcmd.NewDefaultClientConfigLoadingRules()
 	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
 	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
+	rules.ExplicitPath = kubeConfigPath
+
 	if kubeContext != "" {
 		overrides.CurrentContext = kubeContext
 	}
 
-	if useExplicitPath {
-		rules.ExplicitPath = kubeConfigPath
-	}
-
-	if useExplicitPath || kubeContext != "" {
+	if kubeConfigPath != "" || kubeContext != "" {
 		config, err := getClientAndRawConfig(rules, overrides)
 		if err != nil {
 			return nil, err
