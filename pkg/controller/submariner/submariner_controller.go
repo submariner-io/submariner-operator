@@ -164,19 +164,15 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 
 	instance.SetDefaults()
 
-	if err = r.client.Update(context.TODO(), instance); err != nil {
+	if err := r.client.Update(context.TODO(), instance); err != nil {
 		return reconcile.Result{}, err
 	}
 
 	// discovery is performed after Update to avoid storing the discovery in the
 	// struct beyond status
-	if err = r.discoverNetwork(instance); err != nil {
+	if err := r.discoverNetwork(instance); err != nil {
 		return reconcile.Result{}, err
 	}
-	// Create submariner-engine SA
-	//subm_engine_sa := corev1.ServiceAccount{}
-	//subm_engine_sa.Name = "submariner-engine"
-	//reqLogger.Info("Created a new SA", "SA.Name", subm_engine_sa.Name)
 
 	engineDaemonSet, err := r.reconcileEngineDaemonSet(instance, reqLogger)
 	if err != nil {
@@ -245,7 +241,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		}
 	}
 
-	if err = r.reconcileServiceDiscovery(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
+	if err := r.reconcileServiceDiscovery(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
 		return reconcile.Result{}, err
 	}
 	return reconcile.Result{}, nil
@@ -262,7 +258,7 @@ func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace st
 	}
 	// Ensure we’ll get updates
 	for i := range foundGateways.Items {
-		if err = controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.scheme); err != nil {
+		if err := controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.scheme); err != nil {
 			return nil, err
 		}
 	}
@@ -495,6 +491,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 	}
 
 	terminationGracePeriodSeconds := int64(1)
+	maxUnavailable := intstr.FromString("100%")
 
 	routeAgentDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -504,6 +501,12 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 		},
 		Spec: appsv1.DaemonSetSpec{
 			Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
+			UpdateStrategy: appsv1.DaemonSetUpdateStrategy{
+				RollingUpdate: &appsv1.RollingUpdateDaemonSet{
+					MaxUnavailable: &maxUnavailable,
+				},
+				Type: appsv1.RollingUpdateDaemonSetStrategyType,
+			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,

@@ -6,7 +6,7 @@ require (
 	github.com/coreos/prometheus-operator v0.31.1 // indirect
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.19.8
+	github.com/go-openapi/spec v0.19.9
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
@@ -19,9 +19,9 @@ require (
 	github.com/prometheus/client_golang v1.2.1
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/lighthouse v0.4.1
-	github.com/submariner-io/shipyard v0.5.0-pre0
-	github.com/submariner-io/submariner v0.4.1
+	github.com/submariner-io/lighthouse v0.5.1-0.20200731121810-5b4789ff4871
+	github.com/submariner-io/shipyard v0.5.0
+	github.com/submariner-io/submariner v0.5.0
 	go.opencensus.io v0.22.1 // indirect
 	google.golang.org/api v0.13.0 // indirect
 	google.golang.org/appengine v1.6.5 // indirect

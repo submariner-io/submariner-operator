@@ -41,7 +41,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
-	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
@@ -78,7 +77,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&repository, "repository", versions.DefaultSubmarinerRepo, "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
-	cmd.Flags().StringVar(&colorCodes, "colorcodes", "blue", "color codes")
+	cmd.Flags().StringVar(&colorCodes, "colorcodes", submariner.DefaultColorCode, "color codes")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
 	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "Disable NAT for IPsec")
@@ -141,7 +140,7 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 			},
 		})
 	}
-	if len(colorCodes) == 0 {
+	if colorCodes == "" {
 		qs = append(qs, &survey.Question{
 			Name:     "colorCodes",
 			Prompt:   &survey.Input{Message: "What color codes should be used (e.g. \"blue\")?"},
@@ -204,13 +203,6 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage())
 	status.End(cli.CheckForError(err))
 	exitOnError("Error deploying the operator", err)
-
-	if subctlData.ServiceDiscovery {
-		status.Start("Deploying multi cluster service discovery")
-		err = lighthouse.Ensure(status, config, "", "", false, kubeConfig, kubeContext)
-		status.End(cli.CheckForError(err))
-		exitOnError("Error deploying multi cluster service discovery", err)
-	}
 
 	status.Start("Creating SA for cluster")
 	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID)
@@ -280,7 +272,7 @@ func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 	return networkDetails
 }
 
-func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (CIDR string, autodetected bool, err error) {
+func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (cidrType string, autodetected bool, err error) {
 	if clusterCIDR != "" {
 		if nd != nil && len(nd.PodCIDRs) > 0 && nd.PodCIDRs[0] != clusterCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided cluster CIDR for the pods (%s) does not match discovered (%s)\n",
@@ -290,12 +282,12 @@ func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (CIDR string, au
 	} else if nd != nil && len(nd.PodCIDRs) > 0 {
 		return nd.PodCIDRs[0], true, nil
 	} else {
-		CIDR, err = askForCIDR("Pod")
-		return CIDR, false, err
+		cidrType, err = askForCIDR("Pod")
+		return cidrType, false, err
 	}
 }
 
-func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (CIDR string, autodetected bool, err error) {
+func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (cidrType string, autodetected bool, err error) {
 	if serviceCIDR != "" {
 		if nd != nil && len(nd.ServiceCIDRs) > 0 && nd.ServiceCIDRs[0] != serviceCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided service CIDR (%s) does not match discovered (%s)\n",
@@ -305,8 +297,8 @@ func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (CIDR string
 	} else if nd != nil && len(nd.ServiceCIDRs) > 0 {
 		return nd.ServiceCIDRs[0], true, nil
 	} else {
-		CIDR, err = askForCIDR("ClusterIP service")
-		return CIDR, false, err
+		cidrType, err = askForCIDR("ClusterIP service")
+		return cidrType, false, err
 	}
 }
 
@@ -348,7 +340,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 
 	crImageVersion := imageVersion
 
-	if len(imageVersion) == 0 {
+	if imageVersion == "" {
 		// Default engine version
 		// This is handled in the operator after 0.0.1 (of the operator)
 		crImageVersion = versions.DefaultSubmarinerVersion

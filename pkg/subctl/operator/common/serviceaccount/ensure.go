@@ -26,8 +26,8 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-//Ensure creates the given service account
-func Ensure(restConfig *rest.Config, namespace string, serviceAccount string) (bool, error) {
+// Ensure creates the given service account
+func Ensure(restConfig *rest.Config, namespace, serviceAccount string) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
 		return false, err

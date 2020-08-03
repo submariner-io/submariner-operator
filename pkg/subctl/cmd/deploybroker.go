@@ -27,7 +27,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
-	lighthouse "github.com/submariner-io/submariner-operator/pkg/subctl/lighthouse/deploy"
 )
 
 var (
@@ -70,9 +69,6 @@ var deployBroker = &cobra.Command{
 
 		config, err := getRestConfig(kubeConfig, kubeContext)
 		exitOnError("The provided kubeconfig is invalid", err)
-
-		err = lighthouse.Validate()
-		exitOnError("Invalid configuration", err)
 
 		status := cli.NewStatus()
 		status.Start("Deploying broker")

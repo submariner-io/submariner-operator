@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -96,10 +96,10 @@ var _ reconcile.Reconciler = &ReconcileServiceDiscovery{}
 type ReconcileServiceDiscovery struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
-	client            client.Client
+	client            controllerClient.Client
 	scheme            *runtime.Scheme
 	k8sClientSet      *clientset.Clientset
-	operatorClientSet client.Client
+	operatorClientSet controllerClient.Client
 }
 
 // Reconcile reads that state of the cluster for a ServiceDiscovery object and makes changes based on the state read
@@ -120,9 +120,9 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			deployment := &appsv1.Deployment{}
-			opts := []client.DeleteAllOfOption{
-				client.InNamespace(request.NamespacedName.Namespace),
-				client.MatchingLabels{"app": deploymentName},
+			opts := []controllerClient.DeleteAllOfOption{
+				controllerClient.InNamespace(request.NamespacedName.Namespace),
+				controllerClient.MatchingLabels{"app": deploymentName},
 			}
 			err := r.client.DeleteAllOf(context.TODO(), deployment, opts...)
 			return reconcile.Result{}, err
@@ -162,7 +162,7 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 	}
 	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance)
 	if err != nil {
-		//Try to update Openshift-DNS
+		// Try to update Openshift-DNS
 		return reconcile.Result{}, updateOpenshiftClusterDNSOperator(instance, r.client, r.operatorClientSet, reqLogger)
 	}
 
@@ -346,7 +346,7 @@ func newLigthhouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 	}
 }
 
-func updateDNSConfigMap(client client.Client, k8sclientSet *clientset.Clientset, cr *submarinerv1alpha1.ServiceDiscovery) error {
+func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.Clientset, cr *submarinerv1alpha1.ServiceDiscovery) error {
 	configMaps := k8sclientSet.CoreV1().ConfigMaps("kube-system")
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := configMaps.Get("coredns", metav1.GetOptions{})
@@ -388,7 +388,7 @@ forward . `
 	return retryErr
 }
 
-func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDiscovery, client client.Client, operatorClient client.Client, reqLogger logr.Logger) error {
+func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDiscovery, client, operatorClient controllerClient.Client, reqLogger logr.Logger) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		dnsOperator := &operatorv1.DNS{}
 		if err := client.Get(context.TODO(), types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
@@ -410,7 +410,7 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 						return nil
 					}
 				}
-				//ClusterIP of Lighthouse DNS Server changed hence removing the current entry.
+				// ClusterIP of Lighthouse DNS Server changed hence removing the current entry.
 				forwardServers = append(forwardServers[:i], forwardServers[i+1:]...)
 				reqLogger.Info("ClusterIP of Lighthouse DNS server changed, hence updating Cluster DNS Operator CR")
 			}

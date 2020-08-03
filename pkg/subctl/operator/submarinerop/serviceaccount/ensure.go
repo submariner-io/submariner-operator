@@ -34,7 +34,7 @@ import (
 
 const OperatorServiceAccount = "submariner-operator"
 
-//Ensure functions updates or installs the operator CRDs in the cluster
+// Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
@@ -121,16 +121,17 @@ func ensureClusterRole(clientSet *clientset.Clientset, namespace string) (bool, 
 	if err != nil {
 		return false, fmt.Errorf("ClusterRole update or create failed: %s", err)
 	}
-	result, err := utils.CreateOrUpdateClusterRole(clientSet, clusterRole)
-	if err != nil || !result {
-		return false, err
+	clusterRoleResult, err := utils.CreateOrUpdateClusterRole(clientSet, clusterRole)
+	if err != nil {
+		return clusterRoleResult, err
 	}
 
 	lighthouseClusterRole, err := getLighthouseOperatorClusterRole()
 	if err != nil {
 		return false, fmt.Errorf("lighthouseClusterRole update or create failed: %s", err)
 	}
-	return utils.CreateOrUpdateClusterRole(clientSet, lighthouseClusterRole)
+	lighthouseClusterRoleResult, err := utils.CreateOrUpdateClusterRole(clientSet, lighthouseClusterRole)
+	return clusterRoleResult || lighthouseClusterRoleResult, err
 }
 
 func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, error) {

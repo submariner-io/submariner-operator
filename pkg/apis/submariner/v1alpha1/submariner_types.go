@@ -31,26 +31,26 @@ import (
 // SubmarinerSpec defines the desired state of Submariner
 // +k8s:openapi-gen=true
 type SubmarinerSpec struct {
-	Version                  string `json:"version,omitempty"`
-	Repository               string `json:"repository,omitempty"`
-	CeIPSecNATTPort          int    `json:"ceIPSecNATTPort,omitempty"`
-	CeIPSecIKEPort           int    `json:"ceIPSecIKEPort,omitempty"`
-	CeIPSecDebug             bool   `json:"ceIPSecDebug"`
-	CeIPSecPSK               string `json:"ceIPSecPSK"`
+	Broker                   string `json:"broker"`
+	BrokerK8sApiServer       string `json:"brokerK8sApiServer"`
+	BrokerK8sApiServerToken  string `json:"brokerK8sApiServerToken"`
 	BrokerK8sCA              string `json:"brokerK8sCA"`
 	BrokerK8sRemoteNamespace string `json:"brokerK8sRemoteNamespace"`
-	BrokerK8sApiServerToken  string `json:"brokerK8sApiServerToken"`
-	BrokerK8sApiServer       string `json:"brokerK8sApiServer"`
-	Broker                   string `json:"broker"`
-	NatEnabled               bool   `json:"natEnabled"`
-	Debug                    bool   `json:"debug"`
-	ColorCodes               string `json:"colorCodes,omitempty"`
-	ClusterID                string `json:"clusterID"`
-	ServiceCIDR              string `json:"serviceCIDR"`
+	CableDriver              string `json:"cableDriver,omitempty"`
+	CeIPSecPSK               string `json:"ceIPSecPSK"`
 	ClusterCIDR              string `json:"clusterCIDR"`
+	ClusterID                string `json:"clusterID"`
+	ColorCodes               string `json:"colorCodes,omitempty"`
+	Repository               string `json:"repository,omitempty"`
+	ServiceCIDR              string `json:"serviceCIDR"`
 	GlobalCIDR               string `json:"globalCIDR,omitempty"`
 	Namespace                string `json:"namespace"`
-	CableDriver              string `json:"cableDriver,omitempty"`
+	Version                  string `json:"version,omitempty"`
+	CeIPSecIKEPort           int    `json:"ceIPSecIKEPort,omitempty"`
+	CeIPSecNATTPort          int    `json:"ceIPSecNATTPort,omitempty"`
+	CeIPSecDebug             bool   `json:"ceIPSecDebug"`
+	Debug                    bool   `json:"debug"`
+	NatEnabled               bool   `json:"natEnabled"`
 	ServiceDiscoveryEnabled  bool   `json:"serviceDiscoveryEnabled,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
@@ -74,6 +74,8 @@ type SubmarinerStatus struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
+
+const DefaultColorCode = "blue"
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -114,6 +116,6 @@ func (submariner *Submariner) SetDefaults() {
 	}
 
 	if submariner.Spec.ColorCodes == "" {
-		submariner.Spec.ColorCodes = "blue"
+		submariner.Spec.ColorCodes = DefaultColorCode
 	}
 }

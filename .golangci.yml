@@ -8,6 +8,7 @@ linters-settings:
     disabled-checks:
       - ifElseChain
       - unnamedResult
+      - unnecessaryDefer
   gocyclo:
     min-complexity: 20
   lll:
@@ -26,7 +27,7 @@ linters:
     #- funlen
     #- gochecknoglobals
     #- gochecknoinits
-    #- gocritic
+    - gocritic
     - gocyclo
     - gofmt
     - goimports
@@ -37,8 +38,8 @@ linters:
     - ineffassign
     #- interfacer
     #- lll
-    #- maligned
     - misspell
+    - maligned
     - nakedret
     - staticcheck
     - structcheck

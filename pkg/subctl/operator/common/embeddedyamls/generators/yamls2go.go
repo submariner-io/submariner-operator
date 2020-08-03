@@ -70,8 +70,7 @@ func main() {
 	//      and ` + "`endpoints`" + `.
 	//    type: string`
 
-	re, err := regexp.Compile("`([^`]*)`")
-	panicOnErr(err)
+	re := regexp.MustCompile("`([^`]*)`")
 
 	for _, f := range files {
 		_, err = out.WriteString("\t" + constName(f) + " = `")
@@ -101,8 +100,8 @@ func panicOnErr(err error) {
 }
 
 func constName(filename string) string {
-	return strings.Title(strings.Replace(
-		strings.Replace(filename,
-			".", "_", -1),
-		"/", "_", -1))
+	return strings.Title(strings.ReplaceAll(
+		strings.ReplaceAll(filename,
+			".", "_"),
+		"/", "_"))
 }
