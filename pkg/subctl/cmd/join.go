@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
@@ -107,8 +108,7 @@ var joinCmd = &cobra.Command{
 		exitOnError("Error loading the broker information from the given file", err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
 		exitOnError("Error connecting to broker cluster", err)
-		config, err := getRestConfig(kubeConfig, kubeContext)
-		exitOnError("Error connecting to the target cluster", err)
+		config := getClientConfig(kubeConfig, kubeContext)
 		joinSubmarinerCluster(config, subctlData)
 	},
 }
@@ -122,9 +122,16 @@ func checkArgumentPassed(args []string) error {
 
 var status = cli.NewStatus()
 
-func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData) {
+func joinSubmarinerCluster(config clientcmd.ClientConfig, subctlData *datafile.SubctlData) {
 	// Missing information
 	var qs = []*survey.Question{}
+
+	if clusterID == "" {
+		rawConfig, err := config.RawConfig()
+		// This will be fatal later, no point in continuing
+		exitOnError("Error connecting to the target cluster", err)
+		clusterID = *getClusterName(rawConfig)
+	}
 
 	if valid, _ := isValidClusterID(clusterID); !valid {
 		qs = append(qs, &survey.Question{
@@ -166,14 +173,16 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 		}
 	}
 
+	clientConfig, err := config.ClientConfig()
+	exitOnError("Error connecting to the target cluster", err)
+
 	if !noLabel {
-		err := handleNodeLabels(config)
+		err := handleNodeLabels(clientConfig)
 		exitOnError("Unable to set the gateway node up", err)
 	}
 
-	var err error
 	status.Start("Discovering network details")
-	networkDetails := getNetworkDetails(config)
+	networkDetails := getNetworkDetails(clientConfig)
 
 	serviceCIDR, serviceCIDRautoDetected, err := getServiceCIDR(serviceCIDR, networkDetails)
 	exitOnError("Error determining the service CIDR", err)
@@ -200,7 +209,7 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 
 	status.Start("Deploying the Submariner operator")
 
-	err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage())
+	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage())
 	status.End(cli.CheckForError(err))
 	exitOnError("Error deploying the operator", err)
 
@@ -210,7 +219,7 @@ func joinSubmarinerCluster(config *rest.Config, subctlData *datafile.SubctlData)
 	exitOnError("Error creating SA for cluster", err)
 
 	status.Start("Deploying Submariner")
-	err = submarinercr.Ensure(config, OperatorNamespace, populateSubmarinerSpec(subctlData, netconfig))
+	err = submarinercr.Ensure(clientConfig, OperatorNamespace, populateSubmarinerSpec(subctlData, netconfig))
 	if err == nil {
 		status.QueueSuccessMessage("Submariner is up and running")
 		status.End(cli.Success)
