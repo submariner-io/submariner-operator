@@ -2,7 +2,7 @@ module github.com/submariner-io/submariner-operator
 
 require (
 	cloud.google.com/go v0.47.0 // indirect
-	github.com/AlecAivazis/survey/v2 v2.0.8
+	github.com/AlecAivazis/survey/v2 v2.1.0
 	github.com/coreos/prometheus-operator v0.31.1 // indirect
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
