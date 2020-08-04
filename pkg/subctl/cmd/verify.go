@@ -164,6 +164,9 @@ func checkValidateArguments(args []string) error {
 	if len(args) != 2 {
 		return fmt.Errorf("Two kubeconfigs must be specified.")
 	}
+	if strings.Compare(args[0], args[1]) == 0 {
+		return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
+	}
 	if connectionAttempts < 1 {
 		return fmt.Errorf("--connection-attempts must be >=1")
 	}
