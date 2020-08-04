@@ -16,21 +16,18 @@ Please refer the quickstart guides:
 
 ### Latest Stable Release
 
-This release has the latest stable binaries:
-[latest release](https://github.com/submariner-io/submariner-operator/releases/latest)
+This release has the latest stable binaries: [latest release](https://github.com/submariner-io/submariner-operator/releases/latest)
 
 ### Latest Merged Release
 
-This release is constantly updated with the latest code, and might be unstable:
-[devel release](https://github.com/submariner-io/submariner-operator/releases/tag/devel)
+This release is constantly updated with the latest code, and might be unstable: [devel
+release](https://github.com/submariner-io/submariner-operator/releases/tag/devel)
 
 ## Development
 
 ### Prerequisites
 
-The build environment uses
-[Dapper](https://github.com/rancher/dapper), which requires a working
-Docker setup. You will also need GNU Make.
+The build environment uses [Dapper](https://github.com/rancher/dapper), which requires a working Docker setup. You will also need GNU Make.
 
 ### Build Operator
 
@@ -75,8 +72,8 @@ make deploy
 
 ## Reference
 
-For reference, here's a link to the script generating the scaffold code of the 0.0.1
-version of the operator [gen_subm_operator.sh](https://github.com/submariner-io/submariner/blob/v0.0.2/operators/go/gen_subm_operator.sh).
+For reference, here's a link to the script generating the scaffold code of the 0.0.1 version of the operator
+[gen_subm_operator.sh](https://github.com/submariner-io/submariner/blob/v0.0.2/operators/go/gen_subm_operator.sh).
 
 ## Updating OperatorHub
 
