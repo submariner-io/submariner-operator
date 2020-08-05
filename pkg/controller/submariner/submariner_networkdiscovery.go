@@ -48,7 +48,7 @@ func (r *ReconcileSubmariner) discoverNetwork(submariner *submopv1a1.Submariner)
 }
 
 func getCIDR(cidrType, currentCIDR string, detectedCIDRs []string) string {
-	detected := getFirstCIDR(cidrType, detectedCIDRs)
+	detected := getFirstCIDR(detectedCIDRs)
 
 	if currentCIDR == "" {
 		if detected != "" {
@@ -68,7 +68,7 @@ func getCIDR(cidrType, currentCIDR string, detectedCIDRs []string) string {
 	return currentCIDR
 }
 
-func getFirstCIDR(cidrType string, detectedCIDRs []string) string {
+func getFirstCIDR(detectedCIDRs []string) string {
 	CIDRlen := len(detectedCIDRs)
 
 	if CIDRlen > 1 {
