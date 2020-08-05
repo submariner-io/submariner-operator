@@ -35,7 +35,7 @@ var (
 		Long:  "This command exports a resource so it is accessible to other clusters",
 	}
 	exportServiceCmd = &cobra.Command{
-		Use:   "service",
+		Use:   "service <serviceName>",
 		Short: "Exports a Service to other clusters",
 		Long: "This command creates a ServiceExport resource with a given name which causes the Service of the same name to be accessible" +
 			" to other clusters",
