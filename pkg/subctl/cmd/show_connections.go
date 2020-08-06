@@ -83,8 +83,12 @@ func showConnectionsFromConfig(config *rest.Config) {
 }
 
 func printConnections(connections []connectionStatus) {
-	template := "%-20s%-16s%-16s%-24s%-40s%-16s\n"
+	if len(connections) == 0 {
+		fmt.Println("No resources found.")
+		return
+	}
 
+	template := "%-20s%-16s%-16s%-24s%-40s%-16s\n"
 	fmt.Printf(template, "GATEWAY", "CLUSTER", "REMOTE IP", "CABLE DRIVER", "SUBNETS", "STATUS")
 
 	for _, item := range connections {

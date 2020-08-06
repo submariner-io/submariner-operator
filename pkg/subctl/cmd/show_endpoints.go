@@ -93,6 +93,11 @@ func showEndpointsFromConfig(config *rest.Config) {
 }
 
 func printEndpoints(endpoints []endpointStatus) {
+	if len(endpoints) == 0 {
+		fmt.Println("No resources found.")
+		return
+	}
+
 	template := "%-16s%-16s%-20s%-20s%-16s\n"
 
 	fmt.Printf(template, "CLUSTER ID", "ENDPOINT IP", "PUBLIC IP", "CABLE DRIVER", "TYPE")

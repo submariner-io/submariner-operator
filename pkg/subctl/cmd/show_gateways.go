@@ -93,8 +93,14 @@ func showGatewaysFromConfig(config *rest.Config) {
 }
 
 func printGateways(gateways []gatewayStatus) {
+	if len(gateways) == 0 {
+		fmt.Println("No resources found.")
+		return
+	}
+
 	template := "%-20s%-16s%-32s\n"
 	fmt.Printf(template, "NODE", "HA STATUS", "SUMMARY")
+
 	for _, item := range gateways {
 		fmt.Printf(
 			template,
