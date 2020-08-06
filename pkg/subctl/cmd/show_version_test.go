@@ -36,7 +36,7 @@ func TestParseOperatorImage(t *testing.T) {
 	for _, tt := range imageTests {
 		version, repository := parseOperatorImage(tt.image)
 		if strings.Compare(repository, tt.repository) != 0 {
-			t.Fatalf("Operator repository for image %q shold be %q, but value parsed was %q\n", tt.image, tt.repository, repository)
+			t.Fatalf("Operator repository for image %q should be %q, but value parsed was %q\n", tt.image, tt.repository, repository)
 		}
 		if strings.Compare(version, tt.version) != 0 {
 			t.Fatalf("Operator version for image %q should be %q, but value parsed was %q\n", tt.image, tt.version, version)
