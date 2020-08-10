@@ -98,7 +98,7 @@ func printEndpoints(endpoints []endpointStatus) {
 		return
 	}
 
-	template := "%-16s%-16s%-20s%-20s%-16s\n"
+	template := "%-20s%-16s%-16s%-20s%-16s\n"
 
 	fmt.Printf(template, "CLUSTER ID", "ENDPOINT IP", "PUBLIC IP", "CABLE DRIVER", "TYPE")
 
