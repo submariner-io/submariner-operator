@@ -74,7 +74,8 @@ func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageI
 }
 
 func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
-	lighthouseAgentConfig, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).Get(submariner.ServiceDiscoveryCrName, v1.GetOptions{})
+	lighthouseAgentConfig, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).Get(
+		submariner.ServiceDiscoveryCrName, v1.GetOptions{})
 
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -83,7 +84,8 @@ func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface,
 		return nil, err
 	}
 
-	versions = append(versions, newVersionInfoFrom(lighthouseAgentConfig.Spec.Repository, submariner.ServiceDiscoveryCrName, lighthouseAgentConfig.Spec.Version))
+	versions = append(versions, newVersionInfoFrom(lighthouseAgentConfig.Spec.Repository, submariner.ServiceDiscoveryCrName,
+		lighthouseAgentConfig.Spec.Version))
 	return versions, nil
 }
 

@@ -9,11 +9,23 @@ rules:
   resources:
   - services
   - namespaces
+  - endpoints
   verbs:
   - get
   - list
   - watch
   - update
+- apiGroups:
+    - discovery.k8s.io
+  resources:
+    - endpointslices
+  verbs:
+    - create
+    - get
+    - list
+    - watch
+    - update
+    - delete
 - apiGroups:
   - lighthouse.submariner.io
   resources:

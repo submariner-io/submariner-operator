@@ -35,6 +35,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
 	"github.com/spf13/cobra"
 )
@@ -98,6 +99,14 @@ func getClients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, e
 		return nil, nil, err
 	}
 	return dynClient, clientSet, nil
+}
+
+func getClusterName(rawConfig clientcmdapi.Config) *string {
+	context, ok := rawConfig.Contexts[rawConfig.CurrentContext]
+	if !ok {
+		return nil
+	}
+	return &context.Cluster
 }
 
 func getRestConfig(kubeConfigPath, kubeContext string) (*rest.Config, error) {
