@@ -116,6 +116,7 @@ func getRestConfig(kubeConfigPath, kubeContext string) (*rest.Config, error) {
 func getClientConfig(kubeConfigPath, kubeContext string) clientcmd.ClientConfig {
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
 	rules.ExplicitPath = kubeConfigPath
+
 	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
 	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
 	if kubeContext != "" {
