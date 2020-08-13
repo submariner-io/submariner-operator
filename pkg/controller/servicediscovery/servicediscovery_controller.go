@@ -361,7 +361,7 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := configMaps.Get("coredns", metav1.GetOptions{})
 		if err != nil {
-			reqLogger.Error(err, "Config map is not found")
+			reqLogger.Error(err, "Error retrieving 'coredns' ConfigMap")
 			return err
 		}
 		/* This entry will be added to config map
@@ -373,7 +373,6 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.
 		    forward . 2.2.2.2:5353
 		}
 		*/
-		corefile := configMap.Data["Corefile"]
 		lighthouseDnsService := &corev1.Service{}
 		err = client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDnsService)
 		lighthouseClusterIp := lighthouseDnsService.Spec.ClusterIP
@@ -384,39 +383,42 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.
 		coreFile := configMap.Data["Corefile"]
 		if strings.Contains(coreFile, "clusterset") {
 			// Assume this means we've already set the ConfigMap up
-			return nil
-		coreFile := configMap.Data["Corefile"]
-		if strings.Contains(coreFile, "supercluster.local") {
-			reqLogger.Info("coredns configmap has lighthouse configuration hence updating")
-			if strings.Contains(coreFile, lighthouseClusterIp) {
-				return nil
-			}
-			lines := strings.Split(corefile, "\n")
-			for i, line := range lines {
-				if strings.Contains(line, "supercluster.local") {
-					lines[i+1] = "forward . " + lighthouseClusterIp
-					break
+			coreFile := configMap.Data["Corefile"]
+			if strings.Contains(coreFile, "clusterset.local") {
+				reqLogger.Info("coredns configmap has lighthouse configuration hence updating")
+				lines := strings.Split(coreFile, "\n")
+				for i, line := range lines {
+					if strings.Contains(line, "clusterset.local") {
+						if strings.Contains(lines[i+1], lighthouseClusterIp) {
+							return nil
+						}
+
+						lines[i+1] = "forward . " + lighthouseClusterIp
+						break
+					}
 				}
-			}
-			coreFile = strings.Join(lines, "\n")
-		} else {
-			reqLogger.Info("coredns configmap does not have  lighthouse configuration hence creating")
-		expectedCorefile := `#lighthouse
+				coreFile = strings.Join(lines, "\n")
+			} else {
+				reqLogger.Info("coredns configmap does not have  lighthouse configuration hence creating")
+				expectedCorefile := `#lighthouse
 clusterset.local:53 {
 forward . `
-		expectedCorefile = expectedCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
-		superclusterCorefile := `supercluster.local:53 {
+				expectedCorefile = expectedCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
+				superclusterCorefile := `supercluster.local:53 {
 forward . `
-		expectedCorefile = expectedCorefile + superclusterCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
-			coreFile = expectedCorefile + coreFile
+				expectedCorefile = expectedCorefile + superclusterCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
+				coreFile = expectedCorefile + coreFile
+			}
+			log.Info("Updated coredns CoreFile " + coreFile)
+			configMap.Data["Corefile"] = coreFile
+			// Potentially retried
+			_, err = configMaps.Update(configMap)
+			return err
 		}
-		log.Info("Updated coredns CoreFile " + coreFile)
-		configMap.Data["Corefile"] = coreFile
-		// Potentially retried
-		_, err = configMaps.Update(configMap)
-		return err
+		return nil
 	})
 	return retryErr
+
 }
 
 func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDiscovery, client, operatorClient controllerClient.Client,
