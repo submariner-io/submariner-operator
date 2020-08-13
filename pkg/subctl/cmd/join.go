@@ -86,6 +86,11 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "Disable NAT for IPsec")
 	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "Enable IPsec debugging (verbose logging)")
 	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
+	err := cmd.Flags().MarkDeprecated("subm-debug", "please use --enable-pod-debugging instead")
+	// Errors here are fatal programming errors
+	exitOnError("deprecation error", err)
+	cmd.Flags().BoolVar(&submarinerDebug, "enable-pod-debugging", false,
+		"Enable Submariner pod debugging (verbose logging in the deployed pods)")
 	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
 	cmd.Flags().StringVar(&cableDriver, "cable-driver", "", "Cable driver implementation")
 	cmd.Flags().UintVar(&globalnetClusterSize, "globalnet-cluster-size", 0,
