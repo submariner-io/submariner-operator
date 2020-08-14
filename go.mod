@@ -21,7 +21,7 @@ require (
 	github.com/submariner-io/submariner v0.5.1-0.20200805073811-64c7ad477abf
 	k8s.io/api v0.18.0-rc.1
 	k8s.io/apiextensions-apiserver v0.17.8
-	k8s.io/apimachinery v0.18.3
+	k8s.io/apimachinery v0.18.8
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200204173128-addea2498afe
