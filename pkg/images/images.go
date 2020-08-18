@@ -2,6 +2,9 @@ package images
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 )
 
 func GetImagePath(repo, version, component string) string {
@@ -18,4 +21,23 @@ func GetImagePath(repo, version, component string) string {
 
 	path = fmt.Sprintf("%s:%s", path, version)
 	return path
+}
+
+func ParseOperatorImage(operatorImage string) (string, string) {
+	i := strings.LastIndex(operatorImage, ":")
+	var repository string
+	var version string
+	if i == -1 {
+		repository = operatorImage
+	} else {
+		repository = operatorImage[:i]
+		version = operatorImage[i+1:]
+	}
+
+	suffix := "/" + deployment.OperatorName
+	j := strings.LastIndex(repository, suffix)
+	if j != -1 {
+		repository = repository[:j]
+	}
+	return version, repository
 }

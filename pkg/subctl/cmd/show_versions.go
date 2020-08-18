@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/controller/submariner"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -51,25 +51,6 @@ func getSubmarinerVersion(submarinerClient submarinerclientset.Interface, versio
 	return versions, nil
 }
 
-func parseOperatorImage(operatorImage string) (string, string) {
-	i := strings.LastIndex(operatorImage, ":")
-	var repository string
-	var version string
-	if i == -1 {
-		repository = operatorImage
-	} else {
-		repository = operatorImage[:i]
-		version = operatorImage[i+1:]
-	}
-
-	suffix := "/" + deployment.OperatorName
-	j := strings.LastIndex(repository, suffix)
-	if j != -1 {
-		repository = repository[:j]
-	}
-	return version, repository
-}
-
 func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
 	operatorConfig, err := clientSet.AppsV1().Deployments(OperatorNamespace).Get(deployment.OperatorName, v1.GetOptions{})
 	if err != nil {
@@ -77,7 +58,7 @@ func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageI
 	}
 
 	operatorFullImageStr := operatorConfig.Spec.Template.Spec.Containers[0].Image
-	version, repository := parseOperatorImage(operatorFullImageStr)
+	version, repository := images.ParseOperatorImage(operatorFullImageStr)
 	versions = append(versions, newVersionInfoFrom(repository, deployment.OperatorName, version))
 	return versions, nil
 }
