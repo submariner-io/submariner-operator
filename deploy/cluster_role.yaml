@@ -4,7 +4,7 @@ metadata:
   name: submariner-operator
 rules:
   # submariner-operator updates the config map of core-dns to forward requests to
-  # supercluster.local to Lighthouse DNS, also looks at existing configmaps
+  # clusterset.local to Lighthouse DNS, also looks at existing configmaps
   # to figure out network settings
   - apiGroups:
       - ""
