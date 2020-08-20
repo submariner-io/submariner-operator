@@ -8,6 +8,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 )
 
 type gatewayStatus struct {
@@ -27,13 +28,11 @@ func init() {
 	showCmd.AddCommand(showGatewaysCmd)
 }
 
-func getGatewaysStatus() []gatewayStatus {
-	config, err := getRestConfig(kubeConfig, kubeContext)
-	exitOnError("Error getting REST config for cluster", err)
-
+func getGatewaysStatus(config *rest.Config) []gatewayStatus {
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
 	exitOnError("Unable to get the Submariner client", err)
 
+	var status []gatewayStatus
 	existingCfg, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
 	if err != nil {
 		exitOnError("error reading from submariner client", err)
@@ -44,7 +43,6 @@ func getGatewaysStatus() []gatewayStatus {
 		exitWithErrorMsg("no gateways found")
 	}
 
-	var status []gatewayStatus
 	for _, gateway := range *gateways {
 		haStatus := gateway.Status.HAStatus
 		enpoint := gateway.Status.LocalEndpoint.Hostname
@@ -78,13 +76,31 @@ func getGatewaysStatus() []gatewayStatus {
 }
 
 func showGateways(cmd *cobra.Command, args []string) {
-	status := getGatewaysStatus()
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
+	exitOnError("Error getting REST config for cluster", err)
+
+	for _, item := range configs {
+		fmt.Println()
+		fmt.Printf("Showing information for cluster %q:\n", item.context)
+		status := getGatewaysStatus(item.config)
+		printGateways(status)
+	}
+}
+
+func showGatewaysFromConfig(config *rest.Config) {
+	status := getGatewaysStatus(config)
 	printGateways(status)
 }
 
 func printGateways(gateways []gatewayStatus) {
+	if len(gateways) == 0 {
+		fmt.Println("No resources found.")
+		return
+	}
+
 	template := "%-20s%-16s%-32s\n"
 	fmt.Printf(template, "NODE", "HA STATUS", "SUMMARY")
+
 	for _, item := range gateways {
 		fmt.Printf(
 			template,

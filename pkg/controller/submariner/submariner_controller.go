@@ -265,28 +265,8 @@ func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace st
 	return &foundGateways.Items, nil
 }
 
-func (r *ReconcileSubmariner) deletePreExistingEngineDeployment(namespace string, reqLogger logr.Logger) error {
-	foundDeployment := &appsv1.Deployment{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: namespace}, foundDeployment)
-	if err != nil && errors.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		return err
-	}
-
-	reqLogger.Info("Deleting existing engine Deployment")
-	return r.client.Delete(context.TODO(), foundDeployment)
-}
-
 func (r *ReconcileSubmariner) reconcileEngineDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger, r.client, r.scheme)
-	if err == nil {
-		err = r.deletePreExistingEngineDeployment(instance.Namespace, reqLogger)
-	}
-
-	return daemonSet, err
+	return helpers.ReconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger, r.client, r.scheme)
 }
 
 func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,

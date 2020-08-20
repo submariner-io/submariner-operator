@@ -88,8 +88,9 @@ pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/em
 # generate-clientset generates the clientset for the Submariner APIs
 # It needs to be run when the Submariner APIs change
 generate-clientset:
-	git clone https://github.com/kubernetes/code-generator -b release-1.14 $${GOPATH}/src/k8s.io/code-generator
-	GO111MODULE=off $${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \
+	git clone https://github.com/kubernetes/code-generator -b kubernetes-1.17.0 $${GOPATH}/src/k8s.io/code-generator
+	cd $${GOPATH}/src/k8s.io/code-generator && go mod vendor
+	GO111MODULE=on $${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \
 		client,deepcopy \
 		github.com/submariner-io/submariner-operator/pkg/client \
 		github.com/submariner-io/submariner-operator/pkg/apis \

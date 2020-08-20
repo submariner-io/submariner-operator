@@ -19,13 +19,21 @@ func init() {
 }
 
 func showAll(cmd *cobra.Command, args []string) {
-	showNetwork(cmd, args)
-	fmt.Println()
-	showEndpoints(cmd, args)
-	fmt.Println()
-	showConnections(cmd, args)
-	fmt.Println()
-	showGateways(cmd, args)
-	fmt.Println()
-	showVersions(cmd, args)
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
+	exitOnError("Error getting REST config for cluster", err)
+
+	for _, item := range configs {
+		fmt.Println()
+		fmt.Printf("Showing information for cluster %q:\n", item.context)
+
+		showNetworkSingleCluster(item.config)
+		fmt.Println()
+		showEndpointsFromConfig(item.config)
+		fmt.Println()
+		showConnectionsFromConfig(item.config)
+		fmt.Println()
+		showGatewaysFromConfig(item.config)
+		fmt.Println()
+		showVersionsFromConfig(item.config)
+	}
 }

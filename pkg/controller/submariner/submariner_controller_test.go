@@ -191,28 +191,8 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(engineDaemonSetName, fakeClient)).To(
-				Equal(newEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork))))
-		})
-	})
-
-	When("a previous submariner engine Deployment exists", func() {
-		BeforeEach(func() {
-			initClientObjs = append(initClientObjs, &appsv1.Deployment{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "submariner",
-					Namespace: submarinerNamespace,
-				},
-			})
-		})
-
-		It("should delete it", func() {
-			Expect(reconcileErr).To(Succeed())
-			Expect(reconcileResult.Requeue).To(BeFalse())
-			verifyEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
-
-			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: "submariner", Namespace: submarinerNamespace}, &appsv1.Deployment{})
-			Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
+			Expect(expectDaemonSet(engineDaemonSetName, fakeClient).Spec).To(
+				Equal(newEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork)).Spec))
 		})
 	})
 
@@ -246,8 +226,8 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(getDaemonSet(routeAgentDaemonSetName, fakeClient)).To(Equal(newRouteAgentDaemonSet(
-				withNetworkDiscovery(submariner, clusterNetwork))))
+			Expect(expectDaemonSet(routeAgentDaemonSetName, fakeClient).Spec).To(Equal(newRouteAgentDaemonSet(
+				withNetworkDiscovery(submariner, clusterNetwork)).Spec))
 		})
 	})
 

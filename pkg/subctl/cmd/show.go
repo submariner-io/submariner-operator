@@ -18,6 +18,9 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // showCmd represents the show command
@@ -27,7 +30,66 @@ var showCmd = &cobra.Command{
 	Long:  `This command shows information about some aspect of the submariner deployment in a cluster.`,
 }
 
+type restConfig struct {
+	config  *rest.Config
+	context string
+}
+
 func init() {
 	addKubeconfigFlag(showCmd)
 	rootCmd.AddCommand(showCmd)
+}
+
+func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, error) {
+	var restConfigs []restConfig
+
+	rules := clientcmd.NewDefaultClientConfigLoadingRules()
+	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
+	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
+	rules.ExplicitPath = kubeConfigPath
+
+	if kubeContext != "" {
+		overrides.CurrentContext = kubeContext
+	}
+
+	if kubeConfigPath != "" || kubeContext != "" {
+		config, err := getClientAndRawConfig(rules, overrides)
+		if err != nil {
+			return nil, err
+		}
+		restConfigs = append(restConfigs, config)
+		return restConfigs, nil
+	}
+
+	for _, item := range rules.Precedence {
+		rules.ExplicitPath = item
+		config, err := getClientAndRawConfig(rules, overrides)
+		if err != nil {
+			return nil, err
+		}
+
+		restConfigs = append(restConfigs, config)
+	}
+
+	return restConfigs, nil
+}
+
+func getClientAndRawConfig(rules *clientcmd.ClientConfigLoadingRules, overrides *clientcmd.ConfigOverrides) (restConfig, error) {
+	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
+	clientConfig, err := config.ClientConfig()
+	if err != nil {
+		return restConfig{}, err
+	}
+
+	var context string
+	if overrides.CurrentContext != "" {
+		context = overrides.CurrentContext
+	} else {
+		raw, err := config.RawConfig()
+		if err != nil {
+			return restConfig{}, err
+		}
+		context = raw.CurrentContext
+	}
+	return restConfig{config: clientConfig, context: context}, nil
 }
