@@ -236,6 +236,12 @@ errors
 health
 ready
 }
+supercluster.local:53 {
+lighthouse
+errors
+health
+ready
+}
 `
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -359,6 +365,9 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.
 		clusterset.local:53 {
 		    forward . 2.2.2.2:5353
 		}
+		supercluster.local:53 {
+		    forward . 2.2.2.2:5353
+		}
 		*/
 		corefile := configMap.Data["Corefile"]
 		if strings.Contains(corefile, "lighthouse") {
@@ -374,6 +383,9 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.
 clusterset.local:53 {
 forward . `
 		expectedCorefile = expectedCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
+		superclusterCorefile := `supercluster.local:53 {
+forward . `
+		expectedCorefile = expectedCorefile + superclusterCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
 		coreFile := configMap.Data["Corefile"]
 		if strings.Contains(coreFile, "clusterset") {
 			// Assume this means we've already set the ConfigMap up
@@ -422,6 +434,15 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 		lighthouseServer := operatorv1.Server{
 			Name:  lighthouseForwardPluginName,
 			Zones: []string{"clusterset.local"},
+			ForwardPlugin: operatorv1.ForwardPlugin{
+				Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
+			},
+		}
+		forwardServers = append(forwardServers, lighthouseServer)
+
+		lighthouseServer = operatorv1.Server{
+			Name:  lighthouseForwardPluginName,
+			Zones: []string{"supercluster.local"},
 			ForwardPlugin: operatorv1.ForwardPlugin{
 				Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
 			},
