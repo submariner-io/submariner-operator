@@ -42,7 +42,7 @@ func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 
 	podsClusterB := framework.KubeClients[framework.ClusterB].CoreV1().Pods(f.Namespace)
 	p1, _ := podsClusterB.Get(nettestPodB.Pod.Name, metav1.GetOptions{})
-	By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestPodB.Pod.Name, p1.Spec.NodeName))
+	By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestPodB.Pod.Name, nettestPodB.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP
 
@@ -56,7 +56,7 @@ func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 		ConnectionAttempts: connectionAttempts,
 	})
 
-	By(fmt.Sprintf("Nettest Client Pod %q was created on node ", nettestPodA.Pod.Name))
+	By(fmt.Sprintf("Nettest Client Pod %q was created on node %q", nettestPodA.Pod.Name, nettestPodA.Pod.Spec.NodeName))
 
 	By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestPodA.Pod.Name))
 	nettestPodA.AwaitFinish()

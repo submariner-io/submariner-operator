@@ -12,15 +12,15 @@ import (
 )
 
 var (
-	testCmd = &cobra.Command{
-		Use:   "test",
-		Short: "Test features between two clusters",
-		Long:  "This command used to test variety features between two clusters",
+	benchmarkCmd = &cobra.Command{
+		Use:   "benchmark",
+		Short: "Benchmark features between two clusters",
+		Long:  "This command used to benchmark variety features between two clusters",
 	}
-	testThroughputCmd = &cobra.Command{
+	benchmarkThroughputCmd = &cobra.Command{
 		Use:   "throughput <kubeconfig1> <kubeconfig2>",
-		Short: "Test throughput between two clusters",
-		Long:  "This command test the throughput performance between two clusters",
+		Short: "Benchmark throughput between two clusters",
+		Long:  "This command benchmark the throughput performance between two clusters",
 		Args: func(cmd *cobra.Command, args []string) error {
 			return checkThroughputArguments(args)
 		},
@@ -29,8 +29,8 @@ var (
 )
 
 func init() {
-	testCmd.AddCommand(testThroughputCmd)
-	rootCmd.AddCommand(testCmd)
+	benchmarkCmd.AddCommand(benchmarkThroughputCmd)
+	rootCmd.AddCommand(benchmarkCmd)
 }
 
 func checkThroughputArguments(args []string) error {
