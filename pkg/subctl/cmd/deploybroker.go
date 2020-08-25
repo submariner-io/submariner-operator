@@ -49,8 +49,8 @@ func init() {
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
 		"Import IPsec PSK from existing submariner broker file, like broker-info.subm")
 
-	deployBroker.PersistentFlags().BoolVar(&serviceDiscovery, "service-discovery", false,
-		"Enable Multi Cluster Service Discovery")
+	deployBroker.PersistentFlags().BoolVar(&serviceDiscovery, "service-discovery", true,
+		"Enable Multi-Cluster Service Discovery")
 
 	addKubeconfigFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
