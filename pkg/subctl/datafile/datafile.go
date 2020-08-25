@@ -68,7 +68,7 @@ func (data *SubctlData) WriteToFile(filename string) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filename, []byte(dataStr), 0644); err != nil {
+	if err := ioutil.WriteFile(filename, []byte(dataStr), 0600); err != nil {
 		return err
 	}
 

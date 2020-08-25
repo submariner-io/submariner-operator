@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/controller/submariner"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -28,18 +28,17 @@ func init() {
 }
 
 type versionImageInfo struct {
-	component string
-	image     string
-	version   string
+	component  string
+	repository string
+	version    string
 }
 
-func newVersionInfoFrom(image, component, version string) versionImageInfo {
-	v := versionImageInfo{
-		component: component,
-		image:     image,
-		version:   version,
+func newVersionInfoFrom(repository, component, version string) versionImageInfo {
+	return versionImageInfo{
+		component:  component,
+		repository: repository,
+		version:    version,
 	}
-	return v
 }
 
 func getSubmarinerVersion(submarinerClient submarinerclientset.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
@@ -59,17 +58,8 @@ func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageI
 	}
 
 	operatorFullImageStr := operatorConfig.Spec.Template.Spec.Containers[0].Image
-	img := strings.Split(operatorFullImageStr, ":")
-	var image string
-	var version string
-	if len(img) < 2 {
-		image = img[0]
-	} else {
-		image = img[0]
-		version = img[1]
-	}
-
-	versions = append(versions, newVersionInfoFrom(image, deployment.OperatorName, version))
+	version, repository := images.ParseOperatorImage(operatorFullImageStr)
+	versions = append(versions, newVersionInfoFrom(repository, deployment.OperatorName, version))
 	return versions, nil
 }
 
@@ -124,13 +114,13 @@ func showVersionsFromConfig(config *rest.Config) {
 }
 
 func printVersions(versions []versionImageInfo) {
-	template := "%-32s%-48s%-16s\n"
-	fmt.Printf(template, "COMPONENT", "IMAGE", "VERSION")
+	template := "%-32s%-54s%-16s\n"
+	fmt.Printf(template, "COMPONENT", "REPOSITORY", "VERSION")
 	for _, item := range versions {
 		fmt.Printf(
 			template,
 			item.component,
-			item.image,
+			item.repository,
 			item.version)
 	}
 }
