@@ -355,7 +355,7 @@ func newLigthhouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 	}
 }
 
-func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.Clientset, cr *submarinerv1alpha1.ServiceDiscovery,
+func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger) error {
 	configMaps := k8sclientSet.CoreV1().ConfigMaps("kube-system")
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -400,10 +400,10 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.
 			reqLogger.Info("coredns configmap does not have lighthouse configuration hence creating")
 			expectedCorefile := `#lighthouse
 clusterset.local:53 {
-forward . `
+    forward . `
 			expectedCorefile = expectedCorefile + lighthouseClusterIp + "\n" + "}\n"
 			superclusterCorefile := `supercluster.local:53 {
-forward . `
+    forward . `
 			expectedCorefile = expectedCorefile + superclusterCorefile + lighthouseClusterIp + "\n" + "}\n"
 			coreFile = expectedCorefile + coreFile
 		}
