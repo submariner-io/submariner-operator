@@ -30,7 +30,7 @@ import (
 
 const (
 	testBrokerUrl             = "https://my-broker-url:8443"
-	testSASecret              = "submariner-k8s-broker-admin-token-abcdef"
+	testSASecret              = "submariner-k8s-broker-admin-token-abcdef" // #nosec G101 Test secret only
 	testToken                 = "i-am-a-token"
 	SubmarinerBrokerNamespace = "submariner-k8s-broker"
 	BrokerSA                  = "submariner-k8s-broker-admin"
