@@ -1,9 +1,10 @@
+---
 linters-settings:
   gocritic:
     enabled-tags:
       - diagnostic
       - opinionated
-      #- performance
+      # - performance
       - style
     disabled-checks:
       - ifElseChain
@@ -21,30 +22,30 @@ linters:
     - bodyclose
     - deadcode
     - depguard
-    #- dupl
+    # - dupl
     - errcheck
     - exportloopref
-    #- funlen
-    #- gochecknoglobals
-    #- gochecknoinits
+    # - funlen
+    # - gochecknoglobals
+    # - gochecknoinits
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-    #- golint
+    # - golint
     - gosec
     - gosimple
     - govet
     - ineffassign
-    #- interfacer
+    # - interfacer
     - lll
     - misspell
     - maligned
     - nakedret
     - staticcheck
     - structcheck
-    #- stylecheck
-    #- testpackage
+    # - stylecheck
+    # - testpackage
     - typecheck
     - unconvert
     - unparam
