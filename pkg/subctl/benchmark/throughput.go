@@ -3,27 +3,26 @@ package benchmark
 import (
 	"fmt"
 
-	. "github.com/onsi/ginkgo"
+	"github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var _ = Describe("[throughput] Test throughput between two Clusters", func() {
-	f := framework.NewFramework("throughput")
+func StartThroughputTests() {
+	gomega.RegisterFailHandler(func(message string, callerSkip ... int) { panic(message) })
+	f := framework.NewBareFramework("throughput")
+	framework.ValidateFlags(framework.TestContext)
+	framework.BeforeSuite()
 
-	When("a gateway pod sends throughput test to a gateway pod in a remote cluster on a", func() {
-		It("should be able to execute throughput test", func() {
-			RunThroughputTest(f,  framework.GatewayNode)
-		})
-	})
-
-	When("a non-gateway pod sends throughput test to a non-gateway pod in a remote cluster", func() {
-		It("should be able to execute throughput test", func() {
-			RunThroughputTest(f,  framework.NonGatewayNode)
-		})
-	})
-})
+	f.BeforeEach()
+	framework.By("Performing throughput tests from Gateway pod to Gateway pod")
+	RunThroughputTest(f,  framework.GatewayNode)
+	framework.By("Performing throughput tests from Non-Gateway pod to Non-Gateway pod")
+	RunThroughputTest(f,  framework.NonGatewayNode)
+	f.AfterEach()
+	framework.RunCleanupActions()
+}
 
 func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodScheduling) {
 	clusterAName := framework.TestContext.ClusterIDs[framework.ClusterA]
@@ -31,7 +30,7 @@ func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 	var connectionTimeout uint = 5
 	var connectionAttempts uint = 1
 
-	By(fmt.Sprintf("Creating a Nettest Server Pod on %q", clusterBName))
+	framework.By(fmt.Sprintf("Creating a Nettest Server Pod on %q", clusterBName))
 	nettestPodB := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type: framework.ThroughputServerPod,
 		Cluster: framework.ClusterB,
@@ -42,11 +41,11 @@ func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 
 	podsClusterB := framework.KubeClients[framework.ClusterB].CoreV1().Pods(f.Namespace)
 	p1, _ := podsClusterB.Get(nettestPodB.Pod.Name, metav1.GetOptions{})
-	By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestPodB.Pod.Name, nettestPodB.Pod.Spec.NodeName))
+	framework.By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestPodB.Pod.Name, nettestPodB.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP
 
-	By(fmt.Sprintf("Creating a Nettest Client Pod on %q , connecto to server pod ip %q", clusterAName, remoteIP))
+	framework.By(fmt.Sprintf("Creating a Nettest Client Pod on %q , connect to server pod ip %q", clusterAName, remoteIP))
 	nettestPodA := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type: framework.ThroughputClientPod,
 		Cluster: framework.ClusterA,
@@ -56,8 +55,8 @@ func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 		ConnectionAttempts: connectionAttempts,
 	})
 
-	By(fmt.Sprintf("Nettest Client Pod %q was created on node %q", nettestPodA.Pod.Name, nettestPodA.Pod.Spec.NodeName))
+	framework.By(fmt.Sprintf("Nettest Client Pod %q was created on node %q", nettestPodA.Pod.Name, nettestPodA.Pod.Spec.NodeName))
 
-	By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestPodA.Pod.Name))
+	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestPodA.Pod.Name))
 	nettestPodA.AwaitFinish()
 }

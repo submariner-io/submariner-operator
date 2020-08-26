@@ -2,13 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"testing"
-
-	"github.com/onsi/ginkgo/config"
-	"github.com/submariner-io/shipyard/test/e2e"
-	_ "github.com/submariner-io/submariner-operator/pkg/subctl/benchmark"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/benchmark"
 )
 
 var (
@@ -41,13 +37,9 @@ func checkThroughputArguments(args []string) error {
 }
 
 func testThroughput(cmd *cobra.Command, args []string) {
-	testType := ""
 	verboseConnectivityVerification = true
 	configureTestingFramework(args)
 
-	config.GinkgoConfig.FocusString = "\\[throughput"
 	fmt.Printf("Performing throughput tests\n")
-	if !e2e.RunE2ETests(&testing.T{}) {
-		exitWithErrorMsg(fmt.Sprintf("[%s] E2E failed", testType))
-	}
+	benchmark.StartThroughputTests()
 }
