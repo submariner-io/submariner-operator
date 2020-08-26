@@ -1,3 +1,4 @@
+---
 apiVersion: submariner.io/v1alpha1
 kind: Submariner
 metadata:

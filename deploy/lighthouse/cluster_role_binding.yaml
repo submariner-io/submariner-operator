@@ -1,10 +1,11 @@
+---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: submariner-lighthouse
 subjects:
-- kind: ServiceAccount
-  name: submariner-lighthouse
+  - kind: ServiceAccount
+    name: submariner-lighthouse
 roleRef:
   kind: ClusterRole
   name: submariner-lighthouse
