@@ -20,7 +20,7 @@ require (
 	github.com/submariner-io/shipyard v0.6.1
 	github.com/submariner-io/submariner v0.6.0
 	k8s.io/api v0.18.0-rc.1
-	k8s.io/apiextensions-apiserver v0.17.8
+	k8s.io/apiextensions-apiserver v0.19.0
 	k8s.io/apimachinery v0.18.3
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
