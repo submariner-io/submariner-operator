@@ -98,7 +98,7 @@ func printGateways(gateways []gatewayStatus) {
 		return
 	}
 
-	template := "%-20s%-16s%-32s\n"
+	template := "%-32.31s%-16s%-32s\n"
 	fmt.Printf(template, "NODE", "HA STATUS", "SUMMARY")
 
 	for _, item := range gateways {
