@@ -12,6 +12,8 @@ import (
 	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
+	"github.com/submariner-io/submariner-operator/pkg/images"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -202,7 +204,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 						{
 							Name:            "submariner-lighthouse-agent",
 							Image:           getImagePath(cr, serviceDiscoveryImage),
-							ImagePullPolicy: "IfNotPresent",
+							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
@@ -290,7 +292,7 @@ func newLigthhouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 						{
 							Name:            lighthouseCoreDNSName,
 							Image:           getImagePath(cr, lighthouseCoreDNSImage),
-							ImagePullPolicy: "IfNotPresent",
+							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 							Args: []string{
 								"-conf",
 								"/etc/coredns/Corefile",

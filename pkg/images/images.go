@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 )
 
@@ -21,6 +23,14 @@ func GetImagePath(repo, version, component string) string {
 
 	path = fmt.Sprintf("%s:%s", path, version)
 	return path
+}
+
+func GetPullPolicy(version string) v1.PullPolicy {
+	if version == "devel" {
+		return v1.PullAlways
+	} else {
+		return v1.PullIfNotPresent
+	}
 }
 
 func ParseOperatorImage(operatorImage string) (string, string) {

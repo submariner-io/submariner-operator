@@ -401,6 +401,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 				{
 					Name:            "submariner",
 					Image:           getImagePath(cr, engineImage),
+					ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 					Command:         []string{"submariner.sh"},
 					SecurityContext: &security_context_all_caps_privileged,
 					VolumeMounts: []corev1.VolumeMount{
@@ -497,8 +498,9 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					Containers: []corev1.Container{
 						{
-							Name:  "submariner-routeagent",
-							Image: getImagePath(cr, routeAgentImage),
+							Name:            "submariner-routeagent",
+							Image:           getImagePath(cr, routeAgentImage),
+							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
 							Command:         []string{"submariner-route-agent.sh"},
 							SecurityContext: &security_context_all_cap_allow_escal,
@@ -570,7 +572,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 						{
 							Name:            "submariner-globalnet",
 							Image:           getImagePath(cr, globalnetImage),
-							ImagePullPolicy: "IfNotPresent",
+							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 							SecurityContext: &security_context_all_cap_allow_escal,
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-slash", MountPath: "/host", ReadOnly: true},
