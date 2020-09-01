@@ -17,8 +17,10 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
@@ -165,7 +167,14 @@ func checkValidateArguments(args []string) error {
 		return fmt.Errorf("Two kubeconfigs must be specified.")
 	}
 	if strings.Compare(args[0], args[1]) == 0 {
-		return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
+		return fmt.Errorf("Kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file.")
+	}
+	same, err := compareFiles(args[0], args[1])
+	if err != nil {
+		return err
+	}
+	if same {
+		return fmt.Errorf("Kubeconfig file <kubeConfig1> and <kubeConfig2> need to have a unique content.")
 	}
 	if connectionAttempts < 1 {
 		return fmt.Errorf("--connection-attempts must be >=1")
@@ -175,6 +184,18 @@ func checkValidateArguments(args []string) error {
 		return fmt.Errorf("--connection-timeout must be >=20")
 	}
 	return nil
+}
+
+func compareFiles(file1, file2 string) (bool, error) {
+	first, err := ioutil.ReadFile(file1)
+	if err != nil {
+		return false, err
+	}
+	second, err := ioutil.ReadFile(file2)
+	if err != nil {
+		return false, err
+	}
+	return bytes.Equal(first, second), nil
 }
 
 func checkVerifyArguments() error {
