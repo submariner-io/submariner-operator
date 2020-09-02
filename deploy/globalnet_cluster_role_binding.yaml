@@ -2,11 +2,11 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: submariner-operator:globalnet
+  name: submariner-operator-globalnet
 subjects:
   - kind: ServiceAccount
     name: submariner-operator
 roleRef:
   kind: ClusterRole
-  name: submariner-operator:globalnet
+  name: submariner-operator-globalnet
   apiGroup: rbac.authorization.k8s.io
