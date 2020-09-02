@@ -33,6 +33,35 @@ spec:
           type: object
         status:
           description: ServiceExportStatus defines the observed state of ServiceExport
+          properties:
+            conditions:
+              items:
+                description: "ServiceExportCondition contains details for the current
+                  condition of this service export. \n Once [#1624](https://github.com/kubernetes/enhancements/pull/1624)
+                  is merged, this will be replaced by metav1.Condition."
+                properties:
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    description: Status is one of {"True", "False", "Unknown"}
+                    type: string
+                  type:
+                    description: ServiceExportConditionType identifies a specific
+                      condition.
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+              x-kubernetes-list-map-keys:
+              - type
+              x-kubernetes-list-type: map
           type: object
       type: object
   version: v2alpha1
