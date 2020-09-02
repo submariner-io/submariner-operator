@@ -54,7 +54,7 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 
 			createdClusterRole, err := client.RbacV1().ClusterRoles().Get(clusterRole.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(createdClusterRole.ObjectMeta.Name).Should(Equal("submariner-operator:globalnet"))
+			Expect(createdClusterRole.ObjectMeta.Name).Should(Equal("submariner-operator-globalnet"))
 		})
 	})
 
@@ -92,7 +92,7 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 
 			createdClusterRoleBinding, err := client.RbacV1().ClusterRoleBindings().Get(clusterRoleBinding.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(createdClusterRoleBinding.ObjectMeta.Name).Should(Equal("submariner-operator:globalnet"))
+			Expect(createdClusterRoleBinding.ObjectMeta.Name).Should(Equal("submariner-operator-globalnet"))
 		})
 	})
 

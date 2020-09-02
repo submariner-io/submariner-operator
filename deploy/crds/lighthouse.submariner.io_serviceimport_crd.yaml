@@ -5,9 +5,9 @@ metadata:
   name: serviceimports.lighthouse.submariner.io
 spec:
   group: lighthouse.submariner.io
-  version: v2alpha1
   names:
     kind: ServiceImport
     plural: serviceimports
     singular: serviceimport
   scope: Namespaced
+  version: v2alpha1
