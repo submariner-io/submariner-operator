@@ -10,16 +10,16 @@ import (
 )
 
 func StartThroughputTests() {
-	gomega.RegisterFailHandler(func(message string, callerSkip ... int) { panic(message) })
+	gomega.RegisterFailHandler(func(message string, callerSkip ...int) { panic(message) })
 	f := framework.NewBareFramework("throughput")
 	framework.ValidateFlags(framework.TestContext)
 	framework.BeforeSuite()
 
 	f.BeforeEach()
 	framework.By("Performing throughput tests from Gateway pod to Gateway pod")
-	RunThroughputTest(f,  framework.GatewayNode)
+	RunThroughputTest(f, framework.GatewayNode)
 	framework.By("Performing throughput tests from Non-Gateway pod to Non-Gateway pod")
-	RunThroughputTest(f,  framework.NonGatewayNode)
+	RunThroughputTest(f, framework.NonGatewayNode)
 	f.AfterEach()
 	framework.RunCleanupActions()
 }
@@ -32,10 +32,10 @@ func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 
 	framework.By(fmt.Sprintf("Creating a Nettest Server Pod on %q", clusterBName))
 	nettestPodB := f.NewNetworkPod(&framework.NetworkPodConfig{
-		Type: framework.ThroughputServerPod,
-		Cluster: framework.ClusterB,
-		Scheduling: scheduling,
-		ConnectionTimeout: connectionTimeout,
+		Type:               framework.ThroughputServerPod,
+		Cluster:            framework.ClusterB,
+		Scheduling:         scheduling,
+		ConnectionTimeout:  connectionTimeout,
 		ConnectionAttempts: connectionAttempts,
 	})
 
@@ -47,11 +47,11 @@ func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 
 	framework.By(fmt.Sprintf("Creating a Nettest Client Pod on %q , connect to server pod ip %q", clusterAName, remoteIP))
 	nettestPodA := f.NewNetworkPod(&framework.NetworkPodConfig{
-		Type: framework.ThroughputClientPod,
-		Cluster: framework.ClusterA,
-		Scheduling: scheduling,
-		RemoteIP: remoteIP,
-		ConnectionTimeout: connectionTimeout,
+		Type:               framework.ThroughputClientPod,
+		Cluster:            framework.ClusterA,
+		Scheduling:         scheduling,
+		RemoteIP:           remoteIP,
+		ConnectionTimeout:  connectionTimeout,
 		ConnectionAttempts: connectionAttempts,
 	})
 
