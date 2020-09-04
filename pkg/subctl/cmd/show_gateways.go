@@ -44,19 +44,19 @@ func getGatewaysStatus(config *rest.Config) []gatewayStatus {
 	}
 
 	for _, gateway := range *gateways {
-		haStatus := gateway.Status.HAStatus
-		enpoint := gateway.Status.LocalEndpoint.Hostname
-		totalConnections := len(gateway.Status.Connections)
+		haStatus := gateway.HAStatus
+		enpoint := gateway.LocalEndpoint.Hostname
+		totalConnections := len(gateway.Connections)
 		countConnected := 0
-		for _, connection := range gateway.Status.Connections {
+		for _, connection := range gateway.Connections {
 			if connection.Status == submv1.Connected {
 				countConnected += 1
 			}
 		}
 
 		var summary string
-		if gateway.Status.StatusFailure != "" {
-			summary = gateway.Status.StatusFailure
+		if gateway.StatusFailure != "" {
+			summary = gateway.StatusFailure
 		} else if totalConnections == 0 {
 			summary = "There are no connections"
 		} else if totalConnections == countConnected {
