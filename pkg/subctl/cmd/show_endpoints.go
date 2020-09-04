@@ -57,13 +57,13 @@ func getEndpointsStatus(config *rest.Config) []endpointStatus {
 
 	for _, gateway := range *gateways {
 		status = append(status, newEndpointsStatusFrom(
-			gateway.Status.LocalEndpoint.ClusterID,
-			gateway.Status.LocalEndpoint.PrivateIP,
-			gateway.Status.LocalEndpoint.PublicIP,
-			gateway.Status.LocalEndpoint.Backend,
+			gateway.LocalEndpoint.ClusterID,
+			gateway.LocalEndpoint.PrivateIP,
+			gateway.LocalEndpoint.PublicIP,
+			gateway.LocalEndpoint.Backend,
 			"local"))
 
-		for _, connection := range gateway.Status.Connections {
+		for _, connection := range gateway.Connections {
 			status = append(status, newEndpointsStatusFrom(
 				connection.Endpoint.ClusterID,
 				connection.Endpoint.PrivateIP,

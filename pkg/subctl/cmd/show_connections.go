@@ -49,7 +49,7 @@ func getConnectionsStatus(config *rest.Config) []connectionStatus {
 	}
 
 	for _, gateway := range *gateways {
-		for _, connection := range gateway.Status.Connections {
+		for _, connection := range gateway.Connections {
 			subnets := strings.Join(connection.Endpoint.Subnets, ", ")
 
 			status = append(status, connectionStatus{

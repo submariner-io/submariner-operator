@@ -198,11 +198,13 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		log.Error(err, "error retrieving gateways")
 	}
 
+	var gatewayStatuses = []submv1.GatewayStatus{}
 	if gateways != nil {
 		recordGateways(len(*gateways))
 		// Clear the connections so we don’t remember stale status information
 		recordNoConnections()
 		for _, gateway := range *gateways {
+			gatewayStatuses = append(gatewayStatuses, gateway.Status)
 			for j := range gateway.Status.Connections {
 				recordConnection(
 					gateway.Status.LocalEndpoint.ClusterID,
@@ -222,7 +224,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	instance.Status.ColorCodes = instance.Spec.ColorCodes
 	instance.Status.ClusterID = instance.Spec.ClusterID
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
-	instance.Status.Gateways = gateways
+	instance.Status.Gateways = &gatewayStatuses
 
 	if engineDaemonSet != nil {
 		instance.Status.EngineDaemonSetStatus = &engineDaemonSet.Status
