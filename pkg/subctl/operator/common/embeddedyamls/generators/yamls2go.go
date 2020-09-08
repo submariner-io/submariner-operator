@@ -32,18 +32,17 @@ const (
 var files = []string{
 	"crds/submariner.io_submariners_crd.yaml",
 	"crds/submariner.io_servicediscoveries_crd.yaml",
+	"crds/lighthouse.submariner.io_serviceexports_crd.yaml",
+	"crds/lighthouse.submariner.io_serviceimports_crd.yaml",
+	"cluster_role.yaml",
+	"cluster_role_binding.yaml",
+	"globalnet_cluster_role.yaml",
+	"globalnet_cluster_role_binding.yaml",
+	"lighthouse_cluster_role_binding.yaml",
+	"lighthouse_cluster_role.yaml",
 	"role.yaml",
 	"role_binding.yaml",
 	"service_account.yaml",
-	"submariner/globalnet_cluster_role.yaml",
-	"submariner/globalnet_cluster_role_binding.yaml",
-	"cluster_role.yaml",
-	"cluster_role_binding.yaml",
-	"lighthouse/crds/multiclusterservices_crd.yaml",
-	"lighthouse/crds/serviceexport_crd.yaml",
-	"lighthouse/crds/serviceimport_crd.yaml",
-	"lighthouse/cluster_role_binding.yaml",
-	"lighthouse/cluster_role.yaml",
 }
 
 // Reads all .yaml files in the crdDirectory
