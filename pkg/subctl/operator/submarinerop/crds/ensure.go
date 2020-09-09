@@ -18,7 +18,6 @@ package crds
 
 import (
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
@@ -43,13 +42,7 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	// Attempt to update or create the CRD definition
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
-	submarinerResult, err := utils.CreateOrUpdateCRD(crdUpdater, submarinerCrd)
-	if err != nil {
-		return submarinerResult, err
-	}
-
-	gatewaysResult, err := utils.CreateOrUpdateCRD(crdUpdater, getGatewaysCRD())
-	return (submarinerResult || gatewaysResult), err
+	return utils.CreateOrUpdateCRD(crdUpdater, submarinerCrd)
 }
 
 func getSubmarinerCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
@@ -60,34 +53,4 @@ func getSubmarinerCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) 
 	}
 
 	return crd, nil
-}
-
-// TODO Move this to the operator
-func getGatewaysCRD() *apiextensionsv1beta1.CustomResourceDefinition {
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{
-		ObjectMeta: v1.ObjectMeta{
-			Name: "gateways.submariner.io",
-		},
-		Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
-			Group: "submariner.io",
-			Scope: apiextensionsv1beta1.NamespaceScoped,
-			Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-				Plural:   "gateways",
-				Singular: "gateway",
-				ListKind: "GatewayList",
-				Kind:     "Gateway",
-			},
-			Version: "v1",
-			AdditionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
-				{
-					Name:        "ha-status",
-					Type:        "string",
-					Description: "High availability status of the Gateway",
-					JSONPath:    ".status.haStatus",
-				},
-			},
-		},
-	}
-
-	return crd
 }
