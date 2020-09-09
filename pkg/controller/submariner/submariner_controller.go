@@ -58,6 +58,15 @@ var log = logf.Log.WithName("controller_submariner")
 // Add creates a new Submariner Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
+	// Set up the CRDs we need
+	crdUpdater, err := crdutils.NewFromRestConfig(mgr.GetConfig())
+	if err != nil {
+		return err
+	}
+	if err := engine.Ensure(crdUpdater); err != nil {
+		return err
+	}
+
 	// These are required so that we can retrieve Gateway objects using the dynamic client
 	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
 		return err
@@ -162,11 +171,6 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
-	}
-
-	// Since we have a Submariner instance, assume we’re going to need the CRDs
-	if err := r.reconcileCRDs(); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -327,10 +331,6 @@ func (r *ReconcileSubmariner) retrieveDaemonSetContainerStatuses(daemonSet *apps
 		containerStatuses = append(containerStatuses, pods.Items[i].Status.ContainerStatuses...)
 	}
 	return &containerStatuses, nil
-}
-
-func (r *ReconcileSubmariner) reconcileCRDs() error {
-	return engine.Ensure(crdutils.NewFromControllerClient(r.client))
 }
 
 func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace string) (*[]submv1.Gateway, error) {

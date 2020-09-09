@@ -38,6 +38,10 @@ func Ensure(crdUpdater crdutils.CRDUpdater) error {
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the Endpoint CRD: %s", err)
 	}
+	_, err = crdUpdater.Create(newGatewaysCRD())
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return fmt.Errorf("error creating the Gateway CRD: %s", err)
+	}
 	return nil
 }
 
@@ -77,6 +81,35 @@ func newClustersCRD() *apiextensions.CustomResourceDefinition {
 				Kind:     "Cluster",
 			},
 			Version: "v1",
+		},
+	}
+
+	return crd
+}
+
+func newGatewaysCRD() *apiextensions.CustomResourceDefinition {
+	crd := &apiextensions.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "gateways.submariner.io",
+		},
+		Spec: apiextensions.CustomResourceDefinitionSpec{
+			Group: "submariner.io",
+			Scope: apiextensions.NamespaceScoped,
+			Names: apiextensions.CustomResourceDefinitionNames{
+				Plural:   "gateways",
+				Singular: "gateway",
+				ListKind: "GatewayList",
+				Kind:     "Gateway",
+			},
+			Version: "v1",
+			AdditionalPrinterColumns: []apiextensions.CustomResourceColumnDefinition{
+				{
+					Name:        "ha-status",
+					Type:        "string",
+					Description: "High availability status of the Gateway",
+					JSONPath:    ".status.haStatus",
+				},
+			},
 		},
 	}
 
