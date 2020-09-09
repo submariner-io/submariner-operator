@@ -23,13 +23,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	extendedclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 func CreateOrUpdateClusterRole(clientSet clientset.Interface, clusterRole *rbacv1.ClusterRole) (bool, error) {
@@ -72,19 +72,19 @@ func CreateOrUpdateClusterRoleBinding(clientSet clientset.Interface, clusterRole
 	return false, err
 }
 
-func CreateOrUpdateCRD(clientSet extendedclientset.Interface, crd *apiextensionsv1beta1.CustomResourceDefinition) (bool, error) {
-	_, err := clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
+func CreateOrUpdateCRD(updater crdutils.CRDUpdater, crd *apiextensionsv1beta1.CustomResourceDefinition) (bool, error) {
+	_, err := updater.Create(crd)
 	if err == nil {
 		return true, nil
 	} else if errors.IsAlreadyExists(err) {
 		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingCrd, err := clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, v1.GetOptions{})
+			existingCrd, err := updater.Get(crd.Name, v1.GetOptions{})
 			if err != nil {
 				return fmt.Errorf("failed to retrieve pre-existing CRD %s : %v", crd.Name, err)
 			}
 			crd.ResourceVersion = existingCrd.ResourceVersion
 			// Potentially retried
-			_, err = clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Update(crd)
+			_, err = updater.Update(crd)
 			return err
 		})
 		return false, retryErr
@@ -92,14 +92,14 @@ func CreateOrUpdateCRD(clientSet extendedclientset.Interface, crd *apiextensions
 	return false, err
 }
 
-func CreateOrUpdateEmbeddedCRD(clientSet extendedclientset.Interface, crdYaml string) (bool, error) {
+func CreateOrUpdateEmbeddedCRD(updater crdutils.CRDUpdater, crdYaml string) (bool, error) {
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 
 	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
 		return false, fmt.Errorf("Error extracting embedded CRD: %s", err)
 	}
 
-	return CreateOrUpdateCRD(clientSet, crd)
+	return CreateOrUpdateCRD(updater, crd)
 }
 
 func CreateOrUpdateDeployment(clientSet clientset.Interface, namespace string, deployment *appsv1.Deployment) (bool, error) {
