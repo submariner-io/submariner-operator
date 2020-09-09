@@ -44,8 +44,6 @@ func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 	framework.By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestPodB.Pod.Name, nettestPodB.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP
-
-	framework.By(fmt.Sprintf("Creating a Nettest Client Pod on %q , connect to server pod ip %q", clusterAName, remoteIP))
 	nettestPodA := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ThroughputClientPod,
 		Cluster:            framework.ClusterA,
@@ -55,7 +53,8 @@ func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 		ConnectionAttempts: connectionAttempts,
 	})
 
-	framework.By(fmt.Sprintf("Nettest Client Pod %q was created on node %q", nettestPodA.Pod.Name, nettestPodA.Pod.Spec.NodeName))
+	framework.By(fmt.Sprintf("Nettest Client Pod %q was created on cluster %q, node %q; connect to server pod ip %q",
+		nettestPodA.Pod.Name, clusterAName, nettestPodA.Pod.Spec.NodeName, remoteIP))
 
 	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestPodA.Pod.Name))
 	nettestPodA.AwaitFinish()
