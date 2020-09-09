@@ -31,8 +31,8 @@ var showCmd = &cobra.Command{
 }
 
 type restConfig struct {
-	config  *rest.Config
-	context string
+	config      *rest.Config
+	clusterName string
 }
 
 func init() {
@@ -94,5 +94,5 @@ func getClientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, ov
 		clusterName = *getClusterName(raw)
 	}
 
-	return restConfig{config: clientConfig, context: clusterName}, nil
+	return restConfig{config: clientConfig, clusterName: clusterName}, nil
 }
