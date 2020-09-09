@@ -30,6 +30,7 @@ import (
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 var _ = Describe("CreateOrUpdateClusterRole", func() {
@@ -123,7 +124,7 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 
 	When("When called", func() {
 		It("Should add the CRD properly", func() {
-			created, err := CreateOrUpdateCRD(client, crd)
+			created, err := CreateOrUpdateCRD(crdutils.NewFromClientSet(client), crd)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
@@ -135,10 +136,11 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 
 	When("When called twice", func() {
 		It("Should add the CRD properly, and return false on second call", func() {
-			created, err := CreateOrUpdateCRD(client, crd)
+			crdUpdater := crdutils.NewFromClientSet(client)
+			created, err := CreateOrUpdateCRD(crdUpdater, crd)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateCRD(client, crd)
+			created, err = CreateOrUpdateCRD(crdUpdater, crd)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})

@@ -18,17 +18,17 @@ package crds
 
 import (
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config) (bool, error) {
-	clientSet, err := clientset.NewForConfig(restConfig)
+	crdUpdater, err := crdutils.NewFromRestConfig(restConfig)
 	if err != nil {
 		return false, err
 	}
@@ -41,12 +41,12 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	// Attempt to update or create the CRD definition
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
-	submarinerResult, err := utils.CreateOrUpdateCRD(clientSet, submarinerCrd)
+	submarinerResult, err := utils.CreateOrUpdateCRD(crdUpdater, submarinerCrd)
 	if err != nil {
 		return submarinerResult, err
 	}
 
-	gatewaysResult, err := utils.CreateOrUpdateCRD(clientSet, getGatewaysCRD())
+	gatewaysResult, err := utils.CreateOrUpdateCRD(crdUpdater, getGatewaysCRD())
 	return (submarinerResult || gatewaysResult), err
 }
 

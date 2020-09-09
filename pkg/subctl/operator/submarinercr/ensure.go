@@ -28,6 +28,7 @@ import (
 	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/engine"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 const (
@@ -35,7 +36,11 @@ const (
 )
 
 func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
-	err := engine.Ensure(config)
+	crdUpdater, err := crdutils.NewFromRestConfig(config)
+	if err != nil {
+		return fmt.Errorf("error connecting to the target cluster: %s", err)
+	}
+	err = engine.Ensure(crdUpdater)
 	if err != nil {
 		return fmt.Errorf("error setting up the engine requirements: %s", err)
 	}

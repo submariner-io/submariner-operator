@@ -20,24 +20,21 @@ import (
 	"fmt"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
+
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 // Ensure ensures that the required resources are deployed on the target system
 // The resources handled here are the engine CRDs: Cluster and Endpoint
-func Ensure(config *rest.Config) error {
-	apiext, err := clientset.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("error creating the api extensions client: %s", err)
-	}
-	_, err = apiext.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newClustersCRD())
+func Ensure(crdUpdater crdutils.CRDUpdater) error {
+	// We don’t yet need to update these CRDs, so skip updating if they already exist
+	_, err := crdUpdater.Create(newClustersCRD())
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the Cluster CRD: %s", err)
 	}
-	_, err = apiext.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newEndpointsCRD())
+	_, err = crdUpdater.Create(newEndpointsCRD())
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the Endpoint CRD: %s", err)
 	}
