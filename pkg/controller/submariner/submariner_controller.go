@@ -26,10 +26,10 @@ import (
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/dynamic"
@@ -44,12 +44,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-
 	submopv1a1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/engine"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
 var log = logf.Log.WithName("controller_submariner")
@@ -58,9 +59,13 @@ var log = logf.Log.WithName("controller_submariner")
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	// These are required so that we can retrieve Gateway objects using the dynamic client
-	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "Gateway"), &submv1.Gateway{})
-	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "GatewayList"), &submv1.GatewayList{})
-	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "ListOptions"), &metav1.ListOptions{})
+	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
+		return err
+	}
+	// These are required so that we can manipulate CRDs
+	if err := apiextensions.AddToScheme(mgr.GetScheme()); err != nil {
+		return err
+	}
 	return add(mgr, newReconciler(mgr))
 }
 
@@ -157,6 +162,11 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
+
+	// Since we have a Submariner instance, assume we’re going to need the CRDs
+	if err := r.reconcileCRDs(); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -317,6 +327,10 @@ func (r *ReconcileSubmariner) retrieveDaemonSetContainerStatuses(daemonSet *apps
 		containerStatuses = append(containerStatuses, pods.Items[i].Status.ContainerStatuses...)
 	}
 	return &containerStatuses, nil
+}
+
+func (r *ReconcileSubmariner) reconcileCRDs() error {
+	return engine.Ensure(crdutils.NewFromControllerClient(r.client))
 }
 
 func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace string) (*[]submv1.Gateway, error) {
