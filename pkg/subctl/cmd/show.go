@@ -53,7 +53,7 @@ func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, e
 	}
 
 	if kubeConfigPath != "" || kubeContext != "" {
-		config, err := getClientAndRawConfig(rules, overrides)
+		config, err := getClientConfigAndClusterName(rules, overrides)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +63,7 @@ func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, e
 
 	for _, item := range rules.Precedence {
 		rules.ExplicitPath = item
-		config, err := getClientAndRawConfig(rules, overrides)
+		config, err := getClientConfigAndClusterName(rules, overrides)
 		if err != nil {
 			return nil, err
 		}
@@ -74,22 +74,25 @@ func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, e
 	return restConfigs, nil
 }
 
-func getClientAndRawConfig(rules *clientcmd.ClientConfigLoadingRules, overrides *clientcmd.ConfigOverrides) (restConfig, error) {
+func getClientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, overrides *clientcmd.ConfigOverrides) (restConfig, error) {
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
 	clientConfig, err := config.ClientConfig()
 	if err != nil {
 		return restConfig{}, err
 	}
 
-	var context string
-	if overrides.CurrentContext != "" {
-		context = overrides.CurrentContext
-	} else {
-		raw, err := config.RawConfig()
-		if err != nil {
-			return restConfig{}, err
-		}
-		context = raw.CurrentContext
+	raw, err := config.RawConfig()
+	if err != nil {
+		return restConfig{}, err
 	}
-	return restConfig{config: clientConfig, context: context}, nil
+
+	var clusterName string
+
+	if overrides.CurrentContext != "" {
+		clusterName = *getClusterNameFromContext(raw, overrides.CurrentContext)
+	} else {
+		clusterName = *getClusterName(raw)
+	}
+
+	return restConfig{config: clientConfig, context: clusterName}, nil
 }

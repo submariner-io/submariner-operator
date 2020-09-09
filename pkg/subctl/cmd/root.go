@@ -109,6 +109,14 @@ func getClusterName(rawConfig clientcmdapi.Config) *string {
 	return &context.Cluster
 }
 
+func getClusterNameFromContext(rawConfig clientcmdapi.Config, overridesContext string) *string {
+	context, ok := rawConfig.Contexts[overridesContext]
+	if !ok {
+		return nil
+	}
+	return &context.Cluster
+}
+
 func getRestConfig(kubeConfigPath, kubeContext string) (*rest.Config, error) {
 	return getClientConfig(kubeConfigPath, kubeContext).ClientConfig()
 }
