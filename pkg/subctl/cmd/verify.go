@@ -154,12 +154,22 @@ func configureTestingFramework(args []string) {
 	framework.TestContext.ReportPrefix = "subctl"
 	framework.TestContext.SubmarinerNamespace = submarinerNamespace
 
-	// For some tests this is only printing, but in some of them they need those to be
-	// the cluster IDs that will be registered in the Cluster CRDs by submariner
-	framework.TestContext.ClusterIDs = []string{"ClusterA", "ClusterB"}
+	// Read the cluster names from the given kubeconfigs
+	framework.TestContext.ClusterIDs = []string{clusterNameFromConfig(args[0]), clusterNameFromConfig(args[1])}
 
 	config.DefaultReporterConfig.Verbose = verboseConnectivityVerification
 	config.DefaultReporterConfig.SlowSpecThreshold = 60
+}
+
+func clusterNameFromConfig(kubeConfigPath string) string {
+	rawConfig, err := getClientConfig(kubeConfigPath, "").RawConfig()
+	exitOnError(fmt.Sprintf("Error obtaining the kube config for path %q", kubeConfigPath), err)
+	cluster := getClusterName(rawConfig)
+	if cluster == nil {
+		exitWithErrorMsg(fmt.Sprintf("Could not obtain the cluster name from kube config: %#v", rawConfig))
+	}
+
+	return *cluster
 }
 
 func checkValidateArguments(args []string) error {

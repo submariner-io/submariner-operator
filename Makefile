@@ -98,7 +98,7 @@ generate-clientset:
 
 # generate-operator-api updates the generated operator code
 # It needs to be run when the CRDs or APIs change
-generate-operator-api:
+generate-operator-api: vendor/modules.txt
 	operator-sdk generate k8s
 	operator-sdk generate openapi
 

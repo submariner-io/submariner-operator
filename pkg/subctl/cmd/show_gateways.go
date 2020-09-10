@@ -81,7 +81,7 @@ func showGateways(cmd *cobra.Command, args []string) {
 
 	for _, item := range configs {
 		fmt.Println()
-		fmt.Printf("Showing information for cluster %q:\n", item.context)
+		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
 		status := getGatewaysStatus(item.config)
 		printGateways(status)
 	}
@@ -98,7 +98,7 @@ func printGateways(gateways []gatewayStatus) {
 		return
 	}
 
-	template := "%-20s%-16s%-32s\n"
+	template := "%-32.31s%-16s%-32s\n"
 	fmt.Printf(template, "NODE", "HA STATUS", "SUMMARY")
 
 	for _, item := range gateways {

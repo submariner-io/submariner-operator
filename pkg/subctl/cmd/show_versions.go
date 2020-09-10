@@ -101,11 +101,14 @@ func getVersions(config *rest.Config) []versionImageInfo {
 }
 
 func showVersions(cmd *cobra.Command, args []string) {
-	config, err := getRestConfig(kubeConfig, kubeContext)
-	exitOnError("Error connecting to the target cluster", err)
-
-	versions := getVersions(config)
-	printVersions(versions)
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
+	exitOnError("Error getting REST config for cluster", err)
+	for _, item := range configs {
+		fmt.Println()
+		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
+		versions := getVersions(item.config)
+		printVersions(versions)
+	}
 }
 
 func showVersionsFromConfig(config *rest.Config) {
