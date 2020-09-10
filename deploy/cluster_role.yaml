@@ -35,9 +35,9 @@ rules:
       - watch
       - update
   - apiGroups:
-      - network.openshift.io
+      - config.openshift.io
     resources:
-      - clusternetworks
+      - networks
     verbs:
       - get
       - list

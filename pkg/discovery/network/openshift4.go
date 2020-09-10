@@ -29,9 +29,9 @@ import (
 
 var (
 	openshift4clusterNetworkGVR = schema.GroupVersionResource{
-		Group:    "network.openshift.io",
+		Group:    "config.openshift.io",
 		Version:  "v1",
-		Resource: "clusternetworks",
+		Resource: "networks",
 	}
 )
 
@@ -42,43 +42,56 @@ func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, er
 
 	crClient := dynClient.Resource(openshift4clusterNetworkGVR)
 
-	cr, err := crClient.Get("default", metav1.GetOptions{})
+	cr, err := crClient.Get("cluster", metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
-		return nil, errors.WithMessage(err, "error obtaining the default OpenShift4 ClusterNetworks resource")
+		return nil, errors.WithMessage(err, "error obtaining the default 'cluster' OpenShift4 Network config resource")
 	}
 
-	return parseOS4ClusterNetwork(cr)
+	return parseOS4Network(cr)
 }
 
-func parseOS4ClusterNetwork(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
+func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 	result := &ClusterNetwork{}
-	clusterNetworks, found, err := unstructured.NestedSlice(cr.Object, "clusterNetworks")
+
+	clusterNetworks, found, err := unstructured.NestedSlice(cr.Object, "spec", "clusterNetwork")
 	if err != nil {
 		return nil, err
 	} else if !found {
-		return nil, fmt.Errorf("field clusterNetworks expected, but not found in ClusterNetworks resource: %v", cr.Object)
+		return nil, fmt.Errorf("field .spec.clusterNetwork expected, but not found in Network resource: %v", cr.Object)
 	}
+
 	for _, clusterNetwork := range clusterNetworks {
 		clusterNetworkMap, _ := clusterNetwork.(map[string]interface{})
-		cidr, found, err := unstructured.NestedString(clusterNetworkMap, "CIDR")
+		cidr, found, err := unstructured.NestedString(clusterNetworkMap, "cidr")
 
 		if err != nil {
 			return nil, err
 		} else if !found {
-			return nil, fmt.Errorf("field CIDR expected, but not found in cluster network: %v", clusterNetworkMap)
+			return nil, fmt.Errorf("field cidr expected, but not found in clusterNetwork: %v", clusterNetworkMap)
 		}
 		result.PodCIDRs = append(result.PodCIDRs, cidr)
 	}
-	serviceNetwork, found, err := unstructured.NestedString(cr.Object, "serviceNetwork")
+	serviceNetworks, found, err := unstructured.NestedSlice(cr.Object, "spec", "serviceNetwork")
 	if err != nil {
 		return nil, err
 	} else if !found {
-		return nil, fmt.Errorf("field serviceNetwork expected, but not found in ClusterNetworks resource: %v", cr.Object)
+		return nil, fmt.Errorf("field .spec.serviceNetwork expected, but not found in Network resource: %v", cr.Object)
 	}
-	result.ServiceCIDRs = append(result.ServiceCIDRs, serviceNetwork)
-	result.NetworkPlugin = "OpenShift"
+
+	for _, serviceNetwork := range serviceNetworks {
+		result.ServiceCIDRs = append(result.ServiceCIDRs, serviceNetwork.(string))
+	}
+
+	result.NetworkPlugin, found, err = unstructured.NestedString(cr.Object, "spec", "networkType")
+
+	if err != nil {
+		return nil, err
+	} else if !found {
+		return nil, fmt.Errorf("field .spec.networkType expected, but not found in Network resource: %v", cr.Object)
+	}
+
 	return result, nil
 }
