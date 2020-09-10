@@ -17,6 +17,8 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"k8s.io/client-go/rest"
@@ -86,13 +88,17 @@ func getClientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, ov
 		return restConfig{}, err
 	}
 
-	var clusterName string
+	var clusterName *string
 
 	if overrides.CurrentContext != "" {
-		clusterName = *getClusterNameFromContext(raw, overrides.CurrentContext)
+		clusterName = getClusterNameFromContext(raw, overrides.CurrentContext)
 	} else {
-		clusterName = *getClusterName(raw)
+		clusterName = getClusterName(raw)
 	}
 
-	return restConfig{config: clientConfig, clusterName: clusterName}, nil
+	if clusterName == nil {
+		return restConfig{}, fmt.Errorf("Could not obtain the cluster name from kube config: %#v", raw)
+	}
+
+	return restConfig{config: clientConfig, clusterName: *clusterName}, nil
 }
