@@ -28,7 +28,7 @@ func showNetwork(cmd *cobra.Command, args []string) {
 
 	for _, item := range configs {
 		fmt.Println()
-		fmt.Printf("Showing network details for cluster %q:\n", item.context)
+		fmt.Printf("Showing network details for cluster %q:\n", item.clusterName)
 		showNetworkSingleCluster(item.config)
 	}
 }

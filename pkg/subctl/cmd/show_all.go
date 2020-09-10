@@ -24,7 +24,7 @@ func showAll(cmd *cobra.Command, args []string) {
 
 	for _, item := range configs {
 		fmt.Println()
-		fmt.Printf("Showing information for cluster %q:\n", item.context)
+		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
 
 		showNetworkSingleCluster(item.config)
 		fmt.Println()
