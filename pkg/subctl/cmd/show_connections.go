@@ -88,7 +88,7 @@ func printConnections(connections []connectionStatus) {
 		return
 	}
 
-	template := "%-32.31s%-24.23s%-16s%-20s%-40s%-16s\n"
+	template := "%-32.31s%-24.23s%-16.15s%-20.19s%-40.39s%-16.15s\n"
 	fmt.Printf(template, "GATEWAY", "CLUSTER", "REMOTE IP", "CABLE DRIVER", "SUBNETS", "STATUS")
 
 	for _, item := range connections {
