@@ -114,7 +114,7 @@ func showVersionsFromConfig(config *rest.Config) {
 }
 
 func printVersions(versions []versionImageInfo) {
-	template := "%-32s%-54s%-16s\n"
+	template := "%-32.31s%-54.53s%-16.15s\n"
 	fmt.Printf(template, "COMPONENT", "REPOSITORY", "VERSION")
 	for _, item := range versions {
 		fmt.Printf(
