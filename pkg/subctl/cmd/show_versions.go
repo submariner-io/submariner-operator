@@ -105,7 +105,7 @@ func showVersions(cmd *cobra.Command, args []string) {
 	exitOnError("Error getting REST config for cluster", err)
 	for _, item := range configs {
 		fmt.Println()
-		fmt.Printf("Showing information for cluster %q:\n", item.context)
+		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
 		versions := getVersions(item.config)
 		printVersions(versions)
 	}
