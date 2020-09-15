@@ -11,20 +11,28 @@ import (
 
 func StartThroughputTests() {
 	gomega.RegisterFailHandler(func(message string, callerSkip ...int) { panic(message) })
-	f := framework.NewBareFramework("throughput")
+	f := initFramework("throughput")
+	framework.By("Performing throughput tests from Gateway pod to Gateway pod")
+	runThroughputTest(f, framework.GatewayNode)
+	framework.By("Performing throughput tests from Non-Gateway pod to Non-Gateway pod")
+	runThroughputTest(f, framework.NonGatewayNode)
+	cleanupFramework(f)
+}
+
+func initFramework(baseName string) *framework.Framework {
+	f := framework.NewBareFramework(baseName)
 	framework.ValidateFlags(framework.TestContext)
 	framework.BeforeSuite()
-
 	f.BeforeEach()
-	framework.By("Performing throughput tests from Gateway pod to Gateway pod")
-	RunThroughputTest(f, framework.GatewayNode)
-	framework.By("Performing throughput tests from Non-Gateway pod to Non-Gateway pod")
-	RunThroughputTest(f, framework.NonGatewayNode)
+	return f
+}
+
+func cleanupFramework(f *framework.Framework) {
 	f.AfterEach()
 	framework.RunCleanupActions()
 }
 
-func RunThroughputTest(f *framework.Framework, scheduling framework.NetworkPodScheduling) {
+func runThroughputTest(f *framework.Framework, scheduling framework.NetworkPodScheduling) {
 	clusterAName := framework.TestContext.ClusterIDs[framework.ClusterA]
 	clusterBName := framework.TestContext.ClusterIDs[framework.ClusterB]
 	var connectionTimeout uint = 5
