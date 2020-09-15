@@ -100,7 +100,7 @@ type ReconcileServiceDiscovery struct {
 	// that reads objects from the cache and writes to the apiserver
 	client            controllerClient.Client
 	scheme            *runtime.Scheme
-	k8sClientSet      *clientset.Clientset
+	k8sClientSet      clientset.Interface
 	operatorClientSet controllerClient.Client
 }
 
@@ -355,7 +355,7 @@ func newLigthhouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 	}
 }
 
-func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.Clientset, cr *submarinerv1alpha1.ServiceDiscovery) error {
+func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery) error {
 	configMaps := k8sclientSet.CoreV1().ConfigMaps("kube-system")
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := configMaps.Get("coredns", metav1.GetOptions{})
