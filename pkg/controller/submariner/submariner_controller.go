@@ -226,14 +226,20 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
 	instance.Status.Gateways = &gatewayStatuses
 
-	if engineDaemonSet != nil {
-		instance.Status.EngineDaemonSetStatus = &engineDaemonSet.Status
+	err = r.updateDaemonSetStatus(engineDaemonSet, &instance.Status.EngineDaemonSetStatus, request.Namespace)
+	if err != nil {
+		reqLogger.Error(err, "failed to check engine daemonset containers")
+		return reconcile.Result{}, err
 	}
-	if routeagentDaemonSet != nil {
-		instance.Status.RouteAgentDaemonSetStatus = &routeagentDaemonSet.Status
+	err = r.updateDaemonSetStatus(routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
+	if err != nil {
+		reqLogger.Error(err, "failed to check route agent daemonset containers")
+		return reconcile.Result{}, err
 	}
-	if globalnetDaemonSet != nil {
-		instance.Status.GlobalnetDaemonSetStatus = &globalnetDaemonSet.Status
+	err = r.updateDaemonSetStatus(globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
+	if err != nil {
+		reqLogger.Error(err, "failed to check engine daemonset containers")
+		return reconcile.Result{}, err
 	}
 	if !reflect.DeepEqual(instance.Status, initialStatus) {
 		err := r.client.Status().Update(context.TODO(), instance)
@@ -247,6 +253,70 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileSubmariner) updateDaemonSetStatus(daemonSet *appsv1.DaemonSet, status *submopv1a1.DaemonSetStatus,
+	namespace string) error {
+	if daemonSet != nil {
+		if status == nil {
+			status = &submopv1a1.DaemonSetStatus{}
+		}
+		status.Status = &daemonSet.Status
+		if status.LastResourceVersion != daemonSet.ObjectMeta.ResourceVersion {
+			// The daemonset has changed, check its containers
+			mismatchedContainerImages, nonReadyContainerStates, err :=
+				r.checkDaemonSetContainers(daemonSet, namespace)
+			if err != nil {
+				return err
+			}
+			status.MismatchedContainerImages = mismatchedContainerImages
+			status.NonReadyContainerStates = nonReadyContainerStates
+			status.LastResourceVersion = daemonSet.ObjectMeta.ResourceVersion
+		}
+	}
+	return nil
+}
+
+func (r *ReconcileSubmariner) checkDaemonSetContainers(daemonSet *appsv1.DaemonSet,
+	namespace string) (bool, *[]corev1.ContainerState, error) {
+	containerStatuses, err := r.retrieveDaemonSetContainerStatuses(daemonSet, namespace)
+	if err != nil {
+		return false, nil, err
+	}
+	var containerImageManifest *string = nil
+	var mismatchedContainerImages = false
+	var nonReadyContainerStates = []corev1.ContainerState{}
+	for i := range *containerStatuses {
+		if containerImageManifest == nil {
+			containerImageManifest = &((*containerStatuses)[i].ImageID)
+		} else if *containerImageManifest != (*containerStatuses)[i].ImageID {
+			// Container mismatch
+			mismatchedContainerImages = true
+		}
+		if !*(*containerStatuses)[i].Started {
+			// Not (yet) ready
+			nonReadyContainerStates = append(nonReadyContainerStates, (*containerStatuses)[i].State)
+		}
+	}
+	return mismatchedContainerImages, &nonReadyContainerStates, nil
+}
+
+func (r *ReconcileSubmariner) retrieveDaemonSetContainerStatuses(daemonSet *appsv1.DaemonSet,
+	namespace string) (*[]corev1.ContainerStatus, error) {
+	pods := &corev1.PodList{}
+	selector, err := metav1.LabelSelectorAsSelector(daemonSet.Spec.Selector)
+	if err != nil {
+		return nil, err
+	}
+	err = r.client.List(context.TODO(), pods, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
+	if err != nil {
+		return nil, err
+	}
+	containerStatuses := []corev1.ContainerStatus{}
+	for i := range pods.Items {
+		containerStatuses = append(containerStatuses, pods.Items[i].Status.ContainerStatuses...)
+	}
+	return &containerStatuses, nil
 }
 
 func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace string) (*[]submv1.Gateway, error) {
