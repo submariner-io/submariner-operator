@@ -10,5 +10,7 @@ rules:
 
 ignore: |
   /vendor
+  /deploy/crds/submariner.io_servicediscoveries_crd.yaml
+  /deploy/crds/submariner.io_submariners_crd.yaml
 
 strict: true
