@@ -49,7 +49,7 @@ build: operator-image $(BINARIES)
 
 build-cross: $(CROSS_TARBALLS)
 
-operator-image: vendor/modules.txt
+operator-image: vendor/modules.txt pkg/subctl/operator/common/embeddedyamls/yamls.go
 # We check BUILD_ARGS since that's what the compile script uses
 ifeq (--debug,$(findstring --debug,$(BUILD_ARGS)))
 	operator-sdk build quay.io/submariner/submariner-operator:$(DEV_VERSION)
