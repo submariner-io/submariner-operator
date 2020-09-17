@@ -57,13 +57,13 @@ func getEndpointsStatus(config *rest.Config) []endpointStatus {
 
 	for _, gateway := range *gateways {
 		status = append(status, newEndpointsStatusFrom(
-			gateway.Status.LocalEndpoint.ClusterID,
-			gateway.Status.LocalEndpoint.PrivateIP,
-			gateway.Status.LocalEndpoint.PublicIP,
-			gateway.Status.LocalEndpoint.Backend,
+			gateway.LocalEndpoint.ClusterID,
+			gateway.LocalEndpoint.PrivateIP,
+			gateway.LocalEndpoint.PublicIP,
+			gateway.LocalEndpoint.Backend,
 			"local"))
 
-		for _, connection := range gateway.Status.Connections {
+		for _, connection := range gateway.Connections {
 			status = append(status, newEndpointsStatusFrom(
 				connection.Endpoint.ClusterID,
 				connection.Endpoint.PrivateIP,
@@ -81,7 +81,7 @@ func showEndpoints(cmd *cobra.Command, args []string) {
 	exitOnError("Error getting REST config for cluster", err)
 	for _, item := range configs {
 		fmt.Println()
-		fmt.Printf("Showing information for cluster %q:\n", item.context)
+		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
 		status := getEndpointsStatus(item.config)
 		printEndpoints(status)
 	}
@@ -98,7 +98,7 @@ func printEndpoints(endpoints []endpointStatus) {
 		return
 	}
 
-	template := "%-20s%-16s%-16s%-20s%-16s\n"
+	template := "%-30.29s%-16.15s%-16.15s%-20.19s%-16.15s\n"
 
 	fmt.Printf(template, "CLUSTER ID", "ENDPOINT IP", "PUBLIC IP", "CABLE DRIVER", "TYPE")
 

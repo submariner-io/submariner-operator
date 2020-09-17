@@ -198,11 +198,13 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		log.Error(err, "error retrieving gateways")
 	}
 
+	var gatewayStatuses = []submv1.GatewayStatus{}
 	if gateways != nil {
 		recordGateways(len(*gateways))
 		// Clear the connections so we don’t remember stale status information
 		recordNoConnections()
 		for _, gateway := range *gateways {
+			gatewayStatuses = append(gatewayStatuses, gateway.Status)
 			for j := range gateway.Status.Connections {
 				recordConnection(
 					gateway.Status.LocalEndpoint.ClusterID,
@@ -222,7 +224,7 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	instance.Status.ColorCodes = instance.Spec.ColorCodes
 	instance.Status.ClusterID = instance.Spec.ClusterID
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
-	instance.Status.Gateways = gateways
+	instance.Status.Gateways = &gatewayStatuses
 
 	if engineDaemonSet != nil {
 		instance.Status.EngineDaemonSetStatus = &engineDaemonSet.Status
@@ -284,24 +286,19 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submopv1a1.S
 		if isEnabled {
 			sd := newServiceDiscoveryCR(submariner.Namespace)
 			result, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, sd, func() error {
-				_, err := controllerutil.CreateOrUpdate(context.TODO(), r.client, sd, func() error {
-					sd.Spec = submopv1a1.ServiceDiscoverySpec{
-						Version:                  submariner.Spec.Version,
-						Repository:               submariner.Spec.Repository,
-						BrokerK8sCA:              submariner.Spec.BrokerK8sCA,
-						BrokerK8sRemoteNamespace: submariner.Spec.BrokerK8sRemoteNamespace,
-						BrokerK8sApiServerToken:  submariner.Spec.BrokerK8sApiServerToken,
-						BrokerK8sApiServer:       submariner.Spec.BrokerK8sApiServer,
-						Debug:                    submariner.Spec.Debug,
-						ClusterID:                submariner.Spec.ClusterID,
-						Namespace:                submariner.Spec.Namespace,
-					}
-					if submariner.Spec.GlobalCIDR != "" {
-						sd.Spec.GlobalnetEnabled = true
-					}
-					return nil
-				})
-				return err
+				sd.Spec = submopv1a1.ServiceDiscoverySpec{
+					Version:                  submariner.Spec.Version,
+					Repository:               submariner.Spec.Repository,
+					BrokerK8sCA:              submariner.Spec.BrokerK8sCA,
+					BrokerK8sRemoteNamespace: submariner.Spec.BrokerK8sRemoteNamespace,
+					BrokerK8sApiServerToken:  submariner.Spec.BrokerK8sApiServerToken,
+					BrokerK8sApiServer:       submariner.Spec.BrokerK8sApiServer,
+					Debug:                    submariner.Spec.Debug,
+					ClusterID:                submariner.Spec.ClusterID,
+					Namespace:                submariner.Spec.Namespace,
+					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
+				}
+				return nil
 			})
 			if err != nil {
 				return err

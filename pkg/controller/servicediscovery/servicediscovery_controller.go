@@ -100,7 +100,7 @@ type ReconcileServiceDiscovery struct {
 	// that reads objects from the cache and writes to the apiserver
 	client            controllerClient.Client
 	scheme            *runtime.Scheme
-	k8sClientSet      *clientset.Clientset
+	k8sClientSet      clientset.Interface
 	operatorClientSet controllerClient.Client
 }
 
@@ -355,7 +355,7 @@ func newLigthhouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 	}
 }
 
-func updateDNSConfigMap(client controllerClient.Client, k8sclientSet *clientset.Clientset, cr *submarinerv1alpha1.ServiceDiscovery) error {
+func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery) error {
 	configMaps := k8sclientSet.CoreV1().ConfigMaps("kube-system")
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := configMaps.Get("coredns", metav1.GetOptions{})
@@ -418,20 +418,29 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 			return goerrors.New("lighthouseDnsService ClusterIp should be available")
 		}
 
+		var updatedForwardServers []operatorv1.Server
+		changed := false
+		containsLighthouse := false
 		forwardServers := dnsOperator.Spec.Servers
-		for i, forwardServer := range forwardServers {
+		for _, forwardServer := range forwardServers {
 			if forwardServer.Name == lighthouseForwardPluginName {
+				containsLighthouse = true
 				for _, upstreams := range forwardServer.ForwardPlugin.Upstreams {
-					if upstreams == lighthouseDnsService.Spec.ClusterIP {
-						reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
-						return nil
+					if upstreams != lighthouseDnsService.Spec.ClusterIP {
+						changed = true
 					}
 				}
-				// ClusterIP of Lighthouse DNS Server changed hence removing the current entry.
-				forwardServers = append(forwardServers[:i], forwardServers[i+1:]...)
-				reqLogger.Info("ClusterIP of Lighthouse DNS server changed, hence updating Cluster DNS Operator CR")
+				if changed {
+					continue
+				}
 			}
+			updatedForwardServers = append(updatedForwardServers, forwardServer)
 		}
+		if containsLighthouse && !changed {
+			reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
+			return nil
+		}
+		reqLogger.Info("ClusterIP of Lighthouse DNS server changed, hence updating Cluster DNS Operator CR")
 
 		lighthouseServer := operatorv1.Server{
 			Name:  lighthouseForwardPluginName,
@@ -440,7 +449,7 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 				Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
 			},
 		}
-		forwardServers = append(forwardServers, lighthouseServer)
+		updatedForwardServers = append(updatedForwardServers, lighthouseServer)
 
 		lighthouseServer = operatorv1.Server{
 			Name:  lighthouseForwardPluginName,
@@ -449,8 +458,8 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 				Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
 			},
 		}
-		forwardServers = append(forwardServers, lighthouseServer)
-		dnsOperator.Spec.Servers = forwardServers
+		updatedForwardServers = append(updatedForwardServers, lighthouseServer)
+		dnsOperator.Spec.Servers = updatedForwardServers
 
 		toUpdate := &operatorv1.DNS{ObjectMeta: metav1.ObjectMeta{
 			Name:   dnsOperator.Name,
