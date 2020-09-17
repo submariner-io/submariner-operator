@@ -23,24 +23,24 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 // Ensure ensures that the required resources are deployed on the target system
 // The resources handled here are the engine CRDs: Cluster and Endpoint
 func Ensure(crdUpdater crdutils.CRDUpdater) error {
-	// We don’t yet need to update these CRDs, so skip updating if they already exist
-	_, err := crdUpdater.Create(newClustersCRD())
+	_, err := utils.CreateOrUpdateCRD(crdUpdater, newClustersCRD())
 	if err != nil && !errors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Cluster CRD: %s", err)
+		return fmt.Errorf("error provisioning the Cluster CRD: %s", err)
 	}
-	_, err = crdUpdater.Create(newEndpointsCRD())
+	_, err = utils.CreateOrUpdateCRD(crdUpdater, newEndpointsCRD())
 	if err != nil && !errors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Endpoint CRD: %s", err)
+		return fmt.Errorf("error provisioning the Endpoint CRD: %s", err)
 	}
-	_, err = crdUpdater.Create(newGatewaysCRD())
+	_, err = utils.CreateOrUpdateCRD(crdUpdater, newGatewaysCRD())
 	if err != nil && !errors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Gateway CRD: %s", err)
+		return fmt.Errorf("error provisioning the Gateway CRD: %s", err)
 	}
 	return nil
 }
