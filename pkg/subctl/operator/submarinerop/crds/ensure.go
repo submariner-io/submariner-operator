@@ -26,8 +26,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
-//go:generate go run generators/yamls2go.go
-
 // Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
