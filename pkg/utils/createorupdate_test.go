@@ -117,7 +117,7 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 
 	BeforeEach(func() {
 		crd = &apiextensionsv1beta1.CustomResourceDefinition{}
-		err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_submariners_crd_yaml, crd)
+		err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_submariners_yaml, crd)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = extendedfakeclientset.NewSimpleClientset()
 	})
