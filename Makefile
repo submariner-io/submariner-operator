@@ -82,8 +82,23 @@ ci: generate-embeddedyamls validate test build
 
 generate-embeddedyamls: pkg/subctl/operator/common/embeddedyamls/yamls.go
 
-pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go $(shell find deploy/ -name "*.yaml") vendor/modules.txt
+pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_submariners.yaml deploy/lighthouse/crds/lighthouse.submariner.io_multiclusterservices.yaml deploy/lighthouse/crds/lighthouse.submariner.io_serviceexports.yaml deploy/lighthouse/crds/lighthouse.submariner.io_serviceimports.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") vendor/modules.txt
 	go generate pkg/subctl/operator/common/embeddedyamls/generate.go
+
+# Operator CRDs
+deploy/crds/submariner.io_servicediscoveries.yaml: ./pkg/apis/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
+	controller-gen crd paths="./..." output:crd:artifacts:config=deploy/crds
+
+deploy/crds/submariner.io_submariners.yaml: ./pkg/apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
+	controller-gen crd paths="./..." output:crd:artifacts:config=deploy/crds
+
+# Lighthouse CRDs
+deploy/lighthouse/crds/lighthouse.submariner.io_multiclusterservices.yaml deploy/lighthouse/crds/lighthouse.submariner.io_serviceexports.yaml deploy/lighthouse/crds/lighthouse.submariner.io_serviceimports.yaml: vendor/modules.txt
+	cd vendor/github.com/submariner-io/lighthouse && controller-gen crd paths="./..." output:crd:artifacts:config=../../../../deploy/lighthouse/crds
+
+# Submariner CRDs
+deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: vendor/modules.txt
+	cd vendor/github.com/submariner-io/submariner && controller-gen crd paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
 
 # generate-clientset generates the clientset for the Submariner APIs
 # It needs to be run when the Submariner APIs change
