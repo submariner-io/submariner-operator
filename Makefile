@@ -52,9 +52,9 @@ build-cross: $(CROSS_TARBALLS)
 operator-image: vendor/modules.txt
 # We check BUILD_ARGS since that's what the compile script uses
 ifeq (--debug,$(findstring --debug,$(BUILD_ARGS)))
-	operator-sdk build quay.io/submariner/submariner-operator:$(DEV_VERSION) --verbose
+	operator-sdk build quay.io/submariner/submariner-operator:$(DEV_VERSION)
 else
-	operator-sdk build quay.io/submariner/submariner-operator:$(DEV_VERSION) --verbose --go-build-args "-ldflags -s -ldflags -w"
+	operator-sdk build quay.io/submariner/submariner-operator:$(DEV_VERSION) --go-build-args "-ldflags -s -ldflags -w"
 endif
 
 bin/subctl: bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
