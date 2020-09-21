@@ -29,8 +29,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
-//go:generate go run generators/yamls2go.go
-
 const (
 	LighthouseServiceAccount = "submariner-lighthouse"
 )

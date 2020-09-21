@@ -17,7 +17,7 @@ require (
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
 	github.com/submariner-io/lighthouse v0.6.2-0.20200901111022-07c1673eef8e
-	github.com/submariner-io/shipyard v0.6.1
+	github.com/submariner-io/shipyard v0.6.2-0.20200902162238-5120d73cf39e
 	github.com/submariner-io/submariner v0.6.1
 	k8s.io/api v0.18.0-rc.1
 	k8s.io/apiextensions-apiserver v0.17.8

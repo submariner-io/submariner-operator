@@ -937,6 +937,8 @@ github.com/submariner-io/shipyard v0.6.0 h1:i1I2ZDCkU8aeL1KGmidac9L00UFhyaK2J0Jr
 github.com/submariner-io/shipyard v0.6.0/go.mod h1:9H9ctEv+K61bMy5teo/fG2azZswmXsPVfFTVdk8ZGk0=
 github.com/submariner-io/shipyard v0.6.1 h1:jkZc9WJpK+ZKjHmuDOM7BT0rkp41pOAsEGJtPAqFs14=
 github.com/submariner-io/shipyard v0.6.1/go.mod h1:9H9ctEv+K61bMy5teo/fG2azZswmXsPVfFTVdk8ZGk0=
+github.com/submariner-io/shipyard v0.6.2-0.20200902162238-5120d73cf39e h1:PlqMR35HF5ujlWkZ1T1OkeSHrZaLnmLirQPmjMbBKw0=
+github.com/submariner-io/shipyard v0.6.2-0.20200902162238-5120d73cf39e/go.mod h1:9H9ctEv+K61bMy5teo/fG2azZswmXsPVfFTVdk8ZGk0=
 github.com/submariner-io/submariner v0.6.1 h1:xXThs7DEVXZofK9QKYadUBblafK87kb5hPJXhq5VQY4=
 github.com/submariner-io/submariner v0.6.1/go.mod h1:DQO40kP1/jRKk/Xh3yY+9neiFFChpansI8U7JbAXN2U=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
