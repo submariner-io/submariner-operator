@@ -25,7 +25,7 @@ var (
 	benchmarkLatenchCmd = &cobra.Command{
 		Use:   "latency <kubeconfig1> <kubeconfig2>",
 		Short: "Benchmark latency between two clusters",
-		Long:  "This command run latency tests between two clusters",
+		Long:  "This command runs latency benchmark tests between two clusters",
 		Args: func(cmd *cobra.Command, args []string) error {
 			return checkThroughputArguments(args)
 		},

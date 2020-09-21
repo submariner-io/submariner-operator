@@ -9,12 +9,19 @@ import (
 )
 
 func StartLatencyTests() {
-	gomega.RegisterFailHandler(func(message string, callerSkip ...int) { panic(message) })
+	gomega.RegisterFailHandler(func(message string, callerSkip ...int) {
+		framework.RunCleanupActions()
+		panic(message)
+	})
+
 	f := initFramework("latency")
+
 	framework.By("Performing latency tests from Gateway pod to Gateway pod")
 	runLatencyTest(f, framework.GatewayNode)
+
 	framework.By("Performing latency tests from Non-Gateway pod to Non-Gateway pod")
 	runLatencyTest(f, framework.NonGatewayNode)
+
 	cleanupFramework(f)
 }
 
