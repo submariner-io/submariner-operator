@@ -27,8 +27,6 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-//go:generate go run generators/yamls2go.go
-
 func Ensure(restConfig *rest.Config) (bool, error) {
 	serviceDiscoveryResult, err := ensureServiceDiscoveryCRD(restConfig)
 	if err != nil {
