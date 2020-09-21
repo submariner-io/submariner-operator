@@ -52,6 +52,8 @@ type SubmarinerSpec struct {
 	Debug                    bool   `json:"debug"`
 	NatEnabled               bool   `json:"natEnabled"`
 	ServiceDiscoveryEnabled  bool   `json:"serviceDiscoveryEnabled,omitempty"`
+	// +listType=set
+	CustomDomains []string `json:"customDomains,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
