@@ -57,6 +57,10 @@ spec:
               type: string
             colorCodes:
               type: string
+            customDomains:
+              items:
+                type: string
+              type: array
             debug:
               type: boolean
             globalCIDR:
