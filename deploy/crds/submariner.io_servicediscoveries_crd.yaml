@@ -41,6 +41,10 @@ spec:
               type: string
             clusterID:
               type: string
+            customDomains:
+              items:
+                type: string
+              type: array
             debug:
               type: boolean
             globalnetEnabled:

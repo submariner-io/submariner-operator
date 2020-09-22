@@ -157,6 +157,7 @@ func newServiceDiscovery() *submariner_v1.ServiceDiscovery {
 			ClusterID:                "east",
 			Namespace:                "submariner_ns",
 			Debug:                    true,
+			CustomDomains:            []string{"domain1", "domain2"},
 		},
 	}
 }
