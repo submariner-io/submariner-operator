@@ -131,6 +131,24 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscoverySpec(ref common.Referen
 							Format: "",
 						},
 					},
+					"customDomains": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"brokerK8sApiServer", "brokerK8sApiServerToken", "brokerK8sCA", "brokerK8sRemoteNamespace", "clusterID", "namespace", "debug"},
 			},
@@ -324,6 +342,24 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
+						},
+					},
+					"customDomains": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set`",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
 						},
 					},
 				},
