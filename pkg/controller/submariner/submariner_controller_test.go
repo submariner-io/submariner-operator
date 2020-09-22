@@ -259,7 +259,7 @@ func testReconciliation() {
 			Expect(err).To(Succeed())
 
 			Expect(updated.Spec.Repository).To(Equal(versions.DefaultSubmarinerRepo))
-			Expect(updated.Spec.Version).To(Equal(versions.DefaultSubmarinerVersion))
+			Expect(updated.Spec.Version).To(Equal(versions.DefaultSubmarinerComponentsVersion))
 		})
 	})
 

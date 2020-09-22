@@ -114,7 +114,7 @@ func (submariner *Submariner) SetDefaults() {
 	}
 
 	if submariner.Spec.Version == "" {
-		submariner.Spec.Version = versions.DefaultSubmarinerVersion
+		submariner.Spec.Version = versions.DefaultSubmarinerComponentsVersion
 	}
 
 	if submariner.Spec.ColorCodes == "" {

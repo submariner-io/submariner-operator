@@ -404,7 +404,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 	if imageVersion == "" {
 		// Default engine version
 		// This is handled in the operator after 0.0.1 (of the operator)
-		crImageVersion = versions.DefaultSubmarinerVersion
+		crImageVersion = versions.DefaultSubmarinerComponentsVersion
 	}
 
 	// if our network discovery code was capable of discovering those CIDRs
@@ -451,7 +451,7 @@ func operatorImage() string {
 	version := imageVersion
 
 	if imageVersion == "" {
-		version = versions.DefaultSubmarinerOperatorVersion
+		version = versions.DefaultSubmarinerComponentsVersion
 	}
 
 	return images.GetImagePath(repository, version, deployment.OperatorName)
