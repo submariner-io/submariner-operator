@@ -66,6 +66,7 @@ var (
 	cableDriver          string
 	clienttoken          *v1.Secret
 	globalnetClusterSize uint
+	customDomains        []string
 )
 
 func init() {
@@ -97,6 +98,8 @@ func addJoinFlags(cmd *cobra.Command) {
 		"Cluster size for GlobalCIDR allocated to this cluster (amount of global IPs)")
 	cmd.Flags().StringVar(&globalnetCIDR, "globalnet-cidr", "",
 		"GlobalCIDR to be allocated to the cluster")
+	cmd.Flags().StringSliceVar(&customDomains, "custom-domains", nil,
+		"List of domains to use for multicluster service discovery")
 }
 
 const (
@@ -419,6 +422,10 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		crClusterCIDR = netconfig.ClusterCIDR
 	}
 
+	if customDomains == nil && subctlData.CustomDomains != nil {
+		customDomains = *subctlData.CustomDomains
+	}
+
 	submarinerSpec := submariner.SubmarinerSpec{
 		Repository:               repository,
 		Version:                  crImageVersion,
@@ -443,6 +450,9 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 	}
 	if netconfig.GlobalnetCIDR != "" {
 		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR
+	}
+	if len(customDomains) > 0 {
+		submarinerSpec.CustomDomains = customDomains
 	}
 	return submarinerSpec
 }

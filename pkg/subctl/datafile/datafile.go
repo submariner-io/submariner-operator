@@ -38,6 +38,7 @@ type SubctlData struct {
 	ClientToken      *v1.Secret `omitempty,json:"clientToken"`
 	IPSecPSK         *v1.Secret `omitempty,json:"ipsecPSK"`
 	ServiceDiscovery bool       `omitempty,json:"serviceDiscovery"`
+	CustomDomains    *[]string  `omitempty,json:"customDomains"`
 	// Todo (revisit): The following values are moved from the broker-info.subm file to configMap
 	// on the Broker. This needs to be revisited to support seamless upgrades.
 	// https://github.com/submariner-io/submariner-operator/issues/504
