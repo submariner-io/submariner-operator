@@ -370,7 +370,9 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submopv1a1.S
 					ClusterID:                submariner.Spec.ClusterID,
 					Namespace:                submariner.Spec.Namespace,
 					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
-					CustomDomains:            submariner.Spec.CustomDomains,
+				}
+				if len(submariner.Spec.CustomDomains) > 0 {
+					sd.Spec.CustomDomains = submariner.Spec.CustomDomains
 				}
 				return nil
 			})
