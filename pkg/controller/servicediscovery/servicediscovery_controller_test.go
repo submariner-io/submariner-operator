@@ -27,6 +27,14 @@ const (
 	submarinerNamespace = "submariner-operator"
 )
 
+const (
+	clusterlocalConfig = `#lighthouse
+clusterset.local:53 {
+    forward . `
+	superClusterlocalConfig = `supercluster.local:53 {
+    forward . `
+)
+
 var _ = BeforeSuite(func() {
 	err := submariner_v1.AddToScheme(scheme.Scheme)
 	Expect(err).To(Succeed())
@@ -66,11 +74,6 @@ func testReconciliation() {
 		if fakeClient == nil {
 			fakeClient = newClient()
 		}
-
-		if fakeK8sClient == nil {
-			fakeK8sClient = fakeKubeClient.NewSimpleClientset()
-		}
-
 		controller = &ReconcileServiceDiscovery{
 			client:            fakeClient,
 			scheme:            scheme.Scheme,
@@ -84,7 +87,7 @@ func testReconciliation() {
 		}})
 	})
 
-	When("the lighthouseDNS service IP is updated", func() {
+	When("ClusterDNS operator should be updated when the lighthouseDNS service IP is updated", func() {
 		var dnsconfig *operatorv1.DNS
 		var lighthouseDNSService *corev1.Service
 		oldClusterIp := "10.10.10.10"
@@ -93,9 +96,10 @@ func testReconciliation() {
 			dnsconfig = newDNSConfig(oldClusterIp)
 			lighthouseDNSService = newDNSService(updatedClusterIp)
 			initClientObjs = append(initClientObjs, dnsconfig, lighthouseDNSService)
+			fakeK8sClient = fakeKubeClient.NewSimpleClientset()
 		})
 
-		It("should update the DNS operator config", func() {
+		It("ClusterDNS operator  not be updated when the lighthouseDNS service IP is not updated", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
 
@@ -112,7 +116,7 @@ func testReconciliation() {
 		})
 	})
 
-	When("the lighthouseDNS service IP is not updated", func() {
+	When("ClusterDNS operator should not be updated when the lighthouseDNS service IP is not updated", func() {
 		var dnsconfig *operatorv1.DNS
 		var lighthouseDNSService *corev1.Service
 		clusterIp := "10.10.10.10"
@@ -120,6 +124,7 @@ func testReconciliation() {
 			dnsconfig = newDNSConfig(clusterIp)
 			lighthouseDNSService = newDNSService(clusterIp)
 			initClientObjs = append(initClientObjs, dnsconfig, lighthouseDNSService)
+			fakeK8sClient = fakeKubeClient.NewSimpleClientset()
 		})
 
 		It("the DNS config should not be updated", func() {
@@ -136,6 +141,63 @@ func testReconciliation() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
 			Expect(expectDNSConfigUpdated(defaultOpenShiftDNSController, fakeClient).Spec).To(Equal(newDNSConfig(clusterIp).Spec))
+		})
+	})
+
+	When("The coreDNS configmap should be updated if the lighthouse clusterIP is not configured", func() {
+		var lighthouseDNSService *corev1.Service
+		clusterIp := "10.10.10.10"
+		BeforeEach(func() {
+			lighthouseDNSService = newDNSService(clusterIp)
+			configMap := newConfigMap("")
+			initClientObjs = append(initClientObjs, lighthouseDNSService)
+			fakeK8sClient = fakeKubeClient.NewSimpleClientset(configMap)
+		})
+
+		It("the coreDNS config map should be updated", func() {
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+
+			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
+
+			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+				Namespace: submarinerNamespace,
+				Name:      submarinerName,
+			}})
+
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + clusterIp + "\n}"))
+			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + clusterIp + "\n}"))
+		})
+	})
+	When("The coreDNS configmap should be updated if the lighthouse clusterIP is already configured", func() {
+		var lighthouseDNSService *corev1.Service
+		clusterIp := "10.10.10.10"
+		updatedClusterIp := "10.10.10.11"
+		BeforeEach(func() {
+			lighthouseDNSService = newDNSService(updatedClusterIp)
+			lightHouseConfig := clusterlocalConfig + clusterIp + "\n}" + superClusterlocalConfig + clusterIp + "\n}"
+			configMap := newConfigMap(lightHouseConfig)
+			initClientObjs = append(initClientObjs, lighthouseDNSService)
+			fakeK8sClient = fakeKubeClient.NewSimpleClientset(configMap)
+		})
+
+		It("the coreDNS config map should be updated", func() {
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+
+			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
+
+			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+				Namespace: submarinerNamespace,
+				Name:      submarinerName,
+			}})
+
+			Expect(reconcileErr).To(Succeed())
+			Expect(reconcileResult.Requeue).To(BeFalse())
+			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + updatedClusterIp))
+			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + updatedClusterIp))
 		})
 	})
 }
@@ -157,8 +219,38 @@ func newServiceDiscovery() *submariner_v1.ServiceDiscovery {
 			ClusterID:                "east",
 			Namespace:                "submariner_ns",
 			Debug:                    true,
-			CustomDomains:            []string{"domain1", "domain2"},
 		},
+	}
+}
+
+func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
+	corefile := lighthouseConfig + `.:53 {
+		errors
+		health {
+		lameduck 5s
+	}
+		ready
+		kubernetes cluster1.local in-addr.arpa ip6.arpa {
+		pods insecure
+		fallthrough in-addr.arpa ip6.arpa
+		ttl 30
+	}
+		prometheus :9153
+		forward . /etc/resolv.conf
+		cache 30
+		loop
+		reload
+		loadbalance
+	}`
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      coreDNSName,
+			Namespace: coreDNSNamespace,
+		},
+		Data: map[string]string{
+			"Corefile": corefile,
+		},
+		BinaryData: nil,
 	}
 }
 
@@ -210,4 +302,10 @@ func expectDNSConfigUpdated(name string, client controllerClient.Client) *operat
 	foundDNSConfig, err := getDNSConfig(name, client)
 	Expect(err).To(Succeed())
 	return foundDNSConfig
+}
+
+func expectCoreMapUpdated(client clientset.Interface) *corev1.ConfigMap {
+	foundCoreMap, err := client.CoreV1().ConfigMaps(coreDNSNamespace).Get(coreDNSName, metav1.GetOptions{})
+	Expect(err).To(Succeed())
+	return foundCoreMap
 }
