@@ -41,6 +41,8 @@ const (
 	lighthouseCoreDNSName         = "submariner-lighthouse-coredns"
 	defaultOpenShiftDNSController = "default"
 	lighthouseForwardPluginName   = "lighthouse"
+	coreDNSNamespace              = "kube-system"
+	coreDNSName                   = "coredns"
 )
 
 const (
@@ -163,7 +165,7 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 			return reconcile.Result{}, err
 		}
 	}
-	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance)
+	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
 	if err != nil {
 		// Try to update Openshift-DNS
 		return reconcile.Result{}, updateOpenshiftClusterDNSOperator(instance, r.client, r.operatorClientSet, reqLogger)
@@ -355,11 +357,12 @@ func newLigthhouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 	}
 }
 
-func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery) error {
-	configMaps := k8sclientSet.CoreV1().ConfigMaps("kube-system")
+func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery,
+	reqLogger logr.Logger) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		configMap, err := configMaps.Get("coredns", metav1.GetOptions{})
+		configMap, err := k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Get(coreDNSName, metav1.GetOptions{})
 		if err != nil {
+			reqLogger.Error(err, "Error retrieving 'coredns' ConfigMap")
 			return err
 		}
 		/* This entry will be added to config map
@@ -371,33 +374,43 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.I
 		    forward . 2.2.2.2:5353
 		}
 		*/
-		corefile := configMap.Data["Corefile"]
-		if strings.Contains(corefile, "lighthouse") {
-			// Assume this means we've already set the ConfigMap up
-			return nil
-		}
 		lighthouseDnsService := &corev1.Service{}
 		err = client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDnsService)
-		if err != nil || lighthouseDnsService.Spec.ClusterIP == "" {
+		lighthouseClusterIp := lighthouseDnsService.Spec.ClusterIP
+		if err != nil || lighthouseClusterIp == "" {
 			return goerrors.New("lighthouseDnsService ClusterIp should be available")
 		}
-		expectedCorefile := `#lighthouse
-clusterset.local:53 {
-forward . `
-		expectedCorefile = expectedCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
-		superclusterCorefile := `supercluster.local:53 {
-forward . `
-		expectedCorefile = expectedCorefile + superclusterCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
+
 		coreFile := configMap.Data["Corefile"]
-		if strings.Contains(coreFile, "clusterset") {
+		if strings.Contains(coreFile, "clusterset.local") {
 			// Assume this means we've already set the ConfigMap up
-			return nil
+			reqLogger.Info("coredns configmap has lighthouse configuration hence updating")
+			lines := strings.Split(coreFile, "\n")
+			for i, line := range lines {
+				if strings.Contains(line, "clusterset.local") || strings.Contains(line, "supercluster.local") {
+					if strings.Contains(lines[i+1], lighthouseClusterIp) {
+						return nil
+					}
+
+					lines[i+1] = "    forward . " + lighthouseClusterIp
+				}
+			}
+			coreFile = strings.Join(lines, "\n")
+		} else {
+			reqLogger.Info("coredns configmap does not have lighthouse configuration hence creating")
+			expectedCorefile := `#lighthouse
+clusterset.local:53 {
+    forward . `
+			expectedCorefile = expectedCorefile + lighthouseClusterIp + "\n" + "}\n"
+			superclusterCorefile := `supercluster.local:53 {
+    forward . `
+			expectedCorefile = expectedCorefile + superclusterCorefile + lighthouseClusterIp + "\n" + "}\n"
+			coreFile = expectedCorefile + coreFile
 		}
-		coreFile = expectedCorefile + coreFile
-		log.Info("Updated coredns CoreFile " + coreFile)
+		log.Info("Updated coredns ConfigMap " + coreFile)
 		configMap.Data["Corefile"] = coreFile
 		// Potentially retried
-		_, err = configMaps.Update(configMap)
+		_, err = k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Update(configMap)
 		return err
 	})
 	return retryErr
