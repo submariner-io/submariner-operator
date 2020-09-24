@@ -57,7 +57,7 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 		panic(err.Error())
 	}
 
-	_, err = updateOrCreateSubmariner(submarinerClient, namespace, submarinerCR)
+	_, err = createSubmariner(submarinerClient, namespace, submarinerCR)
 
 	if err != nil {
 		return err
@@ -66,21 +66,20 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 	return nil
 }
 
-func updateOrCreateSubmariner(clientSet submarinerclientset.Interface, namespace string, submarinerCR *submariner.Submariner) (bool,
-	error) {
+func createSubmariner(clientSet submarinerclientset.Interface, namespace string, submarinerCR *submariner.Submariner) (bool, error) {
 	_, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Create(submarinerCR)
 	if err == nil {
 		return true, nil
 	} else if errors.IsAlreadyExists(err) {
 		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingCfg, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Get(submarinerCR.Name, metav1.GetOptions{})
+			// We can’t always handle existing resources, and we want to overwrite them anyway, so delete them
+			err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Delete(submarinerCR.Name, &metav1.DeleteOptions{})
 			if err != nil {
-				return fmt.Errorf("failed to get pre-existing cfg %s : %s", submarinerCR.Name, err)
+				return fmt.Errorf("failed to delete pre-existing cfg %s : %s", submarinerCR.Name, err)
 			}
-			submarinerCR.ResourceVersion = existingCfg.ResourceVersion
-			_, err = clientSet.SubmarinerV1alpha1().Submariners(namespace).Update(submarinerCR)
+			_, err = clientSet.SubmarinerV1alpha1().Submariners(namespace).Create(submarinerCR)
 			if err != nil {
-				return fmt.Errorf("failed to update pre-existing cfg  %s : %s", submarinerCR.Name, err)
+				return fmt.Errorf("failed to create cfg  %s : %s", submarinerCR.Name, err)
 			}
 			return nil
 		})
