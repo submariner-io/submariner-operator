@@ -16,6 +16,16 @@ rules:
       - list
       - watch
       - update
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
   - apiGroups:  # pods and services are looked up to figure out network settings
       - ""
     resources:

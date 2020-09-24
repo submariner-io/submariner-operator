@@ -27,7 +27,6 @@ import (
 
 	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/engine"
 )
 
 const (
@@ -35,11 +34,6 @@ const (
 )
 
 func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
-	err := engine.Ensure(config)
-	if err != nil {
-		return fmt.Errorf("error setting up the engine requirements: %s", err)
-	}
-
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return fmt.Errorf("error creating the core kubernetes clientset: %s", err)

@@ -36,6 +36,7 @@ var (
 	defaultGlobalnetClusterSize uint
 	serviceDiscovery            bool
 	GlobalCIDRConfigMap         *v1.ConfigMap
+	defaultCustomDomains        []string
 )
 
 func init() {
@@ -51,6 +52,9 @@ func init() {
 
 	deployBroker.PersistentFlags().BoolVar(&serviceDiscovery, "service-discovery", true,
 		"Enable Multi-Cluster Service Discovery")
+
+	deployBroker.PersistentFlags().StringSliceVar(&defaultCustomDomains, "custom-domains", nil,
+		"List of domains to use for multicluster service discovery")
 
 	addKubeconfigFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
@@ -99,6 +103,10 @@ var deployBroker = &cobra.Command{
 		}
 
 		subctlData.ServiceDiscovery = serviceDiscovery
+
+		if len(defaultCustomDomains) > 0 {
+			subctlData.CustomDomains = &defaultCustomDomains
+		}
 
 		exitOnError("Error setting up service discovery information", err)
 

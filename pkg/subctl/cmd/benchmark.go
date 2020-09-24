@@ -22,10 +22,20 @@ var (
 		},
 		Run: testThroughput,
 	}
+	benchmarkLatenchCmd = &cobra.Command{
+		Use:   "latency <kubeconfig1> <kubeconfig2>",
+		Short: "Benchmark latency between two clusters",
+		Long:  "This command runs latency benchmark tests between two clusters",
+		Args: func(cmd *cobra.Command, args []string) error {
+			return checkThroughputArguments(args)
+		},
+		Run: testLatency,
+	}
 )
 
 func init() {
 	benchmarkCmd.AddCommand(benchmarkThroughputCmd)
+	benchmarkCmd.AddCommand(benchmarkLatenchCmd)
 	rootCmd.AddCommand(benchmarkCmd)
 }
 
@@ -41,4 +51,11 @@ func testThroughput(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("Performing throughput tests\n")
 	benchmark.StartThroughputTests()
+}
+
+func testLatency(cmd *cobra.Command, args []string) {
+	configureTestingFramework(args)
+
+	fmt.Printf("Performing latency tests\n")
+	benchmark.StartLatencyTests()
 }
