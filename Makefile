@@ -40,6 +40,15 @@ deploy: clusters preload-images
 e2e: deploy
 	scripts/kind-e2e/e2e.sh
 
+upgrade-e2e: upgrade e2e
+
+upgrade:
+	$(SCRIPTS_DIR)/clusters.sh --cluster_settings $(DAPPER_SOURCE)/scripts/upgrade/cluster_settings
+	curl -L get.submariner.io | VERSION=0.7.0-rc2 bash
+	~/.local/bin/subctl deploy-broker --kubeconfig output/kubeconfigs/kind-config-cluster1 --kubecontext cluster1
+	~/.local/bin/subctl join --kubeconfig output/kubeconfigs/kind-config-cluster1 --kubecontext cluster1 broker-info.subm
+	~/.local/bin/subctl join --kubeconfig output/kubeconfigs/kind-config-cluster2 --kubecontext cluster2 broker-info.subm
+
 clean:
 	rm -f $(BINARIES) $(CROSS_BINARIES) $(CROSS_TARBALLS)
 

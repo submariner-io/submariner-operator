@@ -18,6 +18,7 @@ package submarinercr
 
 import (
 	"fmt"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -77,6 +78,7 @@ func createSubmariner(clientSet submarinerclientset.Interface, namespace string,
 			if err != nil {
 				return fmt.Errorf("failed to delete pre-existing cfg %s : %s", submarinerCR.Name, err)
 			}
+			time.Sleep(10 * time.Second)
 			_, err = clientSet.SubmarinerV1alpha1().Submariners(namespace).Create(submarinerCR)
 			if err != nil {
 				return fmt.Errorf("failed to create cfg  %s : %s", submarinerCR.Name, err)
