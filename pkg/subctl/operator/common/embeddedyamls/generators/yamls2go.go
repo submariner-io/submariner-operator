@@ -26,20 +26,19 @@ import (
 )
 
 var files = []string{
-	"crds/submariner.io_submariners_crd.yaml",
-	"crds/submariner.io_servicediscoveries_crd.yaml",
-	"role.yaml",
-	"role_binding.yaml",
-	"service_account.yaml",
-	"submariner/globalnet_cluster_role.yaml",
-	"submariner/globalnet_cluster_role_binding.yaml",
-	"cluster_role.yaml",
-	"cluster_role_binding.yaml",
-	"lighthouse/crds/multiclusterservices_crd.yaml",
-	"lighthouse/crds/serviceexport_crd.yaml",
-	"lighthouse/crds/serviceimport_crd.yaml",
-	"lighthouse/cluster_role_binding.yaml",
-	"lighthouse/cluster_role.yaml",
+	"crd/bases/submariner.io_submariners.yaml",
+	"crd/bases/submariner.io_servicediscoveries.yaml",
+	"crd/bases/lighthouse.submariner.io_serviceexports.yaml",
+	"crd/bases/lighthouse.submariner.io_serviceimports.yaml",
+	"rbac/cluster_role.yaml",
+	"rbac/cluster_role_binding.yaml",
+	"rbac/globalnet_cluster_role.yaml",
+	"rbac/globalnet_cluster_role_binding.yaml",
+	"rbac/lighthouse_cluster_role_binding.yaml",
+	"rbac/lighthouse_cluster_role.yaml",
+	"rbac/role.yaml",
+	"rbac/role_binding.yaml",
+	"rbac/service_account.yaml",
 }
 
 // Reads all .yaml files in the crdDirectory

@@ -1,0 +1,16 @@
+---
+apiVersion: submariner.io/v1alpha1
+kind: ServiceDiscovery
+metadata:
+  name: example-servicediscovery
+spec:
+  namespace: "submariner_operator"
+  clusterID: "east"
+  debug: false
+  globalnetEnabled: true
+  brokerK8sApiServer: "192.168.67.110:8443"
+  brokerK8sApiServerToken: "$(SECRET_API_SERVER_TOKEN)"
+  brokerK8sRemoteNamespace: "submariner-broker"
+  brokerK8sCA: "$(SECRET_CA)"
+  repository: "quay.io/submariner"
+  version: "$(VERSION)"

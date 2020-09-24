@@ -2,13 +2,36 @@
 bin/
 build/_output/
 dist/
-deploy/crds/submariner-cr-cluster2.yaml
-deploy/crds/submariner-cr-cluster3.yaml
-deploy/crds/submariner_clusters_crd.yaml
-deploy/crds/submariner_endpoints_crd.yaml
+config/samples/submariner-cr-cluster2.yaml
+config/samples/submariner-cr-cluster3.yaml
+config/crd/bases/submariner_clusters_crd.yaml
+config/crd/bases/submariner_endpoints_crd.yaml
 output/
 vendor/
 *.coverprofile
-.idea
 .shflags
 junit.xml
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Kubernetes Generated files - skip generated files, except for vendored files
+
+!vendor/**/zz_generated.*
+
+# editor and IDE paraphernalia
+.idea
+*.swp
+*.swo
+*~

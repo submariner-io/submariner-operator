@@ -10,7 +10,11 @@ rules:
 
 ignore: |
   /vendor
-  /deploy/crds/submariner.io_servicediscoveries_crd.yaml
-  /deploy/crds/submariner.io_submariners_crd.yaml
+  /config/crd/bases/submariner.io_servicediscoveries.yaml
+  /config/crd/bases/submariner.io_submariners.yaml
+  /config/manager/kustomization.yaml
+  /config/manifests/bases/submariner.clusterserviceversion.yaml
+  /bundle
+  /packagemanifests
 
 strict: true
