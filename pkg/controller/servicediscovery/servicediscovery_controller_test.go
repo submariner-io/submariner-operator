@@ -28,8 +28,7 @@ const (
 )
 
 const (
-	clusterlocalConfig = `#lighthouse
-clusterset.local:53 {
+	clusterlocalConfig = `clusterset.local:53 {
     forward . `
 	superClusterlocalConfig = `supercluster.local:53 {
     forward . `
@@ -219,6 +218,7 @@ func newServiceDiscovery() *submariner_v1.ServiceDiscovery {
 			ClusterID:                "east",
 			Namespace:                "submariner_ns",
 			Debug:                    true,
+			CustomDomains:            []string{"supercluster.local"},
 		},
 	}
 }
