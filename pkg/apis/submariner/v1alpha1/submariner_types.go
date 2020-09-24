@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
@@ -52,6 +53,8 @@ type SubmarinerSpec struct {
 	Debug                    bool   `json:"debug"`
 	NatEnabled               bool   `json:"natEnabled"`
 	ServiceDiscoveryEnabled  bool   `json:"serviceDiscoveryEnabled,omitempty"`
+	// +listType=set
+	CustomDomains []string `json:"customDomains,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -66,13 +69,20 @@ type SubmarinerStatus struct {
 	ServiceCIDR               string                  `json:"serviceCIDR,omitempty"`
 	ClusterCIDR               string                  `json:"clusterCIDR,omitempty"`
 	GlobalCIDR                string                  `json:"globalCIDR,omitempty"`
-	EngineDaemonSetStatus     *appsv1.DaemonSetStatus `json:"engineDaemonSetStatus,omitempty"`
-	RouteAgentDaemonSetStatus *appsv1.DaemonSetStatus `json:"routeAgentDaemonSetStatus,omitempty"`
-	GlobalnetDaemonSetStatus  *appsv1.DaemonSetStatus `json:"globalnetDaemonSetStatus,omitempty"`
-	Gateways                  *[]submv1.Gateway       `json:"gateways,omitempty"`
+	EngineDaemonSetStatus     DaemonSetStatus         `json:"engineDaemonSetStatus,omitempty"`
+	RouteAgentDaemonSetStatus DaemonSetStatus         `json:"routeAgentDaemonSetStatus,omitempty"`
+	GlobalnetDaemonSetStatus  DaemonSetStatus         `json:"globalnetDaemonSetStatus,omitempty"`
+	Gateways                  *[]submv1.GatewayStatus `json:"gateways,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+}
+
+type DaemonSetStatus struct {
+	LastResourceVersion       string                   `json:"lastResourceVersion,omitempty"`
+	Status                    *appsv1.DaemonSetStatus  `json:"status,omitempty"`
+	NonReadyContainerStates   *[]corev1.ContainerState `json:"nonReadyContainerStates,omitempty"`
+	MismatchedContainerImages bool                     `json:"mismatchedContainerImages"`
 }
 
 const DefaultColorCode = "blue"

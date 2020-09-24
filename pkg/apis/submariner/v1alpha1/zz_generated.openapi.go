@@ -27,18 +27,9 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscovery(ref common.ReferenceCa
 				Description: "ServiceDiscovery is the Schema for the servicediscoveries API",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"kind": {
+					"status": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
+							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoveryStatus"),
 						},
 					},
 					"metadata": {
@@ -51,9 +42,18 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscovery(ref common.ReferenceCa
 							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoverySpec"),
 						},
 					},
-					"status": {
+					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoveryStatus"),
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
@@ -71,13 +71,13 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscoverySpec(ref common.Referen
 				Description: "ServiceDiscoverySpec defines the desired state of ServiceDiscovery",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"version": {
+					"brokerK8sApiServer": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
 						},
 					},
-					"repository": {
+					"brokerK8sApiServerToken": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -95,24 +95,6 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscoverySpec(ref common.Referen
 							Format: "",
 						},
 					},
-					"brokerK8sApiServerToken": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"brokerK8sApiServer": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"debug": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
 					"clusterID": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -125,14 +107,50 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscoverySpec(ref common.Referen
 							Format: "",
 						},
 					},
+					"repository": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"version": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"debug": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
 					"globalnetEnabled": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
 						},
 					},
+					"customDomains": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 				},
-				Required: []string{"brokerK8sCA", "brokerK8sRemoteNamespace", "brokerK8sApiServerToken", "brokerK8sApiServer", "debug", "clusterID", "namespace"},
+				Required: []string{"brokerK8sApiServer", "brokerK8sApiServerToken", "brokerK8sCA", "brokerK8sRemoteNamespace", "clusterID", "namespace", "debug"},
 			},
 		},
 	}
@@ -158,14 +176,14 @@ func schema_pkg_apis_submariner_v1alpha1_Submariner(ref common.ReferenceCallback
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -200,37 +218,19 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 				Description: "SubmarinerSpec defines the desired state of Submariner",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"version": {
+					"broker": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
 						},
 					},
-					"repository": {
+					"brokerK8sApiServer": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
 						},
 					},
-					"ceIPSecNATTPort": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"ceIPSecIKEPort": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
-						},
-					},
-					"ceIPSecDebug": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"ceIPSecPSK": {
+					"brokerK8sApiServerToken": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -248,37 +248,19 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
-					"brokerK8sApiServerToken": {
+					"cableDriver": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
 						},
 					},
-					"brokerK8sApiServer": {
+					"ceIPSecPSK": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
 						},
 					},
-					"broker": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"natEnabled": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"debug": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"boolean"},
-							Format: "",
-						},
-					},
-					"colorCodes": {
+					"clusterCIDR": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -290,13 +272,19 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
-					"serviceCIDR": {
+					"colorCodes": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
 						},
 					},
-					"clusterCIDR": {
+					"repository": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"serviceCIDR": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -314,9 +302,39 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
-					"cableDriver": {
+					"version": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"ceIPSecIKEPort": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"ceIPSecNATTPort": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"ceIPSecDebug": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"debug": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
+							Format: "",
+						},
+					},
+					"natEnabled": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"boolean"},
 							Format: "",
 						},
 					},
@@ -326,8 +344,26 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref common.ReferenceCall
 							Format: "",
 						},
 					},
+					"customDomains": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set`",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 				},
-				Required: []string{"ceIPSecDebug", "ceIPSecPSK", "brokerK8sCA", "brokerK8sRemoteNamespace", "brokerK8sApiServerToken", "brokerK8sApiServer", "broker", "natEnabled", "debug", "clusterID", "serviceCIDR", "clusterCIDR", "namespace"},
+				Required: []string{"broker", "brokerK8sApiServer", "brokerK8sApiServerToken", "brokerK8sCA", "brokerK8sRemoteNamespace", "ceIPSecPSK", "clusterCIDR", "clusterID", "serviceCIDR", "namespace", "ceIPSecDebug", "debug", "natEnabled"},
 			},
 		},
 	}
@@ -378,17 +414,17 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 					},
 					"engineDaemonSetStatus": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
+							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.DaemonSetStatus"),
 						},
 					},
 					"routeAgentDaemonSetStatus": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
+							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.DaemonSetStatus"),
 						},
 					},
 					"globalnetDaemonSetStatus": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/api/apps/v1.DaemonSetStatus"),
+							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.DaemonSetStatus"),
 						},
 					},
 					"gateways": {
@@ -397,17 +433,17 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.Gateway"),
+										Ref: ref("github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.GatewayStatus"),
 									},
 								},
 							},
 						},
 					},
 				},
-				Required: []string{"natEnabled", "clusterID", "serviceCIDR", "clusterCIDR"},
+				Required: []string{"natEnabled", "clusterID"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.Gateway", "k8s.io/api/apps/v1.DaemonSetStatus"},
+			"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.DaemonSetStatus", "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.GatewayStatus"},
 	}
 }

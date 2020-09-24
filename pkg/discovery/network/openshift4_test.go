@@ -24,31 +24,31 @@ import (
 )
 
 var _ = Describe("discoverOpenShift4Network", func() {
-	When("JSON contains a single pod network", func() {
+	When("JSON contains a pod network", func() {
 		It("Should parse properly pod and service networks", func() {
-			cr := unstructuredParse(getClusterNetworkJSON())
-			cn, err := parseOS4ClusterNetwork(cr)
+			cr := unstructuredParse(getNetworkJSON())
+			cn, err := parseOS4Network(cr)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(cn.PodCIDRs).To(HaveLen(2))
 			Expect(cn.ServiceCIDRs).To(HaveLen(1))
 			Expect(cn.PodCIDRs).To(Equal([]string{"10.128.0.0/14", "10.132.0.0/14"}))
 			Expect(cn.ServiceCIDRs).To(Equal([]string{"172.30.0.0/16"}))
-
+			Expect(cn.NetworkPlugin).To(Equal("OpenShiftSDN"))
 		})
 	})
 
 	When("JSON is missing the clusterNetworks list", func() {
 		It("Should return error", func() {
-			cr := unstructuredParse(getClusterNetworkJSONMissingCN())
-			_, err := parseOS4ClusterNetwork(cr)
+			cr := unstructuredParse(getNetworkJSONMissingCN())
+			_, err := parseOS4Network(cr)
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
 	When("JSON is missing the serviceNetwork field", func() {
 		It("Should return error", func() {
-			cr := unstructuredParse(getClusterNetworkJSONMissingSN())
-			_, err := parseOS4ClusterNetwork(cr)
+			cr := unstructuredParse(getNetworkJSONMissingSN())
+			_, err := parseOS4Network(cr)
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -62,110 +62,136 @@ func unstructuredParse(json []byte) *unstructured.Unstructured {
 	return crd
 }
 
-func getClusterNetworkJSON() []byte {
-	return []byte(`{
-    "apiVersion": "network.openshift.io/v1",
-    "clusterNetworks": [
+func getNetworkJSON() []byte {
+	return []byte(`
         {
-            "CIDR": "10.128.0.0/14",
-            "hostSubnetLength": 9
-        },
+            "apiVersion": "config.openshift.io/v1",
+            "kind": "Network",
+            "metadata": {
+                "creationTimestamp": "2020-09-10T07:36:54Z",
+                "generation": 2,
+                "name": "cluster",
+                "resourceVersion": "2664",
+                "selfLink": "/apis/config.openshift.io/v1/networks/cluster",
+                "uid": "3b90ece9-94c7-49f7-b615-3d092efb5cd7"
+            },
+            "spec": {
+                "clusterNetwork": [
+					{
+                        "cidr": "10.128.0.0/14",
+                        "hostPrefix": 23
+                    },
+                    {
+                        "cidr": "10.132.0.0/14",
+                        "hostPrefix": 23
+                    }
+                ],
+                "externalIP": {
+                    "policy": {}
+                },
+                "networkType": "OpenShiftSDN",
+                "serviceNetwork": [
+                    "172.30.0.0/16"
+                ]
+            },
+            "status": {
+                "clusterNetwork": [
+					{
+                        "cidr": "10.128.0.0/14",
+                        "hostPrefix": 23
+                    },
+                    {
+                        "cidr": "10.132.0.0/14",
+                        "hostPrefix": 23
+                    }
+                ],
+                "clusterNetworkMTU": 8951,
+                "networkType": "OpenShiftSDN",
+                "serviceNetwork": [
+                    "172.30.0.0/16"
+                ]
+            }
+        }
+    `)
+}
+
+func getNetworkJSONMissingCN() []byte {
+	return []byte(`
 		{
-            "CIDR": "10.132.0.0/14",
-            "hostSubnetLength": 9
-        }
-    ],
-    "hostsubnetlength": 9,
-    "kind": "ClusterNetwork",
-    "metadata": {
-        "creationTimestamp": "2019-10-28T19:52:03Z",
-        "generation": 1,
-        "name": "default",
-        "ownerReferences": [
-            {
-                "apiVersion": "operator.openshift.io/v1",
-                "blockOwnerDeletion": true,
-                "controller": true,
-                "kind": "Network",
-                "name": "cluster",
-                "uid": "61d2c29b-f9bc-11e9-809d-026caba2345a"
-            }
-        ],
-        "resourceVersion": "1422",
-        "selfLink": "/apis/network.openshift.io/v1/clusternetworks/default",
-        "uid": "69d0bf65-f9bc-11e9-809d-026caba2345a"
-    },
-    "mtu": 8951,
-    "network": "10.128.0.0/14",
-    "pluginName": "redhat/openshift-ovs-networkpolicy",
-    "serviceNetwork": "172.30.0.0/16",
-    "vxlanPort": 4789
-}`)
+			"apiVersion": "config.openshift.io/v1",
+			"kind": "Network",
+			"metadata": {
+				"creationTimestamp": "2020-09-10T07:36:54Z",
+				"generation": 2,
+				"name": "cluster",
+				"resourceVersion": "2664",
+				"selfLink": "/apis/config.openshift.io/v1/networks/cluster",
+				"uid": "3b90ece9-94c7-49f7-b615-3d092efb5cd7"
+			},
+			"spec": {
+				"externalIP": {
+				"policy": {}
+			},
+				"networkType": "OpenShiftSDN",
+				"serviceNetwork": [
+				"172.31.0.0/16"
+			]
+			},
+			"status": {
+				"clusterNetwork": [
+				{
+					"cidr": "10.132.0.0/14",
+					"hostPrefix": 23
+				}
+			],
+				"clusterNetworkMTU": 8951,
+				"networkType": "OpenShiftSDN",
+				"serviceNetwork": [
+				"172.31.0.0/16"
+			]
+			}
+		}
+`)
 }
 
-func getClusterNetworkJSONMissingCN() []byte {
+func getNetworkJSONMissingSN() []byte {
 	return []byte(`{
-    "apiVersion": "network.openshift.io/v1",
-    "hostsubnetlength": 9,
-    "kind": "ClusterNetwork",
-    "metadata": {
-        "creationTimestamp": "2019-10-28T19:52:03Z",
-        "generation": 1,
-        "name": "default",
-        "ownerReferences": [
-            {
-                "apiVersion": "operator.openshift.io/v1",
-                "blockOwnerDeletion": true,
-                "controller": true,
-                "kind": "Network",
+            "apiVersion": "config.openshift.io/v1",
+            "kind": "Network",
+            "metadata": {
+                "creationTimestamp": "2020-09-10T07:36:54Z",
+                "generation": 2,
                 "name": "cluster",
-                "uid": "61d2c29b-f9bc-11e9-809d-026caba2345a"
+                "resourceVersion": "2664",
+                "selfLink": "/apis/config.openshift.io/v1/networks/cluster",
+                "uid": "3b90ece9-94c7-49f7-b615-3d092efb5cd7"
+            },
+            "spec": {
+                "clusterNetwork": [
+                    {
+                        "cidr": "10.132.0.0/14",
+                        "hostPrefix": 23
+                    }
+                ],
+                "externalIP": {
+                    "policy": {}
+                },
+                "networkType": "OpenShiftSDN"
+            },
+            "status": {
+                "clusterNetwork": [
+                    {
+                        "cidr": "10.132.0.0/14",
+                        "hostPrefix": 23
+                    }
+                ],
+                "clusterNetworkMTU": 8951,
+                "networkType": "OpenShiftSDN",
+                "serviceNetwork": [
+                    "172.31.0.0/16"
+                ]
             }
-        ],
-        "resourceVersion": "1422",
-        "selfLink": "/apis/network.openshift.io/v1/clusternetworks/default",
-        "uid": "69d0bf65-f9bc-11e9-809d-026caba2345a"
-    },
-    "mtu": 8951,
-    "network": "10.128.0.0/14",
-    "pluginName": "redhat/openshift-ovs-networkpolicy",
-    "serviceNetwork": "172.30.0.0/16",
-    "vxlanPort": 4789
-}`)
-}
-
-func getClusterNetworkJSONMissingSN() []byte {
-	return []byte(`{
-    "apiVersion": "network.openshift.io/v1",
-    "clusterNetworks": [
-        {
-            "CIDR": "10.128.0.0/14",
-            "hostSubnetLength": 9
         }
-    ],
-    "hostsubnetlength": 9,
-    "kind": "ClusterNetwork",
-    "metadata": {
-        "creationTimestamp": "2019-10-28T19:52:03Z",
-        "generation": 1,
-        "name": "default",
-        "ownerReferences": [
-            {
-                "apiVersion": "operator.openshift.io/v1",
-                "blockOwnerDeletion": true,
-                "controller": true,
-                "kind": "Network",
-                "name": "cluster",
-                "uid": "61d2c29b-f9bc-11e9-809d-026caba2345a"
-            }
-        ],
-        "resourceVersion": "1422",
-        "selfLink": "/apis/network.openshift.io/v1/clusternetworks/default",
-        "uid": "69d0bf65-f9bc-11e9-809d-026caba2345a"
-    },
-    "mtu": 8951,
-    "network": "10.128.0.0/14",
-    "pluginName": "redhat/openshift-ovs-networkpolicy",
-    "vxlanPort": 4789
-}`)
+
+`)
 }

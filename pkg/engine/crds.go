@@ -20,26 +20,27 @@ import (
 	"fmt"
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/pkg/utils"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 // Ensure ensures that the required resources are deployed on the target system
 // The resources handled here are the engine CRDs: Cluster and Endpoint
-func Ensure(config *rest.Config) error {
-	apiext, err := clientset.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("error creating the api extensions client: %s", err)
-	}
-	_, err = apiext.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newClustersCRD())
+func Ensure(crdUpdater crdutils.CRDUpdater) error {
+	_, err := utils.CreateOrUpdateCRD(crdUpdater, newClustersCRD())
 	if err != nil && !errors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Cluster CRD: %s", err)
+		return fmt.Errorf("error provisioning the Cluster CRD: %s", err)
 	}
-	_, err = apiext.ApiextensionsV1beta1().CustomResourceDefinitions().Create(newEndpointsCRD())
+	_, err = utils.CreateOrUpdateCRD(crdUpdater, newEndpointsCRD())
 	if err != nil && !errors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Endpoint CRD: %s", err)
+		return fmt.Errorf("error provisioning the Endpoint CRD: %s", err)
+	}
+	_, err = utils.CreateOrUpdateCRD(crdUpdater, newGatewaysCRD())
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return fmt.Errorf("error provisioning the Gateway CRD: %s", err)
 	}
 	return nil
 }
@@ -80,6 +81,35 @@ func newClustersCRD() *apiextensions.CustomResourceDefinition {
 				Kind:     "Cluster",
 			},
 			Version: "v1",
+		},
+	}
+
+	return crd
+}
+
+func newGatewaysCRD() *apiextensions.CustomResourceDefinition {
+	crd := &apiextensions.CustomResourceDefinition{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "gateways.submariner.io",
+		},
+		Spec: apiextensions.CustomResourceDefinitionSpec{
+			Group: "submariner.io",
+			Scope: apiextensions.NamespaceScoped,
+			Names: apiextensions.CustomResourceDefinitionNames{
+				Plural:   "gateways",
+				Singular: "gateway",
+				ListKind: "GatewayList",
+				Kind:     "Gateway",
+			},
+			Version: "v1",
+			AdditionalPrinterColumns: []apiextensions.CustomResourceColumnDefinition{
+				{
+					Name:        "ha-status",
+					Type:        "string",
+					Description: "High availability status of the Gateway",
+					JSONPath:    ".status.haStatus",
+				},
+			},
 		},
 	}
 

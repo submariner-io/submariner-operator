@@ -14,22 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package crds
+package servicediscovery_test
 
 import (
-	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	"testing"
 
-	"fmt"
-
-	"k8s.io/client-go/rest"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func Ensure(restConfig *rest.Config) (bool, error) {
-	crdUpdater, err := crdutils.NewFromRestConfig(restConfig)
-	if err != nil {
-		return false, fmt.Errorf("error creating the api extensions client: %s", err)
-	}
-
-	return lighthouse.Ensure(crdUpdater, lighthouse.DataCluster)
+func TestSubmariner(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "ServiceDiscoveryTest Suite")
 }
