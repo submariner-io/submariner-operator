@@ -10,12 +10,25 @@ import (
 )
 
 func StartThroughputTests() {
-	gomega.RegisterFailHandler(func(message string, callerSkip ...int) { panic(message) })
-	f := initFramework("throughput")
+	var f *framework.Framework
+
+	gomega.RegisterFailHandler(func(message string, callerSkip ...int) {
+		if f != nil {
+			cleanupFramework(f)
+		} else {
+			framework.RunCleanupActions()
+		}
+		panic(message)
+	})
+
+	f = initFramework("latency")
+
 	framework.By("Performing throughput tests from Gateway pod to Gateway pod")
 	runThroughputTest(f, framework.GatewayNode)
+
 	framework.By("Performing throughput tests from Non-Gateway pod to Non-Gateway pod")
 	runThroughputTest(f, framework.NonGatewayNode)
+
 	cleanupFramework(f)
 }
 
