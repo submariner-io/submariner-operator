@@ -367,7 +367,6 @@ function verify_subm_engine_container() {
   kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | tee $env_file
 
   # Verify SubM Engine pod environment variables
-  grep "HOSTNAME=$cluster-worker" $env_file
   grep "BROKER_K8S_APISERVER=$SUBMARINER_BROKER_URL" $env_file
   grep "SUBMARINER_NAMESPACE=$subm_ns" $env_file
   grep "SUBMARINER_BROKER=$subm_broker" $env_file
@@ -412,7 +411,6 @@ function verify_subm_routeagent_container() {
 
     # Verify SubM Routeagent pod environment variables
     grep "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" $env_file
-    grep "HOSTNAME=$cluster-worker" $env_file
     grep "SUBMARINER_NAMESPACE=$subm_ns" $env_file
     grep "SUBMARINER_DEBUG=$subm_debug" $env_file
     grep "SUBMARINER_SERVICECIDR=${service_CIDRs[$cluster]}" $env_file

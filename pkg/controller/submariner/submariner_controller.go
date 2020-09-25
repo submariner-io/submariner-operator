@@ -509,6 +509,8 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 			Volumes: []corev1.Volume{
 				{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
 			},
+			// The gateway engine must be able to run on any flagged node, regardless of existing taints
+			Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 		},
 	}
 	if cr.Spec.CeIPSecIKEPort != 0 {
@@ -596,6 +598,8 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					Volumes: []corev1.Volume{
 						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
 					},
+					// The route agent engine on all nodes, regardless of existing taints
+					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},
 			},
 		},
