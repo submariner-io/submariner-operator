@@ -81,7 +81,7 @@ func createBrokerClusterRoleAndDefaultSA(clientset *kubernetes.Clientset) error 
 	}
 
 	// Create the broker cluster role, which will also be used by any new enrolled cluster
-	_, err = CreateNewClusterBrokerRole(clientset)
+	_, err = CreateOrUpdateClusterBrokerRole(clientset)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating broker role: %s", err)
 	}
@@ -167,8 +167,8 @@ func CreateNewBrokerNamespace(clientset *kubernetes.Clientset) (brokernamespace 
 	return clientset.CoreV1().Namespaces().Create(NewBrokerNamespace())
 }
 
-func CreateNewClusterBrokerRole(clientset *kubernetes.Clientset) (brokerrole *rbac.Role, err error) {
-	return clientset.RbacV1().Roles(SubmarinerBrokerNamespace).Create(NewBrokerClusterRole())
+func CreateOrUpdateClusterBrokerRole(clientset *kubernetes.Clientset) (created bool, err error) {
+	return utils.CreateOrUpdateRole(clientset, SubmarinerBrokerNamespace, NewBrokerClusterRole())
 }
 
 func CreateOrUpdateBrokerAdminRole(clientset *kubernetes.Clientset) (created bool, err error) {
