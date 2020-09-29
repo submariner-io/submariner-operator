@@ -24,7 +24,7 @@ var (
 		},
 		Run: testThroughput,
 	}
-	benchmarkLatenchCmd = &cobra.Command{
+	benchmarkLatencyCmd = &cobra.Command{
 		Use:   "latency <kubeconfig1> [<kubeconfig2>]",
 		Short: "Benchmark latency between two clusters",
 		Long:  "This command runs latency benchmark tests between two clusters",
@@ -36,14 +36,14 @@ var (
 )
 
 func init() {
-	benchmarkLatenchCmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster-baseline", false,
+	benchmarkLatencyCmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster-baseline", false,
 		"Run benchmark latency test with intra-cluster pods")
 
 	benchmarkThroughputCmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster-baseline", false,
 		"Run benchmark latency test with intra-cluster pods")
 
 	benchmarkCmd.AddCommand(benchmarkThroughputCmd)
-	benchmarkCmd.AddCommand(benchmarkLatenchCmd)
+	benchmarkCmd.AddCommand(benchmarkLatencyCmd)
 	rootCmd.AddCommand(benchmarkCmd)
 }
 
