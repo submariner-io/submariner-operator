@@ -49,13 +49,14 @@ build: operator-image $(BINARIES)
 
 build-cross: $(CROSS_TARBALLS)
 
-operator-image: vendor/modules.txt pkg/subctl/operator/common/embeddedyamls/yamls.go
+OSDK_BUILD_ARGS := -ldflags -X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION)
 # We check BUILD_ARGS since that's what the compile script uses
-ifeq (--debug,$(findstring --debug,$(BUILD_ARGS)))
-	operator-sdk build quay.io/submariner/submariner-operator:$(DEV_VERSION)
-else
-	operator-sdk build quay.io/submariner/submariner-operator:$(DEV_VERSION) --go-build-args "-ldflags -s -ldflags -w"
+ifneq (--debug,$(findstring --debug,$(BUILD_ARGS)))
+OSDK_BUILD_ARGS += -ldflags -s -ldflags -w
 endif
+
+operator-image: vendor/modules.txt pkg/subctl/operator/common/embeddedyamls/yamls.go
+	operator-sdk build quay.io/submariner/submariner-operator:$(DEV_VERSION) --go-build-args "$(OSDK_BUILD_ARGS)"
 
 bin/subctl: bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
 	ln -sf $(<F) $@
