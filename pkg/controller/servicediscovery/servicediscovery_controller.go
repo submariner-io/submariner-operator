@@ -142,26 +142,26 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, err
 	}
 
-	ligthhouseDnsConfigMap := newLigthhouseDnsConfigMap(instance)
-	if _, err = helpers.ReconcileConfigMap(instance, ligthhouseDnsConfigMap, reqLogger,
+	lighthouseDnsConfigMap := newLighthouseDnsConfigMap(instance)
+	if _, err = helpers.ReconcileConfigMap(instance, lighthouseDnsConfigMap, reqLogger,
 		r.client, r.scheme); err != nil {
 		log.Error(err, "Error creating the lighthouseCoreDNS configMap")
 		return reconcile.Result{}, err
 	}
 
-	ligthhouseCoreDNSDeployment := newLigthhouseCoreDNSDeployment(instance)
-	if _, err = helpers.ReconcileDeployment(instance, ligthhouseCoreDNSDeployment, reqLogger,
+	lighthouseCoreDNSDeployment := newLighthouseCoreDNSDeployment(instance)
+	if _, err = helpers.ReconcileDeployment(instance, lighthouseCoreDNSDeployment, reqLogger,
 		r.client, r.scheme); err != nil {
 		log.Error(err, "Error creating the lighthouseCoreDNS deployment")
 		return reconcile.Result{}, err
 	}
 
-	ligthhouseCoreDNSService := &corev1.Service{}
+	lighthouseCoreDNSService := &corev1.Service{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
-		ligthhouseCoreDNSService)
+		lighthouseCoreDNSService)
 	if errors.IsNotFound(err) {
-		ligthhouseCoreDNSService = newLigthhouseCoreDNSService(instance)
-		if _, err = helpers.ReconcileService(instance, ligthhouseCoreDNSService, reqLogger,
+		lighthouseCoreDNSService = newLighthouseCoreDNSService(instance)
+		if _, err = helpers.ReconcileService(instance, lighthouseCoreDNSService, reqLogger,
 			r.client, r.scheme); err != nil {
 			log.Error(err, "Error creating the lighthouseCoreDNS service")
 			return reconcile.Result{}, err
@@ -231,7 +231,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 	}
 }
 
-func newLigthhouseDnsConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
+func newLighthouseDnsConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
 	labels := map[string]string{
 		"app":       lighthouseCoreDNSName,
 		"component": componentName,
@@ -259,7 +259,7 @@ ready
 	}
 }
 
-func newLigthhouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
+func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
 	replicas := int32(2)
 	labels := map[string]string{
 		"app":       lighthouseCoreDNSName,
@@ -330,7 +330,7 @@ func newLigthhouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 	}
 }
 
-func newLigthhouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.Service {
+func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.Service {
 	labels := map[string]string{
 		"app":       lighthouseCoreDNSName,
 		"component": componentName,
