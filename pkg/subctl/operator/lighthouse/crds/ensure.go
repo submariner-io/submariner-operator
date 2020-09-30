@@ -18,34 +18,18 @@ package crds
 
 import (
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 
 	"fmt"
 
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/rest"
 )
 
 func Ensure(restConfig *rest.Config) (bool, error) {
-	serviceDiscoveryResult, err := ensureServiceDiscoveryCRD(restConfig)
-	if err != nil {
-		return serviceDiscoveryResult, err
-	}
-
-	installed, err := lighthouse.Ensure(restConfig, lighthouse.DataCluster)
-	if err != nil {
-		return installed, err
-	}
-
-	return (serviceDiscoveryResult || installed), err
-}
-
-func ensureServiceDiscoveryCRD(config *rest.Config) (bool, error) {
-	clientSet, err := clientset.NewForConfig(config)
+	crdUpdater, err := crdutils.NewFromRestConfig(restConfig)
 	if err != nil {
 		return false, fmt.Errorf("error creating the api extensions client: %s", err)
 	}
 
-	return utils.CreateOrUpdateEmbeddedCRD(clientSet, embeddedyamls.Crds_submariner_io_servicediscoveries_crd_yaml)
+	return lighthouse.Ensure(crdUpdater, lighthouse.DataCluster)
 }

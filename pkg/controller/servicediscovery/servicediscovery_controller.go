@@ -4,6 +4,8 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
+	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -41,6 +43,8 @@ const (
 	lighthouseCoreDNSName         = "submariner-lighthouse-coredns"
 	defaultOpenShiftDNSController = "default"
 	lighthouseForwardPluginName   = "lighthouse"
+	coreDNSNamespace              = "kube-system"
+	coreDNSName                   = "coredns"
 )
 
 const (
@@ -138,32 +142,32 @@ func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, err
 	}
 
-	ligthhouseConfigMap := newLigthhouseConfigMap(instance)
-	if _, err = helpers.ReconcileConfigMap(instance, ligthhouseConfigMap, reqLogger,
+	lighthouseDnsConfigMap := newLighthouseDnsConfigMap(instance)
+	if _, err = helpers.ReconcileConfigMap(instance, lighthouseDnsConfigMap, reqLogger,
 		r.client, r.scheme); err != nil {
 		log.Error(err, "Error creating the lighthouseCoreDNS configMap")
 		return reconcile.Result{}, err
 	}
 
-	ligthhouseCoreDNSDeployment := newLigthhouseCoreDNSDeployment(instance)
-	if _, err = helpers.ReconcileDeployment(instance, ligthhouseCoreDNSDeployment, reqLogger,
+	lighthouseCoreDNSDeployment := newLighthouseCoreDNSDeployment(instance)
+	if _, err = helpers.ReconcileDeployment(instance, lighthouseCoreDNSDeployment, reqLogger,
 		r.client, r.scheme); err != nil {
 		log.Error(err, "Error creating the lighthouseCoreDNS deployment")
 		return reconcile.Result{}, err
 	}
 
-	ligthhouseCoreDNSService := &corev1.Service{}
+	lighthouseCoreDNSService := &corev1.Service{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
-		ligthhouseCoreDNSService)
+		lighthouseCoreDNSService)
 	if errors.IsNotFound(err) {
-		ligthhouseCoreDNSService = newLigthhouseCoreDNSService(instance)
-		if _, err = helpers.ReconcileService(instance, ligthhouseCoreDNSService, reqLogger,
+		lighthouseCoreDNSService = newLighthouseCoreDNSService(instance)
+		if _, err = helpers.ReconcileService(instance, lighthouseCoreDNSService, reqLogger,
 			r.client, r.scheme); err != nil {
 			log.Error(err, "Error creating the lighthouseCoreDNS service")
 			return reconcile.Result{}, err
 		}
 	}
-	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance)
+	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
 	if err != nil {
 		// Try to update Openshift-DNS
 		return reconcile.Result{}, updateOpenshiftClusterDNSOperator(instance, r.client, r.operatorClientSet, reqLogger)
@@ -227,24 +231,22 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 	}
 }
 
-func newLigthhouseConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
+func newLighthouseDnsConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
 	labels := map[string]string{
 		"app":       lighthouseCoreDNSName,
 		"component": componentName,
 	}
-	expectedCorefile := `clusterset.local:53 {
+	config := `{
 lighthouse
 errors
 health
 ready
-}
-supercluster.local:53 {
-lighthouse
-errors
-health
-ready
-}
-`
+}`
+	expectedCorefile := ""
+	for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
+		expectedCorefile = fmt.Sprintf("%s%s:53 %s\n", expectedCorefile, domain, config)
+	}
+
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      lighthouseCoreDNSName,
@@ -257,7 +259,7 @@ ready
 	}
 }
 
-func newLigthhouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
+func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
 	replicas := int32(2)
 	labels := map[string]string{
 		"app":       lighthouseCoreDNSName,
@@ -328,7 +330,7 @@ func newLigthhouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 	}
 }
 
-func newLigthhouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.Service {
+func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.Service {
 	labels := map[string]string{
 		"app":       lighthouseCoreDNSName,
 		"component": componentName,
@@ -355,49 +357,55 @@ func newLigthhouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 	}
 }
 
-func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery) error {
-	configMaps := k8sclientSet.CoreV1().ConfigMaps("kube-system")
+func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery,
+	reqLogger logr.Logger) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		configMap, err := configMaps.Get("coredns", metav1.GetOptions{})
+		configMap, err := k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Get(coreDNSName, metav1.GetOptions{})
 		if err != nil {
+			reqLogger.Error(err, "Error retrieving 'coredns' ConfigMap")
 			return err
 		}
-		/* This entry will be added to config map
-		# lighthouse
-		clusterset.local:53 {
-		    forward . 2.2.2.2:5353
-		}
-		supercluster.local:53 {
-		    forward . 2.2.2.2:5353
-		}
-		*/
-		corefile := configMap.Data["Corefile"]
-		if strings.Contains(corefile, "lighthouse") {
-			// Assume this means we've already set the ConfigMap up
-			return nil
-		}
+
 		lighthouseDnsService := &corev1.Service{}
 		err = client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDnsService)
-		if err != nil || lighthouseDnsService.Spec.ClusterIP == "" {
+		lighthouseClusterIp := lighthouseDnsService.Spec.ClusterIP
+		if err != nil || lighthouseClusterIp == "" {
 			return goerrors.New("lighthouseDnsService ClusterIp should be available")
 		}
-		expectedCorefile := `#lighthouse
-clusterset.local:53 {
-forward . `
-		expectedCorefile = expectedCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
-		superclusterCorefile := `supercluster.local:53 {
-forward . `
-		expectedCorefile = expectedCorefile + superclusterCorefile + lighthouseDnsService.Spec.ClusterIP + "\n" + "}\n"
+
 		coreFile := configMap.Data["Corefile"]
-		if strings.Contains(coreFile, "clusterset") {
-			// Assume this means we've already set the ConfigMap up
-			return nil
+		newCoreStr := ""
+		if strings.Contains(coreFile, "lighthouse-start") {
+			// Assume this means we've already set the ConfigMap up, first remove existing lighthouse config
+			skip := false
+			reqLogger.Info("coredns configmap has lighthouse configuration hence updating")
+			lines := strings.Split(coreFile, "\n")
+			for _, line := range lines {
+				if strings.Contains(line, "lighthouse-start") {
+					skip = true
+				} else if strings.Contains(line, "lighthouse-end") {
+					skip = false
+					continue
+				}
+				if skip {
+					continue
+				}
+				newCoreStr = newCoreStr + line + "\n"
+			}
+			coreFile = newCoreStr
+		} else {
+			reqLogger.Info("coredns configmap does not have lighthouse configuration hence creating")
 		}
-		coreFile = expectedCorefile + coreFile
-		log.Info("Updated coredns CoreFile " + coreFile)
+		expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
+		for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
+			expectedCorefile = fmt.Sprintf("%s%s:53 {\n    forward . %s\n}\n",
+				expectedCorefile, domain, lighthouseClusterIp)
+		}
+		coreFile = expectedCorefile + "#lighthouse-end\n" + coreFile
+		log.Info("Updated coredns ConfigMap " + coreFile)
 		configMap.Data["Corefile"] = coreFile
 		// Potentially retried
-		_, err = configMaps.Update(configMap)
+		_, err = k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Update(configMap)
 		return err
 	})
 	return retryErr
@@ -421,10 +429,12 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 		var updatedForwardServers []operatorv1.Server
 		changed := false
 		containsLighthouse := false
-		forwardServers := dnsOperator.Spec.Servers
-		for _, forwardServer := range forwardServers {
+		lighthouseDomains := append([]string{"clusterset.local"}, instance.Spec.CustomDomains...)
+		existingDomains := make([]string, 0)
+		for _, forwardServer := range dnsOperator.Spec.Servers {
 			if forwardServer.Name == lighthouseForwardPluginName {
 				containsLighthouse = true
+				existingDomains = append(existingDomains, forwardServer.Zones...)
 				for _, upstreams := range forwardServer.ForwardPlugin.Upstreams {
 					if upstreams != lighthouseDnsService.Spec.ClusterIP {
 						changed = true
@@ -433,32 +443,34 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 				if changed {
 					continue
 				}
+			} else {
+				updatedForwardServers = append(updatedForwardServers, forwardServer)
 			}
-			updatedForwardServers = append(updatedForwardServers, forwardServer)
+		}
+
+		sort.Strings(lighthouseDomains)
+		sort.Strings(existingDomains)
+		if !reflect.DeepEqual(lighthouseDomains, existingDomains) {
+			changed = true
+			reqLogger.Info(fmt.Sprintf("Configured lighthouse zones changed from %v to %v", existingDomains, lighthouseDomains))
 		}
 		if containsLighthouse && !changed {
 			reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
 			return nil
 		}
-		reqLogger.Info("ClusterIP of Lighthouse DNS server changed, hence updating Cluster DNS Operator CR")
+		reqLogger.Info("Lighthouse DNS configuration changed, hence updating Cluster DNS Operator CR")
 
-		lighthouseServer := operatorv1.Server{
-			Name:  lighthouseForwardPluginName,
-			Zones: []string{"clusterset.local"},
-			ForwardPlugin: operatorv1.ForwardPlugin{
-				Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
-			},
+		for _, domain := range lighthouseDomains {
+			lighthouseServer := operatorv1.Server{
+				Name:  lighthouseForwardPluginName,
+				Zones: []string{domain},
+				ForwardPlugin: operatorv1.ForwardPlugin{
+					Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
+				},
+			}
+			updatedForwardServers = append(updatedForwardServers, lighthouseServer)
 		}
-		updatedForwardServers = append(updatedForwardServers, lighthouseServer)
 
-		lighthouseServer = operatorv1.Server{
-			Name:  lighthouseForwardPluginName,
-			Zones: []string{"supercluster.local"},
-			ForwardPlugin: operatorv1.ForwardPlugin{
-				Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
-			},
-		}
-		updatedForwardServers = append(updatedForwardServers, lighthouseServer)
 		dnsOperator.Spec.Servers = updatedForwardServers
 
 		toUpdate := &operatorv1.DNS{ObjectMeta: metav1.ObjectMeta{

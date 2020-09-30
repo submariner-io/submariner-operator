@@ -169,6 +169,9 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 	if len(allNodes.Items) == 0 {
 		return struct{ Node string }{}, nil
 	}
+	if len(allNodes.Items) == 1 {
+		return struct{ Node string }{allNodes.Items[0].GetName()}, nil
+	}
 	allNodeNames := []string{}
 	for _, node := range allNodes.Items {
 		allNodeNames = append(allNodeNames, node.GetName())

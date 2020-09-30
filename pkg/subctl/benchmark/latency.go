@@ -5,11 +5,10 @@ import (
 
 	"github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func StartThroughputTests() {
+func StartLatencyTests() {
 	var f *framework.Framework
 
 	gomega.RegisterFailHandler(func(message string, callerSkip ...int) {
@@ -23,29 +22,16 @@ func StartThroughputTests() {
 
 	f = initFramework("latency")
 
-	framework.By("Performing throughput tests from Gateway pod to Gateway pod")
-	runThroughputTest(f, framework.GatewayNode)
+	framework.By("Performing latency tests from Gateway pod to Gateway pod")
+	runLatencyTest(f, framework.GatewayNode)
 
-	framework.By("Performing throughput tests from Non-Gateway pod to Non-Gateway pod")
-	runThroughputTest(f, framework.NonGatewayNode)
+	framework.By("Performing latency tests from Non-Gateway pod to Non-Gateway pod")
+	runLatencyTest(f, framework.NonGatewayNode)
 
 	cleanupFramework(f)
 }
 
-func initFramework(baseName string) *framework.Framework {
-	f := framework.NewBareFramework(baseName)
-	framework.ValidateFlags(framework.TestContext)
-	framework.BeforeSuite()
-	f.BeforeEach()
-	return f
-}
-
-func cleanupFramework(f *framework.Framework) {
-	f.AfterEach()
-	framework.RunCleanupActions()
-}
-
-func runThroughputTest(f *framework.Framework, scheduling framework.NetworkPodScheduling) {
+func runLatencyTest(f *framework.Framework, scheduling framework.NetworkPodScheduling) {
 	clusterAName := framework.TestContext.ClusterIDs[framework.ClusterA]
 	clusterBName := framework.TestContext.ClusterIDs[framework.ClusterB]
 	var connectionTimeout uint = 5
@@ -53,7 +39,7 @@ func runThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 
 	framework.By(fmt.Sprintf("Creating a Nettest Server Pod on %q", clusterBName))
 	nettestPodB := f.NewNetworkPod(&framework.NetworkPodConfig{
-		Type:               framework.ThroughputServerPod,
+		Type:               framework.LatencyServerPod,
 		Cluster:            framework.ClusterB,
 		Scheduling:         scheduling,
 		ConnectionTimeout:  connectionTimeout,
@@ -65,8 +51,9 @@ func runThroughputTest(f *framework.Framework, scheduling framework.NetworkPodSc
 	framework.By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestPodB.Pod.Name, nettestPodB.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP
+
 	nettestPodA := f.NewNetworkPod(&framework.NetworkPodConfig{
-		Type:               framework.ThroughputClientPod,
+		Type:               framework.LatencyClientPod,
 		Cluster:            framework.ClusterA,
 		Scheduling:         scheduling,
 		RemoteIP:           remoteIP,

@@ -26,10 +26,10 @@ import (
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/dynamic"
@@ -44,12 +44,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-
 	submopv1a1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
 var log = logf.Log.WithName("controller_submariner")
@@ -58,9 +57,13 @@ var log = logf.Log.WithName("controller_submariner")
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	// These are required so that we can retrieve Gateway objects using the dynamic client
-	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "Gateway"), &submv1.Gateway{})
-	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "GatewayList"), &submv1.GatewayList{})
-	mgr.GetScheme().AddKnownTypeWithName(schema.FromAPIVersionAndKind("submariner.io/v1", "ListOptions"), &metav1.ListOptions{})
+	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
+		return err
+	}
+	// These are required so that we can manipulate CRDs
+	if err := apiextensions.AddToScheme(mgr.GetScheme()); err != nil {
+		return err
+	}
 	return add(mgr, newReconciler(mgr))
 }
 
@@ -226,14 +229,20 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
 	instance.Status.Gateways = &gatewayStatuses
 
-	if engineDaemonSet != nil {
-		instance.Status.EngineDaemonSetStatus = &engineDaemonSet.Status
+	err = r.updateDaemonSetStatus(engineDaemonSet, &instance.Status.EngineDaemonSetStatus, request.Namespace)
+	if err != nil {
+		reqLogger.Error(err, "failed to check engine daemonset containers")
+		return reconcile.Result{}, err
 	}
-	if routeagentDaemonSet != nil {
-		instance.Status.RouteAgentDaemonSetStatus = &routeagentDaemonSet.Status
+	err = r.updateDaemonSetStatus(routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
+	if err != nil {
+		reqLogger.Error(err, "failed to check route agent daemonset containers")
+		return reconcile.Result{}, err
 	}
-	if globalnetDaemonSet != nil {
-		instance.Status.GlobalnetDaemonSetStatus = &globalnetDaemonSet.Status
+	err = r.updateDaemonSetStatus(globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
+	if err != nil {
+		reqLogger.Error(err, "failed to check engine daemonset containers")
+		return reconcile.Result{}, err
 	}
 	if !reflect.DeepEqual(instance.Status, initialStatus) {
 		err := r.client.Status().Update(context.TODO(), instance)
@@ -247,6 +256,70 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileSubmariner) updateDaemonSetStatus(daemonSet *appsv1.DaemonSet, status *submopv1a1.DaemonSetStatus,
+	namespace string) error {
+	if daemonSet != nil {
+		if status == nil {
+			status = &submopv1a1.DaemonSetStatus{}
+		}
+		status.Status = &daemonSet.Status
+		if status.LastResourceVersion != daemonSet.ObjectMeta.ResourceVersion {
+			// The daemonset has changed, check its containers
+			mismatchedContainerImages, nonReadyContainerStates, err :=
+				r.checkDaemonSetContainers(daemonSet, namespace)
+			if err != nil {
+				return err
+			}
+			status.MismatchedContainerImages = mismatchedContainerImages
+			status.NonReadyContainerStates = nonReadyContainerStates
+			status.LastResourceVersion = daemonSet.ObjectMeta.ResourceVersion
+		}
+	}
+	return nil
+}
+
+func (r *ReconcileSubmariner) checkDaemonSetContainers(daemonSet *appsv1.DaemonSet,
+	namespace string) (bool, *[]corev1.ContainerState, error) {
+	containerStatuses, err := r.retrieveDaemonSetContainerStatuses(daemonSet, namespace)
+	if err != nil {
+		return false, nil, err
+	}
+	var containerImageManifest *string = nil
+	var mismatchedContainerImages = false
+	var nonReadyContainerStates = []corev1.ContainerState{}
+	for i := range *containerStatuses {
+		if containerImageManifest == nil {
+			containerImageManifest = &((*containerStatuses)[i].ImageID)
+		} else if *containerImageManifest != (*containerStatuses)[i].ImageID {
+			// Container mismatch
+			mismatchedContainerImages = true
+		}
+		if !*(*containerStatuses)[i].Started {
+			// Not (yet) ready
+			nonReadyContainerStates = append(nonReadyContainerStates, (*containerStatuses)[i].State)
+		}
+	}
+	return mismatchedContainerImages, &nonReadyContainerStates, nil
+}
+
+func (r *ReconcileSubmariner) retrieveDaemonSetContainerStatuses(daemonSet *appsv1.DaemonSet,
+	namespace string) (*[]corev1.ContainerStatus, error) {
+	pods := &corev1.PodList{}
+	selector, err := metav1.LabelSelectorAsSelector(daemonSet.Spec.Selector)
+	if err != nil {
+		return nil, err
+	}
+	err = r.client.List(context.TODO(), pods, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
+	if err != nil {
+		return nil, err
+	}
+	containerStatuses := []corev1.ContainerStatus{}
+	for i := range pods.Items {
+		containerStatuses = append(containerStatuses, pods.Items[i].Status.ContainerStatuses...)
+	}
+	return &containerStatuses, nil
 }
 
 func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace string) (*[]submv1.Gateway, error) {
@@ -297,7 +370,9 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submopv1a1.S
 					ClusterID:                submariner.Spec.ClusterID,
 					Namespace:                submariner.Spec.Namespace,
 					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
-					CustomDomains:            submariner.Spec.CustomDomains,
+				}
+				if len(submariner.Spec.CustomDomains) > 0 {
+					sd.Spec.CustomDomains = submariner.Spec.CustomDomains
 				}
 				return nil
 			})
@@ -434,6 +509,8 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 			Volumes: []corev1.Volume{
 				{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
 			},
+			// The gateway engine must be able to run on any flagged node, regardless of existing taints
+			Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 		},
 	}
 	if cr.Spec.CeIPSecIKEPort != 0 {
@@ -521,6 +598,8 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					Volumes: []corev1.Volume{
 						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
 					},
+					// The route agent engine on all nodes, regardless of existing taints
+					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},
 			},
 		},
