@@ -17,12 +17,13 @@ limitations under the License.
 package crds
 
 import (
-	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
-
 	"fmt"
 
 	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 func Ensure(restConfig *rest.Config) (bool, error) {
@@ -31,5 +32,5 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, fmt.Errorf("error creating the api extensions client: %s", err)
 	}
 
-	return lighthouse.Ensure(crdUpdater, lighthouse.DataCluster)
+	return utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Crds_submariner_io_servicediscoveries_yaml)
 }

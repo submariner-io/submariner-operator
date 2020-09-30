@@ -21,8 +21,8 @@ import (
 
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
@@ -30,88 +30,59 @@ import (
 // Ensure ensures that the required resources are deployed on the target system
 // The resources handled here are the engine CRDs: Cluster and Endpoint
 func Ensure(crdUpdater crdutils.CRDUpdater) error {
-	_, err := utils.CreateOrUpdateCRD(crdUpdater, newClustersCRD())
+	clustersCrd, err := newClustersCRD()
+	if err != nil {
+		return fmt.Errorf("error creating the Cluster CRD: %s", err)
+	}
+	_, err = utils.CreateOrUpdateCRD(crdUpdater, clustersCrd)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Cluster CRD: %s", err)
 	}
-	_, err = utils.CreateOrUpdateCRD(crdUpdater, newEndpointsCRD())
+	endpointsCrd, err := newEndpointsCRD()
+	if err != nil {
+		return fmt.Errorf("error creating the Endpoint CRD: %s", err)
+	}
+	_, err = utils.CreateOrUpdateCRD(crdUpdater, endpointsCrd)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Endpoint CRD: %s", err)
 	}
-	_, err = utils.CreateOrUpdateCRD(crdUpdater, newGatewaysCRD())
+	gatewaysCrd, err := newGatewaysCRD()
+	if err != nil {
+		return fmt.Errorf("error creating the Gateway CRD: %s", err)
+	}
+	_, err = utils.CreateOrUpdateCRD(crdUpdater, gatewaysCrd)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Gateway CRD: %s", err)
 	}
 	return nil
 }
 
-func newEndpointsCRD() *apiextensions.CustomResourceDefinition {
-	crd := &apiextensions.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "endpoints.submariner.io",
-		},
-		Spec: apiextensions.CustomResourceDefinitionSpec{
-			Group: "submariner.io",
-			Scope: apiextensions.NamespaceScoped,
-			Names: apiextensions.CustomResourceDefinitionNames{
-				Plural:   "endpoints",
-				Singular: "endpoint",
-				ListKind: "EndpointList",
-				Kind:     "Endpoint",
-			},
-			Version: "v1",
-		},
+func newEndpointsCRD() (*apiextensions.CustomResourceDefinition, error) {
+	crd := &apiextensions.CustomResourceDefinition{}
+
+	if err := embeddedyamls.GetObject(embeddedyamls.Submariner_crds_submariner_io_endpoints_yaml, crd); err != nil {
+		return nil, err
 	}
 
-	return crd
+	return crd, nil
 }
 
-func newClustersCRD() *apiextensions.CustomResourceDefinition {
-	crd := &apiextensions.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "clusters.submariner.io",
-		},
-		Spec: apiextensions.CustomResourceDefinitionSpec{
-			Group: "submariner.io",
-			Scope: apiextensions.NamespaceScoped,
-			Names: apiextensions.CustomResourceDefinitionNames{
-				Plural:   "clusters",
-				Singular: "cluster",
-				ListKind: "ClusterList",
-				Kind:     "Cluster",
-			},
-			Version: "v1",
-		},
+func newClustersCRD() (*apiextensions.CustomResourceDefinition, error) {
+	crd := &apiextensions.CustomResourceDefinition{}
+
+	if err := embeddedyamls.GetObject(embeddedyamls.Submariner_crds_submariner_io_clusters_yaml, crd); err != nil {
+		return nil, err
 	}
 
-	return crd
+	return crd, nil
 }
 
-func newGatewaysCRD() *apiextensions.CustomResourceDefinition {
-	crd := &apiextensions.CustomResourceDefinition{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "gateways.submariner.io",
-		},
-		Spec: apiextensions.CustomResourceDefinitionSpec{
-			Group: "submariner.io",
-			Scope: apiextensions.NamespaceScoped,
-			Names: apiextensions.CustomResourceDefinitionNames{
-				Plural:   "gateways",
-				Singular: "gateway",
-				ListKind: "GatewayList",
-				Kind:     "Gateway",
-			},
-			Version: "v1",
-			AdditionalPrinterColumns: []apiextensions.CustomResourceColumnDefinition{
-				{
-					Name:        "ha-status",
-					Type:        "string",
-					Description: "High availability status of the Gateway",
-					JSONPath:    ".status.haStatus",
-				},
-			},
-		},
+func newGatewaysCRD() (*apiextensions.CustomResourceDefinition, error) {
+	crd := &apiextensions.CustomResourceDefinition{}
+
+	if err := embeddedyamls.GetObject(embeddedyamls.Submariner_crds_submariner_io_gateways_yaml, crd); err != nil {
+		return nil, err
 	}
 
-	return crd
+	return crd, nil
 }

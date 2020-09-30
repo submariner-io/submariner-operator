@@ -2,10 +2,9 @@
 bin/
 build/_output/
 dist/
-deploy/crds/submariner-cr-cluster2.yaml
-deploy/crds/submariner-cr-cluster3.yaml
-deploy/crds/submariner_clusters_crd.yaml
-deploy/crds/submariner_endpoints_crd.yaml
+deploy/crds
+deploy/lighthouse/crds/lighthouse.submariner.io_*.yaml
+deploy/submariner/crds
 output/
 vendor/
 *.coverprofile
