@@ -155,7 +155,9 @@ func configureTestingFramework(args []string) {
 	framework.TestContext.SubmarinerNamespace = submarinerNamespace
 
 	// Read the cluster names from the given kubeconfigs
-	framework.TestContext.ClusterIDs = []string{clusterNameFromConfig(args[0]), clusterNameFromConfig(args[1])}
+	for _, config := range args {
+		framework.TestContext.ClusterIDs = append(framework.TestContext.ClusterIDs, clusterNameFromConfig(config))
+	}
 
 	config.DefaultReporterConfig.Verbose = verboseConnectivityVerification
 	config.DefaultReporterConfig.SlowSpecThreshold = 60
