@@ -16,7 +16,7 @@ var (
 		Long:  "This command used to run various benchmark tests between two clusters",
 	}
 	benchmarkThroughputCmd = &cobra.Command{
-		Use:   "throughput <kubeconfig1> <kubeconfig2>",
+		Use:   "throughput <kubeconfig1> [<kubeconfig2>]",
 		Short: "Benchmark throughput between two clusters",
 		Long:  "This command runs throughput tests between two clusters",
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -60,7 +60,7 @@ func testThroughput(cmd *cobra.Command, args []string) {
 	configureTestingFramework(args)
 
 	fmt.Printf("Performing throughput tests\n")
-	benchmark.StartThroughputTests()
+	benchmark.StartThroughputTests(intraCluster)
 }
 
 func testLatency(cmd *cobra.Command, args []string) {
