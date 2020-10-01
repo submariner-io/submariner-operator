@@ -207,6 +207,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, subctlData *datafile.S
 
 	status.Start("Discovering network details")
 	networkDetails := getNetworkDetails(clientConfig)
+	status.End(cli.Success)
 
 	serviceCIDR, serviceCIDRautoDetected, err := getServiceCIDR(serviceCIDR, networkDetails)
 	exitOnError("Error determining the service CIDR", err)
