@@ -9,8 +9,8 @@ import (
 )
 
 type benchmarkTestParams struct {
-	ClusterA            framework.ClusterIndex
-	ClusterB            framework.ClusterIndex
+	ClientCluster       framework.ClusterIndex
+	ServerCluster       framework.ClusterIndex
 	ServerPodScheduling framework.NetworkPodScheduling
 	ClientPodScheduling framework.NetworkPodScheduling
 }
@@ -31,8 +31,8 @@ func StartLatencyTests(intraCluster bool) {
 
 	if !intraCluster {
 		latencyTestParams := benchmarkTestParams{
-			ClusterA:            framework.ClusterA,
-			ClusterB:            framework.ClusterB,
+			ClientCluster:       framework.ClusterA,
+			ServerCluster:       framework.ClusterB,
 			ServerPodScheduling: framework.GatewayNode,
 			ClientPodScheduling: framework.GatewayNode,
 		}
@@ -46,8 +46,8 @@ func StartLatencyTests(intraCluster bool) {
 		runLatencyTest(f, latencyTestParams)
 	} else {
 		latencyTestIntraClusterParams := benchmarkTestParams{
-			ClusterA:            framework.ClusterA,
-			ClusterB:            framework.ClusterA,
+			ClientCluster:       framework.ClusterA,
+			ServerCluster:       framework.ClusterA,
 			ServerPodScheduling: framework.GatewayNode,
 			ClientPodScheduling: framework.NonGatewayNode,
 		}
@@ -61,21 +61,21 @@ func StartLatencyTests(intraCluster bool) {
 }
 
 func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
-	clusterAName := framework.TestContext.ClusterIDs[testParams.ClusterA]
-	clusterBName := framework.TestContext.ClusterIDs[testParams.ClusterB]
+	clusterAName := framework.TestContext.ClusterIDs[testParams.ClientCluster]
+	clusterBName := framework.TestContext.ClusterIDs[testParams.ServerCluster]
 	var connectionTimeout uint = 5
 	var connectionAttempts uint = 1
 
 	framework.By(fmt.Sprintf("Creating a Nettest Server Pod on %q", clusterBName))
 	nettestServerPod := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.LatencyServerPod,
-		Cluster:            testParams.ClusterB,
+		Cluster:            testParams.ServerCluster,
 		Scheduling:         testParams.ServerPodScheduling,
 		ConnectionTimeout:  connectionTimeout,
 		ConnectionAttempts: connectionAttempts,
 	})
 
-	podsClusterB := framework.KubeClients[testParams.ClusterB].CoreV1().Pods(f.Namespace)
+	podsClusterB := framework.KubeClients[testParams.ServerCluster].CoreV1().Pods(f.Namespace)
 	p1, _ := podsClusterB.Get(nettestServerPod.Pod.Name, metav1.GetOptions{})
 	framework.By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
 
@@ -83,7 +83,7 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 
 	nettestClientPod := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.LatencyClientPod,
-		Cluster:            testParams.ClusterA,
+		Cluster:            testParams.ClientCluster,
 		Scheduling:         testParams.ClientPodScheduling,
 		RemoteIP:           remoteIP,
 		ConnectionTimeout:  connectionTimeout,
