@@ -14,13 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package submariner_test
 
 import (
-	"github.com/submariner-io/submariner-operator/pkg/controller/submariner"
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	// +kubebuilder:scaffold:imports
 )
 
-func init() {
-	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
-	AddToManagerFuncs = append(AddToManagerFuncs, submariner.Add)
+func TestSubmariner(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Submariner Suite")
 }
