@@ -1,0 +1,7 @@
+---
+- op: add
+  path: /spec/customresourcedefinitions/owned/1/displayName
+  value: Lighthouse
+- op: add
+  path: /spec/customresourcedefinitions/owned/1/description
+  value: ServiceDiscovery is the Schema for the servicediscoveries API

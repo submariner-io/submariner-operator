@@ -1,0 +1,7 @@
+---
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/displayName
+  value: Submariner
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/description
+  value: Submariner is the Schema for the submariners API

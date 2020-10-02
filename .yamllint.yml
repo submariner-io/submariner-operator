@@ -20,5 +20,11 @@ ignore: |
   /deploy/lighthouse/crds/lighthouse.submariner.io_multiclusterservices.yaml
   /deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml
   /deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml
+  /config/crd/bases/submariner.io_submariners.yaml
+  /config/crd/bases/submariner.io_servicediscoveries.yaml
+  /config/manager/kustomization.yaml
+  /config/manifests/bases/submariner.clusterserviceversion.yaml
+  /bundle
+  /packagemanifests
 
 strict: true
