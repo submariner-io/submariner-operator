@@ -131,6 +131,8 @@ preload-images:
 
 validate: pkg/subctl/operator/common/embeddedyamls/yamls.go
 
+golangci-lint: generate-embeddedyamls
+
 .PHONY: test validate build images ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
 
 else
