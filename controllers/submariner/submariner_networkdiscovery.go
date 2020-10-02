@@ -7,7 +7,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 )
 
-func (r *ReconcileSubmariner) getClusterNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
+func (r *SubmarinerReconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
 	const UnknownPlugin = "unknown"
 
 	// If a previously cached discovery exists, use that
@@ -29,7 +29,7 @@ func (r *ReconcileSubmariner) getClusterNetwork(submariner *submopv1a1.Submarine
 	return r.clusterNetwork, err
 }
 
-func (r *ReconcileSubmariner) discoverNetwork(submariner *submopv1a1.Submariner) error {
+func (r *SubmarinerReconciler) discoverNetwork(submariner *submopv1a1.Submariner) error {
 	clusterNetwork, err := r.getClusterNetwork(submariner)
 	submariner.Status.ClusterCIDR = getCIDR(
 		"Cluster",

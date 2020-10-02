@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
+	ctrl "sigs.k8s.io/controller-runtime"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -52,57 +53,27 @@ const (
 	lighthouseCoreDNSImage = "lighthouse-coredns"
 )
 
-// Add creates a new ServiceDiscovery Controller and adds it to the Manager. The Manager will set fields on the Controller
-// and Start it when the Manager is Started.
-func Add(mgr manager.Manager) error {
-	return add(mgr, newReconciler(mgr))
-}
-
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
+// NewReconciler returns a new ServiceDiscoveryReconciler
+func NewReconciler(mgr manager.Manager) *ServiceDiscoveryReconciler {
 	k8sClient, _ := clientset.NewForConfig(mgr.GetConfig())
 	operatorClient, _ := operatorclient.NewClient(mgr.GetConfig())
-	return &ReconcileServiceDiscovery{
+	return &ServiceDiscoveryReconciler{
 		client:            mgr.GetClient(),
+		log:               ctrl.Log.WithName("controllers").WithName("ServiceDiscovery"),
 		scheme:            mgr.GetScheme(),
 		k8sClientSet:      k8sClient,
 		operatorClientSet: operatorClient}
 }
 
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	// Create a new controller
-	c, err := controller.New("servicediscovery-controller", mgr, controller.Options{Reconciler: r})
-	if err != nil {
-		return err
-	}
+// blank assignment to verify that ServiceDiscoveryReconciler implements reconcile.Reconciler
+var _ reconcile.Reconciler = &ServiceDiscoveryReconciler{}
 
-	// Watch for changes to primary resource ServiceDiscovery
-	err = c.Watch(&source.Kind{Type: &submarinerv1alpha1.ServiceDiscovery{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to secondary resource Deployment and requeue the owner ServiceDiscovery
-	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &submarinerv1alpha1.ServiceDiscovery{},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// blank assignment to verify that ReconcileServiceDiscovery implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileServiceDiscovery{}
-
-// ReconcileServiceDiscovery reconciles a ServiceDiscovery object
-type ReconcileServiceDiscovery struct {
+// ServiceDiscoveryReconciler reconciles a ServiceDiscovery object
+type ServiceDiscoveryReconciler struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client            controllerClient.Client
+	log               logr.Logger
 	scheme            *runtime.Scheme
 	k8sClientSet      clientset.Interface
 	operatorClientSet controllerClient.Client
@@ -116,7 +87,7 @@ type ReconcileServiceDiscovery struct {
 
 // +kubebuilder:rbac:groups=submariner.io,resources=servicediscoveries,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=servicediscoveries/status,verbs=get;update;patch
-func (r *ReconcileServiceDiscovery) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling ServiceDiscovery")
 
@@ -512,4 +483,31 @@ func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, componentImag
 
 	path = fmt.Sprintf("%s:%s", path, spec.Version)
 	return path
+}
+
+func (r *ServiceDiscoveryReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// Create a new controller
+	c, err := controller.New("servicediscovery-controller", mgr, controller.Options{Reconciler: r})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to primary resource ServiceDiscovery
+	err = c.Watch(&source.Kind{Type: &submarinerv1alpha1.ServiceDiscovery{}}, &handler.EnqueueRequestForObject{})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource Deployment and requeue the owner ServiceDiscovery
+	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &submarinerv1alpha1.ServiceDiscovery{},
+	})
+	if err != nil {
+		return err
+	}
+
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&submarinerv1alpha1.ServiceDiscovery{}).
+		Complete(r)
 }
