@@ -14,16 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package servicediscovery_test
+package controllers
 
 import (
-	"testing"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner-operator/controllers/submariner"
 )
 
-func TestSubmariner(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "ServiceDiscoveryTest Suite")
+func init() {
+	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
+	AddToManagerFuncs = append(AddToManagerFuncs, submariner.Add)
 }

@@ -39,7 +39,7 @@ type ServiceDiscoverySpec struct {
 	// +listType=set
 	CustomDomains []string `json:"customDomains,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
@@ -47,17 +47,18 @@ type ServiceDiscoverySpec struct {
 // +k8s:openapi-gen=true
 type ServiceDiscoveryStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // ServiceDiscovery is the Schema for the servicediscoveries API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=servicediscoveries,scope=Namespaced
 // +genclient
+// +operator-sdk:csv:customresourcedefinitions:displayName="Lighthouse"
 type ServiceDiscovery struct {
 	Status            ServiceDiscoveryStatus `json:"status,omitempty"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -65,7 +66,7 @@ type ServiceDiscovery struct {
 	metav1.TypeMeta   `json:",inline"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
 
 // ServiceDiscoveryList contains a list of ServiceDiscovery
 type ServiceDiscoveryList struct {

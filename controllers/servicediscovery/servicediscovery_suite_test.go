@@ -14,13 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package apis
+package servicediscovery_test
 
 import (
-	"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	// +kubebuilder:scaffold:imports
 )
 
-func init() {
-	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
-	AddToSchemes = append(AddToSchemes, v1alpha1.SchemeBuilder.AddToScheme)
+func TestSubmariner(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "ServiceDiscoveryTest Suite")
 }

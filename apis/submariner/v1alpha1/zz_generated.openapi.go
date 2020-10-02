@@ -11,12 +11,12 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscovery":       schema_pkg_apis_submariner_v1alpha1_ServiceDiscovery(ref),
-		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoverySpec":   schema_pkg_apis_submariner_v1alpha1_ServiceDiscoverySpec(ref),
-		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoveryStatus": schema_pkg_apis_submariner_v1alpha1_ServiceDiscoveryStatus(ref),
-		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.Submariner":             schema_pkg_apis_submariner_v1alpha1_Submariner(ref),
-		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec":         schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref),
-		"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus":       schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref),
+		"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.ServiceDiscovery":       schema_pkg_apis_submariner_v1alpha1_ServiceDiscovery(ref),
+		"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.ServiceDiscoverySpec":   schema_pkg_apis_submariner_v1alpha1_ServiceDiscoverySpec(ref),
+		"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.ServiceDiscoveryStatus": schema_pkg_apis_submariner_v1alpha1_ServiceDiscoveryStatus(ref),
+		"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.Submariner":             schema_pkg_apis_submariner_v1alpha1_Submariner(ref),
+		"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.SubmarinerSpec":         schema_pkg_apis_submariner_v1alpha1_SubmarinerSpec(ref),
+		"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.SubmarinerStatus":       schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref),
 	}
 }
 
@@ -29,7 +29,7 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscovery(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoveryStatus"),
+							Ref: ref("github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.ServiceDiscoveryStatus"),
 						},
 					},
 					"metadata": {
@@ -39,7 +39,7 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscovery(ref common.ReferenceCa
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoverySpec"),
+							Ref: ref("github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.ServiceDiscoverySpec"),
 						},
 					},
 					"kind": {
@@ -60,7 +60,7 @@ func schema_pkg_apis_submariner_v1alpha1_ServiceDiscovery(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoverySpec", "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.ServiceDiscoveryStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.ServiceDiscoverySpec", "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.ServiceDiscoveryStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -195,19 +195,19 @@ func schema_pkg_apis_submariner_v1alpha1_Submariner(ref common.ReferenceCallback
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec"),
+							Ref: ref("github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.SubmarinerSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus"),
+							Ref: ref("github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.SubmarinerStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerSpec", "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.SubmarinerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.SubmarinerSpec", "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.SubmarinerStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -414,17 +414,17 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 					},
 					"engineDaemonSetStatus": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.DaemonSetStatus"),
+							Ref: ref("github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.DaemonSetStatus"),
 						},
 					},
 					"routeAgentDaemonSetStatus": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.DaemonSetStatus"),
+							Ref: ref("github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.DaemonSetStatus"),
 						},
 					},
 					"globalnetDaemonSetStatus": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.DaemonSetStatus"),
+							Ref: ref("github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.DaemonSetStatus"),
 						},
 					},
 					"gateways": {
@@ -444,6 +444,6 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1.DaemonSetStatus", "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.GatewayStatus"},
+			"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.DaemonSetStatus", "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1.GatewayStatus"},
 	}
 }

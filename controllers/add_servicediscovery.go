@@ -1,7 +1,7 @@
-package controller
+package controllers
 
 import (
-	"github.com/submariner-io/submariner-operator/pkg/controller/servicediscovery"
+	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 )
 
 func init() {
