@@ -26,7 +26,7 @@ import (
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -53,24 +54,11 @@ import (
 
 var log = logf.Log.WithName("controller_submariner")
 
-// Add creates a new Submariner Controller and adds it to the Manager. The Manager will set fields on the Controller
-// and Start it when the Manager is Started.
-func Add(mgr manager.Manager) error {
-	// These are required so that we can retrieve Gateway objects using the dynamic client
-	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
-		return err
-	}
-	// These are required so that we can manipulate CRDs
-	if err := apiextensions.AddToScheme(mgr.GetScheme()); err != nil {
-		return err
-	}
-	return add(mgr, newReconciler(mgr))
-}
-
-// newReconciler returns a new reconcile.Reconciler
-func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	reconciler := &ReconcileSubmariner{
+// NewReconciler returns a new SubmarinerReconciler
+func NewReconciler(mgr manager.Manager) *SubmarinerReconciler {
+	reconciler := &SubmarinerReconciler{
 		client:         mgr.GetClient(),
+		log:            ctrl.Log.WithName("controllers").WithName("Submariner"),
 		scheme:         mgr.GetScheme(),
 		clientSet:      kubernetes.NewForConfigOrDie(mgr.GetConfig()),
 		dynClient:      dynamic.NewForConfigOrDie(mgr.GetConfig()),
@@ -81,58 +69,15 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	return reconciler
 }
 
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, r reconcile.Reconciler) error {
-	// Create a new controller
-	c, err := controller.New("submariner-controller", mgr, controller.Options{Reconciler: r})
-	if err != nil {
-		return err
-	}
+// blank assignment to verify that SubmarinerReconciler implements reconcile.Reconciler
+var _ reconcile.Reconciler = &SubmarinerReconciler{}
 
-	// Watch for changes to primary resource Submariner
-	err = c.Watch(&source.Kind{Type: &submopv1a1.Submariner{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to secondary resource DaemonSets and requeue the owner Submariner
-	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &submopv1a1.Submariner{},
-	})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to the gateway status in the same namespace
-	mapFn := handler.ToRequestsFunc(
-		func(a handler.MapObject) []reconcile.Request {
-			return []reconcile.Request{
-				{NamespacedName: types.NamespacedName{
-					Name:      "submariner",
-					Namespace: a.Meta.GetNamespace(),
-				}},
-			}
-		})
-	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestsFromMapFunc{
-		ToRequests: mapFn,
-	})
-	if err != nil {
-		log.Error(err, "error watching gateways")
-		// This isn’t fatal
-	}
-
-	return nil
-}
-
-// blank assignment to verify that ReconcileSubmariner implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileSubmariner{}
-
-// ReconcileSubmariner reconciles a Submariner object
-type ReconcileSubmariner struct {
+// SubmarinerReconciler reconciles a Submariner object
+type SubmarinerReconciler struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client         client.Client
+	log            logr.Logger
 	scheme         *runtime.Scheme
 	clientSet      kubernetes.Interface
 	submClient     submarinerclientset.Interface
@@ -148,7 +93,7 @@ type ReconcileSubmariner struct {
 
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners/status,verbs=get;update;patch
-func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Submariner")
 
@@ -255,13 +200,13 @@ func (r *ReconcileSubmariner) Reconcile(request reconcile.Request) (reconcile.Re
 		}
 	}
 
-	if err := r.reconcileServiceDiscovery(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
+	if err := r.serviceDiscoveryReconciler(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
 		return reconcile.Result{}, err
 	}
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileSubmariner) updateDaemonSetStatus(daemonSet *appsv1.DaemonSet, status *submopv1a1.DaemonSetStatus,
+func (r *SubmarinerReconciler) updateDaemonSetStatus(daemonSet *appsv1.DaemonSet, status *submopv1a1.DaemonSetStatus,
 	namespace string) error {
 	if daemonSet != nil {
 		if status == nil {
@@ -283,7 +228,7 @@ func (r *ReconcileSubmariner) updateDaemonSetStatus(daemonSet *appsv1.DaemonSet,
 	return nil
 }
 
-func (r *ReconcileSubmariner) checkDaemonSetContainers(daemonSet *appsv1.DaemonSet,
+func (r *SubmarinerReconciler) checkDaemonSetContainers(daemonSet *appsv1.DaemonSet,
 	namespace string) (bool, *[]corev1.ContainerState, error) {
 	containerStatuses, err := r.retrieveDaemonSetContainerStatuses(daemonSet, namespace)
 	if err != nil {
@@ -307,7 +252,7 @@ func (r *ReconcileSubmariner) checkDaemonSetContainers(daemonSet *appsv1.DaemonS
 	return mismatchedContainerImages, &nonReadyContainerStates, nil
 }
 
-func (r *ReconcileSubmariner) retrieveDaemonSetContainerStatuses(daemonSet *appsv1.DaemonSet,
+func (r *SubmarinerReconciler) retrieveDaemonSetContainerStatuses(daemonSet *appsv1.DaemonSet,
 	namespace string) (*[]corev1.ContainerStatus, error) {
 	pods := &corev1.PodList{}
 	selector, err := metav1.LabelSelectorAsSelector(daemonSet.Spec.Selector)
@@ -325,7 +270,7 @@ func (r *ReconcileSubmariner) retrieveDaemonSetContainerStatuses(daemonSet *apps
 	return &containerStatuses, nil
 }
 
-func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace string) (*[]submv1.Gateway, error) {
+func (r *SubmarinerReconciler) retrieveGateways(owner metav1.Object, namespace string) (*[]submv1.Gateway, error) {
 	foundGateways := &submv1.GatewayList{}
 	err := r.client.List(context.TODO(), foundGateways, client.InNamespace(namespace))
 	if err != nil && errors.IsNotFound(err) {
@@ -343,21 +288,21 @@ func (r *ReconcileSubmariner) retrieveGateways(owner metav1.Object, namespace st
 	return &foundGateways.Items, nil
 }
 
-func (r *ReconcileSubmariner) reconcileEngineDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
+func (r *SubmarinerReconciler) reconcileEngineDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
 	return helpers.ReconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger, r.client, r.scheme)
 }
 
-func (r *ReconcileSubmariner) reconcileRouteagentDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
+func (r *SubmarinerReconciler) reconcileRouteagentDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error) {
 	return helpers.ReconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger, r.client, r.scheme)
 }
 
-func (r *ReconcileSubmariner) reconcileGlobalnetDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
+func (r *SubmarinerReconciler) reconcileGlobalnetDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error) {
 	return helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger, r.client, r.scheme)
 }
 
-func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submopv1a1.Submariner, reqLogger logr.Logger, isEnabled bool) error {
+func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1.Submariner, reqLogger logr.Logger, isEnabled bool) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if isEnabled {
 			sd := newServiceDiscoveryCR(submariner.Namespace)
@@ -702,4 +647,59 @@ const (
 
 func getImagePath(submariner *submopv1a1.Submariner, componentImage string) string {
 	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage)
+}
+
+func (r *SubmarinerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// These are required so that we can retrieve Gateway objects using the dynamic client
+	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
+		return err
+	}
+	// These are required so that we can manipulate CRDs
+	if err := apiextensions.AddToScheme(mgr.GetScheme()); err != nil {
+		return err
+	}
+
+	// Create a new controller
+	c, err := controller.New("submariner-controller", mgr, controller.Options{Reconciler: r})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to primary resource Submariner
+	err = c.Watch(&source.Kind{Type: &submopv1a1.Submariner{}}, &handler.EnqueueRequestForObject{})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to secondary resource DaemonSets and requeue the owner Submariner
+	err = c.Watch(&source.Kind{Type: &appsv1.DaemonSet{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &submopv1a1.Submariner{},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Watch for changes to the gateway status in the same namespace
+	mapFn := handler.ToRequestsFunc(
+		func(a handler.MapObject) []reconcile.Request {
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      "submariner",
+					Namespace: a.Meta.GetNamespace(),
+				}},
+			}
+		})
+	err = c.Watch(&source.Kind{Type: &submv1.Gateway{}}, &handler.EnqueueRequestsFromMapFunc{
+		ToRequests: mapFn,
+	})
+	if err != nil {
+		log.Error(err, "error watching gateways")
+		// This isn’t fatal
+	}
+
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&submopv1a1.Submariner{}).
+		Owns(&appsv1.Deployment{}).
+		Complete(r)
 }

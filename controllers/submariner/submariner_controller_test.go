@@ -91,7 +91,7 @@ func testReconciliation() {
 		initClientObjs  []runtime.Object
 		fakeClient      controllerClient.Client
 		submariner      *submariner_v1.Submariner
-		controller      *ReconcileSubmariner
+		controller      *SubmarinerReconciler
 		reconcileErr    error
 		reconcileResult reconcile.Result
 		clusterNetwork  *network.ClusterNetwork
@@ -118,7 +118,7 @@ func testReconciliation() {
 			fakeClient = newClient()
 		}
 
-		controller = &ReconcileSubmariner{
+		controller = &SubmarinerReconciler{
 			client:         fakeClient,
 			scheme:         scheme.Scheme,
 			clusterNetwork: clusterNetwork,
