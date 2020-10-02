@@ -5,6 +5,7 @@ dist/
 deploy/crds
 deploy/lighthouse/crds/lighthouse.submariner.io_*.yaml
 deploy/submariner/crds
+config/bundle/kustomization.yaml
 output/
 vendor/
 *.coverprofile
