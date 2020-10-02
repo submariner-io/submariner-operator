@@ -18,19 +18,19 @@ const (
 // ServiceImport, ServiceExport and ServiceDiscovery
 func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 	installedMCS, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
-		embeddedyamls.Lighthouse_crds_lighthouse_submariner_io_multiclusterservices_yaml)
+		embeddedyamls.Deploy_lighthouse_crds_lighthouse_submariner_io_multiclusterservices_yaml)
 	if err != nil {
 		return installedMCS, fmt.Errorf("Error creating the MultiClusterServices CRD: %s", err)
 	}
 
 	installedSI, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
-		embeddedyamls.Lighthouse_crds_serviceimport_crd_yaml)
+		embeddedyamls.Deploy_lighthouse_crds_lighthouse_submariner_io_serviceimports_yaml)
 	if err != nil {
 		return installedSI, fmt.Errorf("Error creating the ServiceImport CRD: %s", err)
 	}
 
 	installedMCSSI, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
-		embeddedyamls.Mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
+		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
 
 	if err != nil {
 		return installedMCSSI, fmt.Errorf("Error creating the MCS ServiceImport CRD: %s", err)
@@ -42,20 +42,20 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 	}
 
 	installedSE, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
-		embeddedyamls.Lighthouse_crds_lighthouse_submariner_io_serviceexports_yaml)
+		embeddedyamls.Deploy_lighthouse_crds_lighthouse_submariner_io_serviceexports_yaml)
 
 	if err != nil {
 		return installedSE, fmt.Errorf("Error creating the ServiceExport CRD: %s", err)
 	}
 
 	installedMCSSE, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
-		embeddedyamls.Mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
+		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
 
 	if err != nil {
 		return installedMCSSE, fmt.Errorf("Error creating the MCS ServiceExport CRD: %s", err)
 	}
 
-	installedSD, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Crds_submariner_io_servicediscoveries_yaml)
+	installedSD, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
 		return installedSD, err
 	}
