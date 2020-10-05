@@ -36,6 +36,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/image_overrides"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/service_discovery_cr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 
 	"k8s.io/client-go/rest"
@@ -247,7 +248,8 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, subctlData *datafile.S
 	exitOnError("Error creating SA for cluster", err)
 
 	status.Start("Deploying Submariner")
-	err = submarinercr.Ensure(clientConfig, OperatorNamespace, populateSubmarinerSpec(subctlData, netconfig))
+	submarinerSpec := populateSubmarinerSpec(subctlData, netconfig)
+	err = submarinercr.Ensure(clientConfig, OperatorNamespace, submarinerSpec)
 	if err == nil {
 		status.QueueSuccessMessage("Submariner is up and running")
 		status.End(cli.Success)
@@ -256,6 +258,23 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, subctlData *datafile.S
 		status.End(cli.Failure)
 	}
 	exitOnError("Error deploying Submariner", err)
+
+	// If service discovery is enabled, and the imageOverrides were different
+	// for any of them we deploy the ServiceDiscovery separately, instead of
+	// letting the submariner operator do it
+	if serviceDiscovery && imageOverrides.IsSubmarinerLighthouseUnmatched() {
+		status.Start("Deploying ServiceDiscovery")
+		sdSpec := populateServiceDiscoverySpec(subctlData, netconfig)
+		err = service_discovery_cr.Ensure(clientConfig, OperatorNamespace, sdSpec)
+		if err == nil {
+			status.QueueSuccessMessage("ServiceDiscovery is up and running")
+			status.End(cli.Success)
+		} else {
+			status.QueueFailureMessage("ServiceDiscovery deployment failed")
+			status.End(cli.Failure)
+		}
+		exitOnError("Error deploying Submariner", err)
+	}
 }
 
 func checkRequirements(config *rest.Config) ([]string, error) {
@@ -399,20 +418,38 @@ func isValidClusterID(clusterID string) (bool, error) {
 	return true, nil
 }
 
+func populateServiceDiscoverySpec(subctlData *datafile.SubctlData, netconfig globalnet.Config) submariner.ServiceDiscoverySpec {
+	brokerURL := getBrokerURL(subctlData)
+
+	crImageRegistry, crImageVersion := imageOverrides.GetLighthouseRegistryAndVersion(repository, imageVersion)
+
+	if customDomains == nil && subctlData.CustomDomains != nil {
+		customDomains = *subctlData.CustomDomains
+	}
+
+	serviceDiscoverySpec := submariner.ServiceDiscoverySpec{
+		Repository:               crImageRegistry,
+		Version:                  crImageVersion,
+		BrokerK8sCA:              base64.StdEncoding.EncodeToString(subctlData.ClientToken.Data["ca.crt"]),
+		BrokerK8sRemoteNamespace: string(subctlData.ClientToken.Data["namespace"]),
+		BrokerK8sApiServerToken:  string(clienttoken.Data["token"]),
+		BrokerK8sApiServer:       brokerURL,
+		Debug:                    submarinerDebug,
+		ClusterID:                clusterID,
+		GlobalnetEnabled:         netconfig.GlobalnetCIDR != "",
+		Namespace:                SubmarinerNamespace,
+	}
+
+	if len(customDomains) > 0 {
+		serviceDiscoverySpec.CustomDomains = customDomains
+	}
+	return serviceDiscoverySpec
+}
+
 func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet.Config) submariner.SubmarinerSpec {
-	brokerURL := subctlData.BrokerURL
-	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
-		// Submariner doesn't work with a schema prefix
-		brokerURL = brokerURL[(idx + 3):]
-	}
+	brokerURL := getBrokerURL(subctlData)
 
-	crImageVersion := imageVersion
-
-	if imageVersion == "" {
-		// Default engine version
-		// This is handled in the operator after 0.0.1 (of the operator)
-		crImageVersion = versions.DefaultSubmarinerVersion
-	}
+	crImageRegistry, crImageVersion := imageOverrides.GetSubmarinerRegistryAndVersion(repository, imageVersion)
 
 	// if our network discovery code was capable of discovering those CIDRs
 	// we don't need to explicitly set it in the operator
@@ -431,7 +468,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 	}
 
 	submarinerSpec := submariner.SubmarinerSpec{
-		Repository:               repository,
+		Repository:               crImageRegistry,
 		Version:                  crImageVersion,
 		CeIPSecNATTPort:          nattPort,
 		CeIPSecIKEPort:           ikePort,
@@ -450,23 +487,27 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		ClusterCIDR:              crClusterCIDR,
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
-		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
+		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery && !imageOverrides.IsSubmarinerLighthouseUnmatched(),
 	}
 	if netconfig.GlobalnetCIDR != "" {
 		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR
 	}
-	if len(customDomains) > 0 {
+	if len(customDomains) > 0 && !imageOverrides.IsSubmarinerLighthouseUnmatched() {
 		submarinerSpec.CustomDomains = customDomains
 	}
 	return submarinerSpec
 }
 
-func operatorImage() string {
-	version := imageVersion
-
-	if imageVersion == "" {
-		version = versions.DefaultSubmarinerOperatorVersion
+func getBrokerURL(subctlData *datafile.SubctlData) string {
+	brokerURL := subctlData.BrokerURL
+	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
+		// Submariner doesn't work with a schema prefix
+		brokerURL = brokerURL[(idx + 3):]
 	}
+	return brokerURL
+}
 
-	return images.GetImagePath(repository, version, deployment.OperatorName)
+func operatorImage() string {
+	operatorRepository, operatorVersion := imageOverrides.GetOperatorRegistryAndVersion(repository, imageVersion)
+	return images.GetImagePath(operatorRepository, operatorVersion, deployment.OperatorName)
 }
