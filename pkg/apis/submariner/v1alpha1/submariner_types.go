@@ -63,16 +63,19 @@ type SubmarinerSpec struct {
 // SubmarinerStatus defines the observed state of Submariner
 // +k8s:openapi-gen=true
 type SubmarinerStatus struct {
-	NatEnabled                bool                    `json:"natEnabled"`
-	ColorCodes                string                  `json:"colorCodes,omitempty"`
-	ClusterID                 string                  `json:"clusterID"`
-	ServiceCIDR               string                  `json:"serviceCIDR,omitempty"`
-	ClusterCIDR               string                  `json:"clusterCIDR,omitempty"`
-	GlobalCIDR                string                  `json:"globalCIDR,omitempty"`
-	EngineDaemonSetStatus     DaemonSetStatus         `json:"engineDaemonSetStatus,omitempty"`
-	RouteAgentDaemonSetStatus DaemonSetStatus         `json:"routeAgentDaemonSetStatus,omitempty"`
-	GlobalnetDaemonSetStatus  DaemonSetStatus         `json:"globalnetDaemonSetStatus,omitempty"`
-	Gateways                  *[]submv1.GatewayStatus `json:"gateways,omitempty"`
+	NatEnabled  bool   `json:"natEnabled"`
+	ColorCodes  string `json:"colorCodes,omitempty"`
+	ClusterID   string `json:"clusterID"`
+	ServiceCIDR string `json:"serviceCIDR,omitempty"`
+	ClusterCIDR string `json:"clusterCIDR,omitempty"`
+	GlobalCIDR  string `json:"globalCIDR,omitempty"`
+	// +optional
+	EngineDaemonSetStatus *DaemonSetStatus `json:"engineDaemonSetStatus,omitempty"`
+	// +optional
+	RouteAgentDaemonSetStatus *DaemonSetStatus `json:"routeAgentDaemonSetStatus,omitempty"`
+	// +optional
+	GlobalnetDaemonSetStatus *DaemonSetStatus        `json:"globalnetDaemonSetStatus,omitempty"`
+	Gateways                 *[]submv1.GatewayStatus `json:"gateways,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
