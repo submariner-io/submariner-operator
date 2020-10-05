@@ -35,6 +35,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/image_overrides"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 
 	"k8s.io/client-go/rest"
@@ -67,11 +68,13 @@ var (
 	clienttoken          *v1.Secret
 	globalnetClusterSize uint
 	customDomains        []string
+	imageOverrides       image_overrides.ImageOverrides
 )
 
 func init() {
 	addJoinFlags(joinCmd)
 	addKubeconfigFlag(joinCmd)
+	imageOverrides.AddFlags(joinCmd)
 	rootCmd.AddCommand(joinCmd)
 }
 
