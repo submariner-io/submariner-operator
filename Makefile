@@ -33,7 +33,7 @@ GOOS = $(shell go env GOOS)
 
 # Targets to make
 
-clusters: build
+clusters: build images
 
 deploy: clusters preload-images
 
@@ -45,7 +45,7 @@ test: unit-test
 clean:
 	rm -f $(BINARIES) $(CROSS_BINARIES) $(CROSS_TARBALLS)
 
-build: operator-image $(BINARIES)
+build: $(BINARIES)
 
 build-cross: $(CROSS_TARBALLS)
 
@@ -57,6 +57,8 @@ endif
 
 operator-image: vendor/modules.txt pkg/subctl/operator/common/embeddedyamls/yamls.go
 	operator-sdk build quay.io/submariner/submariner-operator:$(DEV_VERSION) --go-build-args "$(OSDK_BUILD_ARGS)"
+
+images: operator-image
 
 bin/subctl: bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
 	ln -sf $(<F) $@
@@ -79,7 +81,7 @@ bin/subctl-%: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg
 		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION)" \
 		--noupx $@ ./pkg/subctl/main.go
 
-ci: generate-embeddedyamls validate test build
+ci: generate-embeddedyamls validate test build images
 
 generate-embeddedyamls: pkg/subctl/operator/common/embeddedyamls/yamls.go
 
@@ -129,7 +131,7 @@ preload-images:
 
 validate: pkg/subctl/operator/common/embeddedyamls/yamls.go
 
-.PHONY: test validate build ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
+.PHONY: test validate build images ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
 
 else
 
