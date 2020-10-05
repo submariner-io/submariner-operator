@@ -1,15 +1,15 @@
 ---
+name: End to End Tests
+
 on:
   pull_request:
   push:
-    branches:
-      - master
     tags:
       - 'v**'
 
-name: End to End Tests
 jobs:
   e2e:
+    name: E2E
     timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
@@ -18,12 +18,15 @@ jobs:
         globalnet: ['', 'globalnet']
         lighthouse: ['', 'lighthouse']
     steps:
-      - uses: actions/checkout@master
+      - name: Check out the repository
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - run: git fetch origin +refs/tags/*:refs/tags/*
 
-      - name: Reclaim free space!
+      - name: Fetch git tags
+        run: git fetch origin +refs/tags/*:refs/tags/*
+
+      - name: Reclaim free space
         run: |
           sudo swapoff -a
           sudo rm -f /swapfile
@@ -34,7 +37,7 @@ jobs:
         run: |
           make e2e using="${{ matrix.globalnet }} ${{ matrix.lighthouse }}"
 
-      - name: Post Mortem
+      - name: Post mortem
         if: failure()
         run: |
           df -h
