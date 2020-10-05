@@ -46,7 +46,7 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 func getSubmarinerCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
 	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_submariners_crd_yaml, crd); err != nil {
+	if err := embeddedyamls.GetObject(embeddedyamls.Crds_submariner_io_submariners_yaml, crd); err != nil {
 		return nil, err
 	}
 
