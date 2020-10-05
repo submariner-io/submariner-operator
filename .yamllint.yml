@@ -10,7 +10,13 @@ rules:
 
 ignore: |
   /vendor
-  /deploy/crds/submariner.io_servicediscoveries_crd.yaml
-  /deploy/crds/submariner.io_submariners_crd.yaml
+  /deploy/submariner/crds/submariner.io_gateways.yaml
+  /deploy/submariner/crds/submariner.io_endpoints.yaml
+  /deploy/submariner/crds/submariner.io_clusters.yaml
+  /deploy/crds/submariner.io_submariners.yaml
+  /deploy/crds/submariner.io_servicediscoveries.yaml
+  /deploy/lighthouse/crds/lighthouse.submariner.io_serviceimports.yaml
+  /deploy/lighthouse/crds/lighthouse.submariner.io_serviceexports.yaml
+  /deploy/lighthouse/crds/lighthouse.submariner.io_multiclusterservices.yaml
 
 strict: true
