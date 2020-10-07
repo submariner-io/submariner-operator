@@ -40,8 +40,6 @@ deploy: clusters preload-images
 e2e: deploy
 	scripts/kind-e2e/e2e.sh
 
-test: unit-test
-
 clean:
 	rm -f $(BINARIES) $(CROSS_BINARIES) $(CROSS_TARBALLS)
 
@@ -81,7 +79,7 @@ bin/subctl-%: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg
 		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION)" \
 		--noupx $@ ./pkg/subctl/main.go
 
-ci: generate-embeddedyamls golangci-lint markdownlint test build images
+ci: generate-embeddedyamls golangci-lint markdownlint unit build images
 
 generate-embeddedyamls: pkg/subctl/operator/common/embeddedyamls/yamls.go
 
@@ -131,7 +129,9 @@ preload-images:
 
 golangci-lint: generate-embeddedyamls
 
-.PHONY: test build images ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
+unit: generate-embeddedyamls
+
+.PHONY: build images ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
 
 else
 
