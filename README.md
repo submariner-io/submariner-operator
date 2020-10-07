@@ -23,52 +23,9 @@ This release has the latest stable binaries: [latest release](https://github.com
 This release is constantly updated with the latest code, and might be unstable: [devel
 release](https://github.com/submariner-io/submariner-operator/releases/tag/devel)
 
-## Development
+## Building and Testing
 
-### Prerequisites
-
-The build environment uses [Dapper](https://github.com/rancher/dapper), which requires a working Docker setup. You will also need GNU Make.
-
-### Build Operator
-
- You can compile the operator image running:
-
-```shell
-make build-operator
-```
-
-The source code can be validated (golint, gofmt, unit testing) running:
-
-```shell
-make validate test
-```
-
-### Build Subctl
-
-To build subctl locally
-
-```shell
-go mod vendor
-make bin/subctl
-```
-
-You will be able to run subctl using ./bin/subctl from the submariner-operator directory.
-
-### Testing
-
-To run end-to-end tests:
-
-```shell
-make e2e cleanup
-```
-
-### Setup development environment
-
-You will need docker installed in your system, and at least 8GB of RAM. Run:
-
-```shell
-make deploy
-```
+See the [Building and Testing docs on Submainer's website](https://submariner.io/contributing/building_testing/).
 
 ## Reference
 
