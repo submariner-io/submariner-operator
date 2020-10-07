@@ -1,5 +1,5 @@
 ---
-name: Prometheus check
+name: Prometheus Tests
 
 on:
   pull_request:
@@ -7,25 +7,26 @@ on:
 
 jobs:
   check:
+    name: Metrics Exported
     timeout-minutes: 20
     runs-on: ubuntu-latest
     if: |
       ( github.event.action == 'labeled' && github.event.label.name == 'check-prometheus' )
       || ( github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'check-prometheus') )
     steps:
-      - name: Checkout the Shipyard repository
-        uses: actions/checkout@master
+      - name: Check out the Shipyard repository
+        uses: actions/checkout@v2
         with:
           repository: submariner-io/shipyard
 
-      - name: Reclaim free space!
+      - name: Reclaim free space
         run: |
           sudo swapoff -a
           sudo rm -f /swapfile
           df -h
           free -h
 
-      - name: Deploy using the latest image, with Prometheus
+      - name: Deploy clusters+Submariner using the latest image, with Prometheus
         run: make deploy using=prometheus
 
       - name: Expose the first cluster's Prometheus
