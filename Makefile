@@ -81,7 +81,7 @@ bin/subctl-%: pkg/subctl/operator/common/embeddedyamls/yamls.go $(shell find pkg
 		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION)" \
 		--noupx $@ ./pkg/subctl/main.go
 
-ci: generate-embeddedyamls validate test build images
+ci: generate-embeddedyamls golangci-lint markdownlint test build images
 
 generate-embeddedyamls: pkg/subctl/operator/common/embeddedyamls/yamls.go
 
@@ -129,11 +129,9 @@ preload-images:
 		import_image quay.io/submariner/$${image}; \
 	done
 
-validate: pkg/subctl/operator/common/embeddedyamls/yamls.go
-
 golangci-lint: generate-embeddedyamls
 
-.PHONY: test validate build images ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
+.PHONY: test build images ci clean generate-clientset generate-embeddedyamls generate-operator-api operator-image preload-images
 
 else
 
