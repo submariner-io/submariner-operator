@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/controllers/submariner"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -65,7 +65,7 @@ func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageI
 
 func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
 	lighthouseAgentConfig, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).Get(
-		submariner.ServiceDiscoveryCrName, v1.GetOptions{})
+		names.ServiceDiscoveryCrName, v1.GetOptions{})
 
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -74,7 +74,7 @@ func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface,
 		return nil, err
 	}
 
-	versions = append(versions, newVersionInfoFrom(lighthouseAgentConfig.Spec.Repository, submariner.ServiceDiscoveryCrName,
+	versions = append(versions, newVersionInfoFrom(lighthouseAgentConfig.Spec.Repository, names.ServiceDiscoveryCrName,
 		lighthouseAgentConfig.Spec.Version))
 	return versions, nil
 }
