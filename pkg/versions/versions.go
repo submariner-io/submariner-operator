@@ -2,7 +2,7 @@ package versions
 
 const (
 	DefaultSubmarinerRepo            = "quay.io/submariner"
-	DefaultSubmarinerOperatorVersion = "0.6.1"
-	DefaultSubmarinerVersion         = "0.6.1"
-	DefaultLighthouseVersion         = "0.6.1"
+	DefaultSubmarinerOperatorVersion = "0.7.0-rc1"
+	DefaultSubmarinerVersion         = "0.7.0-rc0"
+	DefaultLighthouseVersion         = "0.7.0-rc1"
 )
