@@ -49,6 +49,7 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
@@ -422,7 +423,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 			Containers: []corev1.Container{
 				{
 					Name:            "submariner",
-					Image:           getImagePath(cr, engineImage),
+					Image:           getImagePath(cr, names.EngineImage),
 					ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 					Command:         []string{"submariner.sh"},
 					SecurityContext: &security_context_all_caps_privileged,
@@ -523,7 +524,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-routeagent",
-							Image:           getImagePath(cr, routeAgentImage),
+							Image:           getImagePath(cr, names.RouteAgentImage),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
 							Command:         []string{"submariner-route-agent.sh"},
@@ -598,7 +599,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-globalnet",
-							Image:           getImagePath(cr, globalnetImage),
+							Image:           getImagePath(cr, names.GlobalnetImage),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 							SecurityContext: &security_context_all_cap_allow_escal,
 							VolumeMounts: []corev1.VolumeMount{
@@ -633,17 +634,10 @@ func newServiceDiscoveryCR(namespace string) *submopv1a1.ServiceDiscovery {
 	return &submopv1a1.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
-			Name:      ServiceDiscoveryCrName,
+			Name:      names.ServiceDiscoveryCrName,
 		},
 	}
 }
-
-const (
-	routeAgentImage        = "submariner-route-agent"
-	engineImage            = "submariner"
-	globalnetImage         = "submariner-globalnet"
-	ServiceDiscoveryCrName = "service-discovery"
-)
 
 func getImagePath(submariner *submopv1a1.Submariner, componentImage string) string {
 	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage)
