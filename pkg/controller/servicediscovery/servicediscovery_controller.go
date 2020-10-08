@@ -15,6 +15,8 @@ import (
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -71,6 +73,15 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
+	// Set up the CRDs we need
+	crdUpdater, err := crdutils.NewFromRestConfig(mgr.GetConfig())
+	if err != nil {
+		return err
+	}
+	if _, err := lighthouse.Ensure(crdUpdater, lighthouse.DataCluster); err != nil {
+		return err
+	}
+
 	// Create a new controller
 	c, err := controller.New("servicediscovery-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {

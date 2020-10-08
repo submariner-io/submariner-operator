@@ -20,11 +20,18 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/crds"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/serviceaccount"
 )
 
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string) (bool, error) {
+	if created, err := crds.Ensure(config); err != nil {
+		return created, err
+	} else if created {
+		status.QueueSuccessMessage("Created lighthouse CRDs")
+	}
+
 	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
 		return created, err
 	} else if created {

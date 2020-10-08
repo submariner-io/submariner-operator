@@ -47,7 +47,9 @@ import (
 	submopv1a1 "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/controller/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/engine"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
@@ -56,6 +58,15 @@ var log = logf.Log.WithName("controller_submariner")
 // Add creates a new Submariner Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
+	// Set up the CRDs we need
+	crdUpdater, err := crdutils.NewFromRestConfig(mgr.GetConfig())
+	if err != nil {
+		return err
+	}
+	if err := engine.Ensure(crdUpdater); err != nil {
+		return err
+	}
+
 	// These are required so that we can retrieve Gateway objects using the dynamic client
 	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
 		return err

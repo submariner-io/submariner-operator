@@ -29,9 +29,6 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/apis"
 	"github.com/submariner-io/submariner-operator/pkg/controller"
-	"github.com/submariner-io/submariner-operator/pkg/engine"
-	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -121,23 +118,6 @@ func main() {
 	}
 
 	log.Info("Registering Components.")
-
-	// Set up the CRDs we need
-	crdUpdater, err := crdutils.NewFromRestConfig(cfg)
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-	log.Info("Creating the engine CRDs")
-	if err := engine.Ensure(crdUpdater); err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-	log.Info("Creating the Lighthouse CRDs")
-	if _, err := lighthouse.Ensure(crdUpdater, lighthouse.DataCluster); err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
