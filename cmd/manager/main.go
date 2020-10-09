@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"syscall"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -134,9 +135,14 @@ func main() {
 		os.Exit(1)
 	}
 	log.Info("Creating the Lighthouse CRDs")
-	if _, err := lighthouse.Ensure(crdUpdater, lighthouse.DataCluster); err != nil {
+	updated, err := lighthouse.Ensure(crdUpdater, lighthouse.DataCluster)
+	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
+	}
+	if updated {
+		log.Info("The Lighthouse CRDs were updated, restarting...")
+		restartOperator()
 	}
 
 	// Setup Scheme for all resources
@@ -212,4 +218,19 @@ func serveCRMetrics(cfg *rest.Config) error {
 		return err
 	}
 	return nil
+}
+
+func restartOperator() {
+	binary, err := os.Executable()
+	if err != nil {
+		log.Error(err, "unable to find our executable")
+		// We'll end up crashing and the orchestrator will restart us
+		os.Exit(1)
+	}
+	if err = syscall.Exec(binary, os.Args, os.Environ()); err != nil {
+		log.Error(err, "error restarting the operator")
+		os.Exit(1)
+	}
+	// Something went wrong, rely on the orchestrator to restart us
+	os.Exit(1)
 }
