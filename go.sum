@@ -936,8 +936,8 @@ github.com/submariner-io/lighthouse v0.7.0-rc1 h1:h1aD2rc4XbsLc72yw0MQHULFaeCZuf
 github.com/submariner-io/lighthouse v0.7.0-rc1/go.mod h1:WCWEgB7LqQFv0uWfvPBbGtovOUcp39xSL0bZOqwafJs=
 github.com/submariner-io/shipyard v0.7.1 h1:2+CdN9c7BZX7AUKvBrRkqvha+qqEfbWRjgutbFNaiKo=
 github.com/submariner-io/shipyard v0.7.1/go.mod h1:m2Gs15WS6bCDMY2QUjjeC3p4Q95H+pG2UW4k2S9rhQc=
-github.com/submariner-io/submariner v0.7.0-rc0 h1:eQbm4wn5tdxmD+FZEEGMhnyq6zx7AaXNYHS+yeVrMPQ=
-github.com/submariner-io/submariner v0.7.0-rc0/go.mod h1:R18JimMygPwUKlX5QDu989wpDoWHrC7izibH3Q6iX+E=
+github.com/submariner-io/submariner v0.7.0-rc1 h1:vKbEHQyniCI0em756Gev+c6awzTWJj4HmmgD0BeZ4Rw=
+github.com/submariner-io/submariner v0.7.0-rc1/go.mod h1:R18JimMygPwUKlX5QDu989wpDoWHrC7izibH3Q6iX+E=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
 github.com/thanos-io/thanos v0.11.0/go.mod h1:N/Yes7J68KqvmY+xM6J5CJqEvWIvKSR5sqGtmuD6wDc=
 github.com/tidwall/pretty v0.0.0-20180105212114-65a9db5fad51/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
