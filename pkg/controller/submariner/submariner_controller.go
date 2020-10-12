@@ -669,6 +669,8 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					Volumes: []corev1.Volume{
 						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
 					},
+					// The Globalnet Pod must be able to run on any flagged node, regardless of existing taints
+					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},
 			},
 		},
