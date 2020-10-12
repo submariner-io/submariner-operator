@@ -64,13 +64,15 @@ func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, e
 	}
 
 	for _, item := range rules.Precedence {
-		rules.ExplicitPath = item
-		config, err := getClientConfigAndClusterName(rules, overrides)
-		if err != nil {
-			return nil, err
-		}
+		if item != "" {
+			rules.ExplicitPath = item
+			config, err := getClientConfigAndClusterName(rules, overrides)
+			if err != nil {
+				return nil, err
+			}
 
-		restConfigs = append(restConfigs, config)
+			restConfigs = append(restConfigs, config)
+		}
 	}
 
 	return restConfigs, nil
