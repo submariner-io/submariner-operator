@@ -374,7 +374,8 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submopv1a1.S
 				if len(submariner.Spec.CustomDomains) > 0 {
 					sd.Spec.CustomDomains = submariner.Spec.CustomDomains
 				}
-				return nil
+				// Set the owner and controller
+				return controllerutil.SetControllerReference(submariner, sd, r.scheme)
 			})
 			if err != nil {
 				return err
