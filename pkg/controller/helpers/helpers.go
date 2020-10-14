@@ -37,7 +37,8 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 			for k, v := range daemonSet.Labels {
 				toUpdate.Labels[k] = v
 			}
-			return nil
+			// Set the owner and controller
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
 
 		if err != nil {
