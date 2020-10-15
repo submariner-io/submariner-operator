@@ -101,11 +101,11 @@ func getClients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, e
 	return dynClient, clientSet, nil
 }
 
-func getClusterName(rawConfig clientcmdapi.Config) *string {
-	return getClusterNameFromContext(rawConfig, rawConfig.CurrentContext)
-}
-
 func getClusterNameFromContext(rawConfig clientcmdapi.Config, overridesContext string) *string {
+	if overridesContext == "" {
+		// No context provided, use the current context
+		overridesContext = rawConfig.CurrentContext
+	}
 	context, ok := rawConfig.Contexts[overridesContext]
 	if !ok {
 		return nil

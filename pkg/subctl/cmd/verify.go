@@ -156,17 +156,17 @@ func configureTestingFramework(args []string) {
 
 	// Read the cluster names from the given kubeconfigs
 	for _, config := range args {
-		framework.TestContext.ClusterIDs = append(framework.TestContext.ClusterIDs, clusterNameFromConfig(config))
+		framework.TestContext.ClusterIDs = append(framework.TestContext.ClusterIDs, clusterNameFromConfig(config, ""))
 	}
 
 	config.DefaultReporterConfig.Verbose = verboseConnectivityVerification
 	config.DefaultReporterConfig.SlowSpecThreshold = 60
 }
 
-func clusterNameFromConfig(kubeConfigPath string) string {
+func clusterNameFromConfig(kubeConfigPath, kubeContext string) string {
 	rawConfig, err := getClientConfig(kubeConfigPath, "").RawConfig()
 	exitOnError(fmt.Sprintf("Error obtaining the kube config for path %q", kubeConfigPath), err)
-	cluster := getClusterName(rawConfig)
+	cluster := getClusterNameFromContext(rawConfig, kubeContext)
 	if cluster == nil {
 		exitWithErrorMsg(fmt.Sprintf("Could not obtain the cluster name from kube config: %#v", rawConfig))
 	}
