@@ -121,7 +121,7 @@ var joinCmd = &cobra.Command{
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
 		exitOnError("Error connecting to broker cluster", err)
 		config := getClientConfig(kubeConfig, kubeContext)
-		joinSubmarinerCluster(config, subctlData)
+		joinSubmarinerCluster(config, kubeContext, subctlData)
 	},
 }
 
@@ -134,7 +134,7 @@ func checkArgumentPassed(args []string) error {
 
 var status = cli.NewStatus()
 
-func joinSubmarinerCluster(config clientcmd.ClientConfig, subctlData *datafile.SubctlData) {
+func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, subctlData *datafile.SubctlData) {
 	// Missing information
 	var qs = []*survey.Question{}
 
@@ -142,7 +142,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, subctlData *datafile.S
 		rawConfig, err := config.RawConfig()
 		// This will be fatal later, no point in continuing
 		exitOnError("Error connecting to the target cluster", err)
-		clusterID = *getClusterName(rawConfig)
+		clusterID = *getClusterNameFromContext(rawConfig, contextName)
 	}
 
 	if valid, _ := isValidClusterID(clusterID); !valid {
