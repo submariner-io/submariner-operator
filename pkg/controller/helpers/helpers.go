@@ -37,7 +37,8 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 			for k, v := range daemonSet.Labels {
 				toUpdate.Labels[k] = v
 			}
-			return nil
+			// Set the owner and controller
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
 
 		if err != nil {
@@ -82,7 +83,8 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 			for k, v := range deployment.Labels {
 				toUpdate.Labels[k] = v
 			}
-			return nil
+			// Set the owner and controller
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
 
 		if err != nil {
@@ -127,7 +129,8 @@ func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLog
 			for k, v := range configMap.Labels {
 				toUpdate.Labels[k] = v
 			}
-			return nil
+			// Set the owner and controller
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
 
 		if err != nil {
@@ -172,7 +175,8 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 			for k, v := range service.Labels {
 				toUpdate.Labels[k] = v
 			}
-			return nil
+			// Set the owner and controller
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
 
 		if err != nil {
