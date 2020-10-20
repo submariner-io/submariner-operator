@@ -15,7 +15,8 @@ type benchmarkTestParams struct {
 	ClientPodScheduling framework.NetworkPodScheduling
 }
 
-func StartLatencyTests(intraCluster bool) {
+func StartLatencyTests(intraCluster, verbose bool) {
+	benchmark_verbose = verbose
 	var f *framework.Framework
 
 	gomega.RegisterFailHandler(func(message string, callerSkip ...int) {
@@ -94,5 +95,5 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 		nettestClientPod.Pod.Name, clusterAName, nettestClientPod.Pod.Spec.NodeName, remoteIP))
 
 	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
-	nettestClientPod.AwaitFinish()
+	nettestClientPod.AwaitFinishVerbose(benchmark_verbose)
 }

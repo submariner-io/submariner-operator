@@ -9,7 +9,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func StartThroughputTests(intraCluster bool) {
+var benchmark_verbose bool
+
+func StartThroughputTests(intraCluster, verbose bool) {
+	benchmark_verbose = verbose
 	var f *framework.Framework
 
 	gomega.RegisterFailHandler(func(message string, callerSkip ...int) {
@@ -59,8 +62,16 @@ func StartThroughputTests(intraCluster bool) {
 	cleanupFramework(f)
 }
 
+var By = func(str string) {
+	if benchmark_verbose {
+		fmt.Println(str)
+	}
+}
+
 func initFramework(baseName string) *framework.Framework {
 	f := framework.NewBareFramework(baseName)
+	framework.SetStatusFunction(By)
+
 	framework.ValidateFlags(framework.TestContext)
 	framework.BeforeSuite()
 	f.BeforeEach()
@@ -105,5 +116,5 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 		nettestClientPod.Pod.Name, clientClusterName, nettestClientPod.Pod.Spec.NodeName, remoteIP))
 
 	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
-	nettestClientPod.AwaitFinish()
+	nettestClientPod.AwaitFinishVerbose(benchmark_verbose)
 }
