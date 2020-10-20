@@ -4,7 +4,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.1.1
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.19.9
+	github.com/go-openapi/spec v0.19.10
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.14.2
@@ -16,9 +16,9 @@ require (
 	github.com/prometheus/client_golang v1.5.1
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/lighthouse v0.7.0-rc2
+	github.com/submariner-io/lighthouse v0.7.0
 	github.com/submariner-io/shipyard v0.7.1
-	github.com/submariner-io/submariner v0.7.0-rc2
+	github.com/submariner-io/submariner v0.7.0
 	k8s.io/api v0.18.0-rc.1
 	k8s.io/apiextensions-apiserver v0.17.8
 	k8s.io/apimachinery v0.18.3
