@@ -47,3 +47,14 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - "*"
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - delete
