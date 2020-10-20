@@ -940,6 +940,7 @@ github.com/submariner-io/lighthouse v0.7.0 h1:Fge93n+Q+fZbYYikIpqHlBAsxZWq2jrnhc
 github.com/submariner-io/lighthouse v0.7.0/go.mod h1:IUHx2fGOpHJl0cQEsHZyv2dGbToI8TjovpMoKhxwSx0=
 github.com/submariner-io/shipyard v0.7.1 h1:2+CdN9c7BZX7AUKvBrRkqvha+qqEfbWRjgutbFNaiKo=
 github.com/submariner-io/shipyard v0.7.1/go.mod h1:m2Gs15WS6bCDMY2QUjjeC3p4Q95H+pG2UW4k2S9rhQc=
+github.com/submariner-io/shipyard v0.7.2/go.mod h1:m4Qj1bHIgQBmp/CoPQOhsQDaQJvaF9YV3oyDLNfecRg=
 github.com/submariner-io/submariner v0.7.0 h1:Irq+hnvQpZtjWDzmrUW5D7793IWKe2+viH5G3ChowfU=
 github.com/submariner-io/submariner v0.7.0/go.mod h1:/Zzj4eQcI4w/GV4x6t8JorwlaDdwU9c19HFhicN84HA=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
