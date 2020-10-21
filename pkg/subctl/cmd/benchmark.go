@@ -9,7 +9,6 @@ import (
 
 var (
 	intraCluster bool
-	verbose      bool
 
 	benchmarkCmd = &cobra.Command{
 		Use:   "benchmark",
@@ -47,7 +46,7 @@ func init() {
 
 func addBenchmarkFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, "Runs the test within a single cluster")
-	cmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Produce verbose logs during benchmark tests")
+	cmd.PersistentFlags().BoolVar(&benchmark.Verbose, "verbose", false, "Produce verbose logs during benchmark tests")
 }
 
 func checkBenchmarkArguments(args []string, intraCluster bool) error {
@@ -62,17 +61,17 @@ func checkBenchmarkArguments(args []string, intraCluster bool) error {
 func testThroughput(cmd *cobra.Command, args []string) {
 	configureTestingFramework(args)
 
-	if verbose {
+	if benchmark.Verbose {
 		fmt.Printf("Performing throughput tests\n")
 	}
-	benchmark.StartThroughputTests(intraCluster, verbose)
+	benchmark.StartThroughputTests(intraCluster)
 }
 
 func testLatency(cmd *cobra.Command, args []string) {
 	configureTestingFramework(args)
 
-	if verbose {
+	if benchmark.Verbose {
 		fmt.Printf("Performing latency tests\n")
 	}
-	benchmark.StartLatencyTests(intraCluster, verbose)
+	benchmark.StartLatencyTests(intraCluster)
 }
