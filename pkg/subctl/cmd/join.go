@@ -142,7 +142,10 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		rawConfig, err := config.RawConfig()
 		// This will be fatal later, no point in continuing
 		exitOnError("Error connecting to the target cluster", err)
-		clusterID = *getClusterNameFromContext(rawConfig, contextName)
+		clusterName := getClusterNameFromContext(rawConfig, contextName)
+		if clusterName != nil {
+			clusterID = *clusterName
+		}
 	}
 
 	if valid, _ := isValidClusterID(clusterID); !valid {
