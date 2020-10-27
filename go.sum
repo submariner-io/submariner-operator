@@ -368,6 +368,7 @@ github.com/go-openapi/spec v0.19.3/go.mod h1:FpwSN1ksY1eteniUU7X0N/BgJ7a4WvBFVA8
 github.com/go-openapi/spec v0.19.4/go.mod h1:FpwSN1ksY1eteniUU7X0N/BgJ7a4WvBFVA8Lj9mJglo=
 github.com/go-openapi/spec v0.19.10 h1:pcNevfYytLaOQuTju0wm6OqcqU/E/pRwuSGigrLTI28=
 github.com/go-openapi/spec v0.19.10/go.mod h1:vqK/dIdLGCosfvYsQV3WfC7N3TiZSnGY2RZKoFK7X28=
+github.com/go-openapi/spec v0.19.11/go.mod h1:vqK/dIdLGCosfvYsQV3WfC7N3TiZSnGY2RZKoFK7X28=
 github.com/go-openapi/strfmt v0.17.0/go.mod h1:P82hnJI0CXkErkXi8IKjPbNBM6lV6+5pLP5l494TcyU=
 github.com/go-openapi/strfmt v0.17.2/go.mod h1:P82hnJI0CXkErkXi8IKjPbNBM6lV6+5pLP5l494TcyU=
 github.com/go-openapi/strfmt v0.18.0/go.mod h1:P82hnJI0CXkErkXi8IKjPbNBM6lV6+5pLP5l494TcyU=
