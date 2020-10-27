@@ -94,5 +94,5 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 		nettestClientPod.Pod.Name, clusterAName, nettestClientPod.Pod.Spec.NodeName, remoteIP))
 
 	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
-	nettestClientPod.AwaitFinish()
+	nettestClientPod.AwaitFinishVerbose(Verbose)
 }

@@ -36,14 +36,17 @@ var (
 )
 
 func init() {
-	msg := "Runs the test within a single cluster"
-	benchmarkLatencyCmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, msg)
-
-	benchmarkThroughputCmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, msg)
+	addBenchmarkFlags(benchmarkLatencyCmd)
+	addBenchmarkFlags(benchmarkThroughputCmd)
 
 	benchmarkCmd.AddCommand(benchmarkThroughputCmd)
 	benchmarkCmd.AddCommand(benchmarkLatencyCmd)
 	rootCmd.AddCommand(benchmarkCmd)
+}
+
+func addBenchmarkFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, "Runs the test within a single cluster")
+	cmd.PersistentFlags().BoolVar(&benchmark.Verbose, "verbose", false, "Produce verbose logs during benchmark tests")
 }
 
 func checkBenchmarkArguments(args []string, intraCluster bool) error {
@@ -58,13 +61,17 @@ func checkBenchmarkArguments(args []string, intraCluster bool) error {
 func testThroughput(cmd *cobra.Command, args []string) {
 	configureTestingFramework(args)
 
-	fmt.Printf("Performing throughput tests\n")
+	if benchmark.Verbose {
+		fmt.Printf("Performing throughput tests\n")
+	}
 	benchmark.StartThroughputTests(intraCluster)
 }
 
 func testLatency(cmd *cobra.Command, args []string) {
 	configureTestingFramework(args)
 
-	fmt.Printf("Performing latency tests\n")
+	if benchmark.Verbose {
+		fmt.Printf("Performing latency tests\n")
+	}
 	benchmark.StartLatencyTests(intraCluster)
 }
