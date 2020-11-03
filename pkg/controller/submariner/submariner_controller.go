@@ -590,6 +590,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
 								{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
 								{Name: "SUBMARINER_GLOBALCIDR", Value: cr.Spec.GlobalCIDR},
+								{Name: "SUBMARINER_NETWORKPLUGIN", Value: cr.Status.NetworkPlugin},
 							},
 						},
 					},

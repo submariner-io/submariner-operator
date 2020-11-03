@@ -105,17 +105,17 @@ func testReconciliation() {
 		fakeClient = nil
 		submariner = newSubmariner()
 		initClientObjs = []runtime.Object{submariner}
-	})
-
-	JustBeforeEach(func() {
-		if fakeClient == nil {
-			fakeClient = newClient()
-		}
 
 		clusterNetwork = &network.ClusterNetwork{
 			NetworkPlugin: "fake",
 			ServiceCIDRs:  []string{testDetectedServiceCIDR},
 			PodCIDRs:      []string{testDetectedClusterCIDR},
+		}
+	})
+
+	JustBeforeEach(func() {
+		if fakeClient == nil {
+			fakeClient = newClient()
 		}
 
 		controller = &ReconcileSubmariner{
@@ -326,6 +326,7 @@ func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client cont
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Status.ClusterCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Status.ServiceCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NETWORKPLUGIN", "fake"))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
 
@@ -392,6 +393,7 @@ func newSubmariner() *submariner_v1.Submariner {
 func withNetworkDiscovery(submariner *submariner_v1.Submariner, clusterNetwork *network.ClusterNetwork) *submariner_v1.Submariner {
 	submariner.Status.ClusterCIDR = getClusterCIDR(submariner, clusterNetwork)
 	submariner.Status.ServiceCIDR = getServiceCIDR(submariner, clusterNetwork)
+	submariner.Status.NetworkPlugin = clusterNetwork.NetworkPlugin
 	return submariner
 }
 
