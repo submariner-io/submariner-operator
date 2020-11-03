@@ -69,6 +69,7 @@ type SubmarinerStatus struct {
 	ServiceCIDR               string                  `json:"serviceCIDR,omitempty"`
 	ClusterCIDR               string                  `json:"clusterCIDR,omitempty"`
 	GlobalCIDR                string                  `json:"globalCIDR,omitempty"`
+	NetworkPlugin             string                  `json:"networkPlugin,omitempty"`
 	EngineDaemonSetStatus     DaemonSetStatus         `json:"engineDaemonSetStatus,omitempty"`
 	RouteAgentDaemonSetStatus DaemonSetStatus         `json:"routeAgentDaemonSetStatus,omitempty"`
 	GlobalnetDaemonSetStatus  DaemonSetStatus         `json:"globalnetDaemonSetStatus,omitempty"`
