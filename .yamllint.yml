@@ -18,5 +18,7 @@ ignore: |
   /deploy/lighthouse/crds/lighthouse.submariner.io_serviceimports.yaml
   /deploy/lighthouse/crds/lighthouse.submariner.io_serviceexports.yaml
   /deploy/lighthouse/crds/lighthouse.submariner.io_multiclusterservices.yaml
+  /deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml
+  /deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml
 
 strict: true

@@ -374,7 +374,8 @@ func (r *ReconcileSubmariner) reconcileServiceDiscovery(submariner *submopv1a1.S
 				if len(submariner.Spec.CustomDomains) > 0 {
 					sd.Spec.CustomDomains = submariner.Spec.CustomDomains
 				}
-				return nil
+				// Set the owner and controller
+				return controllerutil.SetControllerReference(submariner, sd, r.scheme)
 			})
 			if err != nil {
 				return err
@@ -589,6 +590,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
 								{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
 								{Name: "SUBMARINER_GLOBALCIDR", Value: cr.Spec.GlobalCIDR},
+								{Name: "SUBMARINER_NETWORKPLUGIN", Value: cr.Status.NetworkPlugin},
 							},
 						},
 					},
@@ -669,6 +671,8 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					Volumes: []corev1.Volume{
 						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
 					},
+					// The Globalnet Pod must be able to run on any flagged node, regardless of existing taints
+					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},
 			},
 		},

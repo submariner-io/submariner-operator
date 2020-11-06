@@ -29,9 +29,16 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 		return installedSI, fmt.Errorf("Error creating the ServiceImport CRD: %s", err)
 	}
 
+	installedMCSSI, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
+		embeddedyamls.Mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
+
+	if err != nil {
+		return installedMCSSI, fmt.Errorf("Error creating the MCS ServiceImport CRD: %s", err)
+	}
+
 	// The broker does not need the ServiceExport or ServiceDiscovery
 	if isBroker {
-		return installedMCS || installedSI, nil
+		return installedMCS || installedMCSSI || installedSI, nil
 	}
 
 	installedSE, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
@@ -41,10 +48,17 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 		return installedSE, fmt.Errorf("Error creating the ServiceExport CRD: %s", err)
 	}
 
+	installedMCSSE, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
+		embeddedyamls.Mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
+
+	if err != nil {
+		return installedMCSSE, fmt.Errorf("Error creating the MCS ServiceExport CRD: %s", err)
+	}
+
 	installedSD, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
 		return installedSD, err
 	}
 
-	return installedMCS || installedSI || installedSE || installedSD, nil
+	return installedMCS || installedMCSSI || installedSI || installedSE || installedSD || installedMCSSE, nil
 }

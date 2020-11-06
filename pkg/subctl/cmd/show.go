@@ -64,13 +64,15 @@ func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, e
 	}
 
 	for _, item := range rules.Precedence {
-		rules.ExplicitPath = item
-		config, err := getClientConfigAndClusterName(rules, overrides)
-		if err != nil {
-			return nil, err
-		}
+		if item != "" {
+			rules.ExplicitPath = item
+			config, err := getClientConfigAndClusterName(rules, overrides)
+			if err != nil {
+				return nil, err
+			}
 
-		restConfigs = append(restConfigs, config)
+			restConfigs = append(restConfigs, config)
+		}
 	}
 
 	return restConfigs, nil
@@ -88,13 +90,7 @@ func getClientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, ov
 		return restConfig{}, err
 	}
 
-	var clusterName *string
-
-	if overrides.CurrentContext != "" {
-		clusterName = getClusterNameFromContext(raw, overrides.CurrentContext)
-	} else {
-		clusterName = getClusterName(raw)
-	}
+	clusterName := getClusterNameFromContext(raw, overrides.CurrentContext)
 
 	if clusterName == nil {
 		return restConfig{}, fmt.Errorf("Could not obtain the cluster name from kube config: %#v", raw)
