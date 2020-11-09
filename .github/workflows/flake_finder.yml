@@ -37,3 +37,18 @@ jobs:
           df -h
           free -h
           make post-mortem
+
+      - name: Raise an issue to report flaky test failure
+        id: create-issue
+        if: ${{ failure() }}
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FLAKY_CABLE_DRIVER: ${{ matrix.cable_driver }}
+          FLAKY_GLOBALNET: ${{ matrix.globalnet }}
+          FLAKY_LIGHTHOUSE: ${{ matrix.lighthouse }}
+        with:
+          filename: .github/ISSUE_TEMPLATE/broken-link.md
+
+      - name: Provide issue URL
+        run: 'echo Created issue to record flaky failure: ${{ steps.create-issue.outputs.url }}'
