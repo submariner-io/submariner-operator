@@ -60,7 +60,7 @@ func Ensure(crdUpdater crdutils.CRDUpdater) error {
 func newEndpointsCRD() (*apiextensions.CustomResourceDefinition, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(embeddedyamls.Submariner_crds_submariner_io_endpoints_yaml, crd); err != nil {
+	if err := embeddedyamls.GetObject(embeddedyamls.Deploy_submariner_crds_submariner_io_endpoints_yaml, crd); err != nil {
 		return nil, err
 	}
 
@@ -70,7 +70,7 @@ func newEndpointsCRD() (*apiextensions.CustomResourceDefinition, error) {
 func newClustersCRD() (*apiextensions.CustomResourceDefinition, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(embeddedyamls.Submariner_crds_submariner_io_clusters_yaml, crd); err != nil {
+	if err := embeddedyamls.GetObject(embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml, crd); err != nil {
 		return nil, err
 	}
 
@@ -80,7 +80,7 @@ func newClustersCRD() (*apiextensions.CustomResourceDefinition, error) {
 func newGatewaysCRD() (*apiextensions.CustomResourceDefinition, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(embeddedyamls.Submariner_crds_submariner_io_gateways_yaml, crd); err != nil {
+	if err := embeddedyamls.GetObject(embeddedyamls.Deploy_submariner_crds_submariner_io_gateways_yaml, crd); err != nil {
 		return nil, err
 	}
 

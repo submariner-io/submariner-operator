@@ -25,7 +25,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 
-	submariner "github.com/submariner-io/submariner-operator/pkg/apis/submariner/v1alpha1"
+	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 )
 

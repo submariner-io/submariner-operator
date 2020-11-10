@@ -32,5 +32,5 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, fmt.Errorf("error creating the api extensions client: %s", err)
 	}
 
-	return utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Crds_submariner_io_servicediscoveries_yaml)
+	return utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 }

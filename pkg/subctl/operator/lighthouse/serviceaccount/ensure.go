@@ -82,7 +82,7 @@ func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) 
 
 func getOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding, error) {
 	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
-	err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_cluster_role_binding_yaml, clusterRoleBinding)
+	err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_lighthouse_cluster_role_binding_yaml, clusterRoleBinding)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func getOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding
 
 func getOperatorClusterRole() (*rbacv1.ClusterRole, error) {
 	role := &rbacv1.ClusterRole{}
-	err := embeddedyamls.GetObject(embeddedyamls.Lighthouse_cluster_role_yaml, role)
+	err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_lighthouse_cluster_role_yaml, role)
 	if err != nil {
 		return nil, err
 	}
