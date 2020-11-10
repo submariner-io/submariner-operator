@@ -22,7 +22,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
@@ -72,7 +72,7 @@ func CreateOrUpdateClusterRoleBinding(clientSet clientset.Interface, clusterRole
 	return false, err
 }
 
-func CreateOrUpdateCRD(updater crdutils.CRDUpdater, crd *apiextensionsv1beta1.CustomResourceDefinition) (bool, error) {
+func CreateOrUpdateCRD(updater crdutils.CRDUpdater, crd *apiextensions.CustomResourceDefinition) (bool, error) {
 	_, err := updater.Create(crd)
 	if err == nil {
 		return true, nil
@@ -93,7 +93,7 @@ func CreateOrUpdateCRD(updater crdutils.CRDUpdater, crd *apiextensionsv1beta1.Cu
 }
 
 func CreateOrUpdateEmbeddedCRD(updater crdutils.CRDUpdater, crdYaml string) (bool, error) {
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
+	crd := &apiextensions.CustomResourceDefinition{}
 
 	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
 		return false, fmt.Errorf("Error extracting embedded CRD: %s", err)
