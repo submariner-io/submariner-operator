@@ -11,7 +11,7 @@ require (
 	github.com/onsi/gomega v1.10.3
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
-	github.com/operator-framework/operator-lib v0.1.0
+	github.com/operator-framework/operator-lib v0.2.0
 	github.com/operator-framework/operator-sdk v0.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.5.1
