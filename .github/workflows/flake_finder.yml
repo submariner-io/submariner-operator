@@ -1,0 +1,55 @@
+---
+name: Flake Finder
+
+on:
+  schedule:
+    - cron: "0 0,1,2 * * *"
+    - cron: "0 0/2 * * 6"
+
+jobs:
+  e2e:
+    name: E2E
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cable_driver: ['libreswan', 'strongswan', 'wireguard']
+        globalnet: ['', 'globalnet']
+        lighthouse: ['', 'lighthouse']
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Reclaim free space
+        run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          df -h
+          free -h
+
+      - name: Run E2E deployment and tests
+        run: |
+          make e2e using="${{ matrix.cable_driver }} ${{ matrix.globalnet }} ${{ matrix.lighthouse }}"
+
+      - name: Post mortem
+        if: failure()
+        run: |
+          df -h
+          free -h
+          make post-mortem
+
+      - name: Raise an issue to report flaky test failure
+        id: create-issue
+        if: ${{ failure() }}
+        uses: JasonEtco/create-an-issue@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FLAKY_CABLE_DRIVER: ${{ matrix.cable_driver }}
+          FLAKY_GLOBALNET: ${{ matrix.globalnet }}
+          FLAKY_LIGHTHOUSE: ${{ matrix.lighthouse }}
+        with:
+          filename: .github/ISSUE_TEMPLATE/broken-link.md
+
+      - name: Provide issue URL
+        run: 'echo Created issue to record flaky failure: ${{ steps.create-issue.outputs.url }}'
