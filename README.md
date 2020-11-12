@@ -19,9 +19,9 @@ It's available on [OperatorHub:submariner](https://operatorhub.io/operator/subma
 
 Please refer the quickstart guides:
 
-* [OpenShift AWS](https://submariner.io/quickstart/openshift/)
-* [OpenShift AWS With Service Discovery](https://submariner.io/quickstart/openshift/service_discovery/)
-* [OpenShift With Service Discovery And GlobalNet](https://submariner.io/quickstart/openshift/globalnet/)
+* [kind (local)](https://submariner.io/quickstart/kind/)
+* [OpenShift (AWS)](https://submariner.io/quickstart/openshift/)
+* [OpenShift with Globalnet (AWS)](https://submariner.io/quickstart/openshift/globalnet/)
 
 ## Subctl Releases
 
