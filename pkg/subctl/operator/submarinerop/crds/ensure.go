@@ -17,7 +17,7 @@ limitations under the License.
 package crds
 
 import (
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
@@ -43,8 +43,8 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	return utils.CreateOrUpdateCRD(crdUpdater, submarinerCrd)
 }
 
-func getSubmarinerCRD() (*apiextensionsv1beta1.CustomResourceDefinition, error) {
-	crd := &apiextensionsv1beta1.CustomResourceDefinition{}
+func getSubmarinerCRD() (*apiextensions.CustomResourceDefinition, error) {
+	crd := &apiextensions.CustomResourceDefinition{}
 
 	if err := embeddedyamls.GetObject(embeddedyamls.Deploy_crds_submariner_io_submariners_yaml, crd); err != nil {
 		return nil, err

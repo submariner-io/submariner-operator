@@ -54,8 +54,8 @@ PKG_MAN_OPTS ?= $(PKG_FROM_VERSION) $(PKG_CHANNELS) $(PKG_IS_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/submariner/submariner-operator:$(VERSION)
-# Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
-CRD_OPTIONS ?= "crd:trivialVersions=true"
+# Produce v1 CRDs, requiring Kubernetes 1.16 or later
+CRD_OPTIONS ?= "crd:crdVersions=v1,trivialVersions=false"
 # Semantic versioning regex
 PATTERN := ^([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$
 
@@ -122,18 +122,18 @@ pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/em
 
 # Operator CRDs
 deploy/crds/submariner.io_servicediscoveries.yaml: ./apis/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
-	controller-gen crd paths="./..." output:crd:artifacts:config=deploy/crds
+	controller-gen $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
 
 deploy/crds/submariner.io_submariners.yaml: ./apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
-	controller-gen crd paths="./..." output:crd:artifacts:config=deploy/crds
+	controller-gen $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
 
 # Lighthouse CRDs
 deploy/lighthouse/crds/lighthouse.submariner.io_multiclusterservices.yaml deploy/lighthouse/crds/lighthouse.submariner.io_serviceexports.yaml deploy/lighthouse/crds/lighthouse.submariner.io_serviceimports.yaml: vendor/modules.txt
-	cd vendor/github.com/submariner-io/lighthouse && controller-gen crd paths="./..." output:crd:artifacts:config=../../../../deploy/lighthouse/crds
+	cd vendor/github.com/submariner-io/lighthouse && controller-gen $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../../../../deploy/lighthouse/crds
 
 # Submariner CRDs
 deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: vendor/modules.txt
-	cd vendor/github.com/submariner-io/submariner && controller-gen crd paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
+	cd vendor/github.com/submariner-io/submariner && controller-gen $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
 
 # Generate the clientset for the Submariner APIs
 # It needs to be run when the Submariner APIs change

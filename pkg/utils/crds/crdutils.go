@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -28,9 +28,9 @@ import (
 )
 
 type CRDUpdater interface {
-	Create(*v1beta1.CustomResourceDefinition) (*v1beta1.CustomResourceDefinition, error)
-	Update(*v1beta1.CustomResourceDefinition) (*v1beta1.CustomResourceDefinition, error)
-	Get(name string, options v1.GetOptions) (*v1beta1.CustomResourceDefinition, error)
+	Create(*apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error)
+	Update(*apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error)
+	Get(name string, options v1.GetOptions) (*apiextensions.CustomResourceDefinition, error)
 }
 
 type controllerClientCreator struct {
@@ -46,7 +46,7 @@ func NewFromRestConfig(config *rest.Config) (CRDUpdater, error) {
 }
 
 func NewFromClientSet(cs clientset.Interface) CRDUpdater {
-	return cs.ApiextensionsV1beta1().CustomResourceDefinitions()
+	return cs.ApiextensionsV1().CustomResourceDefinitions()
 }
 
 func NewFromControllerClient(controllerClient client.Client) CRDUpdater {
@@ -55,18 +55,18 @@ func NewFromControllerClient(controllerClient client.Client) CRDUpdater {
 	}
 }
 
-func (c *controllerClientCreator) Create(crd *v1beta1.CustomResourceDefinition) (*v1beta1.CustomResourceDefinition, error) {
+func (c *controllerClientCreator) Create(crd *apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error) {
 	err := c.client.Create(context.TODO(), crd)
 	return crd, err
 }
 
-func (c *controllerClientCreator) Update(crd *v1beta1.CustomResourceDefinition) (*v1beta1.CustomResourceDefinition, error) {
+func (c *controllerClientCreator) Update(crd *apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error) {
 	err := c.client.Update(context.TODO(), crd)
 	return crd, err
 }
 
-func (c *controllerClientCreator) Get(name string, options v1.GetOptions) (*v1beta1.CustomResourceDefinition, error) {
-	crd := &v1beta1.CustomResourceDefinition{}
+func (c *controllerClientCreator) Get(name string, options v1.GetOptions) (*apiextensions.CustomResourceDefinition, error) {
+	crd := &apiextensions.CustomResourceDefinition{}
 	err := c.client.Get(context.TODO(), client.ObjectKey{Name: name}, crd)
 	if err != nil {
 		return nil, err

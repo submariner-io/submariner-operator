@@ -24,7 +24,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	extendedfakeclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
@@ -111,12 +111,12 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 
 var _ = Describe("CreateOrUpdateCRD", func() {
 	var (
-		crd    *apiextensionsv1beta1.CustomResourceDefinition
+		crd    *apiextensions.CustomResourceDefinition
 		client *extendedfakeclientset.Clientset
 	)
 
 	BeforeEach(func() {
-		crd = &apiextensionsv1beta1.CustomResourceDefinition{}
+		crd = &apiextensions.CustomResourceDefinition{}
 		err := embeddedyamls.GetObject(embeddedyamls.Deploy_crds_submariner_io_submariners_yaml, crd)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = extendedfakeclientset.NewSimpleClientset()
@@ -128,7 +128,7 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdCrd, err := client.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
+			createdCrd, err := client.ApiextensionsV1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdCrd.Spec.Names.Kind).Should(Equal("Submariner"))
 		})
