@@ -1,7 +1,3 @@
----
-title: Flaky Failure: make e2e using="{{ env.FLAKY_CABLE_DRIVER }},{{ env.FLAKY_GLOBALNET }},{{ env.FLAKY_LIGHTHOUSE }}" {{ date | date('YYYY-MM-DD HH:mm') }}
----
+Periodic end-to-end tests against the main branch failed, which might mean there was a flaky failure.
 
-The periodic end-to-end tests meant to find flaky failures failed, which might mean there was a flaky failure.
-
-Please check the {{ workflow }} workflow, {{ action }} job in the {{ repo }} repository.
+Please check the [Flake Finder workflow](https://github.com/submariner-io/submariner-operator/actions?query=workflow%3A%22Flake+Finder%22).
