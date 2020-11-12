@@ -40,16 +40,9 @@ jobs:
           make post-mortem
 
       - name: Raise an issue to report flaky test failure
-        id: create-issue
         if: ${{ failure() }}
-        uses: JasonEtco/create-an-issue@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FLAKY_CABLE_DRIVER: ${{ matrix.cable_driver }}
-          FLAKY_GLOBALNET: ${{ matrix.globalnet }}
-          FLAKY_LIGHTHOUSE: ${{ matrix.lighthouse }}
+        uses: peter-evans/create-issue-from-file@v2.3.1
         with:
-          filename: .github/ISSUE_TEMPLATE/broken-link.md
-
-      - name: Provide issue URL
-        run: 'echo Created issue to record flaky failure: ${{ steps.create-issue.outputs.url }}'
+          title: Flaky Failure make e2e using="${{ matrix.cable_driver }} ${{ matrix.globalnet }} ${{ matrix.lighthouse }}"
+          content-filepath: .github/ISSUE_TEMPLATE/flaky_failure_automated.md
+          labels: automated, flaky failure
