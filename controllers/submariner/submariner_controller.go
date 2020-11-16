@@ -319,6 +319,7 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1
 					ClusterID:                submariner.Spec.ClusterID,
 					Namespace:                submariner.Spec.Namespace,
 					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
+					ImageOverrides:           submariner.Spec.ImageOverrides,
 				}
 				if len(submariner.Spec.CustomDomains) > 0 {
 					sd.Spec.CustomDomains = submariner.Spec.CustomDomains
@@ -645,7 +646,8 @@ func newServiceDiscoveryCR(namespace string) *submopv1a1.ServiceDiscovery {
 }
 
 func getImagePath(submariner *submopv1a1.Submariner, componentImage string) string {
-	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage)
+	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage,
+		submariner.Spec.ImageOverrides)
 }
 
 func (r *SubmarinerReconciler) SetupWithManager(mgr ctrl.Manager) error {

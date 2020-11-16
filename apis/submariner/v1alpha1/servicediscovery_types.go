@@ -37,7 +37,8 @@ type ServiceDiscoverySpec struct {
 	Debug                    bool   `json:"debug"`
 	GlobalnetEnabled         bool   `json:"globalnetEnabled,omitempty"`
 	// +listType=set
-	CustomDomains []string `json:"customDomains,omitempty"`
+	CustomDomains  []string          `json:"customDomains,omitempty"`
+	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html

@@ -468,5 +468,5 @@ func operatorImage() string {
 		version = versions.DefaultSubmarinerOperatorVersion
 	}
 
-	return images.GetImagePath(repository, version, deployment.OperatorName)
+	return images.GetImagePath(repository, version, deployment.OperatorName, nil)
 }

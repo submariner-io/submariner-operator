@@ -9,8 +9,12 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 )
 
-func GetImagePath(repo, version, component string) string {
+func GetImagePath(repo, version, component string, imageOverrides map[string]string) string {
 	var path string
+
+	if override, ok := imageOverrides[component]; ok {
+		return override
+	}
 
 	// If the repository is "local" we don't append it on the front of the image,
 	// a local repository is used for development, testing and CI when we inject
