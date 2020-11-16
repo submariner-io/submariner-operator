@@ -89,6 +89,9 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 
 	// Fetch the ServiceDiscovery instance
 	instance := &submarinerv1alpha1.ServiceDiscovery{}
+
+	instance.SetDefaults()
+
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {

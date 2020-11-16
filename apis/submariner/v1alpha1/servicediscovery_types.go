@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/submariner-io/submariner-operator/pkg/versions"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -78,4 +79,10 @@ type ServiceDiscoveryList struct {
 
 func init() {
 	SchemeBuilder.Register(&ServiceDiscovery{}, &ServiceDiscoveryList{})
+}
+
+func (serviceDiscovery *ServiceDiscovery) SetDefaults() {
+	if serviceDiscovery.Spec.Version == "" {
+		serviceDiscovery.Spec.Version = versions.DefaultLighthouseVersion
+	}
 }

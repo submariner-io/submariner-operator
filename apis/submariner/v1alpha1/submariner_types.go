@@ -121,7 +121,7 @@ func init() {
 func (submariner *Submariner) SetDefaults() {
 	if submariner.Spec.Repository == "" {
 		// An empty field is converted to the default upstream submariner repository where all images live
-		submariner.Spec.Repository = versions.DefaultSubmarinerRepo
+		submariner.Spec.Repository = versions.DefaultRepo
 	}
 
 	if submariner.Spec.Version == "" {

@@ -79,7 +79,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterID, "clusterid", "", "cluster ID used to identify the tunnels")
 	cmd.Flags().StringVar(&serviceCIDR, "servicecidr", "", "service CIDR")
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
-	cmd.Flags().StringVar(&repository, "repository", versions.DefaultSubmarinerRepo, "image repository")
+	cmd.Flags().StringVar(&repository, "repository", versions.DefaultRepo, "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
 	cmd.Flags().StringVar(&colorCodes, "colorcodes", submariner.DefaultColorCode, "color codes")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
