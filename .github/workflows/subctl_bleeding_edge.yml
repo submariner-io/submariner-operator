@@ -16,7 +16,7 @@ jobs:
       - name: Generate the Artifacts
         run: |
           make build-cross VERSION=devel
-          echo "::set-env name=BINARIES::$(find dist/ -type f -name '*.tar.xz' -printf '%p ')"
+          echo "BINARIES=$(find dist/ -type f -name '*.tar.xz' -printf '%p ')" >> $GITHUB_ENV
 
       - name: Bump the devel tag
         uses: richardsimko/update-tag@v1.0.3
