@@ -997,6 +997,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/submariner-io/admiral v0.7.0/go.mod h1:S5Aemqu4Ac2sZWW9AEfPIhSC4eMCWmCVQ/rSSEHRt2o=
 github.com/submariner-io/lighthouse v0.7.1-0.20201106144114-e448b23aca3c h1:JFQ6xXOdDapGtJH7WAM0uQ8PFY1ia19U8JUpINmSy8I=
 github.com/submariner-io/lighthouse v0.7.1-0.20201106144114-e448b23aca3c/go.mod h1:5/dqgE6PV94cwFrNesMvN1AY8/eS/x9uCWv7y9OnSIU=
+github.com/submariner-io/lighthouse v0.7.1-0.20201116171124-b514526c3592 h1:3qxSdi/v60KwnFZ7D1zlQJGjY0pnNckMv4MmV6wXxZM=
+github.com/submariner-io/lighthouse v0.7.1-0.20201116171124-b514526c3592/go.mod h1:5/dqgE6PV94cwFrNesMvN1AY8/eS/x9uCWv7y9OnSIU=
 github.com/submariner-io/shipyard v0.7.1 h1:2+CdN9c7BZX7AUKvBrRkqvha+qqEfbWRjgutbFNaiKo=
 github.com/submariner-io/shipyard v0.7.1/go.mod h1:m2Gs15WS6bCDMY2QUjjeC3p4Q95H+pG2UW4k2S9rhQc=
 github.com/submariner-io/shipyard v0.7.2 h1:jlg8AHfBkAqWKJXyby1VEBN1aCipDgwfCvBoWr5Qb6M=
