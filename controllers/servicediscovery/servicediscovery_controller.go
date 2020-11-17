@@ -486,6 +486,10 @@ func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, componentImag
 }
 
 func (r *ServiceDiscoveryReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// These are required so that we can manipulate DNS ConfigMap
+	if err := operatorv1.Install(mgr.GetScheme()); err != nil {
+		return err
+	}
 	// Create a new controller
 	c, err := controller.New("servicediscovery-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
