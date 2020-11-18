@@ -17,16 +17,11 @@ limitations under the License.
 package serviceaccount
 
 import (
-	"fmt"
-
-	v1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
-	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/serviceaccount"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
 const (
@@ -40,61 +35,21 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	createdSa, err := ensureServiceAccount(clientSet, namespace)
+	createdSa, err := serviceaccount.Ensure(clientSet, namespace, LighthouseServiceAccount)
 	if err != nil {
 		return false, err
 	}
 
-	upCr, err := ensureClusterRole(clientSet)
+	createdCR, err := serviceaccount.EnsureClusterRole(clientSet, embeddedyamls.Config_rbac_lighthouse_cluster_role_yaml)
 	if err != nil {
 		return false, err
 	}
 
-	upCrb, err := ensureClusterRoleBinding(clientSet, namespace)
+	createdCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
+		embeddedyamls.Config_rbac_lighthouse_cluster_role_binding_yaml)
 	if err != nil {
 		return false, err
 	}
 
-	return createdSa || upCr || upCrb, err
-}
-
-func ensureServiceAccount(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	sa := &v1.ServiceAccount{ObjectMeta: v1meta.ObjectMeta{Name: LighthouseServiceAccount}}
-	return utils.CreateOrUpdateServiceAccount(clientSet, namespace, sa)
-}
-
-func ensureClusterRole(clientSet *clientset.Clientset) (bool, error) {
-	clusterRole, err := getOperatorClusterRole()
-	if err != nil {
-		return false, fmt.Errorf("ClusterRole update or create failed: %s", err)
-	}
-
-	return utils.CreateOrUpdateClusterRole(clientSet, clusterRole)
-}
-
-func ensureClusterRoleBinding(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	clusterRoleBinding, err := getOperatorClusterRoleBinding(namespace)
-	if err != nil {
-		return false, fmt.Errorf("clusterRoleBinding update or create failed: %s", err)
-	}
-	return utils.CreateOrUpdateClusterRoleBinding(clientSet, clusterRoleBinding)
-}
-
-func getOperatorClusterRoleBinding(namespace string) (*rbacv1.ClusterRoleBinding, error) {
-	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
-	err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_lighthouse_cluster_role_binding_yaml, clusterRoleBinding)
-	if err != nil {
-		return nil, err
-	}
-	clusterRoleBinding.Subjects[0].Namespace = namespace
-	return clusterRoleBinding, nil
-}
-
-func getOperatorClusterRole() (*rbacv1.ClusterRole, error) {
-	role := &rbacv1.ClusterRole{}
-	err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_lighthouse_cluster_role_yaml, role)
-	if err != nil {
-		return nil, err
-	}
-	return role, nil
+	return createdSa || createdCR || createdCRB, nil
 }
