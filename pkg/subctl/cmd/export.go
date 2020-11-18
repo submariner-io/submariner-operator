@@ -22,10 +22,11 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/lighthouse/pkg/apis/lighthouse.submariner.io/v2alpha1"
-	lighthouseClientset "github.com/submariner-io/lighthouse/pkg/client/clientset/versioned"
+	autil "github.com/submariner-io/admiral/pkg/util"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/scheme"
+	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 )
 
 var (
@@ -64,10 +65,11 @@ func exportService(cmd *cobra.Command, args []string) {
 
 	exitOnError("Error connecting to the target cluster", err)
 
-	_, clientSet, err := getClients(restConfig)
+	dynClient, clientSet, err := getClients(restConfig)
 	exitOnError("Error connecting to the target cluster", err)
+	restMapper, err := autil.BuildRestMapper(restConfig)
 
-	lhClientSet, err := lighthouseClientset.NewForConfig(restConfig)
+	exitOnError(fmt.Sprintf("%v", restMapper), err)
 	exitOnError("Error connecting to the target cluster", err)
 
 	if serviceNamespace == "" {
@@ -75,17 +77,22 @@ func exportService(cmd *cobra.Command, args []string) {
 			serviceNamespace = "default"
 		}
 	}
+	err = mcsv1a1.AddToScheme(scheme.Scheme)
+	exitOnError("Failed to add to scheme", err)
 	svcName := args[0]
 	_, err = clientSet.CoreV1().Services(serviceNamespace).Get(svcName, metav1.GetOptions{})
 	exitOnError(fmt.Sprintf("Unable to find the Service %q in namespace %q", svcName, serviceNamespace), err)
 
-	newServiceExport := v2alpha1.ServiceExport{
+	mcsServiceExport := &mcsv1a1.ServiceExport{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      svcName,
 			Namespace: serviceNamespace,
 		},
 	}
-	_, err = lhClientSet.LighthouseV2alpha1().ServiceExports(serviceNamespace).Create(&newServiceExport)
+	resourceServiceExport, gvr, err := autil.ToUnstructuredResource(mcsServiceExport, restMapper)
+	exitOnError("Failed to convert to Unstructured", err)
+
+	_, err = dynClient.Resource(*gvr).Namespace(serviceNamespace).Create(resourceServiceExport, metav1.CreateOptions{})
 	if k8serrors.IsAlreadyExists(err) {
 		fmt.Fprintln(os.Stdout, "Service already exported")
 		return
