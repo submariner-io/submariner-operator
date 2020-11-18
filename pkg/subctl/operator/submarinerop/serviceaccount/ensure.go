@@ -25,6 +25,7 @@ import (
 )
 
 const OperatorServiceAccount = "submariner-operator"
+const NPSyncerServiceAccount = "submariner-networkplugin-syncer"
 
 // Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
@@ -33,7 +34,7 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	createdSa, err := ensureServiceAccounts(clientSet, namespace)
+	createdSA, err := ensureServiceAccounts(clientSet, namespace)
 	if err != nil {
 		return false, err
 	}
@@ -58,31 +59,49 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	return createdSa || createdRole || createdRB || createdCR || createdCRB, nil
+	return createdSA || createdRole || createdRB || createdCR || createdCRB, nil
 }
 
 func ensureServiceAccounts(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	return serviceaccount.Ensure(clientSet, namespace, OperatorServiceAccount)
-}
-
-func ensureClusterRoles(clientSet *clientset.Clientset) (bool, error) {
-	operatorRoleCreated, err := serviceaccount.EnsureClusterRole(clientSet, embeddedyamls.Config_rbac_cluster_role_yaml)
+	createdOperatorSA, err := serviceaccount.Ensure(clientSet, namespace, OperatorServiceAccount)
 	if err != nil {
 		return false, err
 	}
 
-	globalnetRoleCreated, err := serviceaccount.EnsureClusterRole(clientSet, embeddedyamls.Config_rbac_globalnet_cluster_role_yaml)
-	return operatorRoleCreated || globalnetRoleCreated, err
+	createdNPSyncerSA, err := serviceaccount.Ensure(clientSet, namespace, NPSyncerServiceAccount)
+	return createdOperatorSA || createdNPSyncerSA, err
+}
+
+func ensureClusterRoles(clientSet *clientset.Clientset) (bool, error) {
+	createdOperatorCR, err := serviceaccount.EnsureClusterRole(clientSet, embeddedyamls.Config_rbac_cluster_role_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	createdGlobalnetCR, err := serviceaccount.EnsureClusterRole(clientSet, embeddedyamls.Config_rbac_globalnet_cluster_role_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	createdNPSyncerCR, err := serviceaccount.EnsureClusterRole(clientSet,
+		embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_yaml)
+	return createdOperatorCR || createdGlobalnetCR || createdNPSyncerCR, err
 }
 
 func ensureClusterRoleBindings(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	operatorCRCreated, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
+	createdOperatorCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
 		embeddedyamls.Config_rbac_cluster_role_binding_yaml)
 	if err != nil {
 		return false, err
 	}
 
-	globalnetCRCreated, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
+	createdGlobalnetCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
 		embeddedyamls.Config_rbac_globalnet_cluster_role_binding_yaml)
-	return operatorCRCreated || globalnetCRCreated, err
+	if err != nil {
+		return false, err
+	}
+
+	createdNPSyncerCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
+		embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_binding_yaml)
+	return createdOperatorCRB || createdGlobalnetCRB || createdNPSyncerCRB, err
 }
