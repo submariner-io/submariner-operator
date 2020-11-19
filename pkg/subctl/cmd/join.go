@@ -67,6 +67,7 @@ var (
 	clienttoken          *v1.Secret
 	globalnetClusterSize uint
 	customDomains        []string
+	imageOverrideArr     []string
 )
 
 func init() {
@@ -100,6 +101,8 @@ func addJoinFlags(cmd *cobra.Command) {
 		"GlobalCIDR to be allocated to the cluster")
 	cmd.Flags().StringSliceVar(&customDomains, "custom-domains", nil,
 		"List of domains to use for multicluster service discovery")
+	cmd.Flags().StringSliceVar(&imageOverrideArr, "image-override", nil,
+		"Override component image")
 }
 
 const (
@@ -451,6 +454,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
+		ImageOverrides:           getImageOverrides(),
 	}
 	if netconfig.GlobalnetCIDR != "" {
 		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR
@@ -468,5 +472,18 @@ func operatorImage() string {
 		version = versions.DefaultSubmarinerOperatorVersion
 	}
 
-	return images.GetImagePath(repository, version, deployment.OperatorName, nil)
+	return images.GetImagePath(repository, version, deployment.OperatorName, getImageOverrides())
+}
+
+func getImageOverrides() map[string]string {
+	if len(imageOverrideArr) > 0 {
+		imageOverrides := make(map[string]string)
+		for _, s := range imageOverrideArr {
+			key := strings.Split(s, "=")[0]
+			value := strings.Split(s, "=")[1]
+			imageOverrides[key] = value
+		}
+		return imageOverrides
+	}
+	return nil
 }
