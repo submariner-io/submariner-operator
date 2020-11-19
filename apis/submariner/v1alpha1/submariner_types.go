@@ -54,7 +54,8 @@ type SubmarinerSpec struct {
 	NatEnabled               bool   `json:"natEnabled"`
 	ServiceDiscoveryEnabled  bool   `json:"serviceDiscoveryEnabled,omitempty"`
 	// +listType=set
-	CustomDomains []string `json:"customDomains,omitempty"`
+	CustomDomains  []string          `json:"customDomains,omitempty"`
+	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -120,7 +121,7 @@ func init() {
 func (submariner *Submariner) SetDefaults() {
 	if submariner.Spec.Repository == "" {
 		// An empty field is converted to the default upstream submariner repository where all images live
-		submariner.Spec.Repository = versions.DefaultSubmarinerRepo
+		submariner.Spec.Repository = versions.DefaultRepo
 	}
 
 	if submariner.Spec.Version == "" {
