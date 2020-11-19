@@ -23,6 +23,7 @@ import (
 
 	"github.com/spf13/cobra"
 	autil "github.com/submariner-io/admiral/pkg/util"
+	"github.com/submariner-io/lighthouse/pkg/apis/lighthouse.submariner.io/v2alpha1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -43,6 +44,13 @@ var (
 		Run: exportService,
 	}
 	serviceNamespace string
+	/* NOTE:
+	Lighthouse agent requires the LH ServiceExport installed for now. Operator generates
+	CRDs based on types in vendor directory. So we need to import lighthouse/apis
+	to force it to vendor it and create CRD for installation.
+	This will be removed in next release once we fully drop lighthouse CRDs.
+	*/
+	_ = v2alpha1.ServiceExport{}
 )
 
 func init() {
@@ -69,17 +77,18 @@ func exportService(cmd *cobra.Command, args []string) {
 	exitOnError("Error connecting to the target cluster", err)
 	restMapper, err := autil.BuildRestMapper(restConfig)
 
-	exitOnError(fmt.Sprintf("%v", restMapper), err)
-	exitOnError("Error connecting to the target cluster", err)
-
+	exitOnError("Error creating RestMapper for ServiceExport", err)
 	if serviceNamespace == "" {
 		if serviceNamespace, _, err = clientConfig.Namespace(); err != nil {
 			serviceNamespace = "default"
 		}
 	}
+
 	err = mcsv1a1.AddToScheme(scheme.Scheme)
 	exitOnError("Failed to add to scheme", err)
+
 	svcName := args[0]
+
 	_, err = clientSet.CoreV1().Services(serviceNamespace).Get(svcName, metav1.GetOptions{})
 	exitOnError(fmt.Sprintf("Unable to find the Service %q in namespace %q", svcName, serviceNamespace), err)
 

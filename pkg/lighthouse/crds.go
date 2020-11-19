@@ -17,12 +17,6 @@ const (
 // The resources handled here are the lighthouse CRDs: MultiClusterService,
 // ServiceImport, ServiceExport and ServiceDiscovery
 func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
-	installedMCS, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
-		embeddedyamls.Deploy_lighthouse_crds_lighthouse_submariner_io_multiclusterservices_yaml)
-	if err != nil {
-		return installedMCS, fmt.Errorf("Error creating the MultiClusterServices CRD: %s", err)
-	}
-
 	installedSI, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
 		embeddedyamls.Deploy_lighthouse_crds_lighthouse_submariner_io_serviceimports_yaml)
 	if err != nil {
@@ -38,7 +32,7 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 
 	// The broker does not need the ServiceExport or ServiceDiscovery
 	if isBroker {
-		return installedMCS || installedMCSSI || installedSI, nil
+		return installedMCSSI || installedSI, nil
 	}
 
 	installedSE, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
@@ -60,5 +54,5 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 		return installedSD, err
 	}
 
-	return installedMCS || installedMCSSI || installedSI || installedSE || installedSD || installedMCSSE, nil
+	return installedMCSSI || installedSI || installedSE || installedSD || installedMCSSE, nil
 }
