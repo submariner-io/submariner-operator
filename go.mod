@@ -2,11 +2,14 @@ module github.com/submariner-io/submariner-operator
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.2
+	github.com/Azure/go-autorest/autorest v0.9.4 // indirect
+	github.com/Azure/go-autorest/autorest/adal v0.8.1 // indirect
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.19.11
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/onsi/ginkgo v1.14.2
 	github.com/onsi/gomega v1.10.3
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
@@ -17,9 +20,12 @@ require (
 	github.com/prometheus/client_golang v1.8.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/lighthouse v0.7.1-0.20201119065422-6f359be31b8e
-	github.com/submariner-io/shipyard v0.7.3-0.20201105165619-4a6063d2b38c
-	github.com/submariner-io/submariner v0.7.0
+	github.com/stretchr/testify v1.6.1 // indirect
+	github.com/submariner-io/lighthouse v0.5.0
+	github.com/submariner-io/shipyard v0.5.0
+	github.com/submariner-io/submariner v0.5.0
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c // indirect
 	k8s.io/api v0.18.6
 	k8s.io/apiextensions-apiserver v0.18.6
 	k8s.io/apimachinery v0.18.6
