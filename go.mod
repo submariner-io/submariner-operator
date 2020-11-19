@@ -19,7 +19,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/submariner-io/lighthouse v0.7.1-0.20201119065422-6f359be31b8e
 	github.com/submariner-io/shipyard v0.7.3-0.20201105165619-4a6063d2b38c
-	github.com/submariner-io/submariner v0.7.0
+	github.com/submariner-io/submariner v0.7.1-0.20201119153223-9b682d6189dc
 	k8s.io/api v0.18.6
 	k8s.io/apiextensions-apiserver v0.18.6
 	k8s.io/apimachinery v0.18.6
