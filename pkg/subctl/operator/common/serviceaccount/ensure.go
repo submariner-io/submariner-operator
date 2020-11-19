@@ -17,29 +17,57 @@ limitations under the License.
 package serviceaccount
 
 import (
-	"fmt"
-
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	rbacv1 "k8s.io/api/rbac/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 // Ensure creates the given service account
-func Ensure(restConfig *rest.Config, namespace, serviceAccount string) (bool, error) {
-	clientSet, err := clientset.NewForConfig(restConfig)
+func Ensure(clientSet *clientset.Clientset, namespace, name string) (bool, error) {
+	sa := &v1.ServiceAccount{ObjectMeta: v1meta.ObjectMeta{Name: name}}
+	return utils.CreateOrUpdateServiceAccount(clientSet, namespace, sa)
+}
+
+func EnsureRole(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
+	role := &rbacv1.Role{}
+	err := embeddedyamls.GetObject(yaml, role)
 	if err != nil {
 		return false, err
 	}
 
-	sa := &v1.ServiceAccount{ObjectMeta: v1meta.ObjectMeta{Name: serviceAccount}}
-	_, err = clientSet.CoreV1().ServiceAccounts(namespace).Create(sa)
-	if err == nil {
-		return true, nil
-	} else if errors.IsAlreadyExists(err) {
-		return false, nil
-	} else {
-		return false, fmt.Errorf("ServiceAccount creation failed: %s", err)
+	return utils.CreateOrUpdateRole(clientSet, namespace, role)
+}
+
+func EnsureRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
+	roleBinding := &rbacv1.RoleBinding{}
+	err := embeddedyamls.GetObject(yaml, roleBinding)
+	if err != nil {
+		return false, err
 	}
+
+	return utils.CreateOrUpdateRoleBinding(clientSet, namespace, roleBinding)
+}
+
+func EnsureClusterRole(clientSet *clientset.Clientset, yaml string) (bool, error) {
+	clusterRole := &rbacv1.ClusterRole{}
+	err := embeddedyamls.GetObject(yaml, clusterRole)
+	if err != nil {
+		return false, err
+	}
+
+	return utils.CreateOrUpdateClusterRole(clientSet, clusterRole)
+}
+
+func EnsureClusterRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
+	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
+	err := embeddedyamls.GetObject(yaml, clusterRoleBinding)
+	if err != nil {
+		return false, err
+	}
+
+	clusterRoleBinding.Subjects[0].Namespace = namespace
+	return utils.CreateOrUpdateClusterRoleBinding(clientSet, clusterRoleBinding)
 }
