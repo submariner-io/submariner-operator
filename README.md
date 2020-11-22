@@ -38,7 +38,7 @@ release](https://github.com/submariner-io/submariner-operator/releases/tag/devel
 
 ## Building and Testing
 
-See the [Building and Testing docs on Submainer's website](https://submariner.io/for_developers/building_testing/).
+See the [Building and Testing docs on Submariner's website](https://submariner.io/for_developers/building_testing/).
 
 ## Updating OperatorHub
 
