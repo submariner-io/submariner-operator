@@ -8,6 +8,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const globalnetGlobalIPAnnotation = "submariner.io/globalIp"
+
 type benchmarkTestParams struct {
 	ClientCluster       framework.ClusterIndex
 	ServerCluster       framework.ClusterIndex
@@ -65,6 +67,7 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 	clusterBName := framework.TestContext.ClusterIDs[testParams.ServerCluster]
 	var connectionTimeout uint = 5
 	var connectionAttempts uint = 1
+	var netperfPort = 12865
 
 	framework.By(fmt.Sprintf("Creating a Nettest Server Pod on %q", clusterBName))
 	nettestServerPod := f.NewNetworkPod(&framework.NetworkPodConfig{
@@ -73,13 +76,25 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 		Scheduling:         testParams.ServerPodScheduling,
 		ConnectionTimeout:  connectionTimeout,
 		ConnectionAttempts: connectionAttempts,
+		Port:               netperfPort,
 	})
 
 	podsClusterB := framework.KubeClients[testParams.ServerCluster].CoreV1().Pods(f.Namespace)
 	p1, _ := podsClusterB.Get(nettestServerPod.Pod.Name, metav1.GetOptions{})
-	framework.By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
+	By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP
+	if framework.TestContext.GlobalnetEnabled {
+		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q",
+			framework.TestContext.ClusterIDs[testParams.ServerCluster]))
+		service := nettestServerPod.CreateService()
+
+		// Wait for the globalIP annotation on the service.
+		service = f.AwaitUntilAnnotationOnService(testParams.ServerCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
+		remoteIP = service.GetAnnotations()[globalnetGlobalIPAnnotation]
+
+		By(fmt.Sprintf("remote service IP is %q, service name %q, %v", remoteIP, service.Name, service))
+	}
 
 	nettestClientPod := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.LatencyClientPod,
@@ -88,7 +103,14 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 		RemoteIP:           remoteIP,
 		ConnectionTimeout:  connectionTimeout,
 		ConnectionAttempts: connectionAttempts,
+		Port:               netperfPort,
 	})
+
+	if framework.TestContext.GlobalnetEnabled {
+		// Wait for the globalIP annotation on the client pod
+		nettestClientPod.Pod = f.AwaitUntilAnnotationOnPod(testParams.ClientCluster, globalnetGlobalIPAnnotation,
+			nettestClientPod.Pod.Name, nettestClientPod.Pod.Namespace)
+	}
 
 	framework.By(fmt.Sprintf("Nettest Client Pod %q was created on cluster %q, node %q; connect to server pod ip %q",
 		nettestClientPod.Pod.Name, clusterAName, nettestClientPod.Pod.Spec.NodeName, remoteIP))

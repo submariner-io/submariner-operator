@@ -87,6 +87,7 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	serverClusterName := framework.TestContext.ClusterIDs[testParams.ServerCluster]
 	var connectionTimeout uint = 5
 	var connectionAttempts uint = 1
+	var iperf3Port = 5201
 
 	framework.By(fmt.Sprintf("Creating a Nettest Server Pod on %q", serverClusterName))
 	nettestServerPod := f.NewNetworkPod(&framework.NetworkPodConfig{
@@ -95,6 +96,7 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 		Scheduling:         testParams.ServerPodScheduling,
 		ConnectionTimeout:  connectionTimeout,
 		ConnectionAttempts: connectionAttempts,
+		Port:               iperf3Port,
 	})
 
 	podsClusterB := framework.KubeClients[testParams.ServerCluster].CoreV1().Pods(f.Namespace)
@@ -102,6 +104,18 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	framework.By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP
+
+	if framework.TestContext.GlobalnetEnabled {
+		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q",
+			framework.TestContext.ClusterIDs[testParams.ServerCluster]))
+		service := nettestServerPod.CreateService()
+
+		// Wait for the globalIP annotation on the service.
+		service = f.AwaitUntilAnnotationOnService(testParams.ServerCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
+		remoteIP = service.GetAnnotations()[globalnetGlobalIPAnnotation]
+		By(fmt.Sprintf("remote service IP is %q, service name %q, %v", remoteIP, service.Name, service.Spec))
+	}
+
 	nettestClientPod := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ThroughputClientPod,
 		Cluster:            testParams.ClientCluster,
@@ -109,6 +123,7 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 		RemoteIP:           remoteIP,
 		ConnectionTimeout:  connectionTimeout,
 		ConnectionAttempts: connectionAttempts,
+		Port:               iperf3Port,
 	})
 
 	framework.By(fmt.Sprintf("Nettest Client Pod %q was created on cluster %q, node %q; connect to server pod ip %q",
