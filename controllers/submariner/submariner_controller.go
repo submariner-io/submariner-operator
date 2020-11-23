@@ -159,10 +159,8 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 			gatewayStatuses = append(gatewayStatuses, gateway.Status)
 			for j := range gateway.Status.Connections {
 				recordConnection(
-					gateway.Status.LocalEndpoint.ClusterID,
-					gateway.Status.LocalEndpoint.Hostname,
-					gateway.Status.Connections[j].Endpoint.ClusterID,
-					gateway.Status.Connections[j].Endpoint.Hostname,
+					gateway.Status.LocalEndpoint,
+					gateway.Status.Connections[j].Endpoint,
 					string(gateway.Status.Connections[j].Status),
 				)
 			}
