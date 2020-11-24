@@ -19,6 +19,8 @@ package submariner
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
+
+	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
 const (
@@ -62,12 +64,12 @@ func recordNoConnections() {
 	connectionsGauge.Reset()
 }
 
-func recordConnection(localCluster, localHostname, remoteCluster, remoteHostname, status string) {
+func recordConnection(localEndpoint, remoteEndpoint submv1.EndpointSpec, status string) {
 	connectionsGauge.With(prometheus.Labels{
-		connectionsLocalClusterLabel:   localCluster,
-		connectionsLocalHostnameLabel:  localHostname,
-		connectionsRemoteClusterLabel:  remoteCluster,
-		connectionsRemoteHostnameLabel: remoteHostname,
+		connectionsLocalClusterLabel:   localEndpoint.ClusterID,
+		connectionsLocalHostnameLabel:  localEndpoint.Hostname,
+		connectionsRemoteClusterLabel:  remoteEndpoint.ClusterID,
+		connectionsRemoteHostnameLabel: remoteEndpoint.Hostname,
 		connectionsStatusLabel:         status,
 	}).Inc()
 }
