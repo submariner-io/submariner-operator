@@ -16,7 +16,7 @@ CROSS_BINARIES := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,bin/subctl-$(VER
 CROSS_TARBALLS := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,dist/subctl-$(VERSION)-%.tar.xz,$(cross)))
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
-override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG) --deploytool_submariner_args '--cable-driver strongswan'
+override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
 export DEPLOY_ARGS
 override UNIT_TEST_ARGS += cmd pkg/internal
 override VALIDATE_ARGS += --skip-dirs pkg/client

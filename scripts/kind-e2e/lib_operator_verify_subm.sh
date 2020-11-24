@@ -35,7 +35,7 @@ function create_subm_vars() {
     subm_colorcodes=blue
     subm_debug=false
     subm_broker=k8s
-    subm_cabledriver=strongswan
+    subm_cabledriver=libreswan
     ce_ipsec_debug=false
     ce_ipsec_ikeport=500
     ce_ipsec_nattport=4500
