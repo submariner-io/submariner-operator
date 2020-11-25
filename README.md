@@ -11,8 +11,7 @@
 [![Flake Finder](https://github.com/submariner-io/submariner-operator/workflows/Flake%20Finder/badge.svg)](https://github.com/submariner-io/submariner-operator/actions?query=workflow%3A%22Flake+Finder%22)
 <!-- markdownlint-enable line-length -->
 
-The Submariner Operator installs the Submariner components on a Kubernetes cluster. It's also available on
-[OperatorHub](https://operatorhub.io/operator/submariner).
+The Submariner Operator installs the Submariner components on a Kubernetes cluster. It's also available on [OperatorHub](https://operatorhub.io/operator/submariner).
 
 ## Quickstart
 
