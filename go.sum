@@ -1004,6 +1004,8 @@ github.com/submariner-io/shipyard v0.7.2 h1:jlg8AHfBkAqWKJXyby1VEBN1aCipDgwfCvBo
 github.com/submariner-io/shipyard v0.7.2/go.mod h1:m4Qj1bHIgQBmp/CoPQOhsQDaQJvaF9YV3oyDLNfecRg=
 github.com/submariner-io/shipyard v0.7.3-0.20201105165619-4a6063d2b38c h1:WuHXKffODH74STWiBjYLVOtnNPxuUhtec9ErkEW+j/M=
 github.com/submariner-io/shipyard v0.7.3-0.20201105165619-4a6063d2b38c/go.mod h1:m4Qj1bHIgQBmp/CoPQOhsQDaQJvaF9YV3oyDLNfecRg=
+github.com/submariner-io/shipyard v0.8.0-pre0 h1:MIqee7dRDAPJpF7FQrXp2QcphK10rurrnYQgt1sZN04=
+github.com/submariner-io/shipyard v0.8.0-pre0/go.mod h1:m4Qj1bHIgQBmp/CoPQOhsQDaQJvaF9YV3oyDLNfecRg=
 github.com/submariner-io/submariner v0.7.1-0.20201119153223-9b682d6189dc h1:9CHyJtpyZ4F7WvOI98Pro+RyQ6uYkwOjrGYG+Kq7YOY=
 github.com/submariner-io/submariner v0.7.1-0.20201119153223-9b682d6189dc/go.mod h1:yEJMw3LC/4L346St7MnV5kTER8mHgpZ0nIRe/vYvuMg=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
