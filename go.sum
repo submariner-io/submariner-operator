@@ -774,7 +774,6 @@ github.com/onsi/ginkgo v1.10.3/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+
 github.com/onsi/ginkgo v1.11.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.12.1/go.mod h1:zj2OWP4+oCPe1qIXoGWkgMRwljMUYCdkwsT2108oapk=
 github.com/onsi/ginkgo v1.14.0/go.mod h1:iSB4RoI2tjJc9BBv4NKIKWKya62Rps+oPG/Lv9klQyY=
-github.com/onsi/ginkgo v1.14.1/go.mod h1:iSB4RoI2tjJc9BBv4NKIKWKya62Rps+oPG/Lv9klQyY=
 github.com/onsi/ginkgo v1.14.2 h1:8mVmC9kjFFmA8H4pKMUhcblgifdkOIXPvbhN1T36q1M=
 github.com/onsi/ginkgo v1.14.2/go.mod h1:iSB4RoI2tjJc9BBv4NKIKWKya62Rps+oPG/Lv9klQyY=
 github.com/onsi/gomega v0.0.0-20170829124025-dcabb60a477c/go.mod h1:C1qb7wdrVGGVU+Z6iS04AVkA3Q65CEZX59MT0QO5uiA=
@@ -785,7 +784,6 @@ github.com/onsi/gomega v1.7.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1Cpa
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/onsi/gomega v1.8.1/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoTdcA=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
-github.com/onsi/gomega v1.10.2/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.10.3 h1:gph6h/qe9GSUw1NhH1gp+qb+h8rXD8Cy60Z32Qw3ELA=
 github.com/onsi/gomega v1.10.3/go.mod h1:V9xEwhxec5O8UDM77eCW8vLymOMltsqPVYWrpDsH8xc=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
@@ -998,18 +996,16 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/submariner-io/admiral v0.7.0 h1:1Ddjx8PvmeUjqO9+qMAPoFgkDSq8asmXl/tlsiTDlNE=
-github.com/submariner-io/admiral v0.7.0/go.mod h1:S5Aemqu4Ac2sZWW9AEfPIhSC4eMCWmCVQ/rSSEHRt2o=
 github.com/submariner-io/admiral v0.7.1-0.20201113155402-50bbbbc388cf h1:GVvrpEx82lqv/gUV8vr8gVB6LUJKQqWJQ7isa7mz0Ec=
 github.com/submariner-io/admiral v0.7.1-0.20201113155402-50bbbbc388cf/go.mod h1:CB0bBubRoDoYYJTpjAww+VwloKfLRU4U0roevyXkrXk=
-github.com/submariner-io/lighthouse v0.7.1-0.20201119065422-6f359be31b8e h1:koLT3PgdR3Ewhijz5CfN3R9DeXLmyhnqZ3SXEUEcGn8=
-github.com/submariner-io/lighthouse v0.7.1-0.20201119065422-6f359be31b8e/go.mod h1:VwCeWkNoRNQthdc+/IkZ0gD4gYLfIsLESRDInVJaFK0=
-github.com/submariner-io/shipyard v0.7.1 h1:2+CdN9c7BZX7AUKvBrRkqvha+qqEfbWRjgutbFNaiKo=
-github.com/submariner-io/shipyard v0.7.1/go.mod h1:m2Gs15WS6bCDMY2QUjjeC3p4Q95H+pG2UW4k2S9rhQc=
+github.com/submariner-io/lighthouse v0.7.1-0.20201125113548-a925f113b3e3 h1:lzRkskhNQ5Knx9b4soxZvVHikXBeaEZdaJw7BUATF8A=
+github.com/submariner-io/lighthouse v0.7.1-0.20201125113548-a925f113b3e3/go.mod h1:cccs6JjbXMwBWnhVVA+gKz9QI7UVf+hLftoW8GtoMzg=
 github.com/submariner-io/shipyard v0.7.2 h1:jlg8AHfBkAqWKJXyby1VEBN1aCipDgwfCvBoWr5Qb6M=
 github.com/submariner-io/shipyard v0.7.2/go.mod h1:m4Qj1bHIgQBmp/CoPQOhsQDaQJvaF9YV3oyDLNfecRg=
 github.com/submariner-io/shipyard v0.7.3-0.20201105165619-4a6063d2b38c h1:WuHXKffODH74STWiBjYLVOtnNPxuUhtec9ErkEW+j/M=
 github.com/submariner-io/shipyard v0.7.3-0.20201105165619-4a6063d2b38c/go.mod h1:m4Qj1bHIgQBmp/CoPQOhsQDaQJvaF9YV3oyDLNfecRg=
+github.com/submariner-io/shipyard v0.8.0-pre0 h1:MIqee7dRDAPJpF7FQrXp2QcphK10rurrnYQgt1sZN04=
+github.com/submariner-io/shipyard v0.8.0-pre0/go.mod h1:m4Qj1bHIgQBmp/CoPQOhsQDaQJvaF9YV3oyDLNfecRg=
 github.com/submariner-io/submariner v0.7.1-0.20201119153223-9b682d6189dc h1:9CHyJtpyZ4F7WvOI98Pro+RyQ6uYkwOjrGYG+Kq7YOY=
 github.com/submariner-io/submariner v0.7.1-0.20201119153223-9b682d6189dc/go.mod h1:yEJMw3LC/4L346St7MnV5kTER8mHgpZ0nIRe/vYvuMg=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
@@ -1116,8 +1112,6 @@ golang.org/x/crypto v0.0.0-20191112222119-e1110fd1c708/go.mod h1:LzIPMQfyMNhhGPh
 golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20200204104054-c9f3fb736b72/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
-golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
-golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 h1:psW17arqaxU48Z5kZ0CQnkZWQJsqcURM6tKiBApRjXI=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
@@ -1189,7 +1183,6 @@ golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553/go.mod h1:z5CRVTTTmAJ677TzLL
 golang.org/x/net v0.0.0-20200202094626-16171245cfb2/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20200226121028-0de0cce0169b/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=
-golang.org/x/net v0.0.0-20200602114024-627f9648deb9/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=
 golang.org/x/net v0.0.0-20200625001655-4c5254603344/go.mod h1:/O7V0waA8r7cgGh81Ro3o1hOxt32SMVPicZroKQ2sZA=
 golang.org/x/net v0.0.0-20201006153459-a7d1128ccaa0 h1:wBouT66WTYFXdxfVdz9sVWARVd/2vfGcmI45D2gj45M=
 golang.org/x/net v0.0.0-20201006153459-a7d1128ccaa0/go.mod h1:sp8m0HH+o8qH0wwXwYZr8TS3Oi6o0r6Gce1SSxlDquU=
