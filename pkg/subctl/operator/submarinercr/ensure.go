@@ -21,7 +21,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 
@@ -34,17 +33,6 @@ const (
 )
 
 func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("error creating the core kubernetes clientset: %s", err)
-	}
-
-	// Create the namespace
-	_, err = clientset.CoreV1().Namespaces().Create(NewSubmarinerNamespace())
-	if err != nil && !errors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the Submariner namespace %s", err)
-	}
-
 	submarinerCR := &submariner.Submariner{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SubmarinerName,
