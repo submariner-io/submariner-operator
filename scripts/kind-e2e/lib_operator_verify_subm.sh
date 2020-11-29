@@ -446,22 +446,28 @@ function verify_secrets() {
   # Show all the secrets
   kubectl get secrets -n $secret_ns
 
-  local secret_name=$(kubectl get secrets -n $secret_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$deployment_name')].metadata.name}")
-  if [[ -z "$secret_name" ]]; then
+  local secret_names=$(kubectl get secrets -n $secret_ns -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='$deployment_name')].metadata.name}")
+  if [[ -z "$secret_names" ]]; then
     echo "Failed to find the secret's name"
     exit 1
   fi
 
-  # Show all details of the secret
-  json_file=/tmp/$secret_name.${cluster}.json
-  kubectl get secret $secret_name -n $secret_ns -o json | tee $json_file
+  local one_ca_crt_ok=false
+  # Show all details of the secrets
+  for secret_name in $secret_names; do
+    json_file=/tmp/$secret_name.${cluster}.json
+    kubectl get secret $secret_name -n $secret_ns -o json | tee $json_file
 
-  # Verify details of the secret
-  validate_equals '.kind' 'Secret'
-  validate_equals '.type' "kubernetes.io/service-account-token"
-  validate_equals '.metadata.name' $secret_name
-  validate_equals '.metadata.namespace' $secret_ns
-  [[ $(jq -r -M '.data["ca.crt"]' $json_file) =~ $expected_ca_crt ]]
+    # Verify details of the secrets
+    validate_equals '.kind' 'Secret'
+    validate_equals '.type' "kubernetes.io/service-account-token"
+    validate_equals '.metadata.name' $secret_name
+    validate_equals '.metadata.namespace' $secret_ns
+    if [[ $(jq -r -M '.data["ca.crt"]' $json_file) =~ $expected_ca_crt ]]; then
+      one_ca_crt_ok=true
+    fi
+  done
+  [[ "${one_ca_crt_ok}" = "true" ]]
 }
 
 function verify_subm_broker_secrets() {
