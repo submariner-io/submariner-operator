@@ -192,7 +192,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 						{
 							Name:            "submariner-lighthouse-agent",
 							Image:           getImagePath(cr, names.ServiceDiscoveryImage),
-							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.ServiceDiscoveryImage]),
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
@@ -278,7 +278,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 						{
 							Name:            lighthouseCoreDNSName,
 							Image:           getImagePath(cr, names.LighthouseCoreDNSImage),
-							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.LighthouseCoreDNSImage]),
 							Args: []string{
 								"-conf",
 								"/etc/coredns/Corefile",
