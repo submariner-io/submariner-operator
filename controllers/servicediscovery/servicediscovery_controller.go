@@ -235,7 +235,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 						},
 					},
 
-					ServiceAccountName:            "submariner-lighthouse",
+					ServiceAccountName:            "submariner-lighthouse-agent",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 				},
 			},
@@ -329,7 +329,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 						},
 					},
 
-					ServiceAccountName:            "submariner-lighthouse",
+					ServiceAccountName:            "submariner-lighthouse-coredns",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					Volumes: []corev1.Volume{
 						{Name: "config-volume", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
