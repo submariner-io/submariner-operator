@@ -277,6 +277,7 @@ function verify_subm_engine_pod() {
   validate_pod_container_env 'CE_IPSEC_IKEPORT' $ce_ipsec_ikeport
   validate_pod_container_env 'CE_IPSEC_NATTPORT' $ce_ipsec_nattport
 
+  validate_equals '.spec.serviceAccount' 'submariner-engine'
   validate_equals '.status.phase' 'Running'
   validate_equals '.metadata.namespace' $subm_ns
 }
@@ -348,8 +349,7 @@ function verify_subm_routeagent_pod() {
     validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$cluster]}
     validate_pod_container_volume_mount '/host' 'host-slash' 'true'
 
-    # FIXME: Use submariner-routeagent SA vs submariner-operator when doing Operator deploys
-    validate_equals '.spec.serviceAccount' 'submariner-operator'
+    validate_equals '.spec.serviceAccount' 'submariner-routeagent'
 
     [[ $(jq -r ".spec.volumes[] | select(.name==\"host-slash\").hostPath.path" $json_file) = '/' ]]
     validate_equals '.status.phase' 'Running'

@@ -23,5 +23,15 @@ import (
 )
 
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
-	return scc.UpdateSCC(restConfig, namespace, serviceaccount.LighthouseServiceAccount)
+	updateAgentSCC, err := scc.UpdateSCC(restConfig, namespace, serviceaccount.LighthouseAgentServiceAccount)
+	if err != nil {
+		return false, err
+	}
+
+	updateCoreDNSSCC, err := scc.UpdateSCC(restConfig, namespace, serviceaccount.LighthouseCoreDNSServiceAccount)
+	if err != nil {
+		return false, err
+	}
+
+	return updateAgentSCC || updateCoreDNSSCC, err
 }

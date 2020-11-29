@@ -23,5 +23,30 @@ import (
 )
 
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
-	return scc.UpdateSCC(restConfig, namespace, serviceaccount.OperatorServiceAccount)
+	updateOperatorSCC, err := scc.UpdateSCC(restConfig, namespace, serviceaccount.OperatorServiceAccount)
+	if err != nil {
+		return false, err
+	}
+
+	updateEngineSCC, err := scc.UpdateSCC(restConfig, namespace, serviceaccount.SubmarinerServiceAccount)
+	if err != nil {
+		return false, err
+	}
+
+	updateRouteAgentSCC, err := scc.UpdateSCC(restConfig, namespace, serviceaccount.RouteAgentServiceAccount)
+	if err != nil {
+		return false, err
+	}
+
+	updateGlobalnetSCC, err := scc.UpdateSCC(restConfig, namespace, serviceaccount.GlobalnetServiceAccount)
+	if err != nil {
+		return false, err
+	}
+
+	updateNPSyncerSCC, err := scc.UpdateSCC(restConfig, namespace, serviceaccount.NPSyncerServiceAccount)
+	if err != nil {
+		return false, err
+	}
+
+	return updateOperatorSCC || updateEngineSCC || updateRouteAgentSCC || updateGlobalnetSCC || updateNPSyncerSCC, err
 }
