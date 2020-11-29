@@ -24,12 +24,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 )
 
-const OperatorServiceAccount = "submariner-operator"
-const SubmarinerServiceAccount = "submariner-engine"
-const RouteAgentServiceAccount = "submariner-routeagent"
-const GlobalnetServiceAccount = "submariner-globalnet"
-const NPSyncerServiceAccount = "submariner-networkplugin-syncer"
-
 // Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
@@ -66,27 +60,32 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 }
 
 func ensureServiceAccounts(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	createdOperatorSA, err := serviceaccount.Ensure(clientSet, namespace, OperatorServiceAccount)
+	createdOperatorSA, err := serviceaccount.Ensure(clientSet, namespace,
+		embeddedyamls.Config_rbac_submariner_operator_service_account_yaml)
 	if err != nil {
 		return false, err
 	}
 
-	createdSubmarinerSA, err := serviceaccount.Ensure(clientSet, namespace, SubmarinerServiceAccount)
+	createdSubmarinerSA, err := serviceaccount.Ensure(clientSet, namespace,
+		embeddedyamls.Config_rbac_submariner_engine_service_account_yaml)
 	if err != nil {
 		return false, err
 	}
 
-	createdRouteAgentSA, err := serviceaccount.Ensure(clientSet, namespace, RouteAgentServiceAccount)
+	createdRouteAgentSA, err := serviceaccount.Ensure(clientSet, namespace,
+		embeddedyamls.Config_rbac_submariner_route_agent_service_account_yaml)
 	if err != nil {
 		return false, err
 	}
 
-	createdGlobalnetSA, err := serviceaccount.Ensure(clientSet, namespace, GlobalnetServiceAccount)
+	createdGlobalnetSA, err := serviceaccount.Ensure(clientSet, namespace,
+		embeddedyamls.Config_rbac_submariner_globalnet_service_account_yaml)
 	if err != nil {
 		return false, err
 	}
 
-	createdNPSyncerSA, err := serviceaccount.Ensure(clientSet, namespace, NPSyncerServiceAccount)
+	createdNPSyncerSA, err := serviceaccount.Ensure(clientSet, namespace,
+		embeddedyamls.Config_rbac_networkplugin_syncer_service_account_yaml)
 	return createdOperatorSA || createdSubmarinerSA || createdRouteAgentSA || createdGlobalnetSA || createdNPSyncerSA, err
 }
 

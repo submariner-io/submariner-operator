@@ -17,18 +17,28 @@ limitations under the License.
 package scc
 
 import (
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/serviceaccount"
 	"k8s.io/client-go/rest"
 )
 
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
-	updateAgentSCC, err := scc.UpdateSCC(restConfig, namespace, serviceaccount.LighthouseAgentServiceAccount)
+	agentSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_lighthouse_agent_service_account_yaml)
 	if err != nil {
 		return false, err
 	}
 
-	updateCoreDNSSCC, err := scc.UpdateSCC(restConfig, namespace, serviceaccount.LighthouseCoreDNSServiceAccount)
+	coreDNSSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_lighthouse_coredns_service_account_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	updateAgentSCC, err := scc.UpdateSCC(restConfig, namespace, agentSaName)
+	if err != nil {
+		return false, err
+	}
+
+	updateCoreDNSSCC, err := scc.UpdateSCC(restConfig, namespace, coreDNSSaName)
 	if err != nil {
 		return false, err
 	}
