@@ -141,9 +141,12 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 		}
 	}
 	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
-	if err != nil {
+	if errors.IsNotFound(err) {
 		// Try to update Openshift-DNS
 		return reconcile.Result{}, updateOpenshiftClusterDNSOperator(instance, r.client, r.operatorClientSet, reqLogger)
+	} else if err != nil {
+		reqLogger.Error(err, "Error updating the 'coredns' ConfigMap")
+		return reconcile.Result{}, err
 	}
 
 	return reconcile.Result{}, nil
@@ -335,7 +338,6 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.I
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Get(coreDNSName, metav1.GetOptions{})
 		if err != nil {
-			reqLogger.Error(err, "Error retrieving 'coredns' ConfigMap")
 			return err
 		}
 
