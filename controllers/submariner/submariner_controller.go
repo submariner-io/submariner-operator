@@ -143,6 +143,10 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		}
 	}
 
+	if _, err := r.reconcileNetworkPluginSyncerDeployment(instance, reqLogger); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Retrieve the gateway information
 	gateways, err := r.retrieveGateways(instance, request.Namespace)
 	if err != nil {
@@ -289,6 +293,15 @@ func (r *SubmarinerReconciler) retrieveGateways(owner metav1.Object, namespace s
 
 func (r *SubmarinerReconciler) reconcileEngineDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
 	return helpers.ReconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger, r.client, r.scheme)
+}
+
+func (r *SubmarinerReconciler) reconcileNetworkPluginSyncerDeployment(instance *submopv1a1.Submariner,
+	reqLogger logr.Logger) (*appsv1.Deployment, error) {
+	// Only OVNKubernetes needs networkplugin-syncer so far
+	if instance.Status.NetworkPlugin == "OVNKubernetes" {
+		return helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance), reqLogger, r.client, r.scheme)
+	}
+	return nil, nil
 }
 
 func (r *SubmarinerReconciler) reconcileRouteagentDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,

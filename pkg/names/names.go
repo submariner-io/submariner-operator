@@ -1,12 +1,13 @@
 package names
 
 const (
-	RouteAgentImage        = "submariner-route-agent"
-	EngineImage            = "submariner"
-	GlobalnetImage         = "submariner-globalnet"
-	ServiceDiscoveryImage  = "lighthouse-agent"
-	LighthouseCoreDNSImage = "lighthouse-coredns"
-	ServiceDiscoveryCrName = "service-discovery"
+	NetworkPluginSyncerImage = "submariner-networkplugin-syncer"
+	RouteAgentImage          = "submariner-route-agent"
+	EngineImage              = "submariner"
+	GlobalnetImage           = "submariner-globalnet"
+	ServiceDiscoveryImage    = "lighthouse-agent"
+	LighthouseCoreDNSImage   = "lighthouse-coredns"
+	ServiceDiscoveryCrName   = "service-discovery"
 )
 
 var (
