@@ -30,9 +30,6 @@ with_context "$broker" verify_subm_broker_secrets
 
 run_subm_clusters verify_subm_deployed
 
-echo "Running subctl a second time to verify if running subctl a second time works fine"
-with_context cluster2 subctl_install_subm
-
 if [[ "$lighthouse" == "true" ]]; then
     verify="--only service-discovery"
 else
