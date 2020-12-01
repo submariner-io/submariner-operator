@@ -38,11 +38,3 @@ jobs:
           df -h
           free -h
           make post-mortem
-
-      - name: Raise an issue to report flaky test failure
-        if: ${{ failure() }}
-        uses: peter-evans/create-issue-from-file@v2.3.2
-        with:
-          title: Flaky Failure make e2e using="${{ matrix.cable_driver }} ${{ matrix.globalnet }} ${{ matrix.lighthouse }}"
-          content-filepath: .github/ISSUE_TEMPLATE/flaky_failure_automated.md
-          labels: automated, flaky failure
