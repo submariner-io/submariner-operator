@@ -421,7 +421,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 	healthCheckEnabled := true
 	// The values are in seconds
 	healthCheckInterval := uint64(1)
-	healthCheckMaxPacketLossCount := uint64(15)
+	healthCheckMaxPacketLossCount := uint64(5)
 
 	if cr.Spec.ConnectionHealthCheck != nil {
 		healthCheckEnabled = cr.Spec.ConnectionHealthCheck.Enabled
@@ -474,7 +474,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 						{Name: "CE_IPSEC_DEBUG", Value: strconv.FormatBool(cr.Spec.CeIPSecDebug)},
 						{Name: "SUBMARINER_HEALTH_CHECK_ENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
 						{Name: "SUBMARINER_HEALTH_CHECK_INTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
-						{Name: "SUBMARINER_HEALTH_CHECK_MAX_PACKET_LOSS_Count", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
+						{Name: "SUBMARINER_HEALTH_CHECK_MAX_PACKET_LOSS_COUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
 					},
 				},
 			},

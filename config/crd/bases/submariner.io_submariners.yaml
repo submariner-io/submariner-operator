@@ -67,13 +67,12 @@ spec:
                   enabled:
                     type: boolean
                   intervalSeconds:
-                    description: The interval upon which HealthChecker ping packets
-                      are sent
+                    description: The interval at which health check pings are sent.
                     format: int64
                     type: integer
                   maxPacketLossCount:
-                    description: Defines the maximum packet loss the healthchecker
-                      can tolerate before we declare the connection as down
+                    description: The maximum number of packets lost at which the health
+                      checker will mark the connection as down.
                     format: int64
                     type: integer
                 type: object

@@ -91,10 +91,9 @@ type DaemonSetStatus struct {
 
 type HealthCheckSpec struct {
 	Enabled bool `json:"enabled,omitempty"`
-	// The interval upon which HealthChecker ping packets are sent
+	// The interval at which health check pings are sent.
 	IntervalSeconds uint64 `json:"intervalSeconds,omitempty"`
-	// Defines the maximum packet loss the healthchecker can tolerate before we
-	// declare the connection as down
+	// The maximum number of packets lost at which the health checker will mark the connection as down.
 	MaxPacketLossCount uint64 `json:"maxPacketLossCount,omitempty"`
 }
 

@@ -110,8 +110,8 @@ func addJoinFlags(cmd *cobra.Command) {
 		"Enable Gateway health check")
 	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-interval", 1,
 		"The interval in seconds in which health check packets will be send")
-	cmd.Flags().Uint64Var(&healthCheckMaxPacketLossCount, "health-check-timeout", 15,
-		"The maximum packet that can be lost after which health checker will mark a connection as down")
+	cmd.Flags().Uint64Var(&healthCheckMaxPacketLossCount, "health-check-max-packet-loss-count", 5,
+		"The maximum number of packets lost at which the health checker will mark the connection as down.")
 }
 
 const (
