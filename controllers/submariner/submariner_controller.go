@@ -485,6 +485,19 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 
 	// Create Pod
 	terminationGracePeriodSeconds := int64(1)
+
+	// Default healthCheck Values
+	healthCheckEnabled := true
+	// The values are in seconds
+	healthCheckInterval := uint64(1)
+	healthCheckMaxPacketLossCount := uint64(5)
+
+	if cr.Spec.ConnectionHealthCheck != nil {
+		healthCheckEnabled = cr.Spec.ConnectionHealthCheck.Enabled
+		healthCheckInterval = cr.Spec.ConnectionHealthCheck.IntervalSeconds
+		healthCheckMaxPacketLossCount = cr.Spec.ConnectionHealthCheck.MaxPacketLossCount
+	}
+
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,
@@ -528,6 +541,9 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 						{Name: "BROKER_K8S_CA", Value: cr.Spec.BrokerK8sCA},
 						{Name: "CE_IPSEC_PSK", Value: cr.Spec.CeIPSecPSK},
 						{Name: "CE_IPSEC_DEBUG", Value: strconv.FormatBool(cr.Spec.CeIPSecDebug)},
+						{Name: "SUBMARINER_HEALTH_CHECK_ENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
+						{Name: "SUBMARINER_HEALTH_CHECK_INTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
+						{Name: "SUBMARINER_HEALTH_CHECK_MAX_PACKET_LOSS_COUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
 					},
 				},
 			},

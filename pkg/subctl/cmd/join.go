@@ -50,24 +50,27 @@ import (
 )
 
 var (
-	clusterID            string
-	serviceCIDR          string
-	clusterCIDR          string
-	globalnetCIDR        string
-	repository           string
-	imageVersion         string
-	nattPort             int
-	ikePort              int
-	colorCodes           string
-	disableNat           bool
-	ipsecDebug           bool
-	submarinerDebug      bool
-	noLabel              bool
-	cableDriver          string
-	clienttoken          *v1.Secret
-	globalnetClusterSize uint
-	customDomains        []string
-	imageOverrideArr     []string
+	clusterID                     string
+	serviceCIDR                   string
+	clusterCIDR                   string
+	globalnetCIDR                 string
+	repository                    string
+	imageVersion                  string
+	nattPort                      int
+	ikePort                       int
+	colorCodes                    string
+	disableNat                    bool
+	ipsecDebug                    bool
+	submarinerDebug               bool
+	noLabel                       bool
+	cableDriver                   string
+	clienttoken                   *v1.Secret
+	globalnetClusterSize          uint
+	customDomains                 []string
+	imageOverrideArr              []string
+	healthCheckEnable             bool
+	healthCheckInterval           uint64
+	healthCheckMaxPacketLossCount uint64
 )
 
 func init() {
@@ -103,6 +106,12 @@ func addJoinFlags(cmd *cobra.Command) {
 		"List of domains to use for multicluster service discovery")
 	cmd.Flags().StringSliceVar(&imageOverrideArr, "image-override", nil,
 		"Override component image")
+	cmd.Flags().BoolVar(&healthCheckEnable, "health-check-enable", true,
+		"Enable Gateway health check")
+	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-interval", 1,
+		"The interval in seconds in which health check packets will be send")
+	cmd.Flags().Uint64Var(&healthCheckMaxPacketLossCount, "health-check-max-packet-loss-count", 5,
+		"The maximum number of packets lost at which the health checker will mark the connection as down.")
 }
 
 const (
@@ -455,6 +464,11 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
 		ImageOverrides:           getImageOverrides(),
+		ConnectionHealthCheck: &submariner.HealthCheckSpec{
+			Enabled:            healthCheckEnable,
+			IntervalSeconds:    healthCheckInterval,
+			MaxPacketLossCount: healthCheckMaxPacketLossCount,
+		},
 	}
 	if netconfig.GlobalnetCIDR != "" {
 		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR
