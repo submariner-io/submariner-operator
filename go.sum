@@ -22,8 +22,6 @@ cloud.google.com/go/storage v1.3.0/go.mod h1:9IAwXhoyBJ7z9LcAwkj0/7NnPzYaPeZxxVp
 contrib.go.opencensus.io/exporter/ocagent v0.4.12/go.mod h1:450APlNTSR6FrvC3CTRqYosuDstRB9un7SOx2k/9ckA=
 contrib.go.opencensus.io/exporter/ocagent v0.6.0/go.mod h1:zmKjrJcdo0aYcVS7bmEeSEBLPA9YJp5bjrofdU3pIXs=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
-github.com/AlecAivazis/survey/v2 v2.2.2 h1:1I4qBrNsHQE+91tQCqVlfrKe9DEL65949d1oKZWVELY=
-github.com/AlecAivazis/survey/v2 v2.2.2/go.mod h1:9FJRdMdDm8rnT+zHVbvQT2RTSTLq0Ttd6q3Vl2fahjk=
 github.com/AlecAivazis/survey/v2 v2.2.4 h1:OAh6g17JmXsjVVHTnfQFEi6K+YZX6mrC+pT8IPkUlpk=
 github.com/AlecAivazis/survey/v2 v2.2.4/go.mod h1:9FJRdMdDm8rnT+zHVbvQT2RTSTLq0Ttd6q3Vl2fahjk=
 github.com/Azure/azure-pipeline-go v0.2.1/go.mod h1:UGSo8XybXnIGZ3epmeBw7Jdz+HiUVpqIlpz/HKHylF4=
@@ -1018,6 +1016,8 @@ github.com/submariner-io/lighthouse v0.8.0-pre0 h1:/QC1Q5LZVggd+j9mSKIsQr4htK+J6
 github.com/submariner-io/lighthouse v0.8.0-pre0/go.mod h1:TE/W/itkNLGGQaEeiLbK6vm5qxQknv65+FMFft9trOg=
 github.com/submariner-io/shipyard v0.8.0-pre0 h1:MIqee7dRDAPJpF7FQrXp2QcphK10rurrnYQgt1sZN04=
 github.com/submariner-io/shipyard v0.8.0-pre0/go.mod h1:m4Qj1bHIgQBmp/CoPQOhsQDaQJvaF9YV3oyDLNfecRg=
+github.com/submariner-io/shipyard v0.8.0-rc0 h1:JxZsA8zdw6DxjTiL6jE0TV71qaGeij4eYXdD6pGZ1U8=
+github.com/submariner-io/shipyard v0.8.0-rc0/go.mod h1:m4Qj1bHIgQBmp/CoPQOhsQDaQJvaF9YV3oyDLNfecRg=
 github.com/submariner-io/submariner v0.8.0-pre0 h1:1OA9sNTl+65LY1cw3DwAnB7jBn5DkAfevziiidauBNI=
 github.com/submariner-io/submariner v0.8.0-pre0/go.mod h1:wpNo3D8MwAVaz54vN06PQGl+r4/VYbcBoCsUEWZdYrA=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
