@@ -50,27 +50,27 @@ import (
 )
 
 var (
-	clusterID            string
-	serviceCIDR          string
-	clusterCIDR          string
-	globalnetCIDR        string
-	repository           string
-	imageVersion         string
-	nattPort             int
-	ikePort              int
-	colorCodes           string
-	disableNat           bool
-	ipsecDebug           bool
-	submarinerDebug      bool
-	noLabel              bool
-	cableDriver          string
-	clienttoken          *v1.Secret
-	globalnetClusterSize uint
-	customDomains        []string
-	imageOverrideArr     []string
-	healthCheckEnable    bool
-	healthCheckInterval  uint64
-	healthCheckTimeout   uint64
+	clusterID                     string
+	serviceCIDR                   string
+	clusterCIDR                   string
+	globalnetCIDR                 string
+	repository                    string
+	imageVersion                  string
+	nattPort                      int
+	ikePort                       int
+	colorCodes                    string
+	disableNat                    bool
+	ipsecDebug                    bool
+	submarinerDebug               bool
+	noLabel                       bool
+	cableDriver                   string
+	clienttoken                   *v1.Secret
+	globalnetClusterSize          uint
+	customDomains                 []string
+	imageOverrideArr              []string
+	healthCheckEnable             bool
+	healthCheckInterval           uint64
+	healthCheckMaxPacketLossCount uint64
 )
 
 func init() {
@@ -110,8 +110,8 @@ func addJoinFlags(cmd *cobra.Command) {
 		"Enable Gateway health check")
 	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-interval", 1,
 		"The interval in seconds in which health check packets will be send")
-	cmd.Flags().Uint64Var(&healthCheckTimeout, "health-check-timeout", 15,
-		"The interval in seconds for which the HealthChecker will wait before marking a connection as down")
+	cmd.Flags().Uint64Var(&healthCheckMaxPacketLossCount, "health-check-timeout", 15,
+		"The maximum packet that can be lost after which health checker will mark a connection as down")
 }
 
 const (
@@ -465,9 +465,9 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
 		ImageOverrides:           getImageOverrides(),
 		HealthCheckSpec: &submariner.HealthCheckSpec{
-			HealthCheckEnabled:         healthCheckEnable,
-			HealthCheckIntervalSeconds: healthCheckInterval,
-			HealthCheckTimeoutSeconds:  healthCheckTimeout,
+			Enabled:            healthCheckEnable,
+			IntervalSeconds:    healthCheckInterval,
+			MaxPacketLossCount: healthCheckMaxPacketLossCount,
 		},
 	}
 	if netconfig.GlobalnetCIDR != "" {

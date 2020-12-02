@@ -55,10 +55,6 @@ spec:
                 type: boolean
               globalnetEnabled:
                 type: boolean
-              imageOverrides:
-                additionalProperties:
-                  type: string
-                type: object
               namespace:
                 type: string
               repository:

@@ -73,16 +73,16 @@ spec:
                 type: string
               healthCheckSpec:
                 properties:
-                  healthCheckEnabled:
+                  enabled:
                     type: boolean
-                  healthCheckIntervalSeconds:
+                  intervalSeconds:
                     description: The interval upon which HealthChecker ping packets
                       are sent
                     format: int64
                     type: integer
-                  healthCheckTimeoutSeconds:
-                    description: ' Defines how long we should wait for HealthChecker
-                      ping packets before we  declare the connection as down'
+                  maxPacketLossCount:
+                    description: Defines the maximum packet loss the healthchecker
+                      can tolerate before we declare the connection as down
                     format: int64
                     type: integer
                 type: object
