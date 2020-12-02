@@ -464,7 +464,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
 		ImageOverrides:           getImageOverrides(),
-		HealthCheckSpec: &submariner.HealthCheckSpec{
+		ConnectionHealthCheck: &submariner.HealthCheckSpec{
 			Enabled:            healthCheckEnable,
 			IntervalSeconds:    healthCheckInterval,
 			MaxPacketLossCount: healthCheckMaxPacketLossCount,

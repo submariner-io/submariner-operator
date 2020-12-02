@@ -62,16 +62,7 @@ spec:
                 type: string
               colorCodes:
                 type: string
-              customDomains:
-                items:
-                  type: string
-                type: array
-                x-kubernetes-list-type: set
-              debug:
-                type: boolean
-              globalCIDR:
-                type: string
-              healthCheckSpec:
+              connectionHealthCheck:
                 properties:
                   enabled:
                     type: boolean
@@ -86,6 +77,15 @@ spec:
                     format: int64
                     type: integer
                 type: object
+              customDomains:
+                items:
+                  type: string
+                type: array
+                x-kubernetes-list-type: set
+              debug:
+                type: boolean
+              globalCIDR:
+                type: string
               imageOverrides:
                 additionalProperties:
                   type: string

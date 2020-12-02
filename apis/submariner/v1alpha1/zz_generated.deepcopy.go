@@ -249,8 +249,8 @@ func (in *SubmarinerSpec) DeepCopyInto(out *SubmarinerSpec) {
 			(*out)[key] = val
 		}
 	}
-	if in.HealthCheckSpec != nil {
-		in, out := &in.HealthCheckSpec, &out.HealthCheckSpec
+	if in.ConnectionHealthCheck != nil {
+		in, out := &in.ConnectionHealthCheck, &out.ConnectionHealthCheck
 		*out = new(HealthCheckSpec)
 		**out = **in
 	}

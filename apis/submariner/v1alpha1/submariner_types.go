@@ -57,7 +57,7 @@ type SubmarinerSpec struct {
 	CustomDomains  []string          `json:"customDomains,omitempty"`
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
 	// +optional
-	HealthCheckSpec *HealthCheckSpec `json:"healthCheckSpec"`
+	ConnectionHealthCheck *HealthCheckSpec `json:"connectionHealthCheck,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html

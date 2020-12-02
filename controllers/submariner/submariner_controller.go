@@ -423,10 +423,10 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 	healthCheckInterval := uint64(1)
 	healthCheckMaxPacketLossCount := uint64(15)
 
-	if cr.Spec.HealthCheckSpec != nil {
-		healthCheckEnabled = cr.Spec.HealthCheckSpec.Enabled
-		healthCheckInterval = cr.Spec.HealthCheckSpec.IntervalSeconds
-		healthCheckMaxPacketLossCount = cr.Spec.HealthCheckSpec.MaxPacketLossCount
+	if cr.Spec.ConnectionHealthCheck != nil {
+		healthCheckEnabled = cr.Spec.ConnectionHealthCheck.Enabled
+		healthCheckInterval = cr.Spec.ConnectionHealthCheck.IntervalSeconds
+		healthCheckMaxPacketLossCount = cr.Spec.ConnectionHealthCheck.MaxPacketLossCount
 	}
 
 	podTemplate := corev1.PodTemplateSpec{
