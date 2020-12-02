@@ -171,6 +171,10 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 		}}
 
 		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
+			if toUpdate.Spec.Type == corev1.ServiceTypeClusterIP {
+				// Make sure we don't lose the ClusterIP, see https://github.com/kubernetes/kubectl/issues/798
+				service.Spec.ClusterIP = toUpdate.Spec.ClusterIP
+			}
 			toUpdate.Spec = service.Spec
 			for k, v := range service.Labels {
 				toUpdate.Labels[k] = v
