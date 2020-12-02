@@ -68,6 +68,9 @@ var (
 	globalnetClusterSize uint
 	customDomains        []string
 	imageOverrideArr     []string
+	healthCheckEnable    bool
+	healthCheckInterval  uint64
+	healthCheckTimeout   uint64
 )
 
 func init() {
@@ -103,6 +106,12 @@ func addJoinFlags(cmd *cobra.Command) {
 		"List of domains to use for multicluster service discovery")
 	cmd.Flags().StringSliceVar(&imageOverrideArr, "image-override", nil,
 		"Override component image")
+	cmd.Flags().BoolVar(&healthCheckEnable, "health-check-enable", true,
+		"Enable Gateway health check")
+	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-enable", 1,
+		"The interval in seconds in which health check packets will be send")
+	cmd.Flags().Uint64Var(&healthCheckTimeout, "health-check-enable", 15,
+		"The interval in seconds for which the HealthChecker will wait before marking a connection as down")
 }
 
 const (
@@ -455,6 +464,9 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
 		ImageOverrides:           getImageOverrides(),
+		HealthCheckEnabled:       healthCheckEnable,
+		HealthCheckInterval:      healthCheckInterval,
+		HealthCheckTimeout:       healthCheckTimeout,
 	}
 	if netconfig.GlobalnetCIDR != "" {
 		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR

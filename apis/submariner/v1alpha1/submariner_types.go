@@ -49,10 +49,16 @@ type SubmarinerSpec struct {
 	Version                  string `json:"version,omitempty"`
 	CeIPSecIKEPort           int    `json:"ceIPSecIKEPort,omitempty"`
 	CeIPSecNATTPort          int    `json:"ceIPSecNATTPort,omitempty"`
-	CeIPSecDebug             bool   `json:"ceIPSecDebug"`
-	Debug                    bool   `json:"debug"`
-	NatEnabled               bool   `json:"natEnabled"`
-	ServiceDiscoveryEnabled  bool   `json:"serviceDiscoveryEnabled,omitempty"`
+	// The interval in seconds in which the HealthChecker ping will be be send
+	HealthCheckInterval uint64 `json:"healthCheckInterval,omitempty"`
+	// The interval for which the HealthChecker will wait before marking a
+	// connection as down
+	HealthCheckTimeout      uint64 `json:"healthCheckTimeout,omitempty"`
+	CeIPSecDebug            bool   `json:"ceIPSecDebug"`
+	Debug                   bool   `json:"debug"`
+	HealthCheckEnabled      bool   `json:"healthCheckEnabled,omitempty"`
+	NatEnabled              bool   `json:"natEnabled"`
+	ServiceDiscoveryEnabled bool   `json:"serviceDiscoveryEnabled,omitempty"`
 	// +listType=set
 	CustomDomains  []string          `json:"customDomains,omitempty"`
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
