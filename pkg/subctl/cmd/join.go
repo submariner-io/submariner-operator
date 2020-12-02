@@ -108,9 +108,9 @@ func addJoinFlags(cmd *cobra.Command) {
 		"Override component image")
 	cmd.Flags().BoolVar(&healthCheckEnable, "health-check-enable", true,
 		"Enable Gateway health check")
-	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-enable", 1,
+	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-interval", 1,
 		"The interval in seconds in which health check packets will be send")
-	cmd.Flags().Uint64Var(&healthCheckTimeout, "health-check-enable", 15,
+	cmd.Flags().Uint64Var(&healthCheckTimeout, "health-check-timeout", 15,
 		"The interval in seconds for which the HealthChecker will wait before marking a connection as down")
 }
 
@@ -464,9 +464,11 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
 		ImageOverrides:           getImageOverrides(),
-		HealthCheckEnabled:       healthCheckEnable,
-		HealthCheckInterval:      healthCheckInterval,
-		HealthCheckTimeout:       healthCheckTimeout,
+		HealthCheckSpec: &submariner.HealthCheckSpec{
+			HealthCheckEnabled:         healthCheckEnable,
+			HealthCheckIntervalSeconds: healthCheckInterval,
+			HealthCheckTimeoutSeconds:  healthCheckTimeout,
+		},
 	}
 	if netconfig.GlobalnetCIDR != "" {
 		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR

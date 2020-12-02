@@ -416,6 +416,19 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 
 	// Create Pod
 	terminationGracePeriodSeconds := int64(1)
+
+	// Default healthCheck Values
+	healthCheckEnabled := true
+	// The values are in seconds
+	healthCheckInterval := uint64(1)
+	healthCheckTimeout := uint64(15)
+
+	if cr.Spec.HealthCheckSpec != nil {
+		healthCheckEnabled = cr.Spec.HealthCheckSpec.HealthCheckEnabled
+		healthCheckInterval = cr.Spec.HealthCheckSpec.HealthCheckIntervalSeconds
+		healthCheckTimeout = cr.Spec.HealthCheckSpec.HealthCheckTimeoutSeconds
+	}
+
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,
@@ -459,9 +472,9 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 						{Name: "BROKER_K8S_CA", Value: cr.Spec.BrokerK8sCA},
 						{Name: "CE_IPSEC_PSK", Value: cr.Spec.CeIPSecPSK},
 						{Name: "CE_IPSEC_DEBUG", Value: strconv.FormatBool(cr.Spec.CeIPSecDebug)},
-						{Name: "HEALTH_CHECK_ENABLED", Value: strconv.FormatBool(cr.Spec.HealthCheckEnabled)},
-						{Name: "HEALTH_CHECK_INTERVAL", Value: strconv.FormatUint(cr.Spec.HealthCheckInterval, 10)},
-						{Name: "HEALTH_CHECK_TIMEOUT", Value: strconv.FormatUint(cr.Spec.HealthCheckTimeout, 10)},
+						{Name: "SUBMARINER_HEALTH_CHECK_ENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
+						{Name: "SUBMARINER_HEALTH_CHECK_INTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
+						{Name: "SUBMARINER_HEALTH_CHECK_TIMEOUT", Value: strconv.FormatUint(healthCheckTimeout, 10)},
 					},
 				},
 			},

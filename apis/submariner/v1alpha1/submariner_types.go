@@ -49,19 +49,15 @@ type SubmarinerSpec struct {
 	Version                  string `json:"version,omitempty"`
 	CeIPSecIKEPort           int    `json:"ceIPSecIKEPort,omitempty"`
 	CeIPSecNATTPort          int    `json:"ceIPSecNATTPort,omitempty"`
-	// The interval in seconds in which the HealthChecker ping will be be send
-	HealthCheckInterval uint64 `json:"healthCheckInterval,omitempty"`
-	// The interval for which the HealthChecker will wait before marking a
-	// connection as down
-	HealthCheckTimeout      uint64 `json:"healthCheckTimeout,omitempty"`
-	CeIPSecDebug            bool   `json:"ceIPSecDebug"`
-	Debug                   bool   `json:"debug"`
-	HealthCheckEnabled      bool   `json:"healthCheckEnabled,omitempty"`
-	NatEnabled              bool   `json:"natEnabled"`
-	ServiceDiscoveryEnabled bool   `json:"serviceDiscoveryEnabled,omitempty"`
+	CeIPSecDebug             bool   `json:"ceIPSecDebug"`
+	Debug                    bool   `json:"debug"`
+	NatEnabled               bool   `json:"natEnabled"`
+	ServiceDiscoveryEnabled  bool   `json:"serviceDiscoveryEnabled,omitempty"`
 	// +listType=set
 	CustomDomains  []string          `json:"customDomains,omitempty"`
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
+	// +optional
+	HealthCheckSpec *HealthCheckSpec `json:"healthCheckSpec"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -91,6 +87,15 @@ type DaemonSetStatus struct {
 	Status                    *appsv1.DaemonSetStatus  `json:"status,omitempty"`
 	NonReadyContainerStates   *[]corev1.ContainerState `json:"nonReadyContainerStates,omitempty"`
 	MismatchedContainerImages bool                     `json:"mismatchedContainerImages"`
+}
+
+type HealthCheckSpec struct {
+	HealthCheckEnabled bool `json:"healthCheckEnabled,omitempty"`
+	// The interval upon which HealthChecker ping packets are sent
+	HealthCheckIntervalSeconds uint64 `json:"healthCheckIntervalSeconds,omitempty"`
+	//  Defines how long we should wait for HealthChecker ping packets before we
+	//  declare the connection as down
+	HealthCheckTimeoutSeconds uint64 `json:"healthCheckTimeoutSeconds,omitempty"`
 }
 
 const DefaultColorCode = "blue"
