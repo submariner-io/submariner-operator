@@ -85,8 +85,8 @@ func cleanupFramework(f *framework.Framework) {
 func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	clientClusterName := framework.TestContext.ClusterIDs[testParams.ClientCluster]
 	serverClusterName := framework.TestContext.ClusterIDs[testParams.ServerCluster]
-	var connectionTimeout uint = 5
-	var connectionAttempts uint = 1
+	var connectionTimeout uint = 20
+	var connectionAttempts uint = 2
 	var iperf3Port = 5201
 
 	framework.By(fmt.Sprintf("Creating a Nettest Server Pod on %q", serverClusterName))
@@ -105,7 +105,7 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 
 	remoteIP := p1.Status.PodIP
 
-	if framework.TestContext.GlobalnetEnabled {
+	if framework.TestContext.GlobalnetEnabled && testParams.ClientCluster != testParams.ServerCluster {
 		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q",
 			framework.TestContext.ClusterIDs[testParams.ServerCluster]))
 		service := nettestServerPod.CreateService()
@@ -113,7 +113,6 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 		// Wait for the globalIP annotation on the service.
 		service = f.AwaitUntilAnnotationOnService(testParams.ServerCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
 		remoteIP = service.GetAnnotations()[globalnetGlobalIPAnnotation]
-		By(fmt.Sprintf("remote service IP is %q, service name %q, %v", remoteIP, service.Name, service.Spec))
 	}
 
 	nettestClientPod := f.NewNetworkPod(&framework.NetworkPodConfig{
