@@ -31,7 +31,6 @@ var files = []string{
 	"deploy/submariner/crds/submariner.io_clusters.yaml",
 	"deploy/submariner/crds/submariner.io_endpoints.yaml",
 	"deploy/submariner/crds/submariner.io_gateways.yaml",
-	"deploy/lighthouse/crds/lighthouse.submariner.io_multiclusterservices.yaml",
 	"deploy/lighthouse/crds/lighthouse.submariner.io_serviceexports.yaml",
 	"deploy/lighthouse/crds/lighthouse.submariner.io_serviceimports.yaml",
 	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml",

@@ -62,6 +62,20 @@ spec:
                 type: string
               colorCodes:
                 type: string
+              connectionHealthCheck:
+                properties:
+                  enabled:
+                    type: boolean
+                  intervalSeconds:
+                    description: The interval at which health check pings are sent.
+                    format: int64
+                    type: integer
+                  maxPacketLossCount:
+                    description: The maximum number of packets lost at which the health
+                      checker will mark the connection as down.
+                    format: int64
+                    type: integer
+                type: object
               customDomains:
                 items:
                   type: string
@@ -71,6 +85,10 @@ spec:
                 type: boolean
               globalCIDR:
                 type: string
+              imageOverrides:
+                additionalProperties:
+                  type: string
+                type: object
               namespace:
                 type: string
               natEnabled:
@@ -292,6 +310,8 @@ spec:
                                 type: string
                               cluster_id:
                                 type: string
+                              healthCheckIP:
+                                type: string
                               hostname:
                                 type: string
                               nat_enabled:
@@ -313,6 +333,33 @@ spec:
                             - private_ip
                             - public_ip
                             - subnets
+                            type: object
+                          latency:
+                            description: LatencySpec describes the round trip time
+                              information in nanoseconds for a packet between the
+                              gateway pods of two clusters.
+                            properties:
+                              averageRTT:
+                                format: int64
+                                type: integer
+                              lastRTT:
+                                format: int64
+                                type: integer
+                              maxRTT:
+                                format: int64
+                                type: integer
+                              minRTT:
+                                format: int64
+                                type: integer
+                              stddevRTT:
+                                format: int64
+                                type: integer
+                            required:
+                            - averageRTT
+                            - lastRTT
+                            - maxRTT
+                            - minRTT
+                            - stddevRTT
                             type: object
                           status:
                             type: string
@@ -337,6 +384,8 @@ spec:
                         cable_name:
                           type: string
                         cluster_id:
+                          type: string
+                        healthCheckIP:
                           type: string
                         hostname:
                           type: string
@@ -543,6 +592,8 @@ spec:
                 type: object
               natEnabled:
                 type: boolean
+              networkPlugin:
+                type: string
               routeAgentDaemonSetStatus:
                 properties:
                   lastResourceVersion:

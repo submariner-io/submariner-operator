@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - master
-    tags:
-      - 'v**'
 
 jobs:
   e2e:
@@ -44,15 +42,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Build the Operator image
+        env:
+          IMAGES_ARGS: --nocache
+        run: make operator-image
+
       - name: Release the Operator image
         env:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
           RELEASE_ARGS: submariner-operator
-        run: |
-          if [[ $GITHUB_REF =~ "/tags/" ]]; then
-              tags="${GITHUB_REF##*/}"
-              { echo $tags | grep -q -v -; } && tags+=" latest"
-              RELEASE_ARGS+=" --tag \"$tags\""
-          fi
-          make operator-image release
+        run: make release

@@ -11,41 +11,39 @@
 [![Flake Finder](https://github.com/submariner-io/submariner-operator/workflows/Flake%20Finder/badge.svg)](https://github.com/submariner-io/submariner-operator/actions?query=workflow%3A%22Flake+Finder%22)
 <!-- markdownlint-enable line-length -->
 
-The submariner operator installs the submariner components on a Kubernetes cluster.
-
-It's available on [OperatorHub:submariner](https://operatorhub.io/operator/submariner).
+The Submariner Operator installs the Submariner components on a Kubernetes cluster. It's also available on
+[OperatorHub](https://operatorhub.io/operator/submariner).
 
 ## Quickstart
 
-Please refer the quickstart guides:
+Please refer the Quickstart Guides on Submariner's website:
 
-* [kind (local)](https://submariner.io/quickstart/kind/)
-* [OpenShift (AWS)](https://submariner.io/quickstart/openshift/)
-* [OpenShift with Globalnet (AWS)](https://submariner.io/quickstart/openshift/globalnet/)
+* [Sandbox Environment (kind)](https://submariner.io/getting_started/quickstart/kind/).
+* [OpenShift on AWS](https://submariner.io/getting_started/quickstart/openshift/aws/).
+* [OpenShift on AWS with Globalnet](https://submariner.io/getting_started/quickstart/openshift/globalnet/).
+* [OpenShift on AWS and vSphere](https://submariner.io/getting_started/quickstart/openshift/vsphere_aws/).
+* [Google Kubernetes Engine](https://submariner.io/getting_started/quickstart/managed_kubernetes/gke/).
+* [Rancher](https://submariner.io/getting_started/quickstart/managed_kubernetes/rancher/).
 
 ## Subctl Releases
 
 ### Latest Stable Release
 
-This release has the latest stable binaries: [latest release](https://github.com/submariner-io/submariner-operator/releases/latest)
+This release has the latest stable binaries: [latest release](https://github.com/submariner-io/submariner-operator/releases/latest).
 
 ### Latest Merged Release
 
 This release is constantly updated with the latest code, and might be unstable: [devel
-release](https://github.com/submariner-io/submariner-operator/releases/tag/devel)
+release](https://github.com/submariner-io/submariner-operator/releases/tag/devel).
 
 ## Building and Testing
 
-See the [Building and Testing docs on Submainer's website](https://submariner.io/contributing/building_testing/).
-
-## Reference
-
-For reference, here's a link to the script generating the scaffold code of the 0.0.1 version of the operator
-[gen_subm_operator.sh](https://github.com/submariner-io/submariner/blob/v0.0.2/operators/go/gen_subm_operator.sh).
+See the [Building and Testing docs on Submariner's website](https://submariner.io/for_developers/building_testing/).
 
 ## Updating OperatorHub
 
 The OperatorHub definitions can be found here:
-
+<!-- markdownlint-disable line-length -->
 * [upstream-community-operators/submariner](https://github.com/operator-framework/community-operators/tree/master/upstream-community-operators/submariner)
 * [community-operators/submariner](https://github.com/operator-framework/community-operators/tree/master/community-operators/submariner)
+<!-- markdownlint-enable line-length -->
