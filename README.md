@@ -18,12 +18,12 @@ The Submariner Operator installs the Submariner components on a Kubernetes clust
 
 Please refer the Quickstart Guides on Submariner's website:
 
-* [Sandbox Environment (kind)](https://submariner.io/getting_started/quickstart/kind/).
-* [OpenShift on AWS](https://submariner.io/getting_started/quickstart/openshift/aws/).
-* [OpenShift on AWS with Globalnet](https://submariner.io/getting_started/quickstart/openshift/globalnet/).
-* [OpenShift on AWS and vSphere](https://submariner.io/getting_started/quickstart/openshift/vsphere_aws/).
-* [Google Kubernetes Engine](https://submariner.io/getting_started/quickstart/managed_kubernetes/gke/).
-* [Rancher](https://submariner.io/getting_started/quickstart/managed_kubernetes/rancher/).
+* [Sandbox Environment (kind)](https://submariner.io/getting-started/quickstart/kind/).
+* [OpenShift on AWS](https://submariner.io/getting-started/quickstart/openshift/aws/).
+* [OpenShift on AWS with Globalnet](https://submariner.io/getting-started/quickstart/openshift/globalnet/).
+* [OpenShift on AWS and vSphere](https://submariner.io/getting-started/quickstart/openshift/vsphere-aws/).
+* [Google Kubernetes Engine](https://submariner.io/getting-started/quickstart/managed-kubernetes/gke/).
+* [Rancher](https://submariner.io/getting-started/quickstart/managed-kubernetes/rancher/).
 
 ## Subctl Releases
 
@@ -38,7 +38,7 @@ release](https://github.com/submariner-io/submariner-operator/releases/tag/devel
 
 ## Building and Testing
 
-See the [Building and Testing docs on Submariner's website](https://submariner.io/for_developers/building_testing/).
+See the [Building and Testing docs on Submariner's website](https://submariner.io/development/building-testing/).
 
 ## Updating OperatorHub
 
