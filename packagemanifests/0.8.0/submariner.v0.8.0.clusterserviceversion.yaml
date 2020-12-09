@@ -39,7 +39,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: quay.io/submariner/submariner-operator:0.8.0
-    createdAt: "2020-12-09 16:47:20"
+    createdAt: "2020-12-09 16:47:37"
     description: Creates and manages Submariner deployments.
     operators.operatorframework.io/builder: operator-sdk-v1.0.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
@@ -372,7 +372,7 @@ spec:
   maturity: alpha
   provider:
     name: submariner.io
-  replaces: submariner.v0.7.0
+  replaces: submariner.v0.0.0
   selector:
     matchLabels:
       control-plane: submariner-operator
