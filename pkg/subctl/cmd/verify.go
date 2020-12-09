@@ -49,12 +49,16 @@ var (
 	reportDirectory                 string
 	submarinerNamespace             string
 	verifyOnly                      string
-	enableDisruptive                bool
+	disruptiveTests                 bool
 )
 
 func init() {
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
-	verifyCmd.Flags().BoolVar(&enableDisruptive, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
+	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
+	verifyCmd.Flags().BoolVar(&disruptiveTests, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
+	err := verifyCmd.Flags().MarkDeprecated("enable-disruptive", "please use --disruptive-tests instead")
+	// Errors here are fatal programming errors
+	exitOnError("deprecation error", err)
 	addVerifyFlags(verifyCmd)
 	rootCmd.AddCommand(verifyCmd)
 
@@ -95,11 +99,11 @@ The following verifications are deemed disruptive:
 		configureTestingFramework(args)
 
 		disruptive := extractDisruptiveVerifications(verifyOnly)
-		if !enableDisruptive && len(disruptive) > 0 {
+		if !disruptiveTests && len(disruptive) > 0 {
 			err := survey.AskOne(&survey.Confirm{
 				Message: fmt.Sprintf("You have specified disruptive verifications (%s). Are you sure you want to run them?",
 					strings.Join(disruptive, ",")),
-			}, &enableDisruptive)
+			}, &disruptiveTests)
 
 			if err != nil {
 				if isNonInteractive(err) {
@@ -112,7 +116,7 @@ prompt for confirmation therefore you must specify --enable-disruptive to run th
 			}
 		}
 
-		patterns, verifications, err := getVerifyPatterns(verifyOnly, enableDisruptive)
+		patterns, verifications, err := getVerifyPatterns(verifyOnly, disruptiveTests)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
