@@ -106,7 +106,7 @@ func addJoinFlags(cmd *cobra.Command) {
 		"List of domains to use for multicluster service discovery")
 	cmd.Flags().StringSliceVar(&imageOverrideArr, "image-override", nil,
 		"Override component image")
-	cmd.Flags().BoolVar(&healthCheckEnable, "health-check-enable", true,
+	cmd.Flags().BoolVar(&healthCheckEnable, "health-check", true,
 		"Enable Gateway health check")
 	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-interval", 1,
 		"The interval in seconds in which health check packets will be send")
