@@ -41,20 +41,20 @@ var (
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
-		"Enable support for Overlapping CIDRs in connecting clusters (default disabled)")
+		"enable support for Overlapping CIDRs in connecting clusters (default disabled)")
 	deployBroker.PersistentFlags().StringVar(&globalnetCidrRange, "globalnet-cidr-range", "169.254.0.0/16",
-		"Global CIDR supernet range for allocating GlobalCIDRs to each cluster")
+		"GlobalCIDR supernet range for allocating GlobalCIDRs to each cluster")
 	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 8192,
-		"Default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
+		"default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
 
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
-		"Import IPsec PSK from existing submariner broker file, like broker-info.subm")
+		"import IPsec PSK from existing submariner broker file, like broker-info.subm")
 
 	deployBroker.PersistentFlags().BoolVar(&serviceDiscovery, "service-discovery", true,
-		"Enable Multi-Cluster Service Discovery")
+		"enable multi-cluster service discovery")
 
 	deployBroker.PersistentFlags().StringSliceVar(&defaultCustomDomains, "custom-domains", nil,
-		"List of domains to use for multicluster service discovery")
+		"list of domains to use for multicluster service discovery")
 
 	addKubeconfigFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
@@ -64,7 +64,7 @@ const brokerDetailsFilename = "broker-info.subm"
 
 var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
-	Short: "set the broker up",
+	Short: "Set the broker up",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if valid, err := isValidGlobalnetConfig(); !valid {

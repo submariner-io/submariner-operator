@@ -90,19 +90,19 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
 	cmd.Flags().BoolVar(&natTraversal, "natt", true, "enable NAT traversal for IPsec")
-	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "Disable NAT for IPsec")
+	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "disable NAT for IPsec")
 	err := cmd.Flags().MarkDeprecated("disable-nat", "please use --natt=false instead")
 	// Errors here are fatal programming errors
 	exitOnError("deprecation error", err)
-	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "Enable IPsec debugging (verbose logging)")
-	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "Enable Submariner debugging (verbose logging)")
+	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "enable IPsec debugging (verbose logging)")
+	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "enable Submariner debugging (verbose logging)")
 	err = cmd.Flags().MarkDeprecated("subm-debug", "please use --pod-debug instead")
 	// Errors here are fatal programming errors
 	exitOnError("deprecation error", err)
 	cmd.Flags().BoolVar(&submarinerDebug, "pod-debug", false,
 		"enable Submariner pod debugging (verbose logging in the deployed pods)")
 	cmd.Flags().BoolVar(&submarinerDebug, "enable-pod-debugging", false,
-		"Enable Submariner pod debugging (verbose logging in the deployed pods)")
+		"enable Submariner pod debugging (verbose logging in the deployed pods)")
 	err = cmd.Flags().MarkDeprecated("enable-pod-debugging", "please use --pod-debug instead")
 	// Errors here are fatal programming errors
 	exitOnError("deprecation error", err)
@@ -111,21 +111,21 @@ func addJoinFlags(cmd *cobra.Command) {
 	err = cmd.Flags().MarkDeprecated("no-label", "please use --label-gateway=false instead")
 	// Errors here are fatal programming errors
 	exitOnError("deprecation error", err)
-	cmd.Flags().StringVar(&cableDriver, "cable-driver", "", "Cable driver implementation")
+	cmd.Flags().StringVar(&cableDriver, "cable-driver", "", "cable driver implementation")
 	cmd.Flags().UintVar(&globalnetClusterSize, "globalnet-cluster-size", 0,
-		"Cluster size for GlobalCIDR allocated to this cluster (amount of global IPs)")
+		"cluster size for GlobalCIDR allocated to this cluster (amount of global IPs)")
 	cmd.Flags().StringVar(&globalnetCIDR, "globalnet-cidr", "",
 		"GlobalCIDR to be allocated to the cluster")
 	cmd.Flags().StringSliceVar(&customDomains, "custom-domains", nil,
-		"List of domains to use for multicluster service discovery")
+		"list of domains to use for multicluster service discovery")
 	cmd.Flags().StringSliceVar(&imageOverrideArr, "image-override", nil,
-		"Override component image")
+		"override component image")
 	cmd.Flags().BoolVar(&healthCheckEnable, "health-check", true,
-		"Enable Gateway health check")
+		"enable Gateway health check")
 	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-interval", 1,
-		"The interval in seconds in which health check packets will be send")
+		"interval in seconds between health check packets")
 	cmd.Flags().Uint64Var(&healthCheckMaxPacketLossCount, "health-check-max-packet-loss-count", 5,
-		"The maximum number of packets lost at which the health checker will mark the connection as down.")
+		"maximum number of packets lost before the connection is marked as down")
 }
 
 const (
@@ -136,7 +136,7 @@ const (
 
 var joinCmd = &cobra.Command{
 	Use:   "join",
-	Short: "connect a cluster to an existing broker",
+	Short: "Connect a cluster to an existing broker",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		err := checkArgumentPassed(args)
