@@ -8,7 +8,7 @@ require (
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.14.2
-	github.com/onsi/gomega v1.10.3
+	github.com/onsi/gomega v1.10.4
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.2.0
@@ -17,10 +17,10 @@ require (
 	github.com/prometheus/client_golang v1.8.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/admiral v0.8.0-rc0
-	github.com/submariner-io/lighthouse v0.8.0-rc0
-	github.com/submariner-io/shipyard v0.8.0-rc0
-	github.com/submariner-io/submariner v0.8.0-rc0
+	github.com/submariner-io/admiral v0.8.0-rc1
+	github.com/submariner-io/lighthouse v0.8.0-rc1
+	github.com/submariner-io/shipyard v0.8.0-rc1
+	github.com/submariner-io/submariner v0.8.0-rc1
 	k8s.io/api v0.18.6
 	k8s.io/apiextensions-apiserver v0.18.6
 	k8s.io/apimachinery v0.18.6
