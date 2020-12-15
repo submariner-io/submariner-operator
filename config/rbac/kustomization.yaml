@@ -4,11 +4,15 @@ resources:
   - cluster_role_binding.yaml
   - globalnet_cluster_role.yaml
   - globalnet_cluster_role_binding.yaml
+  - lighthouse_service_account.yaml
   - lighthouse_cluster_role.yaml
   - lighthouse_cluster_role_binding.yaml
   - role.yaml
   - role_binding.yaml
   - service_account.yaml
+  - networkplugin_syncer_service_account.yaml
+  - networkplugin_syncer_cluster_role.yaml
+  - networkplugin_syncer_cluster_role_binding.yaml
   #- leader_election_role.yaml
   #- leader_election_role_binding.yaml
   # Comment the following 4 lines if you want to disable

@@ -261,7 +261,7 @@ func testReconciliation() {
 			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
 			Expect(err).To(Succeed())
 
-			Expect(updated.Spec.Repository).To(Equal(versions.DefaultSubmarinerRepo))
+			Expect(updated.Spec.Repository).To(Equal(versions.DefaultRepo))
 			Expect(updated.Spec.Version).To(Equal(versions.DefaultSubmarinerVersion))
 		})
 	})

@@ -1,14 +1,14 @@
 module github.com/submariner-io/submariner-operator
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.2.2
+	github.com/AlecAivazis/survey/v2 v2.2.4
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.19.11
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.14.2
-	github.com/onsi/gomega v1.10.3
+	github.com/onsi/gomega v1.10.4
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.2.0
@@ -17,9 +17,10 @@ require (
 	github.com/prometheus/client_golang v1.8.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/lighthouse v0.7.1-0.20201116171124-b514526c3592
-	github.com/submariner-io/shipyard v0.7.2
-	github.com/submariner-io/submariner v0.7.0
+	github.com/submariner-io/admiral v0.8.0-rc1
+	github.com/submariner-io/lighthouse v0.8.0-rc0
+	github.com/submariner-io/shipyard v0.8.0-rc1
+	github.com/submariner-io/submariner v0.8.0-rc0
 	k8s.io/api v0.18.6
 	k8s.io/apiextensions-apiserver v0.18.6
 	k8s.io/apimachinery v0.18.6
@@ -27,6 +28,8 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200204173128-addea2498afe
 	sigs.k8s.io/controller-runtime v0.6.2
+	sigs.k8s.io/controller-tools v0.3.0
+	sigs.k8s.io/mcs-api v0.0.0-20200908023942-d26176718973
 	sigs.k8s.io/yaml v1.2.0
 )
 

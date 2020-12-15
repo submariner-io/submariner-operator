@@ -23,5 +23,5 @@ import (
 )
 
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
-	return scc.UpateSCC(restConfig, namespace, serviceaccount.OperatorServiceAccount)
+	return scc.UpdateSCC(restConfig, namespace, serviceaccount.OperatorServiceAccount)
 }

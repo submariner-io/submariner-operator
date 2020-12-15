@@ -54,7 +54,10 @@ type SubmarinerSpec struct {
 	NatEnabled               bool   `json:"natEnabled"`
 	ServiceDiscoveryEnabled  bool   `json:"serviceDiscoveryEnabled,omitempty"`
 	// +listType=set
-	CustomDomains []string `json:"customDomains,omitempty"`
+	CustomDomains  []string          `json:"customDomains,omitempty"`
+	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
+	// +optional
+	ConnectionHealthCheck *HealthCheckSpec `json:"connectionHealthCheck,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -84,6 +87,14 @@ type DaemonSetStatus struct {
 	Status                    *appsv1.DaemonSetStatus  `json:"status,omitempty"`
 	NonReadyContainerStates   *[]corev1.ContainerState `json:"nonReadyContainerStates,omitempty"`
 	MismatchedContainerImages bool                     `json:"mismatchedContainerImages"`
+}
+
+type HealthCheckSpec struct {
+	Enabled bool `json:"enabled,omitempty"`
+	// The interval at which health check pings are sent.
+	IntervalSeconds uint64 `json:"intervalSeconds,omitempty"`
+	// The maximum number of packets lost at which the health checker will mark the connection as down.
+	MaxPacketLossCount uint64 `json:"maxPacketLossCount,omitempty"`
 }
 
 const DefaultColorCode = "blue"
@@ -120,7 +131,7 @@ func init() {
 func (submariner *Submariner) SetDefaults() {
 	if submariner.Spec.Repository == "" {
 		// An empty field is converted to the default upstream submariner repository where all images live
-		submariner.Spec.Repository = versions.DefaultSubmarinerRepo
+		submariner.Spec.Repository = versions.DefaultRepo
 	}
 
 	if submariner.Spec.Version == "" {

@@ -18,12 +18,13 @@ package submariner
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	errorutil "github.com/pkg/errors"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
@@ -34,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,6 +49,7 @@ import (
 
 	submopv1a1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
@@ -59,6 +62,7 @@ var log = logf.Log.WithName("controller_submariner")
 func NewReconciler(mgr manager.Manager) *SubmarinerReconciler {
 	reconciler := &SubmarinerReconciler{
 		client:         mgr.GetClient(),
+		config:         mgr.GetConfig(),
 		log:            ctrl.Log.WithName("controllers").WithName("Submariner"),
 		scheme:         mgr.GetScheme(),
 		clientSet:      kubernetes.NewForConfigOrDie(mgr.GetConfig()),
@@ -78,6 +82,7 @@ type SubmarinerReconciler struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client         client.Client
+	config         *rest.Config
 	log            logr.Logger
 	scheme         *runtime.Scheme
 	clientSet      kubernetes.Interface
@@ -143,6 +148,10 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		}
 	}
 
+	if _, err := r.reconcileNetworkPluginSyncerDeployment(instance, reqLogger); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Retrieve the gateway information
 	gateways, err := r.retrieveGateways(instance, request.Namespace)
 	if err != nil {
@@ -159,10 +168,8 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 			gatewayStatuses = append(gatewayStatuses, gateway.Status)
 			for j := range gateway.Status.Connections {
 				recordConnection(
-					gateway.Status.LocalEndpoint.ClusterID,
-					gateway.Status.LocalEndpoint.Hostname,
-					gateway.Status.Connections[j].Endpoint.ClusterID,
-					gateway.Status.Connections[j].Endpoint.Hostname,
+					gateway.Status.LocalEndpoint,
+					gateway.Status.Connections[j].Endpoint,
 					string(gateway.Status.Connections[j].Status),
 				)
 			}
@@ -290,7 +297,21 @@ func (r *SubmarinerReconciler) retrieveGateways(owner metav1.Object, namespace s
 }
 
 func (r *SubmarinerReconciler) reconcileEngineDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
-	return helpers.ReconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger, r.client, r.scheme)
+	daemonSet, err := helpers.ReconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger, r.client, r.scheme)
+	if err != nil {
+		return nil, err
+	}
+	_, err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger)
+	return daemonSet, err
+}
+
+func (r *SubmarinerReconciler) reconcileNetworkPluginSyncerDeployment(instance *submopv1a1.Submariner,
+	reqLogger logr.Logger) (*appsv1.Deployment, error) {
+	// Only OVNKubernetes needs networkplugin-syncer so far
+	if instance.Status.NetworkPlugin == "OVNKubernetes" {
+		return helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance), reqLogger, r.client, r.scheme)
+	}
+	return nil, nil
 }
 
 func (r *SubmarinerReconciler) reconcileRouteagentDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
@@ -319,6 +340,7 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1
 					ClusterID:                submariner.Spec.ClusterID,
 					Namespace:                submariner.Spec.Namespace,
 					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
+					ImageOverrides:           submariner.Spec.ImageOverrides,
 				}
 				if len(submariner.Spec.CustomDomains) > 0 {
 					sd.Spec.CustomDomains = submariner.Spec.CustomDomains
@@ -348,6 +370,35 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1
 	})
 
 	return errorutil.WithMessagef(err, "error reconciling the Service Discovery CR")
+}
+
+func (r *SubmarinerReconciler) setupMetrics(instance *submopv1a1.Submariner, labels map[string]string,
+	reqLogger logr.Logger) (*corev1.Service, error) {
+	app, ok := labels["app"]
+	if !ok {
+		return nil, fmt.Errorf("No app label in the provided labels, %v", labels)
+	}
+	metricsService, err := helpers.ReconcileService(instance, newMetricsService(instance, app), reqLogger, r.client, r.scheme)
+	if err != nil {
+		return nil, err
+	}
+
+	if r.config != nil {
+		services := []*corev1.Service{metricsService}
+		_, err = metrics.CreateServiceMonitors(r.config, instance.Namespace, services)
+		if err != nil {
+			log.Info("Could not create ServiceMonitor object", "error", err.Error())
+			// If this operator is deployed to a cluster without the prometheus-operator running, it will return
+			// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
+			if err == metrics.ErrServiceMonitorNotPresent {
+				log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
+			} else if !errors.IsAlreadyExists(err) {
+				return nil, err
+			}
+		}
+	}
+
+	return metricsService, nil
 }
 
 func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
@@ -382,6 +433,36 @@ func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 	return deployment
 }
 
+// newMetricsService populates a Service providing access to metrics for the given application
+// The assumptions are:
+// - the application's resources are labeled with "app=" the given app name
+// - the metrics are exposed on port 8080 on "/metrics"
+// The Service is named after the application name, suffixed with "-metrics"
+func newMetricsService(cr *submopv1a1.Submariner, app string) *corev1.Service {
+	labels := map[string]string{
+		"app": app,
+	}
+
+	servicePorts := []corev1.ServicePort{
+		{Port: 8080, Name: "metrics", Protocol: corev1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int,
+			IntVal: 8080}},
+	}
+
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Labels:    labels,
+			Namespace: cr.Namespace,
+			Name:      fmt.Sprintf("%s-metrics", app),
+		},
+		Spec: corev1.ServiceSpec{
+			Ports:    servicePorts,
+			Selector: labels,
+		},
+	}
+
+	return service
+}
+
 // newEnginePodTemplate returns a submariner pod with the same fields as the cr
 func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 	labels := map[string]string{
@@ -404,6 +485,19 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 
 	// Create Pod
 	terminationGracePeriodSeconds := int64(1)
+
+	// Default healthCheck Values
+	healthCheckEnabled := true
+	// The values are in seconds
+	healthCheckInterval := uint64(1)
+	healthCheckMaxPacketLossCount := uint64(5)
+
+	if cr.Spec.ConnectionHealthCheck != nil {
+		healthCheckEnabled = cr.Spec.ConnectionHealthCheck.Enabled
+		healthCheckInterval = cr.Spec.ConnectionHealthCheck.IntervalSeconds
+		healthCheckMaxPacketLossCount = cr.Spec.ConnectionHealthCheck.MaxPacketLossCount
+	}
+
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,
@@ -447,6 +541,9 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 						{Name: "BROKER_K8S_CA", Value: cr.Spec.BrokerK8sCA},
 						{Name: "CE_IPSEC_PSK", Value: cr.Spec.CeIPSecPSK},
 						{Name: "CE_IPSEC_DEBUG", Value: strconv.FormatBool(cr.Spec.CeIPSecDebug)},
+						{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
+						{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
+						{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
 					},
 				},
 			},
@@ -613,7 +710,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
-								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner-operator,kube-system,operators,openshift-monitoring"},
+								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner-operator,kube-system,operators,openshift-monitoring,openshift-dns"},
 							},
 						},
 					},
@@ -645,7 +742,8 @@ func newServiceDiscoveryCR(namespace string) *submopv1a1.ServiceDiscovery {
 }
 
 func getImagePath(submariner *submopv1a1.Submariner, componentImage string) string {
-	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage)
+	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage,
+		submariner.Spec.ImageOverrides)
 }
 
 func (r *SubmarinerReconciler) SetupWithManager(mgr ctrl.Manager) error {

@@ -15,6 +15,7 @@ import (
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -46,11 +47,6 @@ const (
 	lighthouseForwardPluginName   = "lighthouse"
 	coreDNSNamespace              = "kube-system"
 	coreDNSName                   = "coredns"
-)
-
-const (
-	serviceDiscoveryImage  = "lighthouse-agent"
-	lighthouseCoreDNSImage = "lighthouse-coredns"
 )
 
 // NewReconciler returns a new ServiceDiscoveryReconciler
@@ -93,6 +89,9 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 
 	// Fetch the ServiceDiscovery instance
 	instance := &submarinerv1alpha1.ServiceDiscovery{}
+
+	instance.SetDefaults()
+
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -142,9 +141,12 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 		}
 	}
 	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
-	if err != nil {
+	if errors.IsNotFound(err) {
 		// Try to update Openshift-DNS
 		return reconcile.Result{}, updateOpenshiftClusterDNSOperator(instance, r.client, r.operatorClientSet, reqLogger)
+	} else if err != nil {
+		reqLogger.Error(err, "Error updating the 'coredns' ConfigMap")
+		return reconcile.Result{}, err
 	}
 
 	return reconcile.Result{}, nil
@@ -181,7 +183,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-lighthouse-agent",
-							Image:           getImagePath(cr, serviceDiscoveryImage),
+							Image:           getImagePath(cr, names.ServiceDiscoveryImage),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
@@ -267,7 +269,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 					Containers: []corev1.Container{
 						{
 							Name:            lighthouseCoreDNSName,
-							Image:           getImagePath(cr, lighthouseCoreDNSImage),
+							Image:           getImagePath(cr, names.LighthouseCoreDNSImage),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
 							Args: []string{
 								"-conf",
@@ -336,7 +338,6 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.I
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Get(coreDNSName, metav1.GetOptions{})
 		if err != nil {
-			reqLogger.Error(err, "Error retrieving 'coredns' ConfigMap")
 			return err
 		}
 
@@ -469,20 +470,8 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 }
 
 func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, componentImage string) string {
-	var path string
-	spec := submariner.Spec
-
-	// If the repository is "local" we don't append it on the front of the image,
-	// a local repository is used for development, testing and CI when we inject
-	// images in the cluster, for example submariner:local, or submariner-route-agent:local
-	if spec.Repository == "local" {
-		path = componentImage
-	} else {
-		path = fmt.Sprintf("%s/%s", spec.Repository, componentImage)
-	}
-
-	path = fmt.Sprintf("%s:%s", path, spec.Version)
-	return path
+	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage,
+		submariner.Spec.ImageOverrides)
 }
 
 func (r *ServiceDiscoveryReconciler) SetupWithManager(mgr ctrl.Manager) error {

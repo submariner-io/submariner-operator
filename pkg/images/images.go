@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "k8s.io/api/core/v1"
-
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
+	v1 "k8s.io/api/core/v1"
 )
 
-func GetImagePath(repo, version, component string) string {
+func GetImagePath(repo, version, component string, imageOverrides map[string]string) string {
 	var path string
+
+	if override, ok := imageOverrides[component]; ok {
+		return override
+	}
 
 	// If the repository is "local" we don't append it on the front of the image,
 	// a local repository is used for development, testing and CI when we inject
@@ -18,7 +22,7 @@ func GetImagePath(repo, version, component string) string {
 	if repo == "local" {
 		path = component
 	} else {
-		path = fmt.Sprintf("%s/%s", repo, component)
+		path = fmt.Sprintf("%s/%s%s%s", repo, names.ImagePrefix, component, names.ImagePostfix)
 	}
 
 	path = fmt.Sprintf("%s:%s", path, version)
