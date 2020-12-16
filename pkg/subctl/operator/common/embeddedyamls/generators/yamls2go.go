@@ -39,6 +39,7 @@ var files = []string{
 	"config/rbac/cluster_role_binding.yaml",
 	"config/rbac/globalnet_cluster_role.yaml",
 	"config/rbac/globalnet_cluster_role_binding.yaml",
+	"config/rbac/lighthouse_service_account.yaml",
 	"config/rbac/lighthouse_cluster_role_binding.yaml",
 	"config/rbac/lighthouse_cluster_role.yaml",
 	"config/rbac/role.yaml",
@@ -82,6 +83,7 @@ func main() {
 	//    type: string`
 
 	re := regexp.MustCompile("`([^`]*)`")
+	reNS := regexp.MustCompile("`\\s*namespace:\\s+placeholder\\s*`")
 
 	for _, f := range files {
 		_, err = out.WriteString("\t" + constName(f) + " = `")
@@ -91,7 +93,8 @@ func main() {
 		contents, err := ioutil.ReadFile(path.Join(yamlsDirectory, f))
 		panicOnErr(err)
 
-		_, err = out.Write(re.ReplaceAll(contents, []byte("` + \"`$1`\" + `")))
+		_, err = out.Write(re.ReplaceAll(reNS.ReplaceAll(contents, []byte("\n")),
+			[]byte("` + \"`$1`\" + `")))
 		panicOnErr(err)
 
 		_, err = out.WriteString("`\n")

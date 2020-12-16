@@ -2,21 +2,60 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    alm-examples: '[]'
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "submariner.io/v1alpha1",
+          "kind": "Submariner",
+          "metadata": {
+            "name": "example-submariner"
+          },
+          "spec": {
+            "broker": "k8s",
+            "brokerK8sApiServer": "192.168.67.110:8443",
+            "brokerK8sApiServerToken": "$(SECRET_API_SERVER_TOKEN)",
+            "brokerK8sCA": "$(SECRET_CA)",
+            "brokerK8sRemoteNamespace": "submariner-broker",
+            "cableDriver": "libreswan",
+            "ceIPSecDebug": false,
+            "ceIPSecIKEPort": 500,
+            "ceIPSecNATTPort": 4500,
+            "ceIPSecPSK": "$(SECRET_IPSEC_PSK)",
+            "clusterCIDR": "192.168.67.0/24",
+            "clusterID": "east",
+            "colorCodes": "blue",
+            "debug": false,
+            "globalCIDR": "169.254.0.0/16",
+            "namespace": "submariner_operator",
+            "natEnabled": true,
+            "repository": "quay.io/submariner",
+            "serviceCIDR": "192.168.66.0/24",
+            "serviceDiscoveryEnabled": true,
+            "version": "0.8.0"
+          }
+        }
+      ]
     capabilities: Basic Install
     categories: Networking
     certified: "false"
-    containerImage: quay.io/submariner/submariner-operator:$(VERSION)
+    containerImage: quay.io/submariner/submariner-operator:0.8.0
+    createdAt: "2020-12-09 16:47:37"
     description: Creates and manages Submariner deployments.
     operators.operatorframework.io/builder: operator-sdk-v1.0.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/submariner-io/submariner-operator
     support: Submariner
-  name: submariner.v0.0.0
+  name: submariner.v0.8.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
-  customresourcedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: Submariner is the Schema for the submariners API
+      displayName: Submariner
+      kind: Submariner
+      name: submariners.submariner.io
+      version: v1alpha1
   description: |
     [Submariner](https://submariner-io) enables direct networking between Pods and Services in different Kubernetes
     clusters. With Submariner, your applications and services can span multiple cloud providers, data centers, and regions.
@@ -119,8 +158,187 @@ spec:
     mediatype: image/svg+xml
   install:
     spec:
-      deployments: null
-    strategy: ""
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - update
+        - apiGroups:
+          - apiextensions.k8s.io
+          resources:
+          - customresourcedefinitions
+          verbs:
+          - get
+          - list
+          - create
+          - update
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - operator.openshift.io
+          resources:
+          - dnses
+          verbs:
+          - get
+          - list
+          - watch
+          - update
+        - apiGroups:
+          - config.openshift.io
+          resources:
+          - networks
+          verbs:
+          - get
+          - list
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - namespaces
+          - nodes
+          verbs:
+          - get
+          - list
+          - watch
+          - update
+        - apiGroups:
+          - submariner.io
+          resources:
+          - endpoints
+          - clusters
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - lighthouse.submariner.io
+          resources:
+          - serviceexports
+          verbs:
+          - get
+          - list
+          - watch
+        serviceAccountName: submariner-operator
+      deployments:
+      - name: submariner-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              control-plane: submariner-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                control-plane: submariner-operator
+            spec:
+              containers:
+              - command:
+                - submariner-operator
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: submariner-operator
+                image: quay.io/submariner/submariner-operator:0.8.0
+                imagePullPolicy: Always
+                name: submariner-operator
+                resources: {}
+              serviceAccountName: submariner-operator
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - services/finalizers
+          - endpoints
+          - persistentvolumeclaims
+          - events
+          - configmaps
+          - secrets
+          verbs:
+          - '*'
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - daemonsets
+          - replicasets
+          - statefulsets
+          verbs:
+          - '*'
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - apps
+          resourceNames:
+          - submariner-operator
+          resources:
+          - deployments/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          verbs:
+          - get
+        - apiGroups:
+          - apps
+          resources:
+          - replicasets
+          verbs:
+          - get
+        - apiGroups:
+          - submariner.io
+          resources:
+          - '*'
+          - servicediscoveries
+          verbs:
+          - '*'
+        - apiGroups:
+          - lighthouse.submariner.io
+          resources:
+          - '*'
+          - serviceexports
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        serviceAccountName: submariner-operator
+    strategy: deployment
   installModes:
   - supported: true
     type: OwnNamespace
@@ -158,4 +376,4 @@ spec:
   selector:
     matchLabels:
       control-plane: submariner-operator
-  version: 0.0.0
+  version: 0.8.0

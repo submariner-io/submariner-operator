@@ -343,6 +343,9 @@ spec:
                                 format: int64
                                 type: integer
                               lastRTT:
+                                description: TODO This shall be deleted once the operator
+                                  is using the latest. Using Optional to avoid validation
+                                  errors when this field is not used.
                                 format: int64
                                 type: integer
                               maxRTT:
@@ -354,12 +357,22 @@ spec:
                               stddevRTT:
                                 format: int64
                                 type: integer
-                            required:
-                            - averageRTT
-                            - lastRTT
-                            - maxRTT
-                            - minRTT
-                            - stddevRTT
+                            type: object
+                          latencyRTT:
+                            description: LatencySpec describes the round trip time
+                              information for a packet between the gateway pods of
+                              two clusters.
+                            properties:
+                              average:
+                                type: string
+                              last:
+                                type: string
+                              max:
+                                type: string
+                              min:
+                                type: string
+                              stdDev:
+                                type: string
                             type: object
                           status:
                             type: string

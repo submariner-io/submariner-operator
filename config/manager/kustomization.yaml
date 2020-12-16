@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: quay.io/submariner/submariner-operator
-  newTag: 0.7.0
+  newTag: 0.8.0
