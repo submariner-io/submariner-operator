@@ -35,7 +35,6 @@ function create_subm_vars() {
     subm_colorcodes=blue
     subm_debug=false
     subm_broker=k8s
-    subm_cabledriver=libreswan
     ce_ipsec_debug=false
     ce_ipsec_ikeport=500
     ce_ipsec_nattport=4500
@@ -210,7 +209,6 @@ function verify_subm_cr() {
   validate_equals '.spec.broker' $subm_broker
   echo "Generated cluster id: $(jq -r '.spec.clusterID' $json_file)"
   validate_equals '.spec.colorCodes' $subm_colorcodes
-  validate_equals '.spec.cableDriver' $subm_cabledriver
   validate_equals '.spec.debug' $subm_debug
   validate_equals '.spec.namespace' $subm_ns
   validate_equals '.spec.natEnabled' $natEnabled
@@ -272,7 +270,6 @@ function verify_subm_engine_pod() {
   validate_pod_container_env 'SUBMARINER_DEBUG' $subm_debug
   validate_pod_container_env 'SUBMARINER_NATENABLED' $natEnabled
   validate_pod_container_env 'SUBMARINER_BROKER' $subm_broker
-  validate_pod_container_env 'SUBMARINER_CABLEDRIVER' $subm_cabledriver
   validate_pod_container_env 'BROKER_K8S_APISERVER' $SUBMARINER_BROKER_URL
   validate_pod_container_env 'BROKER_K8S_REMOTENAMESPACE' $SUBMARINER_BROKER_NS
   validate_pod_container_env 'BROKER_K8S_CA' $SUBMARINER_BROKER_CA
@@ -376,7 +373,6 @@ function verify_subm_engine_container() {
   grep "CE_IPSEC_DEBUG=$ce_ipsec_debug" $env_file
   grep "SUBMARINER_DEBUG=$subm_debug" $env_file
   grep "BROKER_K8S_REMOTENAMESPACE=$SUBMARINER_BROKER_NS" $env_file
-  grep "SUBMARINER_CABLEDRIVER=$subm_cabledriver" $env_file
   grep "SUBMARINER_SERVICECIDR=${service_CIDRs[$cluster]}" $env_file
   grep "SUBMARINER_CLUSTERCIDR=${cluster_CIDRs[$cluster]}" $env_file
   grep "SUBMARINER_COLORCODES=$subm_colorcode" $env_file

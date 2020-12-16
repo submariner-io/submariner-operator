@@ -4,6 +4,7 @@ resources:
   - cluster_role_binding.yaml
   - globalnet_cluster_role.yaml
   - globalnet_cluster_role_binding.yaml
+  - lighthouse_service_account.yaml
   - lighthouse_cluster_role.yaml
   - lighthouse_cluster_role_binding.yaml
   - role.yaml
