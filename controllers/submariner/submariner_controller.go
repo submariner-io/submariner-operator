@@ -167,7 +167,7 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		recordNoConnections()
 		for _, gateway := range *gateways {
 			gatewayStatuses = append(gatewayStatuses, gateway.Status)
-			recordGatewayUpTime(gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
+			recordGatewayCreationTime(gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
 
 			for j := range gateway.Status.Connections {
 				recordConnection(
