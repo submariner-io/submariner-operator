@@ -40,9 +40,9 @@ var (
 			Help: "Number of gateways",
 		},
 	)
-	gatewayUptimeGauge = prometheus.NewGaugeVec(
+	gatewayCreationTimeGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "submariner_gateway_uptime",
+			Name: "submariner_gateway_creation_timestamp",
 			Help: "Timestamp of gateway creation time",
 		},
 		[]string{
@@ -64,18 +64,18 @@ var (
 )
 
 func init() {
-	metrics.Registry.MustRegister(gatewaysGauge, connectionsGauge, gatewayUptimeGauge)
+	metrics.Registry.MustRegister(gatewaysGauge, connectionsGauge, gatewayCreationTimeGauge)
 }
 
 func recordGateways(count int) {
 	gatewaysGauge.Set(float64(count))
 	if count == 0 {
-		gatewayUptimeGauge.Reset()
+		gatewayCreationTimeGauge.Reset()
 	}
 }
 
-func recordGatewayUpTime(localEndpoint submv1.EndpointSpec, upTime time.Time) {
-	gatewayUptimeGauge.With(prometheus.Labels{
+func recordGatewayCreationTime(localEndpoint submv1.EndpointSpec, upTime time.Time) {
+	gatewayCreationTimeGauge.With(prometheus.Labels{
 		connectionsLocalClusterLabel:  localEndpoint.ClusterID,
 		connectionsLocalHostnameLabel: localEndpoint.Hostname,
 	}).Set(float64(upTime.Unix()))
