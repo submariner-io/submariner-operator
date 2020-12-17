@@ -29,17 +29,19 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/operator-framework/operator-lib/leader"
-	"github.com/submariner-io/submariner-operator/apis"
-	"github.com/submariner-io/submariner-operator/controllers"
-	"github.com/submariner-io/submariner-operator/pkg/engine"
-	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
-	"github.com/submariner-io/submariner-operator/pkg/version"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	"github.com/submariner-io/submariner-operator/apis"
+	"github.com/submariner-io/submariner-operator/controllers"
+	"github.com/submariner-io/submariner-operator/controllers/submariner"
+	"github.com/submariner-io/submariner-operator/pkg/engine"
+	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	"github.com/submariner-io/submariner-operator/pkg/version"
 
 	// TODO: in opeartor-sdk v1 the below utilities were moved to internal
 	// TODO: update to operator-sdk v1 or find an alternate way and then change the code accordingly
@@ -48,13 +50,14 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/spf13/pflag"
-	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+
+	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -205,6 +208,15 @@ func main() {
 		if err == metrics.ErrServiceMonitorNotPresent {
 			log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
 		}
+	}
+	if err = (&submariner.BrokerReconciler{
+		Client: mgr.GetClient(),
+		Config: mgr.GetConfig(),
+		Log:    ctrl.Log.WithName("controllers").WithName("Broker"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		log.Error(err, "unable to create controller", "controller", "Broker")
+		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
 

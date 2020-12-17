@@ -34,19 +34,21 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func Ensure(config *rest.Config) error {
-	crdCreator, err := crdutils.NewFromRestConfig(config)
-	if err != nil {
-		return fmt.Errorf("error accessing the target cluster: %s", err)
-	}
-	err = engine.Ensure(crdCreator)
-	if err != nil {
-		return fmt.Errorf("error setting up the engine requirements: %s", err)
-	}
+func Ensure(config *rest.Config, crds bool) error {
+	if crds {
+		crdCreator, err := crdutils.NewFromRestConfig(config)
+		if err != nil {
+			return fmt.Errorf("error accessing the target cluster: %s", err)
+		}
+		err = engine.Ensure(crdCreator)
+		if err != nil {
+			return fmt.Errorf("error setting up the engine requirements: %s", err)
+		}
 
-	_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
-	if err != nil {
-		return fmt.Errorf("error setting up the lighthouse requirements: %s", err)
+		_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
+		if err != nil {
+			return fmt.Errorf("error setting up the lighthouse requirements: %s", err)
+		}
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
