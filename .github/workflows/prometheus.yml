@@ -36,5 +36,11 @@ jobs:
 
       - name: Make sure the submariner_gateways metric is exported
         run: >-
-          test "$(curl -s --data-urlencode query=submariner_gateways http://localhost:9090/api/v1/query |
-          jq -r '.data.result[0].metric.__name__')" = "submariner_gateways"
+          for i in {1..10};
+          do sleep 5; if test "$(curl -s --data-urlencode query=submariner_gateways http://localhost:9090/api/v1/query |
+          jq -r '.data.result[0].metric.__name__')" = "submariner_gateways";
+          then exit 0;
+          fi;
+          done;
+          curl -s --data-urlencode query=submariner_gateways http://localhost:9090/api/v1/query | jq .;
+          exit 1
