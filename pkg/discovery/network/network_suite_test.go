@@ -21,9 +21,49 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
+	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestOpenShift4NetworkDiscovery(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Network discovery")
+}
+
+func fakePod(component string, command []string, env []v1.EnvVar) *v1.Pod {
+	return fakePodWithName(component, component, command, env)
+}
+
+func fakePodWithName(name, component string, command []string, env []v1.EnvVar) *v1.Pod {
+	return fakePodWithNamespace("default", name, component, command, env)
+}
+
+func fakePodWithNamespace(namespace, name, component string, command []string, env []v1.EnvVar) *v1.Pod {
+	return &v1.Pod{
+		ObjectMeta: v1meta.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+			Labels:    map[string]string{"component": component, "name": component},
+		},
+
+		Spec: v1.PodSpec{
+			Containers: []v1.Container{
+				{
+					Command: command,
+					Env:     env,
+				},
+			},
+		},
+	}
+}
+
+func fakeService(namespace, name, component string) *v1.Service {
+	return &v1.Service{
+		ObjectMeta: v1meta.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+			Labels:    map[string]string{"component": component, "name": component},
+		},
+		Spec: v1.ServiceSpec{},
+	}
 }
