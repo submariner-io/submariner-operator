@@ -35,14 +35,13 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
-
 	"k8s.io/client-go/rest"
 
 	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
@@ -486,7 +485,7 @@ func operatorImage() string {
 		version = versions.DefaultSubmarinerOperatorVersion
 	}
 
-	return images.GetImagePath(repository, version, deployment.OperatorName, getImageOverrides())
+	return images.GetImagePath(repository, version, names.OperatorImage, getImageOverrides())
 }
 
 func getImageOverrides() map[string]string {
