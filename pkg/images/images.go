@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -48,7 +47,7 @@ func ParseOperatorImage(operatorImage string) (string, string) {
 		version = operatorImage[i+1:]
 	}
 
-	suffix := "/" + deployment.OperatorName
+	suffix := "/" + names.OperatorImage
 	j := strings.LastIndex(repository, suffix)
 	if j != -1 {
 		repository = repository[:j]

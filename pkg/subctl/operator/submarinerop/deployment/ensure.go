@@ -17,16 +17,12 @@ limitations under the License.
 package deployment
 
 import (
-	"k8s.io/client-go/rest"
-
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/operatorpod"
-)
-
-const (
-	OperatorName = "submariner-operator"
+	"k8s.io/client-go/rest"
 )
 
 // Ensure the operator is deployed, and running
 func Ensure(restConfig *rest.Config, namespace, image string) (bool, error) {
-	return operatorpod.Ensure(restConfig, namespace, OperatorName, image)
+	return operatorpod.Ensure(restConfig, namespace, names.OperatorImage, image)
 }
