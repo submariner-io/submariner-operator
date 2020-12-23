@@ -29,10 +29,11 @@ import (
 )
 
 type ClusterNetwork struct {
-	PodCIDRs      []string
-	ServiceCIDRs  []string
-	NetworkPlugin string
-	GlobalCIDR    string
+	PodCIDRs       []string
+	ServiceCIDRs   []string
+	NetworkPlugin  string
+	GlobalCIDR     string
+	PluginSettings map[string]string
 }
 
 func (cn *ClusterNetwork) Show() {
@@ -114,6 +115,11 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 	canalClusterNet, err := discoverCanalFlannelNetwork(clientSet)
 	if err != nil || canalClusterNet != nil {
 		return canalClusterNet, err
+	}
+
+	ovnClusterNet, err := discoverOvnKubernetesNetwork(clientSet)
+	if err != nil || ovnClusterNet != nil {
+		return ovnClusterNet, err
 	}
 
 	return nil, nil

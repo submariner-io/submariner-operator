@@ -334,30 +334,6 @@ spec:
                             - public_ip
                             - subnets
                             type: object
-                          latency:
-                            description: LatencySpec describes the round trip time
-                              information in nanoseconds for a packet between the
-                              gateway pods of two clusters.
-                            properties:
-                              averageRTT:
-                                format: int64
-                                type: integer
-                              lastRTT:
-                                description: TODO This shall be deleted once the operator
-                                  is using the latest. Using Optional to avoid validation
-                                  errors when this field is not used.
-                                format: int64
-                                type: integer
-                              maxRTT:
-                                format: int64
-                                type: integer
-                              minRTT:
-                                format: int64
-                                type: integer
-                              stddevRTT:
-                                format: int64
-                                type: integer
-                            type: object
                           latencyRTT:
                             description: LatencySpec describes the round trip time
                               information for a packet between the gateway pods of

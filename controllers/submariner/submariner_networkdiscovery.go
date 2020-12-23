@@ -29,7 +29,7 @@ func (r *SubmarinerReconciler) getClusterNetwork(submariner *submopv1a1.Submarin
 	return r.clusterNetwork, err
 }
 
-func (r *SubmarinerReconciler) discoverNetwork(submariner *submopv1a1.Submariner) error {
+func (r *SubmarinerReconciler) discoverNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
 	clusterNetwork, err := r.getClusterNetwork(submariner)
 	submariner.Status.ClusterCIDR = getCIDR(
 		"Cluster",
@@ -46,7 +46,7 @@ func (r *SubmarinerReconciler) discoverNetwork(submariner *submopv1a1.Submariner
 	//TODO: globalCIDR allocation if no global CIDR is assigned and enabled.
 	//      currently the clusterNetwork discovers any existing operator setting,
 	//      but that's not really helpful here
-	return err
+	return clusterNetwork, err
 }
 
 func getCIDR(cidrType, currentCIDR string, detectedCIDRs []string) string {

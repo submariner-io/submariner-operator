@@ -127,7 +127,8 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 
 	// discovery is performed after Update to avoid storing the discovery in the
 	// struct beyond status
-	if err := r.discoverNetwork(instance); err != nil {
+	clusterNetwork, err := r.discoverNetwork(instance)
+	if err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -148,7 +149,7 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		}
 	}
 
-	if _, err := r.reconcileNetworkPluginSyncerDeployment(instance, reqLogger); err != nil {
+	if _, err := r.reconcileNetworkPluginSyncerDeployment(instance, clusterNetwork, reqLogger); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -308,10 +309,11 @@ func (r *SubmarinerReconciler) reconcileEngineDaemonSet(instance *submopv1a1.Sub
 }
 
 func (r *SubmarinerReconciler) reconcileNetworkPluginSyncerDeployment(instance *submopv1a1.Submariner,
-	reqLogger logr.Logger) (*appsv1.Deployment, error) {
+	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger) (*appsv1.Deployment, error) {
 	// Only OVNKubernetes needs networkplugin-syncer so far
-	if instance.Status.NetworkPlugin == "OVNKubernetes" {
-		return helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance), reqLogger, r.client, r.scheme)
+	if instance.Status.NetworkPlugin == network.OvnKubernetes {
+		return helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,
+			clusterNetwork), reqLogger, r.client, r.scheme)
 	}
 	return nil, nil
 }

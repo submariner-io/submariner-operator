@@ -18,7 +18,6 @@ package network
 
 import (
 	v1 "k8s.io/api/core/v1"
-	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -165,26 +164,4 @@ func testDiscoverGenericWith(objects ...runtime.Object) *ClusterNetwork {
 	clusterNet, err := discoverGenericNetwork(clientSet)
 	Expect(err).NotTo(HaveOccurred())
 	return clusterNet
-}
-
-func fakePod(component string, command []string, env []v1.EnvVar) *v1.Pod {
-	return fakePodWithName(component, component, command, env)
-}
-
-func fakePodWithName(name, component string, command []string, env []v1.EnvVar) *v1.Pod {
-	return &v1.Pod{
-		ObjectMeta: v1meta.ObjectMeta{
-			Name:   name,
-			Labels: map[string]string{"component": component, "name": component},
-		},
-
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				{
-					Command: command,
-					Env:     env,
-				},
-			},
-		},
-	}
 }

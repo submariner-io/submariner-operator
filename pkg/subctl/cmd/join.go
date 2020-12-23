@@ -35,14 +35,13 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
-
 	"k8s.io/client-go/rest"
 
 	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
@@ -83,7 +82,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterID, "clusterid", "", "cluster ID used to identify the tunnels")
 	cmd.Flags().StringVar(&serviceCIDR, "servicecidr", "", "service CIDR")
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
-	cmd.Flags().StringVar(&repository, "repository", versions.DefaultRepo, "image repository")
+	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
 	cmd.Flags().StringVar(&colorCodes, "colorcodes", submariner.DefaultColorCode, "color codes")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
@@ -418,14 +417,6 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		brokerURL = brokerURL[(idx + 3):]
 	}
 
-	crImageVersion := imageVersion
-
-	if imageVersion == "" {
-		// Default engine version
-		// This is handled in the operator after 0.0.1 (of the operator)
-		crImageVersion = versions.DefaultSubmarinerVersion
-	}
-
 	// if our network discovery code was capable of discovering those CIDRs
 	// we don't need to explicitly set it in the operator
 	crServiceCIDR := ""
@@ -444,7 +435,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 
 	submarinerSpec := submariner.SubmarinerSpec{
 		Repository:               repository,
-		Version:                  crImageVersion,
+		Version:                  imageVersion,
 		CeIPSecNATTPort:          nattPort,
 		CeIPSecIKEPort:           ikePort,
 		CeIPSecDebug:             ipsecDebug,
@@ -481,12 +472,17 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 
 func operatorImage() string {
 	version := imageVersion
+	repo := repository
 
 	if imageVersion == "" {
 		version = versions.DefaultSubmarinerOperatorVersion
 	}
 
-	return images.GetImagePath(repository, version, deployment.OperatorName, getImageOverrides())
+	if repository == "" {
+		repo = versions.DefaultRepo
+	}
+
+	return images.GetImagePath(repo, version, names.OperatorImage, getImageOverrides())
 }
 
 func getImageOverrides() map[string]string {
