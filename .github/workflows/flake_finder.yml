@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Reclaim free space!
+      - name: Reclaim free space
         run: |
           sudo swapoff -a
           sudo rm -f /swapfile
@@ -57,7 +57,7 @@ jobs:
         run: |
           make upgrade-e2e
 
-      - name: Post Mortem
+      - name: Post mortem
         if: failure()
         run: |
           df -h
