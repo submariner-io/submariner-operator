@@ -85,7 +85,7 @@ func cleanupFramework(f *framework.Framework) {
 func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	clientClusterName := framework.TestContext.ClusterIDs[testParams.ClientCluster]
 	serverClusterName := framework.TestContext.ClusterIDs[testParams.ServerCluster]
-	var connectionTimeout uint = 20
+	var connectionTimeout uint = 10
 	var connectionAttempts uint = 2
 	var iperf3Port = 5201
 
@@ -106,7 +106,7 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	remoteIP := p1.Status.PodIP
 
 	if framework.TestContext.GlobalnetEnabled && testParams.ClientCluster != testParams.ServerCluster {
-		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q",
+		By(fmt.Sprintf("Pointing a ClusterIP service to the listener pod in cluster %q",
 			framework.TestContext.ClusterIDs[testParams.ServerCluster]))
 		service := nettestServerPod.CreateService()
 
