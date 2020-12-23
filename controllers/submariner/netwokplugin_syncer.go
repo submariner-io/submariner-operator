@@ -8,11 +8,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	submopv1a1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 )
 
-func newNetworkPluginSyncerDeployment(cr *submopv1a1.Submariner) *appsv1.Deployment {
+func newNetworkPluginSyncerDeployment(cr *submopv1a1.Submariner, clusterNetwork *network.ClusterNetwork) *appsv1.Deployment {
 	labels := map[string]string{
 		"app":       "submariner-networkplugin-syncer",
 		"component": "networkplugin-syncer",
@@ -70,6 +71,19 @@ func newNetworkPluginSyncerDeployment(cr *submopv1a1.Submariner) *appsv1.Deploym
 				},
 			},
 		},
+	}
+
+	if clusterNetwork.PluginSettings != nil {
+		if ovndb, ok := clusterNetwork.PluginSettings[network.OvnNBDB]; ok {
+			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env =
+				append(networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name: network.OvnNBDB, Value: ovndb})
+		}
+		if ovnsb, ok := clusterNetwork.PluginSettings[network.OvnSBDB]; ok {
+			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env =
+				append(networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+					Name: network.OvnSBDB, Value: ovnsb})
+		}
 	}
 
 	return networkPluginSyncerDeployment
