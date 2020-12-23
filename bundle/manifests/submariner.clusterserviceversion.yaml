@@ -57,26 +57,26 @@ spec:
       name: submariners.submariner.io
       version: v1alpha1
   description: |
-    [Submariner](https://submariner-io) enables direct networking between Pods and Services in different Kubernetes
+    [Submariner](https://submariner.io) enables direct networking between Pods and Services in different Kubernetes
     clusters. With Submariner, your applications and services can span multiple cloud providers, data centers, and regions.
 
     Submariner is designed to be cloud provider and network plugin (CNI) agnostic.
 
     Submariner consists of several main components that work in conjunction to securely connect workloads across
     multiple Kubernetes clusters, both on-premise and on public clouds:
-    * [Gateway Engine](https://submariner.io/architecture/gateway-engine/): manages the secure tunnels to other clusters.
-    * [Route Agent](https://submariner.io/architecture/route-agent/): routes cross-cluster traffic from nodes
+    * [Gateway Engine](https://submariner.io/getting-started/architecture/gateway-engine/): manages the secure tunnels to other clusters.
+    * [Route Agent](https://submariner.io/getting-started/architecture/route-agent/): routes cross-cluster traffic from nodes
     to the active Gateway Engine.
-    * [Broker](https://submariner.io/architecture/broker/): facilitates the exchange of metadata between Gateway
+    * [Broker](https://submariner.io/getting-started/architecture/broker/): facilitates the exchange of metadata between Gateway
     Engines enabling them to discover one another.
 
     Submariner has optional components that provide additional functionality:
-    * [Globalnet Controller](https://submariner.io/architecture/globalnet/): handles overlapping CIDRs across clusters.
-    * [Service Discovery](https://submariner.io/architecture/service-discovery/): provides DNS discovery of services
+    * [Globalnet Controller](https://submariner.io/getting-started/architecture/globalnet/): handles overlapping CIDRs across clusters.
+    * [Service Discovery](https://submariner.io/getting-started/architecture/service-discovery/): provides DNS discovery of services
     across clusters.
 
     ### Prerequisites
-    Submariner has a few requirements to get started, all are documented [here](https://submariner.io/quickstart/#prerequisites).
+    Submariner has a few requirements to get started, all are documented [here](https://submariner.io/getting-started/quickstart/kind/#prerequisites).
 
     ### Deployment
     Submariner provides an [Operator](https://github.com/submariner-io/submariner-operator) for easy API-based
@@ -84,8 +84,8 @@ spec:
     A command line utility, [subctl](https://github.com/submariner-io/submariner-operator/releases), wraps the
     Operator to aid users with manual deployments and easy experimentation.
     subctl greatly simplifies the deployment of Submariner, and is therefore the recommended deployment method.
-    For complete information about subctl, please refer to [this page](https://submariner.io/deployment/subctl).
-    In addition to Operator and subctl, Submariner also provides [Helm Charts](https://submariner.io/deployment/helm).
+    For complete information about subctl, please refer to [this page](https://submariner.io/operations/deployment/subctl).
+    In addition to Operator and subctl, Submariner also provides [Helm Charts](https://submariner.io/operations/deployment/helm).
 
     #### Deploying with subctl
     Install the tool:
@@ -102,7 +102,7 @@ spec:
 
     `subctl join --kubeconfig <PATH-TO-JOINING-CLUSTER> broker-info.subm --clusterid <ID>`
 
-    More information can be found [here](https://submariner.io/deployment/subctl).
+    More information can be found [here](https://submariner.io/operations/deployment/subctl).
 
     Submariner is deployed using the Submariner CR. The following values can be specified:
     * **namespace**: the namespace to install in;
