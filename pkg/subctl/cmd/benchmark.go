@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/submariner-io/shipyard/test/e2e/framework"
+
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/benchmark"
 )
@@ -42,6 +44,8 @@ func init() {
 	benchmarkCmd.AddCommand(benchmarkThroughputCmd)
 	benchmarkCmd.AddCommand(benchmarkLatencyCmd)
 	rootCmd.AddCommand(benchmarkCmd)
+
+	framework.AddBeforeSuite(detectGlobalnet)
 }
 
 func addBenchmarkFlags(cmd *cobra.Command) {

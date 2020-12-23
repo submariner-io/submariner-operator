@@ -8,6 +8,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const globalnetGlobalIPAnnotation = "submariner.io/globalIp"
+
 type benchmarkTestParams struct {
 	ClientCluster       framework.ClusterIndex
 	ServerCluster       framework.ClusterIndex
@@ -30,6 +32,12 @@ func StartLatencyTests(intraCluster bool) {
 	f = initFramework("latency")
 
 	if !intraCluster {
+		if framework.TestContext.GlobalnetEnabled {
+			By("Latency test is not supported with Globalnet enabled, skipping the test...")
+			cleanupFramework(f)
+			return
+		}
+
 		latencyTestParams := benchmarkTestParams{
 			ClientCluster:       framework.ClusterA,
 			ServerCluster:       framework.ClusterB,
@@ -77,7 +85,7 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 
 	podsClusterB := framework.KubeClients[testParams.ServerCluster].CoreV1().Pods(f.Namespace)
 	p1, _ := podsClusterB.Get(nettestServerPod.Pod.Name, metav1.GetOptions{})
-	framework.By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
+	By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP
 
