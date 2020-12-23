@@ -63,16 +63,34 @@ jobs:
   markdown-link-check:
     name: Markdown Links (modified files)
     runs-on: ubuntu-latest
+    env:
+      BASE_BRANCH: ${{ github.base_ref }}
+      FILE_EXTENSION: .md
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
-
+      - name: Extract markdown from CSV.yaml
+        run: |-
+          sudo snap install yq --channel=v4/stable && \
+          yq e '.spec.description, .spec.links' config/manifests/bases/submariner.clusterserviceversion.yaml > extracted_yaml_links.md
+      - name: Prepare a list of md files
+        run: |-
+          git fetch origin "${BASE_BRANCH}" --depth=1 > /dev/null
+          MASTER_HASH=$(git rev-parse origin/"${BASE_BRANCH}")
+          mapfile -t FILE_ARRAY < <( git diff --name-only --diff-filter=AM "$MASTER_HASH" )
+          for i in "${FILE_ARRAY[@]}"; do
+            if [ "${i##*.}" == "${FILE_EXTENSION#.}" ]; then
+              MD_FILES="${MD_FILES}${i},"
+            fi
+          done
+          export MD_FILES="${MD_FILES}extracted_yaml_links.md"
+          echo "MD_FILES=${MD_FILES}" >> $GITHUB_ENV
       - name: Run markdown-link-check
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           config-file: ".markdownlinkcheck.json"
-          check-modified-files-only: "yes"
-          base-branch: ${{ github.base_ref }}
+          check-modified-files-only: "no"
+          file-path: ${{ env.MD_FILES }}
 
   markdownlint:
     name: Markdown
