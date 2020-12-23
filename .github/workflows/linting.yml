@@ -5,6 +5,17 @@ on:
   pull_request:
 
 jobs:
+  crds:
+    name: CRDs up-to-date
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+      - name: Run make manifests to update CRDs
+        run: make manifests
+      - name: Validate that nothing has changed
+        run: git add -A && git diff --staged --exit-code
+
   dco:
     name: DCO in Commit Message(s)
     runs-on: ubuntu-latest

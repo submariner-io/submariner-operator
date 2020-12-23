@@ -8,6 +8,7 @@ const (
 	ServiceDiscoveryImage    = "lighthouse-agent"
 	LighthouseCoreDNSImage   = "lighthouse-coredns"
 	ServiceDiscoveryCrName   = "service-discovery"
+	OperatorImage            = "submariner-operator"
 )
 
 var (

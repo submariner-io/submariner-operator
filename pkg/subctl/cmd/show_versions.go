@@ -8,7 +8,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -52,14 +51,14 @@ func getSubmarinerVersion(submarinerClient submarinerclientset.Interface, versio
 }
 
 func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
-	operatorConfig, err := clientSet.AppsV1().Deployments(OperatorNamespace).Get(deployment.OperatorName, v1.GetOptions{})
+	operatorConfig, err := clientSet.AppsV1().Deployments(OperatorNamespace).Get(names.OperatorImage, v1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	operatorFullImageStr := operatorConfig.Spec.Template.Spec.Containers[0].Image
 	version, repository := images.ParseOperatorImage(operatorFullImageStr)
-	versions = append(versions, newVersionInfoFrom(repository, deployment.OperatorName, version))
+	versions = append(versions, newVersionInfoFrom(repository, names.OperatorImage, version))
 	return versions, nil
 }
 
