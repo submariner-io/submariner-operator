@@ -17,6 +17,8 @@ limitations under the License.
 package submariner
 
 import (
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 
@@ -38,6 +40,15 @@ var (
 			Help: "Number of gateways",
 		},
 	)
+	gatewayCreationTimeGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "submariner_gateway_creation_timestamp",
+			Help: "Timestamp of gateway creation time",
+		},
+		[]string{
+			connectionsLocalClusterLabel,
+			connectionsLocalHostnameLabel},
+	)
 	connectionsGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "submariner_connections",
@@ -53,11 +64,21 @@ var (
 )
 
 func init() {
-	metrics.Registry.MustRegister(gatewaysGauge, connectionsGauge)
+	metrics.Registry.MustRegister(gatewaysGauge, connectionsGauge, gatewayCreationTimeGauge)
 }
 
 func recordGateways(count int) {
 	gatewaysGauge.Set(float64(count))
+	if count == 0 {
+		gatewayCreationTimeGauge.Reset()
+	}
+}
+
+func recordGatewayCreationTime(localEndpoint submv1.EndpointSpec, upTime time.Time) {
+	gatewayCreationTimeGauge.With(prometheus.Labels{
+		connectionsLocalClusterLabel:  localEndpoint.ClusterID,
+		connectionsLocalHostnameLabel: localEndpoint.Hostname,
+	}).Set(float64(upTime.Unix()))
 }
 
 func recordNoConnections() {
