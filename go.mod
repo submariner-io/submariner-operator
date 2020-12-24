@@ -2,9 +2,8 @@ module github.com/submariner-io/submariner-operator
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.7
-	github.com/creack/pty v1.1.9 // indirect
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.19.11
+	github.com/go-openapi/spec v0.20.0
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.14.2
