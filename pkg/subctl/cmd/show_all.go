@@ -26,14 +26,24 @@ func showAll(cmd *cobra.Command, args []string) {
 		fmt.Println()
 		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
 
+		fmt.Println("Showing Network details")
 		showNetworkSingleCluster(item.config)
-		fmt.Println()
-		showEndpointsFromConfig(item.config)
-		fmt.Println()
-		showConnectionsFromConfig(item.config)
-		fmt.Println()
-		showGatewaysFromConfig(item.config)
-		fmt.Println()
-		showVersionsFromConfig(item.config)
+		fmt.Println("")
+
+		submariner := getSubmarinerResource(item.config)
+
+		if submariner == nil {
+			fmt.Println(submMissingMessage)
+			continue
+		}
+
+		fmt.Println("\nShowing Endpoint details")
+		showEndpointsFor(submariner)
+		fmt.Println("\nShowing Connection details")
+		showConnectionsFor(submariner)
+		fmt.Println("\nShowing Gateway details")
+		showGatewaysFor(submariner)
+		fmt.Println("\nShowing version details")
+		showVersionsFor(item.config, submariner)
 	}
 }
