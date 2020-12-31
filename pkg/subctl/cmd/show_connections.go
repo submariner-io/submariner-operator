@@ -5,11 +5,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 )
 
 type connectionStatus struct {
@@ -32,18 +30,10 @@ func init() {
 	showCmd.AddCommand(showConnectionsCmd)
 }
 
-func getConnectionsStatus(config *rest.Config) []connectionStatus {
-	submarinerClient, err := submarinerclientset.NewForConfig(config)
-	exitOnError("Unable to get the Submariner client", err)
-
+func getConnectionsStatus(submariner *v1alpha1.Submariner) []connectionStatus {
 	var status []connectionStatus
 
-	existingCfg, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
-	if err != nil {
-		exitOnError("error reading from submariner client", err)
-	}
-
-	gateways := existingCfg.Status.Gateways
+	gateways := submariner.Status.Gateways
 	if gateways == nil {
 		exitWithErrorMsg("No endpoints found")
 	}
@@ -72,14 +62,15 @@ func showConnections(cmd *cobra.Command, args []string) {
 	for _, item := range configs {
 		fmt.Println()
 		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
-		status := getConnectionsStatus(item.config)
-		printConnections(status)
+		showConnectionsFor(GetSubmarinerResource(item.config))
 	}
 }
 
-func showConnectionsFromConfig(config *rest.Config) {
-	status := getConnectionsStatus(config)
-	printConnections(status)
+func showConnectionsFor(submariner *v1alpha1.Submariner) {
+	if submariner != nil {
+		status := getConnectionsStatus(submariner)
+		printConnections(status)
+	}
 }
 
 func printConnections(connections []connectionStatus) {
