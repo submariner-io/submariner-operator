@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
@@ -40,14 +41,9 @@ func newVersionInfoFrom(repository, component, version string) versionImageInfo 
 	}
 }
 
-func getSubmarinerVersion(submarinerClient submarinerclientset.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
-	existingCfg, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	versions = append(versions, newVersionInfoFrom(existingCfg.Spec.Repository, submarinercr.SubmarinerName, existingCfg.Spec.Version))
-	return versions, nil
+func getSubmarinerVersion(submariner *v1alpha1.Submariner, versions []versionImageInfo) []versionImageInfo {
+	versions = append(versions, newVersionInfoFrom(submariner.Spec.Repository, submarinercr.SubmarinerName, submariner.Spec.Version))
+	return versions
 }
 
 func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
@@ -78,7 +74,7 @@ func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface,
 	return versions, nil
 }
 
-func getVersions(config *rest.Config) []versionImageInfo {
+func getVersions(config *rest.Config, submariner *v1alpha1.Submariner) []versionImageInfo {
 	var versions []versionImageInfo
 
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
@@ -87,7 +83,7 @@ func getVersions(config *rest.Config) []versionImageInfo {
 	clientSet, err := kubernetes.NewForConfig(config)
 	exitOnError("Unable to get the Operator config", err)
 
-	versions, err = getSubmarinerVersion(submarinerClient, versions)
+	versions = getSubmarinerVersion(submariner, versions)
 	exitOnError("Unable to get the Submariner versions", err)
 
 	versions, err = getOperatorVersion(clientSet, versions)
@@ -99,20 +95,24 @@ func getVersions(config *rest.Config) []versionImageInfo {
 	return versions
 }
 
+func showVersionsFor(config *rest.Config, submariner *v1alpha1.Submariner) {
+	versions := getVersions(config, submariner)
+	printVersions(versions)
+}
+
 func showVersions(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
 	exitOnError("Error getting REST config for cluster", err)
 	for _, item := range configs {
 		fmt.Println()
 		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
-		versions := getVersions(item.config)
-		printVersions(versions)
+		submariner := getSubmarinerResource(item.config)
+		if submariner == nil {
+			fmt.Println(submMissingMessage)
+		} else {
+			showVersionsFor(item.config, submariner)
+		}
 	}
-}
-
-func showVersionsFromConfig(config *rest.Config) {
-	versions := getVersions(config)
-	printVersions(versions)
 }
 
 func printVersions(versions []versionImageInfo) {
