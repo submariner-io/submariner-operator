@@ -4,11 +4,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 )
 
 type gatewayStatus struct {
@@ -28,17 +26,10 @@ func init() {
 	showCmd.AddCommand(showGatewaysCmd)
 }
 
-func getGatewaysStatus(config *rest.Config) []gatewayStatus {
-	submarinerClient, err := submarinerclientset.NewForConfig(config)
-	exitOnError("Unable to get the Submariner client", err)
-
+func getGatewaysStatus(submariner *v1alpha1.Submariner) []gatewayStatus {
 	var status []gatewayStatus
-	existingCfg, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
-	if err != nil {
-		exitOnError("error reading from submariner client", err)
-	}
 
-	gateways := existingCfg.Status.Gateways
+	gateways := submariner.Status.Gateways
 	if gateways == nil {
 		exitWithErrorMsg("no gateways found")
 	}
@@ -82,14 +73,15 @@ func showGateways(cmd *cobra.Command, args []string) {
 	for _, item := range configs {
 		fmt.Println()
 		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
-		status := getGatewaysStatus(item.config)
-		printGateways(status)
+		showGatewaysFor(getSubmarinerResource(item.config))
 	}
 }
 
-func showGatewaysFromConfig(config *rest.Config) {
-	status := getGatewaysStatus(config)
-	printGateways(status)
+func showGatewaysFor(submariner *v1alpha1.Submariner) {
+	if submariner != nil {
+		status := getGatewaysStatus(submariner)
+		printGateways(status)
+	}
 }
 
 func printGateways(gateways []gatewayStatus) {
