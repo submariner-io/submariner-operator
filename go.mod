@@ -1,10 +1,9 @@
 module github.com/submariner-io/submariner-operator
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.2.4
-	github.com/creack/pty v1.1.9 // indirect
+	github.com/AlecAivazis/survey/v2 v2.2.7
 	github.com/go-logr/logr v0.1.0
-	github.com/go-openapi/spec v0.19.11
+	github.com/go-openapi/spec v0.20.0
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.14.2
@@ -14,7 +13,7 @@ require (
 	github.com/operator-framework/operator-lib v0.2.0
 	github.com/operator-framework/operator-sdk v0.17.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.8.0
+	github.com/prometheus/client_golang v1.9.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/submariner-io/admiral v0.8.0
@@ -28,7 +27,7 @@ require (
 	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200204173128-addea2498afe
 	sigs.k8s.io/controller-runtime v0.6.2
-	sigs.k8s.io/controller-tools v0.3.0
+	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/mcs-api v0.0.0-20200908023942-d26176718973
 	sigs.k8s.io/yaml v1.2.0
 )
