@@ -49,12 +49,16 @@ var (
 	reportDirectory                 string
 	submarinerNamespace             string
 	verifyOnly                      string
-	enableDisruptive                bool
+	disruptiveTests                 bool
 )
 
 func init() {
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
-	verifyCmd.Flags().BoolVar(&enableDisruptive, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
+	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
+	verifyCmd.Flags().BoolVar(&disruptiveTests, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
+	err := verifyCmd.Flags().MarkDeprecated("enable-disruptive", "please use --disruptive-tests instead")
+	// Errors here are fatal programming errors
+	exitOnError("deprecation error", err)
 	addVerifyFlags(verifyCmd)
 	rootCmd.AddCommand(verifyCmd)
 
@@ -62,12 +66,12 @@ func init() {
 }
 
 func addVerifyFlags(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&verboseConnectivityVerification, "verbose", false, "Produce verbose logs during connectivity verification")
-	cmd.Flags().UintVar(&operationTimeout, "operation-timeout", 240, "Operation timeout for K8s API calls")
-	cmd.Flags().UintVar(&connectionTimeout, "connection-timeout", 60, "The timeout in seconds per connection attempt ")
-	cmd.Flags().UintVar(&connectionAttempts, "connection-attempts", 2, "The maximum number of connection attempts")
+	cmd.Flags().BoolVar(&verboseConnectivityVerification, "verbose", false, "produce verbose logs during connectivity verification")
+	cmd.Flags().UintVar(&operationTimeout, "operation-timeout", 240, "operation timeout for K8s API calls")
+	cmd.Flags().UintVar(&connectionTimeout, "connection-timeout", 60, "timeout in seconds per connection attempt")
+	cmd.Flags().UintVar(&connectionAttempts, "connection-attempts", 2, "maximum number of connection attempts")
 	cmd.Flags().StringVar(&reportDirectory, "report-dir", ".", "XML report directory")
-	cmd.Flags().StringVar(&submarinerNamespace, "submariner-namespace", "submariner-operator", "Namespace in which submariner is deployed")
+	cmd.Flags().StringVar(&submarinerNamespace, "submariner-namespace", "submariner-operator", "namespace in which submariner is deployed")
 }
 
 var verifyCmd = &cobra.Command{
@@ -95,11 +99,11 @@ The following verifications are deemed disruptive:
 		configureTestingFramework(args)
 
 		disruptive := extractDisruptiveVerifications(verifyOnly)
-		if !enableDisruptive && len(disruptive) > 0 {
+		if !disruptiveTests && len(disruptive) > 0 {
 			err := survey.AskOne(&survey.Confirm{
 				Message: fmt.Sprintf("You have specified disruptive verifications (%s). Are you sure you want to run them?",
 					strings.Join(disruptive, ",")),
-			}, &enableDisruptive)
+			}, &disruptiveTests)
 
 			if err != nil {
 				if isNonInteractive(err) {
@@ -112,7 +116,7 @@ prompt for confirmation therefore you must specify --enable-disruptive to run th
 			}
 		}
 
-		patterns, verifications, err := getVerifyPatterns(verifyOnly, enableDisruptive)
+		patterns, verifications, err := getVerifyPatterns(verifyOnly, disruptiveTests)
 		if err != nil {
 			fmt.Println(err.Error())
 			return

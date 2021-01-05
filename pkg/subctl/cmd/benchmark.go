@@ -64,8 +64,8 @@ func init() {
 }
 
 func addBenchmarkFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, "Runs the test within a single cluster")
-	cmd.PersistentFlags().BoolVar(&benchmark.Verbose, "verbose", false, "Produce verbose logs during benchmark tests")
+	cmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, "run the test within a single cluster")
+	cmd.PersistentFlags().BoolVar(&benchmark.Verbose, "verbose", false, "produce verbose logs during benchmark tests")
 }
 
 func checkBenchmarkArguments(args []string, intraCluster bool) error {

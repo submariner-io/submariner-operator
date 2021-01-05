@@ -61,7 +61,7 @@ func init() {
 }
 
 func addServiceExportFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&serviceNamespace, "namespace", "n", "", "Namespace of the service to be exported")
+	cmd.Flags().StringVarP(&serviceNamespace, "namespace", "n", "", "namespace of the service to be exported")
 }
 
 func exportService(cmd *cobra.Command, args []string) {
