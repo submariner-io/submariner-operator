@@ -1,5 +1,5 @@
 /*
-© 2020 Red Hat, Inc. and others.
+© 2021 Red Hat, Inc. and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ func init() {
 }
 
 func addServiceExportFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&serviceNamespace, "namespace", "n", "", "Namespace of the service to be exported")
+	cmd.Flags().StringVarP(&serviceNamespace, "namespace", "n", "", "namespace of the service to be exported")
 }
 
 func exportService(cmd *cobra.Command, args []string) {
