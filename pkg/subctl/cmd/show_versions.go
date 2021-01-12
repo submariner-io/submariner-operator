@@ -111,7 +111,7 @@ func getVersions(config *rest.Config, submariner *v1alpha1.Submariner) []version
 }
 
 func getVersionsFor(config *rest.Config) {
-	submariner := GetSubmarinerResource(config)
+	submariner := getSubmarinerResource(config)
 	if submariner != nil {
 		versions := getVersions(config, submariner)
 		printVersions(versions)

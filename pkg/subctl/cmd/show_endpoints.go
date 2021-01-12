@@ -86,7 +86,7 @@ func showEndpoints(cmd *cobra.Command, args []string) {
 	for _, item := range configs {
 		fmt.Println()
 		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
-		showEndpointsFor(GetSubmarinerResource(item.config))
+		showEndpointsFor(getSubmarinerResource(item.config))
 	}
 }
 

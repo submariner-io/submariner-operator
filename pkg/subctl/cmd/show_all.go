@@ -45,7 +45,7 @@ func showAll(cmd *cobra.Command, args []string) {
 		showNetworkSingleCluster(item.config)
 		fmt.Println("")
 
-		submariner := GetSubmarinerResource(item.config)
+		submariner := getSubmarinerResource(item.config)
 
 		if submariner == nil {
 			continue

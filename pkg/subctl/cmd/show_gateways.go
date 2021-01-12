@@ -88,7 +88,7 @@ func showGateways(cmd *cobra.Command, args []string) {
 	for _, item := range configs {
 		fmt.Println()
 		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
-		showGatewaysFor(GetSubmarinerResource(item.config))
+		showGatewaysFor(getSubmarinerResource(item.config))
 	}
 }
 

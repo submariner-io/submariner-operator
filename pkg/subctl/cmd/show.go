@@ -105,7 +105,7 @@ func getClientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, ov
 	return restConfig{config: clientConfig, clusterName: *clusterName}, nil
 }
 
-func GetSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
+func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
 	exitOnError("Unable to get the Submariner client", err)
 
