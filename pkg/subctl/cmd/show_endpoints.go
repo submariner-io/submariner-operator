@@ -4,10 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 )
 
 type endpointStatus struct {
@@ -39,18 +37,10 @@ func init() {
 	showCmd.AddCommand(showEndpointsCmd)
 }
 
-func getEndpointsStatus(config *rest.Config) []endpointStatus {
-	submarinerClient, err := submarinerclientset.NewForConfig(config)
-	exitOnError("Unable to get the Submariner client", err)
-
+func getEndpointsStatus(submariner *v1alpha1.Submariner) []endpointStatus {
 	var status []endpointStatus
+	gateways := submariner.Status.Gateways
 
-	existingCfg, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
-	if err != nil {
-		exitOnError("Error obtaining the Submariner resource", err)
-	}
-
-	gateways := existingCfg.Status.Gateways
 	if gateways == nil {
 		exitWithErrorMsg("No endpoints found")
 	}
@@ -72,7 +62,6 @@ func getEndpointsStatus(config *rest.Config) []endpointStatus {
 				"remote"))
 		}
 	}
-
 	return status
 }
 
@@ -82,14 +71,15 @@ func showEndpoints(cmd *cobra.Command, args []string) {
 	for _, item := range configs {
 		fmt.Println()
 		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
-		status := getEndpointsStatus(item.config)
-		printEndpoints(status)
+		showEndpointsFor(GetSubmarinerResource(item.config))
 	}
 }
 
-func showEndpointsFromConfig(config *rest.Config) {
-	status := getEndpointsStatus(config)
-	printEndpoints(status)
+func showEndpointsFor(submariner *v1alpha1.Submariner) {
+	if submariner != nil {
+		status := getEndpointsStatus(submariner)
+		printEndpoints(status)
+	}
 }
 
 func printEndpoints(endpoints []endpointStatus) {
