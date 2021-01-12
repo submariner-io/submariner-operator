@@ -1,3 +1,18 @@
+/*
+© 2021 Red Hat, Inc. and others
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package cmd
 
 import (
@@ -49,8 +64,8 @@ func init() {
 }
 
 func addBenchmarkFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, "Runs the test within a single cluster")
-	cmd.PersistentFlags().BoolVar(&benchmark.Verbose, "verbose", false, "Produce verbose logs during benchmark tests")
+	cmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, "run the test within a single cluster")
+	cmd.PersistentFlags().BoolVar(&benchmark.Verbose, "verbose", false, "produce verbose logs during benchmark tests")
 }
 
 func checkBenchmarkArguments(args []string, intraCluster bool) error {

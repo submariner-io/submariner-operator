@@ -522,7 +522,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 				{
 					Name:            "submariner",
 					Image:           getImagePath(cr, names.EngineImage),
-					ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
+					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.EngineImage]),
 					Command:         []string{"submariner.sh"},
 					SecurityContext: &security_context_all_caps_privileged,
 					VolumeMounts: []corev1.VolumeMount{
@@ -548,6 +548,11 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 						{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
 						{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
 						{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
+						{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "spec.nodeName",
+							},
+						}},
 					},
 				},
 			},
@@ -626,7 +631,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 						{
 							Name:            "submariner-routeagent",
 							Image:           getImagePath(cr, names.RouteAgentImage),
-							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentImage]),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
 							Command:         []string{"submariner-route-agent.sh"},
 							SecurityContext: &security_context_all_cap_allow_escal,
@@ -706,7 +711,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 						{
 							Name:            "submariner-globalnet",
 							Image:           getImagePath(cr, names.GlobalnetImage),
-							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetImage]),
 							SecurityContext: &security_context_all_cap_allow_escal,
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-slash", MountPath: "/host", ReadOnly: true},
