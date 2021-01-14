@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - release-*
 
 jobs:
   e2e:
@@ -51,5 +52,5 @@ jobs:
         env:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
-          RELEASE_ARGS: submariner-operator
-        run: make release
+        # Pass RELEASE_ARGS on the call, since GITHUB_REF set in the `env` directive doesn't get properly expanded
+        run: make release RELEASE_ARGS="submariner-operator --tag '${GITHUB_REF##*/}'"
