@@ -309,7 +309,7 @@ func (r *SubmarinerReconciler) reconcileEngineDaemonSet(instance *submopv1a1.Sub
 	if err != nil {
 		return nil, err
 	}
-	_, err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger, engineMetricsServerPort)
+	err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger, engineMetricsServerPort)
 	return daemonSet, err
 }
 
@@ -334,7 +334,7 @@ func (r *SubmarinerReconciler) reconcileGlobalnetDaemonSet(instance *submopv1a1.
 	if err != nil {
 		return nil, err
 	}
-	_, err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger, globalnetMetricsServerPort)
+	err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger, globalnetMetricsServerPort)
 	return daemonSet, err
 }
 
@@ -387,14 +387,14 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1
 }
 
 func (r *SubmarinerReconciler) setupMetrics(instance *submopv1a1.Submariner, labels map[string]string,
-	reqLogger logr.Logger, port int32) (*corev1.Service, error) {
+	reqLogger logr.Logger, port int32) error {
 	app, ok := labels["app"]
 	if !ok {
-		return nil, fmt.Errorf("No app label in the provided labels, %v", labels)
+		return fmt.Errorf("No app label in the provided labels, %v", labels)
 	}
 	metricsService, err := helpers.ReconcileService(instance, newMetricsService(instance, app, port), reqLogger, r.client, r.scheme)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if r.config != nil {
@@ -407,12 +407,12 @@ func (r *SubmarinerReconciler) setupMetrics(instance *submopv1a1.Submariner, lab
 			if err == metrics.ErrServiceMonitorNotPresent {
 				log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
 			} else if !errors.IsAlreadyExists(err) {
-				return nil, err
+				return err
 			}
 		}
 	}
 
-	return metricsService, nil
+	return nil
 }
 
 func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
