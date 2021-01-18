@@ -43,6 +43,8 @@ type restConfig struct {
 	clusterName string
 }
 
+const submMissingMessage = "Submariner is not installed"
+
 func init() {
 	addKubeconfigFlag(showCmd)
 	rootCmd.AddCommand(showCmd)
@@ -112,10 +114,8 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
-			fmt.Println("Submariner is not installed")
 			return nil
 		}
-
 		exitOnError("Error obtaining the Submariner resource", err)
 	}
 

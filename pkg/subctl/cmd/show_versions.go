@@ -112,10 +112,12 @@ func getVersions(config *rest.Config, submariner *v1alpha1.Submariner) []version
 
 func getVersionsFor(config *rest.Config) {
 	submariner := getSubmarinerResource(config)
-	if submariner != nil {
-		versions := getVersions(config, submariner)
-		printVersions(versions)
+	if submariner == nil {
+		fmt.Println(submMissingMessage)
+		return
 	}
+	versions := getVersions(config, submariner)
+	printVersions(versions)
 }
 
 func showVersions(cmd *cobra.Command, args []string) {
