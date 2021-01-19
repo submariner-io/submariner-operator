@@ -18,6 +18,9 @@ package lighthouse
 import (
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
@@ -32,6 +35,20 @@ const (
 // The resources handled here are the lighthouse CRDs: MultiClusterService,
 // ServiceImport, ServiceExport and ServiceDiscovery
 func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
+	// Delete obsolete CRDs if they are still present
+	err := crdUpdater.Delete("serviceimports.lighthouse.submariner.io", &metav1.DeleteOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return false, fmt.Errorf("Error deleting the obsolete ServiceImport CRD: %s", err)
+	}
+	err = crdUpdater.Delete("serviceexports.lighthouse.submariner.io", &metav1.DeleteOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return false, fmt.Errorf("Error deleting the obsolete ServiceExport CRD: %s", err)
+	}
+	err = crdUpdater.Delete("multiclusterservices.lighthouse.submariner.io", &metav1.DeleteOptions{})
+	if err != nil && !errors.IsNotFound(err) {
+		return false, fmt.Errorf("Error deleting the obsolete MultiClusterServices CRD: %s", err)
+	}
+
 	installedMCSSI, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
 
@@ -48,13 +65,13 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
 
 	if err != nil {
-		return installedMCSSE, fmt.Errorf("Error creating the MCS ServiceExport CRD: %s", err)
+		return installedMCSSI || installedMCSSE, fmt.Errorf("Error creating the MCS ServiceExport CRD: %s", err)
 	}
 
 	installedSD, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
-		return installedSD, err
+		return installedMCSSI || installedMCSSE || installedSD, err
 	}
 
-	return installedMCSSI || installedSD || installedMCSSE, nil
+	return installedMCSSI || installedMCSSE || installedSD, nil
 }
