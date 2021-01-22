@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cable_driver: ['libreswan', 'strongswan', 'wireguard']
+        cable_driver: ['libreswan', 'wireguard']
         globalnet: ['', 'globalnet']
         lighthouse: ['', 'lighthouse']
     steps:
