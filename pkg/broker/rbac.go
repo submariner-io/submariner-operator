@@ -68,11 +68,6 @@ func NewBrokerAdminRole() *rbacv1.Role {
 			},
 			{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
-				APIGroups: []string{"lighthouse.submariner.io"},
-				Resources: []string{"*"},
-			},
-			{
-				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"multicluster.x-k8s.io"},
 				Resources: []string{"*"},
 			},
@@ -96,11 +91,6 @@ func NewBrokerClusterRole() *rbacv1.Role {
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"submariner.io"},
 				Resources: []string{"clusters", "endpoints"},
-			},
-			{
-				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
-				APIGroups: []string{"lighthouse.submariner.io"},
-				Resources: []string{"*"},
 			},
 			{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
