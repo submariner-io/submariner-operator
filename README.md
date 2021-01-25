@@ -45,5 +45,4 @@ See the [Building and Testing docs on Submariner's website](https://submariner.i
 The OperatorHub definitions can be found here:
 <!-- markdownlint-disable line-length -->
 * [upstream-community-operators/submariner](https://github.com/operator-framework/community-operators/tree/master/upstream-community-operators/submariner)
-* [community-operators/submariner](https://github.com/operator-framework/community-operators/tree/master/community-operators/submariner)
 <!-- markdownlint-enable line-length -->

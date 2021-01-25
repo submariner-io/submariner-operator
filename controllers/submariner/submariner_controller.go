@@ -56,6 +56,11 @@ import (
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
+const (
+	engineMetricsServerPort    = 8080
+	globalnetMetricsServerPort = 8081
+)
+
 var log = logf.Log.WithName("controller_submariner")
 
 // NewReconciler returns a new SubmarinerReconciler
@@ -304,7 +309,7 @@ func (r *SubmarinerReconciler) reconcileEngineDaemonSet(instance *submopv1a1.Sub
 	if err != nil {
 		return nil, err
 	}
-	_, err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger)
+	err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger, engineMetricsServerPort)
 	return daemonSet, err
 }
 
@@ -325,7 +330,12 @@ func (r *SubmarinerReconciler) reconcileRouteagentDaemonSet(instance *submopv1a1
 
 func (r *SubmarinerReconciler) reconcileGlobalnetDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error) {
-	return helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger, r.client, r.scheme)
+	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger, r.client, r.scheme)
+	if err != nil {
+		return nil, err
+	}
+	err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger, globalnetMetricsServerPort)
+	return daemonSet, err
 }
 
 func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1.Submariner, reqLogger logr.Logger, isEnabled bool) error {
@@ -377,14 +387,14 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1
 }
 
 func (r *SubmarinerReconciler) setupMetrics(instance *submopv1a1.Submariner, labels map[string]string,
-	reqLogger logr.Logger) (*corev1.Service, error) {
+	reqLogger logr.Logger, port int32) error {
 	app, ok := labels["app"]
 	if !ok {
-		return nil, fmt.Errorf("No app label in the provided labels, %v", labels)
+		return fmt.Errorf("No app label in the provided labels, %v", labels)
 	}
-	metricsService, err := helpers.ReconcileService(instance, newMetricsService(instance, app), reqLogger, r.client, r.scheme)
+	metricsService, err := helpers.ReconcileService(instance, newMetricsService(instance, app, port), reqLogger, r.client, r.scheme)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if r.config != nil {
@@ -397,12 +407,12 @@ func (r *SubmarinerReconciler) setupMetrics(instance *submopv1a1.Submariner, lab
 			if err == metrics.ErrServiceMonitorNotPresent {
 				log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
 			} else if !errors.IsAlreadyExists(err) {
-				return nil, err
+				return err
 			}
 		}
 	}
 
-	return metricsService, nil
+	return nil
 }
 
 func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
@@ -442,14 +452,14 @@ func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 // - the application's resources are labeled with "app=" the given app name
 // - the metrics are exposed on port 8080 on "/metrics"
 // The Service is named after the application name, suffixed with "-metrics"
-func newMetricsService(cr *submopv1a1.Submariner, app string) *corev1.Service {
+func newMetricsService(cr *submopv1a1.Submariner, app string, port int32) *corev1.Service {
 	labels := map[string]string{
 		"app": app,
 	}
 
 	servicePorts := []corev1.ServicePort{
-		{Port: 8080, Name: "metrics", Protocol: corev1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int,
-			IntVal: 8080}},
+		{Port: port, Name: "metrics", Protocol: corev1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int,
+			IntVal: port}},
 	}
 
 	service := &corev1.Service{
