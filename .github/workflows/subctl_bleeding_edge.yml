@@ -2,7 +2,7 @@
 on:
   push:
     branches: [master]
-name: Release Subctl Bleeding Edge
+name: Release Subctl Devel
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -15,13 +15,13 @@ jobs:
 
       - name: Generate the Artifacts
         run: |
-          make build-cross VERSION=devel
+          make build-cross VERSION=subctl-devel
           echo "BINARIES=$(find dist/ -type f -name '*.tar.xz' -printf '%p ')" >> $GITHUB_ENV
 
-      - name: Bump the devel tag
+      - name: Bump the subctl-devel tag
         uses: richardsimko/update-tag@v1.0.3
         with:
-          tag_name: devel
+          tag_name: subctl-devel
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -30,5 +30,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release: Cutting Edge
-          tag: devel
+          tag: subctl-devel
           files: ${{ env.BINARIES }}
