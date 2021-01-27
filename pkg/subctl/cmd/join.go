@@ -60,7 +60,7 @@ var (
 	colorCodes                    string
 	natTraversal                  bool
 	disableNat                    bool
-	allocGNet                     bool
+	globalnetEnabled              bool
 	ipsecDebug                    bool
 	submarinerDebug               bool
 	labelGateway                  bool
@@ -127,7 +127,8 @@ func addJoinFlags(cmd *cobra.Command) {
 		"interval in seconds between health check packets")
 	cmd.Flags().Uint64Var(&healthCheckMaxPacketLossCount, "health-check-max-packet-loss-count", 5,
 		"maximum number of packets lost before the connection is marked as down")
-	cmd.Flags().BoolVar(&allocGNet, "allocate-globalnet", true, "Allocate Globalnet CIDR")
+	cmd.Flags().BoolVar(&globalnetEnabled, "globalnet", true,
+		"enable/disable Globalnet for this cluster")
 }
 
 const (
@@ -260,7 +261,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		ClusterCIDRAutoDetected: clusterCIDRautoDetected,
 		GlobalnetClusterSize:    globalnetClusterSize}
 
-	if allocGNet {
+	if globalnetEnabled {
 		err = AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace, &netconfig)
 		exitOnError("Error Discovering multi cluster details", err)
 	}
