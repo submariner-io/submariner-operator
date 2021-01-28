@@ -279,6 +279,9 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 							Name:            lighthouseCoreDNSName,
 							Image:           getImagePath(cr, names.LighthouseCoreDNSImage),
 							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.LighthouseCoreDNSImage]),
+							Env: []corev1.EnvVar{
+								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
+							},
 							Args: []string{
 								"-conf",
 								"/etc/coredns/Corefile",
