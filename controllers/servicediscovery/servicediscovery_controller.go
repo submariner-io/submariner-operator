@@ -62,6 +62,7 @@ const (
 	lighthouseForwardPluginName   = "lighthouse"
 	coreDNSNamespace              = "kube-system"
 	coreDNSName                   = "coredns"
+	customCoreDNSName             = "coredns-custom"
 )
 
 // NewReconciler returns a new ServiceDiscoveryReconciler
@@ -155,7 +156,14 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 			return reconcile.Result{}, err
 		}
 	}
-	err = updateDNSConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
+	err = updateDNSCustomConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
+	if errors.IsNotFound(err) {
+		err = updateDNSConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
+	} else if err != nil {
+		reqLogger.Error(err, "Error updating the 'custom-coredns' ConfigMap")
+		return reconcile.Result{}, err
+	}
+
 	if errors.IsNotFound(err) {
 		// Try to update Openshift-DNS
 		return reconcile.Result{}, updateOpenshiftClusterDNSOperator(instance, r.client, r.operatorClientSet, reqLogger)
@@ -349,6 +357,39 @@ func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 			},
 		},
 	}
+}
+
+func updateDNSCustomConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery,
+	reqLogger logr.Logger) error {
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		configMap, err := k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Get(customCoreDNSName, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+
+		lighthouseDnsService := &corev1.Service{}
+		err = client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDnsService)
+		lighthouseClusterIp := lighthouseDnsService.Spec.ClusterIP
+		if err != nil || lighthouseClusterIp == "" {
+			return goerrors.New("lighthouseDnsService ClusterIp should be available")
+		}
+
+		if _, ok := configMap.Data["lighthouse.server"]; ok {
+			reqLogger.Info("Overwriting existing lighthouse.server data in coredns-custom")
+		}
+
+		coreFile := ""
+		for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
+			coreFile = fmt.Sprintf("%s%s:53 {\n    forward . %s\n}\n",
+				coreFile, domain, lighthouseClusterIp)
+		}
+		log.Info("Updated coredns-custom ConfigMap for lighthouse.server" + coreFile)
+		configMap.Data["lighthouse.server"] = coreFile
+		// Potentially retried
+		_, err = k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Update(configMap)
+		return err
+	})
+	return retryErr
 }
 
 func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery,
