@@ -24,26 +24,47 @@ import (
 	"io/ioutil"
 	"net/url"
 
+	"github.com/submariner-io/admiral/pkg/stringset"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+
 	submarinerClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 )
 
 type SubctlData struct {
-	BrokerURL        string     `json:"brokerURL"`
-	ClientToken      *v1.Secret `omitempty,json:"clientToken"`
-	IPSecPSK         *v1.Secret `omitempty,json:"ipsecPSK"`
-	ServiceDiscovery bool       `omitempty,json:"serviceDiscovery"`
-	CustomDomains    *[]string  `omitempty,json:"customDomains"`
+	BrokerURL   string     `json:"brokerURL"`
+	ClientToken *v1.Secret `omitempty,json:"clientToken"`
+	IPSecPSK    *v1.Secret `omitempty,json:"ipsecPSK"`
+	// TODO (remove): ServiceDiscovery flag is now deprecated, it's keep in the file for consistency and backwards compatibility
+	ServiceDiscovery bool      `omitempty,json:"serviceDiscovery"`
+	components       []string  `omitempty,json:"components"`
+	CustomDomains    *[]string `omitempty,json:"customDomains"`
 	// Todo (revisit): The following values are moved from the broker-info.subm file to configMap
 	// on the Broker. This needs to be revisited to support seamless upgrades.
 	// https://github.com/submariner-io/submariner-operator/issues/504
 	// GlobalnetCidrRange   string `omitempty,json:"globalnetCidrRange"`
 	// GlobalnetClusterSize uint   `omitempty,json:"globalnetClusterSize"`
+}
+
+func (data *SubctlData) SetComponents(componentSet stringset.Interface) {
+	data.components = componentSet.Elements()
+}
+
+func (data *SubctlData) Components() stringset.Interface {
+	return stringset.New(data.components...)
+}
+
+func (data *SubctlData) IsConnectivityEnabled() bool {
+	return data.Components().Contains(components.Connectivity)
+}
+
+func (data *SubctlData) IsServiceDiscoveryEnabled() bool {
+	return data.Components().Contains(components.ServiceDiscovery) || data.ServiceDiscovery
 }
 
 func (data *SubctlData) ToString() (string, error) {

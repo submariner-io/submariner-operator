@@ -20,9 +20,11 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/stringset"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -34,10 +36,13 @@ var (
 	globalnetEnable             bool
 	globalnetCidrRange          string
 	defaultGlobalnetClusterSize uint
-	serviceDiscovery            bool
+	serviceDiscoveryEnabled     bool
+	componentArr                []string
 	GlobalCIDRConfigMap         *v1.ConfigMap
 	defaultCustomDomains        []string
 )
+
+var validComponents = []string{components.ServiceDiscovery, components.Connectivity}
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
@@ -50,11 +55,16 @@ func init() {
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
 		"import IPsec PSK from existing submariner broker file, like broker-info.subm")
 
-	deployBroker.PersistentFlags().BoolVar(&serviceDiscovery, "service-discovery", true,
+	deployBroker.PersistentFlags().BoolVar(&serviceDiscoveryEnabled, "service-discovery", true,
 		"enable multi-cluster service discovery")
+
+	_ = deployBroker.PersistentFlags().MarkDeprecated("service-discovery", "please use --components instead")
 
 	deployBroker.PersistentFlags().StringSliceVar(&defaultCustomDomains, "custom-domains", nil,
 		"list of domains to use for multicluster service discovery")
+
+	deployBroker.PersistentFlags().StringSliceVar(&componentArr, "components", validComponents,
+		fmt.Sprintf("The components to be installed - any of #v. The default is all components", validComponents))
 
 	addKubeconfigFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
@@ -67,10 +77,21 @@ var deployBroker = &cobra.Command{
 	Short: "Set the broker up",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		componentSet := stringset.New(componentArr...)
+
+		// TODO: Remove this in the future, while service-discovery is marked as
+		//       deprecated we should still provide a consistent broker config file
+		if !serviceDiscoveryEnabled {
+			componentSet.Remove(components.ServiceDiscovery)
+		}
+
+		if err := isValidComponents(componentSet); err != nil {
+			exitOnError("Invalid components parameter", err)
+		}
+
 		if valid, err := isValidGlobalnetConfig(); !valid {
 			exitOnError("Invalid GlobalCidr configuration", err)
 		}
-
 		config, err := getRestConfig(kubeConfig, kubeContext)
 		exitOnError("The provided kubeconfig is invalid", err)
 
@@ -102,7 +123,8 @@ var deployBroker = &cobra.Command{
 			status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
 		}
 
-		subctlData.ServiceDiscovery = serviceDiscovery
+		subctlData.ServiceDiscovery = serviceDiscoveryEnabled
+		subctlData.SetComponents(componentSet)
 
 		if len(defaultCustomDomains) > 0 {
 			subctlData.CustomDomains = &defaultCustomDomains
@@ -119,6 +141,22 @@ var deployBroker = &cobra.Command{
 		exitOnError("Error writing the broker information", err)
 
 	},
+}
+
+func isValidComponents(componentSet stringset.Interface) error {
+	validComponentSet := stringset.New(validComponents...)
+
+	if componentSet.Size() < 1 {
+		return fmt.Errorf("at least one component must be provided for deployment")
+	}
+
+	for _, component := range componentSet.Elements() {
+		if !validComponentSet.Contains(component) {
+			return fmt.Errorf("unknown component: %s", component)
+		}
+	}
+
+	return nil
 }
 
 func isValidGlobalnetConfig() (bool, error) {

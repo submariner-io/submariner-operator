@@ -85,4 +85,9 @@ func (serviceDiscovery *ServiceDiscovery) SetDefaults() {
 	if serviceDiscovery.Spec.Version == "" {
 		serviceDiscovery.Spec.Version = versions.DefaultLighthouseVersion
 	}
+
+	if serviceDiscovery.Spec.Repository == "" {
+		// An empty field is converted to the default upstream submariner repository where all images live
+		serviceDiscovery.Spec.Repository = versions.DefaultRepo
+	}
 }
