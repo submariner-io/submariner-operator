@@ -356,8 +356,13 @@ func updateDNSCustomConfigMap(client controllerClient.Client, k8sclientSet clien
 			return goerrors.New("lighthouseDnsService ClusterIp should be available")
 		}
 
+		if configMap.Data == nil {
+			reqLogger.Info("Initializing configMap.Data in " + customCoreDNSName)
+			configMap.Data = make(map[string]string)
+		}
+
 		if _, ok := configMap.Data["lighthouse.server"]; ok {
-			reqLogger.Info("Overwriting existing lighthouse.server data in coredns-custom")
+			reqLogger.Info("Overwriting existing lighthouse.server data in " + customCoreDNSName)
 		}
 
 		coreFile := ""
@@ -365,7 +370,7 @@ func updateDNSCustomConfigMap(client controllerClient.Client, k8sclientSet clien
 			coreFile = fmt.Sprintf("%s%s:53 {\n    forward . %s\n}\n",
 				coreFile, domain, lighthouseClusterIp)
 		}
-		log.Info("Updated coredns-custom ConfigMap for lighthouse.server" + coreFile)
+		log.Info("Updating coredns-custom ConfigMap for lighthouse.server: " + coreFile)
 		configMap.Data["lighthouse.server"] = coreFile
 		// Potentially retried
 		_, err = k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Update(configMap)
