@@ -34,6 +34,7 @@ import (
 	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
@@ -218,8 +219,8 @@ func checkVerifyArguments() error {
 }
 
 var verifyE2EPatterns = map[string]string{
-	"connectivity":      "\\[dataplane",
-	"service-discovery": "\\[discovery",
+	components.Connectivity:     "\\[dataplane",
+	components.ServiceDiscovery: "\\[discovery",
 }
 
 var verifyE2EDisruptivePatterns = map[string]string{
