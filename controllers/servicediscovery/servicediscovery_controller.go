@@ -29,6 +29,7 @@ import (
 	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 
@@ -40,6 +41,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -71,6 +73,7 @@ func NewReconciler(mgr manager.Manager) *ServiceDiscoveryReconciler {
 	operatorClient, _ := operatorclient.NewClient(mgr.GetConfig())
 	return &ServiceDiscoveryReconciler{
 		client:            mgr.GetClient(),
+		config:            mgr.GetConfig(),
 		log:               ctrl.Log.WithName("controllers").WithName("ServiceDiscovery"),
 		scheme:            mgr.GetScheme(),
 		k8sClientSet:      k8sClient,
@@ -85,6 +88,7 @@ type ServiceDiscoveryReconciler struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client            controllerClient.Client
+	config            *rest.Config
 	log               logr.Logger
 	scheme            *runtime.Scheme
 	k8sClientSet      clientset.Interface
@@ -155,6 +159,10 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 			log.Error(err, "Error creating the lighthouseCoreDNS service")
 			return reconcile.Result{}, err
 		}
+	}
+	err = metrics.Setup(instance.Namespace, instance, lighthouseCoreDNSDeployment.GetLabels(), 9153, r.client, r.config, r.scheme, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 	err = updateDNSCustomConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
 	if errors.IsNotFound(err) {
@@ -240,6 +248,7 @@ lighthouse
 errors
 health
 ready
+prometheus :9153
 }`
 	expectedCorefile := ""
 	for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
