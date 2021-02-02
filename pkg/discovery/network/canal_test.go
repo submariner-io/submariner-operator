@@ -20,7 +20,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes/fake"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,17 +27,18 @@ import (
 
 var _ = Describe("discoverCanalFlannelNetwork", func() {
 	When("There are no generic k8s pods to look at", func() {
-		It("Should return still return the pod CIDR", func() {
+		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			clusterNet := testDiscoverCanalFlannelWith(&canalFlannelCfgMap)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal("canal-flannel"))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testCannalFlannelPodCIDR}))
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
 		})
 	})
 
-	When("There is a kubeapi pod at least ", func() {
+	When("There is a kube-api pod", func() {
 
-		It("Should return the ClusterNetwork structure with ServiceCIDRs too", func() {
+		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			clusterNet := testDiscoverWith(
 				&canalFlannelCfgMap,
 				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
@@ -53,14 +53,14 @@ var _ = Describe("discoverCanalFlannelNetwork", func() {
 })
 
 func testDiscoverCanalFlannelWith(objects ...runtime.Object) *ClusterNetwork {
-	clientSet := fake.NewSimpleClientset(objects...)
+	clientSet := newTestClient(objects...)
 	clusterNet, err := discoverCanalFlannelNetwork(clientSet)
 	Expect(err).NotTo(HaveOccurred())
 	return clusterNet
 }
 
 func testDiscoverWith(objects ...runtime.Object) *ClusterNetwork {
-	clientSet := fake.NewSimpleClientset(objects...)
+	clientSet := newTestClient(objects...)
 	clusterNet, err := Discover(nil, clientSet, nil, "")
 	Expect(err).NotTo(HaveOccurred())
 	return clusterNet
