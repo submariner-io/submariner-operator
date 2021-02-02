@@ -158,6 +158,10 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
+	if err := r.serviceDiscoveryReconciler(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// Retrieve the gateway information
 	gateways, err := r.retrieveGateways(instance, request.Namespace)
 	if err != nil {
@@ -216,9 +220,6 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		}
 	}
 
-	if err := r.serviceDiscoveryReconciler(instance, reqLogger, instance.Spec.ServiceDiscoveryEnabled); err != nil {
-		return reconcile.Result{}, err
-	}
 	return reconcile.Result{}, nil
 }
 
