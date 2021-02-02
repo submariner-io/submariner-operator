@@ -26,3 +26,11 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - "serviceexports"
+    verbs:
+      - get
+      - list
+      - watch
