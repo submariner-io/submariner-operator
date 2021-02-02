@@ -17,9 +17,14 @@ limitations under the License.
 package network
 
 import (
+	"fmt"
+	"os"
+	"regexp"
+
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -59,11 +64,71 @@ func findClusterIPRange(clientSet kubernetes.Interface) (string, error) {
 		return clusterIPRange, err
 	}
 
+	clusterIPRange, err = findClusterIPRangeFromServiceCreation(clientSet)
+	if err != nil || clusterIPRange != "" {
+		return clusterIPRange, err
+	}
+
 	return "", nil
 }
 
 func findClusterIPRangeFromApiserver(clientSet kubernetes.Interface) (string, error) {
 	return findPodCommandParameter(clientSet, "component=kube-apiserver", "--service-cluster-ip-range")
+}
+
+func findClusterIPRangeFromServiceCreation(clientSet kubernetes.Interface) (string, error) {
+	// find service cidr based on https://stackoverflow.com/questions/44190607/how-do-you-find-the-cluster-service-cidr-of-a-kubernetes-cluster
+	invalidSvcSpec := &v1.Service{
+		ObjectMeta: v1meta.ObjectMeta{
+			Name: "invalid-svc",
+		},
+		Spec: v1.ServiceSpec{
+			ClusterIP: "1.1.1.1",
+			Ports: []v1.ServicePort{
+				{
+					Port: 443,
+					TargetPort: intstr.IntOrString{
+						IntVal: 443,
+					},
+				},
+			},
+		},
+	}
+
+	ns := os.Getenv("WATCH_NAMESPACE")
+	// WATCH_NAMESPACE env should be set to operator's namespace, if running in operator
+	if ns == "" {
+		// otherwise, it should be called from subctl command, so use "default" namespace
+		ns = "default"
+	}
+
+	// create service to the namespace
+	_, err := clientSet.CoreV1().Services(ns).Create(invalidSvcSpec)
+
+	// creating invalid service didn't fail as expected
+	if err == nil {
+		return "", fmt.Errorf("creating invalid service(%v) didn't fail", invalidSvcSpec)
+	}
+
+	return parseServiceCIDRFrom(err.Error())
+}
+
+func parseServiceCIDRFrom(msg string) (string, error) {
+	// expected msg is below:
+	//   "The Service \"invalid-svc\" is invalid: spec.clusterIPs: Invalid value: []string{\"1.1.1.1\"}:
+	//   failed to allocated ip:1.1.1.1 with error:provided IP is not in the valid range.
+	//   The range of valid IPs is 10.45.0.0/16"
+	// expected matched string is below:
+	//   10.45.0.0/16
+	re := regexp.MustCompile(".*valid IPs is (.*)$")
+
+	match := re.FindStringSubmatch(msg)
+	if match == nil {
+		return "", fmt.Errorf("parsing (%s) failed. it doesn't match with %v", msg, re)
+	}
+
+	// returns first matching string
+	return match[1], nil
 }
 
 func findPodIPRange(clientSet kubernetes.Interface) (string, error) {
