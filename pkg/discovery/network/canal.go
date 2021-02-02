@@ -52,14 +52,14 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 		PodCIDRs:      []string{*podCIDR},
 	}
 
-	// Try to networkPluginsDiscovery the service CIDRs using the generic functions
-	genNetwork, err := discoverGenericNetwork(clientSet)
+	// Try to detect the service CIDRs using the generic functions
+	clusterIPRange, err := findClusterIPRange(clientSet)
 	if err != nil {
 		return nil, err
 	}
 
-	if genNetwork != nil {
-		clusterNetwork.ServiceCIDRs = genNetwork.ServiceCIDRs
+	if clusterIPRange != "" {
+		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
 	}
 
 	return clusterNetwork, nil
