@@ -18,12 +18,10 @@ package lighthouse
 import (
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 const (
@@ -34,8 +32,12 @@ const (
 // Ensure ensures that the required resources are deployed on the target system
 // The resources handled here are the lighthouse CRDs: MultiClusterService,
 // ServiceImport, ServiceExport and ServiceDiscovery
-func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
+func Ensure(cfg *rest.Config, isBroker bool) (bool, error) {
+
 	// Delete obsolete CRDs if they are still present
+	/* WIP: the patch won't be be ready without this, which is part of the upgrade path:
+	we need some generic "utils.DeleteCRD" which will use the right deleter based on the cluster detected
+	version
 	err := crdUpdater.Delete("serviceimports.lighthouse.submariner.io", &metav1.DeleteOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return false, fmt.Errorf("Error deleting the obsolete ServiceImport CRD: %s", err)
@@ -48,8 +50,8 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 	if err != nil && !errors.IsNotFound(err) {
 		return false, fmt.Errorf("Error deleting the obsolete MultiClusterServices CRD: %s", err)
 	}
-
-	installedMCSSI, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
+	*/
+	installedMCSSI, err := utils.CreateOrUpdateEmbeddedCRD(cfg,
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
 
 	if err != nil {
@@ -61,14 +63,14 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 		return installedMCSSI, nil
 	}
 
-	installedMCSSE, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
+	installedMCSSE, err := utils.CreateOrUpdateEmbeddedCRD(cfg,
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
 
 	if err != nil {
 		return installedMCSSI || installedMCSSE, fmt.Errorf("Error creating the MCS ServiceExport CRD: %s", err)
 	}
 
-	installedSD, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
+	installedSD, err := utils.CreateOrUpdateEmbeddedCRD(cfg, embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
 		return installedMCSSI || installedMCSSE || installedSD, err
 	}

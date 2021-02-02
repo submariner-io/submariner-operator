@@ -26,7 +26,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/engine"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -35,16 +34,12 @@ import (
 )
 
 func Ensure(config *rest.Config) error {
-	crdCreator, err := crdutils.NewFromRestConfig(config)
-	if err != nil {
-		return fmt.Errorf("error accessing the target cluster: %s", err)
-	}
-	err = engine.Ensure(crdCreator)
+	err := engine.Ensure(config)
 	if err != nil {
 		return fmt.Errorf("error setting up the engine requirements: %s", err)
 	}
 
-	_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
+	_, err = lighthouse.Ensure(config, lighthouse.BrokerCluster)
 	if err != nil {
 		return fmt.Errorf("error setting up the lighthouse requirements: %s", err)
 	}

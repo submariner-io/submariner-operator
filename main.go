@@ -33,7 +33,6 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers"
 	"github.com/submariner-io/submariner-operator/pkg/engine"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -143,19 +142,13 @@ func main() {
 
 	log.Info("Registering Components.")
 
-	// Set up the CRDs we need
-	crdUpdater, err := crdutils.NewFromRestConfig(cfg)
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
 	log.Info("Creating the engine CRDs")
-	if err := engine.Ensure(crdUpdater); err != nil {
+	if err := engine.Ensure(cfg); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
 	log.Info("Creating the Lighthouse CRDs")
-	updated, err := lighthouse.Ensure(crdUpdater, lighthouse.DataCluster)
+	updated, err := lighthouse.Ensure(cfg, lighthouse.DataCluster)
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)

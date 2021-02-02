@@ -23,9 +23,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiv1beta "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
@@ -72,7 +74,7 @@ func CreateOrUpdateClusterRoleBinding(clientSet clientset.Interface, clusterRole
 	return false, err
 }
 
-func CreateOrUpdateCRD(updater crdutils.CRDUpdater, crd *apiextensions.CustomResourceDefinition) (bool, error) {
+func CreateOrUpdateCRDV1(updater crdutils.CRDUpdater, crd *apiextensions.CustomResourceDefinition) (bool, error) {
 	_, err := updater.Create(crd)
 	if err == nil {
 		return true, nil
@@ -92,14 +94,98 @@ func CreateOrUpdateCRD(updater crdutils.CRDUpdater, crd *apiextensions.CustomRes
 	return false, err
 }
 
-func CreateOrUpdateEmbeddedCRD(updater crdutils.CRDUpdater, crdYaml string) (bool, error) {
-	crd := &apiextensions.CustomResourceDefinition{}
+func CreateOrUpdateCRDV1Beta(updater crdutils.CRDUpdaterV1Beta1, crd *apiv1beta.CustomResourceDefinition) (bool, error) {
+	_, err := updater.Create(crd)
+	if err == nil {
+		return true, nil
+	} else if errors.IsAlreadyExists(err) {
+		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			existingCrd, err := updater.Get(crd.Name, v1.GetOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to retrieve pre-existing CRD %s : %v", crd.Name, err)
+			}
+			crd.ResourceVersion = existingCrd.ResourceVersion
+			// Potentially retried
+			_, err = updater.Update(crd)
+			return err
+		})
+		return false, retryErr
+	}
+	return false, err
+}
 
-	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
-		return false, fmt.Errorf("Error extracting embedded CRD: %s", err)
+var preferredCRDVersion = ""
+
+func GetApiExtensionsApiVersion(cfg *rest.Config) (string, error) {
+	const CustomResourceDefinition = "CustomResourceDefinition"
+
+	if preferredCRDVersion != "" {
+		return preferredCRDVersion, nil
 	}
 
-	return CreateOrUpdateCRD(updater, crd)
+	client, err := clientset.NewForConfig(cfg)
+	if err != nil {
+		return "", fmt.Errorf("error creating the api extensions client: %s", err)
+	}
+
+	serverPreferredResources, err := client.Discovery().ServerPreferredResources()
+	if err != nil {
+		return "", fmt.Errorf("error finding the server preferred resources: %s", err)
+	}
+
+	for _, apiResourceList := range serverPreferredResources {
+		for _, apiResources := range apiResourceList.APIResources {
+			if apiResources.Kind == CustomResourceDefinition {
+				preferredCRDVersion = apiResourceList.GroupVersion
+				return preferredCRDVersion, nil
+			}
+		}
+	}
+
+	// If no API Resource list contained "CustomResourceDefinition" then, we don't know
+	return "", fmt.Errorf("Unable to find preferred API version for %s", CustomResourceDefinition)
+}
+
+func CreateOrUpdateEmbeddedCRD(cfg *rest.Config, crdYaml string) (bool, error) {
+
+	version, err := GetApiExtensionsApiVersion(cfg)
+	if err != nil {
+		return false, err
+	}
+
+	switch version {
+
+	case "apiextensions.k8s.io/v1":
+		updater, err := crdutils.NewFromRestConfig(cfg)
+		if err != nil {
+			return false, err
+		}
+		crd := &apiextensions.CustomResourceDefinition{}
+
+		if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
+			return false, fmt.Errorf("Error extracting embedded CRD: %s", err)
+		}
+
+		return CreateOrUpdateCRDV1(updater, crd)
+
+	case "apiextensions.k8s.io/v1beta1":
+		updater, err := crdutils.NewV1Beta1FromRestConfig(cfg)
+		if err != nil {
+			return false, err
+		}
+		crd := &apiv1beta.CustomResourceDefinition{}
+		if err := embeddedyamls.GetObject(convertCRDV1ToCRDV1Beta1(crdYaml), crd); err != nil {
+			return false, fmt.Errorf("Error extracting embedded CRD: %s", err)
+		}
+
+		return CreateOrUpdateCRDV1Beta(updater, crd)
+	}
+	return false, fmt.Errorf("Error hanlding CRD, unknown server version %s", version)
+}
+
+func convertCRDV1ToCRDV1Beta1(yaml string) string {
+	// TODO: Magic sauce
+	return yaml
 }
 
 func CreateOrUpdateDeployment(clientSet clientset.Interface, namespace string, deployment *appsv1.Deployment) (bool, error) {

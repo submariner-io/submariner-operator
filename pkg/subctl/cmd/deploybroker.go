@@ -18,11 +18,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -73,6 +75,10 @@ var deployBroker = &cobra.Command{
 
 		config, err := getRestConfig(kubeConfig, kubeContext)
 		exitOnError("The provided kubeconfig is invalid", err)
+		v, err := utils.GetApiExtensionsApiVersion(config)
+		fmt.Printf("Detected API Extensions version: %q", v)
+
+		os.Exit(1)
 
 		status := cli.NewStatus()
 		status.Start("Deploying broker")
