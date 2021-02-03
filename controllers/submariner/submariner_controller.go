@@ -216,7 +216,10 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
 			reqLogger.Error(err, "failed to update the Submariner status")
-			return reconcile.Result{}, err
+			// Log the error, but indicate success, to avoid reconciliation storms
+			// TODO skitt determine what we should really be doing for concurrent updates to the Submariner CR
+			// Updates fail here because the instance is updated between the .Update() at the start of the function
+			// and the status update here
 		}
 	}
 
