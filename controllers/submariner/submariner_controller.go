@@ -18,12 +18,10 @@ package submariner
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strconv"
 
 	"github.com/go-logr/logr"
-	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	errorutil "github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -49,6 +47,7 @@ import (
 
 	submopv1a1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
@@ -313,7 +312,7 @@ func (r *SubmarinerReconciler) reconcileEngineDaemonSet(instance *submopv1a1.Sub
 	if err != nil {
 		return nil, err
 	}
-	err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger, engineMetricsServerPort)
+	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), engineMetricsServerPort, r.client, r.config, r.scheme, reqLogger)
 	return daemonSet, err
 }
 
@@ -338,7 +337,8 @@ func (r *SubmarinerReconciler) reconcileGlobalnetDaemonSet(instance *submopv1a1.
 	if err != nil {
 		return nil, err
 	}
-	err = r.setupMetrics(instance, daemonSet.GetLabels(), reqLogger, globalnetMetricsServerPort)
+	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), globalnetMetricsServerPort,
+		r.client, r.config, r.scheme, reqLogger)
 	return daemonSet, err
 }
 
@@ -390,35 +390,6 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1
 	return errorutil.WithMessagef(err, "error reconciling the Service Discovery CR")
 }
 
-func (r *SubmarinerReconciler) setupMetrics(instance *submopv1a1.Submariner, labels map[string]string,
-	reqLogger logr.Logger, port int32) error {
-	app, ok := labels["app"]
-	if !ok {
-		return fmt.Errorf("No app label in the provided labels, %v", labels)
-	}
-	metricsService, err := helpers.ReconcileService(instance, newMetricsService(instance, app, port), reqLogger, r.client, r.scheme)
-	if err != nil {
-		return err
-	}
-
-	if r.config != nil {
-		services := []*corev1.Service{metricsService}
-		_, err = metrics.CreateServiceMonitors(r.config, instance.Namespace, services)
-		if err != nil {
-			log.Info("Could not create ServiceMonitor object", "error", err.Error())
-			// If this operator is deployed to a cluster without the prometheus-operator running, it will return
-			// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
-			if err == metrics.ErrServiceMonitorNotPresent {
-				log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
-			} else if !errors.IsAlreadyExists(err) {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 	labels := map[string]string{
 		"app":       "submariner-engine",
@@ -449,36 +420,6 @@ func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 	}
 
 	return deployment
-}
-
-// newMetricsService populates a Service providing access to metrics for the given application
-// The assumptions are:
-// - the application's resources are labeled with "app=" the given app name
-// - the metrics are exposed on port 8080 on "/metrics"
-// The Service is named after the application name, suffixed with "-metrics"
-func newMetricsService(cr *submopv1a1.Submariner, app string, port int32) *corev1.Service {
-	labels := map[string]string{
-		"app": app,
-	}
-
-	servicePorts := []corev1.ServicePort{
-		{Port: port, Name: "metrics", Protocol: corev1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int,
-			IntVal: port}},
-	}
-
-	service := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Labels:    labels,
-			Namespace: cr.Namespace,
-			Name:      fmt.Sprintf("%s-metrics", app),
-		},
-		Spec: corev1.ServiceSpec{
-			Ports:    servicePorts,
-			Selector: labels,
-		},
-	}
-
-	return service
 }
 
 // newEnginePodTemplate returns a submariner pod with the same fields as the cr
