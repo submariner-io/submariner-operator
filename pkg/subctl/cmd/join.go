@@ -454,8 +454,8 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 	}
 
 	submarinerSpec := submariner.SubmarinerSpec{
-		Repository:               repository,
-		Version:                  imageVersion,
+		Repository:               getImageRepo(),
+		Version:                  getImageVersion(),
 		CeIPSecNATTPort:          nattPort,
 		CeIPSecIKEPort:           ikePort,
 		CeIPSecDebug:             ipsecDebug,
@@ -488,6 +488,36 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		submarinerSpec.CustomDomains = customDomains
 	}
 	return submarinerSpec
+}
+
+func getImageVersion() string {
+	imageOverrides := getImageOverrides()
+	version := imageVersion
+
+	if imageVersion == "" {
+		version = versions.DefaultSubmarinerOperatorVersion
+	}
+
+	if override, ok := imageOverrides[names.OperatorImage]; ok {
+		version, _ = images.ParseOperatorImage(override)
+	}
+
+	return version
+}
+
+func getImageRepo() string {
+	imageOverrides := getImageOverrides()
+	repo := repository
+
+	if repository == "" {
+		repo = versions.DefaultRepo
+	}
+
+	if override, ok := imageOverrides[names.OperatorImage]; ok {
+		_, repo = images.ParseOperatorImage(override)
+	}
+
+	return repo
 }
 
 func operatorImage() string {
