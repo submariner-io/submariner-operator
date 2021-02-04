@@ -16,7 +16,7 @@ jobs:
       - name: Generate the artifacts
         run: make build-cross
       - name: Upload the artifacts
-        uses: skx/github-action-publish-binaries@master
+        uses: skx/github-action-publish-binaries@release-0.15
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
