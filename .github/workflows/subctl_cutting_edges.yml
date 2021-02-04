@@ -25,7 +25,7 @@ jobs:
           echo "BINARIES=$(find dist/ -type f -name '*.tar.xz' -printf '%p ')" >> $GITHUB_ENV
 
       - name: Update the Release
-        uses: johnwbyrd/update-release@master
+        uses: johnwbyrd/update-release@v1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release: "Cutting Edge: ${{ env.SUBCTL_TAG }}"
