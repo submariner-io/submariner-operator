@@ -1,7 +1,10 @@
 ---
 on:
   push:
-    branches: [master]
+    branches:
+      - devel
+      - release-*
+
 name: Release Subctl Devel
 jobs:
   release:
@@ -13,15 +16,18 @@ jobs:
 
       - run: git fetch origin +refs/tags/*:refs/tags/*
 
+      - name: generate version tag
+        run: echo "SUBCTL_TAG=subctl-${GITHUB_REF##*/}" >> $GITHUB_ENV
+
       - name: Generate the Artifacts
         run: |
-          make build-cross VERSION=subctl-devel
+          make build-cross VERSION=${{ env.SUBCTL_TAG }}
           echo "BINARIES=$(find dist/ -type f -name '*.tar.xz' -printf '%p ')" >> $GITHUB_ENV
 
-      - name: Bump the subctl-devel tag
+      - name: Bump the subctl tag
         uses: richardsimko/update-tag@v1.0.3
         with:
-          tag_name: subctl-devel
+          tag_name: ${{ env.SUBCTL_TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -29,6 +35,6 @@ jobs:
         uses: johnwbyrd/update-release@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release: Cutting Edge
-          tag: subctl-devel
+          release: ${{ env.SUBCTL_TAG }} Cutting Edge
+          tag: ${{ env.SUBCTL_TAG }}
           files: ${{ env.BINARIES }}
