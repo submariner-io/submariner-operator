@@ -30,7 +30,8 @@ import (
 type CRDUpdater interface {
 	Create(*apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error)
 	Update(*apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error)
-	Get(name string, options v1.GetOptions) (*apiextensions.CustomResourceDefinition, error)
+	Get(string, v1.GetOptions) (*apiextensions.CustomResourceDefinition, error)
+	Delete(string, *v1.DeleteOptions) error
 }
 
 type controllerClientCreator struct {
@@ -72,4 +73,15 @@ func (c *controllerClientCreator) Get(name string, options v1.GetOptions) (*apie
 		return nil, err
 	}
 	return crd, nil
+}
+
+func (c *controllerClientCreator) Delete(name string, options *v1.DeleteOptions) error {
+	crd, err := c.Get(name, v1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	if crd == nil {
+		return nil
+	}
+	return c.client.Delete(context.TODO(), crd)
 }

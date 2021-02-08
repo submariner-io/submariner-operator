@@ -27,9 +27,9 @@ rules:
       - list
       - watch
   - apiGroups:
-      - lighthouse.submariner.io
+      - multicluster.x-k8s.io
     resources:
-      - serviceexports
+      - "serviceexports"
     verbs:
       - get
       - list

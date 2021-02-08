@@ -225,14 +225,6 @@ spec:
           - get
           - list
           - watch
-        - apiGroups:
-          - lighthouse.submariner.io
-          resources:
-          - serviceexports
-          verbs:
-          - get
-          - list
-          - watch
         serviceAccountName: submariner-operator
       deployments:
       - name: submariner-operator
@@ -324,19 +316,6 @@ spec:
           - servicediscoveries
           verbs:
           - '*'
-        - apiGroups:
-          - lighthouse.submariner.io
-          resources:
-          - '*'
-          - serviceexports
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
         serviceAccountName: submariner-operator
     strategy: deployment
   installModes:
