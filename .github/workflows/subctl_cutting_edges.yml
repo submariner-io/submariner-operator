@@ -17,24 +17,24 @@ jobs:
       - run: git fetch origin +refs/tags/*:refs/tags/*
 
       - name: generate version tag
-        run: echo "SUBCTL_TAG=subctl-${GITHUB_REF##*/}" >> $GITHUB_ENV
+        run: echo "SUBCTL_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
       - name: Generate the Artifacts
         run: |
           make build-cross VERSION=${{ env.SUBCTL_TAG }}
           echo "BINARIES=$(find dist/ -type f -name '*.tar.xz' -printf '%p ')" >> $GITHUB_ENV
 
-      - name: Bump the subctl tag
-        uses: richardsimko/update-tag@v1.0.3
-        with:
-          tag_name: ${{ env.SUBCTL_TAG }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Update the Release
         uses: johnwbyrd/update-release@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release: ${{ env.SUBCTL_TAG }} Cutting Edge
-          tag: ${{ env.SUBCTL_TAG }}
+          release: "Cutting Edge: ${{ env.SUBCTL_TAG }}"
+          tag: subctl-${{ env.SUBCTL_TAG }}
           files: ${{ env.BINARIES }}
+
+      - name: Bump the subctl tag
+        uses: richardsimko/update-tag@v1.0.3
+        with:
+          tag_name: subctl-${{ env.SUBCTL_TAG }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
