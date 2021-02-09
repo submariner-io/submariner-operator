@@ -34,7 +34,7 @@ This release has the latest stable binaries: [latest release](https://github.com
 ### Latest Merged Release
 
 This release is constantly updated with the latest code, and might be unstable: [devel
-release](https://github.com/submariner-io/submariner-operator/releases/tag/devel).
+release](https://github.com/submariner-io/submariner-operator/releases/tag/subctl-devel).
 
 ## Building and Testing
 
