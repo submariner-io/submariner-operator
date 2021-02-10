@@ -17,6 +17,9 @@ limitations under the License.
 package network
 
 import (
+	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
+	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -74,6 +77,11 @@ func findPodIPRange(clientSet kubernetes.Interface) (string, error) {
 		return podIPRange, err
 	}
 
+	podIPRange, err = findPodIPRangeFromNodeSpec(clientSet)
+	if err != nil || podIPRange != "" {
+		return podIPRange, err
+	}
+
 	return "", nil
 }
 
@@ -83,4 +91,24 @@ func findPodIPRangeKubeController(clientSet kubernetes.Interface) (string, error
 
 func findPodIPRangeKubeProxy(clientSet kubernetes.Interface) (string, error) {
 	return findPodCommandParameter(clientSet, "component=kube-proxy", "--cluster-cidr")
+}
+
+func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) {
+	nodes, err := clientSet.CoreV1().Nodes().List(v1meta.ListOptions{})
+
+	if err != nil {
+		return "", errors.WithMessagef(err, "error listing nodes")
+	}
+
+	return parseToPodCidr(nodes.Items)
+}
+
+func parseToPodCidr(nodes []v1.Node) (string, error) {
+	for _, node := range nodes {
+		if node.Spec.PodCIDR != "" {
+			return node.Spec.PodCIDR, nil
+		}
+	}
+
+	return "", nil
 }
