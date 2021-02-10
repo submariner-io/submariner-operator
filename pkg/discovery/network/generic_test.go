@@ -157,6 +157,60 @@ var _ = Describe("discoverGenericNetwork", func() {
 			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
 		})
 	})
+
+	When("There is no pod cidr information on node", func() {
+		It("Should return nil cluster network", func() {
+			clusterNet := testDiscoverGenericWith(
+				fakeNode("node1", ""),
+				fakeNode("node2", ""),
+			)
+			Expect(clusterNet).To(BeNil())
+		})
+	})
+
+	When("There is pod cidr information on any of nodes", func() {
+		var clusterNet *ClusterNetwork
+
+		BeforeEach(func() {
+			clusterNet = testDiscoverGenericWith(
+				fakeNode("node1", ""),
+				fakeNode("node2", testPodCIDR),
+			)
+		})
+
+		It("Should return the ClusterNetwork structure with PodCIDR", func() {
+			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
+		})
+
+		It("Should identify the networkplugin as generic", func() {
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+		})
+
+		It("Should return the ClusterNetwork structure with empty service CIDR", func() {
+			Expect(clusterNet.ServiceCIDRs).To(BeEmpty())
+		})
+	})
+
+	When("There is pod cidr information on any of nodes and there is kubeapi pod", func() {
+		var clusterNet *ClusterNetwork
+
+		BeforeEach(func() {
+			clusterNet = testDiscoverGenericWith(
+				fakeNode("node1", testPodCIDR),
+				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
+			)
+		})
+
+		It("Should return ClusterNetwork with all CIDRs", func() {
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
+			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
+		})
+
+		It("Should identify the networkplugin as generic", func() {
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+		})
+	})
+
 })
 
 func testDiscoverGenericWith(objects ...runtime.Object) *ClusterNetwork {
