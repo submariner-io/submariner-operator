@@ -1,4 +1,4 @@
-FROM quay.io/submariner/shipyard-dapper-base:0.8.0
+FROM quay.io/submariner/shipyard-dapper-base:release-0.8
 
 ARG DAPPER_HOST_ARCH
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} \
