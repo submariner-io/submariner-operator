@@ -35,7 +35,7 @@ const (
 )
 
 type ClusterInfo struct {
-	ClusterId  string   `json:"cluster_id"`
+	ClusterID  string   `json:"cluster_id"`
 	GlobalCidr []string `json:"global_cidr"`
 }
 
@@ -105,7 +105,7 @@ func UpdateGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace stri
 
 	exists := false
 	for k, value := range clusterInfo {
-		if value.ClusterId == newCluster.ClusterId {
+		if value.ClusterID == newCluster.ClusterID {
 			clusterInfo[k].GlobalCidr = newCluster.GlobalCidr
 			exists = true
 		}
@@ -113,7 +113,7 @@ func UpdateGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace stri
 
 	if !exists {
 		var newEntry ClusterInfo
-		newEntry.ClusterId = newCluster.ClusterId
+		newEntry.ClusterID = newCluster.ClusterID
 		newEntry.GlobalCidr = newCluster.GlobalCidr
 		clusterInfo = append(clusterInfo, newEntry)
 	}

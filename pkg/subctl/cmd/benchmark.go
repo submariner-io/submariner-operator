@@ -70,9 +70,9 @@ func addBenchmarkFlags(cmd *cobra.Command) {
 
 func checkBenchmarkArguments(args []string, intraCluster bool) error {
 	if !intraCluster && len(args) != 2 {
-		return fmt.Errorf("Two kubeconfigs must be specified.")
+		return fmt.Errorf("two kubeconfigs must be specified")
 	} else if intraCluster && len(args) != 1 {
-		return fmt.Errorf("Only one kubeconfig should be specified.")
+		return fmt.Errorf("only one kubeconfig should be specified")
 	}
 	return nil
 }

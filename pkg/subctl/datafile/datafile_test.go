@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	testBrokerUrl             = "https://my-broker-url:8443"
+	testBrokerURL             = "https://my-broker-url:8443"
 	testSASecret              = "submariner-k8s-broker-admin-token-abcdef" // #nosec G101 Test secret only
 	testToken                 = "i-am-a-token"
 	SubmarinerBrokerNamespace = "submariner-k8s-broker"
@@ -56,7 +56,7 @@ var _ = Describe("datafile", func() {
 
 	When("Doing decoding from string", func() {
 		It("Should recover the data", func() {
-			data := &SubctlData{BrokerURL: testBrokerUrl}
+			data := &SubctlData{BrokerURL: testBrokerURL}
 			str, _ := data.ToString()
 			newData, err := NewFromString(str)
 			Expect(err).ShouldNot(HaveOccurred())
