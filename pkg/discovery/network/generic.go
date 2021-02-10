@@ -25,27 +25,16 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 		NetworkPlugin: "generic",
 	}
 
-	podIPRange, err := findPodIPRangeKubeController(clientSet)
+	podIPRange, err := findPodIPRange(clientSet)
 	if err != nil {
 		return nil, err
-	}
-
-	if podIPRange == "" {
-		podIPRange, err = findPodIPRangeKubeProxy(clientSet)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	if podIPRange != "" {
 		clusterNetwork.PodCIDRs = []string{podIPRange}
 	}
 
-	// on some self-hosted platforms, the platform itself will provide the kube-apiserver, thus
-	// our discovery method of looking for the kube-apiserver pod is useless, and we won't be
-	// able to return such detail
 	clusterIPRange, err := findClusterIPRange(clientSet)
-
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +51,30 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 }
 
 func findClusterIPRange(clientSet kubernetes.Interface) (string, error) {
+	clusterIPRange, err := findClusterIPRangeFromApiserver(clientSet)
+	if err != nil || clusterIPRange != "" {
+		return clusterIPRange, err
+	}
+
+	return "", nil
+}
+
+func findClusterIPRangeFromApiserver(clientSet kubernetes.Interface) (string, error) {
 	return findPodCommandParameter(clientSet, "component=kube-apiserver", "--service-cluster-ip-range")
+}
+
+func findPodIPRange(clientSet kubernetes.Interface) (string, error) {
+	podIPRange, err := findPodIPRangeKubeController(clientSet)
+	if err != nil || podIPRange != "" {
+		return podIPRange, err
+	}
+
+	podIPRange, err = findPodIPRangeKubeProxy(clientSet)
+	if err != nil || podIPRange != "" {
+		return podIPRange, err
+	}
+
+	return "", nil
 }
 
 func findPodIPRangeKubeController(clientSet kubernetes.Interface) (string, error) {
