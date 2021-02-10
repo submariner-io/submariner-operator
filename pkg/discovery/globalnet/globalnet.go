@@ -40,7 +40,7 @@ type GlobalnetInfo struct {
 
 type GlobalNetwork struct {
 	GlobalCIDRs []string
-	ClusterId   string
+	ClusterID   string
 }
 
 type GlobalCIDR struct {
@@ -53,7 +53,7 @@ type GlobalCIDR struct {
 type CIDR struct {
 	network *net.IPNet
 	size    int
-	lastIp  uint
+	lastIP  uint
 }
 
 type Config struct {
@@ -93,23 +93,23 @@ func NewCIDR(cidr string) (CIDR, error) {
 	}
 	ones, total := network.Mask.Size()
 	size := total - ones
-	lastIp := LastIp(network)
-	clusterCidr := CIDR{network: network, size: size, lastIp: lastIp}
+	lastIP := LastIP(network)
+	clusterCidr := CIDR{network: network, size: size, lastIP: lastIP}
 	return clusterCidr, nil
 }
 
-func LastIp(network *net.IPNet) uint {
+func LastIP(network *net.IPNet) uint {
 	ones, total := network.Mask.Size()
 	clusterSize := uint(total - ones)
-	firstIpInt := ipToUint(network.IP)
-	lastIpUint := (firstIpInt + 1<<clusterSize) - 1
-	return lastIpUint
+	firstIPInt := ipToUint(network.IP)
+	lastIPUint := (firstIPInt + 1<<clusterSize) - 1
+	return lastIPUint
 }
 
 func allocateByCidr(cidr string) (uint, error) {
-	requestedIp, requestedNetwork, err := net.ParseCIDR(cidr)
-	if err != nil || !globalCidr.net.Contains(requestedIp) {
-		return 0, fmt.Errorf("%s not a valid subnet of %v\n", cidr, globalCidr.net)
+	requestedIP, requestedNetwork, err := net.ParseCIDR(cidr)
+	if err != nil || !globalCidr.net.Contains(requestedIP) {
+		return 0, fmt.Errorf("%s not a valid subnet of %v", cidr, globalCidr.net)
 	}
 
 	var clusterCidr CIDR
@@ -117,18 +117,18 @@ func allocateByCidr(cidr string) (uint, error) {
 		return 0, err
 	}
 
-	if !globalCidr.net.Contains(uintToIP(clusterCidr.lastIp)) {
-		return 0, fmt.Errorf("%s not a valid subnet of %v\n", cidr, globalCidr.net)
+	if !globalCidr.net.Contains(uintToIP(clusterCidr.lastIP)) {
+		return 0, fmt.Errorf("%s not a valid subnet of %v", cidr, globalCidr.net)
 	}
 	for i := 0; i < globalCidr.allocatedCount; i++ {
 		allocated := globalCidr.allocatedClusters[i]
-		if allocated.network.Contains(requestedIp) {
+		if allocated.network.Contains(requestedIP) {
 			// subset of already allocated, try next
-			return allocated.lastIp, fmt.Errorf("%s subset of already allocated globalCidr %v\n", cidr, allocated.network)
+			return allocated.lastIP, fmt.Errorf("%s subset of already allocated globalCidr %v", cidr, allocated.network)
 		}
 		if requestedNetwork.Contains(allocated.network.IP) {
-			// already allocated is subset of requested, no valid lastIp
-			return clusterCidr.lastIp, fmt.Errorf("%s overlaps with already allocated globalCidr %s\n", cidr, allocated.network)
+			// already allocated is subset of requested, no valid lastIP
+			return clusterCidr.lastIP, fmt.Errorf("%s overlaps with already allocated globalCidr %s", cidr, allocated.network)
 		}
 	}
 	globalCidr.allocatedClusters = append(globalCidr.allocatedClusters, &clusterCidr)
@@ -183,17 +183,17 @@ func AllocateGlobalCIDR(globalnetInfo *GlobalnetInfo) (string, error) {
 }
 
 func ipToUint(ip net.IP) uint {
-	intIp := ip
+	intIP := ip
 	if len(ip) == 16 {
-		intIp = ip[12:16]
+		intIP = ip[12:16]
 	}
-	return uint(binary.BigEndian.Uint32(intIp))
+	return uint(binary.BigEndian.Uint32(intIP))
 }
 
 func uintToIP(ip uint) net.IP {
-	netIp := make(net.IP, 4)
-	binary.BigEndian.PutUint32(netIp, uint32(ip))
-	return netIp
+	netIP := make(net.IP, 4)
+	binary.BigEndian.PutUint32(netIP, uint32(ip))
+	return netIP
 }
 
 func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
@@ -206,7 +206,7 @@ func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
 	userClusterSize := clusterSize
 	clusterSize = nextPowerOf2(uint32(clusterSize))
 	if clusterSize > uint(availableSize/2) {
-		return 0, fmt.Errorf("Cluster size %d, should be <= %d", userClusterSize, availableSize/2)
+		return 0, fmt.Errorf("cluster size %d, should be <= %d", userClusterSize, availableSize/2)
 	}
 	return clusterSize, nil
 }
@@ -262,7 +262,7 @@ func ValidateGlobalnetConfiguration(globalnetInfo *GlobalnetInfo, netconfig Conf
 	}
 
 	if globalnetCIDR != "" && globalnetClusterSize != 0 {
-		err := errors.New("Both globalnet-cluster-size and globalnet-cidr can't be specified. Specify either one.\n")
+		err := errors.New("both globalnet-cluster-size and globalnet-cidr can't be specified. Specify either one")
 		return "", fmt.Errorf("%s", err)
 	}
 
@@ -320,9 +320,9 @@ func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace strin
 	for _, cluster := range clusterInfo {
 		globalNetwork := GlobalNetwork{
 			GlobalCIDRs: cluster.GlobalCidr,
-			ClusterId:   cluster.ClusterId,
+			ClusterID:   cluster.ClusterID,
 		}
-		globalNetworks[cluster.ClusterId] = &globalNetwork
+		globalNetworks[cluster.ClusterID] = &globalNetwork
 	}
 
 	globalnetInfo.GlobalCidrInfo = globalNetworks
@@ -344,7 +344,7 @@ func AssignGlobalnetIPs(globalnetInfo *GlobalnetInfo, netconfig Config) (string,
 			// no globalCidr configured on this cluster
 			globalnetCIDR, err = AllocateGlobalCIDR(globalnetInfo)
 			if err != nil {
-				return "", fmt.Errorf("Globalnet failed %s", err)
+				return "", fmt.Errorf("globalnet failed %s", err)
 			}
 			status.QueueSuccessMessage(fmt.Sprintf("Allocated GlobalCIDR: %s", globalnetCIDR))
 		}

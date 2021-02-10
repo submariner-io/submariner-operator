@@ -42,13 +42,12 @@ func init() {
 }
 
 func getGatewaysStatus(submariner *v1alpha1.Submariner) []gatewayStatus {
-	var status []gatewayStatus
-
 	gateways := submariner.Status.Gateways
 	if gateways == nil {
 		exitWithErrorMsg("no gateways found")
 	}
 
+	var status = make([]gatewayStatus, 0, len(*gateways))
 	for _, gateway := range *gateways {
 		haStatus := gateway.HAStatus
 		enpoint := gateway.LocalEndpoint.Hostname

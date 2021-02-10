@@ -22,17 +22,18 @@ linters:
     - bodyclose
     - deadcode
     - depguard
+    - dogsled
     # - dupl
     - errcheck
     - exportloopref
     # - funlen
     # - gochecknoglobals
     # - gochecknoinits
+    - goconst
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-    # - golint
     - gosec
     - gosimple
     - govet
@@ -42,9 +43,10 @@ linters:
     - misspell
     - maligned
     - nakedret
+    - prealloc
     - staticcheck
     - structcheck
-    # - stylecheck
+    - stylecheck
     # - testpackage
     - typecheck
     - unconvert
@@ -54,7 +56,14 @@ linters:
     - whitespace
 issues:
   exclude-rules:
-    # Ignore long (due to links) auto-generated YAML lines
+    # Ignore long line and variable name non-compliance warnings in auto-generated file
     - linters:
         - lll
+        - stylecheck
       path: "pkg/subctl/operator/common/embeddedyamls/yamls.go"
+
+    # BrokerK8sApiServer parameter is used by other projects, like ACM,
+    # so not changing it to BrokerK8sAPIServer as suggested by stylecheck
+    - linters:
+        - stylecheck
+      text: "ST1003: struct field BrokerK8sApiServer"
