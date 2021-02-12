@@ -59,6 +59,8 @@ func init() {
 	deployBroker.PersistentFlags().BoolVar(&serviceDiscoveryEnabled, "service-discovery", true,
 		"enable multi-cluster service discovery")
 
+	_ = deployBroker.PersistentFlags().MarkDeprecated("service-discovery", "please use --components instead")
+
 	deployBroker.PersistentFlags().StringSliceVar(&defaultCustomDomains, "custom-domains", nil,
 		"list of domains to use for multicluster service discovery")
 
