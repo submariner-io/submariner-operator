@@ -123,7 +123,7 @@ prompt for confirmation therefore you must specify --enable-disruptive to run th
 			return
 		}
 
-		config.GinkgoConfig.FocusString = strings.Join(patterns, "|")
+		config.GinkgoConfig.FocusStrings = patterns
 
 		fmt.Printf("Performing the following verifications: %s\n", strings.Join(verifications, ", "))
 
