@@ -43,6 +43,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/servicediscoverycr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 	"github.com/submariner-io/submariner-operator/pkg/versions"
@@ -232,7 +233,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	}
 	exitOnError("Unable to check requirements", err)
 
-	if labelGateway && !noLabel {
+	if subctlData.IsConnectivityEnabled() && labelGateway && !noLabel {
 		err := handleNodeLabels(clientConfig)
 		exitOnError("Unable to set the gateway node up", err)
 	}
@@ -277,16 +278,30 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	status.End(cli.CheckForError(err))
 	exitOnError("Error creating SA for cluster", err)
 
-	status.Start("Deploying Submariner")
-	err = submarinercr.Ensure(clientConfig, OperatorNamespace, populateSubmarinerSpec(subctlData, netconfig))
-	if err == nil {
-		status.QueueSuccessMessage("Submariner is up and running")
-		status.End(cli.Success)
-	} else {
-		status.QueueFailureMessage("Submariner deployment failed")
-		status.End(cli.Failure)
+	if subctlData.IsConnectivityEnabled() {
+		status.Start("Deploying Submariner")
+		err = submarinercr.Ensure(clientConfig, OperatorNamespace, populateSubmarinerSpec(subctlData, netconfig))
+		if err == nil {
+			status.QueueSuccessMessage("Submariner is up and running")
+			status.End(cli.Success)
+		} else {
+			status.QueueFailureMessage("Submariner deployment failed")
+			status.End(cli.Failure)
+		}
+
+		exitOnError("Error deploying Submariner", err)
+	} else if subctlData.IsServiceDiscoveryEnabled() {
+		status.Start("Deploying service discovery only")
+		err = servicediscoverycr.Ensure(clientConfig, OperatorNamespace, populateServiceDiscoverySpec(subctlData))
+		if err == nil {
+			status.QueueSuccessMessage("Service discovery is up an running")
+			status.End(cli.Success)
+		} else {
+			status.QueueFailureMessage("Service discovery deployment failed")
+			status.End(cli.Failure)
+		}
+		exitOnError("Error deploying service discovery", err)
 	}
-	exitOnError("Error deploying Submariner", err)
 }
 
 func checkRequirements(config *rest.Config) ([]string, error) {
@@ -473,7 +488,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		ClusterCIDR:              crClusterCIDR,
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
-		ServiceDiscoveryEnabled:  subctlData.ServiceDiscovery,
+		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
 		ImageOverrides:           getImageOverrides(),
 		ConnectionHealthCheck: &submariner.HealthCheckSpec{
 			Enabled:            healthCheckEnable,
@@ -518,6 +533,41 @@ func getImageRepo() string {
 	}
 
 	return repo
+}
+
+func removeSchemaPrefix(brokerURL string) string {
+	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
+		// Submariner doesn't work with a schema prefix
+		brokerURL = brokerURL[(idx + 3):]
+	}
+
+	return brokerURL
+}
+
+func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.ServiceDiscoverySpec {
+	brokerURL := removeSchemaPrefix(subctlData.BrokerURL)
+
+	if customDomains == nil && subctlData.CustomDomains != nil {
+		customDomains = *subctlData.CustomDomains
+	}
+
+	serviceDiscoverySpec := submariner.ServiceDiscoverySpec{
+		Repository:               repository,
+		Version:                  imageVersion,
+		BrokerK8sCA:              base64.StdEncoding.EncodeToString(subctlData.ClientToken.Data["ca.crt"]),
+		BrokerK8sRemoteNamespace: string(subctlData.ClientToken.Data["namespace"]),
+		BrokerK8sApiServerToken:  string(clienttoken.Data["token"]),
+		BrokerK8sApiServer:       brokerURL,
+		Debug:                    submarinerDebug,
+		ClusterID:                clusterID,
+		Namespace:                SubmarinerNamespace,
+		ImageOverrides:           getImageOverrides(),
+	}
+
+	if len(customDomains) > 0 {
+		serviceDiscoverySpec.CustomDomains = customDomains
+	}
+	return &serviceDiscoverySpec
 }
 
 func operatorImage() string {
