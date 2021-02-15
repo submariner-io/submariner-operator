@@ -107,7 +107,8 @@ func findClusterIPRangeFromServiceCreation(clientSet kubernetes.Interface) (stri
 
 	// creating invalid service didn't fail as expected
 	if err == nil {
-		return "", fmt.Errorf("creating invalid service(%v) didn't fail", invalidSvcSpec)
+		return "", fmt.Errorf("could not determine the service IP range via service creation - " +
+			"expected a specific error but none was returned")
 	}
 
 	return parseServiceCIDRFrom(err.Error())
@@ -124,7 +125,8 @@ func parseServiceCIDRFrom(msg string) (string, error) {
 
 	match := re.FindStringSubmatch(msg)
 	if match == nil {
-		return "", fmt.Errorf("parsing (%s) failed. it doesn't match with %v", msg, re)
+		return "", fmt.Errorf("could not determine the service IP range via service creation - the expected error "+
+			"was not returned. The actual error was %q", msg)
 	}
 
 	// returns first matching string
