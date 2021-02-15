@@ -73,7 +73,7 @@ func (c *failingClient) Get(ctx context.Context, key controllerClient.ObjectKey,
 
 func (c *failingClient) Update(ctx context.Context, obj runtime.Object, opts ...controllerClient.UpdateOption) error {
 	if c.onUpdate == reflect.TypeOf(obj) {
-		return fmt.Errorf("Mock Get error")
+		return fmt.Errorf("Mock Update error")
 	}
 
 	return c.Client.Update(ctx, obj, opts...)
@@ -311,8 +311,19 @@ func testReconciliation() {
 		})
 	})
 
+	When("all Submariner resource default values are set", func() {
+		BeforeEach(func() {
+			fakeClient = &failingClient{Client: newClient(), onUpdate: reflect.TypeOf(&submariner_v1.Submariner{})}
+		})
+
+		It("should not update the resource", func() {
+			Expect(reconcileErr).To(Succeed())
+		})
+	})
+
 	When("Submariner resource update fails", func() {
 		BeforeEach(func() {
+			submariner.Spec.Repository = ""
 			fakeClient = &failingClient{Client: newClient(), onUpdate: reflect.TypeOf(&submariner_v1.Submariner{})}
 		})
 

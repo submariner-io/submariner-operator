@@ -123,10 +123,12 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 
 	initialStatus := instance.Status.DeepCopy()
 
-	instance.SetDefaults()
+	if instance.SetDefaults() {
+		reqLogger.Info("Updating Submariner instance with defaults")
 
-	if err := r.client.Update(context.TODO(), instance); err != nil {
-		return reconcile.Result{}, err
+		if err := r.client.Update(context.TODO(), instance); err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	// discovery is performed after Update to avoid storing the discovery in the

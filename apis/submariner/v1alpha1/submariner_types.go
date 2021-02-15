@@ -128,17 +128,24 @@ func init() {
 	SchemeBuilder.Register(&Submariner{}, &SubmarinerList{})
 }
 
-func (submariner *Submariner) SetDefaults() {
+func (submariner *Submariner) SetDefaults() bool {
+	updated := false
+
 	if submariner.Spec.Repository == "" {
 		// An empty field is converted to the default upstream submariner repository where all images live
 		submariner.Spec.Repository = versions.DefaultRepo
+		updated = true
 	}
 
 	if submariner.Spec.Version == "" {
 		submariner.Spec.Version = versions.DefaultSubmarinerVersion
+		updated = true
 	}
 
 	if submariner.Spec.ColorCodes == "" {
 		submariner.Spec.ColorCodes = DefaultColorCode
+		updated = true
 	}
+
+	return updated
 }
