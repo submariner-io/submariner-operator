@@ -48,5 +48,5 @@ func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerS
 		Version:  submariner.SchemeGroupVersion.Version,
 		Resource: "brokers"}).Namespace(namespace)
 
-	return util.CreateAnew(client, brokerCR)
+	return util.CreateAnew(client, brokerCR, nil)
 }
