@@ -123,10 +123,12 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 
 	initialStatus := instance.Status.DeepCopy()
 
-	instance.SetDefaults()
+	if instance.SetDefaults() {
+		reqLogger.Info("Updating Submariner instance with defaults")
 
-	if err := r.client.Update(context.TODO(), instance); err != nil {
-		return reconcile.Result{}, err
+		if err := r.client.Update(context.TODO(), instance); err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	// discovery is performed after Update to avoid storing the discovery in the
@@ -168,27 +170,7 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		log.Error(err, "error retrieving gateways")
 	}
 
-	var gatewayStatuses = []submv1.GatewayStatus{}
-	if gateways != nil {
-		recordGateways(len(*gateways))
-		// Clear the connections so we don’t remember stale status information
-		recordNoConnections()
-		for _, gateway := range *gateways {
-			gatewayStatuses = append(gatewayStatuses, gateway.Status)
-			recordGatewayCreationTime(gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
-
-			for j := range gateway.Status.Connections {
-				recordConnection(
-					gateway.Status.LocalEndpoint,
-					gateway.Status.Connections[j].Endpoint,
-					string(gateway.Status.Connections[j].Status),
-				)
-			}
-		}
-	} else {
-		recordGateways(0)
-		recordNoConnections()
-	}
+	gatewayStatuses := buildGatewayStatusAndUpdateMetrics(gateways)
 
 	instance.Status.NatEnabled = instance.Spec.NatEnabled
 	instance.Status.ColorCodes = instance.Spec.ColorCodes
@@ -223,6 +205,33 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func buildGatewayStatusAndUpdateMetrics(gateways *[]submv1.Gateway) []submv1.GatewayStatus {
+	var gatewayStatuses = []submv1.GatewayStatus{}
+
+	if gateways != nil {
+		recordGateways(len(*gateways))
+		// Clear the connections so we don’t remember stale status information
+		recordNoConnections()
+		for _, gateway := range *gateways {
+			gatewayStatuses = append(gatewayStatuses, gateway.Status)
+			recordGatewayCreationTime(gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
+
+			for j := range gateway.Status.Connections {
+				recordConnection(
+					gateway.Status.LocalEndpoint,
+					gateway.Status.Connections[j].Endpoint,
+					string(gateway.Status.Connections[j].Status),
+				)
+			}
+		}
+	} else {
+		recordGateways(0)
+		recordNoConnections()
+	}
+
+	return gatewayStatuses
 }
 
 func (r *SubmarinerReconciler) updateDaemonSetStatus(daemonSet *appsv1.DaemonSet, status *submopv1a1.DaemonSetStatus,
