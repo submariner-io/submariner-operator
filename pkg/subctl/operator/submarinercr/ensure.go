@@ -47,6 +47,9 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 		Group:    submariner.SchemeGroupVersion.Group,
 		Version:  submariner.SchemeGroupVersion.Version,
 		Resource: "submariners"}).Namespace(namespace)
+	propagationPolicy := metav1.DeletePropagationForeground
 
-	return util.CreateAnew(client, submarinerCR)
+	return util.CreateAnew(client, submarinerCR, &metav1.DeleteOptions{
+		PropagationPolicy: &propagationPolicy,
+	})
 }
