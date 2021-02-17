@@ -52,20 +52,24 @@ func GetPullPolicy(version string) v1.PullPolicy {
 }
 
 func ParseOperatorImage(operatorImage string) (string, string) {
-	i := strings.LastIndex(operatorImage, ":")
 	var repository string
 	var version string
-	if i == -1 {
-		repository = operatorImage
+
+	pathParts := strings.SplitN(operatorImage, "/", 3)
+	if len(pathParts) < 3 || (!strings.Contains(pathParts[0], ".") &&
+		!strings.Contains(pathParts[0], ":") && pathParts[0] != "localhost") {
+		repository = pathParts[0]
 	} else {
-		repository = operatorImage[:i]
-		version = operatorImage[i+1:]
+		repository = pathParts[0] + "/" + pathParts[1]
 	}
 
-	suffix := "/" + names.OperatorImage
-	j := strings.LastIndex(repository, suffix)
-	if j != -1 {
-		repository = repository[:j]
+	imageName := strings.Replace(operatorImage, repository, "", 1)
+	i := strings.LastIndex(imageName, ":")
+	if i == -1 {
+		version = "latest"
+	} else {
+		version = imageName[i+1:]
 	}
+
 	return version, repository
 }
