@@ -28,7 +28,7 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	engineSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_engine_service_account_yaml)
+	gatewaySaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_gateway_service_account_yaml)
 	if err != nil {
 		return false, err
 	}
@@ -53,7 +53,7 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	updateEngineSCC, err := scc.UpdateSCC(restConfig, namespace, engineSaName)
+	updateGatewaySCC, err := scc.UpdateSCC(restConfig, namespace, gatewaySaName)
 	if err != nil {
 		return false, err
 	}
@@ -73,5 +73,5 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	return updateOperatorSCC || updateEngineSCC || updateRouteAgentSCC || updateGlobalnetSCC || updateNPSyncerSCC, err
+	return updateOperatorSCC || updateGatewaySCC || updateRouteAgentSCC || updateGlobalnetSCC || updateNPSyncerSCC, err
 }

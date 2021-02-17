@@ -154,7 +154,7 @@ preload-images:
 	source $(SCRIPTS_DIR)/lib/debug_functions; \
 	source $(SCRIPTS_DIR)/lib/deploy_funcs; \
 	set -e; \
-	for image in submariner submariner-route-agent submariner-operator lighthouse-agent submariner-globalnet lighthouse-coredns; do \
+	for image in submariner-gateway submariner-route-agent submariner-operator lighthouse-agent submariner-globalnet lighthouse-coredns; do \
 		import_image quay.io/submariner/$${image}; \
 	done
 

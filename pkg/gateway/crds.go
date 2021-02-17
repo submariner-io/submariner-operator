@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package engine
+package gateway
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ import (
 )
 
 // Ensure ensures that the required resources are deployed on the target system
-// The resources handled here are the engine CRDs: Cluster and Endpoint
+// The resources handled here are the gateway CRDs: Cluster and Endpoint
 func Ensure(crdUpdater crdutils.CRDUpdater) error {
 	_, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {

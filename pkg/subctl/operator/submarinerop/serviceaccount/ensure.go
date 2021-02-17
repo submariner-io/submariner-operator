@@ -67,7 +67,7 @@ func ensureServiceAccounts(clientSet *clientset.Clientset, namespace string) (bo
 	}
 
 	createdSubmarinerSA, err := serviceaccount.Ensure(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_engine_service_account_yaml)
+		embeddedyamls.Config_rbac_submariner_gateway_service_account_yaml)
 	if err != nil {
 		return false, err
 	}
@@ -97,7 +97,7 @@ func ensureClusterRoles(clientSet *clientset.Clientset) (bool, error) {
 	}
 
 	createdSubmarinerCR, err := serviceaccount.EnsureClusterRole(clientSet,
-		embeddedyamls.Config_rbac_submariner_engine_cluster_role_yaml)
+		embeddedyamls.Config_rbac_submariner_gateway_cluster_role_yaml)
 	if err != nil {
 		return false, err
 	}
@@ -127,7 +127,7 @@ func ensureClusterRoleBindings(clientSet *clientset.Clientset, namespace string)
 	}
 
 	createdSubmarinerCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_engine_cluster_role_binding_yaml)
+		embeddedyamls.Config_rbac_submariner_gateway_cluster_role_binding_yaml)
 	if err != nil {
 		return false, err
 	}
@@ -157,7 +157,7 @@ func ensureRoles(clientSet *clientset.Clientset, namespace string) (bool, error)
 	}
 
 	createdSubmarinerRole, err := serviceaccount.EnsureRole(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_engine_role_yaml)
+		embeddedyamls.Config_rbac_submariner_gateway_role_yaml)
 	if err != nil {
 		return false, err
 	}
@@ -185,7 +185,7 @@ func ensureRoleBindings(clientSet *clientset.Clientset, namespace string) (bool,
 	}
 
 	createdSubmarinerRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_engine_role_binding_yaml)
+		embeddedyamls.Config_rbac_submariner_gateway_role_binding_yaml)
 	if err != nil {
 		return false, err
 	}
