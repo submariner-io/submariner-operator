@@ -135,6 +135,11 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 		return reconcile.Result{}, err
 	}
 
+	err = metrics.Setup(instance.Namespace, instance, lightHouseAgent.GetLabels(), 8082, r.client, r.config, r.scheme, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	lighthouseDnsConfigMap := newLighthouseDnsConfigMap(instance)
 	if _, err = helpers.ReconcileConfigMap(instance, lighthouseDnsConfigMap, reqLogger,
 		r.client, r.scheme); err != nil {
