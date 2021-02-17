@@ -23,8 +23,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	submopv1a1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 )
 
@@ -63,7 +63,7 @@ func newNetworkPluginSyncerDeployment(cr *submopv1a1.Submariner, clusterNetwork 
 						{
 							Name:            "submariner-routeagent",
 							Image:           getImagePath(cr, names.NetworkPluginSyncerImage),
-							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.NetworkPluginSyncerImage]),
 							Command:         []string{"submariner-networkplugin-syncer.sh"},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
