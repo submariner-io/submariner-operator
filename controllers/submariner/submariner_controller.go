@@ -50,8 +50,10 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
@@ -713,6 +715,15 @@ func getImagePath(submariner *submopv1a1.Submariner, componentImage string) stri
 }
 
 func (r *SubmarinerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// Set up the CRDs we need
+	crdUpdater, err := crdutils.NewFromRestConfig(mgr.GetConfig())
+	if err != nil {
+		return err
+	}
+	if err := gateway.Ensure(crdUpdater); err != nil {
+		return err
+	}
+
 	// These are required so that we can retrieve Gateway objects using the dynamic client
 	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
 		return err

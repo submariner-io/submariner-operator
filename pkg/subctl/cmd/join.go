@@ -294,7 +294,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		status.Start("Deploying service discovery only")
 		err = servicediscoverycr.Ensure(clientConfig, OperatorNamespace, populateServiceDiscoverySpec(subctlData))
 		if err == nil {
-			status.QueueSuccessMessage("Service discovery is up an running")
+			status.QueueSuccessMessage("Service discovery is up and running")
 			status.End(cli.Success)
 		} else {
 			status.QueueFailureMessage("Service discovery deployment failed")

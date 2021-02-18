@@ -26,6 +26,7 @@ import (
 
 	"github.com/submariner-io/admiral/pkg/stringset"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -160,8 +161,13 @@ func (data *SubctlData) getAndCheckBrokerAdministratorConfig(private bool) (*res
 	if err != nil {
 		return config, err
 	}
-	// The point of the broker client is to access Submariner data, we know we should able to list clusters
+	// This attempts to determine whether we can connect, by trying to access a Submariner object
+	// Successful connections result in either the object, or a “not found” error; anything else
+	// likely means we couldn’t connect
 	_, err = submClientset.SubmarinerV1().Clusters(string(data.ClientToken.Data["namespace"])).List(metav1.ListOptions{})
+	if errors.IsNotFound(err) {
+		err = nil
+	}
 	return config, err
 }
 
