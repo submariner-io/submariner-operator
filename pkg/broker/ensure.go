@@ -22,32 +22,44 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
-
-	"github.com/submariner-io/submariner-operator/pkg/gateway"
-	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/pkg/gateway"
+	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
-func Ensure(config *rest.Config, crds bool) error {
+func Ensure(config *rest.Config, componentArr []string, crds bool) error {
 	if crds {
 		crdCreator, err := crdutils.NewFromRestConfig(config)
 		if err != nil {
 			return fmt.Errorf("error accessing the target cluster: %s", err)
 		}
-		err = gateway.Ensure(crdCreator)
-		if err != nil {
-			return fmt.Errorf("error setting up the gateway requirements: %s", err)
-		}
 
-		_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
-		if err != nil {
-			return fmt.Errorf("error setting up the lighthouse requirements: %s", err)
+		for i := range componentArr {
+			switch componentArr[i] {
+			case components.Connectivity:
+				err = gateway.Ensure(crdCreator)
+				if err != nil {
+					return fmt.Errorf("error setting up the connectivity requirements: %s", err)
+				}
+			case components.ServiceDiscovery:
+				_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
+				if err != nil {
+					return fmt.Errorf("error setting up the service discovery requirements: %s", err)
+				}
+			case components.Globalnet:
+				// Globalnet needs the Lighthouse CRDs too
+				_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
+				if err != nil {
+					return fmt.Errorf("error setting up the globalnet requirements: %s", err)
+				}
+			}
 		}
 	}
 
