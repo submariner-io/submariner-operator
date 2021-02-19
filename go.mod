@@ -4,6 +4,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.2.7
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.20.0
+	github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.15.0
@@ -26,7 +27,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200204173128-addea2498afe
-	sigs.k8s.io/controller-runtime v0.6.2
+	sigs.k8s.io/controller-runtime v0.6.5
 	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/mcs-api v0.0.0-20200908023942-d26176718973
 	sigs.k8s.io/yaml v1.2.0
