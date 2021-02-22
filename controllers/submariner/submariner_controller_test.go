@@ -310,27 +310,6 @@ func testReconciliation() {
 			Expect(reconcileErr).To(HaveOccurred())
 		})
 	})
-
-	When("all Submariner resource default values are set", func() {
-		BeforeEach(func() {
-			fakeClient = &failingClient{Client: newClient(), onUpdate: reflect.TypeOf(&submariner_v1.Submariner{})}
-		})
-
-		It("should not update the resource", func() {
-			Expect(reconcileErr).To(Succeed())
-		})
-	})
-
-	When("Submariner resource update fails", func() {
-		BeforeEach(func() {
-			submariner.Spec.Repository = ""
-			fakeClient = &failingClient{Client: newClient(), onUpdate: reflect.TypeOf(&submariner_v1.Submariner{})}
-		})
-
-		It("should return an error", func() {
-			Expect(reconcileErr).To(HaveOccurred())
-		})
-	})
 }
 
 func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client controllerClient.Client) {
