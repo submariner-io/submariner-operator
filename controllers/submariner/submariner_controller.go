@@ -520,8 +520,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 					},
 				},
 			},
-			// TODO: Use SA submariner-engine or submariner?
-			ServiceAccountName:            "submariner-operator",
+			ServiceAccountName:            "submariner-engine",
 			HostNetwork:                   true,
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 			RestartPolicy:                 corev1.RestartPolicyAlways,
@@ -618,8 +617,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							},
 						},
 					},
-					// TODO: Use SA submariner-routeagent or submariner?
-					ServiceAccountName: "submariner-operator",
+					ServiceAccountName: "submariner-routeagent",
 					HostNetwork:        true,
 					Volumes: []corev1.Volume{
 						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
@@ -692,8 +690,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							},
 						},
 					},
-					// TODO: Use SA submariner-globalnet or submariner?
-					ServiceAccountName:            "submariner-operator",
+					ServiceAccountName:            "submariner-globalnet",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
 					HostNetwork:                   true,
