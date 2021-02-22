@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"encoding/json"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -128,24 +130,18 @@ func init() {
 	SchemeBuilder.Register(&Submariner{}, &SubmarinerList{})
 }
 
-func (submariner *Submariner) SetDefaults() bool {
-	updated := false
-
-	if submariner.Spec.Repository == "" {
-		// An empty field is converted to the default upstream submariner repository where all images live
-		submariner.Spec.Repository = versions.DefaultRepo
-		updated = true
+func (s *Submariner) UnmarshalJSON(data []byte) error {
+	type submarinerAlias Submariner
+	subm := &submarinerAlias{
+		Spec: SubmarinerSpec{
+			Repository: versions.DefaultRepo,
+			Version:    versions.DefaultSubmarinerVersion,
+			ColorCodes: DefaultColorCode,
+		},
 	}
 
-	if submariner.Spec.Version == "" {
-		submariner.Spec.Version = versions.DefaultSubmarinerVersion
-		updated = true
-	}
+	_ = json.Unmarshal(data, subm)
 
-	if submariner.Spec.ColorCodes == "" {
-		submariner.Spec.ColorCodes = DefaultColorCode
-		updated = true
-	}
-
-	return updated
+	*s = Submariner(*subm)
+	return nil
 }
