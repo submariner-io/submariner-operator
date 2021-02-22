@@ -21,7 +21,6 @@ import (
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 var _ = Describe("discoverWeaveNetwork", func() {
@@ -42,9 +41,9 @@ var _ = Describe("discoverWeaveNetwork", func() {
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
-		It("Should return the ClusterNetwork structure with PodCIDR and no ServiceCIDRs", func() {
+		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
-			Expect(clusterNet.ServiceCIDRs).To(BeEmpty())
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
 		})
 
 		It("Should identify the networkplugin as weave-net", func() {
@@ -64,7 +63,7 @@ var _ = Describe("discoverWeaveNetwork", func() {
 			Expect(clusterNet).NotTo(BeNil())
 		})
 
-		It("Should return ClusterNetwork with Pod and Service CIDRs", func() {
+		It("Should return ClusterNetwork with the pod CIDR and the service CIDR", func() {
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
 		})
@@ -76,7 +75,7 @@ var _ = Describe("discoverWeaveNetwork", func() {
 })
 
 func testDiscoverWeaveWith(objects ...runtime.Object) *ClusterNetwork {
-	clientSet := fake.NewSimpleClientset(objects...)
+	clientSet := newTestClient(objects...)
 	clusterNet, err := discoverWeaveNetwork(clientSet)
 	Expect(err).NotTo(HaveOccurred())
 	return clusterNet

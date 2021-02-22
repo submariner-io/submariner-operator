@@ -51,7 +51,7 @@ var (
 	)
 	connectionsGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "submariner_connections",
+			Name: "submariner_requested_connections",
 			Help: "Number of connections (by endpoint and status)",
 		},
 		[]string{
