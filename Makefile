@@ -4,12 +4,6 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
-override CALCULATED_VERSION := $(shell . ${SCRIPTS_DIR}/lib/version; echo $$VERSION)
-VERSION ?= $(CALCULATED_VERSION)
-DEV_VERSION := $(shell . ${SCRIPTS_DIR}/lib/version; echo $$DEV_VERSION)
-
-export VERSION DEV_VERSION
-
 CROSS_TARGETS := linux-amd64 linux-arm64 linux-arm windows-amd64.exe darwin-amd64
 BINARIES := bin/subctl
 CROSS_BINARIES := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,bin/subctl-$(VERSION)-%,$(cross)))
@@ -160,7 +154,6 @@ manifests: generate vendor/modules.txt
 preload-images:
 	source $(SCRIPTS_DIR)/lib/debug_functions; \
 	source $(SCRIPTS_DIR)/lib/deploy_funcs; \
-	source $(SCRIPTS_DIR)/lib/version; \
 	set -e; \
 	for image in submariner submariner-route-agent submariner-operator lighthouse-agent submariner-globalnet lighthouse-coredns; do \
 		import_image quay.io/submariner/$${image}; \
