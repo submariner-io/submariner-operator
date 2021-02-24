@@ -16,7 +16,13 @@ CROSS_TARGETS := linux-amd64 linux-arm64 linux-arm windows-amd64.exe darwin-amd6
 BINARIES := bin/subctl
 CROSS_BINARIES := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,bin/subctl-$(VERSION)-%,$(cross)))
 CROSS_TARBALLS := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,dist/subctl-$(VERSION)-%.tar.xz,$(cross)))
+
+ifneq (,$(filter ovn,$(_using)))
+CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings.ovn
+else
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings
+endif
+
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
 export DEPLOY_ARGS
@@ -110,7 +116,7 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 	export GOARCH GOOS; \
 	$(SCRIPTS_DIR)/compile.sh \
 		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION) \
-        		   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$(if eq($(patsubst subctl-devel-%,devel,$(CALCULATED_VERSION)),devel),devel,$(CALCULATED_VERSION))" \
+			   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$(if eq($(patsubst subctl-devel-%,devel,$(CALCULATED_VERSION)),devel),devel,$(CALCULATED_VERSION))" \
 		--noupx $@ ./pkg/subctl/main.go
 
 ci: generate-embeddedyamls golangci-lint markdownlint unit build images

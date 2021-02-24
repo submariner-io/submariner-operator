@@ -123,14 +123,6 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 
 	initialStatus := instance.Status.DeepCopy()
 
-	instance.SetDefaults()
-
-	if err := r.client.Update(context.TODO(), instance); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// discovery is performed after Update to avoid storing the discovery in the
-	// struct beyond status
 	clusterNetwork, err := r.discoverNetwork(instance)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -168,27 +160,7 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		log.Error(err, "error retrieving gateways")
 	}
 
-	var gatewayStatuses = []submv1.GatewayStatus{}
-	if gateways != nil {
-		recordGateways(len(*gateways))
-		// Clear the connections so we don’t remember stale status information
-		recordNoConnections()
-		for _, gateway := range *gateways {
-			gatewayStatuses = append(gatewayStatuses, gateway.Status)
-			recordGatewayCreationTime(gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
-
-			for j := range gateway.Status.Connections {
-				recordConnection(
-					gateway.Status.LocalEndpoint,
-					gateway.Status.Connections[j].Endpoint,
-					string(gateway.Status.Connections[j].Status),
-				)
-			}
-		}
-	} else {
-		recordGateways(0)
-		recordNoConnections()
-	}
+	gatewayStatuses := buildGatewayStatusAndUpdateMetrics(gateways)
 
 	instance.Status.NatEnabled = instance.Spec.NatEnabled
 	instance.Status.ColorCodes = instance.Spec.ColorCodes
@@ -223,6 +195,33 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func buildGatewayStatusAndUpdateMetrics(gateways *[]submv1.Gateway) []submv1.GatewayStatus {
+	var gatewayStatuses = []submv1.GatewayStatus{}
+
+	if gateways != nil {
+		recordGateways(len(*gateways))
+		// Clear the connections so we don’t remember stale status information
+		recordNoConnections()
+		for _, gateway := range *gateways {
+			gatewayStatuses = append(gatewayStatuses, gateway.Status)
+			recordGatewayCreationTime(gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
+
+			for j := range gateway.Status.Connections {
+				recordConnection(
+					gateway.Status.LocalEndpoint,
+					gateway.Status.Connections[j].Endpoint,
+					string(gateway.Status.Connections[j].Status),
+				)
+			}
+		}
+	} else {
+		recordGateways(0)
+		recordNoConnections()
+	}
+
+	return gatewayStatuses
 }
 
 func (r *SubmarinerReconciler) updateDaemonSetStatus(daemonSet *appsv1.DaemonSet, status *submopv1a1.DaemonSetStatus,
@@ -511,8 +510,7 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 					},
 				},
 			},
-			// TODO: Use SA submariner-engine or submariner?
-			ServiceAccountName:            "submariner-operator",
+			ServiceAccountName:            "submariner-engine",
 			HostNetwork:                   true,
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 			RestartPolicy:                 corev1.RestartPolicyAlways,
@@ -609,8 +607,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							},
 						},
 					},
-					// TODO: Use SA submariner-routeagent or submariner?
-					ServiceAccountName: "submariner-operator",
+					ServiceAccountName: "submariner-routeagent",
 					HostNetwork:        true,
 					Volumes: []corev1.Volume{
 						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
@@ -683,8 +680,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							},
 						},
 					},
-					// TODO: Use SA submariner-globalnet or submariner?
-					ServiceAccountName:            "submariner-operator",
+					ServiceAccountName:            "submariner-globalnet",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
 					HostNetwork:                   true,

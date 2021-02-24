@@ -3,7 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: submariner-lighthouse
+  name: submariner-lighthouse-coredns
 rules:
   - apiGroups:
       - ""
@@ -28,6 +28,17 @@ rules:
       - update
       - delete
       - deletecollection
+  - apiGroups:
+      - lighthouse.submariner.io
+    resources:
+      - "*"
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - delete
   - apiGroups:
       - submariner.io
     resources:

@@ -55,8 +55,13 @@ func findPod(clientSet kubernetes.Interface, labelSelector string) (*v1.Pod, err
 		Limit:         1,
 	})
 
-	if err != nil || len(pods.Items) == 0 {
+	if err != nil {
 		return nil, errors.WithMessagef(err, "error listing Pods by label selector %q", labelSelector)
 	}
+
+	if len(pods.Items) == 0 {
+		return nil, nil
+	}
+
 	return &pods.Items[0], nil
 }

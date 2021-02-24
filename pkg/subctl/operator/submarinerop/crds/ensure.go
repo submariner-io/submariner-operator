@@ -17,7 +17,6 @@ limitations under the License.
 package crds
 
 import (
-	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
@@ -32,23 +31,13 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, err
 	}
 
-	submarinerCrd, err := getSubmarinerCRD()
+	// Attempt to update or create the CRD definitions
+	// TODO(majopela): In the future we may want to report when we have updated the existing
+	//                 CRD definition with new versions
+	submarinerCreated, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
 	if err != nil {
 		return false, err
 	}
-
-	// Attempt to update or create the CRD definition
-	// TODO(majopela): In the future we may want to report when we have updated the existing
-	//                 CRD definition with new versions
-	return utils.CreateOrUpdateCRD(crdUpdater, submarinerCrd)
-}
-
-func getSubmarinerCRD() (*apiextensions.CustomResourceDefinition, error) {
-	crd := &apiextensions.CustomResourceDefinition{}
-
-	if err := embeddedyamls.GetObject(embeddedyamls.Deploy_crds_submariner_io_submariners_yaml, crd); err != nil {
-		return nil, err
-	}
-
-	return crd, nil
+	brokerCreated, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
+	return submarinerCreated || brokerCreated, err
 }
