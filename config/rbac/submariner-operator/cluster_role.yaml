@@ -26,11 +26,12 @@ rules:
       - create
       - update
       - delete
-  - apiGroups:  # pods and services are looked up to figure out network settings
+  - apiGroups:  # pods, services and nodes are looked up to figure out network settings
       - ""
     resources:
       - pods
       - services
+      - nodes
     verbs:
       - get
       - list
