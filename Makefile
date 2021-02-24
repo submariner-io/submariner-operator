@@ -2,6 +2,8 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
+IMAGES=submariner-operator submariner-operator-bundle
+
 include $(SHIPYARD_DIR)/Makefile.inc
 
 CROSS_TARGETS := linux-amd64 linux-arm64 linux-arm windows-amd64.exe darwin-amd64
@@ -31,7 +33,7 @@ GOARCH = $(shell go env GOARCH)
 GOEXE = $(shell go env GOEXE)
 GOOS = $(shell go env GOOS)
 
-# Options for 'bundle-build'
+# Options for 'submariner-operator-bundle' image
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
 endif
@@ -82,10 +84,7 @@ build: $(BINARIES)
 
 build-cross: $(CROSS_TARBALLS)
 
-operator-image: bin/submariner-operator
-	$(SCRIPTS_DIR)/build_image.sh -i submariner-operator -f Dockerfile
-
-images: operator-image bundle-build
+package/Dockerfile.submariner-operator: bin/submariner-operator
 
 bin/submariner-operator: vendor/modules.txt main.go generate-embeddedyamls
 	${SCRIPTS_DIR}/compile.sh \
@@ -182,10 +181,6 @@ bundle: kustomization
 	kustomize build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
 	operator-sdk bundle validate ./bundle
 
-# Build the bundle image
-bundle-build:
-	$(SCRIPTS_DIR)/build_image.sh -i submariner-operator-bundle -f bundle.Dockerfile
-
 # Generate package manifests
 packagemanifests: kustomization
 	(kustomize build config/manifests \
@@ -198,7 +193,7 @@ golangci-lint: generate-embeddedyamls
 
 unit: generate-embeddedyamls
 
-.PHONY: build images ci clean generate-clientset generate-embeddedyamls operator-image preload-images bundle bundle-build packagemanifests kustomization is-semantic-version
+.PHONY: build images ci clean generate-clientset generate-embeddedyamls preload-images bundle packagemanifests kustomization is-semantic-version
 
 else
 

@@ -31,8 +31,13 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, err
 	}
 
-	// Attempt to update or create the CRD definition
+	// Attempt to update or create the CRD definitions
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
-	return utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
+	submarinerCreated, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
+	if err != nil {
+		return false, err
+	}
+	brokerCreated, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
+	return submarinerCreated || brokerCreated, err
 }

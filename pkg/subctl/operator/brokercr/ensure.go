@@ -1,5 +1,5 @@
 /*
-© 2019 Red Hat, Inc. and others.
+© 2021 Red Hat, Inc. and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,28 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package submarinercr
+package brokercr
 
 import (
-	"github.com/submariner-io/admiral/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 
+	"github.com/submariner-io/admiral/pkg/util"
 	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 )
 
 const (
-	SubmarinerName = "submariner"
+	BrokerName = "submariner-broker"
 )
 
-func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
-	submarinerCR := &submariner.Submariner{
+func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerSpec) error {
+	brokerCR := &submariner.Broker{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: SubmarinerName,
+			Name: BrokerName,
 		},
-		Spec: submarinerSpec,
+		Spec: brokerSpec,
 	}
 
 	dynClient, err := dynamic.NewForConfig(config)
@@ -46,7 +46,7 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 	client := dynClient.Resource(schema.GroupVersionResource{
 		Group:    submariner.SchemeGroupVersion.Group,
 		Version:  submariner.SchemeGroupVersion.Version,
-		Resource: "submariners"}).Namespace(namespace)
+		Resource: "brokers"}).Namespace(namespace)
 
-	return util.CreateAnew(client, submarinerCR)
+	return util.CreateAnew(client, brokerCR)
 }

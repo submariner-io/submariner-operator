@@ -26,6 +26,7 @@ import (
 )
 
 var files = []string{
+	"deploy/crds/submariner.io_brokers.yaml",
 	"deploy/crds/submariner.io_submariners.yaml",
 	"deploy/crds/submariner.io_servicediscoveries.yaml",
 	"deploy/submariner/crds/submariner.io_clusters.yaml",
