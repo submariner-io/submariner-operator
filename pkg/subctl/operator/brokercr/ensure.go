@@ -17,9 +17,10 @@ limitations under the License.
 package brokercr
 
 import (
+	"github.com/submariner-io/admiral/pkg/resource"
+	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/admiral/pkg/util"
@@ -38,15 +39,20 @@ func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerS
 		Spec: brokerSpec,
 	}
 
-	dynClient, err := dynamic.NewForConfig(config)
+	client, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
 		return err
 	}
 
-	client := dynClient.Resource(schema.GroupVersionResource{
-		Group:    submariner.SchemeGroupVersion.Group,
-		Version:  submariner.SchemeGroupVersion.Version,
-		Resource: "brokers"}).Namespace(namespace)
-
-	return util.CreateAnew(client, brokerCR, nil)
+	return util.CreateAnew(&resource.InterfaceFuncs{
+		GetFunc: func(name string, options metav1.GetOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().Brokers(namespace).Get(name, options)
+		},
+		CreateFunc: func(obj runtime.Object) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().Brokers(namespace).Create(obj.(*submariner.Broker))
+		},
+		DeleteFunc: func(name string, options *metav1.DeleteOptions) error {
+			return client.SubmarinerV1alpha1().Brokers(namespace).Delete(name, options)
+		},
+	}, brokerCR, nil)
 }

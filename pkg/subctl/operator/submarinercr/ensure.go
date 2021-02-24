@@ -17,13 +17,14 @@ limitations under the License.
 package submarinercr
 
 import (
+	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 
 	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 )
 
 const (
@@ -38,18 +39,24 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 		Spec: submarinerSpec,
 	}
 
-	dynClient, err := dynamic.NewForConfig(config)
+	client, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
 		return err
 	}
 
-	client := dynClient.Resource(schema.GroupVersionResource{
-		Group:    submariner.SchemeGroupVersion.Group,
-		Version:  submariner.SchemeGroupVersion.Version,
-		Resource: "submariners"}).Namespace(namespace)
 	propagationPolicy := metav1.DeletePropagationForeground
 
-	return util.CreateAnew(client, submarinerCR, &metav1.DeleteOptions{
+	return util.CreateAnew(&resource.InterfaceFuncs{
+		GetFunc: func(name string, options metav1.GetOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().Submariners(namespace).Get(name, options)
+		},
+		CreateFunc: func(obj runtime.Object) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().Submariners(namespace).Create(obj.(*submariner.Submariner))
+		},
+		DeleteFunc: func(name string, options *metav1.DeleteOptions) error {
+			return client.SubmarinerV1alpha1().Submariners(namespace).Delete(name, options)
+		},
+	}, submarinerCR, &metav1.DeleteOptions{
 		PropagationPolicy: &propagationPolicy,
 	})
 }

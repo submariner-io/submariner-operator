@@ -19,77 +19,44 @@ package utils
 import (
 	"fmt"
 
+	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/admiral/pkg/util"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/util/retry"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
+func CreateOrUpdate(client resource.Interface, obj runtime.Object) (bool, error) {
+	result, err := util.CreateOrUpdate(client, obj, util.Replace(obj))
+	return result == util.OperationResultCreated, err
+}
+
 func CreateOrUpdateClusterRole(clientSet clientset.Interface, clusterRole *rbacv1.ClusterRole) (bool, error) {
-	_, err := clientSet.RbacV1().ClusterRoles().Create(clusterRole)
-	if err == nil {
-		return true, nil
-	} else if errors.IsAlreadyExists(err) {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingClusterRole, err := clientSet.RbacV1().ClusterRoles().Get(clusterRole.Name, v1.GetOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to retrieve pre-existing cluster role %s : %v", clusterRole.Name, err)
-			}
-			clusterRole.ResourceVersion = existingClusterRole.ResourceVersion
-			// Potentially retried
-			_, err = clientSet.RbacV1().ClusterRoles().Update(clusterRole)
-			return err
-		})
-		return false, retryErr
-	}
-	return false, err
+	return CreateOrUpdate(resource.ForClusterRole(clientSet), clusterRole)
 }
 
 func CreateOrUpdateClusterRoleBinding(clientSet clientset.Interface, clusterRoleBinding *rbacv1.ClusterRoleBinding) (bool, error) {
-	_, err := clientSet.RbacV1().ClusterRoleBindings().Create(clusterRoleBinding)
-	if err == nil {
-		return true, nil
-	} else if errors.IsAlreadyExists(err) {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingClusterRoleBinding, err := clientSet.RbacV1().ClusterRoleBindings().Get(clusterRoleBinding.Name, v1.GetOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to retrieve pre-existing cluster role binding %s : %v", clusterRoleBinding.Name, err)
-			}
-			clusterRoleBinding.ResourceVersion = existingClusterRoleBinding.ResourceVersion
-			// Potentially retried
-			_, err = clientSet.RbacV1().ClusterRoleBindings().Update(clusterRoleBinding)
-			return err
-		})
-		return false, retryErr
-	}
-	return false, err
+	return CreateOrUpdate(resource.ForClusterRoleBinding(clientSet), clusterRoleBinding)
 }
 
 func CreateOrUpdateCRD(updater crdutils.CRDUpdater, crd *apiextensions.CustomResourceDefinition) (bool, error) {
-	_, err := updater.Create(crd)
-	if err == nil {
-		return true, nil
-	} else if errors.IsAlreadyExists(err) {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingCrd, err := updater.Get(crd.Name, v1.GetOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to retrieve pre-existing CRD %s : %v", crd.Name, err)
-			}
-			crd.ResourceVersion = existingCrd.ResourceVersion
-			// Potentially retried
-			_, err = updater.Update(crd)
-			return err
-		})
-		return false, retryErr
-	}
-	return false, err
+	return CreateOrUpdate(&resource.InterfaceFuncs{
+		GetFunc: func(name string, options metav1.GetOptions) (runtime.Object, error) {
+			return updater.Get(name, options)
+		},
+		CreateFunc: func(obj runtime.Object) (runtime.Object, error) {
+			return updater.Create(obj.(*apiextensions.CustomResourceDefinition))
+		},
+		UpdateFunc: func(obj runtime.Object) (runtime.Object, error) {
+			return updater.Update(obj.(*apiextensions.CustomResourceDefinition))
+		},
+	}, crd)
 }
 
 func CreateOrUpdateEmbeddedCRD(updater crdutils.CRDUpdater, crdYaml string) (bool, error) {
@@ -103,73 +70,17 @@ func CreateOrUpdateEmbeddedCRD(updater crdutils.CRDUpdater, crdYaml string) (boo
 }
 
 func CreateOrUpdateDeployment(clientSet clientset.Interface, namespace string, deployment *appsv1.Deployment) (bool, error) {
-	_, err := clientSet.AppsV1().Deployments(namespace).Create(deployment)
-	if err != nil && errors.IsAlreadyExists(err) {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingDeployment, err := clientSet.AppsV1().Deployments(namespace).Get(deployment.Name, v1.GetOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to retrieve pre-existing deployment %s : %v", deployment.Name, err)
-			}
-			deployment.ResourceVersion = existingDeployment.ResourceVersion
-			// Potentially retried
-			_, err = clientSet.AppsV1().Deployments(namespace).Update(deployment)
-			return err
-		})
-		return false, retryErr
-	}
-	return true, err
+	return CreateOrUpdate(resource.ForDeployment(clientSet, namespace), deployment)
 }
 
 func CreateOrUpdateRole(clientSet clientset.Interface, namespace string, role *rbacv1.Role) (bool, error) {
-	_, err := clientSet.RbacV1().Roles(namespace).Create(role)
-	if err != nil && errors.IsAlreadyExists(err) {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingRole, err := clientSet.RbacV1().Roles(namespace).Get(role.Name, v1.GetOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to retrieve pre-existing role %s : %v", role.Name, err)
-			}
-			role.ResourceVersion = existingRole.ResourceVersion
-			// Potentially retried
-			_, err = clientSet.RbacV1().Roles(namespace).Update(role)
-			return err
-		})
-		return false, retryErr
-	}
-	return true, err
+	return CreateOrUpdate(resource.ForRole(clientSet, namespace), role)
 }
 
 func CreateOrUpdateRoleBinding(clientSet clientset.Interface, namespace string, roleBinding *rbacv1.RoleBinding) (bool, error) {
-	_, err := clientSet.RbacV1().RoleBindings(namespace).Create(roleBinding)
-	if err != nil && errors.IsAlreadyExists(err) {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingRoleBinding, err := clientSet.RbacV1().RoleBindings(namespace).Get(roleBinding.Name, v1.GetOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to retrieve pre-existing role binding %s : %v", roleBinding.Name, err)
-			}
-			roleBinding.ResourceVersion = existingRoleBinding.ResourceVersion
-			// Potentially retried
-			_, err = clientSet.RbacV1().RoleBindings(namespace).Update(roleBinding)
-			return err
-		})
-		return false, retryErr
-	}
-	return true, err
+	return CreateOrUpdate(resource.ForRoleBinding(clientSet, namespace), roleBinding)
 }
 
 func CreateOrUpdateServiceAccount(clientSet clientset.Interface, namespace string, sa *corev1.ServiceAccount) (bool, error) {
-	_, err := clientSet.CoreV1().ServiceAccounts(namespace).Create(sa)
-	if err != nil && errors.IsAlreadyExists(err) {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			existingSa, err := clientSet.CoreV1().ServiceAccounts(namespace).Get(sa.Name, v1.GetOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to retrieve pre-existing service account %s : %v", sa.Name, err)
-			}
-			sa.ResourceVersion = existingSa.ResourceVersion
-			// Potentially retried
-			_, err = clientSet.CoreV1().ServiceAccounts(namespace).Update(sa)
-			return err
-		})
-		return false, retryErr
-	}
-	return true, err
+	return CreateOrUpdate(resource.ForServiceAccount(clientSet, namespace), sa)
 }
