@@ -19,6 +19,7 @@ import (
 	"context"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -59,6 +60,20 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 		})
 
 		if err != nil {
+			if IsImmutableError(err) {
+				reqLogger.Info("Re-creating a DaemonSet because it has immutable fields", "DaemonSet.Namespace",
+					daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
+
+				if err := client.Delete(context.TODO(), toUpdate); err != nil {
+					return err
+				}
+
+				if err := client.Create(context.TODO(), daemonSet); err != nil {
+					return err
+				}
+
+				return nil
+			}
 			return err
 		}
 
@@ -227,4 +242,18 @@ func GetPullPolicy(version, override string) corev1.PullPolicy {
 		return images.GetPullPolicy(tag)
 	}
 	return images.GetPullPolicy(version)
+}
+
+func IsImmutableError(err error) bool {
+	if !errors.IsInvalid(err) {
+		return false
+	}
+
+	if errStatus, ok := err.(errors.APIStatus); ok {
+		if strings.Contains(errStatus.Status().Message, "immutable") {
+			return true
+		}
+	}
+
+	return false
 }
