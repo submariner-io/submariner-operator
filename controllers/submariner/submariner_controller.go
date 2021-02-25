@@ -56,7 +56,7 @@ import (
 )
 
 const (
-	engineMetricsServerPort    = 8080
+	gatewayMetricsServerPort   = 8080
 	globalnetMetricsServerPort = 8081
 )
 
@@ -128,7 +128,7 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	engineDaemonSet, err := r.reconcileEngineDaemonSet(instance, reqLogger)
+	gatewayDaemonSet, err := r.reconcileGatewayDaemonSet(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -168,9 +168,9 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
 	instance.Status.Gateways = &gatewayStatuses
 
-	err = r.updateDaemonSetStatus(engineDaemonSet, &instance.Status.EngineDaemonSetStatus, request.Namespace)
+	err = r.updateDaemonSetStatus(gatewayDaemonSet, &instance.Status.GatewayDaemonSetStatus, request.Namespace)
 	if err != nil {
-		reqLogger.Error(err, "failed to check engine daemonset containers")
+		reqLogger.Error(err, "failed to check gateway daemonset containers")
 		return reconcile.Result{}, err
 	}
 	err = r.updateDaemonSetStatus(routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
@@ -180,7 +180,7 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 	}
 	err = r.updateDaemonSetStatus(globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
 	if err != nil {
-		reqLogger.Error(err, "failed to check engine daemonset containers")
+		reqLogger.Error(err, "failed to check gateway daemonset containers")
 		return reconcile.Result{}, err
 	}
 	if !reflect.DeepEqual(instance.Status, initialStatus) {
@@ -306,12 +306,13 @@ func (r *SubmarinerReconciler) retrieveGateways(owner metav1.Object, namespace s
 	return &foundGateways.Items, nil
 }
 
-func (r *SubmarinerReconciler) reconcileEngineDaemonSet(instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newEngineDaemonSet(instance), reqLogger, r.client, r.scheme)
+func (r *SubmarinerReconciler) reconcileGatewayDaemonSet(
+	instance *submopv1a1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
+	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance), reqLogger, r.client, r.scheme)
 	if err != nil {
 		return nil, err
 	}
-	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), engineMetricsServerPort, r.client, r.config, r.scheme, reqLogger)
+	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.client, r.config, r.scheme, reqLogger)
 	return daemonSet, err
 }
 
@@ -389,10 +390,10 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1
 	return errorutil.WithMessagef(err, "error reconciling the Service Discovery CR")
 }
 
-func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
+func newGatewayDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 	labels := map[string]string{
-		"app":       "submariner-engine",
-		"component": "engine",
+		"app":       "submariner-gateway",
+		"component": "gateway",
 	}
 
 	revisionHistoryLimit := int32(5)
@@ -406,8 +407,8 @@ func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 			Name:      "submariner-gateway",
 		},
 		Spec: appsv1.DaemonSetSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "submariner-engine"}},
-			Template: newEnginePodTemplate(cr),
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "submariner-gateway"}},
+			Template: newGatewayPodTemplate(cr),
 			UpdateStrategy: appsv1.DaemonSetUpdateStrategy{
 				RollingUpdate: &appsv1.RollingUpdateDaemonSet{
 					MaxUnavailable: &maxUnavailable,
@@ -421,13 +422,13 @@ func newEngineDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 	return deployment
 }
 
-// newEnginePodTemplate returns a submariner pod with the same fields as the cr
-func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
+// newGatewayPodTemplate returns a submariner pod with the same fields as the cr
+func newGatewayPodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 	labels := map[string]string{
-		"app": "submariner-engine",
+		"app": "submariner-gateway",
 	}
 
-	// Create privileged security context for Engine pod
+	// Create privileged security context for Gateway pod
 	// FIXME: Seems like these have to be a var, so can pass pointer to bool var to SecurityContext. Cleaner option?
 	allowPrivilegeEscalation := true
 	privileged := true
@@ -474,9 +475,9 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 			NodeSelector: map[string]string{"submariner.io/gateway": "true"},
 			Containers: []corev1.Container{
 				{
-					Name:            "submariner",
-					Image:           getImagePath(cr, names.EngineImage),
-					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.EngineImage]),
+					Name:            "submariner-gateway",
+					Image:           getImagePath(cr, names.GatewayImage),
+					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayImage]),
 					Command:         []string{"submariner.sh"},
 					SecurityContext: &security_context_all_caps_privileged,
 					VolumeMounts: []corev1.VolumeMount{
@@ -510,7 +511,8 @@ func newEnginePodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 					},
 				},
 			},
-			ServiceAccountName:            "submariner-engine",
+			// TODO: Use SA submariner-gateway or submariner?
+			ServiceAccountName:            "submariner-gateway",
 			HostNetwork:                   true,
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 			RestartPolicy:                 corev1.RestartPolicyAlways,

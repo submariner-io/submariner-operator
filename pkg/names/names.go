@@ -18,7 +18,7 @@ package names
 const (
 	NetworkPluginSyncerImage = "submariner-networkplugin-syncer"
 	RouteAgentImage          = "submariner-route-agent"
-	EngineImage              = "submariner"
+	GatewayImage             = "submariner-gateway"
 	GlobalnetImage           = "submariner-globalnet"
 	ServiceDiscoveryImage    = "lighthouse-agent"
 	LighthouseCoreDNSImage   = "lighthouse-coredns"

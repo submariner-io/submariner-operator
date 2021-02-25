@@ -34,7 +34,7 @@ func GetImagePath(repo, version, component string, imageOverrides map[string]str
 
 	// If the repository is "local" we don't append it on the front of the image,
 	// a local repository is used for development, testing and CI when we inject
-	// images in the cluster, for example submariner:local, or submariner-route-agent:local
+	// images in the cluster, for example submariner-gateway:local, or submariner-route-agent:local
 	if repo == "local" {
 		path = component
 	} else {

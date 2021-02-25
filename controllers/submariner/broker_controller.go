@@ -29,7 +29,7 @@ import (
 
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
-	"github.com/submariner-io/submariner-operator/pkg/engine"
+	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
@@ -66,7 +66,7 @@ func (r *BrokerReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) 
 
 	// Broker CRDs
 	crdUpdater := crdutils.NewFromControllerClient(r.Client)
-	err = engine.Ensure(crdUpdater)
+	err = gateway.Ensure(crdUpdater)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
