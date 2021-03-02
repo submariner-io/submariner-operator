@@ -1,5 +1,7 @@
 module github.com/submariner-io/submariner-operator
 
+go 1.13
+
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.7
 	github.com/go-logr/logr v0.1.0
@@ -17,13 +19,14 @@ require (
 	github.com/prometheus/client_golang v1.9.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/submariner-io/admiral v0.8.1-0.20210223151044-06e40f4d9925
-	github.com/submariner-io/lighthouse v0.8.1-0.20210120061937-31c63da34cb6
-	github.com/submariner-io/shipyard v0.8.1-0.20210209163001-044f4913ad9b
-	github.com/submariner-io/submariner v0.8.0
-	k8s.io/api v0.20.1
+	github.com/submariner-io/admiral v0.9.0-m1
+	github.com/submariner-io/lighthouse v0.9.0-m1
+	github.com/submariner-io/shipyard v0.9.0-m1
+	github.com/submariner-io/submariner v0.9.0-m1
+	go.uber.org/zap v1.15.0 // indirect
+	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.20.1
-	k8s.io/apimachinery v0.20.1
+	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200204173128-addea2498afe
@@ -42,7 +45,3 @@ replace (
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.17.0
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.5.9
 )
-
-replace github.com/Azure/go-autorest => github.com/Azure/go-autorest v12.2.0+incompatible
-
-go 1.13
