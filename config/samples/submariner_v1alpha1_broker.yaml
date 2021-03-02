@@ -1,10 +1,17 @@
-apiVersion: submariner.io/v1alpha1
+apiVersion: submariner.io/v1beta1
 kind: Broker
 metadata:
   name: broker-sample
 spec:
-#  defaultCustomDomains:
-#  globalnetCIDRRange:
-  defaultGlobalnetClusterSize: 8192
-  globalnetEnabled: false
-  serviceDiscovery: true
+  components:
+    connectivity: # string map
+      enabled: "true"
+      cableDriver: "wireguard"
+      keyLength: "2048"
+      globalnetEnable: "true"
+      globalnetClusterSize: "8192"
+      globalnetCIDRRange: "169.254.0.0/16"
+    service-discovery:
+      enable: "true"
+      customDomains: "domain1.local,domain2.local"
+

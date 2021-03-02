@@ -1,27 +1,40 @@
 ---
-apiVersion: submariner.io/v1alpha1
-kind: Submariner
+apiVersion: submariner.io/v1beta1
+kind: Connectivity
 metadata:
-  name: example-submariner
+  name: submariner
 spec:
-  namespace: "submariner_operator"
-  serviceCIDR: "192.168.66.0/24"
-  clusterCIDR: "192.168.67.0/24"
-  globalCIDR: "169.254.0.0/16"
+  namespace: "submariner-operator"
   clusterID: "east"
-  colorCodes: "blue"
+  networkCIDRs: # optional
+    services: # optional
+      - "192.168.66.0/24"
+    cluster: # optional
+      - "192.168.67.0/24"
+    globalnet: # optional
+      - "169.254.0.0/16"
+    other/routed: # optional
+      - "10.0.0.0/16"   # external network support
   debug: false
-  natEnabled: true
-  serviceDiscoveryEnabled: true
-  broker: "k8s"
-  brokerK8sApiServer: "192.168.67.110:8443"
-  brokerK8sApiServerToken: "$(SECRET_API_SERVER_TOKEN)"
-  brokerK8sRemoteNamespace: "submariner-broker"
-  brokerK8sCA: "$(SECRET_CA)"
-  cableDriver: "libreswan"
-  ceIPSecPSK: "$(SECRET_IPSEC_PSK)"
-  ceIPSecDebug: false
-  ceIPSecIKEPort: 500
-  ceIPSecNATTPort: 4500
-  repository: "quay.io/submariner"
-  version: "$(VERSION)"
+  brokers:
+    - name: "main-broker"
+      apiServer: "192.168.67.110:8443"
+      namespace: "submariner-broker"
+      secret: "submariner-broker"  # default value
+      allowInsecureConnection: false # to allow temporary override on SSL issues like unexpected certificate expiration
+  cable: # optional
+    driver: "libreswan"
+    settings:  # string map
+      nat-enabled: "true"   # this overrides auto discovery, or we have "auto/auto-detect/automatic" by default
+      debug: "false"
+      ikePort: "500"
+      nattPort: "4500"
+      secret: "submariner-ipsec-psk" # reference to secret, default
+  repository: "quay.io/submariner" #default
+  version: "$(VERSION)" #default
+  imageOverrides:
+    submariner-gateway: "......"
+    submariner-routeagent: "....."
+  status:
+    conditions: # like in other standard k8s objects, with the last N conditions
+

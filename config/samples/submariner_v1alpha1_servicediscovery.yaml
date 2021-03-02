@@ -3,14 +3,16 @@ apiVersion: submariner.io/v1alpha1
 kind: ServiceDiscovery
 metadata:
   name: example-servicediscovery
+  namespace: "submariner-operator"
 spec:
-  namespace: "submariner_operator"
   clusterID: "east"
   debug: false
-  globalnetEnabled: true
-  brokerK8sApiServer: "192.168.67.110:8443"
-  brokerK8sApiServerToken: "$(SECRET_API_SERVER_TOKEN)"
-  brokerK8sRemoteNamespace: "submariner-broker"
-  brokerK8sCA: "$(SECRET_CA)"
+  globalnetEnabled: true # optional
+  brokers:
+    - name: "main-broker"
+      apiServer: "192.168.67.110:8443"
+      namespace: "submariner-broker"
+      secret: "submariner-broker"  # default value
+      allowInsecureConnection: false # to allow temporary override on SSL issues like unexpected certificate expiration
   repository: "quay.io/submariner"
   version: "$(VERSION)"
