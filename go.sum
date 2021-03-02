@@ -1085,8 +1085,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/submariner-io/admiral v0.8.1-0.20210113165042-ee5f8e389614 h1:cOaELyVBH/TdL6vMLxWhJIWeUYX3BQ1D7/hlHe+Vitg=
 github.com/submariner-io/admiral v0.8.1-0.20210113165042-ee5f8e389614/go.mod h1:z3cqLnFjYlmtJDZwnbw0wwaV2Xwlf1i4pdlQ4+D3L3A=
 github.com/submariner-io/admiral v0.8.1-0.20210202150350-62036fb05424/go.mod h1:gERW87b2pa1xY605HbAAqGKxPNUQDugZjLc3Xijt2Vs=
-github.com/submariner-io/admiral v0.8.1-0.20210223151044-06e40f4d9925 h1:AlAX5cDo/YpiQIwe2SVZ3QxyLoHgfHUS9G5Nfa0TygU=
-github.com/submariner-io/admiral v0.8.1-0.20210223151044-06e40f4d9925/go.mod h1:ubFL+xg/okljT7qy3OBgJ5LZrNVZ+zQGi4F3l+PVfkQ=
+github.com/submariner-io/admiral v0.9.0-m1 h1:7QSdxC2eiX6bbuHOr8+fAzoOA49h35Q3v2mSwr5sk4Y=
+github.com/submariner-io/admiral v0.9.0-m1/go.mod h1:NFsFrk2CDac2ekq+EDqgPiyh9Tu4f6crh01HJJv2+M4=
 github.com/submariner-io/lighthouse v0.8.1-0.20210301164623-0a137c0b872e h1:TwiP6jMPPU8stc1xTonAMCIYNi3NsEdh6bJBQAO6WM4=
 github.com/submariner-io/lighthouse v0.8.1-0.20210301164623-0a137c0b872e/go.mod h1:XSwT/96DqPW0ct611FLibojCmx7iik4Jg7jVbS6W28U=
 github.com/submariner-io/shipyard v0.8.0 h1:HKvVDJ4VbEz2CFK5h7fhBCz0z421hoykp7Al7j3kE3Y=
