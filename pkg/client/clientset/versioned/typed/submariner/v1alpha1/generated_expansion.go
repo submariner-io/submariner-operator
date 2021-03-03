@@ -18,6 +18,8 @@ limitations under the License.
 
 package v1alpha1
 
+type BrokerExpansion interface{}
+
 type ServiceDiscoveryExpansion interface{}
 
 type SubmarinerExpansion interface{}

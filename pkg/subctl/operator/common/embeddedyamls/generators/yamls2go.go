@@ -26,6 +26,7 @@ import (
 )
 
 var files = []string{
+	"deploy/crds/submariner.io_brokers.yaml",
 	"deploy/crds/submariner.io_submariners.yaml",
 	"deploy/crds/submariner.io_servicediscoveries.yaml",
 	"deploy/submariner/crds/submariner.io_clusters.yaml",
@@ -33,19 +34,35 @@ var files = []string{
 	"deploy/submariner/crds/submariner.io_gateways.yaml",
 	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml",
 	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml",
-	"config/rbac/cluster_role.yaml",
-	"config/rbac/cluster_role_binding.yaml",
-	"config/rbac/globalnet_cluster_role.yaml",
-	"config/rbac/globalnet_cluster_role_binding.yaml",
-	"config/rbac/lighthouse_service_account.yaml",
-	"config/rbac/lighthouse_cluster_role_binding.yaml",
-	"config/rbac/lighthouse_cluster_role.yaml",
-	"config/rbac/role.yaml",
-	"config/rbac/role_binding.yaml",
-	"config/rbac/service_account.yaml",
-	"config/rbac/networkplugin_syncer_service_account.yaml",
-	"config/rbac/networkplugin_syncer_cluster_role.yaml",
-	"config/rbac/networkplugin_syncer_cluster_role_binding.yaml",
+	"config/rbac/submariner-operator/service_account.yaml",
+	"config/rbac/submariner-operator/role.yaml",
+	"config/rbac/submariner-operator/role_binding.yaml",
+	"config/rbac/submariner-operator/cluster_role.yaml",
+	"config/rbac/submariner-operator/cluster_role_binding.yaml",
+	"config/rbac/submariner-gateway/service_account.yaml",
+	"config/rbac/submariner-gateway/role.yaml",
+	"config/rbac/submariner-gateway/role_binding.yaml",
+	"config/rbac/submariner-gateway/cluster_role.yaml",
+	"config/rbac/submariner-gateway/cluster_role_binding.yaml",
+	"config/rbac/submariner-route-agent/service_account.yaml",
+	"config/rbac/submariner-route-agent/role.yaml",
+	"config/rbac/submariner-route-agent/role_binding.yaml",
+	"config/rbac/submariner-route-agent/cluster_role.yaml",
+	"config/rbac/submariner-route-agent/cluster_role_binding.yaml",
+	"config/rbac/submariner-globalnet/service_account.yaml",
+	"config/rbac/submariner-globalnet/role.yaml",
+	"config/rbac/submariner-globalnet/role_binding.yaml",
+	"config/rbac/submariner-globalnet/cluster_role.yaml",
+	"config/rbac/submariner-globalnet/cluster_role_binding.yaml",
+	"config/rbac/lighthouse-agent/service_account.yaml",
+	"config/rbac/lighthouse-agent/cluster_role.yaml",
+	"config/rbac/lighthouse-agent/cluster_role_binding.yaml",
+	"config/rbac/lighthouse-coredns/service_account.yaml",
+	"config/rbac/lighthouse-coredns/cluster_role.yaml",
+	"config/rbac/lighthouse-coredns/cluster_role_binding.yaml",
+	"config/rbac/networkplugin_syncer/service_account.yaml",
+	"config/rbac/networkplugin_syncer/cluster_role.yaml",
+	"config/rbac/networkplugin_syncer/cluster_role_binding.yaml",
 }
 
 // Reads all .yaml files in the crdDirectory
@@ -81,7 +98,7 @@ func main() {
 	//    type: string`
 
 	re := regexp.MustCompile("`([^`]*)`")
-	reNS := regexp.MustCompile("`\\s*namespace:\\s+placeholder\\s*`")
+	reNS := regexp.MustCompile(`(?s)\s*namespace:\s*placeholder\s*`)
 
 	for _, f := range files {
 		_, err = out.WriteString("\t" + constName(f) + " = `")
@@ -113,7 +130,9 @@ func panicOnErr(err error) {
 
 func constName(filename string) string {
 	return strings.Title(strings.ReplaceAll(
-		strings.ReplaceAll(filename,
+		strings.ReplaceAll(
+			strings.ReplaceAll(filename,
+				"-", "_"),
 			".", "_"),
 		"/", "_"))
 }

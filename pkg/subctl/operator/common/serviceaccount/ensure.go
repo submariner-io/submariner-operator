@@ -21,13 +21,17 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 )
 
 // Ensure creates the given service account
-func Ensure(clientSet *clientset.Clientset, namespace, name string) (bool, error) {
-	sa := &v1.ServiceAccount{ObjectMeta: v1meta.ObjectMeta{Name: name}}
+func Ensure(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
+	sa := &v1.ServiceAccount{}
+	err := embeddedyamls.GetObject(yaml, sa)
+	if err != nil {
+		return false, err
+	}
+
 	return utils.CreateOrUpdateServiceAccount(clientSet, namespace, sa)
 }
 

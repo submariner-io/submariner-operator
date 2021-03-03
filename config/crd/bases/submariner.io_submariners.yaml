@@ -125,7 +125,7 @@ spec:
                 type: string
               colorCodes:
                 type: string
-              engineDaemonSetStatus:
+              gatewayDaemonSetStatus:
                 properties:
                   lastResourceVersion:
                     type: string

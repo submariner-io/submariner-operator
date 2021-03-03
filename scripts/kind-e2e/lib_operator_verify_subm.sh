@@ -16,10 +16,9 @@ function broker_vars() {
 }
 
 function create_subm_vars() {
-    # FIXME A better name might be submariner-engine, but just kinda-matching submariner-<random hash> name used by Helm/upstream tests
     deployment_name=submariner
     operator_deployment_name=submariner-operator
-    engine_deployment_name=submariner-engine
+    gateway_deployment_name=submariner-gateway
     routeagent_deployment_name=submariner-routeagent
     broker_deployment_name=submariner-k8s-broker
     globalnet_deployment_name=submariner-globalnet
@@ -27,11 +26,11 @@ function create_subm_vars() {
     declare_cidrs
     natEnabled=false
 
-    subm_engine_image_repo="localhost:5000"
-    subm_engine_image_tag=local
+    subm_gateway_image_repo="localhost:5000"
+    subm_gateway_image_tag=local
 
     # FIXME: Actually act on this size request in controller
-    subm_engine_size=3
+    subm_gateway_size=3
     subm_colorcodes=blue
     subm_debug=false
     subm_broker=k8s
@@ -79,19 +78,18 @@ function verify_subm_deployed() {
     # We don't verify the operator container, it only contains the
     # operator binary
 
-    # FIXME: Rename all of these submariner-engine or engine, vs submariner
     # Verify SubM CR
     verify_subm_cr
     # Verify Subm CR status
     verify_subm_cr_status_with_retries
-    # Verify SubM Engine Deployment
-    verify_subm_engine_deployment
-    # Verify SubM Engine Pod
-    verify_subm_engine_pod
-    # Verify SubM Engine container
-    verify_subm_engine_container
-    # Verify Engine secrets
-    verify_subm_engine_secrets
+    # Verify SubM Gateway Deployment
+    verify_subm_gateway_deployment
+    # Verify SubM Gateway Pod
+    verify_subm_gateway_pod
+    # Verify SubM Gateway container
+    verify_subm_gateway_container
+    # Verify Gateway secrets
+    verify_subm_gateway_secrets
 
     # Verify SubM Routeagent DaemonSet
     verify_subm_routeagent_daemonset
@@ -183,7 +181,7 @@ function verify_subm_cr_status() {
 }
 
 function verify_subm_cr() {
-  # TODO: Use $engine_deployment_name here?
+  # TODO: Use $gateway_deployment_name here?
 
   # Verify SubM CR presence
   kubectl get submariner --namespace=$subm_ns | grep $deployment_name
@@ -204,8 +202,8 @@ function verify_subm_cr() {
   validate_equals '.spec.ceIPSecDebug' $ce_ipsec_debug
   validate_equals '.spec.ceIPSecIKEPort' $ce_ipsec_ikeport
   validate_equals '.spec.ceIPSecNATTPort' $ce_ipsec_nattport
-  validate_equals '.spec.repository' $subm_engine_image_repo
-  validate_equals '.spec.version' $subm_engine_image_tag
+  validate_equals '.spec.repository' $subm_gateway_image_repo
+  validate_equals '.spec.version' $subm_gateway_image_tag
   validate_equals '.spec.broker' $subm_broker
   echo "Generated cluster id: $(jq -r '.spec.clusterID' $json_file)"
   validate_equals '.spec.colorCodes' $subm_colorcodes
@@ -246,15 +244,15 @@ function validate_pod_container_env() {
   [[ $(jq -r -M ".spec.containers[].env[] | select(.name==\"${var_name}\").value" $json_file) = $expected ]]
 }
 
-function verify_subm_engine_pod() {
-  kubectl wait --for=condition=Ready pods -l app=$engine_deployment_name --timeout=120s --namespace=$subm_ns
+function verify_subm_gateway_pod() {
+  kubectl wait --for=condition=Ready pods -l app=$gateway_deployment_name --timeout=120s --namespace=$subm_ns
 
-  subm_engine_pod_name=$(kubectl get pods --namespace=$subm_ns -l app=$engine_deployment_name -o=jsonpath='{.items..metadata.name}')
+  subm_gateway_pod_name=$(kubectl get pods --namespace=$subm_ns -l app=$gateway_deployment_name -o=jsonpath='{.items..metadata.name}')
 
-  json_file=/tmp/${subm_engine_pod_name}.${cluster}.json
-  kubectl get pod $subm_engine_pod_name --namespace=$subm_ns -o json | tee $json_file
+  json_file=/tmp/${subm_gateway_pod_name}.${cluster}.json
+  kubectl get pod $subm_gateway_pod_name --namespace=$subm_ns -o json | tee $json_file
 
-  validate_pod_container_equals 'image' "${subm_engine_image_repo}/submariner:local"
+  validate_pod_container_equals 'image' "${subm_gateway_image_repo}/submariner-gateway:local"
   validate_pod_container_has 'securityContext.capabilities.add' 'ALL'
   validate_pod_container_equals 'securityContext.allowPrivilegeEscalation' 'true'
   validate_pod_container_equals 'securityContext.privileged' 'true'
@@ -277,12 +275,13 @@ function verify_subm_engine_pod() {
   validate_pod_container_env 'CE_IPSEC_IKEPORT' $ce_ipsec_ikeport
   validate_pod_container_env 'CE_IPSEC_NATTPORT' $ce_ipsec_nattport
 
+  validate_equals '.spec.serviceAccount' 'submariner-gateway'
   validate_equals '.status.phase' 'Running'
   validate_equals '.metadata.namespace' $subm_ns
 }
 
-function verify_subm_engine_deployment() {
-  verify_daemonset $engine_deployment_name submariner-gateway
+function verify_subm_gateway_deployment() {
+  verify_daemonset $gateway_deployment_name submariner-gateway
 }
 
 function verify_subm_routeagent_daemonset() {
@@ -331,9 +330,9 @@ function verify_subm_routeagent_pod() {
   # TODO: Fail if there are zero routeagent pods
   for subm_routeagent_pod_name in "${subm_routeagent_pod_names_array[@]}"; do
     echo "Testing Submariner routeagent pod $subm_routeagent_pod_name"
-    json_file=/tmp/${subm_engine_pod_name}.${cluster}.json
+    json_file=/tmp/${subm_gateway_pod_name}.${cluster}.json
     kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o json | tee $json_file
-    validate_pod_container_equals 'image' "${subm_engine_image_repo}/submariner-route-agent:$subm_engine_image_tag"
+    validate_pod_container_equals 'image' "${subm_gateway_image_repo}/submariner-route-agent:$subm_gateway_image_tag"
     validate_pod_container_has 'securityContext.capabilities.add' 'ALL'
     validate_pod_container_equals 'securityContext.allowPrivilegeEscalation' 'true'
     validate_pod_container_equals 'securityContext.privileged' 'true'
@@ -348,8 +347,7 @@ function verify_subm_routeagent_pod() {
     validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$cluster]}
     validate_pod_container_volume_mount '/host' 'host-slash' 'true'
 
-    # FIXME: Use submariner-routeagent SA vs submariner-operator when doing Operator deploys
-    validate_equals '.spec.serviceAccount' 'submariner-operator'
+    validate_equals '.spec.serviceAccount' 'submariner-routeagent'
 
     [[ $(jq -r ".spec.volumes[] | select(.name==\"host-slash\").hostPath.path" $json_file) = '/' ]]
     validate_equals '.status.phase' 'Running'
@@ -358,14 +356,14 @@ function verify_subm_routeagent_pod() {
   done
 }
 
-function verify_subm_engine_container() {
-  subm_engine_pod_name=$(kubectl get pods --namespace=$subm_ns -l app=$engine_deployment_name -o=jsonpath='{.items..metadata.name}')
+function verify_subm_gateway_container() {
+  subm_gateway_pod_name=$(kubectl get pods --namespace=$subm_ns -l app=$gateway_deployment_name -o=jsonpath='{.items..metadata.name}')
 
-  # Show SubM Engine pod environment variables
-  env_file=/tmp/${subm_engine_pod_name}.env
-  kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- env | tee $env_file
+  # Show SubM Gateway pod environment variables
+  env_file=/tmp/${subm_gateway_pod_name}.env
+  kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- env | tee $env_file
 
-  # Verify SubM Engine pod environment variables
+  # Verify SubM Gateway pod environment variables
   grep "BROKER_K8S_APISERVER=$SUBMARINER_BROKER_URL" $env_file
   grep "SUBMARINER_NAMESPACE=$subm_ns" $env_file
   grep "SUBMARINER_BROKER=$subm_broker" $env_file
@@ -379,18 +377,18 @@ function verify_subm_engine_container() {
   grep "SUBMARINER_NATENABLED=$natEnabled" $env_file
   grep "HOME=/root" $env_file
 
-  if kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- command -v command; then
-    # Verify the engine binary is in the expected place and in PATH
-    kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- command -v submariner-engine | grep /usr/local/bin/submariner-engine
+  if kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v command; then
+    # Verify the gateway binary is in the expected place and in PATH
+    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v submariner-engine | grep /usr/local/bin/submariner-engine
 
-    # Verify the engine entry script is in the expected place and in PATH
-    kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- command -v submariner.sh | grep /usr/local/bin/submariner.sh
-  elif kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- which which; then
-    # Verify the engine binary is in the expected place and in PATH
-    kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- which submariner-engine | grep /usr/local/bin/submariner-engine
+    # Verify the gateway entry script is in the expected place and in PATH
+    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v submariner.sh | grep /usr/local/bin/submariner.sh
+  elif kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which which; then
+    # Verify the gateway binary is in the expected place and in PATH
+    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which submariner-engine | grep /usr/local/bin/submariner-engine
 
-    # Verify the engine entry script is in the expected place and in PATH
-    kubectl exec $subm_engine_pod_name --namespace=$subm_ns -- which submariner.sh | grep /usr/local/bin/submariner.sh
+    # Verify the gateway entry script is in the expected place and in PATH
+    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which submariner.sh | grep /usr/local/bin/submariner.sh
   fi
 }
 
@@ -472,7 +470,7 @@ function verify_subm_broker_secrets() {
   verify_secrets $SUBMARINER_BROKER_NS $broker_deployment_name-client $SUBMARINER_BROKER_CA
 }
 
-function verify_subm_engine_secrets() {
+function verify_subm_gateway_secrets() {
   # FIXME: There seems to be a strange error where the CA substantially match, but eventually actually are different
   verify_secrets $subm_ns $operator_deployment_name ${SUBMARINER_BROKER_CA:0:50}
 }

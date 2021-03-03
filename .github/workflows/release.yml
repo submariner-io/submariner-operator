@@ -18,17 +18,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Reclaim free space
-        run: |
-          sudo swapoff -a
-          sudo rm -f /swapfile
-
       - name: Run E2E deployment and tests
-        run: make e2e
+        uses: submariner-io/shipyard/gh-actions/e2e@devel
 
       - name: Post mortem
         if: failure()
-        run: make post-mortem
+        uses: submariner-io/shipyard/gh-actions/post-mortem@devel
 
       - name: Clean up E2E deployment
         run: make cleanup
@@ -43,14 +38,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build the Operator image
-        env:
-          IMAGES_ARGS: --nocache
-        run: make operator-image
-
-      - name: Release the Operator image
-        env:
-          QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
-          QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
-        # Pass RELEASE_ARGS on the call, since GITHUB_REF set in the `env` directive doesn't get properly expanded
-        run: make release RELEASE_ARGS="submariner-operator --tag '${GITHUB_REF##*/}'"
+      - name: Build and release new images
+        uses: submariner-io/shipyard/gh-actions/release-images@devel
+        with:
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}

@@ -18,6 +18,10 @@ package embeddedyamls
 
 import "sigs.k8s.io/yaml"
 
+type IObjectName struct {
+	Name string
+}
+
 func GetObject(yamlStr string, obj interface{}) error {
 	doc := []byte(yamlStr)
 
@@ -26,4 +30,16 @@ func GetObject(yamlStr string, obj interface{}) error {
 	}
 
 	return nil
+}
+
+func GetObjectName(yamlStr string) (string, error) {
+	doc := []byte(yamlStr)
+	var obj IObjectName
+
+	err := yaml.Unmarshal(doc, obj)
+	if err != nil {
+		return "", err
+	}
+
+	return obj.Name, err
 }

@@ -5,6 +5,7 @@ dist/
 deploy/crds
 deploy/submariner/crds
 config/bundle/kustomization.yaml
+package/.image.*
 output/
 vendor/
 *.coverprofile

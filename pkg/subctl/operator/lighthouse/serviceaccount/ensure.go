@@ -24,10 +24,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 )
 
-const (
-	LighthouseServiceAccount = "submariner-lighthouse"
-)
-
 // Ensure functions updates or installs the operator CRDs in the cluster
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
@@ -35,21 +31,67 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, err
 	}
 
-	createdSa, err := serviceaccount.Ensure(clientSet, namespace, LighthouseServiceAccount)
+	createdSA, err := ensureServiceAccounts(clientSet, namespace)
 	if err != nil {
 		return false, err
 	}
 
-	createdCR, err := serviceaccount.EnsureClusterRole(clientSet, embeddedyamls.Config_rbac_lighthouse_cluster_role_yaml)
+	createdCR, err := ensureClusterRoles(clientSet)
 	if err != nil {
 		return false, err
 	}
 
-	createdCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_lighthouse_cluster_role_binding_yaml)
+	createdCRB, err := ensureClusterRoleBindings(clientSet, namespace)
 	if err != nil {
 		return false, err
 	}
 
-	return createdSa || createdCR || createdCRB, nil
+	return createdSA || createdCR || createdCRB, nil
+}
+
+func ensureServiceAccounts(clientSet *clientset.Clientset, namespace string) (bool, error) {
+	createdAgentSA, err := serviceaccount.Ensure(clientSet, namespace,
+		embeddedyamls.Config_rbac_lighthouse_agent_service_account_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	createdCoreDNSSA, err := serviceaccount.Ensure(clientSet, namespace,
+		embeddedyamls.Config_rbac_lighthouse_coredns_service_account_yaml)
+	if err != nil {
+		return false, err
+	}
+	return createdAgentSA || createdCoreDNSSA, err
+}
+
+func ensureClusterRoles(clientSet *clientset.Clientset) (bool, error) {
+	createdAgentCR, err := serviceaccount.EnsureClusterRole(clientSet,
+		embeddedyamls.Config_rbac_lighthouse_agent_cluster_role_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	createdCoreDNSCR, err := serviceaccount.EnsureClusterRole(clientSet,
+		embeddedyamls.Config_rbac_lighthouse_coredns_cluster_role_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	return createdAgentCR || createdCoreDNSCR, err
+}
+
+func ensureClusterRoleBindings(clientSet *clientset.Clientset, namespace string) (bool, error) {
+	createdAgentCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
+		embeddedyamls.Config_rbac_lighthouse_agent_cluster_role_binding_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	createdCoreDNSCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
+		embeddedyamls.Config_rbac_lighthouse_coredns_cluster_role_binding_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	return createdAgentCRB || createdCoreDNSCRB, err
 }

@@ -1,30 +1,33 @@
 ---
+name: Release Subctl Devel
+
 on:
   push:
     branches:
       - devel
       - release-*
 
-name: Release Subctl Devel
 jobs:
-  release:
+  release-subctl-devel:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Check out the repository
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - run: git fetch origin +refs/tags/*:refs/tags/*
+      - name: Fetch all git tags
+        run: git fetch origin +refs/tags/*:refs/tags/*
 
-      - name: generate version tag
+      - name: Generate subctl version
         run: echo "SUBCTL_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
-      - name: Generate the Artifacts
+      - name: Generate the subctl release artifacts
         run: |
           make build-cross VERSION=${{ env.SUBCTL_TAG }}
           echo "BINARIES=$(find dist/ -type f -name '*.tar.xz' -printf '%p ')" >> $GITHUB_ENV
 
-      - name: Update the Release
+      - name: Update the subctl devel GitHub release with the built artifacts
         uses: johnwbyrd/update-release@v1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -32,8 +35,8 @@ jobs:
           tag: subctl-${{ env.SUBCTL_TAG }}
           files: ${{ env.BINARIES }}
 
-      - name: Bump the subctl tag
-        uses: richardsimko/update-tag@v1.0.3
+      - name: Update the subctl-devel git tag to point to the released commit
+        uses: richardsimko/update-tag@v1.0.5
         with:
           tag_name: subctl-${{ env.SUBCTL_TAG }}
         env:
