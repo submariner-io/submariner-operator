@@ -121,6 +121,11 @@ func (r *SubmarinerReconciler) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
+	if instance.ObjectMeta.DeletionTimestamp != nil {
+		// Graceful deletion has been requested, ignore the object
+		return reconcile.Result{}, nil
+	}
+
 	initialStatus := instance.Status.DeepCopy()
 
 	clusterNetwork, err := r.discoverNetwork(instance)

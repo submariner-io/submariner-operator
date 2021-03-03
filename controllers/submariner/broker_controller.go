@@ -64,6 +64,11 @@ func (r *BrokerReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) 
 		return reconcile.Result{}, err
 	}
 
+	if instance.ObjectMeta.DeletionTimestamp != nil {
+		// Graceful deletion has been requested, ignore the object
+		return reconcile.Result{}, nil
+	}
+
 	// Broker CRDs
 	crdUpdater := crdutils.NewFromControllerClient(r.Client)
 	err = gateway.Ensure(crdUpdater)

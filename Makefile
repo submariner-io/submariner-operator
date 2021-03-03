@@ -2,7 +2,7 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
-IMAGES=submariner-operator submariner-operator-bundle
+IMAGES=submariner-operator
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
@@ -133,7 +133,7 @@ deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submar
 
 # Generate the clientset for the Submariner APIs
 # It needs to be run when the Submariner APIs change
-generate-clientset:
+generate-clientset: vendor/modules.txt
 	git clone https://github.com/kubernetes/code-generator -b kubernetes-1.17.0 $${GOPATH}/src/k8s.io/code-generator
 	cd $${GOPATH}/src/k8s.io/code-generator && go mod vendor
 	GO111MODULE=on $${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \

@@ -127,6 +127,12 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+
+	if instance.ObjectMeta.DeletionTimestamp != nil {
+		// Graceful deletion has been requested, ignore the object
+		return reconcile.Result{}, nil
+	}
+
 	lightHouseAgent := newLighthouseAgent(instance)
 	if _, err = helpers.ReconcileDeployment(instance, lightHouseAgent, reqLogger,
 		r.client, r.scheme); err != nil {
