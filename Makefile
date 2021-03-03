@@ -2,7 +2,7 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
-IMAGES=submariner-operator submariner-operator-bundle
+IMAGES=submariner-operator
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
