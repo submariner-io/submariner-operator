@@ -7,6 +7,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.20.0
 	github.com/googleapis/gnostic v0.4.0 // indirect
+	github.com/hashicorp/go-version v1.2.0
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
 	github.com/onsi/ginkgo v1.15.2
