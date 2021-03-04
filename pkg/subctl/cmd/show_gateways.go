@@ -31,10 +31,11 @@ type gatewayStatus struct {
 }
 
 var showGatewaysCmd = &cobra.Command{
-	Use:   "gateways",
-	Short: "Show submariner gateway summary information",
-	Long:  `This command shows summary information about the submariner gateways in a cluster.`,
-	Run:   showGateways,
+	Use:     "gateways",
+	Short:   "Show submariner gateway summary information",
+	Long:    `This command shows summary information about the submariner gateways in a cluster.`,
+	PreRunE: checkVersionMismatch,
+	Run:     showGateways,
 }
 
 func init() {

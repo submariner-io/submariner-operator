@@ -42,10 +42,11 @@ func newEndpointsStatusFrom(clusterID, endpointIP, publicIP, cableDriver, endpoi
 }
 
 var showEndpointsCmd = &cobra.Command{
-	Use:   "endpoints",
-	Short: "Show submariner endpoint information",
-	Long:  `This command shows information about submariner endpoints in a cluster.`,
-	Run:   showEndpoints,
+	Use:     "endpoints",
+	Short:   "Show submariner endpoint information",
+	Long:    `This command shows information about submariner endpoints in a cluster.`,
+	PreRunE: checkVersionMismatch,
+	Run:     showEndpoints,
 }
 
 func init() {
