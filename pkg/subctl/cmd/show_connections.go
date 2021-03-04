@@ -35,10 +35,11 @@ type connectionStatus struct {
 }
 
 var showConnectionsCmd = &cobra.Command{
-	Use:   "connections",
-	Short: "Show cluster connectivity information",
-	Long:  `This command shows information about submariner endpoint connections with other clusters.`,
-	Run:   showConnections,
+	Use:     "connections",
+	Short:   "Show cluster connectivity information",
+	Long:    `This command shows information about submariner endpoint connections with other clusters.`,
+	PreRunE: checkVersionMismatch,
+	Run:     showConnections,
 }
 
 func init() {

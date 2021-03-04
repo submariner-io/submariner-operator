@@ -30,7 +30,8 @@ var showNetworksCmd = &cobra.Command{
 	Short: "Get information on your cluster related to submariner",
 	Long: `This command shows the status of submariner in your cluster,
 and the relevant network details from your cluster.`,
-	Run: showNetwork,
+	PreRunE: checkVersionMismatch,
+	Run:     showNetwork,
 }
 
 func init() {

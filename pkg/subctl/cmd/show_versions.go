@@ -32,10 +32,11 @@ import (
 )
 
 var showVersionsCmd = &cobra.Command{
-	Use:   "versions",
-	Short: "Shows submariner component versions",
-	Long:  `This command shows the versions of the submariner components in the cluster.`,
-	Run:   showVersions,
+	Use:     "versions",
+	Short:   "Shows submariner component versions",
+	Long:    `This command shows the versions of the submariner components in the cluster.`,
+	PreRunE: checkVersionMismatch,
+	Run:     showVersions,
 }
 
 func init() {

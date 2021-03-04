@@ -26,7 +26,8 @@ var showAllCmd = &cobra.Command{
 	Short: "Show information related to a submariner cluster",
 	Long: `This command shows information related to a submariner cluster:
  networks, endpoints, gateways, connections and component versions.`,
-	Run: showAll,
+	PreRunE: checkVersionMismatch,
+	Run:     showAll,
 }
 
 func init() {
