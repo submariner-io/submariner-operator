@@ -427,7 +427,7 @@ func schema_pkg_apis_submariner_v1alpha1_SubmarinerStatus(ref common.ReferenceCa
 							Format: "",
 						},
 					},
-					"engineDaemonSetStatus": {
+					"gatewayDaemonSetStatus": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1.DaemonSetStatus"),
 						},

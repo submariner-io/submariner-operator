@@ -17,15 +17,13 @@ limitations under the License.
 package submarinercr
 
 import (
-	"fmt"
-
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/submariner-io/admiral/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/util/retry"
 
 	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 )
 
 const (
@@ -40,38 +38,18 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 		Spec: submarinerSpec,
 	}
 
-	submarinerClient, err := submarinerclientset.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	_, err = createSubmariner(submarinerClient, namespace, submarinerCR)
-
+	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
+	client := dynClient.Resource(schema.GroupVersionResource{
+		Group:    submariner.SchemeGroupVersion.Group,
+		Version:  submariner.SchemeGroupVersion.Version,
+		Resource: "submariners"}).Namespace(namespace)
+	propagationPolicy := metav1.DeletePropagationForeground
 
-func createSubmariner(clientSet submarinerclientset.Interface, namespace string, submarinerCR *submariner.Submariner) (bool, error) {
-	_, err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Create(submarinerCR)
-	if err == nil {
-		return true, nil
-	} else if errors.IsAlreadyExists(err) {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			// We can’t always handle existing resources, and we want to overwrite them anyway, so delete them
-			err := clientSet.SubmarinerV1alpha1().Submariners(namespace).Delete(submarinerCR.Name, &metav1.DeleteOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to delete pre-existing cfg %s : %s", submarinerCR.Name, err)
-			}
-			_, err = clientSet.SubmarinerV1alpha1().Submariners(namespace).Create(submarinerCR)
-			if err != nil {
-				return fmt.Errorf("failed to create cfg  %s : %s", submarinerCR.Name, err)
-			}
-			return nil
-		})
-		return false, retryErr
-	}
-	return false, err
+	return util.CreateAnew(client, submarinerCR, &metav1.DeleteOptions{
+		PropagationPolicy: &propagationPolicy,
+	})
 }

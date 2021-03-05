@@ -27,15 +27,18 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 
+	submarinerv1a1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 )
 
 var (
 	ipsecSubmFile               string
 	globalnetEnable             bool
-	globalnetCidrRange          string
+	globalnetCIDRRange          string
 	defaultGlobalnetClusterSize uint
 	serviceDiscoveryEnabled     bool
 	componentArr                []string
@@ -48,7 +51,7 @@ var validComponents = []string{components.ServiceDiscovery, components.Connectiv
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
 		"enable support for Overlapping CIDRs in connecting clusters (default disabled)")
-	deployBroker.PersistentFlags().StringVar(&globalnetCidrRange, "globalnet-cidr-range", "169.254.0.0/16",
+	deployBroker.PersistentFlags().StringVar(&globalnetCIDRRange, "globalnet-cidr-range", "169.254.0.0/16",
 		"GlobalCIDR supernet range for allocating GlobalCIDRs to each cluster")
 	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 8192,
 		"default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
@@ -67,6 +70,9 @@ func init() {
 	deployBroker.PersistentFlags().StringSliceVar(&componentArr, "components", validComponents,
 		fmt.Sprintf("The components to be installed - any of %s. The default is all components",
 			strings.Join(validComponents, ",")))
+
+	deployBroker.PersistentFlags().StringVar(&repository, "repository", "", "image repository")
+	deployBroker.PersistentFlags().StringVar(&imageVersion, "version", "", "image version")
 
 	addKubeconfigFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
@@ -92,15 +98,32 @@ var deployBroker = &cobra.Command{
 		}
 
 		if valid, err := isValidGlobalnetConfig(); !valid {
-			exitOnError("Invalid GlobalCidr configuration", err)
+			exitOnError("Invalid GlobalCIDR configuration", err)
 		}
 		config, err := getRestConfig(kubeConfig, kubeContext)
 		exitOnError("The provided kubeconfig is invalid", err)
 
 		status := cli.NewStatus()
-		status.Start("Deploying broker")
-		err = broker.Ensure(config)
+
+		status.Start("Setting up broker RBAC")
+		err = broker.Ensure(config, false)
 		status.End(cli.CheckForError(err))
+		exitOnError("Error setting up broker RBAC", err)
+
+		status.Start("Deploying the Submariner operator")
+		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage())
+		status.End(cli.CheckForError(err))
+		exitOnError("Error deploying the operator", err)
+
+		status.Start("Deploying the broker")
+		err = brokercr.Ensure(config, OperatorNamespace, populateBrokerSpec())
+		if err == nil {
+			status.QueueSuccessMessage("The broker has been deployed")
+			status.End(cli.Success)
+		} else {
+			status.QueueFailureMessage("Broker deployment failed")
+			status.End(cli.Failure)
+		}
 		exitOnError("Error deploying the broker", err)
 
 		status.Start(fmt.Sprintf("Creating %s file", brokerDetailsFilename))
@@ -134,7 +157,7 @@ var deployBroker = &cobra.Command{
 
 		exitOnError("Error setting up service discovery information", err)
 
-		err = broker.CreateGlobalnetConfigMap(config, globalnetEnable, globalnetCidrRange,
+		err = broker.CreateGlobalnetConfigMap(config, globalnetEnable, globalnetCIDRRange,
 			defaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace)
 		exitOnError("Error creating globalCIDR configmap on Broker", err)
 
@@ -166,9 +189,20 @@ func isValidGlobalnetConfig() (bool, error) {
 	if !globalnetEnable {
 		return true, nil
 	}
-	defaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(globalnetCidrRange, defaultGlobalnetClusterSize)
+	defaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(globalnetCIDRRange, defaultGlobalnetClusterSize)
 	if err != nil || defaultGlobalnetClusterSize == 0 {
 		return false, err
 	}
 	return true, err
+}
+
+func populateBrokerSpec() submarinerv1a1.BrokerSpec {
+	brokerSpec := submarinerv1a1.BrokerSpec{
+		GlobalnetEnabled:            globalnetEnable,
+		GlobalnetCIDRRange:          globalnetCIDRRange,
+		DefaultGlobalnetClusterSize: defaultGlobalnetClusterSize,
+		Components:                  componentArr,
+		DefaultCustomDomains:        defaultCustomDomains,
+	}
+	return brokerSpec
 }

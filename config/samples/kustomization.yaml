@@ -3,6 +3,7 @@
 resources:
   - lighthouse_v2alpha1_serviceexport.yaml
   - lighthouse_v2alpha1_serviceimport.yaml
+  - submariner_v1alpha1_broker.yaml
   - submariner_v1alpha1_submariner.yaml
   - submariner_v1alpha1_servicediscovery.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

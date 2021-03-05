@@ -23,7 +23,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 
-	"github.com/submariner-io/submariner-operator/pkg/engine"
+	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
@@ -34,19 +34,21 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func Ensure(config *rest.Config) error {
-	crdCreator, err := crdutils.NewFromRestConfig(config)
-	if err != nil {
-		return fmt.Errorf("error accessing the target cluster: %s", err)
-	}
-	err = engine.Ensure(crdCreator)
-	if err != nil {
-		return fmt.Errorf("error setting up the engine requirements: %s", err)
-	}
+func Ensure(config *rest.Config, crds bool) error {
+	if crds {
+		crdCreator, err := crdutils.NewFromRestConfig(config)
+		if err != nil {
+			return fmt.Errorf("error accessing the target cluster: %s", err)
+		}
+		err = gateway.Ensure(crdCreator)
+		if err != nil {
+			return fmt.Errorf("error setting up the gateway requirements: %s", err)
+		}
 
-	_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
-	if err != nil {
-		return fmt.Errorf("error setting up the lighthouse requirements: %s", err)
+		_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
+		if err != nil {
+			return fmt.Errorf("error setting up the lighthouse requirements: %s", err)
+		}
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)

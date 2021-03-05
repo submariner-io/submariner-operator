@@ -42,9 +42,9 @@ import (
 )
 
 const (
-	submarinerName          = "submariner"
+	submarinerName          = "submariner-gateway"
 	submarinerNamespace     = "submariner-operator"
-	engineDaemonSetName     = "submariner-gateway"
+	gatewayDaemonSetName    = "submariner-gateway"
 	routeAgentDaemonSetName = "submariner-routeagent"
 )
 
@@ -73,7 +73,7 @@ func (c *failingClient) Get(ctx context.Context, key controllerClient.ObjectKey,
 
 func (c *failingClient) Update(ctx context.Context, obj runtime.Object, opts ...controllerClient.UpdateOption) error {
 	if c.onUpdate == reflect.TypeOf(obj) {
-		return fmt.Errorf("Mock Get error")
+		return fmt.Errorf("Mock Update error")
 	}
 
 	return c.Client.Update(ctx, obj, opts...)
@@ -179,19 +179,19 @@ func testReconciliation() {
 		})
 	})
 
-	When("the submariner engine DaemonSet doesn't exist", func() {
+	When("the submariner gateway DaemonSet doesn't exist", func() {
 		It("should create it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			verifyEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
+			verifyGatewayDaemonSet(withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
 		})
 	})
 
-	When("the submariner engine DaemonSet already exists", func() {
+	When("the submariner gateway DaemonSet already exists", func() {
 		var existingDaemonSet *appsv1.DaemonSet
 
 		BeforeEach(func() {
-			existingDaemonSet = newEngineDaemonSet(submariner)
+			existingDaemonSet = newGatewayDaemonSet(submariner)
 			initClientObjs = append(initClientObjs, existingDaemonSet)
 		})
 
@@ -209,8 +209,8 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(engineDaemonSetName, fakeClient).Spec).To(
-				Equal(newEngineDaemonSet(withNetworkDiscovery(submariner, clusterNetwork)).Spec))
+			Expect(expectDaemonSet(gatewayDaemonSetName, fakeClient).Spec).To(
+				Equal(newGatewayDaemonSet(withNetworkDiscovery(submariner, clusterNetwork)).Spec))
 		})
 	})
 
@@ -257,7 +257,7 @@ func testReconciliation() {
 		It("should return success without creating any resources", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			expectNoDaemonSet(engineDaemonSetName, fakeClient)
+			expectNoDaemonSet(gatewayDaemonSetName, fakeClient)
 			expectNoDaemonSet(routeAgentDaemonSetName, fakeClient)
 		})
 	})
@@ -310,16 +310,6 @@ func testReconciliation() {
 			Expect(reconcileErr).To(HaveOccurred())
 		})
 	})
-
-	When("Submariner resource update fails", func() {
-		BeforeEach(func() {
-			fakeClient = &failingClient{Client: newClient(), onUpdate: reflect.TypeOf(&submariner_v1.Submariner{})}
-		})
-
-		It("should return an error", func() {
-			Expect(reconcileErr).To(HaveOccurred())
-		})
-	})
 }
 
 func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client controllerClient.Client) {
@@ -345,14 +335,15 @@ func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client cont
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
 
-func verifyEngineDaemonSet(submariner *submariner_v1.Submariner, client controllerClient.Client) {
-	daemonSet := expectDaemonSet(engineDaemonSetName, client)
+func verifyGatewayDaemonSet(submariner *submariner_v1.Submariner, client controllerClient.Client) {
+	daemonSet := expectDaemonSet(gatewayDaemonSetName, client)
 
-	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-engine"))
-	Expect(daemonSet.Spec.Template.ObjectMeta.Labels["app"]).To(Equal("submariner-engine"))
+	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-gateway"))
+	Expect(daemonSet.Spec.Template.ObjectMeta.Labels["app"]).To(Equal("submariner-gateway"))
 	Expect(daemonSet.Spec.Template.Spec.NodeSelector["submariner.io/gateway"]).To(Equal("true"))
 	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
-	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(Equal(submariner.Spec.Repository + "/submariner:" + submariner.Spec.Version))
+	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
+		Equal(submariner.Spec.Repository + "/submariner-gateway:" + submariner.Spec.Version))
 
 	envMap := map[string]string{}
 	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {

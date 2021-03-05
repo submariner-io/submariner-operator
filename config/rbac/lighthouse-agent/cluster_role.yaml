@@ -3,25 +3,35 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: submariner-operator-globalnet
+  name: submariner-lighthouse-agent
 rules:
   - apiGroups:
       - ""
     resources:
-      - pods
       - services
       - namespaces
-      - nodes
+      - endpoints
     verbs:
       - get
       - list
       - watch
       - update
   - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - delete
+      - deletecollection
+  - apiGroups:
       - submariner.io
     resources:
-      - endpoints
-      - clusters
+      - "gateways"
     verbs:
       - get
       - list
@@ -29,8 +39,11 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - "serviceexports"
+      - "*"
     verbs:
+      - create
       - get
       - list
       - watch
+      - update
+      - delete

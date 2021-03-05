@@ -110,8 +110,6 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 	// Fetch the ServiceDiscovery instance
 	instance := &submarinerv1alpha1.ServiceDiscovery{}
 
-	instance.SetDefaults()
-
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -129,9 +127,20 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
+
+	if instance.ObjectMeta.DeletionTimestamp != nil {
+		// Graceful deletion has been requested, ignore the object
+		return reconcile.Result{}, nil
+	}
+
 	lightHouseAgent := newLighthouseAgent(instance)
 	if _, err = helpers.ReconcileDeployment(instance, lightHouseAgent, reqLogger,
 		r.client, r.scheme); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = metrics.Setup(instance.Namespace, instance, lightHouseAgent.GetLabels(), 8082, r.client, r.config, r.scheme, reqLogger)
+	if err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -230,7 +239,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 						},
 					},
 
-					ServiceAccountName:            "submariner-lighthouse",
+					ServiceAccountName:            "submariner-lighthouse-agent",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 				},
 			},
@@ -324,7 +333,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 						},
 					},
 
-					ServiceAccountName:            "submariner-lighthouse",
+					ServiceAccountName:            "submariner-lighthouse-coredns",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					Volumes: []corev1.Volume{
 						{Name: "config-volume", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{

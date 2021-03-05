@@ -42,7 +42,7 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 	BeforeEach(func() {
 		clusterRole = &rbacv1.ClusterRole{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_globalnet_cluster_role_yaml, clusterRole)
+		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_yaml, clusterRole)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 	})
@@ -55,7 +55,7 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 
 			createdClusterRole, err := client.RbacV1().ClusterRoles().Get(clusterRole.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(createdClusterRole.ObjectMeta.Name).Should(Equal("submariner-operator-globalnet"))
+			Expect(createdClusterRole.ObjectMeta.Name).Should(Equal("submariner-globalnet"))
 		})
 	})
 
@@ -80,7 +80,7 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 	BeforeEach(func() {
 		clusterRoleBinding = &rbacv1.ClusterRoleBinding{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_globalnet_cluster_role_binding_yaml, clusterRoleBinding)
+		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_binding_yaml, clusterRoleBinding)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 	})
@@ -93,7 +93,7 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 
 			createdClusterRoleBinding, err := client.RbacV1().ClusterRoleBindings().Get(clusterRoleBinding.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(createdClusterRoleBinding.ObjectMeta.Name).Should(Equal("submariner-operator-globalnet"))
+			Expect(createdClusterRoleBinding.ObjectMeta.Name).Should(Equal("submariner-globalnet"))
 		})
 	})
 
@@ -204,7 +204,7 @@ var _ = Describe("CreateOrUpdateRole", func() {
 	BeforeEach(func() {
 		role = &rbacv1.Role{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_role_yaml, role)
+		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_operator_role_yaml, role)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 	})
@@ -243,7 +243,7 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 	BeforeEach(func() {
 		roleBinding = &rbacv1.RoleBinding{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_role_binding_yaml, roleBinding)
+		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_operator_role_binding_yaml, roleBinding)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 	})

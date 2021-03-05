@@ -1,13 +1,13 @@
 ---
-apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: submariner-operator-globalnet
+  name: submariner-lighthouse-agent
 subjects:
   - kind: ServiceAccount
-    name: submariner-operator
+    name: submariner-lighthouse-agent
     namespace: placeholder
 roleRef:
   kind: ClusterRole
-  name: submariner-operator-globalnet
+  name: submariner-lighthouse-agent
   apiGroup: rbac.authorization.k8s.io

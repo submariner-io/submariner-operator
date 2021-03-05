@@ -2,19 +2,21 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
+IMAGES=submariner-operator
+
 include $(SHIPYARD_DIR)/Makefile.inc
-
-override CALCULATED_VERSION := $(shell . ${SCRIPTS_DIR}/lib/version; echo $$VERSION)
-VERSION ?= $(CALCULATED_VERSION)
-DEV_VERSION := $(shell . ${SCRIPTS_DIR}/lib/version; echo $$DEV_VERSION)
-
-export VERSION DEV_VERSION
 
 CROSS_TARGETS := linux-amd64 linux-arm64 linux-arm windows-amd64.exe darwin-amd64
 BINARIES := bin/subctl
 CROSS_BINARIES := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,bin/subctl-$(VERSION)-%,$(cross)))
 CROSS_TARBALLS := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,dist/subctl-$(VERSION)-%.tar.xz,$(cross)))
+
+ifneq (,$(filter ovn,$(_using)))
+CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings.ovn
+else
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings
+endif
+
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
 export DEPLOY_ARGS
@@ -31,7 +33,7 @@ GOARCH = $(shell go env GOARCH)
 GOEXE = $(shell go env GOEXE)
 GOOS = $(shell go env GOOS)
 
-# Options for 'bundle-build'
+# Options for 'submariner-operator-bundle' image
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
 endif
@@ -82,10 +84,7 @@ build: $(BINARIES)
 
 build-cross: $(CROSS_TARBALLS)
 
-operator-image: bin/submariner-operator
-	$(SCRIPTS_DIR)/build_image.sh -i submariner-operator -f Dockerfile
-
-images: operator-image bundle-build
+package/Dockerfile.submariner-operator: bin/submariner-operator
 
 bin/submariner-operator: vendor/modules.txt main.go generate-embeddedyamls
 	${SCRIPTS_DIR}/compile.sh \
@@ -134,7 +133,7 @@ deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submar
 
 # Generate the clientset for the Submariner APIs
 # It needs to be run when the Submariner APIs change
-generate-clientset:
+generate-clientset: vendor/modules.txt
 	git clone https://github.com/kubernetes/code-generator -b kubernetes-1.17.0 $${GOPATH}/src/k8s.io/code-generator
 	cd $${GOPATH}/src/k8s.io/code-generator && go mod vendor
 	GO111MODULE=on $${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \
@@ -154,9 +153,8 @@ manifests: generate vendor/modules.txt
 preload-images:
 	source $(SCRIPTS_DIR)/lib/debug_functions; \
 	source $(SCRIPTS_DIR)/lib/deploy_funcs; \
-	source $(SCRIPTS_DIR)/lib/version; \
 	set -e; \
-	for image in submariner submariner-route-agent submariner-operator lighthouse-agent submariner-globalnet lighthouse-coredns; do \
+	for image in submariner-gateway submariner-route-agent submariner-operator lighthouse-agent submariner-globalnet lighthouse-coredns; do \
 		import_image quay.io/submariner/$${image}; \
 	done
 
@@ -183,10 +181,6 @@ bundle: kustomization
 	kustomize build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
 	operator-sdk bundle validate ./bundle
 
-# Build the bundle image
-bundle-build:
-	$(SCRIPTS_DIR)/build_image.sh -i submariner-operator-bundle -f bundle.Dockerfile
-
 # Generate package manifests
 packagemanifests: kustomization
 	(kustomize build config/manifests \
@@ -199,7 +193,7 @@ golangci-lint: generate-embeddedyamls
 
 unit: generate-embeddedyamls
 
-.PHONY: build images ci clean generate-clientset generate-embeddedyamls operator-image preload-images bundle bundle-build packagemanifests kustomization is-semantic-version
+.PHONY: build images ci clean generate-clientset generate-embeddedyamls preload-images bundle packagemanifests kustomization is-semantic-version
 
 else
 
