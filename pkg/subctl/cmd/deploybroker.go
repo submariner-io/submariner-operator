@@ -72,6 +72,9 @@ func init() {
 		fmt.Sprintf("The components to be installed - any of %s. The default is all components",
 			strings.Join(validComponents, ",")))
 
+	deployBroker.PersistentFlags().StringVar(&repository, "repository", "", "image repository")
+	deployBroker.PersistentFlags().StringVar(&imageVersion, "version", "", "image version")
+
 	addKubeconfigFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
