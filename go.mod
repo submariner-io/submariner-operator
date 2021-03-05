@@ -43,5 +43,5 @@ replace (
 	k8s.io/apimachinery => k8s.io/apimachinery v0.17.0
 	k8s.io/client-go => k8s.io/client-go v0.17.0
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.17.0
-	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.5.9
+	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.5.14
 )
