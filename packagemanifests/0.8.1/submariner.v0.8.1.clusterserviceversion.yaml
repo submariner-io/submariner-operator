@@ -39,7 +39,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: quay.io/submariner/submariner-operator:0.8.1
-    createdAt: "2021-03-07 04:33:52"
+    createdAt: "2021-03-07 04:34:07"
     description: Creates and manages Submariner deployments.
     operators.operatorframework.io/builder: operator-sdk-v1.0.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
@@ -225,6 +225,14 @@ spec:
           - get
           - list
           - watch
+        - apiGroups:
+          - lighthouse.submariner.io
+          resources:
+          - serviceexports
+          verbs:
+          - get
+          - list
+          - watch
         serviceAccountName: submariner-operator
       deployments:
       - name: submariner-operator
@@ -316,6 +324,19 @@ spec:
           - servicediscoveries
           verbs:
           - '*'
+        - apiGroups:
+          - lighthouse.submariner.io
+          resources:
+          - '*'
+          - serviceexports
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
         serviceAccountName: submariner-operator
     strategy: deployment
   installModes:
