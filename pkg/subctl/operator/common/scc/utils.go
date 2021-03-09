@@ -71,7 +71,7 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 		}
 
 		if _, err = sccClient.Update(cr, metav1.UpdateOptions{}); err != nil {
-			return fmt.Errorf("Error updating OpenShift privileged SCC: %s", err)
+			return fmt.Errorf("error updating OpenShift privileged SCC: %s", err)
 		}
 		created = true
 		return nil

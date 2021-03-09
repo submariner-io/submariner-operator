@@ -358,7 +358,7 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 			if globalnetInfo.GlobalCidrInfo[clusterID] == nil ||
 				globalnetInfo.GlobalCidrInfo[clusterID].GlobalCIDRs[0] != netconfig.GlobalnetCIDR {
 				var newClusterInfo broker.ClusterInfo
-				newClusterInfo.ClusterId = clusterID
+				newClusterInfo.ClusterID = clusterID
 				newClusterInfo.GlobalCidr = []string{netconfig.GlobalnetCIDR}
 
 				err = broker.UpdateGlobalnetConfigMap(brokerAdminClientset, brokerNamespace, globalnetConfigMap, newClusterInfo)
@@ -438,9 +438,9 @@ func askForCIDR(name string) (string, error) {
 func isValidClusterID(clusterID string) (bool, error) {
 	// Make sure the clusterid is a valid DNS-1123 string
 	if match, _ := regexp.MatchString("^[a-z0-9][a-z0-9.-]*[a-z0-9]$", clusterID); !match {
-		return false, fmt.Errorf("Cluster IDs must be valid DNS-1123 names, with only lowercase alphanumerics,\n"+
+		return false, fmt.Errorf("cluster IDs must be valid DNS-1123 names, with only lowercase alphanumerics,\n"+
 			"'.' or '-' (and the first and last characters must be alphanumerics).\n"+
-			"%s doesn't meet these requirements\n", clusterID)
+			"%s doesn't meet these requirements", clusterID)
 	}
 	return true, nil
 }
