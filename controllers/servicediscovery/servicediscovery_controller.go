@@ -144,8 +144,8 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 		return reconcile.Result{}, err
 	}
 
-	lighthouseDnsConfigMap := newLighthouseDnsConfigMap(instance)
-	if _, err = helpers.ReconcileConfigMap(instance, lighthouseDnsConfigMap, reqLogger,
+	lighthouseDNSConfigMap := newLighthouseDNSConfigMap(instance)
+	if _, err = helpers.ReconcileConfigMap(instance, lighthouseDNSConfigMap, reqLogger,
 		r.client, r.scheme); err != nil {
 		log.Error(err, "Error creating the lighthouseCoreDNS configMap")
 		return reconcile.Result{}, err
@@ -247,7 +247,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 	}
 }
 
-func newLighthouseDnsConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
+func newLighthouseDNSConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
 	labels := map[string]string{
 		"app":       lighthouseCoreDNSName,
 		"component": componentName,
@@ -385,11 +385,11 @@ func updateDNSCustomConfigMap(client controllerClient.Client, k8sclientSet clien
 			return err
 		}
 
-		lighthouseDnsService := &corev1.Service{}
-		err = client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDnsService)
-		lighthouseClusterIp := lighthouseDnsService.Spec.ClusterIP
-		if err != nil || lighthouseClusterIp == "" {
-			return goerrors.New("lighthouseDnsService ClusterIp should be available")
+		lighthouseDNSService := &corev1.Service{}
+		err = client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDNSService)
+		lighthouseClusterIP := lighthouseDNSService.Spec.ClusterIP
+		if err != nil || lighthouseClusterIP == "" {
+			return goerrors.New("lighthouseDNSService ClusterIp should be available")
 		}
 
 		if configMap.Data == nil {
@@ -404,7 +404,7 @@ func updateDNSCustomConfigMap(client controllerClient.Client, k8sclientSet clien
 		coreFile := ""
 		for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
 			coreFile = fmt.Sprintf("%s%s:53 {\n    forward . %s\n}\n",
-				coreFile, domain, lighthouseClusterIp)
+				coreFile, domain, lighthouseClusterIP)
 		}
 		log.Info("Updating coredns-custom ConfigMap for lighthouse.server: " + coreFile)
 		configMap.Data["lighthouse.server"] = coreFile
@@ -423,11 +423,11 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.I
 			return err
 		}
 
-		lighthouseDnsService := &corev1.Service{}
-		err = client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDnsService)
-		lighthouseClusterIp := lighthouseDnsService.Spec.ClusterIP
-		if err != nil || lighthouseClusterIp == "" {
-			return goerrors.New("lighthouseDnsService ClusterIp should be available")
+		lighthouseDNSService := &corev1.Service{}
+		err = client.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDNSService)
+		lighthouseClusterIP := lighthouseDNSService.Spec.ClusterIP
+		if err != nil || lighthouseClusterIP == "" {
+			return goerrors.New("lighthouseDNSService ClusterIp should be available")
 		}
 
 		coreFile := configMap.Data["Corefile"]
@@ -456,7 +456,7 @@ func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.I
 		expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
 		for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
 			expectedCorefile = fmt.Sprintf("%s%s:53 {\n    forward . %s\n}\n",
-				expectedCorefile, domain, lighthouseClusterIp)
+				expectedCorefile, domain, lighthouseClusterIP)
 		}
 		coreFile = expectedCorefile + "#lighthouse-end\n" + coreFile
 		log.Info("Updated coredns ConfigMap " + coreFile)
@@ -476,11 +476,11 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 			return err
 		}
 
-		lighthouseDnsService := &corev1.Service{}
+		lighthouseDNSService := &corev1.Service{}
 		err := operatorClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
-			lighthouseDnsService)
-		if err != nil || lighthouseDnsService.Spec.ClusterIP == "" {
-			return goerrors.New("lighthouseDnsService ClusterIp should be available")
+			lighthouseDNSService)
+		if err != nil || lighthouseDNSService.Spec.ClusterIP == "" {
+			return goerrors.New("lighthouseDNSService ClusterIp should be available")
 		}
 
 		var updatedForwardServers []operatorv1.Server
@@ -493,7 +493,7 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 				containsLighthouse = true
 				existingDomains = append(existingDomains, forwardServer.Zones...)
 				for _, upstreams := range forwardServer.ForwardPlugin.Upstreams {
-					if upstreams != lighthouseDnsService.Spec.ClusterIP {
+					if upstreams != lighthouseDNSService.Spec.ClusterIP {
 						changed = true
 					}
 				}
@@ -522,7 +522,7 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 				Name:  lighthouseForwardPluginName,
 				Zones: []string{domain},
 				ForwardPlugin: operatorv1.ForwardPlugin{
-					Upstreams: []string{lighthouseDnsService.Spec.ClusterIP},
+					Upstreams: []string{lighthouseDNSService.Spec.ClusterIP},
 				},
 			}
 			updatedForwardServers = append(updatedForwardServers, lighthouseServer)

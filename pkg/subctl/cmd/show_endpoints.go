@@ -24,18 +24,18 @@ import (
 )
 
 type endpointStatus struct {
-	clusterId    string
-	endpointIp   string
-	publicIp     string
+	clusterID    string
+	endpointIP   string
+	publicIP     string
 	cableDriver  string
 	endpointType string
 }
 
-func newEndpointsStatusFrom(clusterId, endpointIp, publicIp, cableDriver, endpointType string) endpointStatus {
+func newEndpointsStatusFrom(clusterID, endpointIP, publicIP, cableDriver, endpointType string) endpointStatus {
 	return endpointStatus{
-		clusterId:    clusterId,
-		endpointIp:   endpointIp,
-		publicIp:     publicIp,
+		clusterID:    clusterID,
+		endpointIP:   endpointIP,
+		publicIP:     publicIP,
 		cableDriver:  cableDriver,
 		endpointType: endpointType,
 	}
@@ -53,12 +53,13 @@ func init() {
 }
 
 func getEndpointsStatus(submariner *v1alpha1.Submariner) []endpointStatus {
-	var status []endpointStatus
 	gateways := submariner.Status.Gateways
 
 	if gateways == nil {
 		exitWithErrorMsg("No endpoints found")
 	}
+
+	var status = make([]endpointStatus, 0, len(*gateways))
 
 	for _, gateway := range *gateways {
 		status = append(status, newEndpointsStatusFrom(
@@ -114,9 +115,9 @@ func printEndpoints(endpoints []endpointStatus) {
 	for _, item := range endpoints {
 		fmt.Printf(
 			template,
-			item.clusterId,
-			item.endpointIp,
-			item.publicIp,
+			item.clusterID,
+			item.endpointIP,
+			item.publicIP,
 			item.cableDriver,
 			item.endpointType)
 	}

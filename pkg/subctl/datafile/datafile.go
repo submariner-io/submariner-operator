@@ -130,7 +130,7 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 	if ipsecSubmFile != "" {
 		datafile, err := NewFromFile(ipsecSubmFile)
 		if err != nil {
-			return nil, fmt.Errorf("Error happened trying to import IPsec PSK from subm file: %s: %s", ipsecSubmFile,
+			return nil, fmt.Errorf("error happened trying to import IPsec PSK from subm file: %s: %s", ipsecSubmFile,
 				err.Error())
 		}
 		subctlData.IPSecPSK = datafile.IPSecPSK
