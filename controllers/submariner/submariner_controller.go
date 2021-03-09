@@ -50,8 +50,10 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
@@ -440,7 +442,7 @@ func newGatewayPodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 	runAsNonRoot := false
 	readOnlyRootFilesystem := false
 
-	security_context_all_caps_privileged := corev1.SecurityContext{
+	securityContextAllCapsPrivileged := corev1.SecurityContext{
 		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
 		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 		Privileged:               &privileged,
@@ -484,7 +486,7 @@ func newGatewayPodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 					Image:           getImagePath(cr, names.GatewayImage),
 					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayImage]),
 					Command:         []string{"submariner.sh"},
-					SecurityContext: &security_context_all_caps_privileged,
+					SecurityContext: &securityContextAllCapsPrivileged,
 					Env: []corev1.EnvVar{
 						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
@@ -550,7 +552,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 	privileged := true
 	readOnlyFileSystem := false
 	runAsNonRoot := false
-	security_context_all_cap_allow_escal := corev1.SecurityContext{
+	securityContextAllCapAllowEscal := corev1.SecurityContext{
 		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
 		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 		Privileged:               &privileged,
@@ -588,7 +590,7 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentImage]),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
 							Command:         []string{"submariner-route-agent.sh"},
-							SecurityContext: &security_context_all_cap_allow_escal,
+							SecurityContext: &securityContextAllCapAllowEscal,
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-slash", MountPath: "/host", ReadOnly: true},
 							},
@@ -637,7 +639,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 	privileged := true
 	readOnlyFileSystem := false
 	runAsNonRoot := false
-	security_context_all_cap_allow_escal := corev1.SecurityContext{
+	securityContextAllCapAllowEscal := corev1.SecurityContext{
 		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
 		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
 		Privileged:               &privileged,
@@ -665,7 +667,7 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							Name:            "submariner-globalnet",
 							Image:           getImagePath(cr, names.GlobalnetImage),
 							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetImage]),
-							SecurityContext: &security_context_all_cap_allow_escal,
+							SecurityContext: &securityContextAllCapAllowEscal,
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-slash", MountPath: "/host", ReadOnly: true},
 							},
@@ -713,6 +715,15 @@ func getImagePath(submariner *submopv1a1.Submariner, componentImage string) stri
 }
 
 func (r *SubmarinerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// Set up the CRDs we need
+	crdUpdater, err := crdutils.NewFromRestConfig(mgr.GetConfig())
+	if err != nil {
+		return err
+	}
+	if err := gateway.Ensure(crdUpdater); err != nil {
+		return err
+	}
+
 	// These are required so that we can retrieve Gateway objects using the dynamic client
 	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
 		return err

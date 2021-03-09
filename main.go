@@ -39,7 +39,6 @@ import (
 	"github.com/submariner-io/submariner-operator/apis"
 	"github.com/submariner-io/submariner-operator/controllers"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
-	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	"github.com/submariner-io/submariner-operator/pkg/version"
@@ -151,11 +150,6 @@ func main() {
 	// Set up the CRDs we need
 	crdUpdater, err := crdutils.NewFromRestConfig(cfg)
 	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-	log.Info("Creating the gateway CRDs")
-	if err := gateway.Ensure(crdUpdater); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}

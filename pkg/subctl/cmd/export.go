@@ -104,7 +104,7 @@ func exportService(cmd *cobra.Command, args []string) {
 
 func validateArguments(args []string) error {
 	if len(args) == 0 || args[0] == "" {
-		return errors.New("Name of the Service to be exported must be specified")
+		return errors.New("name of the Service to be exported must be specified")
 	}
 	return nil
 }

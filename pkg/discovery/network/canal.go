@@ -66,15 +66,15 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 }
 
 func extractPodCIDRFromNetConfigJSON(cm *v1.ConfigMap) *string {
-	netConfJson := cm.Data["net-conf.json"]
-	if netConfJson == "" {
+	netConfJSON := cm.Data["net-conf.json"]
+	if netConfJSON == "" {
 		return nil
 	}
 	var netConf struct {
 		Network string `json:"Network"`
 		// All the other fields are ignored by Unmarshal
 	}
-	if err := json.Unmarshal([]byte(netConfJson), &netConf); err == nil {
+	if err := json.Unmarshal([]byte(netConfJSON), &netConf); err == nil {
 		return &netConf.Network
 	}
 	return nil
