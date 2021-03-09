@@ -43,14 +43,14 @@ func newIPSECPSKSecret() (*v1.Secret, error) {
 	pskSecretData := make(map[string][]byte)
 	pskSecretData["psk"] = psk
 
-	psk_secret := &v1.Secret{
+	pskSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: ipsecPSKSecretName,
 		},
 		Data: pskSecretData,
 	}
 
-	return psk_secret, nil
+	return pskSecret, nil
 }
 
 func GetIPSECPSKSecret(clientSet clientset.Interface, namespace string) (*v1.Secret, error) {

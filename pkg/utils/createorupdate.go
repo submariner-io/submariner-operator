@@ -63,7 +63,7 @@ func CreateOrUpdateEmbeddedCRD(updater crdutils.CRDUpdater, crdYaml string) (boo
 	crd := &apiextensions.CustomResourceDefinition{}
 
 	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
-		return false, fmt.Errorf("Error extracting embedded CRD: %s", err)
+		return false, fmt.Errorf("error extracting embedded CRD: %s", err)
 	}
 
 	return CreateOrUpdateCRD(updater, crd)

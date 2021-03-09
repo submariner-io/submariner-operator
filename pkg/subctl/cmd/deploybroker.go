@@ -46,7 +46,8 @@ var (
 	defaultCustomDomains        []string
 )
 
-var validComponents = []string{components.ServiceDiscovery, components.Connectivity}
+var defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
+var validComponents = []string{components.ServiceDiscovery, components.Connectivity, components.Globalnet}
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
@@ -67,7 +68,7 @@ func init() {
 	deployBroker.PersistentFlags().StringSliceVar(&defaultCustomDomains, "custom-domains", nil,
 		"list of domains to use for multicluster service discovery")
 
-	deployBroker.PersistentFlags().StringSliceVar(&componentArr, "components", validComponents,
+	deployBroker.PersistentFlags().StringSliceVar(&componentArr, "components", defaultComponents,
 		fmt.Sprintf("The components to be installed - any of %s. The default is all components",
 			strings.Join(validComponents, ",")))
 
@@ -92,6 +93,9 @@ var deployBroker = &cobra.Command{
 		if !serviceDiscoveryEnabled {
 			componentSet.Remove(components.ServiceDiscovery)
 		}
+		if globalnetEnable {
+			componentSet.Add(components.Globalnet)
+		}
 
 		if err := isValidComponents(componentSet); err != nil {
 			exitOnError("Invalid components parameter", err)
@@ -106,7 +110,7 @@ var deployBroker = &cobra.Command{
 		status := cli.NewStatus()
 
 		status.Start("Setting up broker RBAC")
-		err = broker.Ensure(config, false)
+		err = broker.Ensure(config, componentArr, false)
 		status.End(cli.CheckForError(err))
 		exitOnError("Error setting up broker RBAC", err)
 

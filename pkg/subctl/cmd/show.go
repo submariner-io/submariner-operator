@@ -101,7 +101,7 @@ func getClientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, ov
 	clusterName := getClusterNameFromContext(raw, overrides.CurrentContext)
 
 	if clusterName == nil {
-		return restConfig{}, fmt.Errorf("Could not obtain the cluster name from kube config: %#v", raw)
+		return restConfig{}, fmt.Errorf("could not obtain the cluster name from kube config: %#v", raw)
 	}
 
 	return restConfig{config: clientConfig, clusterName: *clusterName}, nil

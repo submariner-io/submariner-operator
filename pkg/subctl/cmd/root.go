@@ -197,7 +197,7 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 // this function was sourced from:
 // https://github.com/kubernetes/kubernetes/blob/a3ccea9d8743f2ff82e41b6c2af6dc2c41dc7b10/test/utils/density_utils.go#L36
 func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[string]string) error {
-	var tokens []string
+	var tokens = make([]string, 0, len(labelsToAdd))
 	for k, v := range labelsToAdd {
 		tokens = append(tokens, fmt.Sprintf("\"%s\":\"%s\"", k, v))
 	}
