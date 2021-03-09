@@ -38,6 +38,11 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	serviceDiscoveryCreated, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
+		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
+	if err != nil {
+		return false, err
+	}
 	brokerCreated, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
-	return submarinerCreated || brokerCreated, err
+	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, err
 }
