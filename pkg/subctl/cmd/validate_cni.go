@@ -19,20 +19,36 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 )
 
-func validateK8sConfig(cmd *cobra.Command, args []string) {
-	fmt.Println("\nValidating CNI Configuration")
-	fmt.Println("\n----------------------------")
+var supportedNetworkPlugins = []string{"generic", "canal-flannel", "weave-net", "OpenShiftSDN", "OVNKubernetes"}
+
+var validateCniCmd = &cobra.Command{
+	Use:   "cni",
+	Short: "Validate if Submariner supports the CNI network plugin.",
+	Long: "This command validates if the detected CNI network plugin is supported by Submariner or not.",
+	Run: validateCniConfig,
+}
+
+func init() {
+	validateCmd.AddCommand(validateCniCmd)
+}
+
+func validateCniConfig(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
+		message := fmt.Sprintf("Validating Submariner support for CNI network plugin in %q", item.clusterName)
+		status.Start(message)
 		fmt.Println()
 		submariner := getSubmarinerResource(item.config)
 
 		if submariner == nil {
-			fmt.Println(submMissingMessage)
+			status.QueueWarningMessage(submMissingMessage)
+			status.End(cli.Success)
 			continue
 		}
 
@@ -45,12 +61,16 @@ func validateK8sConfig(cmd *cobra.Command, args []string) {
 		}
 
 		if !isSupportedPlugin {
-			fmt.Printf("The detected CNI network plugin (%q) is not supported by Submariner."+
+			message = fmt.Sprintf("The detected CNI network plugin (%q) is not supported by Submariner."+
 				" Supported network plugins: %v\n", submariner.Status.NetworkPlugin, supportedNetworkPlugins)
+			status.QueueFailureMessage(message)
+			status.End(cli.Failure)
 			continue
 		}
 
-		fmt.Printf("The detected CNI network plugin (%q) is supported by Submariner.\n",
+		message = fmt.Sprintf("The detected CNI network plugin (%q) is supported by Submariner.\n",
 			submariner.Status.NetworkPlugin)
+		status.QueueSuccessMessage(message)
+		status.End(cli.Success)
 	}
 }

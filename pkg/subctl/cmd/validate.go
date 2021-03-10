@@ -23,32 +23,11 @@ var (
 	validateCmd = &cobra.Command{
 		Use:   "validate",
 		Short: "Validate Submariner deployment and report any issues",
-		Long: "This command validates a Submariner deployment and reports any issues if \n" +
-			"1. Submariner prerequisites are missing on the cluster\n" +
-			"2. Submariner is deployed on an unsupported K8s cluster\n" +
-			"3. Submariner Pods are in an error state\n",
+		Long:  "This command validates Submariner deployment and reports any issues",
 	}
-	validateK8sCmd = &cobra.Command{
-		Use:   "cluster-config",
-		Short: "Validate the Kubernetes cluster configuration",
-		Long: "This command validates tha the Kubernetes cluster configuration is supported by Submariner," +
-			" including version, CNI, and kube-proxy mode.",
-		Run: validateK8sConfig,
-	}
-	verboseVerification     bool
-	supportedNetworkPlugins = []string{"generic", "canal-flannel", "weave-net", "OpenShiftSDN", "OVNKubernetes"}
 )
 
 func init() {
 	addKubeconfigFlag(validateCmd)
-	addCommonValidateFlags(validateCmd)
-	validateCmd.AddCommand(validateK8sCmd)
 	rootCmd.AddCommand(validateCmd)
-}
-
-func addCommonValidateFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().BoolVar(&verboseVerification, "verbose", false,
-		"produce verbose logs while validating the setup.")
-	cmd.PersistentFlags().StringVar(&submarinerNamespace, "submariner-namespace", "submariner-operator",
-		"namespace in which Submariner is deployed")
 }
