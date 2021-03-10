@@ -17,15 +17,12 @@ package cmd
 
 import (
 	"fmt"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
-	subMScheme "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned/scheme"
-	appsv1 "k8s.io/api/apps/v1"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
-	k8sScheme "k8s.io/client-go/kubernetes/scheme"
 )
 
 func validateSubmariner(cmd *cobra.Command, args []string) {
@@ -35,63 +32,53 @@ func validateSubmariner(cmd *cobra.Command, args []string) {
 	exitOnError("error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		localClient, err := dynamic.NewForConfig(item.config)
-		if err != nil {
-			exitOnError("failed: error creating dynamic client from kubeConfig: %v\n", err)
-		}
-		verifyDeployments(localClient, OperatorNamespace, item.clusterName)
+		verifyDeployments(item.config, OperatorNamespace, item.clusterName)
 	}
 	fmt.Println("\nValidation passed.")
 }
 
-func verifyDeployments(localClient dynamic.Interface, operatorNamespace, clusterName string) {
-	submarinerResourceClient := localClient.Resource(schema.GroupVersionResource{Group: "submariner.io",
-		Version: "v1alpha1", Resource: "submariners"}).Namespace(operatorNamespace)
-	subMObj, err := submarinerResourceClient.Get("submariner", metav1.GetOptions{})
+func verifyDeployments(config *rest.Config, operatorNamespace, clusterName string) {
+	submarinerResourceClient, err := submarinerclientset.NewForConfig(config)
+	if err != nil {
+		exitOnError("failed: error creating submariner clientset: %v\n", err)
+	}
+
+	submariner, err := submarinerResourceClient.SubmarinerV1alpha1().Submariners(operatorNamespace).
+		Get("submariner", metav1.GetOptions{})
 	if err != nil {
 		exitOnError("failed to validate submariner cr due to", err)
 	}
-	submariner := &v1alpha1.Submariner{}
-	submarinerScheme := subMScheme.Scheme
-	err = submarinerScheme.Convert(subMObj, submariner, nil)
+
+	kubeClientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		exitOnError("failed to validate submariner cr due to", err)
+		exitOnError("failed: error creating kubernetes clientset: %v\n", err)
 	}
 
 	// Check if submariner components are deployed and running
 	fmt.Printf("\nValidating Submariner Pods for cluster: %q", clusterName)
-	CheckDaemonset(localClient, operatorNamespace, "submariner-gateway")
+	CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-gateway")
 
-	CheckDaemonset(localClient, operatorNamespace, "submariner-routeagent")
+	CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-routeagent")
 
 	// Check if service-discovery components are deployed and running if enabled
 	if submariner.Spec.ServiceDiscoveryEnabled {
 		fmt.Printf("\nValidating Service Discovery Pods for cluster: %q", clusterName)
 		// Check lighthouse-agent
-		CheckDeployment(localClient, operatorNamespace, "submariner-lighthouse-agent")
+		CheckDeployment(kubeClientSet, operatorNamespace, "submariner-lighthouse-agent")
 
 		// Check ligthouse-coreDNS
-		CheckDeployment(localClient, operatorNamespace, "submariner-lighthouse-coredns")
+		CheckDeployment(kubeClientSet, operatorNamespace, "submariner-lighthouse-coredns")
 	}
 	// Check if globalnet components are deployed and running if enabled
 	if submariner.Spec.GlobalCIDR != "" {
-		fmt.Printf("\nValidating Global Pods for cluster: %q", clusterName)
-		CheckDaemonset(localClient, operatorNamespace, "submariner-globalnet")
+		fmt.Printf("\nValidating Globalnet Pods for cluster: %q", clusterName)
+		CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-globalnet")
 	}
 	fmt.Println()
 }
 
-func CheckDeployment(localClient dynamic.Interface, namespace, deploymentName string) {
-	k8sscheme := k8sScheme.Scheme
-	resourceClient := localClient.Resource(schema.GroupVersionResource{Group: "apps",
-		Version: "v1", Resource: "deployments"}).Namespace(namespace)
-	agentObj, err := resourceClient.Get(deploymentName, metav1.GetOptions{})
-	if err != nil {
-		err = fmt.Errorf("validation %q of deployment failed due to error: %v", deploymentName, err)
-		exitOnError("failed", err)
-	}
-	deployment := &appsv1.Deployment{}
-	err = k8sscheme.Convert(agentObj, deployment, nil)
+func CheckDeployment(k8sClient kubernetes.Interface, namespace, deploymentName string) {
+	deployment, err := k8sClient.AppsV1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 	if err != nil {
 		err = fmt.Errorf("validation %q of deployment failed due to error: %v", deploymentName, err)
 		exitOnError("failed", err)
@@ -103,17 +90,8 @@ func CheckDeployment(localClient dynamic.Interface, namespace, deploymentName st
 	}
 }
 
-func CheckDaemonset(localClient dynamic.Interface, namespace, daemonSetName string) {
-	k8sscheme := k8sScheme.Scheme
-	resourceClient := localClient.Resource(schema.GroupVersionResource{Group: "apps",
-		Version: "v1", Resource: "daemonsets"}).Namespace(namespace)
-	agentObj, err := resourceClient.Get(daemonSetName, metav1.GetOptions{})
-	if err != nil {
-		err = fmt.Errorf("validation %q of daemonset failed due to error: %v", daemonSetName, err)
-		exitOnError("failed", err)
-	}
-	daemonSet := &appsv1.DaemonSet{}
-	err = k8sscheme.Convert(agentObj, daemonSet, nil)
+func CheckDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName string) {
+	daemonSet, err := k8sClient.AppsV1().DaemonSets(namespace).Get(daemonSetName, metav1.GetOptions{})
 	if err != nil {
 		err = fmt.Errorf("validation %q of daemonset failed due to error: %v", daemonSetName, err)
 		exitOnError("failed", err)
