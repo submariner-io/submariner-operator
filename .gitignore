@@ -12,3 +12,4 @@ vendor/
 .idea
 .shflags
 junit.xml
+Makefile.dapper
