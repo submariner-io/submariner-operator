@@ -29,10 +29,10 @@ var (
 			"3. Submariner Pods are in an error state\n",
 	}
 	validateK8sCmd = &cobra.Command{
-		Use:   "k8s",
-		Short: "Validate if K8s cluster configuration is supported by Submariner",
-		Long: "This command verifies if any unsupported K8s version, CNI," +
-			" or kube-proxy mode is detected on the cluster.",
+		Use:   "cluster-config",
+		Short: "Validate the Kubernetes cluster configuration",
+		Long: "This command validates tha the Kubernetes cluster configuration is supported by Submariner," +
+			" including version, CNI, and kube-proxy mode.",
 		Run: validateK8sConfig,
 	}
 	verboseVerification     bool

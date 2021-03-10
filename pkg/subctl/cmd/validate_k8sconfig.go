@@ -39,32 +39,18 @@ func validateK8sConfig(cmd *cobra.Command, args []string) {
 		isSupportedPlugin := false
 		for _, np := range supportedNetworkPlugins {
 			if submariner.Status.NetworkPlugin == np {
-				// SGM: Check the networkPlugin in submariner route-agent matches with route-agent.
 				isSupportedPlugin = true
 				break
 			}
 		}
 
 		if !isSupportedPlugin {
-			fmt.Println("Submariner is not validated against the cluster's CNI (Network Plugin):",
-				submariner.Status.NetworkPlugin)
-			fmt.Println("Supported Network Plugins:", supportedNetworkPlugins)
+			fmt.Printf("The detected CNI network plugin (%q) is not supported by Submariner."+
+				" Supported network plugins: %v\n", submariner.Status.NetworkPlugin, supportedNetworkPlugins)
 			continue
 		}
 
-		routeAgent := getK8sDaemonSet(item.config, "submariner-routeagent")
-		if routeAgent == nil {
-			fmt.Println("Submariner route agent not found")
-			continue
-		}
-
-		for _, env := range routeAgent.Spec.Template.Spec.Containers[0].Env {
-			if env.Name == "SUBMARINER_NETWORKPLUGIN" && env.Value != submariner.Status.NetworkPlugin {
-				fmt.Printf("SUBMARINER_NETWORKPLUGIN configured in route agent (%q) does"+
-					" not match with the one in Submariner's CR (%q) \n", env.Value, submariner.Status.NetworkPlugin)
-				continue
-			}
-		}
-		fmt.Printf("Detected Network Plugin (%q) is supported by Submariner.\n", submariner.Status.NetworkPlugin)
+		fmt.Printf("The detected CNI network plugin (%q) is supported by Submariner.\n",
+			submariner.Status.NetworkPlugin)
 	}
 }

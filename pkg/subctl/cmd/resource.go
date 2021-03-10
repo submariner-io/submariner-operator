@@ -16,10 +16,8 @@ limitations under the License.
 package cmd
 
 import (
-	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -78,19 +76,4 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	}
 
 	return submariner
-}
-
-func getK8sDaemonSet(config *rest.Config, resourceName string) *v1.DaemonSet {
-	k8sClient, err := kubernetes.NewForConfig(config)
-	exitOnError("Unable to get the k8s client", err)
-
-	daemonSet, err := k8sClient.AppsV1().DaemonSets(OperatorNamespace).Get(resourceName, v1opts.GetOptions{})
-	if err != nil {
-		if errors.IsNotFound(err) {
-			return nil
-		}
-		exitOnError("Error obtaining the "+resourceName+" DaemonSet resource", err)
-	}
-
-	return daemonSet
 }
