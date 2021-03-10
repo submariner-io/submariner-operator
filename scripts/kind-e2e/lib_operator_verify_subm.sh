@@ -379,13 +379,13 @@ function verify_subm_gateway_container() {
 
   if kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v command; then
     # Verify the gateway binary is in the expected place and in PATH
-    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v submariner-engine | grep /usr/local/bin/submariner-engine
+    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v submariner-gateway | grep /usr/local/bin/submariner-gateway
 
     # Verify the gateway entry script is in the expected place and in PATH
     kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v submariner.sh | grep /usr/local/bin/submariner.sh
   elif kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which which; then
     # Verify the gateway binary is in the expected place and in PATH
-    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which submariner-engine | grep /usr/local/bin/submariner-engine
+    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which submariner-gateway | grep /usr/local/bin/submariner-gateway
 
     # Verify the gateway entry script is in the expected place and in PATH
     kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which submariner.sh | grep /usr/local/bin/submariner.sh
