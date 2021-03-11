@@ -22,8 +22,8 @@ import (
 var (
 	validateCmd = &cobra.Command{
 		Use:   "validate",
-		Short: "Validate Submariner deployment and report any issues",
-		Long:  "This command validates Submariner deployment and reports any issues",
+		Short: "Validate the Submariner deployment and report any issues",
+		Long:  "This command validates the Submariner deployment and reports any issues",
 	}
 )
 

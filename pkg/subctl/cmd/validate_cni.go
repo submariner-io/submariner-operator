@@ -27,9 +27,9 @@ var supportedNetworkPlugins = []string{"generic", "canal-flannel", "weave-net", 
 
 var validateCniCmd = &cobra.Command{
 	Use:   "cni",
-	Short: "Validate if Submariner supports the CNI network plugin.",
-	Long: "This command validates if the detected CNI network plugin is supported by Submariner or not.",
-	Run: validateCniConfig,
+	Short: "Validate the CNI network plugin.",
+	Long:  "This command checks whether or not the detected CNI network plugin is supported by Submariner.",
+	Run:   validateCniConfig,
 }
 
 func init() {
@@ -41,7 +41,8 @@ func validateCniConfig(cmd *cobra.Command, args []string) {
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		message := fmt.Sprintf("Validating Submariner support for CNI network plugin in %q", item.clusterName)
+		message := fmt.Sprintf("Validating Submariner support for the CNI network"+
+			" plugin in cluster %q", item.clusterName)
 		status.Start(message)
 		fmt.Println()
 		submariner := getSubmarinerResource(item.config)
