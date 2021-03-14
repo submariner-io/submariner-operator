@@ -46,7 +46,8 @@ func validateConnections(cmd *cobra.Command, args []string) {
 		submariner := getSubmarinerResource(item.config)
 
 		if submariner == nil {
-			fmt.Printf("%v for cluster %q\n", submMissingMessage, item.clusterName)
+			status.QueueWarningMessage(submMissingMessage)
+			status.End(cli.Success)
 			continue
 		}
 
