@@ -40,7 +40,7 @@ func validateConnections(cmd *cobra.Command, args []string) {
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		message := fmt.Sprintf("Validating Connections in %q", item.clusterName)
+		message := fmt.Sprintf("Validating connections in cluster %q", item.clusterName)
 		status.Start(message)
 		fmt.Println()
 		submariner := getSubmarinerResource(item.config)
@@ -53,23 +53,25 @@ func validateConnections(cmd *cobra.Command, args []string) {
 
 		gateways := submariner.Status.Gateways
 		if gateways == nil {
-			message = "There are no gateways detected in cluster"
-			status.QueueFailureMessage(message)
+			message = "There are no gateways detected"
+			status.QueueWarningMessage(message)
 			status.End(cli.Failure)
 			continue
 		}
 
 		allConnectionsEstablished := true
 		for _, gateway := range *gateways {
-			for _, connection := range gateway.Connections {
-				if connection.Status == submv1.Connecting {
-					message = fmt.Sprintf("Connection to cluster %q is still trying to connect", connection.Endpoint.ClusterID)
-					status.QueueFailureMessage(message)
-					allConnectionsEstablished = false
-				} else if connection.Status == submv1.ConnectionError {
-					message = fmt.Sprintf("Connection to cluster %q is not established", connection.Endpoint.ClusterID)
-					status.QueueFailureMessage(message)
-					allConnectionsEstablished = false
+			if gateway.HAStatus == submv1.HAStatusActive {
+				for _, connection := range gateway.Connections {
+					if connection.Status == submv1.Connecting {
+						message = fmt.Sprintf("Connection to cluster %q is in progress", connection.Endpoint.ClusterID)
+						status.QueueFailureMessage(message)
+						allConnectionsEstablished = false
+					} else if connection.Status == submv1.ConnectionError {
+						message = fmt.Sprintf("Connection to cluster %q is not established", connection.Endpoint.ClusterID)
+						status.QueueFailureMessage(message)
+						allConnectionsEstablished = false
+					}
 				}
 			}
 		}
@@ -79,7 +81,7 @@ func validateConnections(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		message = "All Gateways connections are established"
+		message = "All connections are established"
 		status.QueueSuccessMessage(message)
 		status.End(cli.Success)
 	}
