@@ -109,8 +109,8 @@ func CheckDeployment(k8sClient kubernetes.Interface, namespace, deploymentName s
 	}
 
 	if deployment.Status.AvailableReplicas != replicas {
-		message := fmt.Sprintf("The desired number of replicas for Deployment %q (%d) " +
-			"does not match the actual number running (%d)", deploymentName, replicas,
+		message := fmt.Sprintf("The desired number of replicas for Deployment %q (%d)"+
+			" does not match the actual number running (%d)", deploymentName, replicas,
 			deployment.Status.AvailableReplicas)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
@@ -130,8 +130,9 @@ func CheckDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName str
 	}
 
 	if daemonSet.Status.CurrentNumberScheduled != daemonSet.Status.DesiredNumberScheduled {
-		message := fmt.Sprintf("The desired number of nodes that are  running pods for DaemonSet %q (%d) " +
-			"does not match the actual number (%d)", daemonSetName)
+		message := fmt.Sprintf("The desired number of running pods for DaemonSet %q (%d)"+
+			" does not match the actual number (%d)", daemonSetName, daemonSet.Status.DesiredNumberScheduled,
+			daemonSet.Status.CurrentNumberScheduled)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
 		return false
