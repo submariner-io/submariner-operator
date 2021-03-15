@@ -22,15 +22,6 @@ import (
 var (
 	validateCmd = &cobra.Command{
 		Use:   "validate",
-		Short: "Validate Submariner deployment and report any issues",
-		Long: "This command validates a Submariner deployment and reports any issues if \n" +
-			"1. Submariner pre-requisites are missing on the cluster\n" +
-			"2. Submariner is deployed on an unsupported k8s cluster\n" +
-			"3. Submariner Pods are in an error state\n",
-		Run: validateSubmariner,
-	}
-	validateK8sCmd = &cobra.Command{
-		Use:   "k8s",
 		Short: "Validate the Submariner deployment and report any issues",
 		Long:  "This command validates the Submariner deployment and reports any issues",
 	}
