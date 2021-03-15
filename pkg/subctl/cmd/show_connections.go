@@ -28,7 +28,7 @@ import (
 type connectionStatus struct {
 	gateway     string
 	cluster     string
-	remoteIp    string
+	remoteIP    string
 	cableDriver string
 	subnets     string
 	status      submv1.ConnectionStatus
@@ -60,7 +60,7 @@ func getConnectionsStatus(submariner *v1alpha1.Submariner) []connectionStatus {
 			status = append(status, connectionStatus{
 				gateway:     connection.Endpoint.Hostname,
 				cluster:     connection.Endpoint.ClusterID,
-				remoteIp:    connection.Endpoint.PrivateIP,
+				remoteIP:    connection.Endpoint.PrivateIP,
 				cableDriver: connection.Endpoint.Backend,
 				subnets:     subnets,
 				status:      connection.Status,
@@ -106,7 +106,7 @@ func printConnections(connections []connectionStatus) {
 			template,
 			item.gateway,
 			item.cluster,
-			item.remoteIp,
+			item.remoteIP,
 			item.cableDriver,
 			item.subnets,
 			item.status)

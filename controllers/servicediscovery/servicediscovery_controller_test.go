@@ -40,13 +40,11 @@ import (
 const (
 	submarinerName      = "submariner"
 	submarinerNamespace = "submariner-operator"
-)
-
-const (
-	clusterlocalConfig = `clusterset.local:53 {
+	clusterlocalConfig  = `clusterset.local:53 {
     forward . `
 	superClusterlocalConfig = `supercluster.local:53 {
     forward . `
+	IP = "10.10.10.10"
 )
 
 var _ = BeforeSuite(func() {
@@ -104,11 +102,11 @@ func testReconciliation() {
 	When("ClusterDNS operator should be updated when the lighthouseDNS service IP is updated", func() {
 		var dnsconfig *operatorv1.DNS
 		var lighthouseDNSService *corev1.Service
-		oldClusterIp := "10.10.10.10"
-		updatedClusterIp := "10.10.10.11"
+		oldClusterIP := IP
+		updatedClusterIP := "10.10.10.11"
 		BeforeEach(func() {
-			dnsconfig = newDNSConfig(oldClusterIp)
-			lighthouseDNSService = newDNSService(updatedClusterIp)
+			dnsconfig = newDNSConfig(oldClusterIP)
+			lighthouseDNSService = newDNSService(updatedClusterIP)
 			initClientObjs = append(initClientObjs, dnsconfig, lighthouseDNSService)
 			fakeK8sClient = fakeKubeClient.NewSimpleClientset()
 		})
@@ -126,17 +124,17 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDNSConfigUpdated(defaultOpenShiftDNSController, fakeClient).Spec).To(Equal(newDNSConfig(updatedClusterIp).Spec))
+			Expect(expectDNSConfigUpdated(defaultOpenShiftDNSController, fakeClient).Spec).To(Equal(newDNSConfig(updatedClusterIP).Spec))
 		})
 	})
 
 	When("ClusterDNS operator should not be updated when the lighthouseDNS service IP is not updated", func() {
 		var dnsconfig *operatorv1.DNS
 		var lighthouseDNSService *corev1.Service
-		clusterIp := "10.10.10.10"
+		clusterIP := IP
 		BeforeEach(func() {
-			dnsconfig = newDNSConfig(clusterIp)
-			lighthouseDNSService = newDNSService(clusterIp)
+			dnsconfig = newDNSConfig(clusterIP)
+			lighthouseDNSService = newDNSService(clusterIP)
 			initClientObjs = append(initClientObjs, dnsconfig, lighthouseDNSService)
 			fakeK8sClient = fakeKubeClient.NewSimpleClientset()
 		})
@@ -154,15 +152,15 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDNSConfigUpdated(defaultOpenShiftDNSController, fakeClient).Spec).To(Equal(newDNSConfig(clusterIp).Spec))
+			Expect(expectDNSConfigUpdated(defaultOpenShiftDNSController, fakeClient).Spec).To(Equal(newDNSConfig(clusterIP).Spec))
 		})
 	})
 
 	When("The coreDNS configmap should be updated if the lighthouse clusterIP is not configured", func() {
 		var lighthouseDNSService *corev1.Service
-		clusterIp := "10.10.10.10"
+		clusterIP := IP
 		BeforeEach(func() {
-			lighthouseDNSService = newDNSService(clusterIp)
+			lighthouseDNSService = newDNSService(clusterIP)
 			configMap := newConfigMap("")
 			initClientObjs = append(initClientObjs, lighthouseDNSService)
 			fakeK8sClient = fakeKubeClient.NewSimpleClientset(configMap)
@@ -181,17 +179,17 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + clusterIp + "\n}"))
-			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + clusterIp + "\n}"))
+			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + clusterIP + "\n}"))
+			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + clusterIP + "\n}"))
 		})
 	})
 	When("The coreDNS configmap should be updated if the lighthouse clusterIP is already configured", func() {
 		var lighthouseDNSService *corev1.Service
-		clusterIp := "10.10.10.10"
-		updatedClusterIp := "10.10.10.11"
+		clusterIP := IP
+		updatedClusterIP := "10.10.10.11"
 		BeforeEach(func() {
-			lighthouseDNSService = newDNSService(updatedClusterIp)
-			lightHouseConfig := clusterlocalConfig + clusterIp + "\n}" + superClusterlocalConfig + clusterIp + "\n}"
+			lighthouseDNSService = newDNSService(updatedClusterIP)
+			lightHouseConfig := clusterlocalConfig + clusterIP + "\n}" + superClusterlocalConfig + clusterIP + "\n}"
 			configMap := newConfigMap(lightHouseConfig)
 			initClientObjs = append(initClientObjs, lighthouseDNSService)
 			fakeK8sClient = fakeKubeClient.NewSimpleClientset(configMap)
@@ -210,8 +208,8 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + updatedClusterIp))
-			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + updatedClusterIp))
+			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + updatedClusterIP))
+			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + updatedClusterIP))
 		})
 	})
 }
@@ -269,7 +267,7 @@ func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
 	}
 }
 
-func newDNSConfig(clusterIp string) *operatorv1.DNS {
+func newDNSConfig(clusterIP string) *operatorv1.DNS {
 	return &operatorv1.DNS{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: defaultOpenShiftDNSController,
@@ -280,14 +278,14 @@ func newDNSConfig(clusterIp string) *operatorv1.DNS {
 					Name:  "lighthouse",
 					Zones: []string{"clusterset.local"},
 					ForwardPlugin: operatorv1.ForwardPlugin{
-						Upstreams: []string{clusterIp},
+						Upstreams: []string{clusterIP},
 					},
 				},
 				{
 					Name:  "lighthouse",
 					Zones: []string{"supercluster.local"},
 					ForwardPlugin: operatorv1.ForwardPlugin{
-						Upstreams: []string{clusterIp},
+						Upstreams: []string{clusterIP},
 					},
 				},
 			},
@@ -295,14 +293,14 @@ func newDNSConfig(clusterIp string) *operatorv1.DNS {
 	}
 }
 
-func newDNSService(clusterIp string) *corev1.Service {
+func newDNSService(clusterIP string) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      lighthouseCoreDNSName,
 			Namespace: submarinerNamespace,
 		},
 		Spec: corev1.ServiceSpec{
-			ClusterIP: clusterIp,
+			ClusterIP: clusterIP,
 		},
 	}
 }

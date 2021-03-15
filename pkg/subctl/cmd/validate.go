@@ -31,23 +31,12 @@ var (
 	}
 	validateK8sCmd = &cobra.Command{
 		Use:   "k8s",
-		Short: "Validate if K8s Cluster configuration is supported by Submariner",
-		Long: "This command verifies if any unsupported configuration like K8s version, CNI," +
-			" kube-proxy mode is detected on the cluster.",
+		Short: "Validate the Submariner deployment and report any issues",
+		Long:  "This command validates the Submariner deployment and reports any issues",
 	}
-	verboseVerification bool
 )
 
 func init() {
 	addKubeconfigFlag(validateCmd)
-	addCommonValidateFlags(validateCmd)
-	validateCmd.AddCommand(validateK8sCmd)
 	rootCmd.AddCommand(validateCmd)
-}
-
-func addCommonValidateFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().BoolVar(&verboseVerification, "verbose", false,
-		"produce verbose logs while validating the setup.")
-	cmd.PersistentFlags().StringVar(&submarinerNamespace, "submariner-namespace", "submariner-operator",
-		"namespace in which submariner is deployed")
 }

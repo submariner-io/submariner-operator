@@ -103,10 +103,10 @@ var _ = Describe("AllocateGlobalCIDR: Success", func() {
 	})
 	When("There is one allocated GlobalCIDR", func() {
 		globalNetwork1 := GlobalNetwork{
-			ClusterId:   "cluster2",
+			ClusterID:   "cluster2",
 			GlobalCIDRs: []string{"169.254.0.0/19"},
 		}
-		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterId] = &globalNetwork1
+		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterID] = &globalNetwork1
 		result, err := AllocateGlobalCIDR(&globalnetInfo)
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
@@ -117,10 +117,10 @@ var _ = Describe("AllocateGlobalCIDR: Success", func() {
 	})
 	When("There is an unallocated block available at beginning", func() {
 		globalNetwork1 := GlobalNetwork{
-			ClusterId:   "cluster2",
+			ClusterID:   "cluster2",
 			GlobalCIDRs: []string{"169.254.32.0/19"},
 		}
-		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterId] = &globalNetwork1
+		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterID] = &globalNetwork1
 		result, err := AllocateGlobalCIDR(&globalnetInfo)
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
@@ -131,15 +131,15 @@ var _ = Describe("AllocateGlobalCIDR: Success", func() {
 	})
 	When("Unallocated block between two allocated blocks", func() {
 		globalNetwork1 := GlobalNetwork{
-			ClusterId:   "cluster1",
+			ClusterID:   "cluster1",
 			GlobalCIDRs: []string{"169.254.0.0/19"},
 		}
 		globalNetwork2 := GlobalNetwork{
-			ClusterId:   "cluster2",
+			ClusterID:   "cluster2",
 			GlobalCIDRs: []string{"169.254.64.0/19"},
 		}
-		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterId] = &globalNetwork1
-		globalnetInfo.GlobalCidrInfo[globalNetwork2.ClusterId] = &globalNetwork2
+		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterID] = &globalNetwork1
+		globalnetInfo.GlobalCidrInfo[globalNetwork2.ClusterID] = &globalNetwork2
 		result, err := AllocateGlobalCIDR(&globalnetInfo)
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
@@ -150,15 +150,15 @@ var _ = Describe("AllocateGlobalCIDR: Success", func() {
 	})
 	When("Two CIDRs are allocated at beginning", func() {
 		globalNetwork1 := GlobalNetwork{
-			ClusterId:   "cluster1",
+			ClusterID:   "cluster1",
 			GlobalCIDRs: []string{"169.254.0.0/19"},
 		}
 		globalNetwork2 := GlobalNetwork{
-			ClusterId:   "cluster2",
+			ClusterID:   "cluster2",
 			GlobalCIDRs: []string{"169.254.32.0/19"},
 		}
-		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterId] = &globalNetwork1
-		globalnetInfo.GlobalCidrInfo[globalNetwork2.ClusterId] = &globalNetwork2
+		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterID] = &globalNetwork1
+		globalnetInfo.GlobalCidrInfo[globalNetwork2.ClusterID] = &globalNetwork2
 		result, err := AllocateGlobalCIDR(&globalnetInfo)
 		It("Should not return error", func() {
 			Expect(err).ToNot(HaveOccurred())
@@ -175,15 +175,15 @@ var _ = Describe("AllocateGlobalCIDR: Fail", func() {
 
 	When("All CIDRs are already allocated", func() {
 		globalNetwork1 := GlobalNetwork{
-			ClusterId:   "cluster2",
+			ClusterID:   "cluster2",
 			GlobalCIDRs: []string{"169.254.0.0/17"},
 		}
 		globalNetwork2 := GlobalNetwork{
-			ClusterId:   "cluster3",
+			ClusterID:   "cluster3",
 			GlobalCIDRs: []string{"169.254.128.0/17"},
 		}
-		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterId] = &globalNetwork1
-		globalnetInfo.GlobalCidrInfo[globalNetwork2.ClusterId] = &globalNetwork2
+		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterID] = &globalNetwork1
+		globalnetInfo.GlobalCidrInfo[globalNetwork2.ClusterID] = &globalNetwork2
 		result, err := AllocateGlobalCIDR(&globalnetInfo)
 		It("Should return error", func() {
 			Expect(err).To(HaveOccurred())
@@ -195,15 +195,15 @@ var _ = Describe("AllocateGlobalCIDR: Fail", func() {
 
 	When("Not enough space for new cluster", func() {
 		globalNetwork1 := GlobalNetwork{
-			ClusterId:   "cluster2",
+			ClusterID:   "cluster2",
 			GlobalCIDRs: []string{"169.254.0.0/18"},
 		}
 		globalNetwork2 := GlobalNetwork{
-			ClusterId:   "cluster3",
+			ClusterID:   "cluster3",
 			GlobalCIDRs: []string{"169.254.128.0/17"},
 		}
-		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterId] = &globalNetwork1
-		globalnetInfo.GlobalCidrInfo[globalNetwork2.ClusterId] = &globalNetwork2
+		globalnetInfo.GlobalCidrInfo[globalNetwork1.ClusterID] = &globalNetwork1
+		globalnetInfo.GlobalCidrInfo[globalNetwork2.ClusterID] = &globalNetwork2
 		result, err := AllocateGlobalCIDR(&globalnetInfo)
 		It("Should return error", func() {
 			Expect(err).To(HaveOccurred())

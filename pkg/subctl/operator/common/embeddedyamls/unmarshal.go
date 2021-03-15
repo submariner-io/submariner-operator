@@ -16,10 +16,13 @@ limitations under the License.
 
 package embeddedyamls
 
-import "sigs.k8s.io/yaml"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
+)
 
-type IObjectName struct {
-	Name string
+type IObject struct {
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 }
 
 func GetObject(yamlStr string, obj interface{}) error {
@@ -34,9 +37,9 @@ func GetObject(yamlStr string, obj interface{}) error {
 
 func GetObjectName(yamlStr string) (string, error) {
 	doc := []byte(yamlStr)
-	var obj IObjectName
+	var obj IObject
 
-	err := yaml.Unmarshal(doc, obj)
+	err := yaml.Unmarshal(doc, &obj)
 	if err != nil {
 		return "", err
 	}
