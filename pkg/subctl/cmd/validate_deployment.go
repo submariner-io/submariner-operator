@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -29,7 +28,7 @@ import (
 var validatePodsCmd = &cobra.Command{
 	Use:   "pods",
 	Short: "Validate the submariner pods",
-	Long:  "This command validates all the submariner pods are running",
+	Long:  "This command checks that all the submariner pods are running",
 	Run:   validatePods,
 }
 
@@ -42,7 +41,7 @@ func validatePods(cmd *cobra.Command, args []string) {
 	exitOnError("error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		message := fmt.Sprintf("Validating Submariner Pods in %q", item.clusterName)
+		message := fmt.Sprintf("Validating submariner pods in %q", item.clusterName)
 		status.Start(message)
 		fmt.Println()
 		checkPods(item.config, OperatorNamespace)
@@ -50,84 +49,93 @@ func validatePods(cmd *cobra.Command, args []string) {
 }
 
 func checkPods(config *rest.Config, operatorNamespace string) {
-	submarinerResourceClient, err := submarinerclientset.NewForConfig(config)
-	if err != nil {
-		message := fmt.Sprintf("error creating submariner clientset: %v", err)
-		status.QueueFailureMessage(message)
-		status.End(cli.Failure)
-		return
-	}
-
-	submariner, err := submarinerResourceClient.SubmarinerV1alpha1().Submariners(operatorNamespace).
-		Get("submariner", metav1.GetOptions{})
-
-	if err != nil {
-		message := fmt.Sprintf("failed to validate submariner cr due to: %v", err)
-		status.QueueFailureMessage(message)
-		status.End(cli.Failure)
+	submariner := getSubmarinerResource(config)
+	if submariner == nil {
+		status.QueueWarningMessage(submMissingMessage)
+		status.End(cli.Success)
 		return
 	}
 
 	kubeClientSet, err := kubernetes.NewForConfig(config)
 
 	if err != nil {
-		message := fmt.Sprintf("error creating kubernetes clientset: %v", err)
-		status.QueueFailureMessage(message)
-		status.End(cli.Failure)
+		exitOnError("error creating Kubernetes client", err)
+	}
+
+	if !CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-gateway") {
 		return
 	}
 
-	CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-gateway")
-
-	CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-routeagent")
+	if !CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-routeagent") {
+		return
+	}
 
 	// Check if service-discovery components are deployed and running if enabled
 	if submariner.Spec.ServiceDiscoveryEnabled {
 		// Check lighthouse-agent
-		CheckDeployment(kubeClientSet, operatorNamespace, "submariner-lighthouse-agent")
+		if !CheckDeployment(kubeClientSet, operatorNamespace, "submariner-lighthouse-agent") {
+			return
+		}
 
-		// Check ligthouse-coreDNS
-		CheckDeployment(kubeClientSet, operatorNamespace, "submariner-lighthouse-coredns")
+		// Check lighthouse-coreDNS
+		if !CheckDeployment(kubeClientSet, operatorNamespace, "submariner-lighthouse-coredns") {
+			return
+		}
 	}
 	// Check if globalnet components are deployed and running if enabled
 	if submariner.Spec.GlobalCIDR != "" {
-		CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-globalnet")
+		if !CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-globalnet") {
+			return
+		}
 	}
+
 	message := "All Submariner pods are up and running"
-	status.QueueFailureMessage(message)
+	status.QueueSuccessMessage(message)
+	status.End(cli.Success)
 }
 
-func CheckDeployment(k8sClient kubernetes.Interface, namespace, deploymentName string) {
+func CheckDeployment(k8sClient kubernetes.Interface, namespace, deploymentName string) bool {
 	deployment, err := k8sClient.AppsV1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
 	if err != nil {
-		message := fmt.Sprintf("validation %q of deployment failed due to error: %v",
-			deploymentName, err)
+		message := fmt.Sprintf("Error obtaining Deployment %q: %v", deploymentName, err)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
-	if deployment.Status.AvailableReplicas != *deployment.Spec.Replicas {
-		message := fmt.Sprintf("the configured number of replicas are not running for %q", deploymentName)
+	var replicas int32 = 1
+	if deployment.Spec.Replicas != nil {
+		replicas = *deployment.Spec.Replicas
+	}
+
+	if deployment.Status.AvailableReplicas != replicas {
+		message := fmt.Sprintf("The desired number of replicas for Deployment %q (%d) " +
+			"does not match the actual number running (%d)", deploymentName, replicas,
+			deployment.Status.AvailableReplicas)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
+
+	return true
 }
 
-func CheckDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName string) {
+func CheckDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName string) bool {
 	daemonSet, err := k8sClient.AppsV1().DaemonSets(namespace).Get(daemonSetName, metav1.GetOptions{})
 	if err != nil {
-		message := fmt.Sprintf("validation %q of daemonset failed due to error: %v", daemonSetName, err)
+		message := fmt.Sprintf("Error obtaining Daemonset %q: %v", daemonSetName, err)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	if daemonSet.Status.CurrentNumberScheduled != daemonSet.Status.DesiredNumberScheduled {
-		message := fmt.Sprintf("the desried number of daemonsets are not running for %q", daemonSetName)
+		message := fmt.Sprintf("The desired number of nodes that are  running pods for DaemonSet %q (%d) " +
+			"does not match the actual number (%d)", daemonSetName)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
+
+	return true
 }
