@@ -26,8 +26,9 @@ import (
 )
 
 func findPodCommandParameter(clientSet kubernetes.Interface, labelSelector, parameter string) (string, error) {
-	pod, err := findPod(clientSet, labelSelector)
+	pods, err := FindPod(clientSet, labelSelector)
 
+	pod := &pods.Items[0]
 	if err != nil || pod == nil {
 		return "", err
 	}
@@ -49,10 +50,10 @@ func findPodCommandParameter(clientSet kubernetes.Interface, labelSelector, para
 	return "", nil
 }
 
-func findPod(clientSet kubernetes.Interface, labelSelector string) (*v1.Pod, error) {
+func FindPod(clientSet kubernetes.Interface, labelSelector string) (*v1.PodList, error) {
 	pods, err := clientSet.CoreV1().Pods("").List(v1meta.ListOptions{
 		LabelSelector: labelSelector,
-		Limit:         1,
+		//Limit:         1,
 	})
 
 	if err != nil {
@@ -63,5 +64,5 @@ func findPod(clientSet kubernetes.Interface, labelSelector string) (*v1.Pod, err
 		return nil, nil
 	}
 
-	return &pods.Items[0], nil
+	return pods, nil
 }

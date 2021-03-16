@@ -34,8 +34,9 @@ const (
 )
 
 func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	ovnDBPod, err := findPod(clientSet, "name=ovnkube-db")
+	ovnDBPods, err := FindPod(clientSet, "name=ovnkube-db")
 
+	ovnDBPod := &ovnDBPods.Items[0]
 	if err != nil || ovnDBPod == nil {
 		return nil, err
 	}
