@@ -18,10 +18,15 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 )
 
@@ -47,7 +52,7 @@ var gatherTypeFlags = map[string]bool{
 	"resources": false,
 }
 
-var gatherFuncs = map[string]func(*cli.Status, string) error{
+var gatherFuncs = map[string]func(*cli.Status, kubernetes.Interface, string, gather.GatherParams) error{
 	components.Connectivity:     gatherConnectivity,
 	components.ServiceDiscovery: gatherDiscovery,
 	components.Broker:           gatherBroker,
@@ -82,23 +87,57 @@ func gatherData() {
 	err := checkGatherArguments()
 	exitOnError("Invalid arguments", err)
 
+	config := getClientConfig(kubeConfig, kubeContext)
+	exitOnError("Error getting REST config", err)
+
+	restconfig, err := config.ClientConfig()
+	exitOnError("error getting rest config", err)
+
+	clientSet, err := kubernetes.NewForConfig(restconfig)
+	exitOnError("error getting clientset", err)
+
+	rawconfig, err := config.RawConfig()
+	exitOnError("error getting Raw config", err)
+
+	clustername := getClusterNameFromContext(rawconfig, "")
+
+	dirname := "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
+	if _, err := os.Stat(dirname); os.IsNotExist(err) {
+		err := os.MkdirAll(dirname, 0777)
+		if err != nil {
+			exitOnError(fmt.Sprintf("error creating directory %s", dirname), err)
+		}
+	}
+
 	for module, ok := range gatherModuleFlags {
 		if ok {
 			for dataType, ok := range gatherTypeFlags {
 				if ok {
 					status := cli.NewStatus()
-					status.Start(fmt.Sprintf("Gathering %s %s...", module, dataType))
-					status.End(cli.CheckForError(gatherFuncs[module](status, dataType)))
+					status.Start(fmt.Sprintf("Gathering %s %s", module, dataType))
+					status.End(cli.CheckForError(gatherFuncs[module](status, clientSet, dataType,
+						gather.GatherParams{DirName: dirname, ClusterName: *clustername})))
 				}
 			}
 		}
 	}
 }
 
-func gatherConnectivity(status *cli.Status, dataType string) error {
+func gatherConnectivity(status *cli.Status, clientSet kubernetes.Interface, dataType string, params gather.GatherParams) error {
 	switch dataType {
 	case Logs:
-		status.QueueWarningMessage("Gather Connectivity Logs not implemented yet")
+		err := gather.GatherGatewayPodLogs(clientSet, params)
+		if err != nil {
+			status.QueueFailureMessage(fmt.Sprintf("Failed to gather Gateway pod logs: %s", err))
+		} else {
+			status.QueueSuccessMessage("Successfully gathered Gateway pod logs")
+		}
+		err = gather.GatherRouteagentPodLogs(clientSet, params)
+		if err != nil {
+			status.QueueFailureMessage(fmt.Sprintf("Failed to gather Routeagent pod logs: %s", err))
+		} else {
+			status.QueueSuccessMessage("Successfully gathered Routeagent pod logs")
+		}
 	case Resources:
 		status.QueueWarningMessage("Gather Connectivity Resources not implemented yet")
 	default:
@@ -107,7 +146,7 @@ func gatherConnectivity(status *cli.Status, dataType string) error {
 	return nil
 }
 
-func gatherDiscovery(status *cli.Status, dataType string) error {
+func gatherDiscovery(status *cli.Status, clientSet kubernetes.Interface, dataType string, params gather.GatherParams) error {
 	switch dataType {
 	case Logs:
 		status.QueueWarningMessage("Gather ServiceDiscovery Logs not implemented yet")
@@ -119,10 +158,10 @@ func gatherDiscovery(status *cli.Status, dataType string) error {
 	return nil
 }
 
-func gatherBroker(status *cli.Status, dataType string) error {
+func gatherBroker(status *cli.Status, clientSet kubernetes.Interface, dataType string, params gather.GatherParams) error {
 	switch dataType {
 	case Logs:
-		status.QueueSuccessMessage("No logs to gather on Broker")
+		status.QueueWarningMessage("No logs to gather on Broker")
 	case Resources:
 		status.QueueWarningMessage("Gather Broker Resources not implemented yet")
 	default:
@@ -131,7 +170,7 @@ func gatherBroker(status *cli.Status, dataType string) error {
 	return nil
 }
 
-func gatherOperator(status *cli.Status, dataType string) error {
+func gatherOperator(status *cli.Status, clientSet kubernetes.Interface, dataType string, params gather.GatherParams) error {
 	switch dataType {
 	case Logs:
 		status.QueueWarningMessage("Gather Operator Logs not implemented yet")
