@@ -21,6 +21,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	submarinerv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
+
+	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var validateConnectionsCmd = &cobra.Command{
@@ -51,7 +54,13 @@ func validateConnections(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		gateways := submariner.Status.Gateways
+		submarinerClient, err := submarinerv1.NewForConfig(item.config)
+		exitOnError("Unable to get the Submariner client", err)
+
+		gateways, err := submarinerClient.SubmarinerV1().Gateways(OperatorNamespace).
+			List(v1opts.ListOptions{})
+		exitOnError("Unable to get the Gateways client", err)
+
 		if gateways == nil {
 			message = "There are no gateways detected"
 			status.QueueWarningMessage(message)
@@ -60,18 +69,19 @@ func validateConnections(cmd *cobra.Command, args []string) {
 		}
 
 		allConnectionsEstablished := true
-		for _, gateway := range *gateways {
-			if gateway.HAStatus == submv1.HAStatusActive {
-				for _, connection := range gateway.Connections {
-					if connection.Status == submv1.Connecting {
-						message = fmt.Sprintf("Connection to cluster %q is in progress", connection.Endpoint.ClusterID)
-						status.QueueFailureMessage(message)
-						allConnectionsEstablished = false
-					} else if connection.Status == submv1.ConnectionError {
-						message = fmt.Sprintf("Connection to cluster %q is not established", connection.Endpoint.ClusterID)
-						status.QueueFailureMessage(message)
-						allConnectionsEstablished = false
-					}
+		for _, gateway := range gateways.Items {
+			if gateway.Status.HAStatus != submv1.HAStatusActive {
+				continue
+			}
+			for _, connection := range gateway.Status.Connections {
+				if connection.Status == submv1.Connecting {
+					message = fmt.Sprintf("Connection to cluster %q is in progress", connection.Endpoint.ClusterID)
+					status.QueueFailureMessage(message)
+					allConnectionsEstablished = false
+				} else if connection.Status == submv1.ConnectionError {
+					message = fmt.Sprintf("Connection to cluster %q is not established", connection.Endpoint.ClusterID)
+					status.QueueFailureMessage(message)
+					allConnectionsEstablished = false
 				}
 			}
 		}
