@@ -21,6 +21,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 )
 
 var (
@@ -28,16 +30,28 @@ var (
 	gatherModule string
 )
 
+const (
+	Logs      = "logs"
+	Resources = "resources"
+)
+
 var gatherModuleFlags = map[string]bool{
-	"connectivity": false,
-	"discovery":    false,
-	"broker":       false,
-	"operator":     false,
+	components.Connectivity:     false,
+	components.ServiceDiscovery: false,
+	components.Broker:           false,
+	components.Operator:         false,
 }
 
 var gatherTypeFlags = map[string]bool{
 	"logs":      false,
 	"resources": false,
+}
+
+var gatherFuncs = map[string]func(*cli.Status, string) error{
+	components.Connectivity:     gatherConnectivity,
+	components.ServiceDiscovery: gatherDiscovery,
+	components.Broker:           gatherBroker,
+	components.Operator:         gatherOperator,
 }
 
 func init() {
@@ -47,15 +61,18 @@ func init() {
 }
 
 func addGatherFlags(gatherCmd *cobra.Command) {
-	gatherCmd.Flags().StringVar(&gatherType, "type", strings.Join(getAllTypeKeys(), ","), "comma-separated list of data types to gather")
-	gatherCmd.Flags().StringVar(&gatherModule, "module", strings.Join(getAllModuleKeys(), ","), "comma-separated list of components for which to gather data")
+	gatherCmd.Flags().StringVar(&gatherType, "type", strings.Join(getAllTypeKeys(), ","),
+		"comma-separated list of data types to gather")
+	gatherCmd.Flags().StringVar(&gatherModule, "module", strings.Join(getAllModuleKeys(), ","),
+		"comma-separated list of components for which to gather data")
 }
 
 var gatherCmd = &cobra.Command{
-	Use:   "gather <kubeConfig1>",
+	Use:   "gather <kubeConfig>",
 	Short: "Gather troubleshooting data from a cluster",
-	Long: fmt.Sprintf("This command gathers data from a submariner cluster for troubleshooting. Data gathered" +
-		"can be selected by component (%v) and type (%v). Default is to capture all data.", strings.Join(getAllModuleKeys(), ","), strings.Join(getAllTypeKeys(), ",")),
+	Long: fmt.Sprintf("This command gathers data from a submariner cluster for troubleshooting. The data gathered "+
+		"can be selected by component (%v) and type (%v). Default is to capture all data.",
+		strings.Join(getAllModuleKeys(), ","), strings.Join(getAllTypeKeys(), ",")),
 	Run: func(cmd *cobra.Command, args []string) {
 		gatherData()
 	},
@@ -65,22 +82,57 @@ func gatherData() {
 	err := checkGatherArguments()
 	exitOnError("Invalid arguments", err)
 
-	fmt.Printf("Gathering following data for module(s): ")
 	for module, ok := range gatherModuleFlags {
 		if ok {
-			fmt.Printf("%s ", module)
+			for dataType, ok := range gatherTypeFlags {
+				if ok {
+					status := cli.NewStatus()
+					status.Start(fmt.Sprintf("Gathering %s %s...", module, dataType))
+					status.End(cli.CheckForError(gatherFuncs[module](status, dataType)))
+				}
+			}
 		}
 	}
-	for dataType, ok := range gatherTypeFlags {
-		if ok {
-			fmt.Printf("\n  * %s ", dataType)
-		}
+}
+
+func gatherConnectivity(status *cli.Status, dataType string) error {
+	switch dataType {
+	case Logs:
+		status.QueueWarningMessage("Gather Connectivity Logs not implemented yet")
+	case Resources:
+		status.QueueWarningMessage("Gather Connectivity Resources not implemented yet")
 	}
-	fmt.Println()
+	return nil
+}
+
+func gatherDiscovery(status *cli.Status, dataType string) error {
+	switch dataType {
+	case Logs:
+		status.QueueWarningMessage("Gather ServiceDiscovery Logs not implemented yet")
+	case Resources:
+		status.QueueWarningMessage("Gather ServiceDiscovery Resources not implemented yet")
+	}
+	return nil
+}
+
+func gatherBroker(status *cli.Status, dataType string) error {
+	if dataType == Resources {
+		status.QueueWarningMessage("Gather Broker Resources not implemented yet")
+	}
+	return nil
+}
+
+func gatherOperator(status *cli.Status, dataType string) error {
+	switch dataType {
+	case Logs:
+		status.QueueWarningMessage("Gather Operator Logs not implemented yet")
+	case Resources:
+		status.QueueWarningMessage("Gather Operator Resources not implemented yet")
+	}
+	return nil
 }
 
 func checkGatherArguments() error {
-
 	gatherTypeList := strings.Split(gatherType, ",")
 	for _, arg := range gatherTypeList {
 		if _, found := gatherTypeFlags[arg]; !found {
