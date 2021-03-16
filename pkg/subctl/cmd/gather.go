@@ -101,6 +101,8 @@ func gatherConnectivity(status *cli.Status, dataType string) error {
 		status.QueueWarningMessage("Gather Connectivity Logs not implemented yet")
 	case Resources:
 		status.QueueWarningMessage("Gather Connectivity Resources not implemented yet")
+	default:
+		return fmt.Errorf("unsupported data type %s", dataType)
 	}
 	return nil
 }
@@ -111,13 +113,20 @@ func gatherDiscovery(status *cli.Status, dataType string) error {
 		status.QueueWarningMessage("Gather ServiceDiscovery Logs not implemented yet")
 	case Resources:
 		status.QueueWarningMessage("Gather ServiceDiscovery Resources not implemented yet")
+	default:
+		return fmt.Errorf("unsupported data type %s", dataType)
 	}
 	return nil
 }
 
 func gatherBroker(status *cli.Status, dataType string) error {
-	if dataType == Resources {
+	switch dataType {
+	case Logs:
+		status.QueueSuccessMessage("No logs to gather on Broker")
+	case Resources:
 		status.QueueWarningMessage("Gather Broker Resources not implemented yet")
+	default:
+		return fmt.Errorf("unsupported data type %s", dataType)
 	}
 	return nil
 }
@@ -128,6 +137,8 @@ func gatherOperator(status *cli.Status, dataType string) error {
 		status.QueueWarningMessage("Gather Operator Logs not implemented yet")
 	case Resources:
 		status.QueueWarningMessage("Gather Operator Resources not implemented yet")
+	default:
+		return fmt.Errorf("unsupported data type %s", dataType)
 	}
 	return nil
 }
