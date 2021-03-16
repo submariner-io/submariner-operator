@@ -199,6 +199,8 @@ Makefile.dapper:
 
 include Makefile.dapper
 
+.PHONY: deploy
+
 endif
 
 # Disable rebuilding Makefile
