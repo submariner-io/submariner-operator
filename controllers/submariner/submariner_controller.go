@@ -591,9 +591,6 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
 							Command:         []string{"submariner-route-agent.sh"},
 							SecurityContext: &securityContextAllCapAllowEscal,
-							VolumeMounts: []corev1.VolumeMount{
-								{Name: "host-slash", MountPath: "/host", ReadOnly: true},
-							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
@@ -612,9 +609,6 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					},
 					ServiceAccountName: "submariner-routeagent",
 					HostNetwork:        true,
-					Volumes: []corev1.Volume{
-						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
-					},
 					// The route agent engine on all nodes, regardless of existing taints
 					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},
@@ -668,9 +662,6 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							Image:           getImagePath(cr, names.GlobalnetImage),
 							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetImage]),
 							SecurityContext: &securityContextAllCapAllowEscal,
-							VolumeMounts: []corev1.VolumeMount{
-								{Name: "host-slash", MountPath: "/host", ReadOnly: true},
-							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
@@ -687,9 +678,6 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
 					HostNetwork:                   true,
-					Volumes: []corev1.Volume{
-						{Name: "host-slash", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/"}}},
-					},
 					// The Globalnet Pod must be able to run on any flagged node, regardless of existing taints
 					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},

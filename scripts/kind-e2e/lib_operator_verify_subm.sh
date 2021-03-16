@@ -345,11 +345,9 @@ function verify_subm_routeagent_pod() {
     validate_pod_container_env 'SUBMARINER_DEBUG' $subm_debug
     validate_pod_container_env 'SUBMARINER_SERVICECIDR' ${service_CIDRs[$cluster]}
     validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$cluster]}
-    validate_pod_container_volume_mount '/host' 'host-slash' 'true'
 
     validate_equals '.spec.serviceAccount' 'submariner-routeagent'
 
-    [[ $(jq -r ".spec.volumes[] | select(.name==\"host-slash\").hostPath.path" $json_file) = '/' ]]
     validate_equals '.status.phase' 'Running'
     validate_equals '.metadata.namespace' $subm_ns
     validate_equals '.spec.terminationGracePeriodSeconds' '1'
