@@ -33,6 +33,7 @@ const (
 	OvnKubernetes      = "OVNKubernetes"
 )
 
+// Test PR
 func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	ovnDBPods, err := FindPod(clientSet, "name=ovnkube-db")
 
