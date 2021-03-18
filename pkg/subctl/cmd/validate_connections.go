@@ -21,17 +21,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-	submarinerv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
-
-	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var validateConnectionsCmd = &cobra.Command{
 	Use:   "connections",
 	Short: "Validate the gateways connections",
-	Long: "This command validates if the connections of the gateways are all " +
-		"established",
-	Run: validateConnections,
+	Long:  "This command checks that the gateway connections are all established",
+	Run:   validateConnections,
 }
 
 func init() {
@@ -46,6 +42,7 @@ func validateConnections(cmd *cobra.Command, args []string) {
 		message := fmt.Sprintf("Validating connections in cluster %q", item.clusterName)
 		status.Start(message)
 		fmt.Println()
+
 		submariner := getSubmarinerResource(item.config)
 
 		if submariner == nil {
@@ -54,13 +51,7 @@ func validateConnections(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		submarinerClient, err := submarinerv1.NewForConfig(item.config)
-		exitOnError("Unable to get the Submariner client", err)
-
-		gateways, err := submarinerClient.SubmarinerV1().Gateways(OperatorNamespace).
-			List(v1opts.ListOptions{})
-		exitOnError("Unable to get the Gateways client", err)
-
+		gateways := getGatewaysResource(item.config)
 		if gateways == nil {
 			message = "There are no gateways detected"
 			status.QueueWarningMessage(message)

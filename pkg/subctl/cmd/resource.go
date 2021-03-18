@@ -24,6 +24,8 @@ import (
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
+	submarinerclientv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	submarinerv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 )
 
 func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, error) {
@@ -76,4 +78,20 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	}
 
 	return submariner
+}
+
+func getGatewaysResource(config *rest.Config) *submarinerclientv1.GatewayList {
+	submarinerClient, err := submarinerv1.NewForConfig(config)
+	exitOnError("Unable to get the Submariner client", err)
+
+	gateways, err := submarinerClient.SubmarinerV1().Gateways(OperatorNamespace).
+		List(v1opts.ListOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		exitOnError("Error obtaining the Gateways resource", err)
+	}
+
+	return gateways
 }
