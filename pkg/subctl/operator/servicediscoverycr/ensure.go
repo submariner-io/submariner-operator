@@ -17,11 +17,11 @@ limitations under the License.
 package servicediscoverycr
 
 import (
-	"github.com/submariner-io/admiral/pkg/util"
+	"github.com/submariner-io/admiral/pkg/resource"
+	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 
@@ -37,13 +37,10 @@ func init() {
 }
 
 func Ensure(config *rest.Config, namespace string, serviceDiscoverySpec *submariner.ServiceDiscoverySpec) error {
-	dynClient, err := dynamic.NewForConfig(config)
+	client, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
-
-	client := dynClient.Resource(schema.GroupVersionResource{
-		Group: "submariner.io", Version: "v1alpha1", Resource: "servicediscoveries"}).Namespace(namespace)
 
 	sd := &submariner.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
@@ -53,19 +50,17 @@ func Ensure(config *rest.Config, namespace string, serviceDiscoverySpec *submari
 		Spec: *serviceDiscoverySpec,
 	}
 
-	return createServiceDiscovery(client, sd)
-}
-
-func createServiceDiscovery(client dynamic.ResourceInterface, sd *submariner.ServiceDiscovery) error {
-	serviceDiscovery, err := util.ToUnstructured(sd)
-	if err != nil {
-		return err
-	}
-
-	_, err = util.CreateOrUpdate(client, serviceDiscovery, func(existing *unstructured.Unstructured) (*unstructured.Unstructured, error) {
-		err = unstructured.SetNestedField(existing.Object, util.GetNestedField(serviceDiscovery, "spec"), "spec")
-		return existing, err
-	})
+	_, err = utils.CreateOrUpdate(&resource.InterfaceFuncs{
+		GetFunc: func(name string, options metav1.GetOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Get(name, options)
+		},
+		CreateFunc: func(obj runtime.Object) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Create(obj.(*submariner.ServiceDiscovery))
+		},
+		UpdateFunc: func(obj runtime.Object) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Update(obj.(*submariner.ServiceDiscovery))
+		},
+	}, sd)
 
 	return err
 }
