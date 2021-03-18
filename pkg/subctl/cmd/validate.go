@@ -13,13 +13,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+package cmd
 
-package components
-
-const (
-	Connectivity     = "connectivity"
-	ServiceDiscovery = "service-discovery"
-	Globalnet        = "globalnet"
-	Broker           = "broker"
-	Operator         = "operator"
+import (
+	"github.com/spf13/cobra"
 )
+
+var (
+	validateCmd = &cobra.Command{
+		Use:   "validate",
+		Short: "Validate the Submariner deployment and report any issues",
+		Long:  "This command validates the Submariner deployment and reports any issues",
+	}
+)
+
+func init() {
+	addKubeconfigFlag(validateCmd)
+	rootCmd.AddCommand(validateCmd)
+}

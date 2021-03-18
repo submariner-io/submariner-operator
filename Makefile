@@ -1,8 +1,12 @@
+BASE_BRANCH ?= devel
+export BASE_BRANCH
+
 ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
 IMAGES=submariner-operator
+PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-route-agent lighthouse-agent lighthouse-coredns
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
@@ -70,9 +74,7 @@ endif
 
 # Targets to make
 
-clusters: build images
-
-deploy: clusters preload-images
+images: build
 
 e2e: deploy
 	scripts/kind-e2e/e2e.sh
@@ -150,14 +152,6 @@ generate: vendor/modules.txt
 manifests: generate vendor/modules.txt
 	controller-gen $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
-preload-images:
-	source $(SCRIPTS_DIR)/lib/debug_functions; \
-	source $(SCRIPTS_DIR)/lib/deploy_funcs; \
-	set -e; \
-	for image in submariner-gateway submariner-route-agent submariner-operator lighthouse-agent submariner-globalnet lighthouse-coredns; do \
-		import_image quay.io/submariner/$${image}; \
-	done
-
 # test if VERSION matches the semantic versioning rule
 is-semantic-version:
 	[[ $(VERSION) =~ $(PATTERN) ]] || \
@@ -193,15 +187,21 @@ golangci-lint: generate-embeddedyamls
 
 unit: generate-embeddedyamls
 
-.PHONY: build images ci clean generate-clientset generate-embeddedyamls preload-images bundle packagemanifests kustomization is-semantic-version
+.PHONY: build ci clean generate-clientset generate-embeddedyamls bundle packagemanifests kustomization is-semantic-version
 
 else
 
 # Not running in Dapper
 
+Makefile.dapper:
+	@echo Downloading $@
+	@curl -sfLO https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)/$@
+
 include Makefile.dapper
+
+.PHONY: deploy
 
 endif
 
 # Disable rebuilding Makefile
-Makefile Makefile.dapper Makefile.inc: ;
+Makefile Makefile.inc: ;

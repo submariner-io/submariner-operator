@@ -345,11 +345,9 @@ function verify_subm_routeagent_pod() {
     validate_pod_container_env 'SUBMARINER_DEBUG' $subm_debug
     validate_pod_container_env 'SUBMARINER_SERVICECIDR' ${service_CIDRs[$cluster]}
     validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' ${cluster_CIDRs[$cluster]}
-    validate_pod_container_volume_mount '/host' 'host-slash' 'true'
 
     validate_equals '.spec.serviceAccount' 'submariner-routeagent'
 
-    [[ $(jq -r ".spec.volumes[] | select(.name==\"host-slash\").hostPath.path" $json_file) = '/' ]]
     validate_equals '.status.phase' 'Running'
     validate_equals '.metadata.namespace' $subm_ns
     validate_equals '.spec.terminationGracePeriodSeconds' '1'
@@ -379,13 +377,13 @@ function verify_subm_gateway_container() {
 
   if kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v command; then
     # Verify the gateway binary is in the expected place and in PATH
-    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v submariner-engine | grep /usr/local/bin/submariner-engine
+    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v submariner-gateway | grep /usr/local/bin/submariner-gateway
 
     # Verify the gateway entry script is in the expected place and in PATH
     kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- command -v submariner.sh | grep /usr/local/bin/submariner.sh
   elif kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which which; then
     # Verify the gateway binary is in the expected place and in PATH
-    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which submariner-engine | grep /usr/local/bin/submariner-engine
+    kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which submariner-gateway | grep /usr/local/bin/submariner-gateway
 
     # Verify the gateway entry script is in the expected place and in PATH
     kubectl exec $subm_gateway_pod_name --namespace=$subm_ns -- which submariner.sh | grep /usr/local/bin/submariner.sh
