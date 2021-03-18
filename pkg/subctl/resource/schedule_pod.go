@@ -25,8 +25,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type NetworkPodType int
-
 type NetworkPodScheduling int
 
 const (
@@ -114,7 +112,7 @@ func (np *NetworkPod) schedulePod() error {
 	var err error
 	np.Pod, err = pc.Create(&networkPod)
 	if err != nil {
-		return errors.WithMessage(err, "error spawning the Pod")
+		return err
 	}
 
 	err = np.awaitUntilPodScheduled()

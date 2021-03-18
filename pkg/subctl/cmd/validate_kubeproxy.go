@@ -37,8 +37,8 @@ var (
 
 var validateKubeProxyModeCmd = &cobra.Command{
 	Use:   "kube-proxy-mode",
-	Short: "Validate the Kube-proxy mode used in the cluster.",
-	Long:  "This command checks if kube-proxy mode is supported by Submariner.",
+	Short: "Validate the kube-proxy mode.",
+	Long:  "This command checks if the kube-proxy mode is supported by Submariner.",
 	Run:   validateKubeProxyMode,
 }
 
