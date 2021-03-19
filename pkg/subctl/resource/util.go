@@ -16,6 +16,7 @@ limitations under the License.
 package resource
 
 import (
+	"github.com/submariner-io/shipyard/test/e2e/framework"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -30,16 +31,19 @@ func addNodeSelectorTerm(nodeSelTerms []v1.NodeSelectorTerm, label string,
 	}})
 }
 
-func nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {
+func nodeAffinity(scheduling framework.NetworkPodScheduling) *v1.Affinity {
 	var nodeSelTerms []v1.NodeSelectorTerm
 
 	switch scheduling {
-	case GatewayNode:
-		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpIn, []string{"true"})
+	case framework.GatewayNode:
+		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,
+			v1.NodeSelectorOpIn, []string{"true"})
 
-	case NonGatewayNode:
-		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpDoesNotExist, nil)
-		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpNotIn, []string{"true"})
+	case framework.NonGatewayNode:
+		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,
+			v1.NodeSelectorOpDoesNotExist, nil)
+		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,
+			v1.NodeSelectorOpNotIn, []string{"true"})
 	}
 
 	return &v1.Affinity{

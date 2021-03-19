@@ -25,30 +25,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-type NetworkPodScheduling int
-
-const (
-	GatewayLabel = "submariner.io/gateway"
-)
-
-const (
-	InvalidScheduling NetworkPodScheduling = iota
-	GatewayNode
-	NonGatewayNode
-)
-
-type NetworkingType bool
-
-const (
-	HostNetworking NetworkingType = true
-	PodNetworking  NetworkingType = false
-)
-
 type PodConfig struct {
 	Name       string
 	ClientSet  *kubernetes.Clientset
-	Scheduling NetworkPodScheduling
-	Networking NetworkingType
+	Scheduling framework.NetworkPodScheduling
+	Networking framework.NetworkingType
 	Namespace  string
 	Command    string
 	Timeout    uint
@@ -61,8 +42,8 @@ type NetworkPod struct {
 }
 
 func ScheduleNetworkPod(config *PodConfig) (string, error) {
-	if config.Scheduling == InvalidScheduling {
-		config.Scheduling = GatewayNode
+	if config.Scheduling == framework.InvalidScheduling {
+		config.Scheduling = framework.GatewayNode
 	}
 
 	if config.Namespace == "" {
