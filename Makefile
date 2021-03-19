@@ -209,7 +209,7 @@ Makefile.dapper:
 
 include Makefile.dapper
 
-.PHONY: deploy
+.PHONY: deploy bundle packagemanifests kustomization is-semantic-version
 
 endif
 
