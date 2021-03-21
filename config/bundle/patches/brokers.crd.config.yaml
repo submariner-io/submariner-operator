@@ -1,0 +1,7 @@
+---
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/displayName
+  value: Broker
+- op: add
+  path: /spec/customresourcedefinitions/owned/0/description
+  value: Broker is the Schema for the brokers API
