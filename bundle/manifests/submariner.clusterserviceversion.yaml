@@ -6,6 +6,17 @@ metadata:
       [
         {
           "apiVersion": "submariner.io/v1alpha1",
+          "kind": "Broker",
+          "metadata": {
+            "name": "broker-sample"
+          },
+          "spec": {
+            "defaultGlobalnetClusterSize": 8192,
+            "globalnetEnabled": false
+          }
+        },
+        {
+          "apiVersion": "submariner.io/v1alpha1",
           "kind": "Submariner",
           "metadata": {
             "name": "example-submariner"
@@ -26,31 +37,36 @@ metadata:
             "colorCodes": "blue",
             "debug": false,
             "globalCIDR": "169.254.0.0/16",
-            "namespace": "submariner_operator",
+            "namespace": "submariner-operator",
             "natEnabled": true,
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "0.8.1"
+            "version": "0.9.0"
           }
         }
       ]
     capabilities: Basic Install
     categories: Networking
     certified: "false"
-    containerImage: quay.io/submariner/submariner-operator:0.8.1
-    createdAt: "2021-03-07 04:33:52"
+    containerImage: quay.io/submariner/submariner-operator:0.9.0
+    createdAt: "2021-03-21 10:33:20"
     description: Creates and manages Submariner deployments.
     operators.operatorframework.io/builder: operator-sdk-v1.0.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/submariner-io/submariner-operator
     support: Submariner
-  name: submariner.v0.8.1
+  name: submariner.v0.9.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - description: Broker is the Schema for the brokers API
+      displayName: Broker
+      kind: Broker
+      name: brokers.submariner.io
+      version: v1alpha1
     - description: Submariner is the Schema for the submariners API
       displayName: Submariner
       kind: Submariner
@@ -165,6 +181,7 @@ spec:
           resources:
           - configmaps
           verbs:
+          - create
           - get
           - list
           - watch
@@ -184,6 +201,7 @@ spec:
           resources:
           - pods
           - services
+          - nodes
           verbs:
           - get
           - list
@@ -204,27 +222,6 @@ spec:
           verbs:
           - get
           - list
-        - apiGroups:
-          - ""
-          resources:
-          - pods
-          - services
-          - namespaces
-          - nodes
-          verbs:
-          - get
-          - list
-          - watch
-          - update
-        - apiGroups:
-          - submariner.io
-          resources:
-          - endpoints
-          - clusters
-          verbs:
-          - get
-          - list
-          - watch
         serviceAccountName: submariner-operator
       deployments:
       - name: submariner-operator
@@ -253,7 +250,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: submariner-operator
-                image: quay.io/submariner/submariner-operator:0.8.1
+                image: quay.io/submariner/submariner-operator:0.9.0
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources: {}
@@ -351,8 +348,8 @@ spec:
   maturity: alpha
   provider:
     name: submariner.io
-  replaces: submariner.v0.8.0
+  replaces: submariner.v0.8.1
   selector:
     matchLabels:
       control-plane: submariner-operator
-  version: 0.8.1
+  version: 0.9.0
