@@ -4,7 +4,7 @@ kind: Submariner
 metadata:
   name: example-submariner
 spec:
-  namespace: "submariner_operator"
+  namespace: "submariner-operator"
   serviceCIDR: "192.168.66.0/24"
   clusterCIDR: "192.168.67.0/24"
   globalCIDR: "169.254.0.0/16"

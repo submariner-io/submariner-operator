@@ -6,7 +6,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: submariner-networkplugin-syncer
-    namespace: placeholder
+    namespace: $(SA_NAMESPACE)
 roleRef:
   kind: ClusterRole
   name: submariner-networkplugin-syncer

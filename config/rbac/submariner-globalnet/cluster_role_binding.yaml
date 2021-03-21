@@ -6,7 +6,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: submariner-globalnet
-    namespace: placeholder
+    namespace: $(SA_NAMESPACE)
 roleRef:
   kind: ClusterRole
   name: submariner-globalnet

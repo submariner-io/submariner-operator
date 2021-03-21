@@ -1,0 +1,10 @@
+---
+varReference:
+  - kind: ClusterRoleBinding
+    group: rbac.authorization.k8s.io
+    version: v1
+    path: subjects/namespace
+  - kind: RoleBinding
+    group: rbac.authorization.k8s.io
+    version: v1
+    path: subjects/namespace
