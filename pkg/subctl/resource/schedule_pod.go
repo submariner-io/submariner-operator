@@ -41,7 +41,7 @@ type NetworkPod struct {
 	PodOutput string
 }
 
-func ScheduleNetworkPod(config *PodConfig) (string, error) {
+func SchedulePodAwaitUntilCompletion(config *PodConfig) (string, error) {
 	if config.Scheduling == framework.InvalidScheduling {
 		config.Scheduling = framework.GatewayNode
 	}
@@ -55,12 +55,29 @@ func ScheduleNetworkPod(config *PodConfig) (string, error) {
 		return "", err
 	}
 
-	defer np.deletePod()
-	if err := np.awaitUntilPodFinished(); err != nil {
+	defer np.DeletePod()
+	if err := np.AwaitUntilPodCompletion(); err != nil {
 		return "", err
 	}
 
 	return np.PodOutput, nil
+}
+
+func SchedulePod(config *PodConfig) (*NetworkPod, error) {
+	if config.Scheduling == framework.InvalidScheduling {
+		config.Scheduling = framework.GatewayNode
+	}
+
+	if config.Namespace == "" {
+		config.Namespace = "default"
+	}
+
+	np := &NetworkPod{Config: config}
+	if err := np.schedulePod(); err != nil {
+		return nil, err
+	}
+
+	return np, nil
 }
 
 func (np *NetworkPod) schedulePod() error {
@@ -79,7 +96,7 @@ func (np *NetworkPod) schedulePod() error {
 				{
 					Name:    np.Config.Name,
 					Image:   "quay.io/submariner/nettest:devel",
-					Command: []string{"sh", "-c", "$COMMAND >/dev/termination-log 2>&1 || exit 0"},
+					Command: []string{"sh", "-c", "$(COMMAND) >/dev/termination-log 2>&1 || exit 0"},
 					Env: []v1.EnvVar{
 						{Name: "COMMAND", Value: np.Config.Command},
 					},
@@ -103,7 +120,7 @@ func (np *NetworkPod) schedulePod() error {
 	return nil
 }
 
-func (np *NetworkPod) deletePod() {
+func (np *NetworkPod) DeletePod() {
 	pc := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 	_ = pc.Delete(np.Pod.Name, &metav1.DeleteOptions{})
 }
@@ -134,7 +151,7 @@ func (np *NetworkPod) awaitUntilPodScheduled() error {
 	return nil
 }
 
-func (np *NetworkPod) awaitUntilPodFinished() error {
+func (np *NetworkPod) AwaitUntilPodCompletion() error {
 	pods := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 
 	_, errorMsg, err := framework.AwaitResultOrError(
