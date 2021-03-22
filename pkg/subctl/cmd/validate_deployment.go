@@ -150,7 +150,7 @@ func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespa
 		return
 	}
 
-	message := "All Submariner pods are up and running"
+	message = "All Submariner pods are up and running"
 	status.QueueSuccessMessage(message)
 	status.End(cli.Success)
 }
@@ -223,8 +223,6 @@ func checkPodsStatus(k8sClient kubernetes.Interface, operatorNamespace string) b
 			if c.RestartCount >= 5 {
 				message := fmt.Sprintf("Pod %q has restarted %d times", pod.Name, c.RestartCount)
 				status.QueueWarningMessage(message)
-				status.End(cli.Failure)
-				return false
 			}
 		}
 	}
