@@ -22,7 +22,7 @@ require (
 	github.com/submariner-io/admiral v0.9.0-m1.0.20210303181719-5bb1de3368b5
 	github.com/submariner-io/lighthouse v0.9.0-m1
 	github.com/submariner-io/shipyard v0.9.0-m1
-	github.com/submariner-io/submariner v0.9.0-m1
+	github.com/submariner-io/submariner v0.9.0-m1.0.20210322110323-300db4f5d90f
 	go.uber.org/zap v1.15.0 // indirect
 	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.20.1
