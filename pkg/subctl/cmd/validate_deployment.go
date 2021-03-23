@@ -17,10 +17,8 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
-	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	smClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,97 +45,72 @@ func validateSubmarinerDeployment(cmd *cobra.Command, args []string) {
 	exitOnError("error getting REST config for cluster", err)
 
 	for _, item := range configs {
+		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
 		submariner := getSubmarinerResource(item.config)
 		if submariner == nil {
 			status.QueueWarningMessage(submMissingMessage)
 			status.End(cli.Success)
-			return
+			continue
 		}
 
+		status.End(cli.Success)
 		checkPods(item, submariner, OperatorNamespace)
 		checkOverlappingCIDRs(item, submariner)
 	}
 }
 
 func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
-	var message string
 	submarinerClient, err := smClientset.NewForConfig(item.config)
 	exitOnError("Unable to get the Submariner client", err)
+
+	status.Start("Checking if cluster CIDRs overlap")
 
 	localClusterName := submariner.Status.ClusterID
 	endpointList, err := submarinerClient.SubmarinerV1().Endpoints(submariner.Namespace).List(metav1.ListOptions{})
 	if err != nil {
-		exitOnError("Error while listing the endpoints", err)
+		status.QueueFailureMessage(fmt.Sprintf("Error listing the Submariner endpoints in cluster %q", localClusterName))
+		status.End(cli.Failure)
+		return
 	}
 
-	status.Start("Verifying if cluster CIDRs overlap")
-
-	var localEndpoint submarinerv1.Endpoint
-	overlappingClusters := make(map[string]submarinerv1.Endpoint)
 	for i, source := range endpointList.Items {
-		if localClusterName == source.Spec.ClusterID {
-			localEndpoint = source
-		}
-
 		for _, dest := range endpointList.Items[i+1:] {
 			// Currently we dont support multiple endpoints in a cluster, hence return an error.
 			// When the corresponding support is added, this check needs to be updated.
 			if source.Spec.ClusterID == dest.Spec.ClusterID {
-				message = fmt.Sprintf("Looks like some stale endpoints are present for cluster %q",
-					source.Spec.ClusterID)
-				status.QueueFailureMessage(message)
-				status.End(cli.Failure)
-				break
+				status.QueueFailureMessage(fmt.Sprintf("Found multiple Submariner endpoints (%q and %q) in cluster %q",
+					source.Name, dest.Name, source.Spec.ClusterID))
+				continue
 			}
 
 			for _, subnet := range dest.Spec.Subnets {
 				overlap, err := util.IsOverlappingCIDR(source.Spec.Subnets, subnet)
 				if err != nil {
 					// Ideally this case will never hit, as the subnets are valid CIDRs
-					message = fmt.Sprintf("Error parsing the CIDR %s in cluster %q", err, dest.Spec.ClusterID)
-					status.QueueFailureMessage(message)
-					status.End(cli.Failure)
-					break
+					status.QueueFailureMessage(fmt.Sprintf("Error parsing CIDR in cluster %q: %s", dest.Spec.ClusterID, err))
+					continue
 				}
 
 				if overlap {
-					overlappingClusters[source.Spec.ClusterID] = source
-					overlappingClusters[dest.Spec.ClusterID] = dest
+					status.QueueFailureMessage(fmt.Sprintf("CIDR %q in cluster %q overlaps with cluster %q (CIDRs: %v)",
+						subnet, dest.Spec.ClusterID, source.Spec.ClusterID, source.Spec.Subnets))
 				}
 			}
 		}
 	}
 
-	if len(overlappingClusters) > 0 {
-		if _, exists := overlappingClusters[localClusterName]; exists {
-			delete(overlappingClusters, localClusterName)
-			message = fmt.Sprintf("localCluster %q with CIDRs %q overlaps with clusters %#v",
-				localClusterName, localEndpoint.Spec.Subnets, overlappingClusters)
-		} else {
-			message = fmt.Sprintf("localCluster %q does not have overlapping CIDRs with other member clusters. "+
-				"However, the following submariner member clusters have overlapping CIDRs %#v", localClusterName,
-				getClusterDetails(overlappingClusters))
-		}
-		status.QueueFailureMessage(message)
+	if status.HasFailureMessages() {
 		status.End(cli.Failure)
+		return
 	}
 
 	status.QueueSuccessMessage("Clusters do not have overlapping CIDRs")
 	status.End(cli.Success)
 }
 
-func getClusterDetails(overlappingClusters map[string]submarinerv1.Endpoint) string {
-	output := []string{}
-	for _, cluster := range overlappingClusters {
-		output = append(output, fmt.Sprintf("clusterID: %s, subnets: %s", cluster.Spec.ClusterID, cluster.Spec.Subnets))
-	}
-	return strings.Join(output, " ; ")
-}
-
 func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespace string) {
 	message := fmt.Sprintf("Validating submariner pods in %q", item.clusterName)
 	status.Start(message)
-	fmt.Println()
 
 	kubeClientSet, err := kubernetes.NewForConfig(item.config)
 

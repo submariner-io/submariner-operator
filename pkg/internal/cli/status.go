@@ -152,6 +152,10 @@ func (s *Status) QueueWarningMessage(message string) {
 	s.warningQueue = append(s.warningQueue, message)
 }
 
+func (s *Status) HasFailureMessages() bool {
+	return len(s.failureQueue) > 0
+}
+
 func CheckForError(err error) Result {
 	if err == nil {
 		return Success
