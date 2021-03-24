@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -88,16 +89,13 @@ func gatherData() {
 	exitOnError("Invalid arguments", err)
 
 	config := getClientConfig(kubeConfig, kubeContext)
-	exitOnError("Error getting REST config", err)
+	exitOnError("Error getting client config", err)
 
 	restConfig, err := config.ClientConfig()
-	exitOnError("error getting rest config", err)
-
-	clientSet, err := kubernetes.NewForConfig(restConfig)
-	exitOnError("error getting clientset", err)
+	exitOnError("Error getting REST config", err)
 
 	rawConfig, err := config.RawConfig()
-	exitOnError("error getting Raw config", err)
+	exitOnError("Error getting raw config", err)
 
 	clusterName := *getClusterNameFromContext(rawConfig, "")
 
@@ -113,10 +111,15 @@ func gatherData() {
 
 	info := &gather.Info{
 		RestConfig:  restConfig,
-		ClientSet:   clientSet,
 		ClusterName: clusterName,
 		DirName:     dirName,
 	}
+
+	info.ClientSet, err = kubernetes.NewForConfig(restConfig)
+	exitOnError("Error creating k8s client set", err)
+
+	info.DynClient, err = dynamic.NewForConfig(restConfig)
+	exitOnError("Error creating dynamic client", err)
 
 	for module, ok := range gatherModuleFlags {
 		if ok {
