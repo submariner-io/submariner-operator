@@ -13,18 +13,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 package gather
 
-const (
-	gatewayPodLabel    = "app=submariner-gateway"
-	routeagentPodLabel = "app=submariner-routeagent"
+import (
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
-func GatewayPodLogs(info *Info) error {
-	return gatherPodLogs(gatewayPodLabel, info)
-}
-
-func RouteAgentPodLogs(info *Info) error {
-	return gatherPodLogs(routeagentPodLabel, info)
+type Info struct {
+	RestConfig  *rest.Config
+	Status      *cli.Status
+	ClientSet   kubernetes.Interface
+	ClusterName string
+	DirName     string
 }
