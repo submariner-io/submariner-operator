@@ -17,6 +17,7 @@ package gather
 
 import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -25,6 +26,7 @@ type Info struct {
 	RestConfig  *rest.Config
 	Status      *cli.Status
 	ClientSet   kubernetes.Interface
+	DynClient   dynamic.Interface
 	ClusterName string
 	DirName     string
 }
