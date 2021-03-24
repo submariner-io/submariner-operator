@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/cobra"
 	smClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner/pkg/util"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -42,7 +43,7 @@ func init() {
 
 func validateSubmarinerDeployment(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
-	exitOnError("error getting REST config for cluster", err)
+	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
 		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
@@ -115,7 +116,7 @@ func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespa
 	kubeClientSet, err := kubernetes.NewForConfig(item.config)
 
 	if err != nil {
-		exitOnError("error creating Kubernetes client", err)
+		exitOnError("Error creating Kubernetes client", err)
 	}
 
 	if !CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-gateway") {
@@ -143,6 +144,10 @@ func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespa
 		if !CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-globalnet") {
 			return
 		}
+	}
+
+	if !checkPodsStatus(kubeClientSet, operatorNamespace) {
+		return
 	}
 
 	message = "All Submariner pods are up and running"
@@ -192,6 +197,34 @@ func CheckDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName str
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
 		return false
+	}
+
+	return true
+}
+
+func checkPodsStatus(k8sClient kubernetes.Interface, operatorNamespace string) bool {
+	pods, err := k8sClient.CoreV1().Pods(operatorNamespace).List(metav1.ListOptions{})
+	if err != nil {
+		message := fmt.Sprintf("Error obtaining Pods list: %v", err)
+		status.QueueFailureMessage(message)
+		status.End(cli.Failure)
+		return false
+	}
+
+	for _, pod := range pods.Items {
+		if pod.Status.Phase != v1.PodRunning {
+			message := fmt.Sprintf("Pod %q is not running. (current state is %v)", pod.Name, pod.Status.Phase)
+			status.QueueFailureMessage(message)
+			status.End(cli.Failure)
+			return false
+		}
+
+		for _, c := range pod.Status.ContainerStatuses {
+			if c.RestartCount >= 5 {
+				message := fmt.Sprintf("Pod %q has restarted %d times", pod.Name, c.RestartCount)
+				status.QueueWarningMessage(message)
+			}
+		}
 	}
 
 	return true
