@@ -156,6 +156,22 @@ func (s *Status) HasFailureMessages() bool {
 	return len(s.failureQueue) > 0
 }
 
+func (s *Status) HasWarningMessages() bool {
+	return len(s.warningQueue) > 0
+}
+
+func (s *Status) ResultFromMessages() Result {
+	if s.HasFailureMessages() {
+		return Failure
+	}
+
+	if s.HasWarningMessages() {
+		return Warning
+	}
+
+	return Success
+}
+
 func CheckForError(err error) Result {
 	if err == nil {
 		return Success
