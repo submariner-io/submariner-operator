@@ -16,7 +16,11 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
+
+	calicoclient "github.com/projectcalico/libcalico-go/lib/clientv3"
+	"github.com/projectcalico/libcalico-go/lib/options"
 
 	"github.com/spf13/cobra"
 
@@ -67,6 +71,27 @@ func validateCniConfig(cmd *cobra.Command, args []string) {
 			status.QueueFailureMessage(message)
 			status.End(cli.Failure)
 			continue
+		}
+
+		if submariner.Status.NetworkPlugin == "canal-flannel" {
+			client, err := calicoclient.NewFromEnv()
+			if err != nil {
+				status.QueueFailureMessage(fmt.Sprintf("Error getting calico client: %s", err))
+				status.End(cli.Failure)
+				continue
+			}
+
+			ipPool := client.IPPools()
+			ipPoolList, err := ipPool.List(context.Background(), options.ListOptions{})
+			if err != nil {
+				status.QueueFailureMessage(fmt.Sprintf("Error listing calico IPPools: %s", err))
+				status.End(cli.Failure)
+				continue
+			}
+
+			for i, pool := range ipPoolList.Items {
+				fmt.Printf("IPPool[%d]: %#v", i, pool)
+			}
 		}
 
 		message = fmt.Sprintf("The detected CNI network plugin (%q) is supported by Submariner.\n",
