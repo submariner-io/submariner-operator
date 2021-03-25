@@ -41,7 +41,7 @@ type NetworkPod struct {
 	PodOutput string
 }
 
-func SchedulePodAwaitUntilCompletion(config *PodConfig) (string, error) {
+func SchedulePodAwaitCompletion(config *PodConfig) (string, error) {
 	if config.Scheduling == framework.InvalidScheduling {
 		config.Scheduling = framework.GatewayNode
 	}
@@ -56,7 +56,7 @@ func SchedulePodAwaitUntilCompletion(config *PodConfig) (string, error) {
 	}
 
 	defer np.DeletePod()
-	if err := np.AwaitUntilPodCompletion(); err != nil {
+	if err := np.AwaitPodCompletion(); err != nil {
 		return "", err
 	}
 
@@ -151,7 +151,7 @@ func (np *NetworkPod) awaitUntilPodScheduled() error {
 	return nil
 }
 
-func (np *NetworkPod) AwaitUntilPodCompletion() error {
+func (np *NetworkPod) AwaitPodCompletion() error {
 	pods := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 
 	_, errorMsg, err := framework.AwaitResultOrError(

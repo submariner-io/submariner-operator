@@ -28,11 +28,11 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 )
 
-var validateIntraClusterFWConfig = &cobra.Command{
-	Use:   "fw-intra-cluster",
-	Short: "Validate the Firewall Configuration within the cluster.",
-	Long:  "This command checks whether firewall configuration allows traffic via vx-submariner interface.",
-	Run:   validateFWConfig,
+var validateFirewallVxLANConfigCmd = &cobra.Command{
+	Use:   "vxlan",
+	Short: "Validate if firewall allows VxLAN traffic within the cluster.",
+	Long:  "This command checks whether firewall configuration allows traffic via the Submariner VxLAN interface.",
+	Run:   validateFirewallVxLANConfig,
 }
 
 var validationTimeout uint
@@ -47,11 +47,11 @@ func addValidateFWConfigFlags(cmd *cobra.Command) {
 }
 
 func init() {
-	addValidateFWConfigFlags(validateIntraClusterFWConfig)
-	validateCmd.AddCommand(validateIntraClusterFWConfig)
+	addValidateFWConfigFlags(validateFirewallVxLANConfigCmd)
+	validateFirewallConfigCmd.AddCommand(validateFirewallVxLANConfigCmd)
 }
 
-func validateFWConfig(cmd *cobra.Command, args []string) {
+func validateFirewallVxLANConfig(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
 	exitOnError("Error getting REST config for cluster", err)
 
@@ -60,93 +60,87 @@ func validateFWConfig(cmd *cobra.Command, args []string) {
 		submariner := getSubmarinerResource(item.config)
 		if submariner == nil {
 			status.QueueWarningMessage(submMissingMessage)
-			status.End(cli.Success)
+			status.End(cli.Warning)
 			continue
 		}
 
 		status.End(cli.Success)
-		retVal := validateFWConfigWithinCluster(item, submariner)
-		if retVal.HasFailureMessages() {
-			status.End(cli.Failure)
-			continue
-		} else {
-			status.End(cli.Success)
-		}
+		validateFWConfigWithinCluster(item, submariner)
+		status.End(status.ResultFromMessages())
 	}
 }
 
-func validateFWConfigWithinCluster(item restConfig, submariner *v1alpha1.Submariner) *cli.Status {
-	status.Start(fmt.Sprintf("Validating Firewall configuration in cluster %q", item.clusterName))
+func validateFWConfigWithinCluster(item restConfig, submariner *v1alpha1.Submariner) {
+	status.Start(fmt.Sprintf("Validating the firewall configuration in cluster %q", item.clusterName))
 	if submariner.Status.NetworkPlugin == "OVNKubernetes" {
-		status.QueueSuccessMessage("This validation is not necessary for OVNKubernetes.")
-		return status
+		status.QueueSuccessMessage("This validation is not necessary for the OVNKubernetes CNI plugin")
+		return
 	}
 
 	clientSet, err := kubernetes.NewForConfig(item.config)
 	if err != nil {
 		message := fmt.Sprintf("Error creating API server client: %s", err)
 		status.QueueFailureMessage(message)
-		return status
+		return
 	}
 
 	gateways := getGatewaysResource(item.config)
 	if gateways == nil {
 		status.QueueWarningMessage("There are no gateways detected on the cluster.")
-		return status
+		return
 	}
 
 	if len(gateways.Items[0].Status.Connections) == 0 {
 		status.QueueWarningMessage("There are no active connections to remote clusters.")
-		return status
+		return
 	}
 
 	sPod, err := spawnSnifferPodOnGatewayNode(clientSet)
 	if err != nil {
-		message := fmt.Sprintf("Error while spawning the Sniffer Pod on the GatewayNode. %v", err)
+		message := fmt.Sprintf("Error while spawning the sniffer pod on the GatewayNode: %v", err)
 		status.QueueFailureMessage(message)
-		return status
+		return
 	}
 
 	defer sPod.DeletePod()
 	remoteClusterIP := strings.Split(gateways.Items[0].Status.Connections[0].Endpoint.Subnets[0], "/")[0]
 	cPod, err := spawnClientPodOnNonGatewayNode(clientSet, remoteClusterIP)
 	if err != nil {
-		message := fmt.Sprintf("Error while spawning the Client Pod on nonGateway node. %v", err)
+		message := fmt.Sprintf("Error while spawning the client pod on non-Gateway node: %v", err)
 		status.QueueFailureMessage(message)
-		return status
+		return
 	}
 
 	defer cPod.DeletePod()
-	if err = cPod.AwaitUntilPodCompletion(); err != nil {
-		message := fmt.Sprintf("Error while waiting for Client Pod to be finish its execution. %v", err)
+	if err = cPod.AwaitPodCompletion(); err != nil {
+		message := fmt.Sprintf("Error while waiting for client pod to be finish its execution: %v", err)
 		status.QueueFailureMessage(message)
-		return status
+		return
 	}
 
-	if err = sPod.AwaitUntilPodCompletion(); err != nil {
-		message := fmt.Sprintf("Error while waiting for Sniffer Pod to be finish its execution. %v", err)
+	if err = sPod.AwaitPodCompletion(); err != nil {
+		message := fmt.Sprintf("Error while waiting for sniffer pod to be finish its execution: %v", err)
 		status.QueueFailureMessage(message)
-		return status
+		return
 	}
 
 	// Verify that tcpdump output (i.e, from snifferPod) contains the remoteClusterIP
 	if !strings.Contains(sPod.PodOutput, remoteClusterIP) {
-		message := fmt.Sprintf("Tcpdump output from Sniffer Pod does not include the expected remoteClusterIP." +
-			" Please check your Firewall configuration to allow UDP/4800 traffic.")
+		message := fmt.Sprintf("The tcpdump output from the sniffer pod does not contain the expected remote"+
+			" endpoint IP %s. Please check that your firewall configuration allows UDP/4800 traffic.", remoteClusterIP)
 		status.QueueFailureMessage(message)
-		return status
+		return
 	}
 
 	// Verify that tcpdump output (i.e, from snifferPod) contains the clientPod IPaddress
 	if !strings.Contains(sPod.PodOutput, cPod.Pod.Status.PodIP) {
-		message := fmt.Sprintf("Tcpdump output from Sniffer Pod does not include the clientPod IPAddress."+
+		message := fmt.Sprintf("The tcpdump output from the sniffer pod does not contain the client pod's IP."+
 			" There seems to be some issue with the IPTable rules programmed on the %q node", cPod.Pod.Spec.NodeName)
 		status.QueueFailureMessage(message)
-		return status
+		return
 	}
 
-	status.QueueSuccessMessage("Firewall configuration within the cluster looks fine.")
-	return status
+	status.QueueSuccessMessage("The firewall configuration is working fine.")
 }
 
 func spawnSnifferPodOnGatewayNode(clientSet *kubernetes.Clientset) (*resource.NetworkPod, error) {
