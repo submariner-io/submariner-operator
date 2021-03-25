@@ -18,10 +18,15 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/kubernetes"
+
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 )
 
@@ -47,7 +52,7 @@ var gatherTypeFlags = map[string]bool{
 	"resources": false,
 }
 
-var gatherFuncs = map[string]func(*cli.Status, string) error{
+var gatherFuncs = map[string]func(string, *gather.Info) bool{
 	components.Connectivity:     gatherConnectivity,
 	components.ServiceDiscovery: gatherDiscovery,
 	components.Broker:           gatherBroker,
@@ -69,8 +74,8 @@ func addGatherFlags(gatherCmd *cobra.Command) {
 
 var gatherCmd = &cobra.Command{
 	Use:   "gather <kubeConfig>",
-	Short: "Gather troubleshooting data from a cluster",
-	Long: fmt.Sprintf("This command gathers data from a submariner cluster for troubleshooting. The data gathered "+
+	Short: "Gather troubleshooting information from a cluster",
+	Long: fmt.Sprintf("This command gathers information from a submariner cluster for troubleshooting. The information gathered "+
 		"can be selected by component (%v) and type (%v). Default is to capture all data.",
 		strings.Join(getAllModuleKeys(), ","), strings.Join(getAllTypeKeys(), ",")),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -82,65 +87,115 @@ func gatherData() {
 	err := checkGatherArguments()
 	exitOnError("Invalid arguments", err)
 
+	config := getClientConfig(kubeConfig, kubeContext)
+	exitOnError("Error getting REST config", err)
+
+	restConfig, err := config.ClientConfig()
+	exitOnError("error getting rest config", err)
+
+	clientSet, err := kubernetes.NewForConfig(restConfig)
+	exitOnError("error getting clientset", err)
+
+	rawConfig, err := config.RawConfig()
+	exitOnError("error getting Raw config", err)
+
+	clusterName := *getClusterNameFromContext(rawConfig, "")
+
+	dirName := "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
+	if _, err := os.Stat(dirName); os.IsNotExist(err) {
+		err := os.MkdirAll(dirName, 0700)
+		if err != nil {
+			exitOnError(fmt.Sprintf("Error creating directory %s", dirName), err)
+		}
+	}
+
+	fmt.Printf("Gathering information from cluster %q\n", clusterName)
+
+	info := &gather.Info{
+		RestConfig:  restConfig,
+		ClientSet:   clientSet,
+		ClusterName: clusterName,
+		DirName:     dirName,
+	}
+
 	for module, ok := range gatherModuleFlags {
 		if ok {
 			for dataType, ok := range gatherTypeFlags {
 				if ok {
-					status := cli.NewStatus()
-					status.Start(fmt.Sprintf("Gathering %s %s...", module, dataType))
-					status.End(cli.CheckForError(gatherFuncs[module](status, dataType)))
+					info.Status = cli.NewStatus()
+					info.Status.Start(fmt.Sprintf("Gathering %s %s", module, dataType))
+
+					if gatherFuncs[module](dataType, info) {
+						info.Status.End(info.Status.ResultFromMessages())
+					}
 				}
 			}
 		}
 	}
 }
 
-func gatherConnectivity(status *cli.Status, dataType string) error {
+func gatherConnectivity(dataType string, info *gather.Info) bool {
 	switch dataType {
 	case Logs:
-		status.QueueWarningMessage("Gather Connectivity Logs not implemented yet")
+		err := gather.GatewayPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Gateway pod logs: %s", err))
+		} else {
+			info.Status.QueueSuccessMessage("Successfully gathered Gateway pod logs")
+		}
+
+		err = gather.RouteAgentPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Route Agent pod logs: %s", err))
+		} else {
+			info.Status.QueueSuccessMessage("Successfully gathered Route Agent pod logs")
+		}
 	case Resources:
-		status.QueueWarningMessage("Gather Connectivity Resources not implemented yet")
+		info.Status.QueueWarningMessage("Gather Connectivity Resources not implemented yet")
 	default:
-		return fmt.Errorf("unsupported data type %s", dataType)
+		return false
 	}
-	return nil
+
+	return true
 }
 
-func gatherDiscovery(status *cli.Status, dataType string) error {
+func gatherDiscovery(dataType string, info *gather.Info) bool {
 	switch dataType {
 	case Logs:
-		status.QueueWarningMessage("Gather ServiceDiscovery Logs not implemented yet")
+		info.Status.QueueWarningMessage("Gather ServiceDiscovery Logs not implemented yet")
 	case Resources:
-		status.QueueWarningMessage("Gather ServiceDiscovery Resources not implemented yet")
+		info.Status.QueueWarningMessage("Gather ServiceDiscovery Resources not implemented yet")
 	default:
-		return fmt.Errorf("unsupported data type %s", dataType)
+		return false
 	}
-	return nil
+
+	return true
 }
 
-func gatherBroker(status *cli.Status, dataType string) error {
+func gatherBroker(dataType string, info *gather.Info) bool {
 	switch dataType {
 	case Logs:
-		status.QueueSuccessMessage("No logs to gather on Broker")
+		info.Status.QueueWarningMessage("No logs to gather on Broker")
 	case Resources:
-		status.QueueWarningMessage("Gather Broker Resources not implemented yet")
+		info.Status.QueueWarningMessage("Gather Broker Resources not implemented yet")
 	default:
-		return fmt.Errorf("unsupported data type %s", dataType)
+		return false
 	}
-	return nil
+
+	return true
 }
 
-func gatherOperator(status *cli.Status, dataType string) error {
+func gatherOperator(dataType string, info *gather.Info) bool {
 	switch dataType {
 	case Logs:
-		status.QueueWarningMessage("Gather Operator Logs not implemented yet")
+		info.Status.QueueWarningMessage("Gather Operator Logs not implemented yet")
 	case Resources:
-		status.QueueWarningMessage("Gather Operator Resources not implemented yet")
+		info.Status.QueueWarningMessage("Gather Operator Resources not implemented yet")
 	default:
-		return fmt.Errorf("unsupported data type %s", dataType)
+		return false
 	}
-	return nil
+
+	return true
 }
 
 func checkGatherArguments() error {

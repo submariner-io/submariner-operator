@@ -62,9 +62,8 @@ const (
 	lighthouseCoreDNSName         = "submariner-lighthouse-coredns"
 	defaultOpenShiftDNSController = "default"
 	lighthouseForwardPluginName   = "lighthouse"
-	coreDNSNamespace              = "kube-system"
+	defaultCoreDNSNamespace       = "kube-system"
 	coreDNSName                   = "coredns"
-	customCoreDNSName             = "coredns-custom"
 )
 
 // NewReconciler returns a new ServiceDiscoveryReconciler
@@ -173,12 +172,14 @@ func (r *ServiceDiscoveryReconciler) Reconcile(request reconcile.Request) (recon
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	err = updateDNSCustomConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
-	if errors.IsNotFound(err) {
+	if instance.Spec.CoreDNSCustomConfig != nil && instance.Spec.CoreDNSCustomConfig.ConfigMapName != "" {
+		err = updateDNSCustomConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
+		if err != nil {
+			reqLogger.Error(err, "Error updating the 'custom-coredns' ConfigMap")
+			return reconcile.Result{}, err
+		}
+	} else {
 		err = updateDNSConfigMap(r.client, r.k8sClientSet, instance, reqLogger)
-	} else if err != nil {
-		reqLogger.Error(err, "Error updating the 'custom-coredns' ConfigMap")
-		return reconcile.Result{}, err
 	}
 
 	if errors.IsNotFound(err) {
@@ -272,6 +273,19 @@ prometheus :9153
 		},
 		Data: map[string]string{
 			"Corefile": expectedCorefile,
+		},
+	}
+}
+
+func newCoreDNSCustomConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
+	namespace := defaultCoreDNSNamespace
+	if cr.Spec.CoreDNSCustomConfig.Namespace != "" {
+		namespace = cr.Spec.CoreDNSCustomConfig.Namespace
+	}
+	return &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cr.Spec.CoreDNSCustomConfig.ConfigMapName,
+			Namespace: namespace,
 		},
 	}
 }
@@ -379,10 +393,22 @@ func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 
 func updateDNSCustomConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger) error {
+	var configFunc func(*corev1.ConfigMap) (*corev1.ConfigMap, error)
+	customCoreDNSName := cr.Spec.CoreDNSCustomConfig.ConfigMapName
+	coreDNSNamespace := defaultCoreDNSNamespace
+	if cr.Spec.CoreDNSCustomConfig.Namespace != "" {
+		coreDNSNamespace = cr.Spec.CoreDNSCustomConfig.Namespace
+	}
+
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Get(customCoreDNSName, metav1.GetOptions{})
-		if err != nil {
+		if errors.IsNotFound(err) {
+			configFunc = k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Create
+			configMap = newCoreDNSCustomConfigMap(cr)
+		} else if err != nil {
 			return err
+		} else {
+			configFunc = k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Update
 		}
 
 		lighthouseDNSService := &corev1.Service{}
@@ -409,7 +435,7 @@ func updateDNSCustomConfigMap(client controllerClient.Client, k8sclientSet clien
 		log.Info("Updating coredns-custom ConfigMap for lighthouse.server: " + coreFile)
 		configMap.Data["lighthouse.server"] = coreFile
 		// Potentially retried
-		_, err = k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Update(configMap)
+		_, err = configFunc(configMap)
 		return err
 	})
 	return retryErr
@@ -417,6 +443,7 @@ func updateDNSCustomConfigMap(client controllerClient.Client, k8sclientSet clien
 
 func updateDNSConfigMap(client controllerClient.Client, k8sclientSet clientset.Interface, cr *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger) error {
+	coreDNSNamespace := defaultCoreDNSNamespace
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := k8sclientSet.CoreV1().ConfigMaps(coreDNSNamespace).Get(coreDNSName, metav1.GetOptions{})
 		if err != nil {
