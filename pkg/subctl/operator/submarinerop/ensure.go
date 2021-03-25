@@ -30,7 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/serviceaccount"
 )
 
-func Ensure(status *cli.Status, config *rest.Config, operatorNamespace, operatorImage string) error {
+func Ensure(status *cli.Status, config *rest.Config, operatorNamespace, operatorImage string, debug bool) error {
 	if created, err := crds.Ensure(config); err != nil {
 		return err
 	} else if created {
@@ -61,7 +61,7 @@ func Ensure(status *cli.Status, config *rest.Config, operatorNamespace, operator
 		status.QueueSuccessMessage("Created Lighthouse service accounts and roles")
 	}
 
-	if created, err := deployment.Ensure(config, operatorNamespace, operatorImage); err != nil {
+	if created, err := deployment.Ensure(config, operatorNamespace, operatorImage, debug); err != nil {
 		return err
 	} else if created {
 		status.QueueSuccessMessage("Deployed the operator successfully")

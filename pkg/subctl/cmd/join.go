@@ -64,6 +64,7 @@ var (
 	globalnetEnabled              bool
 	ipsecDebug                    bool
 	submarinerDebug               bool
+	operatorDebug                 bool
 	labelGateway                  bool
 	noLabel                       bool
 	cableDriver                   string
@@ -106,6 +107,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&submarinerDebug, "enable-pod-debugging", false,
 		"enable Submariner pod debugging (verbose logging in the deployed pods)")
 	err = cmd.Flags().MarkDeprecated("enable-pod-debugging", "please use --pod-debug instead")
+	cmd.Flags().BoolVar(&operatorDebug, "operator-debug", false, "enable operator debugging (verbose logging)")
 	// Errors here are fatal programming errors
 	exitOnError("deprecation error", err)
 	cmd.Flags().BoolVar(&labelGateway, "label-gateway", true, "label gateways if necessary")
@@ -269,7 +271,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 
 	status.Start("Deploying the Submariner operator")
 
-	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage())
+	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage(), operatorDebug)
 	status.End(cli.CheckForError(err))
 	exitOnError("Error deploying the operator", err)
 
