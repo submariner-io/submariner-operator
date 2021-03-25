@@ -31,15 +31,15 @@ const (
 	coreDNSPodLabel           = "k8s-app=kube-dns"
 )
 
-func ServiceDiscoveryPodLogs(info *Info) error {
+func ServiceDiscoveryPodLogs(info Info) error {
 	return gatherPodLogs(lighthouseComponentsLabel, info)
 }
 
-func CoreDNSPodLogs(info *Info) error {
+func CoreDNSPodLogs(info Info) error {
 	return gatherPodLogs(coreDNSPodLabel, info)
 }
 
-func ServiceExports(info *Info, namespace string) {
+func ServiceExports(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    mcsv1a1.GroupName,
 		Version:  mcsv1a1.GroupVersion.Version,
@@ -47,7 +47,7 @@ func ServiceExports(info *Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
-func ServiceImports(info *Info, namespace string) {
+func ServiceImports(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    mcsv1a1.GroupName,
 		Version:  mcsv1a1.GroupVersion.Version,
@@ -55,7 +55,7 @@ func ServiceImports(info *Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
-func EndpointSlices(info *Info, namespace string) {
+func EndpointSlices(info Info, namespace string) {
 	labelMap := map[string]string{
 		discoveryv1beta1.LabelManagedBy: lhconstants.LabelValueManagedBy,
 	}
@@ -68,7 +68,7 @@ func EndpointSlices(info *Info, namespace string) {
 	}, namespace, metav1.ListOptions{LabelSelector: labelSelector})
 }
 
-func ConfigMapCoreDNS(info *Info, namespace string) {
+func ConfigMapCoreDNS(info Info, namespace string) {
 	fieldMap := map[string]string{
 		"metadata.name": "coredns",
 	}
@@ -76,6 +76,6 @@ func ConfigMapCoreDNS(info *Info, namespace string) {
 	gatherConfigMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
 }
 
-func ConfigMapLighthouseDNS(info *Info, namespace string) {
+func ConfigMapLighthouseDNS(info Info, namespace string) {
 	gatherConfigMaps(info, namespace, metav1.ListOptions{LabelSelector: lighthouseComponentsLabel})
 }
