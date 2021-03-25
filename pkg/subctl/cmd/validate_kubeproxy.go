@@ -66,7 +66,7 @@ func validateKubeProxyMode(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		podOutput, err := resource.ScheduleNetworkPod(&resource.PodConfig{
+		podOutput, err := resource.SchedulePodAwaitCompletion(&resource.PodConfig{
 			Name:       "query-iface-list",
 			ClientSet:  clientset,
 			Scheduling: framework.GatewayNode,
