@@ -24,8 +24,6 @@ import (
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
@@ -55,7 +53,7 @@ var gatherTypeFlags = map[string]bool{
 	"resources": false,
 }
 
-var gatherFuncs = map[string]func(string, *gather.Info) bool{
+var gatherFuncs = map[string]func(string, gather.Info) bool{
 	components.Connectivity:     gatherConnectivity,
 	components.ServiceDiscovery: gatherDiscovery,
 	components.Broker:           gatherBroker,
@@ -117,17 +115,14 @@ func gatherData() {
 
 	fmt.Printf("Gathering information from cluster %q\n", clusterName)
 
-	info := &gather.Info{
+	info := gather.Info{
 		RestConfig:  restConfig,
 		ClusterName: clusterName,
 		DirName:     directory,
 	}
 
-	info.ClientSet, err = kubernetes.NewForConfig(restConfig)
-	exitOnError("Error creating k8s client set", err)
-
-	info.DynClient, err = dynamic.NewForConfig(restConfig)
-	exitOnError("Error creating dynamic client", err)
+	info.DynClient, info.ClientSet, err = getClients(restConfig)
+	exitOnError("Error getting client %s", err)
 
 	for module, ok := range gatherModuleFlags {
 		if ok {
@@ -145,7 +140,7 @@ func gatherData() {
 	}
 }
 
-func gatherConnectivity(dataType string, info *gather.Info) bool {
+func gatherConnectivity(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
 		err := gather.GatewayPodLogs(info)
@@ -178,7 +173,7 @@ func gatherConnectivity(dataType string, info *gather.Info) bool {
 	return true
 }
 
-func gatherDiscovery(dataType string, info *gather.Info) bool {
+func gatherDiscovery(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
 		err := gather.ServiceDiscoveryPodLogs(info)
@@ -203,14 +198,29 @@ func gatherDiscovery(dataType string, info *gather.Info) bool {
 	return true
 }
 
-func gatherBroker(dataType string, info *gather.Info) bool {
+func gatherBroker(dataType string, info gather.Info) bool {
 	switch dataType {
-	case Logs:
-		info.Status.QueueWarningMessage("No logs to gather on Broker")
 	case Resources:
-		_, _ = getBrokerRestConfig(info.RestConfig)
+		brokerRestConfig, brokerNamespace, err := getBrokerRestConfigAndNamespace(info.RestConfig)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker's rest config: %s", err))
+			return true
+		}
 
-		info.Status.QueueWarningMessage("Gather Broker Resources not implemented yet")
+		info.DynClient, info.ClientSet, err = getClients(brokerRestConfig)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker client %s", err))
+			return true
+		}
+
+		info.RestConfig = brokerRestConfig
+		info.ClusterName = "broker"
+
+		// The broker's ClusterRole used by member clusters only allows the below resources to be queried
+		gather.Endpoints(info, brokerNamespace)
+		gather.Clusters(info, brokerNamespace)
+		gather.EndpointSlices(info, brokerNamespace)
+		gather.ServiceImports(info, brokerNamespace)
 	default:
 		return false
 	}
@@ -218,7 +228,7 @@ func gatherBroker(dataType string, info *gather.Info) bool {
 	return true
 }
 
-func gatherOperator(dataType string, info *gather.Info) bool {
+func gatherOperator(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
 		info.Status.QueueWarningMessage("Gather Operator Logs not implemented yet")

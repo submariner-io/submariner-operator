@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func OperatorSubmariner(info *Info, namespace string) {
+func OperatorSubmariner(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerOp.SchemeGroupVersion.Group,
 		Version:  submarinerOp.SchemeGroupVersion.Version,
@@ -29,7 +29,7 @@ func OperatorSubmariner(info *Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
-func OperatorServiceDiscovery(info *Info, namespace string) {
+func OperatorServiceDiscovery(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerOp.SchemeGroupVersion.Group,
 		Version:  submarinerOp.SchemeGroupVersion.Version,
@@ -37,26 +37,26 @@ func OperatorServiceDiscovery(info *Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
-func GatewayDaemonSet(info *Info, namespace string) {
+func GatewayDaemonSet(info Info, namespace string) {
 	gatherDaemonSet(info, namespace, gatewayPodLabel)
 }
 
-func RouteAgentDaemonSet(info *Info, namespace string) {
+func RouteAgentDaemonSet(info Info, namespace string) {
 	gatherDaemonSet(info, namespace, routeagentPodLabel)
 }
 
-func GlobalnetDaemonSet(info *Info, namespace string) {
+func GlobalnetDaemonSet(info Info, namespace string) {
 	gatherDaemonSet(info, namespace, globalnetPodLabel)
 }
 
-func NetworkPluginSyncerDeployment(info *Info, namespace string) {
+func NetworkPluginSyncerDeployment(info Info, namespace string) {
 	gatherDeployment(info, namespace, networkpluginSyncerPodLabel)
 }
 
-func LighthouseAgentDeployment(info *Info, namespace string) {
+func LighthouseAgentDeployment(info Info, namespace string) {
 	gatherDeployment(info, namespace, "app=submariner-lighthouse-agent")
 }
 
-func LighthouseCoreDNSDeployment(info *Info, namespace string) {
+func LighthouseCoreDNSDeployment(info Info, namespace string) {
 	gatherDeployment(info, namespace, "app=submariner-lighthouse-coredns")
 }

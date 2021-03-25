@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
+func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
 		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(listOptions)
 		if err != nil {
@@ -75,7 +75,7 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 	}
 }
 
-func gatherDaemonSet(info *Info, namespace, byLabelSelector string) {
+func gatherDaemonSet(info Info, namespace, byLabelSelector string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
@@ -83,7 +83,7 @@ func gatherDaemonSet(info *Info, namespace, byLabelSelector string) {
 	}, namespace, metav1.ListOptions{LabelSelector: byLabelSelector})
 }
 
-func gatherDeployment(info *Info, namespace, byLabelSelector string) {
+func gatherDeployment(info Info, namespace, byLabelSelector string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
@@ -91,7 +91,7 @@ func gatherDeployment(info *Info, namespace, byLabelSelector string) {
 	}, namespace, metav1.ListOptions{LabelSelector: byLabelSelector})
 }
 
-func gatherConfigMaps(info *Info, namespace string, listOptions metav1.ListOptions) {
+func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    corev1.SchemeGroupVersion.Group,
 		Version:  corev1.SchemeGroupVersion.Version,

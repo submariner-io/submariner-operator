@@ -101,25 +101,25 @@ func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
 	return gateways
 }
 
-func getBrokerRestConfig(localConfig *rest.Config) (*rest.Config, error) {
+func getBrokerRestConfigAndNamespace(localConfig *rest.Config) (*rest.Config, string, error) {
 	submarinerClient, err := subOperatorClientset.NewForConfig(localConfig)
 	if err != nil {
-		return nil, errors.WithMessage(err, "error getting submariner client")
+		return nil, "", errors.WithMessage(err, "error getting submariner client")
 	}
 
-	brokerConfig, err := getBrokerRestConfigFromSubmariner(submarinerClient)
+	brokerConfig, brokerNamespace, err := getBrokerRestConfigAndNamespaceFromSubmariner(submarinerClient)
 	if apierrors.IsNotFound(err) {
-		return getBrokerRestConfigFromServiceDisc(submarinerClient)
+		return getBrokerRestConfigAndNamespaceFromServiceDisc(submarinerClient)
 	}
 
-	return brokerConfig, err
+	return brokerConfig, brokerNamespace, err
 }
 
-func getBrokerRestConfigFromSubmariner(submarinerClient *subOperatorClientset.Clientset) (*rest.Config, error) {
+func getBrokerRestConfigAndNamespaceFromSubmariner(submarinerClient *subOperatorClientset.Clientset) (*rest.Config, string, error) {
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
 		Get(submarinercr.SubmarinerName, v1opts.GetOptions{})
 	if err != nil {
-		return nil, errors.WithMessage(err, "error obtaining the Submariner resource")
+		return nil, "", errors.WithMessage(err, "error obtaining the Submariner resource")
 	}
 
 	// Try to authorize against the submariner Cluster resource as we know the CRD should exist and the credentials
@@ -129,16 +129,16 @@ func getBrokerRestConfigFromSubmariner(submarinerClient *subOperatorClientset.Cl
 			Group:    submarinerv1.SchemeGroupVersion.Group,
 			Version:  submarinerv1.SchemeGroupVersion.Version,
 			Resource: "clusters",
-		})
+		}, submariner.Spec.BrokerK8sRemoteNamespace)
 
-	return restConfig, err
+	return restConfig, submariner.Spec.BrokerK8sRemoteNamespace, err
 }
 
-func getBrokerRestConfigFromServiceDisc(submarinerClient *subOperatorClientset.Clientset) (*rest.Config, error) {
+func getBrokerRestConfigAndNamespaceFromServiceDisc(submarinerClient *subOperatorClientset.Clientset) (*rest.Config, string, error) {
 	serviceDisc, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).
 		Get(names.ServiceDiscoveryCrName, v1opts.GetOptions{})
 	if err != nil {
-		return nil, errors.WithMessage(err, "error obtaining the ServiceDiscovery resource")
+		return nil, "", errors.WithMessage(err, "error obtaining the ServiceDiscovery resource")
 	}
 
 	// Try to authorize against the ServiceImport resource as we know the CRD should exist and the credentials
@@ -148,7 +148,7 @@ func getBrokerRestConfigFromServiceDisc(submarinerClient *subOperatorClientset.C
 			Group:    "multicluster.x-k8s.io",
 			Version:  "v1alpha1",
 			Resource: "serviceimports",
-		})
+		}, serviceDisc.Spec.BrokerK8sRemoteNamespace)
 
-	return restConfig, err
+	return restConfig, serviceDisc.Spec.BrokerK8sRemoteNamespace, err
 }
