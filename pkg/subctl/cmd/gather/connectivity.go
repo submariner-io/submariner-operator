@@ -16,6 +16,11 @@ limitations under the License.
 
 package gather
 
+import (
+	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+)
+
 const (
 	gatewayPodLabel    = "app=submariner-gateway"
 	routeagentPodLabel = "app=submariner-routeagent"
@@ -27,4 +32,28 @@ func GatewayPodLogs(info *Info) error {
 
 func RouteAgentPodLogs(info *Info) error {
 	return gatherPodLogs(routeagentPodLabel, info)
+}
+
+func Endpoints(info *Info, namespace string) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    submarinerv1.SchemeGroupVersion.Group,
+		Version:  submarinerv1.SchemeGroupVersion.Version,
+		Resource: "endpoints",
+	}, namespace)
+}
+
+func Clusters(info *Info, namespace string) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    submarinerv1.SchemeGroupVersion.Group,
+		Version:  submarinerv1.SchemeGroupVersion.Version,
+		Resource: "clusters",
+	}, namespace)
+}
+
+func Gateways(info *Info, namespace string) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    submarinerv1.SchemeGroupVersion.Group,
+		Version:  submarinerv1.SchemeGroupVersion.Version,
+		Resource: "gateways",
+	}, namespace)
 }
