@@ -75,6 +75,8 @@ func init() {
 	deployBroker.PersistentFlags().StringVar(&repository, "repository", "", "image repository")
 	deployBroker.PersistentFlags().StringVar(&imageVersion, "version", "", "image version")
 
+	deployBroker.PersistentFlags().BoolVar(&operatorDebug, "operator-debug", false, "enable operator debugging (verbose logging)")
+
 	addKubeconfigFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
@@ -115,7 +117,7 @@ var deployBroker = &cobra.Command{
 		exitOnError("Error setting up broker RBAC", err)
 
 		status.Start("Deploying the Submariner operator")
-		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage())
+		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage(), operatorDebug)
 		status.End(cli.CheckForError(err))
 		exitOnError("Error deploying the operator", err)
 
