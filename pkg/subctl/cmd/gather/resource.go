@@ -16,6 +16,7 @@ limitations under the License.
 package gather
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -25,29 +26,37 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespace string) error {
-	list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(metav1.ListOptions{})
+func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespace string) {
+	err := func() error {
+		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(metav1.ListOptions{})
+		if err != nil {
+			return errors.WithMessagef(err, "error listing %q", ofType.Resource)
+		}
+
+		path := filepath.Join(info.DirName, info.ClusterName+"-"+ofType.Resource+".yaml")
+		file, err := os.Create(path)
+		if err != nil {
+			return errors.WithMessagef(err, "error opening file %s", path)
+		}
+
+		defer file.Close()
+
+		data, err := yaml.Marshal(list)
+		if err != nil {
+			return errors.WithMessage(err, "error marshaling to YAML")
+		}
+
+		_, err = file.Write(data)
+		if err != nil {
+			return errors.WithMessagef(err, "error writing to file %s", path)
+		}
+
+		return nil
+	}()
+
 	if err != nil {
-		return errors.WithMessagef(err, "error listing %q", ofType.Resource)
+		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather %s: %s", ofType.Resource, err))
+	} else {
+		info.Status.QueueSuccessMessage(fmt.Sprintf("Successfully gathered %s", ofType.Resource))
 	}
-
-	path := filepath.Join(info.DirName, info.ClusterName+"-"+ofType.Resource+".yaml")
-	file, err := os.Create(path)
-	if err != nil {
-		return errors.WithMessagef(err, "error opening file %s", path)
-	}
-
-	defer file.Close()
-
-	data, err := yaml.Marshal(list)
-	if err != nil {
-		return errors.WithMessage(err, "error marshaling to YAML")
-	}
-
-	_, err = file.Write(data)
-	if err != nil {
-		return errors.WithMessagef(err, "error writing to file %s", path)
-	}
-
-	return nil
 }
