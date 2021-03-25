@@ -13,9 +13,9 @@ function test_subctl_gather() {
 
   ${DAPPER_SOURCE}/bin/subctl gather --kubeconfig ${KUBECONFIGS_DIR}/kind-config-${cluster} --dir $out_dir
 
-  validate_resources_file $subm_ns 'endpoints.submariner.io' 'Endpoint' "$out_dir/${cluster}-endpoints.yaml"
-  validate_resources_file $subm_ns 'clusters.submariner.io' 'Cluster' "$out_dir/${cluster}-clusters.yaml"
-  validate_resources_file $subm_ns 'gateways.submariner.io' 'Gateway' "$out_dir/${cluster}-gateways.yaml"
+  validate_resource_files $subm_ns 'endpoints.submariner.io' 'Endpoint'
+  validate_resource_files $subm_ns 'clusters.submariner.io' 'Cluster'
+  validate_resource_files $subm_ns 'gateways.submariner.io' 'Gateway'
 
   validate_pod_log_files $subm_ns $gateway_deployment_name
   validate_pod_log_files $subm_ns $routeagent_deployment_name
@@ -29,24 +29,37 @@ function validate_pod_log_files() {
   read -ra pod_names_array <<< "$pod_names"
 
   for pod_name in "${pod_names_array[@]}"; do
-    file=$out_dir/${cluster}-$pod_name.log
+    file=$out_dir/${cluster}_$pod_name.log
     cat $file
   done
 }
 
-function validate_resources_file() {
+function validate_resource_files() {
   local ns=$1
   local resource=$2
   local kind=$3
-  local file=$4
+  local label=$4
 
-  exp_num=$(kubectl get $resource --namespace=$ns -o=yaml | grep "kind: $kind$" | wc -l)
+  names=$(kubectl get $resource --namespace=$ns -o=jsonpath='{.items..metadata.name}')
+  read -ra names_array <<< "$names"
 
-  cat $file
-  actual_num=$(grep "kind: $kind$" $file | wc -l)
-  if [[ $exp_num != $actual_num ]]; then
-     echo "Expected $exp_num $resource but got $actual_num"
+  short_res=$(echo $resource | awk -F. '{ print $1 }')
+
+  for name in "${names_array[@]}"; do
+    file=$out_dir/${cluster}_${short_res}_${ns}_${name}.yaml
+    cat $file
+
+    kind_count=$(grep "kind: $kind$" $file | wc -l)
+    if [[ $kind_count != "1" ]]; then
+      echo "Expected 1 kind: $kind"
      return 1
-  fi
+    fi
+
+    res_name=$(grep "name: $name$" $file)
+    if [[ $res_name == "" ]]; then
+      echo "Expected resource name: $name"
+     return 1
+    fi
+  done
 }
 
