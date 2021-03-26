@@ -99,6 +99,12 @@ func gatherData() {
 
 	clusterName := *getClusterNameFromContext(rawConfig, "")
 
+	submariner := getSubmarinerResource(restConfig)
+	if submariner == nil {
+		fmt.Println(submMissingMessage)
+		return
+	}
+
 	dirName := "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
 	if _, err := os.Stat(dirName); os.IsNotExist(err) {
 		err := os.MkdirAll(dirName, 0700)
@@ -111,6 +117,7 @@ func gatherData() {
 
 	info := &gather.Info{
 		RestConfig:  restConfig,
+		Submariner:  submariner,
 		ClusterName: clusterName,
 		DirName:     dirName,
 	}
@@ -184,6 +191,8 @@ func gatherBroker(dataType string, info *gather.Info) bool {
 	case Logs:
 		info.Status.QueueWarningMessage("No logs to gather on Broker")
 	case Resources:
+		_, _ = getBrokerRestConfig(info.Submariner)
+
 		info.Status.QueueWarningMessage("Gather Broker Resources not implemented yet")
 	default:
 		return false

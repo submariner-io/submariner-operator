@@ -18,14 +18,16 @@ package cmd
 import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
-	submarinerclientv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-	submarinerv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
+	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 )
 
 func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, error) {
@@ -65,7 +67,7 @@ func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, e
 }
 
 func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
-	submarinerClient, err := submarinerclientset.NewForConfig(config)
+	submarinerClient, err := subOperatorClientset.NewForConfig(config)
 	exitOnError("Unable to get the Submariner client", err)
 
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
@@ -80,8 +82,8 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	return submariner
 }
 
-func getGatewaysResource(config *rest.Config) *submarinerclientv1.GatewayList {
-	submarinerClient, err := submarinerv1.NewForConfig(config)
+func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
+	submarinerClient, err := subClientsetv1.NewForConfig(config)
 	exitOnError("Unable to get the Submariner client", err)
 
 	gateways, err := submarinerClient.SubmarinerV1().Gateways(OperatorNamespace).
@@ -94,4 +96,17 @@ func getGatewaysResource(config *rest.Config) *submarinerclientv1.GatewayList {
 	}
 
 	return gateways
+}
+
+func getBrokerRestConfig(submariner *v1alpha1.Submariner) (*rest.Config, error) {
+	// Try to authorize against the submariner CLuster resource as we know the CRD should exist and the credentials
+	// should allow read access.
+	restConfig, _, err := resource.GetAuthorizedRestConfig(submariner.Spec.BrokerK8sApiServer, submariner.Spec.BrokerK8sApiServerToken,
+		submariner.Spec.BrokerK8sCA, rest.TLSClientConfig{}, schema.GroupVersionResource{
+			Group:    submarinerv1.SchemeGroupVersion.Group,
+			Version:  submarinerv1.SchemeGroupVersion.Version,
+			Resource: "clusters",
+		})
+
+	return restConfig, err
 }
