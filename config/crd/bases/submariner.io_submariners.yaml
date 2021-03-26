@@ -76,6 +76,13 @@ spec:
                     format: int64
                     type: integer
                 type: object
+              coreDNSCustomConfig:
+                properties:
+                  configMapName:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
               customDomains:
                 items:
                   type: string
