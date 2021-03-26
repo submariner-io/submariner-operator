@@ -154,7 +154,11 @@ func gatherConnectivity(dataType string, info *gather.Info) bool {
 			info.Status.QueueSuccessMessage("Successfully gathered Route Agent pod logs")
 		}
 	case Resources:
-		info.Status.QueueWarningMessage("Gather Connectivity Resources not implemented yet")
+		gather.Endpoints(info, SubmarinerNamespace)
+
+		gather.Clusters(info, SubmarinerNamespace)
+
+		gather.Gateways(info, SubmarinerNamespace)
 	default:
 		return false
 	}
