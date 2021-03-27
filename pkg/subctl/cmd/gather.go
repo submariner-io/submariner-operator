@@ -34,6 +34,7 @@ import (
 var (
 	gatherType   string
 	gatherModule string
+	directory    string
 )
 
 const (
@@ -71,6 +72,9 @@ func addGatherFlags(gatherCmd *cobra.Command) {
 		"comma-separated list of data types to gather")
 	gatherCmd.Flags().StringVar(&gatherModule, "module", strings.Join(getAllModuleKeys(), ","),
 		"comma-separated list of components for which to gather data")
+	gatherCmd.Flags().StringVar(&directory, "dir", "",
+		"the directory in which to store files. If not specified, a directory of the form \"submariner-<timestamp>\" "+
+			"is created in the current directory")
 }
 
 var gatherCmd = &cobra.Command{
@@ -105,11 +109,14 @@ func gatherData() {
 		return
 	}
 
-	dirName := "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
-	if _, err := os.Stat(dirName); os.IsNotExist(err) {
-		err := os.MkdirAll(dirName, 0700)
+	if directory == "" {
+		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
+	}
+
+	if _, err := os.Stat(directory); os.IsNotExist(err) {
+		err := os.MkdirAll(directory, 0700)
 		if err != nil {
-			exitOnError(fmt.Sprintf("Error creating directory %s", dirName), err)
+			exitOnError(fmt.Sprintf("Error creating directory %q", directory), err)
 		}
 	}
 
@@ -119,7 +126,7 @@ func gatherData() {
 		RestConfig:  restConfig,
 		Submariner:  submariner,
 		ClusterName: clusterName,
-		DirName:     dirName,
+		DirName:     directory,
 	}
 
 	info.ClientSet, err = kubernetes.NewForConfig(restConfig)
