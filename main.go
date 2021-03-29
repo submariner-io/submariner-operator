@@ -18,7 +18,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"runtime"
@@ -33,8 +32,7 @@ import (
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/submariner-io/submariner-operator/apis"
 	"github.com/submariner-io/submariner-operator/controllers"
@@ -49,9 +47,10 @@ import (
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
 	"github.com/operator-framework/operator-sdk/pkg/metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
-	"github.com/spf13/pflag"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/klog"
+	"k8s.io/klog/klogr"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -70,7 +69,7 @@ var (
 
 var (
 	scheme = apiruntime.NewScheme()
-	log    = ctrl.Log.WithName("cmd")
+	log    = logf.Log.WithName("cmd")
 )
 
 func printVersion() {
@@ -88,27 +87,8 @@ func init() {
 }
 
 func main() {
-	// Add the zap logger flag set to the CLI. The flag set must
-	// be added before calling pflag.Parse().
-
-	// TODO: re-enable this after the import is fixed
-	// pflag.CommandLine.AddFlagSet(zap.FlagSet())
-
-	// Add flags registered by imported packages (e.g. glog and
-	// controller-runtime)
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-
-	pflag.Parse()
-
-	// Use a zap logr.Logger implementation. If none of the zap
-	// flags are configured (or if the zap flag set is not being
-	// used), this defaults to a production zap logger.
-	//
-	// The logger instantiated here can be changed to any logger
-	// implementing the logr.Logger interface. This logger will
-	// be propagated through the whole operator, generating
-	// uniform and structured logs.
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
+	klog.InitFlags(nil)
+	logf.SetLogger(klogr.New())
 
 	printVersion()
 
@@ -208,7 +188,7 @@ func main() {
 	if err = (&submariner.BrokerReconciler{
 		Client: mgr.GetClient(),
 		Config: mgr.GetConfig(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Broker"),
+		Log:    logf.Log.WithName("controllers").WithName("Broker"),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Broker")

@@ -27,6 +27,7 @@ rules:
       - create
       - update
       - delete
+      - watch
   - apiGroups:  # pods, services and nodes are looked up to figure out network settings
       - ""
     resources:

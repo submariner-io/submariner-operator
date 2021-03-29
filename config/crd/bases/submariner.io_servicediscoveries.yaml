@@ -46,6 +46,13 @@ spec:
                 type: string
               clusterID:
                 type: string
+              coreDNSCustomConfig:
+                properties:
+                  configMapName:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
               customDomains:
                 items:
                   type: string

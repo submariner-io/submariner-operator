@@ -258,7 +258,7 @@ func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      coreDNSName,
-			Namespace: coreDNSNamespace,
+			Namespace: defaultCoreDNSNamespace,
 		},
 		Data: map[string]string{
 			"Corefile": corefile,
@@ -318,7 +318,7 @@ func expectDNSConfigUpdated(name string, client controllerClient.Client) *operat
 }
 
 func expectCoreMapUpdated(client clientset.Interface) *corev1.ConfigMap {
-	foundCoreMap, err := client.CoreV1().ConfigMaps(coreDNSNamespace).Get(coreDNSName, metav1.GetOptions{})
+	foundCoreMap, err := client.CoreV1().ConfigMaps(defaultCoreDNSNamespace).Get(coreDNSName, metav1.GetOptions{})
 	Expect(err).To(Succeed())
 	return foundCoreMap
 }

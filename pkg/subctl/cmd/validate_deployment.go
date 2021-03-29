@@ -19,47 +19,104 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	smClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner/pkg/util"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+
+	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 )
 
 var validatePodsCmd = &cobra.Command{
-	Use:   "pods",
-	Short: "Validate the submariner pods",
-	Long:  "This command checks that all the submariner pods are running",
-	Run:   validatePods,
+	Use:   "deployment",
+	Short: "Validate the submariner deployment",
+	Long: "This command checks that the submariner components are properly deployed and running" +
+		" with no overlapping CIDRs.",
+	Run: validateSubmarinerDeployment,
 }
 
 func init() {
 	validateCmd.AddCommand(validatePodsCmd)
 }
 
-func validatePods(cmd *cobra.Command, args []string) {
+func validateSubmarinerDeployment(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
-	exitOnError("error getting REST config for cluster", err)
+	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		message := fmt.Sprintf("Validating submariner pods in %q", item.clusterName)
-		status.Start(message)
-		fmt.Println()
-		checkPods(item.config, OperatorNamespace)
+		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
+		submariner := getSubmarinerResource(item.config)
+		if submariner == nil {
+			status.QueueWarningMessage(submMissingMessage)
+			status.End(cli.Success)
+			continue
+		}
+
+		status.End(cli.Success)
+		checkPods(item, submariner, OperatorNamespace)
+		checkOverlappingCIDRs(item, submariner)
 	}
 }
 
-func checkPods(config *rest.Config, operatorNamespace string) {
-	submariner := getSubmarinerResource(config)
-	if submariner == nil {
-		status.QueueWarningMessage(submMissingMessage)
-		status.End(cli.Success)
+func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
+	submarinerClient, err := smClientset.NewForConfig(item.config)
+	exitOnError("Unable to get the Submariner client", err)
+
+	status.Start("Checking if cluster CIDRs overlap")
+
+	localClusterName := submariner.Status.ClusterID
+	endpointList, err := submarinerClient.SubmarinerV1().Endpoints(submariner.Namespace).List(metav1.ListOptions{})
+	if err != nil {
+		status.QueueFailureMessage(fmt.Sprintf("Error listing the Submariner endpoints in cluster %q", localClusterName))
+		status.End(cli.Failure)
 		return
 	}
 
-	kubeClientSet, err := kubernetes.NewForConfig(config)
+	for i, source := range endpointList.Items {
+		for _, dest := range endpointList.Items[i+1:] {
+			// Currently we dont support multiple endpoints in a cluster, hence return an error.
+			// When the corresponding support is added, this check needs to be updated.
+			if source.Spec.ClusterID == dest.Spec.ClusterID {
+				status.QueueFailureMessage(fmt.Sprintf("Found multiple Submariner endpoints (%q and %q) in cluster %q",
+					source.Name, dest.Name, source.Spec.ClusterID))
+				continue
+			}
+
+			for _, subnet := range dest.Spec.Subnets {
+				overlap, err := util.IsOverlappingCIDR(source.Spec.Subnets, subnet)
+				if err != nil {
+					// Ideally this case will never hit, as the subnets are valid CIDRs
+					status.QueueFailureMessage(fmt.Sprintf("Error parsing CIDR in cluster %q: %s", dest.Spec.ClusterID, err))
+					continue
+				}
+
+				if overlap {
+					status.QueueFailureMessage(fmt.Sprintf("CIDR %q in cluster %q overlaps with cluster %q (CIDRs: %v)",
+						subnet, dest.Spec.ClusterID, source.Spec.ClusterID, source.Spec.Subnets))
+				}
+			}
+		}
+	}
+
+	if status.HasFailureMessages() {
+		status.End(cli.Failure)
+		return
+	}
+
+	status.QueueSuccessMessage("Clusters do not have overlapping CIDRs")
+	status.End(cli.Success)
+}
+
+func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespace string) {
+	message := fmt.Sprintf("Validating submariner pods in %q", item.clusterName)
+	status.Start(message)
+
+	kubeClientSet, err := kubernetes.NewForConfig(item.config)
 
 	if err != nil {
-		exitOnError("error creating Kubernetes client", err)
+		exitOnError("Error creating Kubernetes client", err)
 	}
 
 	if !CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-gateway") {
@@ -89,7 +146,11 @@ func checkPods(config *rest.Config, operatorNamespace string) {
 		}
 	}
 
-	message := "All Submariner pods are up and running"
+	if !checkPodsStatus(kubeClientSet, operatorNamespace) {
+		return
+	}
+
+	message = "All Submariner pods are up and running"
 	status.QueueSuccessMessage(message)
 	status.End(cli.Success)
 }
@@ -136,6 +197,34 @@ func CheckDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName str
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
 		return false
+	}
+
+	return true
+}
+
+func checkPodsStatus(k8sClient kubernetes.Interface, operatorNamespace string) bool {
+	pods, err := k8sClient.CoreV1().Pods(operatorNamespace).List(metav1.ListOptions{})
+	if err != nil {
+		message := fmt.Sprintf("Error obtaining Pods list: %v", err)
+		status.QueueFailureMessage(message)
+		status.End(cli.Failure)
+		return false
+	}
+
+	for _, pod := range pods.Items {
+		if pod.Status.Phase != v1.PodRunning {
+			message := fmt.Sprintf("Pod %q is not running. (current state is %v)", pod.Name, pod.Status.Phase)
+			status.QueueFailureMessage(message)
+			status.End(cli.Failure)
+			return false
+		}
+
+		for _, c := range pod.Status.ContainerStatuses {
+			if c.RestartCount >= 5 {
+				message := fmt.Sprintf("Pod %q has restarted %d times", pod.Name, c.RestartCount)
+				status.QueueWarningMessage(message)
+			}
+		}
 	}
 
 	return true
