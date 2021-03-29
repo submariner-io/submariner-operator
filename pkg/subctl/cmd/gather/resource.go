@@ -22,6 +22,7 @@ import (
 
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"
@@ -88,4 +89,12 @@ func gatherDeployment(info *Info, namespace, byLabelSelector string) {
 		Version:  appsv1.SchemeGroupVersion.Version,
 		Resource: "deployments",
 	}, namespace, metav1.ListOptions{LabelSelector: byLabelSelector})
+}
+
+func configMaps(info *Info, namespace string, listOptions metav1.ListOptions) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    corev1.SchemeGroupVersion.Group,
+		Version:  corev1.SchemeGroupVersion.Version,
+		Resource: "configmaps",
+	}, namespace, listOptions)
 }
