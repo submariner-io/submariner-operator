@@ -29,7 +29,7 @@ const (
 
 var validateFirewallMetricsCmd = &cobra.Command{
 	Use:   "metrics",
-	Short: "Validate if firewall allows metrics on the Gateway nodes.",
+	Short: "Validate firewall access to metrics.",
 	Long:  "This command checks whether firewall configuration allows metrics to be read from the Gateway nodes.",
 	Run:   validateFirewallMetricsConfig,
 }
@@ -99,5 +99,5 @@ func validateFirewallMetricsConfigWithinCluster(item restConfig) {
 		return
 	}
 
-	status.QueueSuccessMessage("The firewall configuration for prometheus metrics is working fine.")
+	status.QueueSuccessMessage("Prometheus metrics can be retrieved from gateway nodes.")
 }
