@@ -7,18 +7,19 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-openapi/spec v0.20.0
 	github.com/googleapis/gnostic v0.4.0 // indirect
+	github.com/hashicorp/go-version v1.2.0
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
-	github.com/onsi/ginkgo v1.15.0
-	github.com/onsi/gomega v1.10.5
+	github.com/onsi/ginkgo v1.15.2
+	github.com/onsi/gomega v1.11.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.4.0
 	github.com/operator-framework/operator-sdk v0.17.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.9.0
+	github.com/prometheus/client_golang v1.10.0
 	github.com/spf13/cobra v1.1.1
-	github.com/submariner-io/admiral v0.9.0-m1.0.20210303181719-5bb1de3368b5
+	github.com/submariner-io/admiral v0.9.0-m1.0.20210326161940-f9d67998ec93
 	github.com/submariner-io/lighthouse v0.9.0-m1
 	github.com/submariner-io/shipyard v0.9.0-m1
 	github.com/submariner-io/submariner v0.9.0-m1.0.20210325165515-2670f96657f7
