@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner/pkg/cidr"
 	smClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -85,7 +85,7 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
 			}
 
 			for _, subnet := range dest.Spec.Subnets {
-				overlap, err := util.IsOverlappingCIDR(source.Spec.Subnets, subnet)
+				overlap, err := cidr.IsOverlapping(source.Spec.Subnets, subnet)
 				if err != nil {
 					// Ideally this case will never hit, as the subnets are valid CIDRs
 					status.QueueFailureMessage(fmt.Sprintf("Error parsing CIDR in cluster %q: %s", dest.Spec.ClusterID, err))

@@ -95,6 +95,7 @@ The following verifications are deemed disruptive:
 		}
 		return checkVerifyArguments()
 	},
+	PreRunE: checkVersionMismatch,
 	Run: func(cmd *cobra.Command, args []string) {
 		testType := ""
 		configureTestingFramework(args)
