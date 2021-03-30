@@ -33,30 +33,36 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 			return errors.WithMessagef(err, "error listing %q", ofType.Resource)
 		}
 
-		path := filepath.Join(info.DirName, info.ClusterName+"-"+ofType.Resource+".yaml")
-		file, err := os.Create(path)
-		if err != nil {
-			return errors.WithMessagef(err, "error opening file %s", path)
+		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d %s in namespace %q", len(list.Items), ofType.Resource, namespace))
+
+		for _, item := range list.Items {
+			nsPart := ""
+			if namespace != "" {
+				nsPart = "_" + namespace
+			}
+
+			path := filepath.Join(info.DirName, info.ClusterName+"_"+ofType.Resource+nsPart+"_"+item.GetName()+".yaml")
+			file, err := os.Create(path)
+			if err != nil {
+				return errors.WithMessagef(err, "error opening file %s", path)
+			}
+
+			defer file.Close()
+
+			data, err := yaml.Marshal(item)
+			if err != nil {
+				return errors.WithMessage(err, "error marshaling to YAML")
+			}
+
+			_, err = file.Write(data)
+			if err != nil {
+				return errors.WithMessagef(err, "error writing to file %s", path)
+			}
 		}
-
-		defer file.Close()
-
-		data, err := yaml.Marshal(list)
-		if err != nil {
-			return errors.WithMessage(err, "error marshaling to YAML")
-		}
-
-		_, err = file.Write(data)
-		if err != nil {
-			return errors.WithMessagef(err, "error writing to file %s", path)
-		}
-
 		return nil
 	}()
 
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather %s: %s", ofType.Resource, err))
-	} else {
-		info.Status.QueueSuccessMessage(fmt.Sprintf("Successfully gathered %s", ofType.Resource))
 	}
 }

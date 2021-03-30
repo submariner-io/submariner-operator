@@ -38,6 +38,7 @@ var verifyConnectivityCmd = &cobra.Command{
 	Args: func(cmd *cobra.Command, args []string) error {
 		return checkValidateArguments(args)
 	},
+	PreRunE: checkVersionMismatch,
 	Run: func(cmd *cobra.Command, args []string) {
 		configureTestingFramework(args)
 		e2e.RunE2ETests(&testing.T{})

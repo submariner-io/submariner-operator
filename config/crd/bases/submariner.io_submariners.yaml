@@ -364,10 +364,16 @@ spec:
                             type: string
                           statusMessage:
                             type: string
+                          usingIP:
+                            type: string
+                          usingNAT:
+                            type: boolean
                         required:
                         - endpoint
                         - status
                         - statusMessage
+                        - usingIP
+                        - usingNAT
                         type: object
                       type: array
                     haStatus:
