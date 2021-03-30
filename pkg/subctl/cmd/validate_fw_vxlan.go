@@ -20,12 +20,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/shipyard/test/e2e/framework"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 )
 
 var validateFirewallVxLANConfigCmd = &cobra.Command{
@@ -35,16 +33,9 @@ var validateFirewallVxLANConfigCmd = &cobra.Command{
 	Run:   validateFirewallVxLANConfig,
 }
 
-var validationTimeout uint
-
 const (
-	TCPSniffCommand = "tcpdump -ln -c 3 -i vx-submariner tcp and port 8080 and 'tcp[tcpflags] == tcp-syn'"
+	TCPSniffVxLANCommand = "tcpdump -ln -c 3 -i vx-submariner tcp and port 8080 and 'tcp[tcpflags] == tcp-syn'"
 )
-
-func addValidateFWConfigFlags(cmd *cobra.Command) {
-	cmd.Flags().UintVar(&validationTimeout, "validation-timeout", 90,
-		"timeout in seconds while validating the connection attempt")
-}
 
 func init() {
 	addValidateFWConfigFlags(validateFirewallVxLANConfigCmd)
@@ -95,7 +86,8 @@ func validateFWConfigWithinCluster(item restConfig, submariner *v1alpha1.Submari
 		return
 	}
 
-	sPod, err := spawnSnifferPodOnGatewayNode(clientSet)
+	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffVxLANCommand)
+	sPod, err := spawnSnifferPodOnGatewayNode(clientSet, namespace, podCommand)
 	if err != nil {
 		message := fmt.Sprintf("Error while spawning the sniffer pod on the GatewayNode: %v", err)
 		status.QueueFailureMessage(message)
@@ -104,7 +96,8 @@ func validateFWConfigWithinCluster(item restConfig, submariner *v1alpha1.Submari
 
 	defer sPod.DeletePod()
 	remoteClusterIP := strings.Split(gateways.Items[0].Status.Connections[0].Endpoint.Subnets[0], "/")[0]
-	cPod, err := spawnClientPodOnNonGatewayNode(clientSet, remoteClusterIP)
+	podCommand = fmt.Sprintf("nc -w %d %s 8080", validationTimeout/2, remoteClusterIP)
+	cPod, err := spawnClientPodOnNonGatewayNode(clientSet, namespace, podCommand)
 	if err != nil {
 		message := fmt.Sprintf("Error while spawning the client pod on non-Gateway node: %v", err)
 		status.QueueFailureMessage(message)
@@ -140,39 +133,5 @@ func validateFWConfigWithinCluster(item restConfig, submariner *v1alpha1.Submari
 		return
 	}
 
-	status.QueueSuccessMessage("The firewall configuration is working fine.")
-}
-
-func spawnSnifferPodOnGatewayNode(clientSet *kubernetes.Clientset) (*resource.NetworkPod, error) {
-	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffCommand)
-	sPod, err := resource.SchedulePod(&resource.PodConfig{
-		Name:       "validate-fwconfig-sniffer",
-		ClientSet:  clientSet,
-		Scheduling: framework.GatewayNode,
-		Networking: framework.HostNetworking,
-		Namespace:  namespace,
-		Command:    podCommand,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	return sPod, nil
-}
-
-func spawnClientPodOnNonGatewayNode(clientSet *kubernetes.Clientset, remoteIP string) (*resource.NetworkPod, error) {
-	podCommand := fmt.Sprintf("nc -w %d %s 8080", validationTimeout/2, remoteIP)
-	cPod, err := resource.SchedulePod(&resource.PodConfig{
-		Name:       "validate-fwconfig-client",
-		ClientSet:  clientSet,
-		Scheduling: framework.NonGatewayNode,
-		Networking: framework.PodNetworking,
-		Namespace:  namespace,
-		Command:    podCommand,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	return cPod, nil
+	status.QueueSuccessMessage("The firewall configuration for vx-submariner is working fine.")
 }
