@@ -82,7 +82,7 @@ func processLogStream(logrequest *rest.Request) (string, error) {
 }
 
 func writeLogToFile(data, podName string, info *Info) error {
-	fileName := filepath.Join(info.DirName, info.ClusterName+"-"+podName+".log")
+	fileName := filepath.Join(info.DirName, info.ClusterName+"_"+podName+".log")
 	f, err := os.Create(fileName)
 	if err != nil {
 		return errors.WithMessagef(err, "error opening file %s", fileName)
