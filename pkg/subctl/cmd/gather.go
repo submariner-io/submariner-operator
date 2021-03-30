@@ -181,7 +181,15 @@ func gatherConnectivity(dataType string, info *gather.Info) bool {
 func gatherDiscovery(dataType string, info *gather.Info) bool {
 	switch dataType {
 	case Logs:
-		info.Status.QueueWarningMessage("Gather ServiceDiscovery Logs not implemented yet")
+		err := gather.ServiceDiscoveryPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather all ServiceDiscovery pod logs: %s", err))
+		}
+
+		err = gather.CoreDNSPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather CoreDNS pod logs: %s", err))
+		}
 	case Resources:
 		gather.ServiceExports(info, corev1.NamespaceAll)
 		gather.ServiceImports(info, corev1.NamespaceAll)

@@ -26,6 +26,19 @@ import (
 	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 )
 
+const (
+	lighthouseComponentsLabel = "component=submariner-lighthouse"
+	coreDNSPodLabel           = "k8s-app=kube-dns"
+)
+
+func ServiceDiscoveryPodLogs(info *Info) error {
+	return gatherPodLogs(lighthouseComponentsLabel, info)
+}
+
+func CoreDNSPodLogs(info *Info) error {
+	return gatherPodLogs(coreDNSPodLabel, info)
+}
+
 func ServiceExports(info *Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    mcsv1a1.GroupName,
