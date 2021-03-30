@@ -36,6 +36,8 @@ func gatherPodLogs(podLabelSelector string, info *Info) error {
 		return err
 	}
 
+	info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector))
+
 	for i := range pods.Items {
 		pod := &pods.Items[i]
 		err := podLogsToFile(pod, info)
@@ -100,10 +102,6 @@ func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.P
 
 	if err != nil {
 		return nil, errors.WithMessage(err, "error listing pods")
-	}
-
-	if len(pods.Items) == 0 {
-		return nil, fmt.Errorf("no pods found matching label selector %q", byLabelSelector)
 	}
 
 	return pods, nil

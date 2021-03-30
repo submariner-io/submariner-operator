@@ -157,15 +157,11 @@ func gatherConnectivity(dataType string, info *gather.Info) bool {
 		err := gather.GatewayPodLogs(info)
 		if err != nil {
 			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Gateway pod logs: %s", err))
-		} else {
-			info.Status.QueueSuccessMessage("Successfully gathered Gateway pod logs")
 		}
 
 		err = gather.RouteAgentPodLogs(info)
 		if err != nil {
 			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Route Agent pod logs: %s", err))
-		} else {
-			info.Status.QueueSuccessMessage("Successfully gathered Route Agent pod logs")
 		}
 	case Resources:
 		gather.Endpoints(info, SubmarinerNamespace)
