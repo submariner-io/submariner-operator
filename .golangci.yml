@@ -61,7 +61,9 @@ issues:
         - lll
         - stylecheck
       path: "pkg/subctl/operator/common/embeddedyamls/yamls.go"
-
+    - linters:
+        - maligned
+      path: "apis/submariner/v1alpha1/submariner_types.go"
     # BrokerK8sApiServer parameter is used by other projects, like ACM,
     # so not changing it to BrokerK8sAPIServer as suggested by stylecheck
     - linters:

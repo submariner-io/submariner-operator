@@ -539,6 +539,12 @@ func newGatewayPodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 			corev1.EnvVar{Name: "CE_IPSEC_NATTPORT", Value: strconv.Itoa(cr.Spec.CeIPSecNATTPort)})
 	}
 
+	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer)})
+
+	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+		corev1.EnvVar{Name: "CE_IPSEC_FORCEENCAPS", Value: strconv.FormatBool(cr.Spec.CeIPSecForceUDPEncaps)})
+
 	return podTemplate
 }
 
