@@ -156,11 +156,19 @@ func gatherConnectivity(dataType string, info *gather.Info) bool {
 		if err != nil {
 			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Route Agent pod logs: %s", err))
 		}
+
+		err = gather.GlobalnetPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Globalnet pod logs: %s", err))
+		}
+
+		err = gather.NetworkPluginSyncerPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather NetworkPluginSyncer pod logs: %s", err))
+		}
 	case Resources:
 		gather.Endpoints(info, SubmarinerNamespace)
-
 		gather.Clusters(info, SubmarinerNamespace)
-
 		gather.Gateways(info, SubmarinerNamespace)
 	default:
 		return false
@@ -202,7 +210,14 @@ func gatherOperator(dataType string, info *gather.Info) bool {
 	case Logs:
 		info.Status.QueueWarningMessage("Gather Operator Logs not implemented yet")
 	case Resources:
-		info.Status.QueueWarningMessage("Gather Operator Resources not implemented yet")
+		gather.OperatorSubmariner(info, SubmarinerNamespace)
+		gather.OperatorServiceDiscovery(info, SubmarinerNamespace)
+		gather.GatewayDaemonSet(info, SubmarinerNamespace)
+		gather.RouteAgentDaemonSet(info, SubmarinerNamespace)
+		gather.GlobalnetDaemonSet(info, SubmarinerNamespace)
+		gather.NetworkPluginSyncerDeployment(info, SubmarinerNamespace)
+		gather.LighthouseAgentDeployment(info, SubmarinerNamespace)
+		gather.LighthouseCoreDNSDeployment(info, SubmarinerNamespace)
 	default:
 		return false
 	}
