@@ -73,9 +73,9 @@ func ConfigMapCoreDNS(info *Info, namespace string) {
 		"metadata.name": "coredns",
 	}
 	fieldSelector := fields.Set(fieldMap).String()
-	configMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
+	gatherConfigMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
 }
 
 func ConfigMapLighthouseDNS(info *Info, namespace string) {
-	configMaps(info, namespace, metav1.ListOptions{})
+	gatherConfigMaps(info, namespace, metav1.ListOptions{LabelSelector: lighthouseComponentsLabel})
 }
