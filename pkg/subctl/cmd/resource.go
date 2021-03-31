@@ -38,22 +38,23 @@ func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, e
 	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
 	rules.ExplicitPath = kubeConfigPath
 
+	contexts := []string{}
 	if kubeContext != "" {
-		overrides.CurrentContext = kubeContext
-	}
-
-	if kubeConfigPath != "" || kubeContext != "" {
-		config, err := getClientConfigAndClusterName(rules, overrides)
+		contexts = append(contexts, kubeContext)
+	} else {
+		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
+		rawConfig, err := kubeConfig.RawConfig()
 		if err != nil {
-			return nil, err
+			return restConfigs, err
 		}
-		restConfigs = append(restConfigs, config)
-		return restConfigs, nil
+		for context := range rawConfig.Contexts {
+			contexts = append(contexts, context)
+		}
 	}
 
-	for _, item := range rules.Precedence {
-		if item != "" {
-			rules.ExplicitPath = item
+	for _, context := range contexts {
+		if context != "" {
+			overrides.CurrentContext = context
 			config, err := getClientConfigAndClusterName(rules, overrides)
 			if err != nil {
 				return nil, err
