@@ -52,7 +52,7 @@ func validateAll(cmd *cobra.Command, args []string) {
 		status.End(cli.Success)
 		fmt.Println()
 
-		validateCNIInCluster(item.clusterName, submariner)
+		validateCNIInCluster(item.config, item.clusterName, submariner)
 		fmt.Println()
 		validateConnectionsInCluster(item.config, item.clusterName)
 		fmt.Println()
