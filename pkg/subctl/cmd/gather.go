@@ -103,12 +103,6 @@ func gatherData() {
 
 	clusterName := *getClusterNameFromContext(rawConfig, "")
 
-	submariner := getSubmarinerResource(restConfig)
-	if submariner == nil {
-		fmt.Println(submMissingMessage)
-		return
-	}
-
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
 	}
@@ -124,7 +118,6 @@ func gatherData() {
 
 	info := &gather.Info{
 		RestConfig:  restConfig,
-		Submariner:  submariner,
 		ClusterName: clusterName,
 		DirName:     directory,
 	}
@@ -194,7 +187,7 @@ func gatherBroker(dataType string, info *gather.Info) bool {
 	case Logs:
 		info.Status.QueueWarningMessage("No logs to gather on Broker")
 	case Resources:
-		_, _ = getBrokerRestConfig(info.Submariner)
+		_, _ = getBrokerRestConfig(info.RestConfig)
 
 		info.Status.QueueWarningMessage("Gather Broker Resources not implemented yet")
 	default:
