@@ -91,7 +91,7 @@ func gatherDeployment(info *Info, namespace, byLabelSelector string) {
 	}, namespace, metav1.ListOptions{LabelSelector: byLabelSelector})
 }
 
-func configMaps(info *Info, namespace string, listOptions metav1.ListOptions) {
+func gatherConfigMaps(info *Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    corev1.SchemeGroupVersion.Group,
 		Version:  corev1.SchemeGroupVersion.Version,
