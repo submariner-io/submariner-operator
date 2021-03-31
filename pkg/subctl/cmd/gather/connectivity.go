@@ -18,12 +18,15 @@ package gather
 
 import (
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
-	gatewayPodLabel    = "app=submariner-gateway"
-	routeagentPodLabel = "app=submariner-routeagent"
+	gatewayPodLabel             = "app=submariner-gateway"
+	routeagentPodLabel          = "app=submariner-routeagent"
+	globalnetPodLabel           = "app=submariner-globalnet"
+	networkpluginSyncerPodLabel = "app=submariner-networkplugin-syncer"
 )
 
 func GatewayPodLogs(info *Info) error {
@@ -34,12 +37,20 @@ func RouteAgentPodLogs(info *Info) error {
 	return gatherPodLogs(routeagentPodLabel, info)
 }
 
+func GlobalnetPodLogs(info *Info) error {
+	return gatherPodLogs(globalnetPodLabel, info)
+}
+
+func NetworkPluginSyncerPodLogs(info *Info) error {
+	return gatherPodLogs(networkpluginSyncerPodLabel, info)
+}
+
 func Endpoints(info *Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
 		Resource: "endpoints",
-	}, namespace)
+	}, namespace, v1.ListOptions{})
 }
 
 func Clusters(info *Info, namespace string) {
@@ -47,7 +58,7 @@ func Clusters(info *Info, namespace string) {
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
 		Resource: "clusters",
-	}, namespace)
+	}, namespace, v1.ListOptions{})
 }
 
 func Gateways(info *Info, namespace string) {
@@ -55,5 +66,5 @@ func Gateways(info *Info, namespace string) {
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
 		Resource: "gateways",
-	}, namespace)
+	}, namespace, v1.ListOptions{})
 }
