@@ -78,7 +78,11 @@ func checkBenchmarkArguments(args []string, intraCluster bool) error {
 }
 
 func testThroughput(cmd *cobra.Command, args []string) {
-	configureTestingFramework(args)
+	err := configureTestingFramework(args)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 
 	if benchmark.Verbose {
 		fmt.Printf("Performing throughput tests\n")
@@ -87,7 +91,11 @@ func testThroughput(cmd *cobra.Command, args []string) {
 }
 
 func testLatency(cmd *cobra.Command, args []string) {
-	configureTestingFramework(args)
+	err := configureTestingFramework(args)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 
 	if benchmark.Verbose {
 		fmt.Printf("Performing latency tests\n")

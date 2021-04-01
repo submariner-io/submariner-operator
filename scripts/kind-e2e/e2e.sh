@@ -37,9 +37,9 @@ else
 fi
 
 # run dataplane E2E tests between the two clusters
-${DAPPER_SOURCE}/bin/subctl verify ${verify} --submariner-namespace=$subm_ns --verbose --connection-timeout 20 --connection-attempts 4 \
-    ${KUBECONFIGS_DIR}/kind-config-cluster1 \
-    ${KUBECONFIGS_DIR}/kind-config-cluster2
+${DAPPER_SOURCE}/bin/subctl verify ${verify} --submariner-namespace=$subm_ns \
+    --verbose --connection-timeout 20 --connection-attempts 4 \
+    --kubecontexts cluster1,cluster2
 
 . ${DAPPER_SOURCE}/scripts/kind-e2e/lib_subctl_gather_test.sh
 
