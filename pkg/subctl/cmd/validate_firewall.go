@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/shipyard/test/e2e/framework"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
@@ -44,28 +43,32 @@ func init() {
 
 func spawnSnifferPodOnGatewayNode(clientSet *kubernetes.Clientset,
 	namespace, podCommand string) (*resource.NetworkPod, error) {
-	sPod, err := resource.SchedulePod(&resource.PodConfig{
-		Name:       "validate-fwconfig-sniffer",
-		ClientSet:  clientSet,
-		Scheduling: framework.GatewayNode,
-		Networking: framework.HostNetworking,
-		Namespace:  namespace,
-		Command:    podCommand,
-	})
+	scheduling := resource.PodScheduling{ScheduleOn: resource.GatewayNode, Networking: resource.HostNetworking}
+	return spawnPod(clientSet, scheduling, "validate-sniffer",
+		namespace, podCommand)
+}
 
-	if err != nil {
-		return nil, err
-	}
-	return sPod, nil
+func spawnSnifferPodOnNode(clientSet *kubernetes.Clientset,
+	nodeName, namespace, podCommand string) (*resource.NetworkPod, error) {
+	scheduling := resource.PodScheduling{ScheduleOn: resource.CustomNode, NodeName: nodeName,
+		Networking: resource.HostNetworking}
+	return spawnPod(clientSet, scheduling, "validate-sniffer",
+		namespace, podCommand)
 }
 
 func spawnClientPodOnNonGatewayNode(clientSet *kubernetes.Clientset,
 	namespace, podCommand string) (*resource.NetworkPod, error) {
-	cPod, err := resource.SchedulePod(&resource.PodConfig{
-		Name:       "validate-fwconfig-client",
+	scheduling := resource.PodScheduling{ScheduleOn: resource.NonGatewayNode, Networking: resource.PodNetworking}
+	return spawnPod(clientSet, scheduling, "validate-client",
+		namespace, podCommand)
+}
+
+func spawnPod(clientSet *kubernetes.Clientset, scheduling resource.PodScheduling, podName, namespace,
+	podCommand string) (*resource.NetworkPod, error) {
+	pod, err := resource.SchedulePod(&resource.PodConfig{
+		Name:       podName,
 		ClientSet:  clientSet,
-		Scheduling: framework.NonGatewayNode,
-		Networking: framework.PodNetworking,
+		Scheduling: scheduling,
 		Namespace:  namespace,
 		Command:    podCommand,
 	})
@@ -73,5 +76,5 @@ func spawnClientPodOnNonGatewayNode(clientSet *kubernetes.Clientset,
 	if err != nil {
 		return nil, err
 	}
-	return cPod, nil
+	return pod, nil
 }
