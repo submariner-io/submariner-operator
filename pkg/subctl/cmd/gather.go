@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 
@@ -180,9 +181,21 @@ func gatherConnectivity(dataType string, info *gather.Info) bool {
 func gatherDiscovery(dataType string, info *gather.Info) bool {
 	switch dataType {
 	case Logs:
-		info.Status.QueueWarningMessage("Gather ServiceDiscovery Logs not implemented yet")
+		err := gather.ServiceDiscoveryPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather all ServiceDiscovery pod logs: %s", err))
+		}
+
+		err = gather.CoreDNSPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather CoreDNS pod logs: %s", err))
+		}
 	case Resources:
-		info.Status.QueueWarningMessage("Gather ServiceDiscovery Resources not implemented yet")
+		gather.ServiceExports(info, corev1.NamespaceAll)
+		gather.ServiceImports(info, corev1.NamespaceAll)
+		gather.EndpointSlices(info, corev1.NamespaceAll)
+		gather.ConfigMapLighthouseDNS(info, SubmarinerNamespace)
+		gather.ConfigMapCoreDNS(info, "kube-system")
 	default:
 		return false
 	}
