@@ -13,19 +13,46 @@ function test_subctl_gather() {
 
   ${DAPPER_SOURCE}/bin/subctl gather --kubeconfig ${KUBECONFIGS_DIR}/kind-config-${cluster} --dir $out_dir
 
+  # connectivity
   validate_resource_files $subm_ns 'endpoints.submariner.io' 'Endpoint'
   validate_resource_files $subm_ns 'clusters.submariner.io' 'Cluster'
   validate_resource_files $subm_ns 'gateways.submariner.io' 'Gateway'
 
-  validate_pod_log_files $subm_ns $gateway_deployment_name
-  validate_pod_log_files $subm_ns $routeagent_deployment_name
+  validate_pod_log_files $subm_ns '-l app=submariner-gateway'
+  validate_pod_log_files $subm_ns '-l app=submariner-routeagent'
+  validate_pod_log_files $subm_ns '-l app=submariner-globalnet'
+  validate_pod_log_files $subm_ns '-l app=submariner-networkplugin-syncer'
+
+  # operator
+  validate_resource_files $subm_ns 'submariners' 'Submariner'
+  validate_resource_files $subm_ns 'servicediscoveries' 'ServiceDiscovery'
+  validate_resource_files $subm_ns 'daemonsets' 'DaemonSet' '-l app=submariner-gateway'
+  validate_resource_files $subm_ns 'daemonsets' 'DaemonSet' '-l app=submariner-routeagent'
+  validate_resource_files $subm_ns 'daemonsets' 'DaemonSet' '-l app=submariner-globalnet'
+  validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-networkplugin-syncer'
+  validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-lighthouse-agent'
+  validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-lighthouse-coredns'
+
+  # Service Discovery
+  validate_resource_files all 'serviceexports.multicluster.x-k8s.io' 'ServiceExport'
+  validate_resource_files all 'serviceimports.multicluster.x-k8s.io' 'ServiceImport'
+  validate_resource_files all 'endpointslices.discovery.k8s.io' 'EndpointSlice'
+  validate_resource_files $subm_ns 'configmaps' 'ConfigMap' '-l component=submariner-lighthouse'
+  validate_resource_files kube-system 'configmaps' 'ConfigMap' '--field-selector metadata.name=coredns'
+
+  validate_pod_log_files $subm_ns '-l component=submariner-lighthouse'
+  validate_pod_log_files kube-system '-l k8s-app=kube-dns'
 }
 
 function validate_pod_log_files() {
   local ns=$1
-  local label=$2
+  local selector=$2
+  local nsarg="--namespace=${ns}"
 
-  pod_names=$(kubectl get pods --namespace=$ns -l app=$label -o=jsonpath='{.items..metadata.name}')
+  if [[ "$ns" == "all" ]]; then
+    nsarg="-A"
+  fi
+  pod_names=$(kubectl get pods $nsarg $selector -o=jsonpath='{.items..metadata.name}')
   read -ra pod_names_array <<< "$pod_names"
 
   for pod_name in "${pod_names_array[@]}"; do
@@ -38,9 +65,9 @@ function validate_resource_files() {
   local ns=$1
   local resource=$2
   local kind=$3
-  local label=$4
+  local selector=$4
 
-  names=$(kubectl get $resource --namespace=$ns -o=jsonpath='{.items..metadata.name}')
+  names=$(kubectl get $resource --namespace=$ns $selector -o=jsonpath='{.items..metadata.name}')
   read -ra names_array <<< "$names"
 
   short_res=$(echo $resource | awk -F. '{ print $1 }')
