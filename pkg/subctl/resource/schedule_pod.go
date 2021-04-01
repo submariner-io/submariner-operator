@@ -25,11 +25,32 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+type schedulingType int
+
+const (
+	InvalidScheduling schedulingType = iota
+	GatewayNode
+	NonGatewayNode
+	CustomNode
+)
+
+type networkingType bool
+
+const (
+	HostNetworking networkingType = true
+	PodNetworking  networkingType = false
+)
+
+type PodScheduling struct {
+	ScheduleOn schedulingType
+	NodeName   string
+	Networking networkingType
+}
+
 type PodConfig struct {
 	Name       string
 	ClientSet  *kubernetes.Clientset
-	Scheduling framework.NetworkPodScheduling
-	Networking framework.NetworkingType
+	Scheduling PodScheduling
 	Namespace  string
 	Command    string
 	Timeout    uint
@@ -42,8 +63,8 @@ type NetworkPod struct {
 }
 
 func SchedulePodAwaitCompletion(config *PodConfig) (string, error) {
-	if config.Scheduling == framework.InvalidScheduling {
-		config.Scheduling = framework.GatewayNode
+	if config.Scheduling.ScheduleOn == InvalidScheduling {
+		config.Scheduling.ScheduleOn = GatewayNode
 	}
 
 	if config.Namespace == "" {
@@ -64,8 +85,8 @@ func SchedulePodAwaitCompletion(config *PodConfig) (string, error) {
 }
 
 func SchedulePod(config *PodConfig) (*NetworkPod, error) {
-	if config.Scheduling == framework.InvalidScheduling {
-		config.Scheduling = framework.GatewayNode
+	if config.Scheduling.ScheduleOn == InvalidScheduling {
+		config.Scheduling.ScheduleOn = GatewayNode
 	}
 
 	if config.Namespace == "" {
@@ -81,6 +102,10 @@ func SchedulePod(config *PodConfig) (*NetworkPod, error) {
 }
 
 func (np *NetworkPod) schedulePod() error {
+	if np.Config.Scheduling.ScheduleOn == CustomNode && np.Config.Scheduling.NodeName == "" {
+		return fmt.Errorf("CustomNode is specified for scheduling, but nodeName is missing")
+	}
+
 	networkPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: np.Config.Name,
@@ -89,9 +114,8 @@ func (np *NetworkPod) schedulePod() error {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      nodeAffinity(np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
-			HostNetwork:   bool(np.Config.Networking),
+			HostNetwork:   bool(np.Config.Scheduling.Networking),
 			Containers: []v1.Container{
 				{
 					Name:    np.Config.Name,
@@ -106,13 +130,19 @@ func (np *NetworkPod) schedulePod() error {
 		},
 	}
 
-	if np.Config.Networking == framework.HostNetworking {
+	if np.Config.Scheduling.Networking == HostNetworking {
 		networkPod.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
 			Capabilities: &v1.Capabilities{
 				Add:  []v1.Capability{"NET_ADMIN", "NET_RAW"},
 				Drop: []v1.Capability{"all"},
 			},
 		}
+	}
+
+	if np.Config.Scheduling.ScheduleOn == CustomNode {
+		networkPod.Spec.NodeName = np.Config.Scheduling.NodeName
+	} else {
+		networkPod.Spec.Affinity = nodeAffinity(np.Config.Scheduling.ScheduleOn)
 	}
 
 	pc := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)

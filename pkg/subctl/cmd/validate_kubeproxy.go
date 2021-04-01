@@ -22,7 +22,6 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/submariner-io/shipyard/test/e2e/framework"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 )
@@ -66,11 +65,11 @@ func validateKubeProxyMode(cmd *cobra.Command, args []string) {
 			return
 		}
 
+		scheduling := resource.PodScheduling{ScheduleOn: resource.GatewayNode, Networking: resource.HostNetworking}
 		podOutput, err := resource.SchedulePodAwaitCompletion(&resource.PodConfig{
 			Name:       "query-iface-list",
 			ClientSet:  clientset,
-			Scheduling: framework.GatewayNode,
-			Networking: framework.HostNetworking,
+			Scheduling: scheduling,
 			Namespace:  namespace,
 			Command:    KubeProxyIPVSIfaceCommand,
 		})

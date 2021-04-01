@@ -16,6 +16,10 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
+
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -85,6 +89,24 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	return submariner
 }
 
+func getEndpointResource(config *rest.Config, clusterID string) *submarinerv1.Endpoint {
+	submarinerClient, err := subClientsetv1.NewForConfig(config)
+	exitOnError("Unable to get the Submariner client", err)
+
+	endpoints, err := submarinerClient.SubmarinerV1().Endpoints(OperatorNamespace).List(v1opts.ListOptions{})
+	if err != nil {
+		exitOnError(fmt.Sprintf("Error obtaining the Endpoints in the cluster %q", clusterID), err)
+	}
+
+	for _, endpoint := range endpoints.Items {
+		if endpoint.Spec.ClusterID == clusterID {
+			return &endpoint
+		}
+	}
+
+	return nil
+}
+
 func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
 	submarinerClient, err := subClientsetv1.NewForConfig(config)
 	exitOnError("Unable to get the Submariner client", err)
@@ -151,4 +173,16 @@ func getBrokerRestConfigAndNamespaceFromServiceDisc(submarinerClient *subOperato
 		}, serviceDisc.Spec.BrokerK8sRemoteNamespace)
 
 	return restConfig, serviceDisc.Spec.BrokerK8sRemoteNamespace, err
+}
+
+func compareFiles(file1, file2 string) (bool, error) {
+	first, err := ioutil.ReadFile(file1)
+	if err != nil {
+		return false, err
+	}
+	second, err := ioutil.ReadFile(file2)
+	if err != nil {
+		return false, err
+	}
+	return bytes.Equal(first, second), nil
 }

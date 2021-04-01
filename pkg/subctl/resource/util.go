@@ -31,15 +31,15 @@ func addNodeSelectorTerm(nodeSelTerms []v1.NodeSelectorTerm, label string,
 	}})
 }
 
-func nodeAffinity(scheduling framework.NetworkPodScheduling) *v1.Affinity {
+func nodeAffinity(scheduling schedulingType) *v1.Affinity {
 	var nodeSelTerms []v1.NodeSelectorTerm
 
 	switch scheduling {
-	case framework.GatewayNode:
+	case GatewayNode:
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,
 			v1.NodeSelectorOpIn, []string{"true"})
 
-	case framework.NonGatewayNode:
+	case NonGatewayNode:
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,
 			v1.NodeSelectorOpDoesNotExist, nil)
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,

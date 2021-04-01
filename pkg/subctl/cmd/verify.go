@@ -17,10 +17,8 @@ limitations under the License.
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
@@ -33,13 +31,14 @@ import (
 	_ "github.com/submariner-io/lighthouse/test/e2e/framework"
 	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 )
 
 var (
@@ -201,18 +200,6 @@ func checkValidateArguments(args []string) error {
 		return fmt.Errorf("--connection-timeout must be >=20")
 	}
 	return nil
-}
-
-func compareFiles(file1, file2 string) (bool, error) {
-	first, err := ioutil.ReadFile(file1)
-	if err != nil {
-		return false, err
-	}
-	second, err := ioutil.ReadFile(file2)
-	if err != nil {
-		return false, err
-	}
-	return bytes.Equal(first, second), nil
 }
 
 func checkVerifyArguments() error {
