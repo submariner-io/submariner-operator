@@ -52,6 +52,8 @@ type SubmarinerSpec struct {
 	CeIPSecIKEPort           int                  `json:"ceIPSecIKEPort,omitempty"`
 	CeIPSecNATTPort          int                  `json:"ceIPSecNATTPort,omitempty"`
 	CeIPSecDebug             bool                 `json:"ceIPSecDebug"`
+	CeIPSecPreferredServer   bool                 `json:"ceIPSecPreferredServer,omitempty"`
+	CeIPSecForceUDPEncaps    bool                 `json:"ceIPSecForceUDPEncaps,omitempty"`
 	Debug                    bool                 `json:"debug"`
 	NatEnabled               bool                 `json:"natEnabled"`
 	ServiceDiscoveryEnabled  bool                 `json:"serviceDiscoveryEnabled,omitempty"`

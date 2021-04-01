@@ -50,12 +50,16 @@ spec:
                 type: string
               ceIPSecDebug:
                 type: boolean
+              ceIPSecForceUDPEncaps:
+                type: boolean
               ceIPSecIKEPort:
                 type: integer
               ceIPSecNATTPort:
                 type: integer
               ceIPSecPSK:
                 type: string
+              ceIPSecPreferredServer:
+                type: boolean
               clusterCIDR:
                 type: string
               clusterID:

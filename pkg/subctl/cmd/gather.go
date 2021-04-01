@@ -103,12 +103,6 @@ func gatherData() {
 
 	clusterName := *getClusterNameFromContext(rawConfig, "")
 
-	submariner := getSubmarinerResource(restConfig)
-	if submariner == nil {
-		fmt.Println(submMissingMessage)
-		return
-	}
-
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
 	}
@@ -124,7 +118,6 @@ func gatherData() {
 
 	info := &gather.Info{
 		RestConfig:  restConfig,
-		Submariner:  submariner,
 		ClusterName: clusterName,
 		DirName:     directory,
 	}
@@ -163,11 +156,19 @@ func gatherConnectivity(dataType string, info *gather.Info) bool {
 		if err != nil {
 			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Route Agent pod logs: %s", err))
 		}
+
+		err = gather.GlobalnetPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Globalnet pod logs: %s", err))
+		}
+
+		err = gather.NetworkPluginSyncerPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather NetworkPluginSyncer pod logs: %s", err))
+		}
 	case Resources:
 		gather.Endpoints(info, SubmarinerNamespace)
-
 		gather.Clusters(info, SubmarinerNamespace)
-
 		gather.Gateways(info, SubmarinerNamespace)
 	default:
 		return false
@@ -194,7 +195,7 @@ func gatherBroker(dataType string, info *gather.Info) bool {
 	case Logs:
 		info.Status.QueueWarningMessage("No logs to gather on Broker")
 	case Resources:
-		_, _ = getBrokerRestConfig(info.Submariner)
+		_, _ = getBrokerRestConfig(info.RestConfig)
 
 		info.Status.QueueWarningMessage("Gather Broker Resources not implemented yet")
 	default:
@@ -209,7 +210,14 @@ func gatherOperator(dataType string, info *gather.Info) bool {
 	case Logs:
 		info.Status.QueueWarningMessage("Gather Operator Logs not implemented yet")
 	case Resources:
-		info.Status.QueueWarningMessage("Gather Operator Resources not implemented yet")
+		gather.OperatorSubmariner(info, SubmarinerNamespace)
+		gather.OperatorServiceDiscovery(info, SubmarinerNamespace)
+		gather.GatewayDaemonSet(info, SubmarinerNamespace)
+		gather.RouteAgentDaemonSet(info, SubmarinerNamespace)
+		gather.GlobalnetDaemonSet(info, SubmarinerNamespace)
+		gather.NetworkPluginSyncerDeployment(info, SubmarinerNamespace)
+		gather.LighthouseAgentDeployment(info, SubmarinerNamespace)
+		gather.LighthouseCoreDNSDeployment(info, SubmarinerNamespace)
 	default:
 		return false
 	}
