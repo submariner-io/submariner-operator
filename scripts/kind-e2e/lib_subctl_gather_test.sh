@@ -32,6 +32,9 @@ function test_subctl_gather() {
   validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-networkplugin-syncer'
   validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-lighthouse-agent'
   validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-lighthouse-coredns'
+  validate_resource_files $subm_ns 'deployments' 'Deployment' '--field-selector metadata.name=submariner-operator'
+
+  validate_pod_log_files $subm_ns '-l name=submariner-operator'
 
   # Service Discovery
   validate_resource_files all 'serviceexports.multicluster.x-k8s.io' 'ServiceExport'

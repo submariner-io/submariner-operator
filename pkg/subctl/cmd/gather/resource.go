@@ -75,20 +75,20 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 	}
 }
 
-func gatherDaemonSet(info Info, namespace, byLabelSelector string) {
+func gatherDaemonSet(info Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
 		Resource: "daemonsets",
-	}, namespace, metav1.ListOptions{LabelSelector: byLabelSelector})
+	}, namespace, listOptions)
 }
 
-func gatherDeployment(info Info, namespace, byLabelSelector string) {
+func gatherDeployment(info Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
 		Resource: "deployments",
-	}, namespace, metav1.ListOptions{LabelSelector: byLabelSelector})
+	}, namespace, listOptions)
 }
 
 func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOptions) {
