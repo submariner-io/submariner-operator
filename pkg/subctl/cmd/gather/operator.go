@@ -18,10 +18,11 @@ package gather
 import (
 	submarinerOp "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func OperatorSubmariner(info Info, namespace string) {
+func Submariners(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerOp.SchemeGroupVersion.Group,
 		Version:  submarinerOp.SchemeGroupVersion.Version,
@@ -29,7 +30,7 @@ func OperatorSubmariner(info Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
-func OperatorServiceDiscovery(info Info, namespace string) {
+func ServiceDiscoveries(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerOp.SchemeGroupVersion.Group,
 		Version:  submarinerOp.SchemeGroupVersion.Version,
@@ -37,26 +38,36 @@ func OperatorServiceDiscovery(info Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
+func SubmarinerOperatorDeployment(info Info, namespace string) {
+	gatherDeployment(info, namespace, metav1.ListOptions{FieldSelector: fields.Set(map[string]string{
+		"metadata.name": "submariner-operator",
+	}).String()})
+}
+
 func GatewayDaemonSet(info Info, namespace string) {
-	gatherDaemonSet(info, namespace, gatewayPodLabel)
+	gatherDaemonSet(info, namespace, metav1.ListOptions{LabelSelector: gatewayPodLabel})
 }
 
 func RouteAgentDaemonSet(info Info, namespace string) {
-	gatherDaemonSet(info, namespace, routeagentPodLabel)
+	gatherDaemonSet(info, namespace, metav1.ListOptions{LabelSelector: routeagentPodLabel})
 }
 
 func GlobalnetDaemonSet(info Info, namespace string) {
-	gatherDaemonSet(info, namespace, globalnetPodLabel)
+	gatherDaemonSet(info, namespace, metav1.ListOptions{LabelSelector: globalnetPodLabel})
 }
 
 func NetworkPluginSyncerDeployment(info Info, namespace string) {
-	gatherDeployment(info, namespace, networkpluginSyncerPodLabel)
+	gatherDeployment(info, namespace, metav1.ListOptions{LabelSelector: networkpluginSyncerPodLabel})
 }
 
 func LighthouseAgentDeployment(info Info, namespace string) {
-	gatherDeployment(info, namespace, "app=submariner-lighthouse-agent")
+	gatherDeployment(info, namespace, metav1.ListOptions{LabelSelector: "app=submariner-lighthouse-agent"})
 }
 
 func LighthouseCoreDNSDeployment(info Info, namespace string) {
-	gatherDeployment(info, namespace, "app=submariner-lighthouse-coredns")
+	gatherDeployment(info, namespace, metav1.ListOptions{LabelSelector: "app=submariner-lighthouse-coredns"})
+}
+
+func SubmarinerOperatorPodLogs(info Info) error {
+	return gatherPodLogs("name=submariner-operator", info)
 }

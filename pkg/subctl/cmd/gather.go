@@ -231,10 +231,14 @@ func gatherBroker(dataType string, info gather.Info) bool {
 func gatherOperator(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		info.Status.QueueWarningMessage("Gather Operator Logs not implemented yet")
+		err := gather.SubmarinerOperatorPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Submariner operator pod logs: %s", err))
+		}
 	case Resources:
-		gather.OperatorSubmariner(info, SubmarinerNamespace)
-		gather.OperatorServiceDiscovery(info, SubmarinerNamespace)
+		gather.Submariners(info, SubmarinerNamespace)
+		gather.ServiceDiscoveries(info, SubmarinerNamespace)
+		gather.SubmarinerOperatorDeployment(info, SubmarinerNamespace)
 		gather.GatewayDaemonSet(info, SubmarinerNamespace)
 		gather.RouteAgentDaemonSet(info, SubmarinerNamespace)
 		gather.GlobalnetDaemonSet(info, SubmarinerNamespace)
