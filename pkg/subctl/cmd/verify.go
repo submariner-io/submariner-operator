@@ -53,6 +53,7 @@ var (
 )
 
 func init() {
+	addKubecontextsFlag(verifyCmd)
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
@@ -75,7 +76,7 @@ func addVerifyFlags(cmd *cobra.Command) {
 }
 
 var verifyCmd = &cobra.Command{
-	Use:   "verify <kubeConfig1> <kubeConfig2>",
+	Use:   "verify --kubecontexts <kubeContext1>,<kubeContext2>",
 	Short: "Run verifications between two clusters",
 	Long: `This command performs various tests to verify that a Submariner deployment between two clusters
 is functioning properly. The verifications performed are controlled by the --only and --enable-disruptive
@@ -96,7 +97,14 @@ The following verifications are deemed disruptive:
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		testType := ""
-		configureTestingFramework(args)
+		if len(args) > 0 {
+			fmt.Println("subctl verify with kubeconfig arguments is deprecated, please use --kubecontexts instead")
+		}
+		err := configureTestingFramework(args)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
 
 		disruptive := extractDisruptiveVerifications(verifyOnly)
 		if !disruptiveTests && len(disruptive) > 0 {
@@ -148,9 +156,32 @@ func isNonInteractive(err error) bool {
 	return false
 }
 
-func configureTestingFramework(args []string) {
-	framework.TestContext.KubeConfig = ""
-	framework.TestContext.KubeConfigs = args
+func configureTestingFramework(args []string) error {
+	// Legacy handling: if arguments are provided and are files, assume they are kubeconfigs;
+	// otherwise, use contexts from --kubecontexts
+	// This is shared by verify and benchmark
+	if len(args) > 0 {
+		_, err1 := os.Stat(args[0])
+		var err2 error = nil
+		if len(args) > 1 {
+			_, err2 = os.Stat(args[1])
+		}
+		if err1 != nil || err2 != nil {
+			// Something happened (possibly IsNotExist, but we don’t care about specifics)
+			return fmt.Errorf("the provided arguments (%v) aren't accessible files", args)
+		}
+
+		// The files exist and can be examined without error
+		framework.TestContext.KubeConfig = ""
+		framework.TestContext.KubeConfigs = args
+
+		// Read the cluster names from the given kubeconfigs
+		for _, config := range args {
+			framework.TestContext.ClusterIDs = append(framework.TestContext.ClusterIDs, clusterNameFromConfig(config, ""))
+		}
+	} else {
+		framework.TestContext.KubeContexts = kubeContexts
+	}
 	framework.TestContext.OperationTimeout = operationTimeout
 	framework.TestContext.ConnectionTimeout = connectionTimeout
 	framework.TestContext.ConnectionAttempts = connectionAttempts
@@ -158,13 +189,10 @@ func configureTestingFramework(args []string) {
 	framework.TestContext.ReportPrefix = "subctl"
 	framework.TestContext.SubmarinerNamespace = submarinerNamespace
 
-	// Read the cluster names from the given kubeconfigs
-	for _, config := range args {
-		framework.TestContext.ClusterIDs = append(framework.TestContext.ClusterIDs, clusterNameFromConfig(config, ""))
-	}
-
 	config.DefaultReporterConfig.Verbose = verboseConnectivityVerification
 	config.DefaultReporterConfig.SlowSpecThreshold = 60
+
+	return nil
 }
 
 func clusterNameFromConfig(kubeConfigPath, kubeContext string) string {
@@ -179,19 +207,24 @@ func clusterNameFromConfig(kubeConfigPath, kubeContext string) string {
 }
 
 func checkValidateArguments(args []string) error {
-	if len(args) != 2 {
-		return fmt.Errorf("two kubeconfigs must be specified")
+	if len(args) != 2 && len(kubeContexts) != 2 {
+		return fmt.Errorf("two kubecontexts must be specified")
 	}
-	if strings.Compare(args[0], args[1]) == 0 {
-		return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
+	if len(args) == 2 {
+		if strings.Compare(args[0], args[1]) == 0 {
+			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
+		}
+		same, err := compareFiles(args[0], args[1])
+		if err != nil {
+			return err
+		}
+		if same {
+			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> need to have a unique content")
+		}
+	} else if strings.Compare(kubeContexts[0], kubeContexts[1]) == 0 {
+		return fmt.Errorf("the two kubecontexts must be different")
 	}
-	same, err := compareFiles(args[0], args[1])
-	if err != nil {
-		return err
-	}
-	if same {
-		return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> need to have a unique content")
-	}
+
 	if connectionAttempts < 1 {
 		return fmt.Errorf("--connection-attempts must be >=1")
 	}
