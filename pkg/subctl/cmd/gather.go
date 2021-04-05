@@ -143,25 +143,10 @@ func gatherData() {
 func gatherConnectivity(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		err := gather.GatewayPodLogs(info)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Gateway pod logs: %s", err))
-		}
-
-		err = gather.RouteAgentPodLogs(info)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Route Agent pod logs: %s", err))
-		}
-
-		err = gather.GlobalnetPodLogs(info)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Globalnet pod logs: %s", err))
-		}
-
-		err = gather.NetworkPluginSyncerPodLogs(info)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather NetworkPluginSyncer pod logs: %s", err))
-		}
+		gather.GatewayPodLogs(info)
+		gather.RouteAgentPodLogs(info)
+		gather.GlobalnetPodLogs(info)
+		gather.NetworkPluginSyncerPodLogs(info)
 	case Resources:
 		gather.Endpoints(info, SubmarinerNamespace)
 		gather.Clusters(info, SubmarinerNamespace)
@@ -176,15 +161,8 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 func gatherDiscovery(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		err := gather.ServiceDiscoveryPodLogs(info)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather all ServiceDiscovery pod logs: %s", err))
-		}
-
-		err = gather.CoreDNSPodLogs(info)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather CoreDNS pod logs: %s", err))
-		}
+		gather.ServiceDiscoveryPodLogs(info)
+		gather.CoreDNSPodLogs(info)
 	case Resources:
 		gather.ServiceExports(info, corev1.NamespaceAll)
 		gather.ServiceImports(info, corev1.NamespaceAll)
@@ -231,10 +209,7 @@ func gatherBroker(dataType string, info gather.Info) bool {
 func gatherOperator(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		err := gather.SubmarinerOperatorPodLogs(info)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Submariner operator pod logs: %s", err))
-		}
+		gather.SubmarinerOperatorPodLogs(info)
 	case Resources:
 		gather.Submariners(info, SubmarinerNamespace)
 		gather.ServiceDiscoveries(info, SubmarinerNamespace)
