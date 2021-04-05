@@ -29,23 +29,23 @@ const (
 	networkpluginSyncerPodLabel = "app=submariner-networkplugin-syncer"
 )
 
-func GatewayPodLogs(info *Info) error {
+func GatewayPodLogs(info Info) error {
 	return gatherPodLogs(gatewayPodLabel, info)
 }
 
-func RouteAgentPodLogs(info *Info) error {
+func RouteAgentPodLogs(info Info) error {
 	return gatherPodLogs(routeagentPodLabel, info)
 }
 
-func GlobalnetPodLogs(info *Info) error {
+func GlobalnetPodLogs(info Info) error {
 	return gatherPodLogs(globalnetPodLabel, info)
 }
 
-func NetworkPluginSyncerPodLogs(info *Info) error {
+func NetworkPluginSyncerPodLogs(info Info) error {
 	return gatherPodLogs(networkpluginSyncerPodLabel, info)
 }
 
-func Endpoints(info *Info, namespace string) {
+func Endpoints(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
@@ -53,7 +53,7 @@ func Endpoints(info *Info, namespace string) {
 	}, namespace, v1.ListOptions{})
 }
 
-func Clusters(info *Info, namespace string) {
+func Clusters(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
@@ -61,7 +61,7 @@ func Clusters(info *Info, namespace string) {
 	}, namespace, v1.ListOptions{})
 }
 
-func Gateways(info *Info, namespace string) {
+func Gateways(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,

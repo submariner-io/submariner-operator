@@ -5,17 +5,19 @@ on:
   issues:
     types:
       - opened
+      - edited
+      - closed
       - reopened
+      - synchronize
   pull_request_target:
     types:
       - opened
+      - edited
+      - closed
       - reopened
-  pull_request:
-    types:
-      - opened
-      - reopened
+      - synchronize
   schedule:
-    - cron: '0 0 * * *' # check daily
+    - cron: '0 0/6 * * *' # every 6 hours
 
 jobs:
   check:

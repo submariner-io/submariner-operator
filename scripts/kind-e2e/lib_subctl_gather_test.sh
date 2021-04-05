@@ -18,10 +18,10 @@ function test_subctl_gather() {
   validate_resource_files $subm_ns 'clusters.submariner.io' 'Cluster'
   validate_resource_files $subm_ns 'gateways.submariner.io' 'Gateway'
 
-  validate_pod_log_files $subm_ns $gateway_deployment_name
-  validate_pod_log_files $subm_ns $routeagent_deployment_name
-  validate_pod_log_files $subm_ns $globalnet_deployment_name
-  validate_pod_log_files $subm_ns 'submariner-networkplugin-syncer'
+  validate_pod_log_files $subm_ns '-l app=submariner-gateway'
+  validate_pod_log_files $subm_ns '-l app=submariner-routeagent'
+  validate_pod_log_files $subm_ns '-l app=submariner-globalnet'
+  validate_pod_log_files $subm_ns '-l app=submariner-networkplugin-syncer'
 
   # operator
   validate_resource_files $subm_ns 'submariners' 'Submariner'
@@ -32,13 +32,33 @@ function test_subctl_gather() {
   validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-networkplugin-syncer'
   validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-lighthouse-agent'
   validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-lighthouse-coredns'
+  validate_resource_files $subm_ns 'deployments' 'Deployment' '--field-selector metadata.name=submariner-operator'
+
+  validate_pod_log_files $subm_ns '-l name=submariner-operator'
+
+  # Service Discovery
+  validate_resource_files all 'serviceexports.multicluster.x-k8s.io' 'ServiceExport'
+  validate_resource_files all 'serviceimports.multicluster.x-k8s.io' 'ServiceImport'
+  validate_resource_files all 'endpointslices.discovery.k8s.io' 'EndpointSlice'
+  validate_resource_files $subm_ns 'configmaps' 'ConfigMap' '-l component=submariner-lighthouse'
+  validate_resource_files kube-system 'configmaps' 'ConfigMap' '--field-selector metadata.name=coredns'
+
+  validate_pod_log_files $subm_ns '-l component=submariner-lighthouse'
+  validate_pod_log_files kube-system '-l k8s-app=kube-dns'
+
+  # Broker
+  with_context "$broker" validate_broker_resources
 }
 
 function validate_pod_log_files() {
   local ns=$1
-  local label=$2
+  local selector=$2
+  local nsarg="--namespace=${ns}"
 
-  pod_names=$(kubectl get pods --namespace=$ns -l app=$label -o=jsonpath='{.items..metadata.name}')
+  if [[ "$ns" == "all" ]]; then
+    nsarg="-A"
+  fi
+  pod_names=$(kubectl get pods $nsarg $selector -o=jsonpath='{.items..metadata.name}')
   read -ra pod_names_array <<< "$pod_names"
 
   for pod_name in "${pod_names_array[@]}"; do
@@ -52,6 +72,11 @@ function validate_resource_files() {
   local resource=$2
   local kind=$3
   local selector=$4
+  local cluster_name=$5
+
+  if [[ $cluster_name == "" ]]; then
+    cluster_name=${cluster}
+  fi
 
   names=$(kubectl get $resource --namespace=$ns $selector -o=jsonpath='{.items..metadata.name}')
   read -ra names_array <<< "$names"
@@ -59,7 +84,7 @@ function validate_resource_files() {
   short_res=$(echo $resource | awk -F. '{ print $1 }')
 
   for name in "${names_array[@]}"; do
-    file=$out_dir/${cluster}_${short_res}_${ns}_${name}.yaml
+    file=$out_dir/${cluster_name}_${short_res}_${ns}_${name}.yaml
     cat $file
 
     kind_count=$(grep "kind: $kind$" $file | wc -l)
@@ -76,3 +101,9 @@ function validate_resource_files() {
   done
 }
 
+function validate_broker_resources() {
+  validate_resource_files $SUBMARINER_BROKER_NS 'endpoints.submariner.io' 'Endpoint' '' 'broker'
+  validate_resource_files $SUBMARINER_BROKER_NS 'clusters.submariner.io' 'Cluster' '' 'broker'
+  validate_resource_files $SUBMARINER_BROKER_NS 'serviceimports.multicluster.x-k8s.io' 'ServiceImport' '' 'broker'
+  validate_resource_files $SUBMARINER_BROKER_NS 'endpointslices.discovery.k8s.io' 'EndpointSlice' '' 'broker'
+}

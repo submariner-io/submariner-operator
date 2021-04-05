@@ -22,12 +22,13 @@ import (
 
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"
 )
 
-func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
+func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
 		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(listOptions)
 		if err != nil {
@@ -74,18 +75,26 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 	}
 }
 
-func gatherDaemonSet(info *Info, namespace, byLabelSelector string) {
+func gatherDaemonSet(info Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
 		Resource: "daemonsets",
-	}, namespace, metav1.ListOptions{LabelSelector: byLabelSelector})
+	}, namespace, listOptions)
 }
 
-func gatherDeployment(info *Info, namespace, byLabelSelector string) {
+func gatherDeployment(info Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
 		Resource: "deployments",
-	}, namespace, metav1.ListOptions{LabelSelector: byLabelSelector})
+	}, namespace, listOptions)
+}
+
+func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOptions) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    corev1.SchemeGroupVersion.Group,
+		Version:  corev1.SchemeGroupVersion.Version,
+		Resource: "configmaps",
+	}, namespace, listOptions)
 }

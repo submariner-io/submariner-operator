@@ -29,7 +29,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func gatherPodLogs(podLabelSelector string, info *Info) error {
+func gatherPodLogs(podLabelSelector string, info Info) error {
 	pods, err := findPods(info.ClientSet, podLabelSelector)
 
 	if err != nil {
@@ -49,7 +49,7 @@ func gatherPodLogs(podLabelSelector string, info *Info) error {
 	return nil
 }
 
-func podLogsToFile(pod *corev1.Pod, info *Info) error {
+func podLogsToFile(pod *corev1.Pod, info Info) error {
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{})
 
 	logs, err := processLogStream(logRequest)
@@ -81,7 +81,7 @@ func processLogStream(logrequest *rest.Request) (string, error) {
 	return logs.String(), nil
 }
 
-func writeLogToFile(data, podName string, info *Info) error {
+func writeLogToFile(data, podName string, info Info) error {
 	fileName := filepath.Join(info.DirName, info.ClusterName+"_"+podName+".log")
 	f, err := os.Create(fileName)
 	if err != nil {
