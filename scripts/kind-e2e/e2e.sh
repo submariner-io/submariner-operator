@@ -36,15 +36,14 @@ else
     verify="--only connectivity"
 fi
 
-subm_ns=""
-if [[ -n "$SUBM_NS" ]]; then
-    subm_ns="--submariner-namespace=$SUBM_NS"
-fi
-
 # run dataplane E2E tests between the two clusters
-${DAPPER_SOURCE}/bin/subctl verify ${verify} ${subm_ns} --verbose --connection-timeout 20 --connection-attempts 4 \
+${DAPPER_SOURCE}/bin/subctl verify ${verify} --submariner-namespace=$subm_ns --verbose --connection-timeout 20 --connection-attempts 4 \
     ${KUBECONFIGS_DIR}/kind-config-cluster1 \
     ${KUBECONFIGS_DIR}/kind-config-cluster2
+
+. ${DAPPER_SOURCE}/scripts/kind-e2e/lib_subctl_gather_test.sh
+
+with_context "${clusters[1]}" test_subctl_gather
 
 print_clusters_message
 

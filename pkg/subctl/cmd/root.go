@@ -37,7 +37,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
+	goversion "github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/version"
 )
 
 var (
@@ -161,19 +163,27 @@ func handleNodeLabels(config *rest.Config) error {
 }
 
 func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, error) {
-	// List all nodes and select one
-	allNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
+	// List the worker nodes and select one
+	workerNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker"})
 	if err != nil {
 		return struct{ Node string }{}, err
 	}
-	if len(allNodes.Items) == 0 {
-		return struct{ Node string }{}, nil
+	if len(workerNodes.Items) == 0 {
+		// In some deployments (like KIND), worker nodes are not explicitly labelled. So list non-master nodes.
+		workerNodes, err = clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
+		if err != nil {
+			return struct{ Node string }{}, err
+		}
+		if len(workerNodes.Items) == 0 {
+			return struct{ Node string }{}, nil
+		}
 	}
-	if len(allNodes.Items) == 1 {
-		return struct{ Node string }{allNodes.Items[0].GetName()}, nil
+
+	if len(workerNodes.Items) == 1 {
+		return struct{ Node string }{workerNodes.Items[0].GetName()}, nil
 	}
 	allNodeNames := []string{}
-	for _, node := range allNodes.Items {
+	for _, node := range workerNodes.Items {
 		allNodeNames = append(allNodeNames, node.GetName())
 	}
 	var qs = []*survey.Question{
@@ -233,4 +243,24 @@ var nodeLabelBackoff wait.Backoff = wait.Backoff{
 	Duration: 1 * time.Second,
 	Factor:   1.2,
 	Jitter:   1,
+}
+
+func checkVersionMismatch(cmd *cobra.Command, args []string) error {
+	config, err := getRestConfig(kubeConfig, kubeContext)
+	exitOnError("The provided kubeconfig is invalid", err)
+
+	submariner := getSubmarinerResource(config)
+
+	if submariner != nil && submariner.Spec.Version != "" {
+		subctlVer, _ := goversion.NewVersion(version.Version)
+		submarinerVer, _ := goversion.NewVersion(submariner.Spec.Version)
+
+		if subctlVer != nil && submarinerVer != nil && subctlVer.LessThan(submarinerVer) {
+			return fmt.Errorf(
+				"the subctl version %q is older than the deployed Submariner version %q. Please upgrade your subctl version",
+				version.Version, submariner.Spec.Version)
+		}
+	}
+
+	return nil
 }

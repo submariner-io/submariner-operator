@@ -367,6 +367,10 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(submariner *submopv1a1
 					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
 					ImageOverrides:           submariner.Spec.ImageOverrides,
 				}
+				if submariner.Spec.CoreDNSCustomConfig != nil {
+					sd.Spec.CoreDNSCustomConfig.ConfigMapName = submariner.Spec.CoreDNSCustomConfig.ConfigMapName
+					sd.Spec.CoreDNSCustomConfig.Namespace = submariner.Spec.CoreDNSCustomConfig.Namespace
+				}
 				if len(submariner.Spec.CustomDomains) > 0 {
 					sd.Spec.CustomDomains = submariner.Spec.CustomDomains
 				}
@@ -534,6 +538,12 @@ func newGatewayPodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
 			corev1.EnvVar{Name: "CE_IPSEC_NATTPORT", Value: strconv.Itoa(cr.Spec.CeIPSecNATTPort)})
 	}
+
+	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer)})
+
+	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+		corev1.EnvVar{Name: "CE_IPSEC_FORCEENCAPS", Value: strconv.FormatBool(cr.Spec.CeIPSecForceUDPEncaps)})
 
 	return podTemplate
 }

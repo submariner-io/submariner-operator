@@ -50,12 +50,16 @@ spec:
                 type: string
               ceIPSecDebug:
                 type: boolean
+              ceIPSecForceUDPEncaps:
+                type: boolean
               ceIPSecIKEPort:
                 type: integer
               ceIPSecNATTPort:
                 type: integer
               ceIPSecPSK:
                 type: string
+              ceIPSecPreferredServer:
+                type: boolean
               clusterCIDR:
                 type: string
               clusterID:
@@ -75,6 +79,13 @@ spec:
                       checker will mark the connection as down.
                     format: int64
                     type: integer
+                type: object
+              coreDNSCustomConfig:
+                properties:
+                  configMapName:
+                    type: string
+                  namespace:
+                    type: string
                 type: object
               customDomains:
                 items:
@@ -357,10 +368,16 @@ spec:
                             type: string
                           statusMessage:
                             type: string
+                          usingIP:
+                            type: string
+                          usingNAT:
+                            type: boolean
                         required:
                         - endpoint
                         - status
                         - statusMessage
+                        - usingIP
+                        - usingNAT
                         type: object
                       type: array
                     haStatus:

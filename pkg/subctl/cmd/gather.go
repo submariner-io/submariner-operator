@@ -18,16 +18,22 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 )
 
 var (
 	gatherType   string
 	gatherModule string
+	directory    string
 )
 
 const (
@@ -47,7 +53,7 @@ var gatherTypeFlags = map[string]bool{
 	"resources": false,
 }
 
-var gatherFuncs = map[string]func(*cli.Status, string) error{
+var gatherFuncs = map[string]func(string, gather.Info) bool{
 	components.Connectivity:     gatherConnectivity,
 	components.ServiceDiscovery: gatherDiscovery,
 	components.Broker:           gatherBroker,
@@ -65,12 +71,15 @@ func addGatherFlags(gatherCmd *cobra.Command) {
 		"comma-separated list of data types to gather")
 	gatherCmd.Flags().StringVar(&gatherModule, "module", strings.Join(getAllModuleKeys(), ","),
 		"comma-separated list of components for which to gather data")
+	gatherCmd.Flags().StringVar(&directory, "dir", "",
+		"the directory in which to store files. If not specified, a directory of the form \"submariner-<timestamp>\" "+
+			"is created in the current directory")
 }
 
 var gatherCmd = &cobra.Command{
 	Use:   "gather <kubeConfig>",
-	Short: "Gather troubleshooting data from a cluster",
-	Long: fmt.Sprintf("This command gathers data from a submariner cluster for troubleshooting. The data gathered "+
+	Short: "Gather troubleshooting information from a cluster",
+	Long: fmt.Sprintf("This command gathers information from a submariner cluster for troubleshooting. The information gathered "+
 		"can be selected by component (%v) and type (%v). Default is to capture all data.",
 		strings.Join(getAllModuleKeys(), ","), strings.Join(getAllTypeKeys(), ",")),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -82,65 +91,165 @@ func gatherData() {
 	err := checkGatherArguments()
 	exitOnError("Invalid arguments", err)
 
+	config := getClientConfig(kubeConfig, kubeContext)
+	exitOnError("Error getting client config", err)
+
+	restConfig, err := config.ClientConfig()
+	exitOnError("Error getting REST config", err)
+
+	rawConfig, err := config.RawConfig()
+	exitOnError("Error getting raw config", err)
+
+	clusterName := *getClusterNameFromContext(rawConfig, "")
+
+	if directory == "" {
+		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
+	}
+
+	if _, err := os.Stat(directory); os.IsNotExist(err) {
+		err := os.MkdirAll(directory, 0700)
+		if err != nil {
+			exitOnError(fmt.Sprintf("Error creating directory %q", directory), err)
+		}
+	}
+
+	fmt.Printf("Gathering information from cluster %q\n", clusterName)
+
+	info := gather.Info{
+		RestConfig:  restConfig,
+		ClusterName: clusterName,
+		DirName:     directory,
+	}
+
+	info.DynClient, info.ClientSet, err = getClients(restConfig)
+	exitOnError("Error getting client %s", err)
+
 	for module, ok := range gatherModuleFlags {
 		if ok {
 			for dataType, ok := range gatherTypeFlags {
 				if ok {
-					status := cli.NewStatus()
-					status.Start(fmt.Sprintf("Gathering %s %s...", module, dataType))
-					status.End(cli.CheckForError(gatherFuncs[module](status, dataType)))
+					info.Status = cli.NewStatus()
+					info.Status.Start(fmt.Sprintf("Gathering %s %s", module, dataType))
+
+					if gatherFuncs[module](dataType, info) {
+						info.Status.End(info.Status.ResultFromMessages())
+					}
 				}
 			}
 		}
 	}
 }
 
-func gatherConnectivity(status *cli.Status, dataType string) error {
+func gatherConnectivity(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		status.QueueWarningMessage("Gather Connectivity Logs not implemented yet")
+		err := gather.GatewayPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Gateway pod logs: %s", err))
+		}
+
+		err = gather.RouteAgentPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Route Agent pod logs: %s", err))
+		}
+
+		err = gather.GlobalnetPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Globalnet pod logs: %s", err))
+		}
+
+		err = gather.NetworkPluginSyncerPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather NetworkPluginSyncer pod logs: %s", err))
+		}
 	case Resources:
-		status.QueueWarningMessage("Gather Connectivity Resources not implemented yet")
+		gather.Endpoints(info, SubmarinerNamespace)
+		gather.Clusters(info, SubmarinerNamespace)
+		gather.Gateways(info, SubmarinerNamespace)
 	default:
-		return fmt.Errorf("unsupported data type %s", dataType)
+		return false
 	}
-	return nil
+
+	return true
 }
 
-func gatherDiscovery(status *cli.Status, dataType string) error {
+func gatherDiscovery(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		status.QueueWarningMessage("Gather ServiceDiscovery Logs not implemented yet")
+		err := gather.ServiceDiscoveryPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather all ServiceDiscovery pod logs: %s", err))
+		}
+
+		err = gather.CoreDNSPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather CoreDNS pod logs: %s", err))
+		}
 	case Resources:
-		status.QueueWarningMessage("Gather ServiceDiscovery Resources not implemented yet")
+		gather.ServiceExports(info, corev1.NamespaceAll)
+		gather.ServiceImports(info, corev1.NamespaceAll)
+		gather.EndpointSlices(info, corev1.NamespaceAll)
+		gather.ConfigMapLighthouseDNS(info, SubmarinerNamespace)
+		gather.ConfigMapCoreDNS(info, "kube-system")
 	default:
-		return fmt.Errorf("unsupported data type %s", dataType)
+		return false
 	}
-	return nil
+
+	return true
 }
 
-func gatherBroker(status *cli.Status, dataType string) error {
+func gatherBroker(dataType string, info gather.Info) bool {
 	switch dataType {
-	case Logs:
-		status.QueueSuccessMessage("No logs to gather on Broker")
 	case Resources:
-		status.QueueWarningMessage("Gather Broker Resources not implemented yet")
+		brokerRestConfig, brokerNamespace, err := getBrokerRestConfigAndNamespace(info.RestConfig)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker's rest config: %s", err))
+			return true
+		}
+
+		info.DynClient, info.ClientSet, err = getClients(brokerRestConfig)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker client %s", err))
+			return true
+		}
+
+		info.RestConfig = brokerRestConfig
+		info.ClusterName = "broker"
+
+		// The broker's ClusterRole used by member clusters only allows the below resources to be queried
+		gather.Endpoints(info, brokerNamespace)
+		gather.Clusters(info, brokerNamespace)
+		gather.EndpointSlices(info, brokerNamespace)
+		gather.ServiceImports(info, brokerNamespace)
 	default:
-		return fmt.Errorf("unsupported data type %s", dataType)
+		return false
 	}
-	return nil
+
+	return true
 }
 
-func gatherOperator(status *cli.Status, dataType string) error {
+func gatherOperator(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		status.QueueWarningMessage("Gather Operator Logs not implemented yet")
+		err := gather.SubmarinerOperatorPodLogs(info)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Submariner operator pod logs: %s", err))
+		}
 	case Resources:
-		status.QueueWarningMessage("Gather Operator Resources not implemented yet")
+		gather.Submariners(info, SubmarinerNamespace)
+		gather.ServiceDiscoveries(info, SubmarinerNamespace)
+		gather.SubmarinerOperatorDeployment(info, SubmarinerNamespace)
+		gather.GatewayDaemonSet(info, SubmarinerNamespace)
+		gather.RouteAgentDaemonSet(info, SubmarinerNamespace)
+		gather.GlobalnetDaemonSet(info, SubmarinerNamespace)
+		gather.NetworkPluginSyncerDeployment(info, SubmarinerNamespace)
+		gather.LighthouseAgentDeployment(info, SubmarinerNamespace)
+		gather.LighthouseCoreDNSDeployment(info, SubmarinerNamespace)
 	default:
-		return fmt.Errorf("unsupported data type %s", dataType)
+		return false
 	}
-	return nil
+
+	return true
 }
 
 func checkGatherArguments() error {
