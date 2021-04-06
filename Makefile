@@ -1,4 +1,6 @@
 BASE_BRANCH ?= devel
+# Denotes the default operator image version, exposed as a variable for the automated release
+DEFAULT_IMAGE_VERSION ?= $(BASE_BRANCH)
 export BASE_BRANCH
 
 ifneq (,$(DAPPER_HOST_ARCH))
@@ -112,7 +114,7 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 	export GOARCH GOOS; \
 	$(SCRIPTS_DIR)/compile.sh \
 		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION) \
-			   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$(if eq($(patsubst subctl-devel-%,devel,$(CALCULATED_VERSION)),devel),devel,$(CALCULATED_VERSION))" \
+			   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$(DEFAULT_IMAGE_VERSION)" \
 		--noupx $@ ./pkg/subctl/main.go
 
 ci: generate-embeddedyamls golangci-lint markdownlint unit build images
