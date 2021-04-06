@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	cmdversion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -59,6 +60,7 @@ func Execute() error {
 
 func init() {
 	rootCmd.AddCommand(cmdversion.Cmd)
+	rootCmd.AddCommand(cloud.NewCommand(&kubeConfig, &kubeContext))
 }
 
 func addKubeconfigFlag(cmd *cobra.Command) {
