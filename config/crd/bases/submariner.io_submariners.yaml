@@ -327,9 +327,6 @@ spec:
                                 type: string
                               nat_enabled:
                                 type: boolean
-                              natDiscoveryPort:
-                                format: int32
-                                type: integer
                               private_ip:
                                 type: string
                               public_ip:
@@ -400,9 +397,6 @@ spec:
                           type: string
                         nat_enabled:
                           type: boolean
-                        natDiscoveryPort:
-                          format: int32
-                          type: integer
                         private_ip:
                           type: string
                         public_ip:
