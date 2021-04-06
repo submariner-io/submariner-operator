@@ -52,6 +52,9 @@ var validComponents = []string{components.ServiceDiscovery, components.Connectiv
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
 		"enable support for Overlapping CIDRs in connecting clusters (default disabled)")
+
+	_ = deployBroker.PersistentFlags().MarkDeprecated("globalnet", "please use --components instead")
+
 	deployBroker.PersistentFlags().StringVar(&globalnetCIDRRange, "globalnet-cidr-range", "169.254.0.0/16",
 		"GlobalCIDR supernet range for allocating GlobalCIDRs to each cluster")
 	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 8192,
@@ -69,7 +72,7 @@ func init() {
 		"list of domains to use for multicluster service discovery")
 
 	deployBroker.PersistentFlags().StringSliceVar(&componentArr, "components", defaultComponents,
-		fmt.Sprintf("The components to be installed - any of %s. The default is all components",
+		fmt.Sprintf("The components to be installed - any of %s",
 			strings.Join(validComponents, ",")))
 
 	deployBroker.PersistentFlags().StringVar(&repository, "repository", "", "image repository")
