@@ -11,7 +11,17 @@ function test_subctl_gather() {
   rm -rf $out_dir
   mkdir $out_dir
 
-  ${DAPPER_SOURCE}/bin/subctl gather --kubeconfig ${KUBECONFIGS_DIR}/kind-config-${cluster} --dir $out_dir
+  ${DAPPER_SOURCE}/bin/subctl gather --dir $out_dir
+
+  for cluster in "${clusters[@]}"; do
+      with_context "${cluster}" validate_gathered_files
+  done
+
+  # Broker
+  with_context "$broker" validate_broker_resources
+}
+
+function validate_gathered_files () {
 
   # connectivity
   validate_resource_files $subm_ns 'endpoints.submariner.io' 'Endpoint'
@@ -45,9 +55,6 @@ function test_subctl_gather() {
 
   validate_pod_log_files $subm_ns '-l component=submariner-lighthouse'
   validate_pod_log_files kube-system '-l k8s-app=kube-dns'
-
-  # Broker
-  with_context "$broker" validate_broker_resources
 }
 
 function validate_pod_log_files() {

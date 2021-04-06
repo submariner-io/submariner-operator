@@ -43,9 +43,10 @@ import (
 )
 
 var (
-	kubeConfig  string
-	kubeContext string
-	rootCmd     = &cobra.Command{
+	kubeConfig   string
+	kubeContext  string
+	kubeContexts []string
+	rootCmd      = &cobra.Command{
 		Use:   "subctl",
 		Short: "An installer for Submariner",
 	}
@@ -60,7 +61,15 @@ func init() {
 
 func addKubeconfigFlag(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
-	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
+	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontext", nil, "kubeconfig context to use")
+	if len(kubeContexts) > 0 {
+		kubeContext = kubeContexts[0]
+	}
+}
+
+func addKubecontextsFlag(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontexts", nil,
+		"comma separated list of kubeconfig contexts to use. If none specified, all contexts referenced by kubeconfig are used")
 }
 
 const (

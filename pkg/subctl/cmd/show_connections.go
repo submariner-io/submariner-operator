@@ -73,7 +73,7 @@ func getConnectionsStatus(submariner *v1alpha1.Submariner) []connectionStatus {
 }
 
 func showConnections(cmd *cobra.Command, args []string) {
-	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 	for _, item := range configs {
 		fmt.Println()

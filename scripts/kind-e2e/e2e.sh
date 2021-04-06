@@ -43,7 +43,7 @@ ${DAPPER_SOURCE}/bin/subctl verify ${verify} --submariner-namespace=$subm_ns --v
 
 . ${DAPPER_SOURCE}/scripts/kind-e2e/lib_subctl_gather_test.sh
 
-with_context "${clusters[1]}" test_subctl_gather
+test_subctl_gather
 
 print_clusters_message
 

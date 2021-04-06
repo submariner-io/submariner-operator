@@ -39,7 +39,7 @@ func init() {
 }
 
 func showNetwork(cmd *cobra.Command, args []string) {
-	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
