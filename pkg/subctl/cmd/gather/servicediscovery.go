@@ -31,12 +31,12 @@ const (
 	coreDNSPodLabel           = "k8s-app=kube-dns"
 )
 
-func ServiceDiscoveryPodLogs(info Info) error {
-	return gatherPodLogs(lighthouseComponentsLabel, info)
+func ServiceDiscoveryPodLogs(info Info) {
+	gatherPodLogs(lighthouseComponentsLabel, info)
 }
 
-func CoreDNSPodLogs(info Info) error {
-	return gatherPodLogs(coreDNSPodLabel, info)
+func CoreDNSPodLogs(info Info) {
+	gatherPodLogs(coreDNSPodLabel, info)
 }
 
 func ServiceExports(info Info, namespace string) {

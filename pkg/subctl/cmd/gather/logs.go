@@ -29,24 +29,31 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func gatherPodLogs(podLabelSelector string, info Info) error {
-	pods, err := findPods(info.ClientSet, podLabelSelector)
+func gatherPodLogs(podLabelSelector string, info Info) {
+	err := func() error {
+		pods, err := findPods(info.ClientSet, podLabelSelector)
+
+		if err != nil {
+			return err
+		}
+
+		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector))
+
+		for i := range pods.Items {
+			pod := &pods.Items[i]
+			err := podLogsToFile(pod, info)
+			if err != nil {
+				return errors.WithMessagef(err, "error getting logs for pod %q", pod.Name)
+			}
+		}
+
+		return nil
+	}()
 
 	if err != nil {
-		return err
+		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather logs for pods matching label selector %q: %s",
+			podLabelSelector, err))
 	}
-
-	info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector))
-
-	for i := range pods.Items {
-		pod := &pods.Items[i]
-		err := podLogsToFile(pod, info)
-		if err != nil {
-			return errors.WithMessagef(err, "error getting logs for pod %q", pod.Name)
-		}
-	}
-
-	return nil
 }
 
 func podLogsToFile(pod *corev1.Pod, info Info) error {

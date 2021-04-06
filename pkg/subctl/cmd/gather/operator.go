@@ -68,6 +68,6 @@ func LighthouseCoreDNSDeployment(info Info, namespace string) {
 	gatherDeployment(info, namespace, metav1.ListOptions{LabelSelector: "app=submariner-lighthouse-coredns"})
 }
 
-func SubmarinerOperatorPodLogs(info Info) error {
-	return gatherPodLogs("name=submariner-operator", info)
+func SubmarinerOperatorPodLogs(info Info) {
+	gatherPodLogs("name=submariner-operator", info)
 }
