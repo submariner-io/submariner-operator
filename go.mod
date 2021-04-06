@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
-	github.com/onsi/ginkgo v1.15.2
+	github.com/onsi/ginkgo v1.16.0
 	github.com/onsi/gomega v1.11.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
@@ -19,9 +19,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.10.0
 	github.com/spf13/cobra v1.1.1
-	github.com/submariner-io/admiral v0.9.0-m1.0.20210330170028-a5e4008ebf84
+	github.com/submariner-io/admiral v0.9.0-m2
 	github.com/submariner-io/lighthouse v0.9.0-m1
-	github.com/submariner-io/shipyard v0.9.0-m1
+	github.com/submariner-io/shipyard v0.9.0-m2
 	github.com/submariner-io/submariner v0.9.0-m1.0.20210329154437-ecf33cb91f20
 	go.uber.org/zap v1.15.0 // indirect
 	k8s.io/api v0.20.2
