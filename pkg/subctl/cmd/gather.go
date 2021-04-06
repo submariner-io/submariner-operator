@@ -23,11 +23,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var (
@@ -62,6 +61,7 @@ var gatherFuncs = map[string]func(string, gather.Info) bool{
 
 func init() {
 	addKubeconfigFlag(gatherCmd)
+	addKubecontextsFlag(gatherCmd)
 	addGatherFlags(gatherCmd)
 	rootCmd.AddCommand(gatherCmd)
 }
@@ -91,16 +91,17 @@ func gatherData() {
 	err := checkGatherArguments()
 	exitOnError("Invalid arguments", err)
 
-	config := getClientConfig(kubeConfig, kubeContext)
-	exitOnError("Error getting client config", err)
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
+	exitOnError("Error getting REST configs", err)
 
-	restConfig, err := config.ClientConfig()
-	exitOnError("Error getting REST config", err)
+	for _, config := range configs {
+		gatherDataByCluster(config)
+	}
+}
 
-	rawConfig, err := config.RawConfig()
-	exitOnError("Error getting raw config", err)
-
-	clusterName := *getClusterNameFromContext(rawConfig, "")
+func gatherDataByCluster(restConfig restConfig) {
+	var err error
+	clusterName := restConfig.clusterName
 
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
@@ -116,12 +117,12 @@ func gatherData() {
 	fmt.Printf("Gathering information from cluster %q\n", clusterName)
 
 	info := gather.Info{
-		RestConfig:  restConfig,
+		RestConfig:  restConfig.config,
 		ClusterName: clusterName,
 		DirName:     directory,
 	}
 
-	info.DynClient, info.ClientSet, err = getClients(restConfig)
+	info.DynClient, info.ClientSet, err = getClients(restConfig.config)
 	exitOnError("Error getting client %s", err)
 
 	for module, ok := range gatherModuleFlags {
