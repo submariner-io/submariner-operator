@@ -4,9 +4,8 @@ go 1.13
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.7
-	github.com/go-logr/logr v0.1.0
+	github.com/go-logr/logr v0.3.0
 	github.com/go-openapi/spec v0.20.0
-	github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/hashicorp/go-version v1.2.0
 	github.com/kr/pty v1.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12
@@ -20,10 +19,9 @@ require (
 	github.com/prometheus/client_golang v1.10.0
 	github.com/spf13/cobra v1.1.1
 	github.com/submariner-io/admiral v0.9.0-m2
-	github.com/submariner-io/lighthouse v0.9.0-m1
+	github.com/submariner-io/lighthouse v0.9.0-m2
 	github.com/submariner-io/shipyard v0.9.0-m2
-	github.com/submariner-io/submariner v0.9.0-m1.0.20210329154437-ecf33cb91f20
-	go.uber.org/zap v1.15.0 // indirect
+	github.com/submariner-io/submariner v0.9.0-m2
 	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.20.1
 	k8s.io/apimachinery v0.20.2
