@@ -53,7 +53,7 @@ func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
 		"enable support for Overlapping CIDRs in connecting clusters (default disabled)")
 
-	_ = deployBroker.PersistentFlags().MarkDeprecated("globalnet", "please use --components instead")
+	_ = deployBroker.PersistentFlags().MarkDeprecated("globalnet", "please use --components globalnet")
 
 	deployBroker.PersistentFlags().StringVar(&globalnetCIDRRange, "globalnet-cidr-range", "169.254.0.0/16",
 		"GlobalCIDR supernet range for allocating GlobalCIDRs to each cluster")
