@@ -37,8 +37,8 @@ var verboseOutput bool
 
 var validateTunnelCmd = &cobra.Command{
 	Use:   "tunnel <localkubeconfig> <remotekubeconfig>",
-	Short: "Validate if firewall allows tunnels on the Gateway node.",
-	Long:  "This command checks whether firewall configuration allows tunnel to be configured on the Gateway nodes.",
+	Short: "Validate firewall access to Gateway node tunnels",
+	Long:  "This command checks whether firewall configuration allows tunnels to be configured on the Gateway nodes.",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 2 {
 			return fmt.Errorf("two kubeconfigs must be specified")
@@ -48,8 +48,7 @@ var validateTunnelCmd = &cobra.Command{
 			return err
 		}
 		if same {
-			return fmt.Errorf("kubeconfig file <localkubeconfig> and <remotekubeconfig> need to have" +
-				" a unique content")
+			return fmt.Errorf("the specified kubeconfig files are the same")
 		}
 		return nil
 	},
@@ -97,21 +96,21 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 		return
 	}
 
-	podCommand := fmt.Sprintf("timeout %d tcpdump -ln -nnX -s 100 -c 5 -i any udp and src port %s and dst port %d",
-		validationTimeout, ClientSourcePort, tunnelPort)
+	clientMessage := string(uuid.NewUUID())[0:8]
+	podCommand := fmt.Sprintf("timeout %d tcpdump -ln -Q in -A -s 100 -i any udp and dst port %d | grep -B 1 %s",
+		validationTimeout, tunnelPort, clientMessage)
 	sPod, err := spawnSnifferPodOnNode(lClientSet, localEndpoint.Spec.Hostname,
 		namespace, podCommand)
 	if err != nil {
 		status.QueueFailureMessage(fmt.Sprintf("Error while spawning the sniffer pod on the GatewayNode: %v", err))
 		return
 	}
-
 	defer sPod.DeletePod()
-	var gatewayPodIP string
-	if !localEndpoint.Spec.NATEnabled {
-		gatewayPodIP = localEndpoint.Spec.PrivateIP
-	} else {
-		gatewayPodIP = localEndpoint.Spec.PublicIP
+
+	gatewayPodIP := getGatewayIP(remoteCfg, submariner.Spec.ClusterID)
+	if gatewayPodIP == "" {
+		status.QueueWarningMessage("Gateway object on remote cluster does not have connection info to local cluster.")
+		return
 	}
 
 	rClientSet, err := kubernetes.NewForConfig(remoteCfg)
@@ -121,7 +120,6 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 		return
 	}
 
-	clientMessage := string(uuid.NewUUID())[0:8]
 	podCommand = fmt.Sprintf("for x in $(seq 1000); do echo %s; done | for i in $(seq 5);"+
 		" do timeout 2 nc -n -p %s -u %s %d; done", clientMessage, ClientSourcePort, gatewayPodIP, tunnelPort)
 	// Spawn the pod on the nonGateway node. If we spawn the pod on Gateway node, the tunnel process can
@@ -162,15 +160,32 @@ func getTunnelPort(submariner *v1alpha1.Submariner, endpoint *subv1.Endpoint) (i
 		}
 		return tunnelPort, nil
 	default:
-		message := fmt.Sprintf("Error parsing the tunnelPort for CableDriver %q",
+		message := fmt.Sprintf("Could not determine the tunnel port for cable driver %q",
 			submariner.Spec.CableDriver)
-		status.QueueWarningMessage(message)
+		status.QueueFailureMessage(message)
 		return tunnelPort, fmt.Errorf(message)
 	}
 }
 
+func getGatewayIP(remoteCfg *rest.Config, localClusterID string) string {
+	gateways := getGatewaysResource(remoteCfg)
+	if gateways == nil {
+		status.QueueWarningMessage("There are no gateways detected on the remote cluster.")
+		return ""
+	}
+
+	for _, conn := range gateways.Items[0].Status.Connections {
+		if conn.Endpoint.ClusterID == localClusterID {
+			return conn.UsingIP
+		}
+	}
+	return ""
+}
+
 func validateSnifferPodOutput(podOutput, clientMessage, hostname string, tunnelPort int32) {
+	clientMessageReceived := true
 	if !strings.Contains(podOutput, clientMessage) {
+		clientMessageReceived = false
 		message := fmt.Sprintf("The tcpdump output from the sniffer pod does not include the message"+
 			" sent from client pod. Please check that your firewall configuration allows UDP/%d traffic"+
 			" on the %q node.", tunnelPort, hostname)
@@ -178,9 +193,11 @@ func validateSnifferPodOutput(podOutput, clientMessage, hostname string, tunnelP
 	}
 
 	if !strings.Contains(podOutput, ClientSourcePort) {
-		message := fmt.Sprintf("The tcpdump output from the sniffer pod does not include packets with"+
-			" sourcePort used by client pod. Please check that your firewall configuration allows UDP/%d traffic"+
-			" on the %q node.", tunnelPort, hostname)
-		status.QueueFailureMessage(message)
+		if clientMessageReceived {
+			message := fmt.Sprintf("The tcpdump output from the sniffer pod does not include packets with"+
+				" sourcePort %q used by client pod. The NAT router on remote cluster end seems to be modifying the"+
+				" sourcePort. This can create issues during tunnel setup.", ClientSourcePort)
+			status.QueueWarningMessage(message)
+		}
 	}
 }
