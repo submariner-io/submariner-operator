@@ -373,8 +373,6 @@ spec:
                         - endpoint
                         - status
                         - statusMessage
-                        - usingIP
-                        - usingNAT
                         type: object
                       type: array
                     haStatus:
