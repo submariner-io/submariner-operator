@@ -106,6 +106,15 @@ func (np *NetworkPod) schedulePod() error {
 		},
 	}
 
+	if np.Config.Networking == framework.HostNetworking {
+		networkPod.Spec.Containers[0].SecurityContext = &v1.SecurityContext{
+			Capabilities: &v1.Capabilities{
+				Add:  []v1.Capability{"NET_ADMIN", "NET_RAW"},
+				Drop: []v1.Capability{"all"},
+			},
+		}
+	}
+
 	pc := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 	var err error
 	np.Pod, err = pc.Create(&networkPod)
