@@ -49,7 +49,7 @@ func GatewayDaemonSet(info Info, namespace string) {
 }
 
 func RouteAgentDaemonSet(info Info, namespace string) {
-	gatherDaemonSet(info, namespace, metav1.ListOptions{LabelSelector: routeagentPodLabel})
+	gatherDaemonSet(info, namespace, metav1.ListOptions{LabelSelector: RouteagentPodLabel})
 }
 
 func GlobalnetDaemonSet(info Info, namespace string) {

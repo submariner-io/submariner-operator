@@ -23,10 +23,14 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	submarinerOp "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var (
@@ -125,6 +129,24 @@ func gatherDataByCluster(restConfig restConfig) {
 	info.DynClient, info.ClientSet, err = getClients(restConfig.config)
 	exitOnError("Error getting client %s", err)
 
+	resourceSubmariners := schema.GroupVersionResource{
+		Group:    submarinerOp.SchemeGroupVersion.Group,
+		Version:  submarinerOp.SchemeGroupVersion.Version,
+		Resource: "submariners",
+	}
+
+	var submariner submarinerOp.Submariner
+
+	resourceSubm, err := info.DynClient.Resource(resourceSubmariners).Namespace(submarinerNamespace).Get("submariner", metav1.GetOptions{})
+	if err != nil {
+		exitOnError(fmt.Sprintf("Failed to get submariner resource %q", err), err)
+	}
+	err = runtime.DefaultUnstructuredConverter.FromUnstructured(resourceSubm.UnstructuredContent(), &submariner)
+	if err != nil {
+		exitOnError(fmt.Sprintf("Failed to get submariner resource %q", err), err)
+	}
+	info.Submariner = submariner
+
 	for module, ok := range gatherModuleFlags {
 		if ok {
 			for dataType, ok := range gatherTypeFlags {
@@ -148,6 +170,8 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 		gather.RouteAgentPodLogs(info)
 		gather.GlobalnetPodLogs(info)
 		gather.NetworkPluginSyncerPodLogs(info)
+		gather.CNIResources(info)
+		gather.CableDriverResources(info)
 	case Resources:
 		gather.Endpoints(info, SubmarinerNamespace)
 		gather.Clusters(info, SubmarinerNamespace)
