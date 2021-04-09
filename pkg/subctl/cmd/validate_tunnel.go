@@ -91,16 +91,21 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 		return
 	}
 
+	gwNodeName := getActiveGatewayNodeName(lClientSet, localEndpoint.Spec.Hostname)
+	if gwNodeName == "" {
+		status.QueueWarningMessage("Could not find the active Gateway nodeName in local cluster")
+		return
+	}
+
 	tunnelPort, err := getTunnelPort(submariner, localEndpoint)
 	if err != nil {
 		return
 	}
 
 	clientMessage := string(uuid.NewUUID())[0:8]
-	podCommand := fmt.Sprintf("timeout %d tcpdump -ln -Q in -A -s 100 -i any udp and dst port %d | grep -B 1 %s",
+	podCommand := fmt.Sprintf("timeout %d tcpdump -ln -Q in -A -s 100 -i any udp and dst port %d | grep '%s'",
 		validationTimeout, tunnelPort, clientMessage)
-	sPod, err := spawnSnifferPodOnNode(lClientSet, localEndpoint.Spec.Hostname,
-		namespace, podCommand)
+	sPod, err := spawnSnifferPodOnNode(lClientSet, gwNodeName, namespace, podCommand)
 	if err != nil {
 		status.QueueFailureMessage(fmt.Sprintf("Error while spawning the sniffer pod on the GatewayNode: %v", err))
 		return
@@ -146,13 +151,12 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 	}
 
 	validateSnifferPodOutput(sPod.PodOutput, clientMessage, localEndpoint.Spec.Hostname, tunnelPort)
-	status.QueueSuccessMessage("Tunnels can be successfully established on the Gateway node.")
 }
 
 func getTunnelPort(submariner *v1alpha1.Submariner, endpoint *subv1.Endpoint) (int32, error) {
 	var tunnelPort int32
 	var err error
-	switch submariner.Spec.CableDriver {
+	switch endpoint.Spec.Backend {
 	case "libreswan", "wireguard":
 		tunnelPort, err = endpoint.Spec.GetBackendPort(subv1.UDPPortConfig, int32(submariner.Spec.CeIPSecNATTPort))
 		if err != nil {
@@ -161,7 +165,7 @@ func getTunnelPort(submariner *v1alpha1.Submariner, endpoint *subv1.Endpoint) (i
 		return tunnelPort, nil
 	default:
 		message := fmt.Sprintf("Could not determine the tunnel port for cable driver %q",
-			submariner.Spec.CableDriver)
+			endpoint.Spec.Backend)
 		status.QueueFailureMessage(message)
 		return tunnelPort, fmt.Errorf(message)
 	}
@@ -183,21 +187,13 @@ func getGatewayIP(remoteCfg *rest.Config, localClusterID string) string {
 }
 
 func validateSnifferPodOutput(podOutput, clientMessage, hostname string, tunnelPort int32) {
-	clientMessageReceived := true
 	if !strings.Contains(podOutput, clientMessage) {
-		clientMessageReceived = false
 		message := fmt.Sprintf("The tcpdump output from the sniffer pod does not include the message"+
 			" sent from client pod. Please check that your firewall configuration allows UDP/%d traffic"+
 			" on the %q node.", tunnelPort, hostname)
 		status.QueueFailureMessage(message)
+		return
 	}
 
-	if !strings.Contains(podOutput, ClientSourcePort) {
-		if clientMessageReceived {
-			message := fmt.Sprintf("The tcpdump output from the sniffer pod does not include packets with"+
-				" sourcePort %q used by client pod. The NAT router on remote cluster end seems to be modifying the"+
-				" sourcePort. This can create issues during tunnel setup.", ClientSourcePort)
-			status.QueueWarningMessage(message)
-		}
-	}
+	status.QueueSuccessMessage("Tunnels can be successfully established on the Gateway node.")
 }

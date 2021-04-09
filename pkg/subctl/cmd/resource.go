@@ -19,21 +19,26 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	k8sV1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/submariner-io/submariner-operator/pkg/names"
+
 	"github.com/submariner-io/admiral/pkg/resource"
+	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
+
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
-	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 )
 
 func getMultipleRestConfigs(kubeConfigPath string, kubeContexts []string) ([]restConfig, error) {
@@ -105,6 +110,25 @@ func getEndpointResource(config *rest.Config, clusterID string) *submarinerv1.En
 	}
 
 	return nil
+}
+
+func getActiveGatewayNodeName(clientSet *kubernetes.Clientset, hostname string) string {
+	nodes, err := clientSet.CoreV1().Nodes().List(v1opts.ListOptions{})
+	if err != nil {
+		exitOnError("Error listing the Nodes in the local cluster", err)
+	}
+
+	for _, node := range nodes.Items {
+		for _, addr := range node.Status.Addresses {
+			if addr.Type == k8sV1.NodeHostName {
+				if strings.HasPrefix(addr.Address, hostname) {
+					return node.Name
+				}
+			}
+		}
+	}
+
+	return ""
 }
 
 func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
