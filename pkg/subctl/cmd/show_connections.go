@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/table"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
@@ -48,8 +49,8 @@ func init() {
 	showCmd.AddCommand(showConnectionsCmd)
 }
 
-func getConnectionsStatus(submariner *v1alpha1.Submariner) []connectionStatus {
-	var status []connectionStatus
+func getConnectionsStatus(submariner *v1alpha1.Submariner) []interface{} {
+	var status []interface{}
 
 	gateways := submariner.Status.Gateways
 	if gateways == nil {
@@ -119,29 +120,25 @@ func showConnections(cmd *cobra.Command, args []string) {
 }
 
 func showConnectionsFor(submariner *v1alpha1.Submariner) {
-	status := getConnectionsStatus(submariner)
-	printConnections(status)
-}
+	connections := getConnectionsStatus(submariner)
 
-func printConnections(connections []connectionStatus) {
 	if len(connections) == 0 {
 		fmt.Println("No resources found.")
 		return
 	}
+	connectionPrinter.Print(connections)
+}
 
-	template := "%-32.31s%-24.23s%-16.15s%-5.3s%-20.19s%-40.39s%-16.15s%-10.9s\n"
-	fmt.Printf(template, "GATEWAY", "CLUSTER", "REMOTE IP", "NAT", "CABLE DRIVER", "SUBNETS", "STATUS", "RTT avg.")
-
-	for _, item := range connections {
-		fmt.Printf(
-			template,
-			item.gateway,
-			item.cluster,
-			item.remoteIP,
-			item.usingNAT,
-			item.cableDriver,
-			item.subnets,
-			item.status,
-			item.rtt)
-	}
+var connectionPrinter = table.Printer{
+	Headers: []table.Header{
+		{Name: "GATEWAY", MaxLength: 31}, {Name: "CLUSTER", MaxLength: 23}, {Name: "REMOTE IP", MaxLength: 15},
+		{Name: "NAT", MaxLength: 3}, {Name: "CABLE DRIVER", MaxLength: 19}, {Name: "SUBNETS", MaxLength: 39},
+		{Name: "STATUS", MaxLength: 15}, {Name: "RTT avg.", MaxLength: 12},
+	},
+	RowConverterFunc: func(obj interface{}) []string {
+		item := obj.(connectionStatus)
+		return []string{
+			item.gateway, item.cluster, item.remoteIP, item.usingNAT, item.cableDriver,
+			item.subnets, string(item.status), item.rtt}
+	},
 }
