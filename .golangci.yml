@@ -66,3 +66,9 @@ issues:
     - linters:
         - stylecheck
       text: "ST1003: struct field BrokerK8sApiServer"
+    # Temporary, until https://github.com/submariner-io/submariner-operator/issues/1236
+    # is addressed (sigs.k8s.io/controller-runtime/pkg/client/fake is deprecated)
+    - path: controllers/servicediscovery/servicediscovery_controller_test.go
+      text: "SA1019: package sigs.k8s.io/controller-runtime/pkg/client/fake is deprecated"
+    - path: controllers/submariner/submariner_controller_test.go
+      text: "SA1019: package sigs.k8s.io/controller-runtime/pkg/client/fake is deprecated"
