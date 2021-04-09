@@ -32,6 +32,7 @@ type connectionStatus struct {
 	usingNAT    string
 	cableDriver string
 	subnets     string
+	rtt         string
 	status      submv1.ConnectionStatus
 }
 
@@ -60,6 +61,7 @@ func getConnectionsStatus(submariner *v1alpha1.Submariner) []connectionStatus {
 			subnets := strings.Join(connection.Endpoint.Subnets, ", ")
 
 			ip, nat := remoteIPAndNATForConnection(connection)
+
 			status = append(status, connectionStatus{
 				gateway:     connection.Endpoint.Hostname,
 				cluster:     connection.Endpoint.ClusterID,
@@ -68,11 +70,20 @@ func getConnectionsStatus(submariner *v1alpha1.Submariner) []connectionStatus {
 				cableDriver: connection.Endpoint.Backend,
 				subnets:     subnets,
 				status:      connection.Status,
+				rtt:         getAverageRTTForConnection(connection),
 			})
 		}
 	}
 
 	return status
+}
+
+func getAverageRTTForConnection(connection submv1.Connection) string {
+	rtt := ""
+	if connection.LatencyRTT != nil {
+		rtt = connection.LatencyRTT.Average
+	}
+	return rtt
 }
 
 func remoteIPAndNATForConnection(connection submv1.Connection) (string, string) {
@@ -118,8 +129,8 @@ func printConnections(connections []connectionStatus) {
 		return
 	}
 
-	template := "%-32.31s%-24.23s%-16.15s%-5.3s%-20.19s%-40.39s%-16.15s\n"
-	fmt.Printf(template, "GATEWAY", "CLUSTER", "REMOTE IP", "NAT", "CABLE DRIVER", "SUBNETS", "STATUS")
+	template := "%-32.31s%-24.23s%-16.15s%-5.3s%-20.19s%-40.39s%-16.15s%-10.9s\n"
+	fmt.Printf(template, "GATEWAY", "CLUSTER", "REMOTE IP", "NAT", "CABLE DRIVER", "SUBNETS", "STATUS", "RTT avg.")
 
 	for _, item := range connections {
 		fmt.Printf(
@@ -130,6 +141,7 @@ func printConnections(connections []connectionStatus) {
 			item.usingNAT,
 			item.cableDriver,
 			item.subnets,
-			item.status)
+			item.status,
+			item.rtt)
 	}
 }
