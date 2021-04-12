@@ -32,7 +32,7 @@ import (
 	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 )
 
-func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, error) {
+func getMultipleRestConfigs(kubeConfigPath string, kubeContexts []string) ([]restConfig, error) {
 	var restConfigs []restConfig
 
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
@@ -41,8 +41,8 @@ func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, e
 	rules.ExplicitPath = kubeConfigPath
 
 	contexts := []string{}
-	if kubeContext != "" {
-		contexts = append(contexts, kubeContext)
+	if len(kubeContexts) > 0 {
+		contexts = append(contexts, kubeContexts...)
 	} else {
 		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
 		rawConfig, err := kubeConfig.RawConfig()
