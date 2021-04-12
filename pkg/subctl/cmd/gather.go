@@ -17,8 +17,11 @@ limitations under the License.
 package cmd
 
 import (
+	"archive/tar"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -139,6 +142,9 @@ func gatherDataByCluster(restConfig restConfig) {
 			}
 		}
 	}
+	info.Status.Start(fmt.Sprintf("Creating a tarball of gathered data in directory %s", directory))
+	createTar(directory, info.Status)
+	info.Status.End(info.Status.ResultFromMessages())
 }
 
 func gatherConnectivity(dataType string, info gather.Info) bool {
@@ -265,4 +271,54 @@ func getAllModuleKeys() []string {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+func createTar(sourcedir string, Status *cli.Status)  {
+	dir, err := os.Open(sourcedir)
+	if err != nil {
+		Status.QueueFailureMessage(fmt.Sprintf("error opening source directory %s", directory))
+	}
+	defer dir.Close()
+
+	files, err := dir.Readdir(0) // grab the files list
+	if err != nil {
+		if err != nil {
+			Status.QueueFailureMessage(fmt.Sprintf("error grabbing files from directory %s", dir))
+		}
+	}
+
+	tarfile, err := os.Create(sourcedir + ".tar") // Destination tarfile name
+	if err != nil {
+		Status.QueueFailureMessage(fmt.Sprintf("error creating destination tarfile %s", tarfile))
+	}
+	defer tarfile.Close()
+
+	tarfileWriter := tar.NewWriter(tarfile)
+	defer tarfileWriter.Close()
+
+	for _, fileInfo := range files {
+		// see https://www.socketloop.com/tutorials/go-file-path-independent-of-operating-system
+		file, err := os.Open(dir.Name() + string(filepath.Separator) + fileInfo.Name())
+		if err != nil {
+			Status.QueueFailureMessage(fmt.Sprintf("error opening file %s", file))
+		}
+		defer file.Close()
+
+		// prepare the tar header
+		header := &tar.Header{
+			Name: file.Name(),
+			Size: fileInfo.Size(),
+			Mode: int64(fileInfo.Mode())}
+
+		err = tarfileWriter.WriteHeader(header)
+		if err != nil {
+			Status.QueueFailureMessage("error writing tar header")
+		}
+
+		_, err = io.Copy(tarfileWriter, file)
+		if err != nil {
+			Status.QueueFailureMessage(fmt.Sprintf("error copying file %s to tar", file))
+		}
+	}
+	Status.QueueSuccessMessage(fmt.Sprintf("Successfully created tarball %s", sourcedir + ".tar"))
 }
