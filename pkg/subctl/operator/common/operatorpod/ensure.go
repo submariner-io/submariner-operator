@@ -34,7 +34,7 @@ const deploymentCheckInterval = 5 * time.Second
 const deploymentWaitTime = 10 * time.Minute
 
 // Ensure the operator is deployed, and running
-func Ensure(restConfig *rest.Config, namespace, operatorName, image string) (bool, error) {
+func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debug bool) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
 		return false, err
@@ -45,6 +45,13 @@ func Ensure(restConfig *rest.Config, namespace, operatorName, image string) (boo
 	// If we are running with a local development image, don't try to pull from registry
 	if strings.HasSuffix(image, ":local") {
 		imagePullPolicy = v1.PullIfNotPresent
+	}
+
+	command := []string{operatorName, "-alsologtostderr"}
+	if debug {
+		command = append(command, "-v=3")
+	} else {
+		command = append(command, "-v=1")
 	}
 
 	deployment := &appsv1.Deployment{
@@ -65,7 +72,7 @@ func Ensure(restConfig *rest.Config, namespace, operatorName, image string) (boo
 						{
 							Name:            operatorName,
 							Image:           image,
-							Command:         []string{operatorName},
+							Command:         command,
 							ImagePullPolicy: imagePullPolicy,
 							Env: []v1.EnvVar{
 								{

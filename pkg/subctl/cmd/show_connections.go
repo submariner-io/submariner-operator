@@ -29,6 +29,7 @@ type connectionStatus struct {
 	gateway     string
 	cluster     string
 	remoteIP    string
+	usingNAT    string
 	cableDriver string
 	subnets     string
 	status      submv1.ConnectionStatus
@@ -58,10 +59,12 @@ func getConnectionsStatus(submariner *v1alpha1.Submariner) []connectionStatus {
 		for _, connection := range gateway.Connections {
 			subnets := strings.Join(connection.Endpoint.Subnets, ", ")
 
+			ip, nat := remoteIPAndNATForConnection(connection)
 			status = append(status, connectionStatus{
 				gateway:     connection.Endpoint.Hostname,
 				cluster:     connection.Endpoint.ClusterID,
-				remoteIP:    connection.Endpoint.PrivateIP,
+				remoteIP:    ip,
+				usingNAT:    nat,
 				cableDriver: connection.Endpoint.Backend,
 				subnets:     subnets,
 				status:      connection.Status,
@@ -70,6 +73,22 @@ func getConnectionsStatus(submariner *v1alpha1.Submariner) []connectionStatus {
 	}
 
 	return status
+}
+
+func remoteIPAndNATForConnection(connection submv1.Connection) (string, string) {
+	usingNAT := "no"
+	if connection.UsingIP != "" {
+		if connection.UsingNAT {
+			usingNAT = "yes"
+		}
+		return connection.UsingIP, usingNAT
+	}
+
+	if connection.Endpoint.NATEnabled {
+		return connection.Endpoint.PublicIP, "yes"
+	} else {
+		return connection.Endpoint.PrivateIP, "no"
+	}
 }
 
 func showConnections(cmd *cobra.Command, args []string) {
@@ -99,8 +118,8 @@ func printConnections(connections []connectionStatus) {
 		return
 	}
 
-	template := "%-32.31s%-24.23s%-16.15s%-20.19s%-40.39s%-16.15s\n"
-	fmt.Printf(template, "GATEWAY", "CLUSTER", "REMOTE IP", "CABLE DRIVER", "SUBNETS", "STATUS")
+	template := "%-32.31s%-24.23s%-16.15s%-5.3s%-20.19s%-40.39s%-16.15s\n"
+	fmt.Printf(template, "GATEWAY", "CLUSTER", "REMOTE IP", "NAT", "CABLE DRIVER", "SUBNETS", "STATUS")
 
 	for _, item := range connections {
 		fmt.Printf(
@@ -108,6 +127,7 @@ func printConnections(connections []connectionStatus) {
 			item.gateway,
 			item.cluster,
 			item.remoteIP,
+			item.usingNAT,
 			item.cableDriver,
 			item.subnets,
 			item.status)
