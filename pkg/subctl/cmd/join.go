@@ -58,6 +58,8 @@ var (
 	imageVersion                  string
 	nattPort                      int
 	ikePort                       int
+	preferredServer               bool
+	forceUDPEncaps                bool
 	colorCodes                    string
 	natTraversal                  bool
 	disableNat                    bool
@@ -96,6 +98,11 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&natTraversal, "natt", true, "enable NAT traversal for IPsec")
 	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "disable NAT for IPsec")
 	err := cmd.Flags().MarkDeprecated("disable-nat", "please use --natt=false instead")
+
+	cmd.Flags().BoolVar(&preferredServer, "preferred-server", false,
+		"enable this cluster as a preferred server for dataplane connections")
+	cmd.Flags().BoolVar(&forceUDPEncaps, "force-udp-encaps", false, "force UDP encapsulation for IPSec")
+
 	// Errors here are fatal programming errors
 	exitOnError("deprecation error", err)
 	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "enable IPsec debugging (verbose logging)")
@@ -483,6 +490,8 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		CeIPSecNATTPort:          nattPort,
 		CeIPSecIKEPort:           ikePort,
 		CeIPSecDebug:             ipsecDebug,
+		CeIPSecForceUDPEncaps:    forceUDPEncaps,
+		CeIPSecPreferredServer:   preferredServer,
 		CeIPSecPSK:               base64.StdEncoding.EncodeToString(subctlData.IPSecPSK.Data["psk"]),
 		BrokerK8sCA:              base64.StdEncoding.EncodeToString(subctlData.ClientToken.Data["ca.crt"]),
 		BrokerK8sRemoteNamespace: string(subctlData.ClientToken.Data["namespace"]),

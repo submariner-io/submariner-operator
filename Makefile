@@ -1,4 +1,6 @@
 BASE_BRANCH ?= devel
+# Denotes the default operator image version, exposed as a variable for the automated release
+DEFAULT_IMAGE_VERSION ?= $(BASE_BRANCH)
 export BASE_BRANCH
 
 ifneq (,$(DAPPER_HOST_ARCH))
@@ -102,7 +104,7 @@ dist/subctl-%.tar.xz: bin/subctl-%
 
 # Versions may include hyphens so it's easier to use $(VERSION) than to extract them from the target
 bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vendor/modules.txt
-	mkdir -p bin
+	mkdir -p $(@D)
 # We want the calculated version here, not the potentially-overridden target version
 	target=$@; \
 	target=$${target%.exe}; \
@@ -112,7 +114,7 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 	export GOARCH GOOS; \
 	$(SCRIPTS_DIR)/compile.sh \
 		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION) \
-			   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$(if eq($(patsubst subctl-devel-%,devel,$(CALCULATED_VERSION)),devel),devel,$(CALCULATED_VERSION))" \
+			   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$(DEFAULT_IMAGE_VERSION)" \
 		--noupx $@ ./pkg/subctl/main.go
 
 ci: generate-embeddedyamls golangci-lint markdownlint unit build images
@@ -123,15 +125,20 @@ pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/em
 	go generate pkg/subctl/operator/common/embeddedyamls/generate.go
 
 # Operator CRDs
-deploy/crds/submariner.io_servicediscoveries.yaml: ./apis/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
-	controller-gen $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
+CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
+$(CONTROLLER_GEN): vendor/modules.txt
+	mkdir -p $(@D)
+	go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
-deploy/crds/submariner.io_submariners.yaml: ./apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
-	controller-gen $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
+deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
+
+deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
 
 # Submariner CRDs
-deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: vendor/modules.txt
-	cd vendor/github.com/submariner-io/submariner && controller-gen $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
+deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: $(CONTROLLER_GEN) vendor/modules.txt
+	cd vendor/github.com/submariner-io/submariner && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
 
 # Generate the clientset for the Submariner APIs
 # It needs to be run when the Submariner APIs change
@@ -145,12 +152,12 @@ generate-clientset: vendor/modules.txt
 		submariner:v1alpha1
 
 # Generate code
-generate: vendor/modules.txt
-	controller-gen object:headerFile="hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
+generate: $(CONTROLLER_GEN) vendor/modules.txt
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
 
 # Generate manifests e.g. CRD, RBAC etc
-manifests: generate vendor/modules.txt
-	controller-gen $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: generate $(CONTROLLER_GEN) vendor/modules.txt
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # test if VERSION matches the semantic versioning rule
 is-semantic-version:
@@ -158,29 +165,32 @@ is-semantic-version:
 	(printf '\nerror: VERSION does not match the format required by operator-sdk.\n\n' && exit 1)
 
 # Generate kustomization.yaml for bundle
-kustomization: is-semantic-version manifests
+KUSTOMIZE := $(CURDIR)/bin/kustomize
+$(KUSTOMIZE): vendor/modules.txt
+	mkdir -p $(@D)
+	go build -o $@ sigs.k8s.io/kustomize/kustomize/v3
+
+kustomization: $(KUSTOMIZE) is-semantic-version manifests
 	operator-sdk generate kustomize manifests -q && \
-	cd config/manager && kustomize edit set image controller=$(IMG) && cd ../../ && \
+	(cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)) && \
 	(cd config/bundle && \
-	cat kustomization.template.yaml > kustomization.yaml && \
-	sed -i -e 's/$${VERSION}/$(VERSION)/g' kustomization.yaml && \
-	kustomize edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f && \
-	cd ../../ )
+	sed -e 's/$${VERSION}/$(VERSION)/g' kustomization.template.yaml > kustomization.yaml && \
+	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
 
 # Generate bundle manifests and metadata, then validate generated files
-bundle: kustomization
-	(kustomize build config/manifests \
+bundle: $(KUSTOMIZE) kustomization
+	($(KUSTOMIZE) build config/manifests \
 	| operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)) && \
-	(cd config/bundle && kustomize edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml && cd ../../) && \
-	kustomize build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
+	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml && cd ../../) && \
+	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
 	operator-sdk bundle validate ./bundle
 
 # Generate package manifests
-packagemanifests: kustomization
-	(kustomize build config/manifests \
+packagemanifests: $(KUSTOMIZE) kustomization
+	($(KUSTOMIZE) build config/manifests \
 	| operator-sdk generate packagemanifests -q --version $(VERSION) $(PKG_MAN_OPTS)) && \
-	(cd config/bundle && kustomize edit add resource ../../packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
-	kustomize build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && \
+	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
+	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && \
 	mv packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(VERSION)/submariner.v$(VERSION).clusterserviceversion.yaml
 
 golangci-lint: generate-embeddedyamls

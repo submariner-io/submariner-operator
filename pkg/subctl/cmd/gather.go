@@ -23,12 +23,10 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
-
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var (
@@ -54,7 +52,7 @@ var gatherTypeFlags = map[string]bool{
 	"resources": false,
 }
 
-var gatherFuncs = map[string]func(string, *gather.Info) bool{
+var gatherFuncs = map[string]func(string, gather.Info) bool{
 	components.Connectivity:     gatherConnectivity,
 	components.ServiceDiscovery: gatherDiscovery,
 	components.Broker:           gatherBroker,
@@ -63,6 +61,7 @@ var gatherFuncs = map[string]func(string, *gather.Info) bool{
 
 func init() {
 	addKubeconfigFlag(gatherCmd)
+	addKubecontextsFlag(gatherCmd)
 	addGatherFlags(gatherCmd)
 	rootCmd.AddCommand(gatherCmd)
 }
@@ -92,22 +91,17 @@ func gatherData() {
 	err := checkGatherArguments()
 	exitOnError("Invalid arguments", err)
 
-	config := getClientConfig(kubeConfig, kubeContext)
-	exitOnError("Error getting client config", err)
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
+	exitOnError("Error getting REST configs", err)
 
-	restConfig, err := config.ClientConfig()
-	exitOnError("Error getting REST config", err)
-
-	rawConfig, err := config.RawConfig()
-	exitOnError("Error getting raw config", err)
-
-	clusterName := *getClusterNameFromContext(rawConfig, "")
-
-	submariner := getSubmarinerResource(restConfig)
-	if submariner == nil {
-		fmt.Println(submMissingMessage)
-		return
+	for _, config := range configs {
+		gatherDataByCluster(config)
 	}
+}
+
+func gatherDataByCluster(restConfig restConfig) {
+	var err error
+	clusterName := restConfig.clusterName
 
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
@@ -122,18 +116,14 @@ func gatherData() {
 
 	fmt.Printf("Gathering information from cluster %q\n", clusterName)
 
-	info := &gather.Info{
-		RestConfig:  restConfig,
-		Submariner:  submariner,
+	info := gather.Info{
+		RestConfig:  restConfig.config,
 		ClusterName: clusterName,
 		DirName:     directory,
 	}
 
-	info.ClientSet, err = kubernetes.NewForConfig(restConfig)
-	exitOnError("Error creating k8s client set", err)
-
-	info.DynClient, err = dynamic.NewForConfig(restConfig)
-	exitOnError("Error creating dynamic client", err)
+	info.DynClient, info.ClientSet, err = getClients(restConfig.config)
+	exitOnError("Error getting client %s", err)
 
 	for module, ok := range gatherModuleFlags {
 		if ok {
@@ -151,27 +141,16 @@ func gatherData() {
 	}
 }
 
-func gatherConnectivity(dataType string, info *gather.Info) bool {
+func gatherConnectivity(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		err := gather.GatewayPodLogs(info)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Gateway pod logs: %s", err))
-		} else {
-			info.Status.QueueSuccessMessage("Successfully gathered Gateway pod logs")
-		}
-
-		err = gather.RouteAgentPodLogs(info)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather Route Agent pod logs: %s", err))
-		} else {
-			info.Status.QueueSuccessMessage("Successfully gathered Route Agent pod logs")
-		}
+		gather.GatewayPodLogs(info)
+		gather.RouteAgentPodLogs(info)
+		gather.GlobalnetPodLogs(info)
+		gather.NetworkPluginSyncerPodLogs(info)
 	case Resources:
 		gather.Endpoints(info, SubmarinerNamespace)
-
 		gather.Clusters(info, SubmarinerNamespace)
-
 		gather.Gateways(info, SubmarinerNamespace)
 	default:
 		return false
@@ -180,12 +159,17 @@ func gatherConnectivity(dataType string, info *gather.Info) bool {
 	return true
 }
 
-func gatherDiscovery(dataType string, info *gather.Info) bool {
+func gatherDiscovery(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		info.Status.QueueWarningMessage("Gather ServiceDiscovery Logs not implemented yet")
+		gather.ServiceDiscoveryPodLogs(info)
+		gather.CoreDNSPodLogs(info)
 	case Resources:
-		info.Status.QueueWarningMessage("Gather ServiceDiscovery Resources not implemented yet")
+		gather.ServiceExports(info, corev1.NamespaceAll)
+		gather.ServiceImports(info, corev1.NamespaceAll)
+		gather.EndpointSlices(info, corev1.NamespaceAll)
+		gather.ConfigMapLighthouseDNS(info, SubmarinerNamespace)
+		gather.ConfigMapCoreDNS(info, "kube-system")
 	default:
 		return false
 	}
@@ -193,14 +177,29 @@ func gatherDiscovery(dataType string, info *gather.Info) bool {
 	return true
 }
 
-func gatherBroker(dataType string, info *gather.Info) bool {
+func gatherBroker(dataType string, info gather.Info) bool {
 	switch dataType {
-	case Logs:
-		info.Status.QueueWarningMessage("No logs to gather on Broker")
 	case Resources:
-		_, _ = getBrokerRestConfig(info.Submariner)
+		brokerRestConfig, brokerNamespace, err := getBrokerRestConfigAndNamespace(info.RestConfig)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker's rest config: %s", err))
+			return true
+		}
 
-		info.Status.QueueWarningMessage("Gather Broker Resources not implemented yet")
+		info.DynClient, info.ClientSet, err = getClients(brokerRestConfig)
+		if err != nil {
+			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker client %s", err))
+			return true
+		}
+
+		info.RestConfig = brokerRestConfig
+		info.ClusterName = "broker"
+
+		// The broker's ClusterRole used by member clusters only allows the below resources to be queried
+		gather.Endpoints(info, brokerNamespace)
+		gather.Clusters(info, brokerNamespace)
+		gather.EndpointSlices(info, brokerNamespace)
+		gather.ServiceImports(info, brokerNamespace)
 	default:
 		return false
 	}
@@ -208,12 +207,20 @@ func gatherBroker(dataType string, info *gather.Info) bool {
 	return true
 }
 
-func gatherOperator(dataType string, info *gather.Info) bool {
+func gatherOperator(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Logs:
-		info.Status.QueueWarningMessage("Gather Operator Logs not implemented yet")
+		gather.SubmarinerOperatorPodLogs(info)
 	case Resources:
-		info.Status.QueueWarningMessage("Gather Operator Resources not implemented yet")
+		gather.Submariners(info, SubmarinerNamespace)
+		gather.ServiceDiscoveries(info, SubmarinerNamespace)
+		gather.SubmarinerOperatorDeployment(info, SubmarinerNamespace)
+		gather.GatewayDaemonSet(info, SubmarinerNamespace)
+		gather.RouteAgentDaemonSet(info, SubmarinerNamespace)
+		gather.GlobalnetDaemonSet(info, SubmarinerNamespace)
+		gather.NetworkPluginSyncerDeployment(info, SubmarinerNamespace)
+		gather.LighthouseAgentDeployment(info, SubmarinerNamespace)
+		gather.LighthouseCoreDNSDeployment(info, SubmarinerNamespace)
 	default:
 		return false
 	}

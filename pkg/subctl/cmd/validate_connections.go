@@ -35,7 +35,7 @@ func init() {
 }
 
 func validateConnections(cmd *cobra.Command, args []string) {
-	configs, err := getMultipleRestConfigs(kubeConfig, kubeContext)
+	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
@@ -64,6 +64,13 @@ func validateConnections(cmd *cobra.Command, args []string) {
 			if gateway.Status.HAStatus != submv1.HAStatusActive {
 				continue
 			}
+
+			if len(gateway.Status.Connections) == 0 {
+				status.QueueFailureMessage("There are no active connections")
+				status.End(cli.Failure)
+				return
+			}
+
 			for _, connection := range gateway.Status.Connections {
 				if connection.Status == submv1.Connecting {
 					message = fmt.Sprintf("Connection to cluster %q is in progress", connection.Endpoint.ClusterID)

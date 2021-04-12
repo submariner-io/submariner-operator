@@ -50,12 +50,16 @@ spec:
                 type: string
               ceIPSecDebug:
                 type: boolean
+              ceIPSecForceUDPEncaps:
+                type: boolean
               ceIPSecIKEPort:
                 type: integer
               ceIPSecNATTPort:
                 type: integer
               ceIPSecPSK:
                 type: string
+              ceIPSecPreferredServer:
+                type: boolean
               clusterCIDR:
                 type: string
               clusterID:
@@ -323,9 +327,6 @@ spec:
                                 type: string
                               nat_enabled:
                                 type: boolean
-                              natDiscoveryPort:
-                                format: int32
-                                type: integer
                               private_ip:
                                 type: string
                               public_ip:
@@ -372,8 +373,6 @@ spec:
                         - endpoint
                         - status
                         - statusMessage
-                        - usingIP
-                        - usingNAT
                         type: object
                       type: array
                     haStatus:
@@ -396,9 +395,6 @@ spec:
                           type: string
                         nat_enabled:
                           type: boolean
-                        natDiscoveryPort:
-                          format: int32
-                          type: integer
                         private_ip:
                           type: string
                         public_ip:

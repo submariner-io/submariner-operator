@@ -16,7 +16,9 @@ limitations under the License.
 package cmd
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/pkg/names"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
@@ -30,7 +32,7 @@ import (
 	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 )
 
-func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, error) {
+func getMultipleRestConfigs(kubeConfigPath string, kubeContexts []string) ([]restConfig, error) {
 	var restConfigs []restConfig
 
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
@@ -38,22 +40,23 @@ func getMultipleRestConfigs(kubeConfigPath, kubeContext string) ([]restConfig, e
 	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
 	rules.ExplicitPath = kubeConfigPath
 
-	if kubeContext != "" {
-		overrides.CurrentContext = kubeContext
-	}
-
-	if kubeConfigPath != "" || kubeContext != "" {
-		config, err := getClientConfigAndClusterName(rules, overrides)
+	contexts := []string{}
+	if len(kubeContexts) > 0 {
+		contexts = append(contexts, kubeContexts...)
+	} else {
+		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
+		rawConfig, err := kubeConfig.RawConfig()
 		if err != nil {
-			return nil, err
+			return restConfigs, err
 		}
-		restConfigs = append(restConfigs, config)
-		return restConfigs, nil
+		for context := range rawConfig.Contexts {
+			contexts = append(contexts, context)
+		}
 	}
 
-	for _, item := range rules.Precedence {
-		if item != "" {
-			rules.ExplicitPath = item
+	for _, context := range contexts {
+		if context != "" {
+			overrides.CurrentContext = context
 			config, err := getClientConfigAndClusterName(rules, overrides)
 			if err != nil {
 				return nil, err
@@ -73,7 +76,7 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
 		Get(submarinercr.SubmarinerName, v1opts.GetOptions{})
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return nil
 		}
 		exitOnError("Error obtaining the Submariner resource", err)
@@ -89,7 +92,7 @@ func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
 	gateways, err := submarinerClient.SubmarinerV1().Gateways(OperatorNamespace).
 		List(v1opts.ListOptions{})
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return nil
 		}
 		exitOnError("Error obtaining the Gateways resource", err)
@@ -98,15 +101,54 @@ func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
 	return gateways
 }
 
-func getBrokerRestConfig(submariner *v1alpha1.Submariner) (*rest.Config, error) {
-	// Try to authorize against the submariner CLuster resource as we know the CRD should exist and the credentials
+func getBrokerRestConfigAndNamespace(localConfig *rest.Config) (*rest.Config, string, error) {
+	submarinerClient, err := subOperatorClientset.NewForConfig(localConfig)
+	if err != nil {
+		return nil, "", errors.WithMessage(err, "error getting submariner client")
+	}
+
+	brokerConfig, brokerNamespace, err := getBrokerRestConfigAndNamespaceFromSubmariner(submarinerClient)
+	if apierrors.IsNotFound(err) {
+		return getBrokerRestConfigAndNamespaceFromServiceDisc(submarinerClient)
+	}
+
+	return brokerConfig, brokerNamespace, err
+}
+
+func getBrokerRestConfigAndNamespaceFromSubmariner(submarinerClient *subOperatorClientset.Clientset) (*rest.Config, string, error) {
+	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
+		Get(submarinercr.SubmarinerName, v1opts.GetOptions{})
+	if err != nil {
+		return nil, "", errors.WithMessage(err, "error obtaining the Submariner resource")
+	}
+
+	// Try to authorize against the submariner Cluster resource as we know the CRD should exist and the credentials
 	// should allow read access.
 	restConfig, _, err := resource.GetAuthorizedRestConfig(submariner.Spec.BrokerK8sApiServer, submariner.Spec.BrokerK8sApiServerToken,
 		submariner.Spec.BrokerK8sCA, rest.TLSClientConfig{}, schema.GroupVersionResource{
 			Group:    submarinerv1.SchemeGroupVersion.Group,
 			Version:  submarinerv1.SchemeGroupVersion.Version,
 			Resource: "clusters",
-		})
+		}, submariner.Spec.BrokerK8sRemoteNamespace)
 
-	return restConfig, err
+	return restConfig, submariner.Spec.BrokerK8sRemoteNamespace, err
+}
+
+func getBrokerRestConfigAndNamespaceFromServiceDisc(submarinerClient *subOperatorClientset.Clientset) (*rest.Config, string, error) {
+	serviceDisc, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).
+		Get(names.ServiceDiscoveryCrName, v1opts.GetOptions{})
+	if err != nil {
+		return nil, "", errors.WithMessage(err, "error obtaining the ServiceDiscovery resource")
+	}
+
+	// Try to authorize against the ServiceImport resource as we know the CRD should exist and the credentials
+	// should allow read access.
+	restConfig, _, err := resource.GetAuthorizedRestConfig(serviceDisc.Spec.BrokerK8sApiServer, serviceDisc.Spec.BrokerK8sApiServerToken,
+		serviceDisc.Spec.BrokerK8sCA, rest.TLSClientConfig{}, schema.GroupVersionResource{
+			Group:    "multicluster.x-k8s.io",
+			Version:  "v1alpha1",
+			Resource: "serviceimports",
+		}, serviceDisc.Spec.BrokerK8sRemoteNamespace)
+
+	return restConfig, serviceDisc.Spec.BrokerK8sRemoteNamespace, err
 }

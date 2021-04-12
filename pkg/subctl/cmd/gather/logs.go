@@ -29,25 +29,34 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func gatherPodLogs(podLabelSelector string, info *Info) error {
-	pods, err := findPods(info.ClientSet, podLabelSelector)
+func gatherPodLogs(podLabelSelector string, info Info) {
+	err := func() error {
+		pods, err := findPods(info.ClientSet, podLabelSelector)
+
+		if err != nil {
+			return err
+		}
+
+		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector))
+
+		for i := range pods.Items {
+			pod := &pods.Items[i]
+			err := podLogsToFile(pod, info)
+			if err != nil {
+				return errors.WithMessagef(err, "error getting logs for pod %q", pod.Name)
+			}
+		}
+
+		return nil
+	}()
 
 	if err != nil {
-		return err
+		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather logs for pods matching label selector %q: %s",
+			podLabelSelector, err))
 	}
-
-	for i := range pods.Items {
-		pod := &pods.Items[i]
-		err := podLogsToFile(pod, info)
-		if err != nil {
-			return errors.WithMessagef(err, "error getting logs for pod %q", pod.Name)
-		}
-	}
-
-	return nil
 }
 
-func podLogsToFile(pod *corev1.Pod, info *Info) error {
+func podLogsToFile(pod *corev1.Pod, info Info) error {
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{})
 
 	logs, err := processLogStream(logRequest)
@@ -79,7 +88,7 @@ func processLogStream(logrequest *rest.Request) (string, error) {
 	return logs.String(), nil
 }
 
-func writeLogToFile(data, podName string, info *Info) error {
+func writeLogToFile(data, podName string, info Info) error {
 	fileName := filepath.Join(info.DirName, info.ClusterName+"_"+podName+".log")
 	f, err := os.Create(fileName)
 	if err != nil {
@@ -100,10 +109,6 @@ func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.P
 
 	if err != nil {
 		return nil, errors.WithMessage(err, "error listing pods")
-	}
-
-	if len(pods.Items) == 0 {
-		return nil, fmt.Errorf("no pods found matching label selector %q", byLabelSelector)
 	}
 
 	return pods, nil

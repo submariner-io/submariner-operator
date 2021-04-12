@@ -21,27 +21,34 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"
 )
 
-func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespace string) {
+func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
-		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(metav1.ListOptions{})
+		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(listOptions)
 		if err != nil {
 			return errors.WithMessagef(err, "error listing %q", ofType.Resource)
 		}
 
-		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d %s in namespace %q", len(list.Items), ofType.Resource, namespace))
+		selectorStr := ""
+		if listOptions.LabelSelector != "" {
+			selectorStr = fmt.Sprintf("by label selector %q ", listOptions.LabelSelector)
+		} else if listOptions.FieldSelector != "" {
+			selectorStr = fmt.Sprintf("by field selector %q ", listOptions.FieldSelector)
+		}
 
-		for _, item := range list.Items {
-			nsPart := ""
-			if namespace != "" {
-				nsPart = "_" + namespace
-			}
+		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d %s %sin namespace %q", len(list.Items), ofType.Resource,
+			selectorStr, namespace))
 
-			path := filepath.Join(info.DirName, info.ClusterName+"_"+ofType.Resource+nsPart+"_"+item.GetName()+".yaml")
+		for i := range list.Items {
+			item := &list.Items[i]
+
+			path := filepath.Join(info.DirName, info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+"_"+item.GetName()+".yaml")
 			file, err := os.Create(path)
 			if err != nil {
 				return errors.WithMessagef(err, "error opening file %s", path)
@@ -59,10 +66,35 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 				return errors.WithMessagef(err, "error writing to file %s", path)
 			}
 		}
+
 		return nil
 	}()
 
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather %s: %s", ofType.Resource, err))
 	}
+}
+
+func gatherDaemonSet(info Info, namespace string, listOptions metav1.ListOptions) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    appsv1.SchemeGroupVersion.Group,
+		Version:  appsv1.SchemeGroupVersion.Version,
+		Resource: "daemonsets",
+	}, namespace, listOptions)
+}
+
+func gatherDeployment(info Info, namespace string, listOptions metav1.ListOptions) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    appsv1.SchemeGroupVersion.Group,
+		Version:  appsv1.SchemeGroupVersion.Version,
+		Resource: "deployments",
+	}, namespace, listOptions)
+}
+
+func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOptions) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    corev1.SchemeGroupVersion.Group,
+		Version:  corev1.SchemeGroupVersion.Version,
+		Resource: "configmaps",
+	}, namespace, listOptions)
 }
