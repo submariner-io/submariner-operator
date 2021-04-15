@@ -27,6 +27,8 @@ const (
 	routeagentPodLabel          = "app=submariner-routeagent"
 	globalnetPodLabel           = "app=submariner-globalnet"
 	networkpluginSyncerPodLabel = "app=submariner-networkplugin-syncer"
+	ovnMasterPodLabelOCP        = "app=ovnkube-master"
+	ovnMasterPodLabelGeneric    = "name=ovnkube-master"
 )
 
 func GatewayPodLogs(info Info) {

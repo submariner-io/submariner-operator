@@ -52,6 +52,19 @@ var libreswanCmds = map[string]string{
 	"ipsec-trafficstatus": "ipsec --trafficstatus",
 }
 
+const ovnShowCmd = "ovn-nbctl show"
+
+var ovnCmds = map[string]string{
+	"ovn_show":             ovnShowCmd,
+	"ovn_logical_routers":  "ovn-nbctl list Logical_Router",
+	"ovn_lrps":             "ovn-nbctl list Logical_Router_Port",
+	"ovn_logical_switches": "ovn-nbctl list Logical_Switch",
+	"ovn_lsps":             "ovn-nbctl list Logical_Switch_Port",
+	"ovn_routes":           "ovn-nbctl list Logical_Router_Static_Route",
+	"ovn_policies":         "ovn-nbctl list Logical_Router_Policy",
+	"ovn_acls":             "ovn-nbctl list ACL",
+}
+
 var networkPluginCNIType = map[string]string{
 	"generic":       typeIPTables,
 	"canal-flannel": typeIPTables,
@@ -136,6 +149,45 @@ func logIPTablesCmds(info Info, pod *v1.Pod) {
 	}
 }
 
+func OVNResources(info Info, networkPlugin string) {
+	if networkPluginCNIType[networkPlugin] != typeOvn {
+		return
+	}
+
+	// we check two different labels because OpenShift deploys with a different
+	// label compared to ovn-kubernetes upstream
+	pods, err := findPods(info.ClientSet, ovnMasterPodLabelOCP)
+	if err != nil || pods == nil || len(pods.Items) == 0 {
+		pods, err = findPods(info.ClientSet, ovnMasterPodLabelGeneric)
+		if err != nil {
+			info.Status.QueueFailureMessage("Failed to gather any OVN master pods: " + err.Error())
+		} else if pods == nil || len(pods.Items) == 0 {
+			info.Status.QueueFailureMessage("Failed to find any OVN master pods")
+		}
+	}
+
+	var masterPod *v1.Pod
+	// ovn-nbctl commands only work on one of the masters, figure out which one
+	for i := range pods.Items {
+		err = tryCmd(info, &pods.Items[i], ovnShowCmd)
+		if err == nil {
+			masterPod = &pods.Items[i]
+			break
+		}
+	}
+
+	if masterPod == nil {
+		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to exec OVN command in all masters: %s", err))
+		return
+	}
+
+	info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering OVN data from master pod %q", masterPod.Name))
+
+	for name, command := range ovnCmds {
+		logCmdOutput(info, masterPod, command, name)
+	}
+}
+
 func CableDriverResources(info Info, cableDriver string) {
 	podLabelSelector := gatewayPodLabel
 	err := func() error {
@@ -168,14 +220,18 @@ func logLibreswanCmds(info Info, pod *v1.Pod) {
 	}
 }
 
-func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string) {
+func execCmdInBash(info Info, pod *v1.Pod, cmd string) (string, string, error) {
 	execOptions := resource.ExecOptionsFromPod(pod)
 	execConfig := resource.ExecConfig{
 		RestConfig: info.RestConfig,
 		ClientSet:  info.ClientSet,
 	}
 	execOptions.Command = []string{"/bin/bash", "-c", cmd}
-	stdOut, _, err := resource.ExecWithOptions(execConfig, execOptions)
+	return resource.ExecWithOptions(execConfig, execOptions)
+}
+
+func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string) {
+	stdOut, _, err := execCmdInBash(info, pod, cmd)
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error running %q on pod %q: %v", cmd, pod.Name, err))
 		return
@@ -189,4 +245,9 @@ func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string) {
 		}
 		return
 	}
+}
+
+func tryCmd(info Info, pod *v1.Pod, cmd string) error {
+	_, _, err := execCmdInBash(info, pod, cmd)
+	return err
 }

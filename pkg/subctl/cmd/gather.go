@@ -174,6 +174,7 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 		if submarinerCR != nil {
 			gather.CNIResources(info, submarinerCR.Status.NetworkPlugin)
 			gather.CableDriverResources(info, submarinerCR.Spec.CableDriver)
+			gather.OVNResources(info, submarinerCR.Status.NetworkPlugin)
 		}
 		gather.Endpoints(info, SubmarinerNamespace)
 		gather.Clusters(info, SubmarinerNamespace)
