@@ -83,6 +83,18 @@ spec:
             type: object
           status:
             description: ServiceDiscoveryStatus defines the observed state of ServiceDiscovery
+            properties:
+              deploymentInfo:
+                properties:
+                  cloudProvider:
+                    type: string
+                  kubernetesType:
+                    type: string
+                  kubernetesTypeVersion:
+                    type: string
+                  kubernetesVersion:
+                    type: string
+                type: object
             type: object
         type: object
     served: true
