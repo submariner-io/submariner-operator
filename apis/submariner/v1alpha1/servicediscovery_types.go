@@ -56,6 +56,7 @@ type CoreDNSCustomConfig struct {
 // ServiceDiscoveryStatus defines the observed state of ServiceDiscovery
 // +k8s:openapi-gen=true
 type ServiceDiscoveryStatus struct {
+	DeploymentInfo DeploymentInfo `json:"deploymentInfo,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html

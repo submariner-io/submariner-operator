@@ -136,6 +136,17 @@ spec:
                 type: string
               colorCodes:
                 type: string
+              deploymentInfo:
+                properties:
+                  cloudProvider:
+                    type: string
+                  kubernetesType:
+                    type: string
+                  kubernetesTypeVersion:
+                    type: string
+                  kubernetesVersion:
+                    type: string
+                type: object
               gatewayDaemonSetStatus:
                 properties:
                   lastResourceVersion:

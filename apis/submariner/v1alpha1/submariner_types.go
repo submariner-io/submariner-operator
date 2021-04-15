@@ -82,6 +82,7 @@ type SubmarinerStatus struct {
 	RouteAgentDaemonSetStatus DaemonSetStatus         `json:"routeAgentDaemonSetStatus,omitempty"`
 	GlobalnetDaemonSetStatus  DaemonSetStatus         `json:"globalnetDaemonSetStatus,omitempty"`
 	Gateways                  *[]submv1.GatewayStatus `json:"gateways,omitempty"`
+	DeploymentInfo            DeploymentInfo          `json:"deploymentInfo,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
@@ -94,6 +95,13 @@ type DaemonSetStatus struct {
 	MismatchedContainerImages bool                     `json:"mismatchedContainerImages"`
 }
 
+type DeploymentInfo struct {
+	KubernetesType        KubernetesType `json:"kubernetesType,omitempty"`
+	KubernetesTypeVersion string         `json:"kubernetesTypeVersion,omitempty"`
+	KubernetesVersion     string         `json:"kubernetesVersion,omitempty"`
+	CloudProvider         CloudProvider  `json:"cloudProvider,omitempty"`
+}
+
 type HealthCheckSpec struct {
 	Enabled bool `json:"enabled,omitempty"`
 	// The interval at which health check pings are sent.
@@ -102,7 +110,23 @@ type HealthCheckSpec struct {
 	MaxPacketLossCount uint64 `json:"maxPacketLossCount,omitempty"`
 }
 
-const DefaultColorCode = "blue"
+type KubernetesType string
+type CloudProvider string
+
+const (
+	DefaultColorCode                     = "blue"
+	K8s                   KubernetesType = "k8s"
+	OCP                                  = "ocp"
+	EKS                                  = "eks"
+	AKS                                  = "aks"
+	GKE                                  = "gke"
+	DefaultKubernetesType                = K8s
+	Kind                  CloudProvider  = "kind"
+	AWS                                  = "aws"
+	GCP                                  = "gcp"
+	Azure                                = "azure"
+	Openstack                            = "openstack"
+)
 
 // +kubebuilder:object:root=true
 
