@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"k8s.io/client-go/rest"
 )
 
 var validateConnectionsCmd = &cobra.Command{
@@ -39,58 +40,61 @@ func validateConnections(cmd *cobra.Command, args []string) {
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		message := fmt.Sprintf("Validating connections in cluster %q", item.clusterName)
-		status.Start(message)
-		fmt.Println()
-
+		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
 		submariner := getSubmarinerResource(item.config)
-
 		if submariner == nil {
 			status.QueueWarningMessage(submMissingMessage)
 			status.End(cli.Success)
 			continue
 		}
-
-		gateways := getGatewaysResource(item.config)
-		if gateways == nil {
-			message = "There are no gateways detected"
-			status.QueueWarningMessage(message)
-			status.End(cli.Failure)
-			continue
-		}
-
-		allConnectionsEstablished := true
-		for _, gateway := range gateways.Items {
-			if gateway.Status.HAStatus != submv1.HAStatusActive {
-				continue
-			}
-
-			if len(gateway.Status.Connections) == 0 {
-				status.QueueFailureMessage("There are no active connections")
-				status.End(cli.Failure)
-				return
-			}
-
-			for _, connection := range gateway.Status.Connections {
-				if connection.Status == submv1.Connecting {
-					message = fmt.Sprintf("Connection to cluster %q is in progress", connection.Endpoint.ClusterID)
-					status.QueueFailureMessage(message)
-					allConnectionsEstablished = false
-				} else if connection.Status == submv1.ConnectionError {
-					message = fmt.Sprintf("Connection to cluster %q is not established", connection.Endpoint.ClusterID)
-					status.QueueFailureMessage(message)
-					allConnectionsEstablished = false
-				}
-			}
-		}
-
-		if !allConnectionsEstablished {
-			status.End(cli.Failure)
-			continue
-		}
-
-		message = "All connections are established"
-		status.QueueSuccessMessage(message)
 		status.End(cli.Success)
+		validateConnectionsInCluster(item.config, item.clusterName)
 	}
+}
+
+func validateConnectionsInCluster(config *rest.Config, clusterName string) {
+	message := fmt.Sprintf("Validating connections in cluster %q", clusterName)
+	status.Start(message)
+
+	gateways := getGatewaysResource(config)
+	if gateways == nil {
+		message = "There are no gateways detected"
+		status.QueueWarningMessage(message)
+		status.End(cli.Failure)
+		return
+	}
+
+	allConnectionsEstablished := true
+	for _, gateway := range gateways.Items {
+		if gateway.Status.HAStatus != submv1.HAStatusActive {
+			continue
+		}
+
+		if len(gateway.Status.Connections) == 0 {
+			status.QueueFailureMessage("There are no active connections")
+			status.End(cli.Failure)
+			return
+		}
+
+		for _, connection := range gateway.Status.Connections {
+			if connection.Status == submv1.Connecting {
+				message = fmt.Sprintf("Connection to cluster %q is in progress", connection.Endpoint.ClusterID)
+				status.QueueFailureMessage(message)
+				allConnectionsEstablished = false
+			} else if connection.Status == submv1.ConnectionError {
+				message = fmt.Sprintf("Connection to cluster %q is not established", connection.Endpoint.ClusterID)
+				status.QueueFailureMessage(message)
+				allConnectionsEstablished = false
+			}
+		}
+	}
+
+	if !allConnectionsEstablished {
+		status.End(cli.Failure)
+		return
+	}
+
+	message = "All connections are established"
+	status.QueueSuccessMessage(message)
+	status.End(cli.Success)
 }

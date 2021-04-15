@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 )
@@ -39,26 +40,30 @@ func validateK8sVersion(cmd *cobra.Command, args []string) {
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		message := fmt.Sprintf("Validating Submariner support for the Kubernetes version"+
-			" used in cluster %q", item.clusterName)
-		status.Start(message)
-
-		failedRequirements, err := checkRequirements(item.config)
-		if len(failedRequirements) > 0 {
-			status.QueueFailureMessage("The Kubernetes version does not meet Submariner's requirements:")
-			for i := range failedRequirements {
-				message = fmt.Sprintf("* %s\n", (failedRequirements)[i])
-				status.QueueFailureMessage(message)
-			}
-			status.End(cli.Failure)
-			continue
-		}
-		if err != nil {
-			status.QueueFailureMessage(err.Error())
-			status.End(cli.Failure)
-			continue
-		}
-		status.QueueSuccessMessage("The Kubernetes version meets Submariner's requirements")
-		status.End(cli.Success)
+		validateK8sVersionInCluster(item.config, item.clusterName)
 	}
+}
+
+func validateK8sVersionInCluster(config *rest.Config, clusterName string) {
+	message := fmt.Sprintf("Validating Submariner support for the Kubernetes version"+
+		" used in cluster %q", clusterName)
+	status.Start(message)
+
+	failedRequirements, err := checkRequirements(config)
+	if len(failedRequirements) > 0 {
+		status.QueueFailureMessage("The Kubernetes version does not meet Submariner's requirements:")
+		for i := range failedRequirements {
+			message = fmt.Sprintf("* %s\n", (failedRequirements)[i])
+			status.QueueFailureMessage(message)
+		}
+		status.End(cli.Failure)
+		return
+	}
+	if err != nil {
+		status.QueueFailureMessage(err.Error())
+		status.End(cli.Failure)
+		return
+	}
+	status.QueueSuccessMessage("The Kubernetes version meets Submariner's requirements")
+	status.End(cli.Success)
 }
