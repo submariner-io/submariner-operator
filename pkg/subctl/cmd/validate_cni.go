@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-
+	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 )
 
@@ -41,37 +41,41 @@ func validateCniConfig(cmd *cobra.Command, args []string) {
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		message := fmt.Sprintf("Validating Submariner support for the CNI network"+
-			" plugin in cluster %q", item.clusterName)
-		status.Start(message)
-		fmt.Println()
+		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
 		submariner := getSubmarinerResource(item.config)
-
 		if submariner == nil {
 			status.QueueWarningMessage(submMissingMessage)
 			status.End(cli.Success)
 			continue
 		}
-
-		isSupportedPlugin := false
-		for _, np := range supportedNetworkPlugins {
-			if submariner.Status.NetworkPlugin == np {
-				isSupportedPlugin = true
-				break
-			}
-		}
-
-		if !isSupportedPlugin {
-			message = fmt.Sprintf("The detected CNI network plugin (%q) is not supported by Submariner."+
-				" Supported network plugins: %v\n", submariner.Status.NetworkPlugin, supportedNetworkPlugins)
-			status.QueueFailureMessage(message)
-			status.End(cli.Failure)
-			continue
-		}
-
-		message = fmt.Sprintf("The detected CNI network plugin (%q) is supported by Submariner.\n",
-			submariner.Status.NetworkPlugin)
-		status.QueueSuccessMessage(message)
 		status.End(cli.Success)
+		validateCNIInCluster(item.clusterName, submariner)
 	}
+}
+
+func validateCNIInCluster(clusterName string, submariner *v1alpha1.Submariner) {
+	message := fmt.Sprintf("Validating Submariner support for the CNI network"+
+		" plugin in cluster %q", clusterName)
+	status.Start(message)
+
+	isSupportedPlugin := false
+	for _, np := range supportedNetworkPlugins {
+		if submariner.Status.NetworkPlugin == np {
+			isSupportedPlugin = true
+			break
+		}
+	}
+
+	if !isSupportedPlugin {
+		message := fmt.Sprintf("The detected CNI network plugin (%q) is not supported by Submariner."+
+			" Supported network plugins: %v\n", submariner.Status.NetworkPlugin, supportedNetworkPlugins)
+		status.QueueFailureMessage(message)
+		status.End(cli.Failure)
+		return
+	}
+
+	message = fmt.Sprintf("The detected CNI network plugin (%q) is supported by Submariner.",
+		submariner.Status.NetworkPlugin)
+	status.QueueSuccessMessage(message)
+	status.End(cli.Success)
 }
