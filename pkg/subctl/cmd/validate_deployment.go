@@ -65,9 +65,9 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
 	exitOnError("Unable to get the Submariner client", err)
 
 	if submariner.Spec.GlobalCIDR != "" {
-		status.Start("Checking if globalnet CIDRs overlap")
+		status.Start("Globalnet deployment detected, checking if globalnet CIDRs overlap")
 	} else {
-		status.Start("Checking if cluster CIDRs overlap")
+		status.Start("Non-Globalnet deployment detected, checking if cluster CIDRs overlap")
 	}
 
 	localClusterName := submariner.Status.ClusterID
