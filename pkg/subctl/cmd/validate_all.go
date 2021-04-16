@@ -25,9 +25,8 @@ import (
 var validateAllCmd = &cobra.Command{
 	Use:   "all",
 	Short: "Validate the Submariner deployment and report any issues",
-	Long: "This command validates the Submariner deployment and reports any issues related to cni," +
-		" connections, deployment, k8s-version and kube-proxy-mode",
-	Run: validateAll,
+	Long:  "This command validates the Submariner deployment and reports any issues",
+	Run:   validateAll,
 }
 
 func init() {
@@ -47,6 +46,7 @@ func validateAll(cmd *cobra.Command, args []string) {
 		if submariner == nil {
 			status.QueueWarningMessage(submMissingMessage)
 			status.End(cli.Success)
+			fmt.Println()
 			continue
 		}
 		status.End(cli.Success)
@@ -61,5 +61,13 @@ func validateAll(cmd *cobra.Command, args []string) {
 		checkOverlappingCIDRs(item, submariner)
 		fmt.Println()
 		validateKubeProxyModeInCluster(item.config, item.clusterName)
+		fmt.Println()
+		validateFirewallMetricsConfigWithinCluster(item.config, item.clusterName)
+		fmt.Println()
+		validateVxLANConfigWithinCluster(item.config, item.clusterName, submariner)
+		fmt.Println()
+		fmt.Printf("Skipping tunnel firewall validation as it requires two kubeconfigs." +
+			" Please run \"subctl validate firewall tunnel\" command manually.\n")
+		fmt.Println()
 	}
 }

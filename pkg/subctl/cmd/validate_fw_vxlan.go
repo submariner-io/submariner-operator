@@ -21,6 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -56,26 +57,31 @@ func validateFirewallVxLANConfig(cmd *cobra.Command, args []string) {
 		}
 
 		status.End(cli.Success)
-		validateFWConfigWithinCluster(item, submariner)
-		status.End(status.ResultFromMessages())
+		validateVxLANConfigWithinCluster(item.config, item.clusterName, submariner)
 	}
 }
 
-func validateFWConfigWithinCluster(item restConfig, submariner *v1alpha1.Submariner) {
-	status.Start(fmt.Sprintf("Validating the firewall configuration in cluster %q", item.clusterName))
+func validateVxLANConfigWithinCluster(config *rest.Config, clusterName string, submariner *v1alpha1.Submariner) {
+	status.Start(fmt.Sprintf("Validating the firewall configuration to check if VxLAN traffic is allowed"+
+		" in cluster %q", clusterName))
+	validateFWConfigWithinCluster(config, submariner)
+	status.End(status.ResultFromMessages())
+}
+
+func validateFWConfigWithinCluster(config *rest.Config, submariner *v1alpha1.Submariner) {
 	if submariner.Status.NetworkPlugin == "OVNKubernetes" {
 		status.QueueSuccessMessage("This validation is not necessary for the OVNKubernetes CNI plugin")
 		return
 	}
 
-	clientSet, err := kubernetes.NewForConfig(item.config)
+	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		message := fmt.Sprintf("Error creating API server client: %s", err)
 		status.QueueFailureMessage(message)
 		return
 	}
 
-	gateways := getGatewaysResource(item.config)
+	gateways := getGatewaysResource(config)
 	if gateways == nil {
 		status.QueueWarningMessage("There are no gateways detected on the cluster.")
 		return

@@ -21,6 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -44,15 +45,15 @@ func validateFirewallMetricsConfig(cmd *cobra.Command, args []string) {
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		status.Start(fmt.Sprintf("Validating the firewall configuration to check if metrics port (8080)"+
-			" is allowed in cluster %q", item.clusterName))
-		validateFirewallMetricsConfigWithinCluster(item)
-		status.End(status.ResultFromMessages())
+		validateFirewallMetricsConfigWithinCluster(item.config, item.clusterName)
 	}
 }
 
-func validateFirewallMetricsConfigWithinCluster(item restConfig) {
-	clientSet, err := kubernetes.NewForConfig(item.config)
+func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName string) {
+	status.Start(fmt.Sprintf("Validating the firewall configuration to check if metrics port (8080)"+
+		" is allowed in cluster %q", clusterName))
+
+	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		message := fmt.Sprintf("Error creating API server client: %s", err)
 		status.QueueFailureMessage(message)
@@ -100,4 +101,5 @@ func validateFirewallMetricsConfigWithinCluster(item restConfig) {
 	}
 
 	status.QueueSuccessMessage("Prometheus metrics can be retrieved from gateway nodes.")
+	status.End(status.ResultFromMessages())
 }
