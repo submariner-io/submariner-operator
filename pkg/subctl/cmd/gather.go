@@ -23,14 +23,11 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	submarinerOp "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 var (
@@ -62,8 +59,6 @@ var gatherFuncs = map[string]func(string, gather.Info) bool{
 	components.Broker:           gatherBroker,
 	components.Operator:         gatherOperator,
 }
-
-var submarinerCR *submarinerOp.Submariner
 
 func init() {
 	addKubeconfigFlag(gatherCmd)
@@ -100,15 +95,6 @@ func gatherData() {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST configs", err)
 
-	for _, config := range configs {
-		gatherDataByCluster(config)
-	}
-}
-
-func gatherDataByCluster(restConfig restConfig) {
-	var err error
-	clusterName := restConfig.clusterName
-
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
 	}
@@ -120,6 +106,15 @@ func gatherDataByCluster(restConfig restConfig) {
 		}
 	}
 
+	for _, config := range configs {
+		gatherDataByCluster(config, directory)
+	}
+}
+
+func gatherDataByCluster(restConfig restConfig, directory string) {
+	var err error
+	clusterName := restConfig.clusterName
+
 	fmt.Printf("Gathering information from cluster %q\n", clusterName)
 
 	info := gather.Info{
@@ -129,22 +124,15 @@ func gatherDataByCluster(restConfig restConfig) {
 	}
 
 	info.DynClient, info.ClientSet, err = getClients(restConfig.config)
-	exitOnError("Error getting client %s", err)
-
-	resourceSubmariners := schema.GroupVersionResource{
-		Group:    submarinerOp.SchemeGroupVersion.Group,
-		Version:  submarinerOp.SchemeGroupVersion.Version,
-		Resource: "submariners",
+	if err != nil {
+		fmt.Printf("Error getting client: %s\n", err)
+		return
 	}
 
-	resourceSubm, err := info.DynClient.Resource(resourceSubmariners).Namespace(submarinerNamespace).Get("submariner", metav1.GetOptions{})
-	if err == nil {
-		var submariner submarinerOp.Submariner
-		err = runtime.DefaultUnstructuredConverter.FromUnstructured(resourceSubm.UnstructuredContent(), &submariner)
-		if err != nil {
-			exitOnError(fmt.Sprintf("Failed to get submariner resource %q", err), err)
-		}
-		submarinerCR = &submariner
+	info.Submariner, err = getSubmarinerResourceWithError(restConfig.config)
+	if err != nil && !apierrors.IsNotFound(err) {
+		fmt.Printf("Error getting Submariner resource: %s\n", err)
+		return
 	}
 
 	for module, ok := range gatherModuleFlags {
@@ -171,10 +159,10 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 		gather.GlobalnetPodLogs(info)
 		gather.NetworkPluginSyncerPodLogs(info)
 	case Resources:
-		if submarinerCR != nil {
-			gather.CNIResources(info, submarinerCR.Status.NetworkPlugin)
-			gather.CableDriverResources(info, submarinerCR.Spec.CableDriver)
-			gather.OVNResources(info, submarinerCR.Status.NetworkPlugin)
+		if info.Submariner != nil {
+			gather.CNIResources(info, info.Submariner.Status.NetworkPlugin)
+			gather.CableDriverResources(info, info.Submariner.Spec.CableDriver)
+			gather.OVNResources(info, info.Submariner.Status.NetworkPlugin)
 		}
 		gather.Endpoints(info, SubmarinerNamespace)
 		gather.Clusters(info, SubmarinerNamespace)
