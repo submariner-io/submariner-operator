@@ -63,6 +63,8 @@ var gatherFuncs = map[string]func(string, gather.Info) bool{
 	components.Operator:         gatherOperator,
 }
 
+var submarinerCR *submarinerOp.Submariner
+
 func init() {
 	addKubeconfigFlag(gatherCmd)
 	addKubecontextsFlag(gatherCmd)
@@ -135,17 +137,15 @@ func gatherDataByCluster(restConfig restConfig) {
 		Resource: "submariners",
 	}
 
-	var submariner submarinerOp.Submariner
-
 	resourceSubm, err := info.DynClient.Resource(resourceSubmariners).Namespace(submarinerNamespace).Get("submariner", metav1.GetOptions{})
-	if err != nil {
-		exitOnError(fmt.Sprintf("Failed to get submariner resource %q", err), err)
+	if err == nil {
+		var submariner submarinerOp.Submariner
+		err = runtime.DefaultUnstructuredConverter.FromUnstructured(resourceSubm.UnstructuredContent(), &submariner)
+		if err != nil {
+			exitOnError(fmt.Sprintf("Failed to get submariner resource %q", err), err)
+		}
+		submarinerCR = &submariner
 	}
-	err = runtime.DefaultUnstructuredConverter.FromUnstructured(resourceSubm.UnstructuredContent(), &submariner)
-	if err != nil {
-		exitOnError(fmt.Sprintf("Failed to get submariner resource %q", err), err)
-	}
-	info.Submariner = submariner
 
 	for module, ok := range gatherModuleFlags {
 		if ok {
@@ -170,9 +170,11 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 		gather.RouteAgentPodLogs(info)
 		gather.GlobalnetPodLogs(info)
 		gather.NetworkPluginSyncerPodLogs(info)
-		gather.CNIResources(info)
-		gather.CableDriverResources(info)
 	case Resources:
+		if submarinerCR != nil {
+			gather.CNIResources(info, submarinerCR.Status.NetworkPlugin)
+			gather.CableDriverResources(info, submarinerCR.Spec.CableDriver)
+		}
 		gather.Endpoints(info, SubmarinerNamespace)
 		gather.Clusters(info, SubmarinerNamespace)
 		gather.Gateways(info, SubmarinerNamespace)

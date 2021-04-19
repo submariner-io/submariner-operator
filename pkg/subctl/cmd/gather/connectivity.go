@@ -24,7 +24,7 @@ import (
 
 const (
 	gatewayPodLabel             = "app=submariner-gateway"
-	RouteagentPodLabel          = "app=submariner-routeagent"
+	routeagentPodLabel          = "app=submariner-routeagent"
 	globalnetPodLabel           = "app=submariner-globalnet"
 	networkpluginSyncerPodLabel = "app=submariner-networkplugin-syncer"
 )
@@ -34,7 +34,7 @@ func GatewayPodLogs(info Info) {
 }
 
 func RouteAgentPodLogs(info Info) {
-	gatherPodLogs(RouteagentPodLabel, info)
+	gatherPodLogs(routeagentPodLabel, info)
 }
 
 func GlobalnetPodLogs(info Info) {
