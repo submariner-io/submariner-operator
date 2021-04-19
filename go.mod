@@ -8,7 +8,7 @@ require (
 	github.com/go-openapi/spec v0.20.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/mattn/go-isatty v0.0.12
-	github.com/onsi/ginkgo v1.16.0
+	github.com/onsi/ginkgo v1.16.1
 	github.com/onsi/gomega v1.11.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
@@ -19,7 +19,7 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/submariner-io/admiral v0.9.0-m2
 	github.com/submariner-io/lighthouse v0.9.0-m2
-	github.com/submariner-io/shipyard v0.9.0-m2.0.20210406162037-044072e6a6ce
+	github.com/submariner-io/shipyard v0.9.0-rc0
 	github.com/submariner-io/submariner v0.9.0-m2.0.20210408175957-d96333023ab5
 	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.20.1
