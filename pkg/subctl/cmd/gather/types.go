@@ -16,7 +16,6 @@ limitations under the License.
 package gather
 
 import (
-	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -30,5 +29,4 @@ type Info struct {
 	DynClient   dynamic.Interface
 	ClusterName string
 	DirName     string
-	Submariner  submariner.Submariner
 }
