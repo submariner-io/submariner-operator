@@ -47,7 +47,7 @@ var (
 )
 
 var defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
-var validComponents = []string{components.ServiceDiscovery, components.Connectivity, components.Globalnet}
+var validComponents = []string{components.ServiceDiscovery, components.Connectivity}
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
@@ -69,8 +69,7 @@ func init() {
 		"list of domains to use for multicluster service discovery")
 
 	deployBroker.PersistentFlags().StringSliceVar(&componentArr, "components", defaultComponents,
-		fmt.Sprintf("The components to be installed - any of %s. The default is all components",
-			strings.Join(validComponents, ",")))
+		fmt.Sprintf("The components to be installed - any of %s", strings.Join(validComponents, ",")))
 
 	deployBroker.PersistentFlags().StringVar(&repository, "repository", "", "image repository")
 	deployBroker.PersistentFlags().StringVar(&imageVersion, "version", "", "image version")
@@ -90,17 +89,18 @@ var deployBroker = &cobra.Command{
 
 		componentSet := stringset.New(componentArr...)
 
+		if err := isValidComponents(componentSet); err != nil {
+			exitOnError("Invalid components parameter", err)
+		}
+
 		// TODO: Remove this in the future, while service-discovery is marked as
 		//       deprecated we should still provide a consistent broker config file
 		if !serviceDiscoveryEnabled {
 			componentSet.Remove(components.ServiceDiscovery)
 		}
+
 		if globalnetEnable {
 			componentSet.Add(components.Globalnet)
-		}
-
-		if err := isValidComponents(componentSet); err != nil {
-			exitOnError("Invalid components parameter", err)
 		}
 
 		if valid, err := isValidGlobalnetConfig(); !valid {
