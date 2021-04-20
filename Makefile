@@ -93,7 +93,7 @@ package/Dockerfile.submariner-operator: bin/submariner-operator
 
 bin/submariner-operator: vendor/modules.txt main.go generate-embeddedyamls
 	${SCRIPTS_DIR}/compile.sh \
-	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION)" \
+	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
 	$@ main.go
 
 bin/subctl: bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
@@ -106,7 +106,6 @@ dist/subctl-%.tar.xz: bin/subctl-%
 # Versions may include hyphens so it's easier to use $(VERSION) than to extract them from the target
 bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vendor/modules.txt
 	mkdir -p $(@D)
-# We want the calculated version here, not the potentially-overridden target version
 	target=$@; \
 	target=$${target%.exe}; \
 	components=($$(echo $${target//-/ })); \
@@ -114,7 +113,7 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 	GOARCH=$${components[-1]}; \
 	export GOARCH GOOS; \
 	$(SCRIPTS_DIR)/compile.sh \
-		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(CALCULATED_VERSION) \
+		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION) \
 			   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
 		--noupx $@ ./pkg/subctl/main.go
 
