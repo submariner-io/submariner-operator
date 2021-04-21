@@ -88,7 +88,7 @@ func CNIResources(info Info, networkPlugin string) {
 			return err
 		}
 
-		info.Status.QueueSuccessMessage(fmt.Sprintf("athering CNI data from %d pods matching label selector %q",
+		info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering CNI data from %d pods matching label selector %q",
 			len(pods.Items), podLabelSelector))
 
 		for i := range pods.Items {

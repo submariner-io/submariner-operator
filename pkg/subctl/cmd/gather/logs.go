@@ -64,6 +64,7 @@ func podLogsToFile(pod *corev1.Pod, info Info) error {
 		return err
 	}
 
+	logs = scrubSensitiveData(info, logs)
 	err = writeLogToFile(logs, pod.Name, info)
 	if err != nil {
 		return err
