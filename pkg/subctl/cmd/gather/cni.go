@@ -36,6 +36,7 @@ var systemCmds = map[string]string{
 	"ip-routes":         "ip route show",
 	"ip-rules":          "ip rule list",
 	"ip-rules-table150": "ip rule show table 150",
+	"sysctl-a":          "sysctl -a",
 }
 
 var ipGatewayCmds = map[string]string{
