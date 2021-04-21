@@ -98,7 +98,7 @@ func validateCNIInCluster(config *rest.Config, clusterName string, submariner *v
 	validateCalicoIPPoolsIfCalicoCNI(config)
 }
 
-func doesCalicoConfigMapExist(clientSet kubernetes.Interface) (*v1.ConfigMap, error) {
+func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) {
 	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -114,9 +114,19 @@ func doesCalicoConfigMapExist(clientSet kubernetes.Interface) (*v1.ConfigMap, er
 
 func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) {
 	dynClient, clientSet, err := getClients(config)
-	exitOnError("Error creating clients for cluster", err)
+	if err != nil {
+		status.Start(fmt.Sprintf("Error creating client - unable to detect the Calico CNI: %s", err))
+		status.End(cli.Failure)
+		return
+	}
 
-	calicoConfig, _ := doesCalicoConfigMapExist(clientSet)
+	calicoConfig, err := findCalicoConfigMap(clientSet)
+	if err != nil {
+		status.Start(fmt.Sprintf("Error trying to detect the Calico ConfigMap: %s", err))
+		status.End(cli.Failure)
+		return
+	}
+
 	if calicoConfig == nil {
 		return
 	}
@@ -128,7 +138,7 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) {
 	if gateways == nil {
 		message = "There are no gateways detected on the cluster"
 		status.QueueWarningMessage(message)
-		status.End(cli.Failure)
+		status.End(cli.Warning)
 		return
 	}
 
@@ -175,7 +185,7 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) {
 			for _, subnet := range connection.Endpoint.Subnets {
 				ipPool, found := ippools[subnet]
 				if found {
-					isDisabled, err := getValue(ipPool, "disabled")
+					isDisabled, err := getSpecBool(ipPool, "disabled")
 					if err != nil {
 						status.QueueFailureMessage(err.Error())
 						continue
@@ -184,25 +194,23 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) {
 					// When disabled is set to true, Calico IPAM will not assign addresses from this Pool.
 					// The IPPools configured for Submariner remote CIDRs should have disabled as true.
 					if !isDisabled {
-						status.QueueFailureMessage(fmt.Sprintf("IPPool %q for cidr %q has disabled set to false", ipPool.GetName(), subnet))
+						status.QueueFailureMessage(fmt.Sprintf("The IPPool %q with CIDR %q for remote endpoint"+
+							" %q has disabled set to false", ipPool.GetName(), subnet, connection.Endpoint.CableName))
 						continue
 					}
 				} else {
-					status.QueueFailureMessage(fmt.Sprintf("Could not find any IPPool for remote cidr %q", subnet))
+					status.QueueFailureMessage(fmt.Sprintf("Could not find any IPPool with CIDR %q for remote"+
+						" endpoint %q", subnet, connection.Endpoint.CableName))
 					continue
 				}
 			}
 		}
 	}
 
-	result := status.ResultFromMessages()
-	if result == cli.Success {
-		status.QueueSuccessMessage("The necessary Calico IPPools for remote cluster CIDRs are successfully configured.")
-	}
 	status.End(status.ResultFromMessages())
 }
 
-func getValue(pool unstructured.Unstructured, key string) (bool, error) {
+func getSpecBool(pool unstructured.Unstructured, key string) (bool, error) {
 	isDisabled, found, err := unstructured.NestedBool(pool.Object, "spec", key)
 	if err != nil {
 		return false, err
