@@ -30,7 +30,9 @@ const (
 	libreswan    = "libreswan"
 )
 
-var ipCmds = map[string]string{
+var systemCmds = map[string]string{
+	"ip-a":              "ip -d a",
+	"ip-l":              "ip -d l",
 	"ip-routes":         "ip route show",
 	"ip-rules":          "ip rule list",
 	"ip-rules-table150": "ip rule show table 150",
@@ -55,14 +57,17 @@ var libreswanCmds = map[string]string{
 const ovnShowCmd = "ovn-nbctl show"
 
 var ovnCmds = map[string]string{
-	"ovn_show":             ovnShowCmd,
-	"ovn_logical_routers":  "ovn-nbctl list Logical_Router",
-	"ovn_lrps":             "ovn-nbctl list Logical_Router_Port",
-	"ovn_logical_switches": "ovn-nbctl list Logical_Switch",
-	"ovn_lsps":             "ovn-nbctl list Logical_Switch_Port",
-	"ovn_routes":           "ovn-nbctl list Logical_Router_Static_Route",
-	"ovn_policies":         "ovn-nbctl list Logical_Router_Policy",
-	"ovn_acls":             "ovn-nbctl list ACL",
+	"ovn_show":                           ovnShowCmd,
+	"ovn_lr_ovn_cluster_router_policies": "ovn-nbctl lr-policy-list ovn_cluster_router",
+	"ovn_lr_ovn_cluster_router_routes":   "ovn-nbctl lr-route-list ovn_cluster_router",
+	"ovn_lr_submariner_router_routes":    "ovn-nbctl lr-route-list submariner_router",
+	"ovn_logical_routers":                "ovn-nbctl list Logical_Router",
+	"ovn_lrps":                           "ovn-nbctl list Logical_Router_Port",
+	"ovn_logical_switches":               "ovn-nbctl list Logical_Switch",
+	"ovn_lsps":                           "ovn-nbctl list Logical_Switch_Port",
+	"ovn_routes":                         "ovn-nbctl list Logical_Router_Static_Route",
+	"ovn_policies":                       "ovn-nbctl list Logical_Router_Policy",
+	"ovn_acls":                           "ovn-nbctl list ACL",
 }
 
 var networkPluginCNIType = map[string]string{
@@ -88,7 +93,7 @@ func CNIResources(info Info, networkPlugin string) {
 
 		for i := range pods.Items {
 			pod := &pods.Items[i]
-			logIPCmds(info, pod)
+			logSystemCmds(info, pod)
 			switch networkPluginCNIType[networkPlugin] {
 			case typeIPTables:
 				logIPTablesCmds(info, pod)
@@ -131,8 +136,8 @@ func logCNIGatewayNodeResources(info Info) {
 	}
 }
 
-func logIPCmds(info Info, pod *v1.Pod) {
-	for name, cmd := range ipCmds {
+func logSystemCmds(info Info, pod *v1.Pod) {
+	for name, cmd := range systemCmds {
 		logCmdOutput(info, pod, cmd, name)
 	}
 }
