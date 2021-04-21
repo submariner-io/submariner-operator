@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -60,8 +61,8 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 			if err != nil {
 				return errors.WithMessage(err, "error marshaling to YAML")
 			}
-
-			_, err = file.Write(data)
+			scrubbedData := scrubSensitiveData(info, string(data))
+			_, err = file.Write([]byte(scrubbedData))
 			if err != nil {
 				return errors.WithMessagef(err, "error writing to file %s", path)
 			}
@@ -97,4 +98,14 @@ func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOption
 		Version:  corev1.SchemeGroupVersion.Version,
 		Resource: "configmaps",
 	}, namespace, listOptions)
+}
+
+func scrubSensitiveData(info Info, dataString string) string {
+	if !info.IncludeSensitiveData && info.Submariner != nil {
+		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sApiServer, "##redeacted-api-server##")
+		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sApiServerToken, "##redacted-token##")
+		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sCA, "##redacted-ca##")
+		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.CeIPSecPSK, "##redacted-ipsec-psk##")
+	}
+	return dataString
 }

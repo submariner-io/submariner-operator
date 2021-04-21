@@ -31,9 +31,10 @@ import (
 )
 
 var (
-	gatherType   string
-	gatherModule string
-	directory    string
+	gatherType           string
+	gatherModule         string
+	directory            string
+	includeSensitiveData bool
 )
 
 const (
@@ -75,6 +76,8 @@ func addGatherFlags(gatherCmd *cobra.Command) {
 	gatherCmd.Flags().StringVar(&directory, "dir", "",
 		"the directory in which to store files. If not specified, a directory of the form \"submariner-<timestamp>\" "+
 			"is created in the current directory")
+	gatherCmd.Flags().BoolVar(&includeSensitiveData, "include-sensitive-data", false,
+		"do not redact sensitive data such as credentials and security tokens")
 }
 
 var gatherCmd = &cobra.Command{
@@ -118,9 +121,10 @@ func gatherDataByCluster(restConfig restConfig, directory string) {
 	fmt.Printf("Gathering information from cluster %q\n", clusterName)
 
 	info := gather.Info{
-		RestConfig:  restConfig.config,
-		ClusterName: clusterName,
-		DirName:     directory,
+		RestConfig:           restConfig.config,
+		ClusterName:          clusterName,
+		DirName:              directory,
+		IncludeSensitiveData: includeSensitiveData,
 	}
 
 	info.DynClient, info.ClientSet, err = getClients(restConfig.config)

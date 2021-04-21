@@ -24,11 +24,12 @@ import (
 )
 
 type Info struct {
-	RestConfig  *rest.Config
-	Status      *cli.Status
-	ClientSet   kubernetes.Interface
-	DynClient   dynamic.Interface
-	Submariner  *v1alpha1.Submariner
-	ClusterName string
-	DirName     string
+	RestConfig           *rest.Config
+	Status               *cli.Status
+	ClientSet            kubernetes.Interface
+	DynClient            dynamic.Interface
+	Submariner           *v1alpha1.Submariner
+	ClusterName          string
+	DirName              string
+	IncludeSensitiveData bool
 }
