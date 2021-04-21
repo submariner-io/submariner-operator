@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/pkg/errors"
 	k8sV1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,8 +28,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/submariner-io/submariner-operator/pkg/names"
 
 	"github.com/submariner-io/admiral/pkg/resource"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
@@ -158,56 +155,35 @@ func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
 	return gateways
 }
 
-func getBrokerRestConfigAndNamespace(localConfig *rest.Config) (*rest.Config, string, error) {
-	submarinerClient, err := subOperatorClientset.NewForConfig(localConfig)
-	if err != nil {
-		return nil, "", errors.WithMessage(err, "error getting submariner client")
+func getBrokerRestConfigAndNamespace(submariner *v1alpha1.Submariner,
+	serviceDisc *v1alpha1.ServiceDiscovery) (*rest.Config, string, error) {
+	if submariner != nil {
+		// Try to authorize against the submariner Cluster resource as we know the CRD should exist and the credentials
+		// should allow read access.
+		restConfig, _, err := resource.GetAuthorizedRestConfig(submariner.Spec.BrokerK8sApiServer, submariner.Spec.BrokerK8sApiServerToken,
+			submariner.Spec.BrokerK8sCA, rest.TLSClientConfig{}, schema.GroupVersionResource{
+				Group:    submarinerv1.SchemeGroupVersion.Group,
+				Version:  submarinerv1.SchemeGroupVersion.Version,
+				Resource: "clusters",
+			}, submariner.Spec.BrokerK8sRemoteNamespace)
+
+		return restConfig, submariner.Spec.BrokerK8sRemoteNamespace, err
 	}
 
-	brokerConfig, brokerNamespace, err := getBrokerRestConfigAndNamespaceFromSubmariner(submarinerClient)
-	if apierrors.IsNotFound(err) {
-		return getBrokerRestConfigAndNamespaceFromServiceDisc(submarinerClient)
+	if serviceDisc != nil {
+		// Try to authorize against the ServiceImport resource as we know the CRD should exist and the credentials
+		// should allow read access.
+		restConfig, _, err := resource.GetAuthorizedRestConfig(serviceDisc.Spec.BrokerK8sApiServer, serviceDisc.Spec.BrokerK8sApiServerToken,
+			serviceDisc.Spec.BrokerK8sCA, rest.TLSClientConfig{}, schema.GroupVersionResource{
+				Group:    "multicluster.x-k8s.io",
+				Version:  "v1alpha1",
+				Resource: "serviceimports",
+			}, serviceDisc.Spec.BrokerK8sRemoteNamespace)
+
+		return restConfig, serviceDisc.Spec.BrokerK8sRemoteNamespace, err
 	}
 
-	return brokerConfig, brokerNamespace, err
-}
-
-func getBrokerRestConfigAndNamespaceFromSubmariner(submarinerClient *subOperatorClientset.Clientset) (*rest.Config, string, error) {
-	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
-		Get(submarinercr.SubmarinerName, v1opts.GetOptions{})
-	if err != nil {
-		return nil, "", errors.WithMessage(err, "error obtaining the Submariner resource")
-	}
-
-	// Try to authorize against the submariner Cluster resource as we know the CRD should exist and the credentials
-	// should allow read access.
-	restConfig, _, err := resource.GetAuthorizedRestConfig(submariner.Spec.BrokerK8sApiServer, submariner.Spec.BrokerK8sApiServerToken,
-		submariner.Spec.BrokerK8sCA, rest.TLSClientConfig{}, schema.GroupVersionResource{
-			Group:    submarinerv1.SchemeGroupVersion.Group,
-			Version:  submarinerv1.SchemeGroupVersion.Version,
-			Resource: "clusters",
-		}, submariner.Spec.BrokerK8sRemoteNamespace)
-
-	return restConfig, submariner.Spec.BrokerK8sRemoteNamespace, err
-}
-
-func getBrokerRestConfigAndNamespaceFromServiceDisc(submarinerClient *subOperatorClientset.Clientset) (*rest.Config, string, error) {
-	serviceDisc, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).
-		Get(names.ServiceDiscoveryCrName, v1opts.GetOptions{})
-	if err != nil {
-		return nil, "", errors.WithMessage(err, "error obtaining the ServiceDiscovery resource")
-	}
-
-	// Try to authorize against the ServiceImport resource as we know the CRD should exist and the credentials
-	// should allow read access.
-	restConfig, _, err := resource.GetAuthorizedRestConfig(serviceDisc.Spec.BrokerK8sApiServer, serviceDisc.Spec.BrokerK8sApiServerToken,
-		serviceDisc.Spec.BrokerK8sCA, rest.TLSClientConfig{}, schema.GroupVersionResource{
-			Group:    "multicluster.x-k8s.io",
-			Version:  "v1alpha1",
-			Resource: "serviceimports",
-		}, serviceDisc.Spec.BrokerK8sRemoteNamespace)
-
-	return restConfig, serviceDisc.Spec.BrokerK8sRemoteNamespace, err
+	return nil, "", nil
 }
 
 func compareFiles(file1, file2 string) (bool, error) {
