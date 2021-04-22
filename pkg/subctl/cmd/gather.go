@@ -27,12 +27,14 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 var (
-	gatherType   string
-	gatherModule string
-	directory    string
+	gatherType           string
+	gatherModule         string
+	directory            string
+	includeSensitiveData bool
 )
 
 const (
@@ -74,6 +76,8 @@ func addGatherFlags(gatherCmd *cobra.Command) {
 	gatherCmd.Flags().StringVar(&directory, "dir", "",
 		"the directory in which to store files. If not specified, a directory of the form \"submariner-<timestamp>\" "+
 			"is created in the current directory")
+	gatherCmd.Flags().BoolVar(&includeSensitiveData, "include-sensitive-data", false,
+		"do not redact sensitive data such as credentials and security tokens")
 }
 
 var gatherCmd = &cobra.Command{
@@ -94,15 +98,6 @@ func gatherData() {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST configs", err)
 
-	for _, config := range configs {
-		gatherDataByCluster(config)
-	}
-}
-
-func gatherDataByCluster(restConfig restConfig) {
-	var err error
-	clusterName := restConfig.clusterName
-
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
 	}
@@ -114,16 +109,35 @@ func gatherDataByCluster(restConfig restConfig) {
 		}
 	}
 
+	for _, config := range configs {
+		gatherDataByCluster(config, directory)
+	}
+}
+
+func gatherDataByCluster(restConfig restConfig, directory string) {
+	var err error
+	clusterName := restConfig.clusterName
+
 	fmt.Printf("Gathering information from cluster %q\n", clusterName)
 
 	info := gather.Info{
-		RestConfig:  restConfig.config,
-		ClusterName: clusterName,
-		DirName:     directory,
+		RestConfig:           restConfig.config,
+		ClusterName:          clusterName,
+		DirName:              directory,
+		IncludeSensitiveData: includeSensitiveData,
 	}
 
 	info.DynClient, info.ClientSet, err = getClients(restConfig.config)
-	exitOnError("Error getting client %s", err)
+	if err != nil {
+		fmt.Printf("Error getting client: %s\n", err)
+		return
+	}
+
+	info.Submariner, err = getSubmarinerResourceWithError(restConfig.config)
+	if err != nil && !apierrors.IsNotFound(err) {
+		fmt.Printf("Error getting Submariner resource: %s\n", err)
+		return
+	}
 
 	for module, ok := range gatherModuleFlags {
 		if ok {
@@ -149,6 +163,11 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 		gather.GlobalnetPodLogs(info)
 		gather.NetworkPluginSyncerPodLogs(info)
 	case Resources:
+		if info.Submariner != nil {
+			gather.CNIResources(info, info.Submariner.Status.NetworkPlugin)
+			gather.CableDriverResources(info, info.Submariner.Spec.CableDriver)
+			gather.OVNResources(info, info.Submariner.Status.NetworkPlugin)
+		}
 		gather.Endpoints(info, SubmarinerNamespace)
 		gather.Clusters(info, SubmarinerNamespace)
 		gather.Gateways(info, SubmarinerNamespace)

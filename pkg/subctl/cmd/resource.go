@@ -78,12 +78,23 @@ func getMultipleRestConfigs(kubeConfigPath string, kubeContexts []string) ([]res
 	return restConfigs, nil
 }
 
-func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
+func getSubmarinerResourceWithError(config *rest.Config) (*v1alpha1.Submariner, error) {
 	submarinerClient, err := subOperatorClientset.NewForConfig(config)
-	exitOnError("Unable to get the Submariner client", err)
+	if err != nil {
+		return nil, err
+	}
 
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
 		Get(submarinercr.SubmarinerName, v1opts.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return submariner, nil
+}
+
+func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
+	submariner, err := getSubmarinerResourceWithError(config)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil

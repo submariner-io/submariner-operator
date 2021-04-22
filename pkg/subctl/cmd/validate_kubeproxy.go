@@ -21,6 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
@@ -53,41 +54,45 @@ func validateKubeProxyMode(cmd *cobra.Command, args []string) {
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
-		message := fmt.Sprintf("Validating Submariner support for the kube-proxy mode"+
-			" used in cluster %q", item.clusterName)
-		status.Start(message)
+		validateKubeProxyModeInCluster(item.config, item.clusterName)
+	}
+}
 
-		clientset, err := kubernetes.NewForConfig(item.config)
-		if err != nil {
-			message := fmt.Sprintf("Error creating API server client: %s", err)
-			status.QueueFailureMessage(message)
-			status.End(cli.Failure)
-			return
-		}
+func validateKubeProxyModeInCluster(config *rest.Config, clusterName string) {
+	message := fmt.Sprintf("Validating Submariner support for the kube-proxy mode"+
+		" used in cluster %q", clusterName)
+	status.Start(message)
 
-		scheduling := resource.PodScheduling{ScheduleOn: resource.GatewayNode, Networking: resource.HostNetworking}
-		podOutput, err := resource.SchedulePodAwaitCompletion(&resource.PodConfig{
-			Name:       "query-iface-list",
-			ClientSet:  clientset,
-			Scheduling: scheduling,
-			Namespace:  namespace,
-			Command:    KubeProxyIPVSIfaceCommand,
-		})
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		message := fmt.Sprintf("Error creating API server client: %s", err)
+		status.QueueFailureMessage(message)
+		status.End(cli.Failure)
+		return
+	}
 
-		if err != nil {
-			message := fmt.Sprintf("Error while spawning the Network Pod. %v", err)
-			status.QueueFailureMessage(message)
-			status.End(cli.Failure)
-			return
-		}
+	scheduling := resource.PodScheduling{ScheduleOn: resource.GatewayNode, Networking: resource.HostNetworking}
+	podOutput, err := resource.SchedulePodAwaitCompletion(&resource.PodConfig{
+		Name:       "query-iface-list",
+		ClientSet:  clientset,
+		Scheduling: scheduling,
+		Namespace:  namespace,
+		Command:    KubeProxyIPVSIfaceCommand,
+	})
 
-		if strings.Contains(podOutput, MissingInterface) {
-			status.QueueSuccessMessage("Cluster is not deployed with kube-proxy ipvs mode.")
-			status.End(cli.Success)
-		} else {
-			status.QueueFailureMessage("Cluster is deployed with kube-proxy ipvs mode." +
-				" Submariner does not support this mode.")
-			status.End(cli.Failure)
-		}
+	if err != nil {
+		message := fmt.Sprintf("Error while spawning the Network Pod. %v", err)
+		status.QueueFailureMessage(message)
+		status.End(cli.Failure)
+		return
+	}
+
+	if strings.Contains(podOutput, MissingInterface) {
+		status.QueueSuccessMessage("Cluster is not deployed with kube-proxy ipvs mode.")
+		status.End(cli.Success)
+	} else {
+		status.QueueFailureMessage("Cluster is deployed with kube-proxy ipvs mode." +
+			" Submariner does not support this mode.")
+		status.End(cli.Failure)
 	}
 }

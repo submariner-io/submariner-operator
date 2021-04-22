@@ -64,7 +64,11 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
 	submarinerClient, err := smClientset.NewForConfig(item.config)
 	exitOnError("Unable to get the Submariner client", err)
 
-	status.Start("Checking if cluster CIDRs overlap")
+	if submariner.Spec.GlobalCIDR != "" {
+		status.Start("Globalnet deployment detected, checking if globalnet CIDRs overlap")
+	} else {
+		status.Start("Non-Globalnet deployment detected, checking if cluster CIDRs overlap")
+	}
 
 	localClusterName := submariner.Status.ClusterID
 	endpointList, err := submarinerClient.SubmarinerV1().Endpoints(submariner.Namespace).List(metav1.ListOptions{})
@@ -105,7 +109,12 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
 		return
 	}
 
-	status.QueueSuccessMessage("Clusters do not have overlapping CIDRs")
+	if submariner.Spec.GlobalCIDR != "" {
+		status.QueueSuccessMessage("Clusters do not have overlapping globalnet CIDRs")
+	} else {
+		status.QueueSuccessMessage("Clusters do not have overlapping CIDRs")
+	}
+
 	status.End(cli.Success)
 }
 

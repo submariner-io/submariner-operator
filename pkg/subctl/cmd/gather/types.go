@@ -16,6 +16,7 @@ limitations under the License.
 package gather
 
 import (
+	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -23,10 +24,12 @@ import (
 )
 
 type Info struct {
-	RestConfig  *rest.Config
-	Status      *cli.Status
-	ClientSet   kubernetes.Interface
-	DynClient   dynamic.Interface
-	ClusterName string
-	DirName     string
+	RestConfig           *rest.Config
+	Status               *cli.Status
+	ClientSet            kubernetes.Interface
+	DynClient            dynamic.Interface
+	Submariner           *v1alpha1.Submariner
+	ClusterName          string
+	DirName              string
+	IncludeSensitiveData bool
 }
