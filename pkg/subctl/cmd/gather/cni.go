@@ -98,7 +98,7 @@ func CNIResources(info Info, networkPlugin string) {
 			case typeIPTables:
 				logIPTablesCmds(info, pod)
 			case typeOvn:
-				info.Status.QueueWarningMessage("OVN CNI not supported yet")
+				// no-op. Handled in OVNResources()
 			case typeUnknown:
 				info.Status.QueueFailureMessage("Unsupported CNI Type")
 			}
