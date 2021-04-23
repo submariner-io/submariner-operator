@@ -29,6 +29,7 @@ type Info struct {
 	ClientSet            kubernetes.Interface
 	DynClient            dynamic.Interface
 	Submariner           *v1alpha1.Submariner
+	ServiceDiscovery     *v1alpha1.ServiceDiscovery
 	ClusterName          string
 	DirName              string
 	IncludeSensitiveData bool
