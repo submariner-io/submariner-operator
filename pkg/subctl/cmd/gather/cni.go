@@ -138,19 +138,19 @@ func logCNIGatewayNodeResources(info Info) {
 
 func logSystemCmds(info Info, pod *v1.Pod) {
 	for name, cmd := range systemCmds {
-		logCmdOutput(info, pod, cmd, name)
+		logCmdOutput(info, pod, cmd, name, false)
 	}
 }
 
 func logIPGatewayCmds(info Info, pod *v1.Pod) {
 	for name, cmd := range ipGatewayCmds {
-		logCmdOutput(info, pod, cmd, name)
+		logCmdOutput(info, pod, cmd, name, true)
 	}
 }
 
 func logIPTablesCmds(info Info, pod *v1.Pod) {
 	for name, cmd := range ipTablesCmds {
-		logCmdOutput(info, pod, cmd, name)
+		logCmdOutput(info, pod, cmd, name, false)
 	}
 }
 
@@ -189,7 +189,7 @@ func OVNResources(info Info, networkPlugin string) {
 	info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering OVN data from master pod %q", masterPod.Name))
 
 	for name, command := range ovnCmds {
-		logCmdOutput(info, masterPod, command, name)
+		logCmdOutput(info, masterPod, command, name, false)
 	}
 }
 
@@ -221,7 +221,7 @@ func CableDriverResources(info Info, cableDriver string) {
 
 func logLibreswanCmds(info Info, pod *v1.Pod) {
 	for name, cmd := range libreswanCmds {
-		logCmdOutput(info, pod, cmd, name)
+		logCmdOutput(info, pod, cmd, name, true)
 	}
 }
 
@@ -235,9 +235,9 @@ func execCmdInBash(info Info, pod *v1.Pod, cmd string) (string, string, error) {
 	return resource.ExecWithOptions(execConfig, execOptions)
 }
 
-func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string) {
+func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool) {
 	stdOut, _, err := execCmdInBash(info, pod, cmd)
-	if err != nil {
+	if err != nil && !ignoreError {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error running %q on pod %q: %v", cmd, pod.Name, err))
 		return
 	}
