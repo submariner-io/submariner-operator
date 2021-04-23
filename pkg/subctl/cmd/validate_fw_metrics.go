@@ -37,6 +37,8 @@ var validateFirewallMetricsCmd = &cobra.Command{
 
 func init() {
 	addValidateFWConfigFlags(validateFirewallMetricsCmd)
+	validateFirewallMetricsCmd.Flags().BoolVar(&verboseOutput, "verbose", false,
+		"produce verbose logs during validation")
 	validateFirewallConfigCmd.AddCommand(validateFirewallMetricsCmd)
 }
 
@@ -89,6 +91,11 @@ func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName
 		message := fmt.Sprintf("Error while waiting for sniffer pod to be finish its execution: %v", err)
 		status.QueueFailureMessage(message)
 		return
+	}
+
+	if verboseOutput {
+		status.QueueSuccessMessage("tcpdump output from Sniffer Pod on Gateway node")
+		status.QueueSuccessMessage(sPod.PodOutput)
 	}
 
 	// Verify that tcpdump output (i.e, from snifferPod) contains the HostIP of clientPod

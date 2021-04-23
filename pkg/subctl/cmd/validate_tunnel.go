@@ -147,7 +147,8 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 	}
 
 	if verboseOutput {
-		status.QueueSuccessMessage(fmt.Sprintf("tcpdump output on Gateway node: %s", sPod.PodOutput))
+		status.QueueSuccessMessage("tcpdump output from Sniffer Pod on Gateway node")
+		status.QueueSuccessMessage(sPod.PodOutput)
 	}
 
 	validateSnifferPodOutput(sPod.PodOutput, clientMessage, localEndpoint.Spec.Hostname, tunnelPort)
