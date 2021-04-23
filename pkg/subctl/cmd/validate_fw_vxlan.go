@@ -40,6 +40,8 @@ const (
 
 func init() {
 	addValidateFWConfigFlags(validateFirewallVxLANConfigCmd)
+	validateFirewallVxLANConfigCmd.Flags().BoolVar(&verboseOutput, "verbose", false,
+		"produce verbose logs during validation")
 	validateFirewallConfigCmd.AddCommand(validateFirewallVxLANConfigCmd)
 }
 
@@ -121,6 +123,11 @@ func validateFWConfigWithinCluster(config *rest.Config, submariner *v1alpha1.Sub
 		message := fmt.Sprintf("Error while waiting for sniffer pod to be finish its execution: %v", err)
 		status.QueueFailureMessage(message)
 		return
+	}
+
+	if verboseOutput {
+		status.QueueSuccessMessage("tcpdump output from Sniffer Pod on Gateway node")
+		status.QueueSuccessMessage(sPod.PodOutput)
 	}
 
 	// Verify that tcpdump output (i.e, from snifferPod) contains the remoteClusterIP
