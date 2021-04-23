@@ -593,6 +593,14 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 				},
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					Volumes: []corev1.Volume{
+						{Name: "host-run", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+							Path: "/run",
+						}}},
+						{Name: "host-sys", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+							Path: "/sys",
+						}}},
+					},
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-routeagent",
@@ -601,6 +609,10 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
 							Command:         []string{"submariner-route-agent.sh"},
 							SecurityContext: &securityContextAllCapAllowEscal,
+							VolumeMounts: []corev1.VolumeMount{
+								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
+								{Name: "host-run", MountPath: "/run"},
+							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
