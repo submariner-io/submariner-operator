@@ -116,6 +116,8 @@ func gatherData() {
 	for _, config := range configs {
 		gatherDataByCluster(config, directory)
 	}
+
+	fmt.Printf("Files are stored under directory %q\n", directory)
 }
 
 func gatherDataByCluster(restConfig restConfig, directory string) {
