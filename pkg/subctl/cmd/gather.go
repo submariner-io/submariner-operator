@@ -23,11 +23,15 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -135,9 +139,23 @@ func gatherDataByCluster(restConfig restConfig, directory string) {
 		return
 	}
 
-	info.Submariner, err = getSubmarinerResourceWithError(restConfig.config)
+	submarinerClient, err := subOperatorClientset.NewForConfig(restConfig.config)
+	if err != nil {
+		fmt.Printf("Error getting Submariner client: %s\n", err)
+		return
+	}
+
+	info.Submariner, err = submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
+		Get(submarinercr.SubmarinerName, metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		fmt.Printf("Error getting Submariner resource: %s\n", err)
+		return
+	}
+
+	info.ServiceDiscovery, err = submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).
+		Get(names.ServiceDiscoveryCrName, metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		fmt.Printf("Error getting ServiceDiscovery resource: %s\n", err)
 		return
 	}
 
@@ -158,6 +176,11 @@ func gatherDataByCluster(restConfig restConfig, directory string) {
 }
 
 func gatherConnectivity(dataType string, info gather.Info) bool {
+	if info.Submariner == nil {
+		info.Status.QueueWarningMessage("The Submariner connectivity components are not installed")
+		return false
+	}
+
 	switch dataType {
 	case Logs:
 		gather.GatewayPodLogs(info)
@@ -165,11 +188,9 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 		gather.GlobalnetPodLogs(info)
 		gather.NetworkPluginSyncerPodLogs(info)
 	case Resources:
-		if info.Submariner != nil {
-			gather.CNIResources(info, info.Submariner.Status.NetworkPlugin)
-			gather.CableDriverResources(info, info.Submariner.Spec.CableDriver)
-			gather.OVNResources(info, info.Submariner.Status.NetworkPlugin)
-		}
+		gather.CNIResources(info, info.Submariner.Status.NetworkPlugin)
+		gather.CableDriverResources(info, info.Submariner.Spec.CableDriver)
+		gather.OVNResources(info, info.Submariner.Status.NetworkPlugin)
 		gather.Endpoints(info, SubmarinerNamespace)
 		gather.Clusters(info, SubmarinerNamespace)
 		gather.Gateways(info, SubmarinerNamespace)
@@ -181,6 +202,11 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 }
 
 func gatherDiscovery(dataType string, info gather.Info) bool {
+	if info.ServiceDiscovery == nil {
+		info.Status.QueueWarningMessage("The Submariner service discovery components are not installed")
+		return false
+	}
+
 	switch dataType {
 	case Logs:
 		gather.ServiceDiscoveryPodLogs(info)
@@ -201,10 +227,14 @@ func gatherDiscovery(dataType string, info gather.Info) bool {
 func gatherBroker(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Resources:
-		brokerRestConfig, brokerNamespace, err := getBrokerRestConfigAndNamespace(info.RestConfig)
+		brokerRestConfig, brokerNamespace, err := getBrokerRestConfigAndNamespace(info.Submariner, info.ServiceDiscovery)
 		if err != nil {
 			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker's rest config: %s", err))
 			return true
+		}
+
+		if brokerRestConfig == nil {
+			return false
 		}
 
 		info.DynClient, info.ClientSet, err = getClients(brokerRestConfig)

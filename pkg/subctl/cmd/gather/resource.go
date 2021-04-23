@@ -101,11 +101,20 @@ func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOption
 }
 
 func scrubSensitiveData(info Info, dataString string) string {
-	if !info.IncludeSensitiveData && info.Submariner != nil {
-		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sApiServer, "##redeacted-api-server##")
+	if info.IncludeSensitiveData {
+		return dataString
+	}
+
+	if info.Submariner != nil {
+		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sApiServer, "##redacted-api-server##")
 		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sApiServerToken, "##redacted-token##")
 		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sCA, "##redacted-ca##")
 		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.CeIPSecPSK, "##redacted-ipsec-psk##")
+	} else if info.ServiceDiscovery != nil {
+		dataString = strings.ReplaceAll(dataString, info.ServiceDiscovery.Spec.BrokerK8sApiServer, "##redacted-api-server##")
+		dataString = strings.ReplaceAll(dataString, info.ServiceDiscovery.Spec.BrokerK8sApiServerToken, "##redacted-token##")
+		dataString = strings.ReplaceAll(dataString, info.ServiceDiscovery.Spec.BrokerK8sCA, "##redacted-ca##")
 	}
+
 	return dataString
 }
