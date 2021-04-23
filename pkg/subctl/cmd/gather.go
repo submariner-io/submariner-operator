@@ -214,7 +214,7 @@ func gatherDiscovery(dataType string, info gather.Info) bool {
 		gather.ServiceImports(info, corev1.NamespaceAll)
 		gather.EndpointSlices(info, corev1.NamespaceAll)
 		gather.ConfigMapLighthouseDNS(info, SubmarinerNamespace)
-		gather.ConfigMapCoreDNS(info, "kube-system")
+		gather.ConfigMapCoreDNS(info)
 	default:
 		return false
 	}
