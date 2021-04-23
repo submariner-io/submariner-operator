@@ -30,6 +30,10 @@ import (
 )
 
 func gatherPodLogs(podLabelSelector string, info Info) {
+	gatherPodLogsByContainer(podLabelSelector, "", info)
+}
+
+func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
 
@@ -39,9 +43,11 @@ func gatherPodLogs(podLabelSelector string, info Info) {
 
 		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector))
 
+		podLogOptions := &corev1.PodLogOptions{}
+		podLogOptions.Container = container
 		for i := range pods.Items {
 			pod := &pods.Items[i]
-			err := podLogsToFile(pod, info)
+			err := podLogsToFile(pod, podLogOptions, info)
 			if err != nil {
 				return errors.WithMessagef(err, "error getting logs for pod %q", pod.Name)
 			}
@@ -56,8 +62,8 @@ func gatherPodLogs(podLabelSelector string, info Info) {
 	}
 }
 
-func podLogsToFile(pod *corev1.Pod, info Info) error {
-	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &corev1.PodLogOptions{})
+func podLogsToFile(pod *corev1.Pod, podLogOptions *corev1.PodLogOptions, info Info) error {
+	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, podLogOptions)
 
 	logs, err := processLogStream(logRequest)
 	if err != nil {

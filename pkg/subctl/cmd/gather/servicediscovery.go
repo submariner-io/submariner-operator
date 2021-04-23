@@ -28,7 +28,8 @@ import (
 
 const (
 	lighthouseComponentsLabel = "component=submariner-lighthouse"
-	coreDNSPodLabel           = "k8s-app=kube-dns"
+	k8sCoreDNSPodLabel        = "k8s-app=kube-dns"
+	ocpCoreDNSPodLabel        = "dns.operator.openshift.io/daemonset-dns=default"
 )
 
 func ServiceDiscoveryPodLogs(info Info) {
@@ -36,7 +37,11 @@ func ServiceDiscoveryPodLogs(info Info) {
 }
 
 func CoreDNSPodLogs(info Info) {
-	gatherPodLogs(coreDNSPodLabel, info)
+	if isCoreDNSTypeOcp(info) {
+		gatherPodLogsByContainer(ocpCoreDNSPodLabel, "dns", info)
+	} else {
+		gatherPodLogs(k8sCoreDNSPodLabel, info)
+	}
 }
 
 func ServiceExports(info Info, namespace string) {
@@ -68,14 +73,38 @@ func EndpointSlices(info Info, namespace string) {
 	}, namespace, metav1.ListOptions{LabelSelector: labelSelector})
 }
 
-func ConfigMapCoreDNS(info Info, namespace string) {
+func ConfigMapCoreDNS(info Info) {
+	namespace := "kube-system"
+	name := "coredns"
+	if isCoreDNSTypeOcp(info) {
+		namespace = "openshift-dns"
+		name = "dns-default"
+	}
 	fieldMap := map[string]string{
-		"metadata.name": "coredns",
+		"metadata.name": name,
 	}
 	fieldSelector := fields.Set(fieldMap).String()
 	gatherConfigMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
+
+	// Gather custom configname for AKS type deployments
+	if info.ServiceDiscovery.Spec.CoreDNSCustomConfig != nil {
+		name = info.ServiceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName
+		if info.ServiceDiscovery.Spec.CoreDNSCustomConfig.Namespace != "" {
+			namespace = info.ServiceDiscovery.Spec.CoreDNSCustomConfig.Namespace
+		}
+		fieldMap := map[string]string{
+			"metadata.name": name,
+		}
+		fieldSelector := fields.Set(fieldMap).String()
+		gatherConfigMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
+	}
 }
 
 func ConfigMapLighthouseDNS(info Info, namespace string) {
 	gatherConfigMaps(info, namespace, metav1.ListOptions{LabelSelector: lighthouseComponentsLabel})
+}
+
+func isCoreDNSTypeOcp(info Info) bool {
+	pods, err := findPods(info.ClientSet, ocpCoreDNSPodLabel)
+	return err == nil && len(pods.Items) > 0
 }
