@@ -145,4 +145,6 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 
 	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
 	nettestClientPod.AwaitFinishVerbose(Verbose)
+	nettestClientPod.CheckSuccessfulFinish()
+	fmt.Println(nettestClientPod.TerminationMessage)
 }
