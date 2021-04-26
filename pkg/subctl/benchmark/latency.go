@@ -17,6 +17,7 @@ package benchmark
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
@@ -118,4 +119,12 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 
 	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
 	nettestClientPod.AwaitFinishVerbose(Verbose)
+	nettestClientPod.CheckSuccessfulFinish()
+	latencyHeaders := strings.Split(nettestClientPod.TerminationMessage, "\n")[1]
+	headers := strings.Split(latencyHeaders, ",")
+	latencyValues := strings.Split(nettestClientPod.TerminationMessage, "\n")[2]
+	values := strings.Split(latencyValues, ",")
+	for i, v := range headers {
+		fmt.Printf("%s:\t%s\n", v, values[i])
+	}
 }
