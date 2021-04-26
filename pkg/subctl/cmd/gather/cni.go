@@ -245,7 +245,7 @@ func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool)
 	if stdOut != "" {
 		// the first line contains the executed command
 		stdOut = cmd + "\n" + stdOut
-		err := writeLogToFile(stdOut, pod.Spec.NodeName+"_"+cmdName, info)
+		err := writeLogToFile(stdOut, pod.Spec.NodeName+"_"+cmdName, info, ".log")
 		if err != nil {
 			info.Status.QueueFailureMessage(fmt.Sprintf("Error writing output from command %q on pod %q: %v", cmd, pod.Name, err))
 		}

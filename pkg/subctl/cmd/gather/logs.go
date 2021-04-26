@@ -26,7 +26,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 func gatherPodLogs(podLabelSelector string, info Info) {
@@ -43,14 +42,10 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 
 		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector))
 
-		podLogOptions := &corev1.PodLogOptions{}
+		podLogOptions := corev1.PodLogOptions{}
 		podLogOptions.Container = container
 		for i := range pods.Items {
-			pod := &pods.Items[i]
-			err := podLogsToFile(pod, podLogOptions, info)
-			if err != nil {
-				return errors.WithMessagef(err, "error getting logs for pod %q", pod.Name)
-			}
+			outputPodLogs(&pods.Items[i], podLogOptions, info)
 		}
 
 		return nil
@@ -62,16 +57,26 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 	}
 }
 
-func podLogsToFile(pod *corev1.Pod, podLogOptions *corev1.PodLogOptions, info Info) error {
-	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, podLogOptions)
+func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) {
+	err := outputPreviousPodLog(pod, podLogOptions, info)
+	if err != nil {
+		info.Status.QueueFailureMessage(fmt.Sprintf("Error outputting previous log for pod %q: %v", pod.Name, err))
+	}
 
-	logs, err := processLogStream(logRequest)
+	err = outputCurrentPodLog(pod, podLogOptions, info)
+	if err != nil {
+		info.Status.QueueFailureMessage(fmt.Sprintf("Error outputting current log for pod %q: %v", pod.Name, err))
+	}
+}
+
+func writePodLogToFile(logStream io.ReadCloser, info Info, podName, fileExtension string) error {
+	logs, err := getLogFromStream(logStream)
 	if err != nil {
 		return err
 	}
 
 	logs = scrubSensitiveData(info, logs)
-	err = writeLogToFile(logs, pod.Name, info)
+	err = writeLogToFile(logs, podName, info, fileExtension)
 	if err != nil {
 		return err
 	}
@@ -79,15 +84,9 @@ func podLogsToFile(pod *corev1.Pod, podLogOptions *corev1.PodLogOptions, info In
 	return nil
 }
 
-func processLogStream(logrequest *rest.Request) (string, error) {
-	logStream, err := logrequest.Stream()
-	if err != nil {
-		return "", errors.WithMessage(err, "error opening log stream")
-	}
-	defer logStream.Close()
-
+func getLogFromStream(logStream io.ReadCloser) (string, error) {
 	logs := new(bytes.Buffer)
-	_, err = io.Copy(logs, logStream)
+	_, err := io.Copy(logs, logStream)
 	if err != nil {
 		return "", errors.WithMessage(err, "error copying the log stream")
 	}
@@ -95,8 +94,8 @@ func processLogStream(logrequest *rest.Request) (string, error) {
 	return logs.String(), nil
 }
 
-func writeLogToFile(data, podName string, info Info) error {
-	fileName := filepath.Join(info.DirName, info.ClusterName+"_"+podName+".log")
+func writeLogToFile(data, podName string, info Info, fileExtension string) error {
+	fileName := filepath.Join(info.DirName, info.ClusterName+"_"+podName+fileExtension)
 	f, err := os.Create(fileName)
 	if err != nil {
 		return errors.WithMessagef(err, "error opening file %s", fileName)
@@ -119,4 +118,40 @@ func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.P
 	}
 
 	return pods, nil
+}
+
+func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) error {
+	podLogOptions.Previous = true
+	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
+	logStream, _ := logRequest.Stream()
+
+	// TODO: Check for error other than "no previous pods found"
+
+	// if no previous pods found, logstream == nil, ignore it
+	if logStream != nil {
+		info.Status.QueueWarningMessage(fmt.Sprintf("Found logs for previous instances of pod %s", pod.Name))
+		err := writePodLogToFile(logStream, info, pod.Name, ".log.prev")
+		if err != nil {
+			return err
+		}
+		defer logStream.Close()
+	}
+	return nil
+}
+
+func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) error {
+	// Running with Previous = false on the same pod
+	podLogOptions.Previous = false
+	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
+	logStream, err := logRequest.Stream()
+	if err != nil {
+		return errors.WithMessage(err, "error opening log stream")
+	}
+	defer logStream.Close()
+
+	err = writePodLogToFile(logStream, info, pod.Name, ".log")
+	if err != nil {
+		return err
+	}
+	return nil
 }
