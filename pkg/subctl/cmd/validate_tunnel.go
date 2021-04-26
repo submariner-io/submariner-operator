@@ -179,11 +179,19 @@ func getGatewayIP(remoteCfg *rest.Config, localClusterID string) string {
 		return ""
 	}
 
-	for _, conn := range gateways.Items[0].Status.Connections {
-		if conn.Endpoint.ClusterID == localClusterID {
-			return conn.UsingIP
+	for i := range gateways.Items {
+		gw := &gateways.Items[i]
+		if gw.Status.HAStatus != subv1.HAStatusActive {
+			continue
+		}
+
+		for _, conn := range gw.Status.Connections {
+			if conn.Endpoint.ClusterID == localClusterID {
+				return conn.UsingIP
+			}
 		}
 	}
+
 	return ""
 }
 
