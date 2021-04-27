@@ -28,6 +28,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -147,16 +148,22 @@ func gatherDataByCluster(restConfig restConfig, directory string) {
 
 	info.Submariner, err = submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
 		Get(submarinercr.SubmarinerName, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		fmt.Printf("Error getting Submariner resource: %s\n", err)
-		return
+	if err != nil {
+		info.Submariner = nil
+		if !apierrors.IsNotFound(err) {
+			fmt.Printf("Error getting Submariner resource: %s\n", err)
+			return
+		}
 	}
 
 	info.ServiceDiscovery, err = submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).
 		Get(names.ServiceDiscoveryCrName, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		fmt.Printf("Error getting ServiceDiscovery resource: %s\n", err)
-		return
+	if err != nil {
+		info.ServiceDiscovery = nil
+		if !apierrors.IsNotFound(err) {
+			fmt.Printf("Error getting ServiceDiscovery resource: %s\n", err)
+			return
+		}
 	}
 
 	for module, ok := range gatherModuleFlags {
@@ -233,17 +240,33 @@ func gatherBroker(dataType string, info gather.Info) bool {
 			return true
 		}
 
-		if brokerRestConfig == nil {
-			return false
+		if brokerRestConfig != nil {
+			info.RestConfig = brokerRestConfig
+			info.DynClient, info.ClientSet, err = getClients(brokerRestConfig)
+			if err != nil {
+				info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker client: %s", err))
+				return true
+			}
+		} else {
+			submarinerClient, err := subOperatorClientset.NewForConfig(info.RestConfig)
+			if err != nil {
+				info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the Submariner client: %s", err))
+				return true
+			}
+
+			_, err = submarinerClient.SubmarinerV1alpha1().Brokers(OperatorNamespace).Get(brokercr.BrokerName, metav1.GetOptions{})
+			if apierrors.IsNotFound(err) {
+				return false
+			}
+
+			if err != nil {
+				info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the Broker resource: %s", err))
+				return true
+			}
+
+			brokerNamespace = metav1.NamespaceAll
 		}
 
-		info.DynClient, info.ClientSet, err = getClients(brokerRestConfig)
-		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker client %s", err))
-			return true
-		}
-
-		info.RestConfig = brokerRestConfig
 		info.ClusterName = "broker"
 
 		// The broker's ClusterRole used by member clusters only allows the below resources to be queried
