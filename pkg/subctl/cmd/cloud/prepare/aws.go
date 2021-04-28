@@ -32,19 +32,18 @@ var (
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
 func newAWSPrepareCommand() *cobra.Command {
-	awsCloudPrepareCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "aws",
 		Short: "Prepare an AWS cloud",
 		Long:  "This command prepares an AWS based cloud for Submariner installation.",
 		Run:   prepareAws,
 	}
 
-	awsCloudPrepareCmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "m5n.large", "Type of gateways instance machine")
-	awsCloudPrepareCmd.Flags().StringVar(&infraID, "infra-id", "", "AWS infra ID")
-	awsCloudPrepareCmd.Flags().StringVar(&region, "region", "", "AWS region")
-	awsCloudPrepareCmd.Flags().IntVar(&gateways, "gateways", 1, "Amount of gateways to prepare (0 = gateway per public subnet)")
+	cloudutils.AddAWSFlags(cmd, &infraID, &region)
+	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "m5n.large", "Type of gateways instance machine")
+	cmd.Flags().IntVar(&gateways, "gateways", 1, "Amount of gateways to prepare (0 = gateway per public subnet)")
 
-	return awsCloudPrepareCmd
+	return cmd
 }
 
 func prepareAws(cmd *cobra.Command, args []string) {

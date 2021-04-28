@@ -69,3 +69,10 @@ func GetClientConfig(kubeConfigPath, kubeContext string) clientcmd.ClientConfig 
 
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
 }
+
+// ExpectFlag exits with an error if the flag value is empty
+func ExpectFlag(flag, value string) {
+	if value == "" {
+		ExitWithErrorMsg(fmt.Sprintf("You must specify the %v flag", flag))
+	}
+}

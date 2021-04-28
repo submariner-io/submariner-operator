@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	cloudprepareaws "github.com/submariner-io/cloud-prepare/pkg/aws"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
@@ -32,20 +33,26 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+const (
+	infraIDFlag = "infra-id"
+	regionFlag  = "region"
+)
+
+// AddAWSFlags adds basic flags needed by AWS
+func AddAWSFlags(command *cobra.Command, infraID, region *string) {
+	command.Flags().StringVar(infraID, infraIDFlag, "", "AWS infra ID")
+	command.Flags().StringVar(region, regionFlag, "", "AWS region")
+}
+
 // RunOnAWS runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.
 func RunOnAWS(infraID, region, gwInstanceType, kubeConfig, kubeContext string,
 	function func(cloud api.Cloud, reporter api.Reporter) error) error {
-	if infraID == "" {
-		utils.ExitWithErrorMsg("You must specify the infraid")
-	}
-
-	if region == "" {
-		utils.ExitWithErrorMsg("You must specify the region")
-	}
+	utils.ExpectFlag(infraIDFlag, infraID)
+	utils.ExpectFlag(regionFlag, region)
 
 	k8sConfig, err := utils.GetRestConfig(kubeConfig, kubeContext)
-	utils.ExitOnError("Filed to initialize a Kubernetes config", err)
+	utils.ExitOnError("Failed to initialize a Kubernetes config", err)
 
 	reporter := NewCLIReporter()
 	reporter.Started("Retrieving AWS credentials from your OpenShift installation")

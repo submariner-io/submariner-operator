@@ -31,17 +31,16 @@ var (
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
 func newAWSCleanupCommand() *cobra.Command {
-	awsCloudPrepareCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "aws",
 		Short: "Clean up an AWS cloud",
 		Long:  "This command cleans up an AWS based cloud after Submariner uninstallation.",
 		Run:   cleanupAws,
 	}
 
-	awsCloudPrepareCmd.Flags().StringVar(&infraID, "infra-id", "", "AWS infra ID")
-	awsCloudPrepareCmd.Flags().StringVar(&region, "region", "", "AWS region")
+	cloudutils.AddAWSFlags(cmd, &infraID, &region)
 
-	return awsCloudPrepareCmd
+	return cmd
 }
 
 func cleanupAws(cmd *cobra.Command, args []string) {
