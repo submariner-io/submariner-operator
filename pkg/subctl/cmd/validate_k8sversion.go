@@ -26,8 +26,8 @@ import (
 
 var validateK8sVersionCmd = &cobra.Command{
 	Use:   "k8s-version",
-	Short: "Validate the Kubernetes version.",
-	Long:  "This command checks whether or not Submariner can be deployed on the Kubernetes version.",
+	Short: "Check the Kubernetes version",
+	Long:  "This command checks if Submariner can be deployed on the Kubernetes version.",
 	Run:   validateK8sVersion,
 }
 
@@ -45,7 +45,7 @@ func validateK8sVersion(cmd *cobra.Command, args []string) {
 }
 
 func validateK8sVersionInCluster(config *rest.Config, clusterName string) {
-	message := fmt.Sprintf("Validating Submariner support for the Kubernetes version"+
+	message := fmt.Sprintf("Checking Submariner support for the Kubernetes version"+
 		" used in cluster %q", clusterName)
 	status.Start(message)
 

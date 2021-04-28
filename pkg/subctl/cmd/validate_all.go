@@ -24,8 +24,8 @@ import (
 
 var validateAllCmd = &cobra.Command{
 	Use:   "all",
-	Short: "Validate the Submariner deployment and report any issues",
-	Long:  "This command validates the Submariner deployment and reports any issues",
+	Short: "Run all diagnostic checks (except those requiring two kubecontexts)",
+	Long:  "This command runs all diagnostic checks (except those requiring two kubecontexts) and reports any issues",
 	Run:   validateAll,
 }
 
