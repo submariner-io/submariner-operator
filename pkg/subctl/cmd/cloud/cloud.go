@@ -27,7 +27,7 @@ func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cloud",
 		Short: "Cloud operations",
-		Long:  `This command contains cloud operations relating to Submariner installation.`,
+		Long:  `This command contains cloud operations related to Submariner installation.`,
 	}
 
 	cmd.AddCommand(prepare.NewCommand(origKubeConfig, origKubeContext))
