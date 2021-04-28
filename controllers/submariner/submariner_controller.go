@@ -487,8 +487,8 @@ func newGatewayPodTemplate(cr *submopv1a1.Submariner) corev1.PodTemplateSpec {
 			Containers: []corev1.Container{
 				{
 					Name:            "submariner-gateway",
-					Image:           getImagePath(cr, names.GatewayImage),
-					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayImage]),
+					Image:           getImagePath(cr, names.GatewayImage, names.GatewayComponent),
+					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayComponent]),
 					Command:         []string{"submariner.sh"},
 					SecurityContext: &securityContextAllCapsPrivileged,
 					Env: []corev1.EnvVar{
@@ -604,8 +604,8 @@ func newRouteAgentDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-routeagent",
-							Image:           getImagePath(cr, names.RouteAgentImage),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentImage]),
+							Image:           getImagePath(cr, names.RouteAgentImage, names.RouteAgentComponent),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
 							Command:         []string{"submariner-route-agent.sh"},
 							SecurityContext: &securityContextAllCapAllowEscal,
@@ -681,8 +681,8 @@ func newGlobalnetDaemonSet(cr *submopv1a1.Submariner) *appsv1.DaemonSet {
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-globalnet",
-							Image:           getImagePath(cr, names.GlobalnetImage),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetImage]),
+							Image:           getImagePath(cr, names.GlobalnetImage, names.GlobalnetComponent),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetComponent]),
 							SecurityContext: &securityContextAllCapAllowEscal,
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
@@ -719,8 +719,8 @@ func newServiceDiscoveryCR(namespace string) *submopv1a1.ServiceDiscovery {
 	}
 }
 
-func getImagePath(submariner *submopv1a1.Submariner, componentImage string) string {
-	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage,
+func getImagePath(submariner *submopv1a1.Submariner, imageName, componentName string) string {
+	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, imageName, componentName,
 		submariner.Spec.ImageOverrides)
 }
 

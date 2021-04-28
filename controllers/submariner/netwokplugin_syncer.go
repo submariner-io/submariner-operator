@@ -62,8 +62,8 @@ func newNetworkPluginSyncerDeployment(cr *submopv1a1.Submariner, clusterNetwork 
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-routeagent",
-							Image:           getImagePath(cr, names.NetworkPluginSyncerImage),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.NetworkPluginSyncerImage]),
+							Image:           getImagePath(cr, names.NetworkPluginSyncerImage, names.NetworkPluginSyncerComponent),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.NetworkPluginSyncerComponent]),
 							Command:         []string{"submariner-networkplugin-syncer.sh"},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
