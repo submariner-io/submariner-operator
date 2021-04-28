@@ -605,7 +605,7 @@ func operatorImage() string {
 		repo = versions.DefaultRepo
 	}
 
-	return images.GetImagePath(repo, version, names.OperatorImage, getImageOverrides())
+	return images.GetImagePath(repo, version, names.OperatorImage, names.OperatorComponent, getImageOverrides())
 }
 
 func getImageOverrides() map[string]string {
