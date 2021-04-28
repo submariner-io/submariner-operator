@@ -26,8 +26,8 @@ import (
 
 var validateConnectionsCmd = &cobra.Command{
 	Use:   "connections",
-	Short: "Validate the gateways connections",
-	Long:  "This command checks that the gateway connections are all established",
+	Short: "Check the Gateway connections",
+	Long:  "This command checks that the Gateway connections to other clusters are all established",
 	Run:   validateConnections,
 }
 
@@ -53,7 +53,7 @@ func validateConnections(cmd *cobra.Command, args []string) {
 }
 
 func validateConnectionsInCluster(config *rest.Config, clusterName string) {
-	message := fmt.Sprintf("Validating connections in cluster %q", clusterName)
+	message := fmt.Sprintf("Checking Gateway connections in cluster %q", clusterName)
 	status.Start(message)
 
 	gateways := getGatewaysResource(config)

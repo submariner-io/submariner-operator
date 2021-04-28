@@ -30,8 +30,8 @@ const (
 
 var validateFirewallMetricsCmd = &cobra.Command{
 	Use:   "metrics",
-	Short: "Validate firewall access to metrics.",
-	Long:  "This command checks whether firewall configuration allows metrics to be read from the Gateway nodes.",
+	Short: "Check firewall access to metrics",
+	Long:  "This command checks if the firewall configuration allows metrics to be accessed from the Gateway nodes.",
 	Run:   validateFirewallMetricsConfig,
 }
 
@@ -52,7 +52,7 @@ func validateFirewallMetricsConfig(cmd *cobra.Command, args []string) {
 }
 
 func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName string) {
-	status.Start(fmt.Sprintf("Validating the firewall configuration to check if metrics port (8080)"+
+	status.Start(fmt.Sprintf("Checking the firewall configuration to determine if metrics port (8080)"+
 		" is allowed in cluster %q", clusterName))
 
 	clientSet, err := kubernetes.NewForConfig(config)
@@ -107,6 +107,6 @@ func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName
 		return
 	}
 
-	status.QueueSuccessMessage("Prometheus metrics can be retrieved from gateway nodes.")
+	status.QueueSuccessMessage("Prometheus metrics can be retrieved from Gateway nodes.")
 	status.End(status.ResultFromMessages())
 }

@@ -24,8 +24,8 @@ import (
 
 var validateFirewallConfigCmd = &cobra.Command{
 	Use:   "firewall",
-	Short: "Validate the firewall configuration in the cluster.",
-	Long:  "This command checks whether the firewall is configured as per Submariner pre-requisites.",
+	Short: "Check the firewall configuration",
+	Long:  "This command checks if the firewall is configured as per Submariner pre-requisites.",
 }
 
 var validationTimeout uint
