@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/rest"
@@ -39,12 +40,17 @@ func validateK8sVersion(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
+	validationStatus := true
+
 	for _, item := range configs {
-		validateK8sVersionInCluster(item.config, item.clusterName)
+		validationStatus = validationStatus && validateK8sVersionInCluster(item.config, item.clusterName)
+	}
+	if !validationStatus {
+		os.Exit(1)
 	}
 }
 
-func validateK8sVersionInCluster(config *rest.Config, clusterName string) {
+func validateK8sVersionInCluster(config *rest.Config, clusterName string) bool {
 	message := fmt.Sprintf("Checking Submariner support for the Kubernetes version"+
 		" used in cluster %q", clusterName)
 	status.Start(message)
@@ -57,13 +63,14 @@ func validateK8sVersionInCluster(config *rest.Config, clusterName string) {
 			status.QueueFailureMessage(message)
 		}
 		status.End(cli.Failure)
-		return
+		return false
 	}
 	if err != nil {
 		status.QueueFailureMessage(err.Error())
 		status.End(cli.Failure)
-		return
+		return false
 	}
 	status.QueueSuccessMessage("The Kubernetes version meets Submariner's requirements")
 	status.End(cli.Success)
+	return true
 }
