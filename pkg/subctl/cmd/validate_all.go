@@ -69,8 +69,8 @@ func validateAll(cmd *cobra.Command, args []string) {
 		fmt.Println()
 		validationStatus = validationStatus && validateVxLANConfigWithinCluster(item.config, item.clusterName, submariner)
 		fmt.Println()
-		fmt.Printf("Skipping tunnel firewall validation as it requires two kubeconfigs." +
-			" Please run \"subctl validate firewall tunnel\" command manually.\n")
+		fmt.Printf("Skipping tunnel firewall check as it requires two kubeconfigs." +
+			" Please run \"subctl diagnose firewall tunnel\" command manually.\n")
 		fmt.Println()
 	}
 
