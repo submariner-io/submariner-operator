@@ -32,9 +32,21 @@ import (
 )
 
 func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: "generic",
+	clusterNetwork, err := discoverNetwork(clientSet)
+	if err != nil {
+		return nil, err
 	}
+
+	if clusterNetwork != nil {
+		clusterNetwork.NetworkPlugin = "generic"
+		return clusterNetwork, nil
+	}
+
+	return nil, nil
+}
+
+func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
+	clusterNetwork := &ClusterNetwork{}
 
 	podIPRange, err := findPodIPRange(clientSet)
 	if err != nil {

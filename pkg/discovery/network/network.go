@@ -125,6 +125,10 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 		return ovnClusterNet, err
 	}
 
+	calicoClusterNet, err := discoverCalicoNetwork(clientSet)
+	if err != nil || calicoClusterNet != nil {
+		return calicoClusterNet, err
+	}
 	return nil, nil
 }
 
