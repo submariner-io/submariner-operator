@@ -45,5 +45,9 @@ ${DAPPER_SOURCE}/bin/subctl verify ${verify} --submariner-namespace=$subm_ns \
 
 test_subctl_gather
 
+# Run subctl diagnose as a sanity check
+
+${DAPPER_SOURCE}/bin/subctl diagnose all
+
 print_clusters_message
 
