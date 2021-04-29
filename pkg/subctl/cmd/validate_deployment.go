@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner/pkg/cidr"
@@ -44,6 +45,8 @@ func validateSubmarinerDeployment(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
+	validationStatus := true
+
 	for _, item := range configs {
 		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
 		submariner := getSubmarinerResource(item.config)
@@ -54,12 +57,17 @@ func validateSubmarinerDeployment(cmd *cobra.Command, args []string) {
 		}
 
 		status.End(cli.Success)
-		checkPods(item, submariner, OperatorNamespace)
-		checkOverlappingCIDRs(item, submariner)
+
+		validationStatus = validationStatus && checkPods(item, submariner, OperatorNamespace)
+		validationStatus = validationStatus && checkOverlappingCIDRs(item, submariner)
+	}
+
+	if !validationStatus {
+		os.Exit(1)
 	}
 }
 
-func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
+func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) bool {
 	submarinerClient, err := smClientset.NewForConfig(item.config)
 	exitOnError("Unable to get the Submariner client", err)
 
@@ -72,18 +80,21 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
 	localClusterName := submariner.Status.ClusterID
 	endpointList, err := submarinerClient.SubmarinerV1().Endpoints(submariner.Namespace).List(metav1.ListOptions{})
 	if err != nil {
-		status.QueueFailureMessage(fmt.Sprintf("Error listing the Submariner endpoints in cluster %q", localClusterName))
+		message := fmt.Sprintf("Error listing the Submariner endpoints in cluster %q", localClusterName)
+		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
+	var message string
 	for i, source := range endpointList.Items {
 		for _, dest := range endpointList.Items[i+1:] {
 			// Currently we dont support multiple endpoints in a cluster, hence return an error.
 			// When the corresponding support is added, this check needs to be updated.
 			if source.Spec.ClusterID == dest.Spec.ClusterID {
-				status.QueueFailureMessage(fmt.Sprintf("Found multiple Submariner endpoints (%q and %q) in cluster %q",
-					source.Name, dest.Name, source.Spec.ClusterID))
+				message = fmt.Sprintf("Found multiple Submariner endpoints (%q and %q) in cluster %q",
+					source.Name, dest.Name, source.Spec.ClusterID)
+				status.QueueFailureMessage(message)
 				continue
 			}
 
@@ -91,13 +102,15 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
 				overlap, err := cidr.IsOverlapping(source.Spec.Subnets, subnet)
 				if err != nil {
 					// Ideally this case will never hit, as the subnets are valid CIDRs
-					status.QueueFailureMessage(fmt.Sprintf("Error parsing CIDR in cluster %q: %s", dest.Spec.ClusterID, err))
+					message = fmt.Sprintf("Error parsing CIDR in cluster %q: %s", dest.Spec.ClusterID, err)
+					status.QueueFailureMessage(message)
 					continue
 				}
 
 				if overlap {
-					status.QueueFailureMessage(fmt.Sprintf("CIDR %q in cluster %q overlaps with cluster %q (CIDRs: %v)",
-						subnet, dest.Spec.ClusterID, source.Spec.ClusterID, source.Spec.Subnets))
+					message = fmt.Sprintf("CIDR %q in cluster %q overlaps with cluster %q (CIDRs: %v)",
+						subnet, dest.Spec.ClusterID, source.Spec.ClusterID, source.Spec.Subnets)
+					status.QueueFailureMessage(message)
 				}
 			}
 		}
@@ -105,7 +118,7 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
 
 	if status.HasFailureMessages() {
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	if submariner.Spec.GlobalCIDR != "" {
@@ -115,9 +128,10 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
 	}
 
 	status.End(cli.Success)
+	return true
 }
 
-func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespace string) {
+func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespace string) bool {
 	message := fmt.Sprintf("Checking Submariner pods in %q", item.clusterName)
 	status.Start(message)
 
@@ -128,39 +142,40 @@ func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespa
 	}
 
 	if !CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-gateway") {
-		return
+		return false
 	}
 
 	if !CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-routeagent") {
-		return
+		return false
 	}
 
 	// Check if service-discovery components are deployed and running if enabled
 	if submariner.Spec.ServiceDiscoveryEnabled {
 		// Check lighthouse-agent
 		if !CheckDeployment(kubeClientSet, operatorNamespace, "submariner-lighthouse-agent") {
-			return
+			return false
 		}
 
 		// Check lighthouse-coreDNS
 		if !CheckDeployment(kubeClientSet, operatorNamespace, "submariner-lighthouse-coredns") {
-			return
+			return false
 		}
 	}
 	// Check if globalnet components are deployed and running if enabled
 	if submariner.Spec.GlobalCIDR != "" {
 		if !CheckDaemonset(kubeClientSet, operatorNamespace, "submariner-globalnet") {
-			return
+			return false
 		}
 	}
 
 	if !checkPodsStatus(kubeClientSet, operatorNamespace) {
-		return
+		return false
 	}
 
 	message = "All Submariner pods are up and running"
 	status.QueueSuccessMessage(message)
 	status.End(cli.Success)
+	return true
 }
 
 func CheckDeployment(k8sClient kubernetes.Interface, namespace, deploymentName string) bool {

@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -46,12 +47,18 @@ func validateFirewallMetricsConfig(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
+	validationStatus := true
+
 	for _, item := range configs {
-		validateFirewallMetricsConfigWithinCluster(item.config, item.clusterName)
+		validationStatus = validationStatus && validateFirewallMetricsConfigWithinCluster(item.config, item.clusterName)
+	}
+
+	if !validationStatus {
+		os.Exit(1)
 	}
 }
 
-func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName string) {
+func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName string) bool {
 	status.Start(fmt.Sprintf("Checking the firewall configuration to determine if metrics port (8080)"+
 		" is allowed in cluster %q", clusterName))
 
@@ -59,7 +66,7 @@ func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName
 	if err != nil {
 		message := fmt.Sprintf("Error creating API server client: %s", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffMetricsCommand)
@@ -67,7 +74,7 @@ func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName
 	if err != nil {
 		message := fmt.Sprintf("Error while spawning the sniffer pod on the GatewayNode: %v", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	defer sPod.DeletePod()
@@ -77,20 +84,20 @@ func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName
 	if err != nil {
 		message := fmt.Sprintf("Error while spawning the client pod on non-Gateway node: %v", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	defer cPod.DeletePod()
 	if err = cPod.AwaitPodCompletion(); err != nil {
 		message := fmt.Sprintf("Error while waiting for client pod to be finish its execution: %v", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	if err = sPod.AwaitPodCompletion(); err != nil {
 		message := fmt.Sprintf("Error while waiting for sniffer pod to be finish its execution: %v", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	if verboseOutput {
@@ -104,9 +111,10 @@ func validateFirewallMetricsConfigWithinCluster(config *rest.Config, clusterName
 			" client pod HostIP. Please check that your firewall configuration allows TCP/8080 traffic"+
 			" on the %q node.", sPod.Pod.Spec.NodeName)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	status.QueueSuccessMessage("Prometheus metrics can be retrieved from Gateway nodes.")
 	status.End(status.ResultFromMessages())
+	return true
 }

@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -49,6 +50,8 @@ func validateFirewallVxLANConfig(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
+	validationStatus := true
+
 	for _, item := range configs {
 		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
 		submariner := getSubmarinerResource(item.config)
@@ -59,39 +62,44 @@ func validateFirewallVxLANConfig(cmd *cobra.Command, args []string) {
 		}
 
 		status.End(cli.Success)
-		validateVxLANConfigWithinCluster(item.config, item.clusterName, submariner)
+		validationStatus = validationStatus && validateVxLANConfigWithinCluster(item.config, item.clusterName, submariner)
+	}
+
+	if !validationStatus {
+		os.Exit(1)
 	}
 }
 
-func validateVxLANConfigWithinCluster(config *rest.Config, clusterName string, submariner *v1alpha1.Submariner) {
+func validateVxLANConfigWithinCluster(config *rest.Config, clusterName string, submariner *v1alpha1.Submariner) bool {
 	status.Start(fmt.Sprintf("Checking the firewall configuration to determine if VXLAN traffic is allowed"+
 		" in cluster %q", clusterName))
-	validateFWConfigWithinCluster(config, submariner)
+	validationStatus := validateFWConfigWithinCluster(config, submariner)
 	status.End(status.ResultFromMessages())
+	return validationStatus
 }
 
-func validateFWConfigWithinCluster(config *rest.Config, submariner *v1alpha1.Submariner) {
+func validateFWConfigWithinCluster(config *rest.Config, submariner *v1alpha1.Submariner) bool {
 	if submariner.Status.NetworkPlugin == "OVNKubernetes" {
 		status.QueueSuccessMessage("This check is not necessary for the OVNKubernetes CNI plugin")
-		return
+		return true
 	}
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		message := fmt.Sprintf("Error creating API server client: %s", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	gateways := getGatewaysResource(config)
-	if gateways == nil {
+	if gateways == nil || len(gateways.Items) == 0 {
 		status.QueueWarningMessage("There are no gateways detected on the cluster.")
-		return
+		return false
 	}
 
 	if len(gateways.Items[0].Status.Connections) == 0 {
 		status.QueueWarningMessage("There are no active connections to remote clusters.")
-		return
+		return false
 	}
 
 	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffVxLANCommand)
@@ -99,7 +107,7 @@ func validateFWConfigWithinCluster(config *rest.Config, submariner *v1alpha1.Sub
 	if err != nil {
 		message := fmt.Sprintf("Error while spawning the sniffer pod on the GatewayNode: %v", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	defer sPod.DeletePod()
@@ -109,20 +117,20 @@ func validateFWConfigWithinCluster(config *rest.Config, submariner *v1alpha1.Sub
 	if err != nil {
 		message := fmt.Sprintf("Error while spawning the client pod on non-Gateway node: %v", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	defer cPod.DeletePod()
 	if err = cPod.AwaitPodCompletion(); err != nil {
 		message := fmt.Sprintf("Error while waiting for client pod to be finish its execution: %v", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	if err = sPod.AwaitPodCompletion(); err != nil {
 		message := fmt.Sprintf("Error while waiting for sniffer pod to be finish its execution: %v", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	if verboseOutput {
@@ -135,7 +143,7 @@ func validateFWConfigWithinCluster(config *rest.Config, submariner *v1alpha1.Sub
 		message := fmt.Sprintf("The tcpdump output from the sniffer pod does not contain the expected remote"+
 			" endpoint IP %s. Please check that your firewall configuration allows UDP/4800 traffic.", remoteClusterIP)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	// Verify that tcpdump output (i.e, from snifferPod) contains the clientPod IPaddress
@@ -143,8 +151,9 @@ func validateFWConfigWithinCluster(config *rest.Config, submariner *v1alpha1.Sub
 		message := fmt.Sprintf("The tcpdump output from the sniffer pod does not contain the client pod's IP."+
 			" There seems to be some issue with the IPTable rules programmed on the %q node", cPod.Pod.Spec.NodeName)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	status.QueueSuccessMessage("The firewall configuration for vx-submariner is working fine.")
+	return true
 }

@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -39,6 +40,8 @@ func validateConnections(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
+	validationStatus := true
+
 	for _, item := range configs {
 		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
 		submariner := getSubmarinerResource(item.config)
@@ -48,11 +51,14 @@ func validateConnections(cmd *cobra.Command, args []string) {
 			continue
 		}
 		status.End(cli.Success)
-		validateConnectionsInCluster(item.config, item.clusterName)
+		validationStatus = validationStatus && validateConnectionsInCluster(item.config, item.clusterName)
+	}
+	if !validationStatus {
+		os.Exit(1)
 	}
 }
 
-func validateConnectionsInCluster(config *rest.Config, clusterName string) {
+func validateConnectionsInCluster(config *rest.Config, clusterName string) bool {
 	message := fmt.Sprintf("Checking Gateway connections in cluster %q", clusterName)
 	status.Start(message)
 
@@ -61,7 +67,7 @@ func validateConnectionsInCluster(config *rest.Config, clusterName string) {
 		message = "There are no gateways detected"
 		status.QueueWarningMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	allConnectionsEstablished := true
@@ -71,9 +77,10 @@ func validateConnectionsInCluster(config *rest.Config, clusterName string) {
 		}
 
 		if len(gateway.Status.Connections) == 0 {
-			status.QueueFailureMessage("There are no active connections")
+			message = "There are no active connections"
+			status.QueueFailureMessage(message)
 			status.End(cli.Failure)
-			return
+			return false
 		}
 
 		for _, connection := range gateway.Status.Connections {
@@ -91,10 +98,11 @@ func validateConnectionsInCluster(config *rest.Config, clusterName string) {
 
 	if !allConnectionsEstablished {
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	message = "All connections are established"
 	status.QueueSuccessMessage(message)
 	status.End(cli.Success)
+	return true
 }
