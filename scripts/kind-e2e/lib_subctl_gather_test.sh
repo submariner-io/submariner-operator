@@ -13,6 +13,8 @@ function test_subctl_gather() {
 
   ${DAPPER_SOURCE}/bin/subctl gather --dir $out_dir
 
+  ls $out_dir
+
   for cluster in "${clusters[@]}"; do
       with_context "${cluster}" validate_gathered_files
   done
