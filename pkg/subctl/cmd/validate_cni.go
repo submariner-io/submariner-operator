@@ -35,8 +35,8 @@ var supportedNetworkPlugins = []string{"generic", "canal-flannel", "weave-net", 
 
 var validateCniCmd = &cobra.Command{
 	Use:   "cni",
-	Short: "Validate the CNI network plugin.",
-	Long:  "This command checks whether or not the detected CNI network plugin is supported by Submariner.",
+	Short: "Check the CNI network plugin",
+	Long:  "This command checks if the detected CNI network plugin is supported by Submariner.",
 	Run:   validateCniConfig,
 }
 
@@ -70,7 +70,7 @@ func validateCniConfig(cmd *cobra.Command, args []string) {
 }
 
 func validateCNIInCluster(config *rest.Config, clusterName string, submariner *v1alpha1.Submariner) {
-	message := fmt.Sprintf("Validating Submariner support for the CNI network"+
+	message := fmt.Sprintf("Checking Submariner support for the CNI network"+
 		" plugin in cluster %q", clusterName)
 	status.Start(message)
 

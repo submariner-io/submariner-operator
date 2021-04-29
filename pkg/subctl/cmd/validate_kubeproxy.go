@@ -38,7 +38,7 @@ var (
 
 var validateKubeProxyModeCmd = &cobra.Command{
 	Use:   "kube-proxy-mode",
-	Short: "Validate the kube-proxy mode.",
+	Short: "Check the kube-proxy mode",
 	Long:  "This command checks if the kube-proxy mode is supported by Submariner.",
 	Run:   validateKubeProxyMode,
 }
@@ -59,7 +59,7 @@ func validateKubeProxyMode(cmd *cobra.Command, args []string) {
 }
 
 func validateKubeProxyModeInCluster(config *rest.Config, clusterName string) {
-	message := fmt.Sprintf("Validating Submariner support for the kube-proxy mode"+
+	message := fmt.Sprintf("Checking Submariner support for the kube-proxy mode"+
 		" used in cluster %q", clusterName)
 	status.Start(message)
 
