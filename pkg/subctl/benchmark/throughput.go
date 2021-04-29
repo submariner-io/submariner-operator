@@ -159,6 +159,7 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	// to remove this dependency with iptables-chain, lets delete the service after the nettest server Pod is terminated.
 	// [*] https://github.com/submariner-io/submariner/issues/1166
 	if framework.TestContext.GlobalnetEnabled && testParams.ClientCluster != testParams.ServerCluster {
+		f.DeletePod(testParams.ServerCluster, nettestServerPod.Pod.Name, f.Namespace)
 		f.DeleteService(testParams.ServerCluster, service.Name)
 		f.DeleteServiceExport(testParams.ServerCluster, service.Name)
 	}
