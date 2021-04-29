@@ -25,7 +25,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func GetImagePath(repo, version, component string, imageOverrides map[string]string) string {
+func GetImagePath(repo, version, image, component string, imageOverrides map[string]string) string {
 	var path string
 
 	if override, ok := imageOverrides[component]; ok {
@@ -36,9 +36,9 @@ func GetImagePath(repo, version, component string, imageOverrides map[string]str
 	// a local repository is used for development, testing and CI when we inject
 	// images in the cluster, for example submariner-gateway:local, or submariner-route-agent:local
 	if repo == "local" {
-		path = component
+		path = image
 	} else {
-		path = fmt.Sprintf("%s/%s%s%s", repo, names.ImagePrefix, component, names.ImagePostfix)
+		path = fmt.Sprintf("%s/%s%s%s", repo, names.ImagePrefix, image, names.ImagePostfix)
 	}
 
 	path = fmt.Sprintf("%s:%s", path, version)

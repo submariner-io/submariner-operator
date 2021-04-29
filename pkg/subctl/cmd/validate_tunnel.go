@@ -37,8 +37,8 @@ var verboseOutput bool
 
 var validateTunnelCmd = &cobra.Command{
 	Use:   "tunnel <localkubeconfig> <remotekubeconfig>",
-	Short: "Validate firewall access to Gateway node tunnels",
-	Long:  "This command checks whether firewall configuration allows tunnels to be configured on the Gateway nodes.",
+	Short: "Check firewall access to Gateway node tunnels",
+	Long:  "This command checks if the firewall configuration allows tunnels to be configured on the Gateway nodes.",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 2 {
 			return fmt.Errorf("two kubeconfigs must be specified")
@@ -82,7 +82,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 		exitWithErrorMsg(submMissingMessage)
 	}
 
-	status.Start(fmt.Sprintf("Validating if tunnels can be setup on Gateway node of cluster %q.",
+	status.Start(fmt.Sprintf("Checking if tunnels can be setup on Gateway node of cluster %q.",
 		submariner.Spec.ClusterID))
 
 	localEndpoint := getEndpointResource(localCfg, submariner.Spec.ClusterID)
@@ -179,11 +179,19 @@ func getGatewayIP(remoteCfg *rest.Config, localClusterID string) string {
 		return ""
 	}
 
-	for _, conn := range gateways.Items[0].Status.Connections {
-		if conn.Endpoint.ClusterID == localClusterID {
-			return conn.UsingIP
+	for i := range gateways.Items {
+		gw := &gateways.Items[i]
+		if gw.Status.HAStatus != subv1.HAStatusActive {
+			continue
+		}
+
+		for _, conn := range gw.Status.Connections {
+			if conn.Endpoint.ClusterID == localClusterID {
+				return conn.UsingIP
+			}
 		}
 	}
+
 	return ""
 }
 

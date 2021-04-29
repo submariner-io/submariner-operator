@@ -31,10 +31,9 @@ import (
 
 var validatePodsCmd = &cobra.Command{
 	Use:   "deployment",
-	Short: "Validate the submariner deployment",
-	Long: "This command checks that the submariner components are properly deployed and running" +
-		" with no overlapping CIDRs.",
-	Run: validateSubmarinerDeployment,
+	Short: "Check the Submariner deployment",
+	Long:  "This command checks that the Submariner components are properly deployed and running with no overlapping CIDRs.",
+	Run:   validateSubmarinerDeployment,
 }
 
 func init() {
@@ -119,7 +118,7 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) {
 }
 
 func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespace string) {
-	message := fmt.Sprintf("Validating submariner pods in %q", item.clusterName)
+	message := fmt.Sprintf("Checking Submariner pods in %q", item.clusterName)
 	status.Start(message)
 
 	kubeClientSet, err := kubernetes.NewForConfig(item.config)

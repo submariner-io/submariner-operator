@@ -15,20 +15,31 @@ limitations under the License.
 */
 package names
 
+/* Component names and other constants */
 const (
+	NetworkPluginSyncerComponent = "submariner-networkplugin-syncer"
+	RouteAgentComponent          = "submariner-route-agent"
+	GatewayComponent             = "submariner-gateway"
+	GlobalnetComponent           = "submariner-globalnet"
+	ServiceDiscoveryComponent    = "lighthouse-agent"
+	LighthouseCoreDNSComponent   = "lighthouse-coredns"
+	OperatorComponent            = "submariner-operator"
+	ServiceDiscoveryCrName       = "service-discovery"
+)
+
+/* These values are used by downstream distributions to override the component default image name */
+var (
 	NetworkPluginSyncerImage = "submariner-networkplugin-syncer"
 	RouteAgentImage          = "submariner-route-agent"
 	GatewayImage             = "submariner-gateway"
 	GlobalnetImage           = "submariner-globalnet"
 	ServiceDiscoveryImage    = "lighthouse-agent"
 	LighthouseCoreDNSImage   = "lighthouse-coredns"
-	ServiceDiscoveryCrName   = "service-discovery"
 	OperatorImage            = "submariner-operator"
 )
 
+/* Deprecated: These values are used by downstream distributions to patch the image names by adding a prefix/suffix */
 var (
-	// ImagePrefix is used by downstream distributions to introduce a prefix in the component
-	ImagePrefix = ""
-	// ImagePostfix is used by downstream distributions to introduce a postfix in the component image
+	ImagePrefix  = ""
 	ImagePostfix = ""
 )

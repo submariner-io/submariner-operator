@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package version
 
 import (
 	"fmt"
@@ -22,12 +22,11 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-
 	"github.com/submariner-io/submariner-operator/pkg/version"
 )
 
-// infoCmd represents the info command
-var versionCmd = &cobra.Command{
+// Cmd represents the version command
+var Cmd = &cobra.Command{
 	Use:   "version",
 	Short: "Get version information on subctl",
 	Long: `This command shows the version tag, and git commit for your
@@ -35,14 +34,11 @@ subctl binary.`,
 	Run: subctlVersion,
 }
 
-func init() {
-	rootCmd.AddCommand(versionCmd)
-}
-
 func subctlVersion(cmd *cobra.Command, args []string) {
 	PrintSubctlVersion(os.Stdout)
 }
 
+// PrintSubctlVersion will print the version subctl was compiled under
 func PrintSubctlVersion(w io.Writer) {
 	fmt.Fprintf(w, "subctl version: %s\n", version.Version)
 }

@@ -63,14 +63,14 @@ func getSubmarinerVersion(submariner *v1alpha1.Submariner, versions []versionIma
 }
 
 func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
-	operatorConfig, err := clientSet.AppsV1().Deployments(OperatorNamespace).Get(names.OperatorImage, v1.GetOptions{})
+	operatorConfig, err := clientSet.AppsV1().Deployments(OperatorNamespace).Get(names.OperatorComponent, v1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	operatorFullImageStr := operatorConfig.Spec.Template.Spec.Containers[0].Image
 	version, repository := images.ParseOperatorImage(operatorFullImageStr)
-	versions = append(versions, newVersionInfoFrom(repository, names.OperatorImage, version))
+	versions = append(versions, newVersionInfoFrom(repository, names.OperatorComponent, version))
 	return versions, nil
 }
 

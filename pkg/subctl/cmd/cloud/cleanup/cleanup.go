@@ -13,21 +13,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+
+package cleanup
 
 import (
 	"github.com/spf13/cobra"
 )
 
 var (
-	validateCmd = &cobra.Command{
-		Use:   "diagnose",
-		Short: "Run diagnostic checks on the Submariner deployment and report any issues",
-		Long:  "This command runs various diagnostic checks on the Submariner deployment and reports any issues",
-	}
+	kubeConfig  *string
+	kubeContext *string
 )
 
-func init() {
-	addKubeconfigFlag(validateCmd)
-	rootCmd.AddCommand(validateCmd)
+// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
+func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
+	kubeConfig = origKubeConfig
+	kubeContext = origKubeContext
+	cmd := &cobra.Command{
+		Use:   "cleanup",
+		Short: "Clean up the cloud",
+		Long:  `This command cleans up the cloud after Submariner uninstallation.`,
+	}
+
+	cmd.AddCommand(newAWSCleanupCommand())
+
+	return cmd
 }

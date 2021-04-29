@@ -29,8 +29,8 @@ import (
 
 var validateFirewallVxLANConfigCmd = &cobra.Command{
 	Use:   "vxlan",
-	Short: "Validate if firewall allows VxLAN traffic within the cluster.",
-	Long:  "This command checks whether firewall configuration allows traffic via the Submariner VxLAN interface.",
+	Short: "Check firewall access for Submariner VXLAN traffic",
+	Long:  "This command checks if the firewall configuration allows traffic via the Submariner VXLAN interface.",
 	Run:   validateFirewallVxLANConfig,
 }
 
@@ -64,7 +64,7 @@ func validateFirewallVxLANConfig(cmd *cobra.Command, args []string) {
 }
 
 func validateVxLANConfigWithinCluster(config *rest.Config, clusterName string, submariner *v1alpha1.Submariner) {
-	status.Start(fmt.Sprintf("Validating the firewall configuration to check if VxLAN traffic is allowed"+
+	status.Start(fmt.Sprintf("Checking the firewall configuration to determine if VXLAN traffic is allowed"+
 		" in cluster %q", clusterName))
 	validateFWConfigWithinCluster(config, submariner)
 	status.End(status.ResultFromMessages())
@@ -72,7 +72,7 @@ func validateVxLANConfigWithinCluster(config *rest.Config, clusterName string, s
 
 func validateFWConfigWithinCluster(config *rest.Config, submariner *v1alpha1.Submariner) {
 	if submariner.Status.NetworkPlugin == "OVNKubernetes" {
-		status.QueueSuccessMessage("This validation is not necessary for the OVNKubernetes CNI plugin")
+		status.QueueSuccessMessage("This check is not necessary for the OVNKubernetes CNI plugin")
 		return
 	}
 

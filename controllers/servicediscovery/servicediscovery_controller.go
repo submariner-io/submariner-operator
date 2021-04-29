@@ -224,8 +224,8 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-lighthouse-agent",
-							Image:           getImagePath(cr, names.ServiceDiscoveryImage),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.ServiceDiscoveryImage]),
+							Image:           getImagePath(cr, names.ServiceDiscoveryImage, names.ServiceDiscoveryComponent),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.ServiceDiscoveryComponent]),
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
@@ -324,8 +324,8 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 					Containers: []corev1.Container{
 						{
 							Name:            lighthouseCoreDNSName,
-							Image:           getImagePath(cr, names.LighthouseCoreDNSImage),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.LighthouseCoreDNSImage]),
+							Image:           getImagePath(cr, names.LighthouseCoreDNSImage, names.LighthouseCoreDNSComponent),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.LighthouseCoreDNSComponent]),
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 							},
@@ -578,8 +578,8 @@ func updateOpenshiftClusterDNSOperator(instance *submarinerv1alpha1.ServiceDisco
 	return retryErr
 }
 
-func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, componentImage string) string {
-	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, componentImage,
+func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, imageName, componentName string) string {
+	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, imageName, componentName,
 		submariner.Spec.ImageOverrides)
 }
 
