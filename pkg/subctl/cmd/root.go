@@ -17,13 +17,15 @@ limitations under the License.
 package cmd
 
 import (
-	"os"
 	"strings"
 	"time"
 
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	cmdversion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -57,6 +59,8 @@ func Execute() error {
 }
 
 func init() {
+	rootCmd.AddCommand(cmdversion.Cmd)
+	rootCmd.AddCommand(cloud.NewCommand(&kubeConfig, &kubeContext))
 }
 
 func addKubeconfigFlag(cmd *cobra.Command) {
@@ -77,27 +81,16 @@ const (
 )
 
 func panicOnError(err error) {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "")
-		PrintSubctlVersion(os.Stderr)
-		fmt.Fprintln(os.Stderr, "")
-		panic(err.Error())
-	}
+	utils.PanicOnError(err)
 }
 
 // exitOnError will print your error nicely and exit in case of error
 func exitOnError(message string, err error) {
-	if err != nil {
-		exitWithErrorMsg(fmt.Sprintf("%s: %s", message, err))
-	}
+	utils.ExitOnError(message, err)
 }
 
 func exitWithErrorMsg(message string) {
-	fmt.Fprintln(os.Stderr, message)
-	fmt.Fprintln(os.Stderr, "")
-	PrintSubctlVersion(os.Stderr)
-	fmt.Fprintln(os.Stderr, "")
-	os.Exit(1)
+	utils.ExitWithErrorMsg(message)
 }
 
 func getClients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, error) {
@@ -125,19 +118,11 @@ func getClusterNameFromContext(rawConfig clientcmdapi.Config, overridesContext s
 }
 
 func getRestConfig(kubeConfigPath, kubeContext string) (*rest.Config, error) {
-	return getClientConfig(kubeConfigPath, kubeContext).ClientConfig()
+	return utils.GetRestConfig(kubeConfigPath, kubeContext)
 }
 
 func getClientConfig(kubeConfigPath, kubeContext string) clientcmd.ClientConfig {
-	rules := clientcmd.NewDefaultClientConfigLoadingRules()
-	rules.ExplicitPath = kubeConfigPath
-
-	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
-	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
-	if kubeContext != "" {
-		overrides.CurrentContext = kubeContext
-	}
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
+	return utils.GetClientConfig(kubeConfigPath, kubeContext)
 }
 
 func handleNodeLabels(config *rest.Config) error {
