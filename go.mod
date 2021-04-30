@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.7
-	github.com/aws/aws-sdk-go v1.38.14
+	github.com/aws/aws-sdk-go v1.38.28
 	github.com/go-logr/logr v0.3.0
 	github.com/go-openapi/spec v0.20.0
 	github.com/hashicorp/go-version v1.2.0
@@ -19,10 +19,10 @@ require (
 	github.com/prometheus/client_golang v1.10.0
 	github.com/spf13/cobra v1.1.1
 	github.com/submariner-io/admiral v0.9.0
-	github.com/submariner-io/cloud-prepare v0.0.0-20210422124637-01644d90a37b
-	github.com/submariner-io/lighthouse v0.9.0-rc0
+	github.com/submariner-io/cloud-prepare v0.9.0
+	github.com/submariner-io/lighthouse v0.9.0
 	github.com/submariner-io/shipyard v0.9.0
-	github.com/submariner-io/submariner v0.9.0-rc0
+	github.com/submariner-io/submariner v0.9.0
 	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.20.1
 	k8s.io/apimachinery v0.20.2
