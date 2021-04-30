@@ -4,11 +4,11 @@ name: Release Subctl Devel
 on:
   push:
     branches:
-      - devel
+      - release-0.9
       - release-*
 
 jobs:
-  release-subctl-devel:
+  release-subctl-release-0.9:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -27,7 +27,7 @@ jobs:
           make build-cross VERSION=${{ env.SUBCTL_TAG }}
           echo "BINARIES=$(find dist/ -type f -name '*.tar.xz' -printf '%p ')" >> $GITHUB_ENV
 
-      - name: Update the subctl devel GitHub release with the built artifacts
+      - name: Update the subctl release-0.9 GitHub release with the built artifacts
         uses: johnwbyrd/update-release@v1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -35,7 +35,7 @@ jobs:
           tag: subctl-${{ env.SUBCTL_TAG }}
           files: ${{ env.BINARIES }}
 
-      - name: Update the subctl-devel git tag to point to the released commit
+      - name: Update the subctl-release-0.9 git tag to point to the released commit
         uses: richardsimko/update-tag@v1.0.5
         with:
           tag_name: subctl-${{ env.SUBCTL_TAG }}
