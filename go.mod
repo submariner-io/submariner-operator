@@ -21,7 +21,7 @@ require (
 	github.com/submariner-io/admiral v0.9.0-rc0
 	github.com/submariner-io/cloud-prepare v0.0.0-20210422124637-01644d90a37b
 	github.com/submariner-io/lighthouse v0.9.0-rc0
-	github.com/submariner-io/shipyard v0.9.0-rc0
+	github.com/submariner-io/shipyard v0.9.0
 	github.com/submariner-io/submariner v0.9.0-rc0
 	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.20.1
