@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -37,8 +38,10 @@ func validateAll(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
+	validationStatus := true
+
 	for _, item := range configs {
-		validateK8sVersionInCluster(item.config, item.clusterName)
+		validationStatus = validationStatus && validateK8sVersionInCluster(item.config, item.clusterName)
 		fmt.Println()
 
 		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
@@ -52,22 +55,26 @@ func validateAll(cmd *cobra.Command, args []string) {
 		status.End(cli.Success)
 		fmt.Println()
 
-		validateCNIInCluster(item.config, item.clusterName, submariner)
+		validationStatus = validationStatus && validateCNIInCluster(item.config, item.clusterName, submariner)
 		fmt.Println()
-		validateConnectionsInCluster(item.config, item.clusterName)
+		validationStatus = validationStatus && validateConnectionsInCluster(item.config, item.clusterName)
 		fmt.Println()
-		checkPods(item, submariner, OperatorNamespace)
+		validationStatus = validationStatus && checkPods(item, submariner, OperatorNamespace)
 		fmt.Println()
-		checkOverlappingCIDRs(item, submariner)
+		validationStatus = validationStatus && checkOverlappingCIDRs(item, submariner)
 		fmt.Println()
-		validateKubeProxyModeInCluster(item.config, item.clusterName)
+		validationStatus = validationStatus && validateKubeProxyModeInCluster(item.config, item.clusterName)
 		fmt.Println()
-		validateFirewallMetricsConfigWithinCluster(item.config, item.clusterName)
+		validationStatus = validationStatus && validateFirewallMetricsConfigWithinCluster(item.config, item.clusterName)
 		fmt.Println()
-		validateVxLANConfigWithinCluster(item.config, item.clusterName, submariner)
+		validationStatus = validationStatus && validateVxLANConfigWithinCluster(item.config, item.clusterName, submariner)
 		fmt.Println()
-		fmt.Printf("Skipping tunnel firewall validation as it requires two kubeconfigs." +
-			" Please run \"subctl validate firewall tunnel\" command manually.\n")
+		fmt.Printf("Skipping tunnel firewall check as it requires two kubeconfigs." +
+			" Please run \"subctl diagnose firewall tunnel\" command manually.\n")
 		fmt.Println()
+	}
+
+	if !validationStatus {
+		os.Exit(1)
 	}
 }

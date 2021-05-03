@@ -45,5 +45,19 @@ ${DAPPER_SOURCE}/bin/subctl verify ${verify} --submariner-namespace=$subm_ns \
 
 test_subctl_gather
 
+# Run subctl diagnose as a sanity check
+
+${DAPPER_SOURCE}/bin/subctl diagnose all
+
+# Run benchmark commands for sanity checks
+
+${DAPPER_SOURCE}/bin/subctl benchmark latency --intra-cluster ${KUBECONFIGS_DIR}/kind-config-cluster1
+
+${DAPPER_SOURCE}/bin/subctl benchmark latency ${KUBECONFIGS_DIR}/kind-config-cluster1 ${KUBECONFIGS_DIR}/kind-config-cluster2
+
+${DAPPER_SOURCE}/bin/subctl benchmark throughput --intra-cluster ${KUBECONFIGS_DIR}/kind-config-cluster1
+
+${DAPPER_SOURCE}/bin/subctl benchmark throughput --verbose ${KUBECONFIGS_DIR}/kind-config-cluster1 ${KUBECONFIGS_DIR}/kind-config-cluster2
+
 print_clusters_message
 

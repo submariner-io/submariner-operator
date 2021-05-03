@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -69,11 +70,14 @@ func validateTunnelConfig(cmd *cobra.Command, args []string) {
 	remoteCfg, err := getRestConfig(args[1], "")
 	exitOnError("The provided remote kubeconfig is invalid", err)
 
-	validateTunnelConfigAcrossClusters(localCfg, remoteCfg)
+	validationStatus := validateTunnelConfigAcrossClusters(localCfg, remoteCfg)
 	status.End(status.ResultFromMessages())
+	if !validationStatus {
+		os.Exit(1)
+	}
 }
 
-func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
+func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	lClientSet, err := kubernetes.NewForConfig(localCfg)
 	exitOnError("Error creating API server client:: %s", err)
 
@@ -88,18 +92,18 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 	localEndpoint := getEndpointResource(localCfg, submariner.Spec.ClusterID)
 	if localEndpoint == nil {
 		status.QueueWarningMessage("Could not find the local cluster Endpoint")
-		return
+		return false
 	}
 
 	gwNodeName := getActiveGatewayNodeName(lClientSet, localEndpoint.Spec.Hostname)
 	if gwNodeName == "" {
 		status.QueueWarningMessage("Could not find the active Gateway nodeName in local cluster")
-		return
+		return false
 	}
 
 	tunnelPort, err := getTunnelPort(submariner, localEndpoint)
 	if err != nil {
-		return
+		return false
 	}
 
 	clientMessage := string(uuid.NewUUID())[0:8]
@@ -108,21 +112,21 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 	sPod, err := spawnSnifferPodOnNode(lClientSet, gwNodeName, namespace, podCommand)
 	if err != nil {
 		status.QueueFailureMessage(fmt.Sprintf("Error while spawning the sniffer pod on the GatewayNode: %v", err))
-		return
+		return false
 	}
 	defer sPod.DeletePod()
 
 	gatewayPodIP := getGatewayIP(remoteCfg, submariner.Spec.ClusterID)
 	if gatewayPodIP == "" {
 		status.QueueWarningMessage("Gateway object on remote cluster does not have connection info to local cluster.")
-		return
+		return false
 	}
 
 	rClientSet, err := kubernetes.NewForConfig(remoteCfg)
 	if err != nil {
 		message := fmt.Sprintf("Error creating API server client: %s", err)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	podCommand = fmt.Sprintf("for x in $(seq 1000); do echo %s; done | for i in $(seq 5);"+
@@ -132,18 +136,18 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 	cPod, err := spawnClientPodOnNonGatewayNode(rClientSet, namespace, podCommand)
 	if err != nil {
 		status.QueueFailureMessage(fmt.Sprintf("Error while spawning the client pod on non-Gateway node: %v", err))
-		return
+		return false
 	}
 
 	defer cPod.DeletePod()
 	if err = cPod.AwaitPodCompletion(); err != nil {
 		status.QueueFailureMessage(fmt.Sprintf("Error while waiting for client pod to be finish its execution: %v", err))
-		return
+		return false
 	}
 
 	if err = sPod.AwaitPodCompletion(); err != nil {
 		status.QueueFailureMessage(fmt.Sprintf("Error while waiting for sniffer pod to be finish its execution: %v", err))
-		return
+		return false
 	}
 
 	if verboseOutput {
@@ -151,7 +155,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) {
 		status.QueueSuccessMessage(sPod.PodOutput)
 	}
 
-	validateSnifferPodOutput(sPod.PodOutput, clientMessage, localEndpoint.Spec.Hostname, tunnelPort)
+	return validateSnifferPodOutput(sPod.PodOutput, clientMessage, localEndpoint.Spec.Hostname, tunnelPort)
 }
 
 func getTunnelPort(submariner *v1alpha1.Submariner, endpoint *subv1.Endpoint) (int32, error) {
@@ -195,14 +199,15 @@ func getGatewayIP(remoteCfg *rest.Config, localClusterID string) string {
 	return ""
 }
 
-func validateSnifferPodOutput(podOutput, clientMessage, hostname string, tunnelPort int32) {
+func validateSnifferPodOutput(podOutput, clientMessage, hostname string, tunnelPort int32) bool {
 	if !strings.Contains(podOutput, clientMessage) {
 		message := fmt.Sprintf("The tcpdump output from the sniffer pod does not include the message"+
 			" sent from client pod. Please check that your firewall configuration allows UDP/%d traffic"+
 			" on the %q node.", tunnelPort, hostname)
 		status.QueueFailureMessage(message)
-		return
+		return false
 	}
 
 	status.QueueSuccessMessage("Tunnels can be successfully established on the Gateway node.")
+	return true
 }

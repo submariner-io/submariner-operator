@@ -20,6 +20,7 @@ import (
 
 	"github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	v1 "k8s.io/api/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -120,10 +121,12 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 
 	remoteIP := p1.Status.PodIP
 
+	var service *v1.Service
 	if framework.TestContext.GlobalnetEnabled && testParams.ClientCluster != testParams.ServerCluster {
-		By(fmt.Sprintf("Pointing a ClusterIP service to the listener pod in cluster %q",
+		By(fmt.Sprintf("Pointing a ClusterIP service to the nettest server pod in cluster %q and exporting it",
 			framework.TestContext.ClusterIDs[testParams.ServerCluster]))
-		service := nettestServerPod.CreateService()
+		service = nettestServerPod.CreateService()
+		f.CreateServiceExport(testParams.ServerCluster, service.Name)
 
 		// Wait for the globalIP annotation on the service.
 		service = f.AwaitUntilAnnotationOnService(testParams.ServerCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
@@ -145,4 +148,19 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 
 	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
 	nettestClientPod.AwaitFinishVerbose(Verbose)
+	nettestClientPod.CheckSuccessfulFinish()
+	fmt.Println(nettestClientPod.TerminationMessage)
+
+	// In Globalnet deployments, when backend pods finish their execution, kubeproxy-iptables driver tries
+	// to delete the iptables-chain associated with the service (even when the service is present) as there are
+	// no active backend pods. Since the iptables-chain is also referenced by Globalnet Ingress rules, the chain
+	// cannot be deleted (kubeproxy errors out and continues to retry) until Globalnet removes the reference.
+	// Globalnet removes the reference only when the service itself is deleted. Until Globalnet is enhanced [*]
+	// to remove this dependency with iptables-chain, lets delete the service after the nettest server Pod is terminated.
+	// [*] https://github.com/submariner-io/submariner/issues/1166
+	if framework.TestContext.GlobalnetEnabled && testParams.ClientCluster != testParams.ServerCluster {
+		f.DeletePod(testParams.ServerCluster, nettestServerPod.Pod.Name, f.Namespace)
+		f.DeleteService(testParams.ServerCluster, service.Name)
+		f.DeleteServiceExport(testParams.ServerCluster, service.Name)
+	}
 }

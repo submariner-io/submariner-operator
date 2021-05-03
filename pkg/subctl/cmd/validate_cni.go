@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	v1 "k8s.io/api/core/v1"
@@ -56,6 +57,8 @@ func validateCniConfig(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
+	validationStatus := true
+
 	for _, item := range configs {
 		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
 		submariner := getSubmarinerResource(item.config)
@@ -65,11 +68,16 @@ func validateCniConfig(cmd *cobra.Command, args []string) {
 			continue
 		}
 		status.End(cli.Success)
-		validateCNIInCluster(item.config, item.clusterName, submariner)
+		if !validateCNIInCluster(item.config, item.clusterName, submariner) {
+			validationStatus = false
+		}
+	}
+	if !validationStatus {
+		os.Exit(1)
 	}
 }
 
-func validateCNIInCluster(config *rest.Config, clusterName string, submariner *v1alpha1.Submariner) {
+func validateCNIInCluster(config *rest.Config, clusterName string, submariner *v1alpha1.Submariner) bool {
 	message := fmt.Sprintf("Checking Submariner support for the CNI network"+
 		" plugin in cluster %q", clusterName)
 	status.Start(message)
@@ -87,7 +95,7 @@ func validateCNIInCluster(config *rest.Config, clusterName string, submariner *v
 			" Supported network plugins: %v\n", submariner.Status.NetworkPlugin, supportedNetworkPlugins)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	message = fmt.Sprintf("The detected CNI network plugin (%q) is supported by Submariner.",
@@ -95,7 +103,8 @@ func validateCNIInCluster(config *rest.Config, clusterName string, submariner *v
 	status.QueueSuccessMessage(message)
 	status.End(cli.Success)
 
-	validateCalicoIPPoolsIfCalicoCNI(config)
+	calicoCNIStatus := validateCalicoIPPoolsIfCalicoCNI(config)
+	return calicoCNIStatus
 }
 
 func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) {
@@ -112,23 +121,25 @@ func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) 
 	return nil, nil
 }
 
-func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) {
+func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) bool {
 	dynClient, clientSet, err := getClients(config)
 	if err != nil {
-		status.Start(fmt.Sprintf("Error creating client - unable to detect the Calico CNI: %s", err))
+		message := fmt.Sprintf("Error creating client - unable to detect the Calico CNI: %s", err)
+		status.Start(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	calicoConfig, err := findCalicoConfigMap(clientSet)
 	if err != nil {
-		status.Start(fmt.Sprintf("Error trying to detect the Calico ConfigMap: %s", err))
+		message := fmt.Sprintf("Error trying to detect the Calico ConfigMap: %s", err)
+		status.Start(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	if calicoConfig == nil {
-		return
+		return true
 	}
 
 	message := "Calico CNI detected, verifying if the Submariner IPPool pre-requisites are configured."
@@ -139,7 +150,7 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) {
 		message = "There are no gateways detected on the cluster"
 		status.QueueWarningMessage(message)
 		status.End(cli.Warning)
-		return
+		return false
 	}
 
 	client := dynClient.Resource(calicoGVR)
@@ -149,14 +160,14 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) {
 		message := fmt.Sprintf("Error obtaining IPPools: %v", err)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	if len(ippoolList.Items) < 1 {
 		message := "Could not find any IPPools in the cluster"
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	ippools := make(map[string]unstructured.Unstructured)
@@ -207,7 +218,10 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) {
 		}
 	}
 
-	status.End(status.ResultFromMessages())
+	result := status.ResultFromMessages()
+	status.End(result)
+
+	return result != cli.Failure
 }
 
 func getSpecBool(pool unstructured.Unstructured, key string) (bool, error) {

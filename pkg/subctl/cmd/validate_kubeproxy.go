@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -53,12 +54,18 @@ func validateKubeProxyMode(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
+	validationStatus := true
+
 	for _, item := range configs {
-		validateKubeProxyModeInCluster(item.config, item.clusterName)
+		validationStatus = validationStatus && validateKubeProxyModeInCluster(item.config, item.clusterName)
+	}
+
+	if !validationStatus {
+		os.Exit(1)
 	}
 }
 
-func validateKubeProxyModeInCluster(config *rest.Config, clusterName string) {
+func validateKubeProxyModeInCluster(config *rest.Config, clusterName string) bool {
 	message := fmt.Sprintf("Checking Submariner support for the kube-proxy mode"+
 		" used in cluster %q", clusterName)
 	status.Start(message)
@@ -68,7 +75,7 @@ func validateKubeProxyModeInCluster(config *rest.Config, clusterName string) {
 		message := fmt.Sprintf("Error creating API server client: %s", err)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	scheduling := resource.PodScheduling{ScheduleOn: resource.GatewayNode, Networking: resource.HostNetworking}
@@ -84,7 +91,7 @@ func validateKubeProxyModeInCluster(config *rest.Config, clusterName string) {
 		message := fmt.Sprintf("Error while spawning the Network Pod. %v", err)
 		status.QueueFailureMessage(message)
 		status.End(cli.Failure)
-		return
+		return false
 	}
 
 	if strings.Contains(podOutput, MissingInterface) {
@@ -94,5 +101,7 @@ func validateKubeProxyModeInCluster(config *rest.Config, clusterName string) {
 		status.QueueFailureMessage("Cluster is deployed with kube-proxy ipvs mode." +
 			" Submariner does not support this mode.")
 		status.End(cli.Failure)
+		return false
 	}
+	return true
 }
