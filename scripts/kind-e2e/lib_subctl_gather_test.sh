@@ -73,6 +73,13 @@ function validate_pod_log_files() {
   for pod_name in "${pod_names_array[@]}"; do
     file=$out_dir/${cluster}_$pod_name.log
     cat $file
+
+    # Create log.prev for previous pods
+    restart_count=$(kubectl describe pod $pod_name $nsarg | grep "Restart Count" | awk '{print $3}')
+    if [[ restart_count -gt 0 ]]; then
+      prev_file=$out_dir/${cluster}_$pod_name.log.prev
+      cat $prev_file
+    fi
   done
 }
 
