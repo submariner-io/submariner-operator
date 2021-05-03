@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: submariner-anonymous
+rules:
+  - apiGroups:
+      - submariner.io
+    resources:
+      - submariners
+      - servicediscoveries
+    verbs:
+      - get
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - get
+  - apiGroups:
+      - networks.config.openshift.io
+    resources:
+      - clusters
+    verbs:
+      - get

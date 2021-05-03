@@ -1,5 +1,7 @@
 ---
 resources:
+  - anonymous/role.yaml
+  - anonymous/role_binding.yaml
   - submariner-operator/service_account.yaml
   - submariner-operator/role.yaml
   - submariner-operator/role_binding.yaml

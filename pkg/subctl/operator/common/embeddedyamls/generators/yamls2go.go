@@ -34,6 +34,8 @@ var files = []string{
 	"deploy/submariner/crds/submariner.io_gateways.yaml",
 	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml",
 	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml",
+	"config/rbac/anonymous/role.yaml",
+	"config/rbac/anonymous/role_binding.yaml",
 	"config/rbac/submariner-operator/service_account.yaml",
 	"config/rbac/submariner-operator/role.yaml",
 	"config/rbac/submariner-operator/role_binding.yaml",

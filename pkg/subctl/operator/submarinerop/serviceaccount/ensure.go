@@ -150,6 +150,12 @@ func ensureClusterRoleBindings(clientSet *clientset.Clientset, namespace string)
 }
 
 func ensureRoles(clientSet *clientset.Clientset, namespace string) (bool, error) {
+	createdAnonymousRole, err := serviceaccount.EnsureRole(clientSet, namespace,
+		embeddedyamls.Config_rbac_anonymous_role_yaml)
+	if err != nil {
+		return false, err
+	}
+
 	createdOperatorRole, err := serviceaccount.EnsureRole(clientSet, namespace,
 		embeddedyamls.Config_rbac_submariner_operator_role_yaml)
 	if err != nil {
@@ -174,10 +180,16 @@ func ensureRoles(clientSet *clientset.Clientset, namespace string) (bool, error)
 		return false, err
 	}
 
-	return createdOperatorRole || createdSubmarinerRole || createdRouteAgentRole || createdGlobalnetRole, err
+	return createdAnonymousRole || createdOperatorRole || createdSubmarinerRole || createdRouteAgentRole || createdGlobalnetRole, err
 }
 
 func ensureRoleBindings(clientSet *clientset.Clientset, namespace string) (bool, error) {
+	createdAnonymousRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
+		embeddedyamls.Config_rbac_anonymous_role_binding_yaml)
+	if err != nil {
+		return false, err
+	}
+
 	createdOperatorRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
 		embeddedyamls.Config_rbac_submariner_operator_role_binding_yaml)
 	if err != nil {
@@ -202,5 +214,5 @@ func ensureRoleBindings(clientSet *clientset.Clientset, namespace string) (bool,
 		return false, err
 	}
 
-	return createdOperatorRB || createdSubmarinerRB || createdRouteAgentRB || createdGlobalnetRB, err
+	return createdAnonymousRB || createdOperatorRB || createdSubmarinerRB || createdRouteAgentRB || createdGlobalnetRB, err
 }
