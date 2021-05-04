@@ -4,12 +4,12 @@ go 1.13
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.7
-	github.com/aws/aws-sdk-go v1.38.14
+	github.com/aws/aws-sdk-go v1.38.31
 	github.com/go-logr/logr v0.3.0
 	github.com/go-openapi/spec v0.20.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/mattn/go-isatty v0.0.12
-	github.com/onsi/ginkgo v1.16.1
+	github.com/onsi/ginkgo v1.16.2
 	github.com/onsi/gomega v1.11.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
@@ -18,11 +18,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.10.0
 	github.com/spf13/cobra v1.1.1
-	github.com/submariner-io/admiral v0.9.0-rc0
-	github.com/submariner-io/cloud-prepare v0.0.0-20210422124637-01644d90a37b
-	github.com/submariner-io/lighthouse v0.9.0-rc0
-	github.com/submariner-io/shipyard v0.9.1-0.20210504132445-2411d131f223
-	github.com/submariner-io/submariner v0.9.0-rc0
+	github.com/submariner-io/admiral v0.9.0-rc0.0.20210505142838-68cca1546c1d
+	github.com/submariner-io/cloud-prepare v0.0.0-20210504132420-6340a7b0300f
+	github.com/submariner-io/lighthouse v0.9.0-rc0.0.20210504144058-ba56a035ba18
+	github.com/submariner-io/shipyard v0.9.1-0.20210505140948-b514bc7c36d4
+	github.com/submariner-io/submariner v0.9.0-rc0.0.20210504030158-375a0c682464
 	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.20.1
 	k8s.io/apimachinery v0.20.2
