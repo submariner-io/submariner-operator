@@ -21,7 +21,7 @@ require (
 	github.com/submariner-io/admiral v0.9.0-rc0
 	github.com/submariner-io/cloud-prepare v0.0.0-20210422124637-01644d90a37b
 	github.com/submariner-io/lighthouse v0.9.0-rc0
-	github.com/submariner-io/shipyard v0.9.0-rc0
+	github.com/submariner-io/shipyard v0.9.1-0.20210504132445-2411d131f223
 	github.com/submariner-io/submariner v0.9.0-rc0
 	k8s.io/api v0.20.2
 	k8s.io/apiextensions-apiserver v0.20.1
@@ -32,7 +32,7 @@ require (
 	sigs.k8s.io/controller-runtime v0.8.0
 	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/kustomize/kustomize/v3 v3.5.4
-	sigs.k8s.io/mcs-api v0.0.0-20200908023942-d26176718973
+	sigs.k8s.io/mcs-api v0.1.0
 	sigs.k8s.io/yaml v1.2.0
 )
 
