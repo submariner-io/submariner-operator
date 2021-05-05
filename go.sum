@@ -1165,6 +1165,8 @@ github.com/submariner-io/lighthouse v0.9.0-rc0/go.mod h1:XB/jsjoflwPNIxnVHDbijNL
 github.com/submariner-io/shipyard v0.9.0-m2/go.mod h1:y5q1jef9Hph3VGqD7d9W3fXtdLNZ4GR7b7Rf/lrA/go=
 github.com/submariner-io/shipyard v0.9.0-rc0 h1:6HO5tgJ9SRzsy9WvMfsAQlOnKdqvTLIqbCiJTgarG8w=
 github.com/submariner-io/shipyard v0.9.0-rc0/go.mod h1:vDGWreRLu2VfBoR8J4UgPKJjatx8pLkj89qAgB+N0ZE=
+github.com/submariner-io/shipyard v0.9.1-0.20210504132445-2411d131f223 h1:27j6V6Uw/0/VHPM7vMLyRsxQRkR9Zl6RhGza+DbM4ig=
+github.com/submariner-io/shipyard v0.9.1-0.20210504132445-2411d131f223/go.mod h1:Vm1KCBUtMmuNiEhNy+p3pPxUu3w4L/6USIPjvkV4lpI=
 github.com/submariner-io/submariner v0.9.0-rc0 h1:u1xdWEM9Q5eUcOYOa3fEAzROn7WzIYil6TZGFCduBlk=
 github.com/submariner-io/submariner v0.9.0-rc0/go.mod h1:KWBhr5EI2+mjmP89dj1TgwAphnm0oARjt1dosA+vsP4=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
@@ -1820,6 +1822,8 @@ sigs.k8s.io/kustomize/kyaml v0.0.6 h1:KhQr7JwpCseFTSWCwqp4CJ4mY6Kx+i34tF4e0eNkcX
 sigs.k8s.io/kustomize/kyaml v0.0.6/go.mod h1:tDOfJjL6slQVBLHJ76XfXAFgAOEdfm04AW2HehYOp8k=
 sigs.k8s.io/mcs-api v0.0.0-20200908023942-d26176718973 h1:WMyup1v/JrXbDn/s8NCbj3YeUcLEk7OsNJYSyDczubY=
 sigs.k8s.io/mcs-api v0.0.0-20200908023942-d26176718973/go.mod h1:gGiAryeFNB4GBsq2LBmVqSgKoobLxt+p7ii/WG5QYYw=
+sigs.k8s.io/mcs-api v0.1.0 h1:edDbg0oRGfXw8TmZjKYep06LcJLv/qcYLidejnUp0PM=
+sigs.k8s.io/mcs-api v0.1.0/go.mod h1:gGiAryeFNB4GBsq2LBmVqSgKoobLxt+p7ii/WG5QYYw=
 sigs.k8s.io/structured-merge-diff v0.0.0-20190525122527-15d366b2352e/go.mod h1:wWxsB5ozmmv/SG7nM11ayaAW51xMvak/t1r0CSlcokI=
 sigs.k8s.io/structured-merge-diff v1.0.1-0.20191108220359-b1b620dd3f06/go.mod h1:/ULNhyfzRopfcjskuui0cTITekDduZ7ycKN3oUT9R18=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
