@@ -24,13 +24,13 @@ require (
 	github.com/submariner-io/shipyard v0.9.1-0.20210505140948-b514bc7c36d4
 	github.com/submariner-io/submariner v0.9.0-rc0.0.20210504030158-375a0c682464
 	k8s.io/api v0.20.2
-	k8s.io/apiextensions-apiserver v0.20.1
+	k8s.io/apiextensions-apiserver v0.20.2
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
 	k8s.io/kube-openapi v0.0.0-20200204173128-addea2498afe
 	sigs.k8s.io/controller-runtime v0.8.0
-	sigs.k8s.io/controller-tools v0.4.1
+	sigs.k8s.io/controller-tools v0.5.0
 	sigs.k8s.io/kustomize/kustomize/v3 v3.5.4
 	sigs.k8s.io/mcs-api v0.1.0
 	sigs.k8s.io/yaml v1.2.0
