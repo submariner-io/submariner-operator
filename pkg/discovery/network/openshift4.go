@@ -17,6 +17,7 @@ limitations under the License.
 package network
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -42,7 +43,7 @@ func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, er
 
 	crClient := dynClient.Resource(openshift4clusterNetworkGVR)
 
-	cr, err := crClient.Get("cluster", metav1.GetOptions{})
+	cr, err := crClient.Get(context.TODO(), "cluster", metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil

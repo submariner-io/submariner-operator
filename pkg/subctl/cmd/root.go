@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -110,11 +111,11 @@ func getClusterNameFromContext(rawConfig clientcmdapi.Config, overridesContext s
 		// No context provided, use the current context
 		overridesContext = rawConfig.CurrentContext
 	}
-	context, ok := rawConfig.Contexts[overridesContext]
+	configContext, ok := rawConfig.Contexts[overridesContext]
 	if !ok {
 		return nil
 	}
-	return &context.Cluster
+	return &configContext.Cluster
 }
 
 func getRestConfig(kubeConfigPath, kubeContext string) (*rest.Config, error) {
@@ -132,7 +133,7 @@ func handleNodeLabels(config *rest.Config) error {
 	const submarinerGatewayLabel = "submariner.io/gateway"
 	const trueLabel = "true"
 	selector := labels.SelectorFromSet(labels.Set(map[string]string{submarinerGatewayLabel: trueLabel}))
-	labeledNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: selector.String()})
+	labeledNodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
 		return err
 	}
@@ -158,13 +159,15 @@ func handleNodeLabels(config *rest.Config) error {
 
 func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, error) {
 	// List the worker nodes and select one
-	workerNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker"})
+	workerNodes, err := clientset.CoreV1().Nodes().List(
+		context.TODO(), metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker"})
 	if err != nil {
 		return struct{ Node string }{}, err
 	}
 	if len(workerNodes.Items) == 0 {
 		// In some deployments (like KIND), worker nodes are not explicitly labelled. So list non-master nodes.
-		workerNodes, err = clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
+		workerNodes, err = clientset.CoreV1().Nodes().List(
+			context.TODO(), metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
 		if err != nil {
 			return struct{ Node string }{}, err
 		}
@@ -214,7 +217,7 @@ func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[st
 
 	var lastErr error
 	err := wait.ExponentialBackoff(nodeLabelBackoff, func() (bool, error) {
-		_, lastErr = c.CoreV1().Nodes().Patch(nodeName, types.MergePatchType, []byte(patch))
+		_, lastErr = c.CoreV1().Nodes().Patch(context.TODO(), nodeName, types.MergePatchType, []byte(patch), metav1.PatchOptions{})
 		if lastErr != nil {
 			if !errors.IsConflict(lastErr) {
 				return false, lastErr

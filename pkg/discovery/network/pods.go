@@ -17,6 +17,7 @@ limitations under the License.
 package network
 
 import (
+	"context"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -50,7 +51,7 @@ func findPodCommandParameter(clientSet kubernetes.Interface, labelSelector, para
 }
 
 func findPod(clientSet kubernetes.Interface, labelSelector string) (*v1.Pod, error) {
-	pods, err := clientSet.CoreV1().Pods("").List(v1meta.ListOptions{
+	pods, err := clientSet.CoreV1().Pods("").List(context.TODO(), v1meta.ListOptions{
 		LabelSelector: labelSelector,
 		Limit:         1,
 	})

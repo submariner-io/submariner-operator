@@ -16,6 +16,7 @@ limitations under the License.
 package benchmark
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -100,7 +101,7 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 	})
 
 	podsClusterB := framework.KubeClients[testParams.ServerCluster].CoreV1().Pods(f.Namespace)
-	p1, _ := podsClusterB.Get(nettestServerPod.Pod.Name, metav1.GetOptions{})
+	p1, _ := podsClusterB.Get(context.TODO(), nettestServerPod.Pod.Name, metav1.GetOptions{})
 	By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP

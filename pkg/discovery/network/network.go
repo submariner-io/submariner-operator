@@ -17,6 +17,7 @@ limitations under the License.
 package network
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-logr/logr"
@@ -129,7 +130,8 @@ func getGlobalCIDRs(submClient submarinerclientset.Interface, operatorNamespace 
 	if submClient == nil {
 		return "", nil
 	}
-	existingCfg, err := submClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
+	existingCfg, err := submClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(
+		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
 	if err != nil {
 		return "", err
 	}

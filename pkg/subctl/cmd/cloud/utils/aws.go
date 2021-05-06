@@ -17,6 +17,7 @@ limitations under the License.
 package utils
 
 import (
+	"context"
 	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -88,7 +89,8 @@ func getAWSCredentials(k8sConfig *rest.Config) (*credentials.Credentials, error)
 		return nil, err
 	}
 
-	credentialsSecret, err := kubeClient.CoreV1().Secrets("openshift-machine-api").Get("aws-cloud-credentials", metav1.GetOptions{})
+	credentialsSecret, err := kubeClient.CoreV1().Secrets("openshift-machine-api").Get(
+		context.TODO(), "aws-cloud-credentials", metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
