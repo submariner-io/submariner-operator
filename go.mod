@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.12
 	github.com/aws/aws-sdk-go v1.38.31
-	github.com/go-logr/logr v0.3.0
+	github.com/go-logr/logr v0.4.0
 	github.com/go-openapi/spec v0.20.0
 	github.com/hashicorp/go-version v1.2.0
 	github.com/mattn/go-isatty v0.0.12
