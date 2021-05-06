@@ -12,10 +12,11 @@ linters-settings:
       - unnecessaryDefer
   gocyclo:
     min-complexity: 20
+  govet:
+    enable:
+      - fieldalignment
   lll:
     line-length: 140
-  maligned:
-    suggest-new: true
 linters:
   disable-all: true
   enable:
@@ -41,7 +42,6 @@ linters:
     # - interfacer
     - lll
     - misspell
-    - maligned
     - nakedret
     - prealloc
     - staticcheck
@@ -72,3 +72,9 @@ issues:
       text: "SA1019: package sigs.k8s.io/controller-runtime/pkg/client/fake is deprecated"
     - path: controllers/submariner/submariner_controller_test.go
       text: "SA1019: package sigs.k8s.io/controller-runtime/pkg/client/fake is deprecated"
+
+    # Ignore pointer bytes in struct alignment tests (this is a very
+    # minor optimisation)
+    - linters:
+        - govet
+      text: "pointer bytes could be"

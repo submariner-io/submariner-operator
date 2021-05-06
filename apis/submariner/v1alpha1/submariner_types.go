@@ -157,7 +157,7 @@ type BrokerStatus struct {
 // +kubebuilder:resource:path=brokers,scope=Namespaced
 // +genclient
 // +operator-sdk:csv:customresourcedefinitions:displayName="Broker"
-type Broker struct { //nolint:maligned // we want to keep the traditional order
+type Broker struct { //nolint:govet // we want to keep the traditional order
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
