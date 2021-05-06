@@ -36,6 +36,9 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
+// When changing pins, check the dependabot configuration too
+// in .github/dependabot.yml
+
 // Pinned to kubernetes-1.17.0
 replace (
 	k8s.io/api => k8s.io/api v0.17.0
