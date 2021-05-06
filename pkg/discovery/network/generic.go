@@ -17,6 +17,7 @@ limitations under the License.
 package network
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -103,7 +104,7 @@ func findClusterIPRangeFromServiceCreation(clientSet kubernetes.Interface) (stri
 	}
 
 	// create service to the namespace
-	_, err := clientSet.CoreV1().Services(ns).Create(invalidSvcSpec)
+	_, err := clientSet.CoreV1().Services(ns).Create(context.TODO(), invalidSvcSpec, v1meta.CreateOptions{})
 
 	// creating invalid service didn't fail as expected
 	if err == nil {
@@ -161,7 +162,7 @@ func findPodIPRangeKubeProxy(clientSet kubernetes.Interface) (string, error) {
 }
 
 func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) {
-	nodes, err := clientSet.CoreV1().Nodes().List(v1meta.ListOptions{})
+	nodes, err := clientSet.CoreV1().Nodes().List(context.TODO(), v1meta.ListOptions{})
 
 	if err != nil {
 		return "", errors.WithMessagef(err, "error listing nodes")

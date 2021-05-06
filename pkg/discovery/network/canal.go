@@ -17,6 +17,7 @@ limitations under the License.
 package network
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/pkg/errors"
@@ -33,7 +34,7 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 	//          defaultMode: 420
 	//          name: canal-config
 	//        name: flannel-cfg
-	cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get("canal-config", metav1.GetOptions{})
+	cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "canal-config", metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil

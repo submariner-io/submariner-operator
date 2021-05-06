@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"strings"
@@ -82,7 +83,7 @@ func getSubmarinerResourceWithError(config *rest.Config) (*v1alpha1.Submariner, 
 	}
 
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
-		Get(submarinercr.SubmarinerName, v1opts.GetOptions{})
+		Get(context.TODO(), submarinercr.SubmarinerName, v1opts.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +107,7 @@ func getEndpointResource(config *rest.Config, clusterID string) *submarinerv1.En
 	submarinerClient, err := subClientsetv1.NewForConfig(config)
 	exitOnError("Unable to get the Submariner client", err)
 
-	endpoints, err := submarinerClient.SubmarinerV1().Endpoints(OperatorNamespace).List(v1opts.ListOptions{})
+	endpoints, err := submarinerClient.SubmarinerV1().Endpoints(OperatorNamespace).List(context.TODO(), v1opts.ListOptions{})
 	if err != nil {
 		exitOnError(fmt.Sprintf("Error obtaining the Endpoints in the cluster %q", clusterID), err)
 	}
@@ -121,7 +122,7 @@ func getEndpointResource(config *rest.Config, clusterID string) *submarinerv1.En
 }
 
 func getActiveGatewayNodeName(clientSet *kubernetes.Clientset, hostname string) string {
-	nodes, err := clientSet.CoreV1().Nodes().List(v1opts.ListOptions{})
+	nodes, err := clientSet.CoreV1().Nodes().List(context.TODO(), v1opts.ListOptions{})
 	if err != nil {
 		exitOnError("Error listing the Nodes in the local cluster", err)
 	}
@@ -144,7 +145,7 @@ func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
 	exitOnError("Unable to get the Submariner client", err)
 
 	gateways, err := submarinerClient.SubmarinerV1().Gateways(OperatorNamespace).
-		List(v1opts.ListOptions{})
+		List(context.TODO(), v1opts.ListOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil

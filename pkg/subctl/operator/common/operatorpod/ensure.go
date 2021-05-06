@@ -17,6 +17,7 @@ limitations under the License.
 package operatorpod
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -98,7 +99,7 @@ func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debu
 		},
 	}
 
-	created, err := utils.CreateOrUpdateDeployment(clientSet, namespace, deployment)
+	created, err := utils.CreateOrUpdateDeployment(context.TODO(), clientSet, namespace, deployment)
 	if err != nil {
 		return false, err
 	}

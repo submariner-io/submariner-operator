@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -108,7 +109,7 @@ func validateCNIInCluster(config *rest.Config, clusterName string, submariner *v
 }
 
 func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) {
-	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(metav1.ListOptions{})
+	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +156,7 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) bool {
 
 	client := dynClient.Resource(calicoGVR)
 
-	ippoolList, err := client.List(metav1.ListOptions{})
+	ippoolList, err := client.List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		message := fmt.Sprintf("Error obtaining IPPools: %v", err)
 		status.QueueFailureMessage(message)

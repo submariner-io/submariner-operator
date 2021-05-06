@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -330,8 +331,8 @@ func detectGlobalnet() {
 	submarinerClient, err := submarinerclientset.NewForConfig(framework.RestConfigs[framework.ClusterA])
 	exitOnError("Error creating submariner client: %v", err)
 
-	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName,
-		v1.GetOptions{})
+	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(
+		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
 	if errors.IsNotFound(err) {
 		exitWithErrorMsg(`
 The Submariner resource was not found. Either submariner has not been deployed in this cluster or was deployed using helm.

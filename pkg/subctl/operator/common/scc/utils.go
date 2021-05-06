@@ -16,6 +16,7 @@ limitations under the License.
 package scc
 
 import (
+	"context"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -45,7 +46,7 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 
 	created := false
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		cr, err := sccClient.Get("privileged", metav1.GetOptions{})
+		cr, err := sccClient.Get(context.TODO(), "privileged", metav1.GetOptions{})
 		if err != nil {
 			if errors.IsNotFound(err) {
 				return nil
@@ -70,7 +71,7 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 			return err
 		}
 
-		if _, err = sccClient.Update(cr, metav1.UpdateOptions{}); err != nil {
+		if _, err = sccClient.Update(context.TODO(), cr, metav1.UpdateOptions{}); err != nil {
 			return fmt.Errorf("error updating OpenShift privileged SCC: %s", err)
 		}
 		created = true

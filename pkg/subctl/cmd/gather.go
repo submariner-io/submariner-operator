@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -147,7 +148,7 @@ func gatherDataByCluster(restConfig restConfig, directory string) {
 	}
 
 	info.Submariner, err = submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
-		Get(submarinercr.SubmarinerName, metav1.GetOptions{})
+		Get(context.TODO(), submarinercr.SubmarinerName, metav1.GetOptions{})
 	if err != nil {
 		info.Submariner = nil
 		if !apierrors.IsNotFound(err) {
@@ -157,7 +158,7 @@ func gatherDataByCluster(restConfig restConfig, directory string) {
 	}
 
 	info.ServiceDiscovery, err = submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).
-		Get(names.ServiceDiscoveryCrName, metav1.GetOptions{})
+		Get(context.TODO(), names.ServiceDiscoveryCrName, metav1.GetOptions{})
 	if err != nil {
 		info.ServiceDiscovery = nil
 		if !apierrors.IsNotFound(err) {
@@ -254,7 +255,8 @@ func gatherBroker(dataType string, info gather.Info) bool {
 				return true
 			}
 
-			_, err = submarinerClient.SubmarinerV1alpha1().Brokers(OperatorNamespace).Get(brokercr.BrokerName, metav1.GetOptions{})
+			_, err = submarinerClient.SubmarinerV1alpha1().Brokers(OperatorNamespace).Get(
+				context.TODO(), brokercr.BrokerName, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return false
 			}

@@ -17,6 +17,7 @@ limitations under the License.
 package datafile
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -164,7 +165,8 @@ func (data *SubctlData) getAndCheckBrokerAdministratorConfig(private bool) (*res
 	// This attempts to determine whether we can connect, by trying to access a Submariner object
 	// Successful connections result in either the object, or a “not found” error; anything else
 	// likely means we couldn’t connect
-	_, err = submClientset.SubmarinerV1().Clusters(string(data.ClientToken.Data["namespace"])).List(metav1.ListOptions{})
+	_, err = submClientset.SubmarinerV1().Clusters(string(data.ClientToken.Data["namespace"])).List(
+		context.TODO(), metav1.ListOptions{})
 	if errors.IsNotFound(err) {
 		err = nil
 	}
