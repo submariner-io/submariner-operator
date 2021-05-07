@@ -9,7 +9,7 @@ updates:
       # Pinned
       - dependency-name: github.com/go-openapi/spec
       # K8s and operator SDK, we need to handle these manually
-      - dependency-name: github.com/operator-framework/operator-sdk
+      - dependency-name: github.com/operator-framework/*
       - dependency-name: k8s.io/*
       - dependency-name: sigs.k8s.io/*
       # We get this from cloud-prepare
