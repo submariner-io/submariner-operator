@@ -21,14 +21,9 @@ package cleanup
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-)
-
-var (
-	infraID string
-	region  string
 )
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
@@ -40,13 +35,13 @@ func newAWSCleanupCommand() *cobra.Command {
 		Run:   cleanupAws,
 	}
 
-	cloudutils.AddAWSFlags(cmd, &infraID, &region)
+	aws.AddAWSFlags(cmd)
 
 	return cmd
 }
 
 func cleanupAws(cmd *cobra.Command, args []string) {
-	err := cloudutils.RunOnAWS(infraID, region, "", *kubeConfig, *kubeContext,
+	err := aws.RunOnAWS("", *kubeConfig, *kubeContext,
 		func(cloud api.Cloud, reporter api.Reporter) error {
 			return cloud.CleanupAfterSubmariner(reporter)
 		})
