@@ -19,14 +19,12 @@ package prepare
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 var (
 	gwInstanceType string
-	infraID        string
-	region         string
 	gateways       int
 )
 
@@ -39,7 +37,7 @@ func newAWSPrepareCommand() *cobra.Command {
 		Run:   prepareAws,
 	}
 
-	cloudutils.AddAWSFlags(cmd, &infraID, &region)
+	aws.AddAWSFlags(cmd)
 	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "m5n.large", "Type of gateways instance machine")
 	cmd.Flags().IntVar(&gateways, "gateways", 1, "Amount of gateways to prepare (0 = gateway per public subnet)")
 
@@ -58,7 +56,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		},
 		Gateways: gateways,
 	}
-	err := cloudutils.RunOnAWS(infraID, region, gwInstanceType, *kubeConfig, *kubeContext,
+	err := aws.RunOnAWS(gwInstanceType, *kubeConfig, *kubeContext,
 		func(cloud api.Cloud, reporter api.Reporter) error {
 			return cloud.PrepareForSubmariner(input, reporter)
 		})

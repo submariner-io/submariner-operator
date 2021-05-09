@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+// This package provides common functionality to run cloud prepare/cleanup on AWS
+package aws
 
 import (
 	"errors"
@@ -26,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	cloudprepareaws "github.com/submariner-io/cloud-prepare/pkg/aws"
+	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,15 +40,20 @@ const (
 	regionFlag  = "region"
 )
 
+var (
+	infraID string
+	region  string
+)
+
 // AddAWSFlags adds basic flags needed by AWS
-func AddAWSFlags(command *cobra.Command, infraID, region *string) {
-	command.Flags().StringVar(infraID, infraIDFlag, "", "AWS infra ID")
-	command.Flags().StringVar(region, regionFlag, "", "AWS region")
+func AddAWSFlags(command *cobra.Command) {
+	command.Flags().StringVar(&infraID, infraIDFlag, "", "AWS infra ID")
+	command.Flags().StringVar(&region, regionFlag, "", "AWS region")
 }
 
 // RunOnAWS runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.
-func RunOnAWS(infraID, region, gwInstanceType, kubeConfig, kubeContext string,
+func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 	function func(cloud api.Cloud, reporter api.Reporter) error) error {
 	utils.ExpectFlag(infraIDFlag, infraID)
 	utils.ExpectFlag(regionFlag, region)
@@ -54,7 +61,7 @@ func RunOnAWS(infraID, region, gwInstanceType, kubeConfig, kubeContext string,
 	k8sConfig, err := utils.GetRestConfig(kubeConfig, kubeContext)
 	utils.ExitOnError("Failed to initialize a Kubernetes config", err)
 
-	reporter := NewCLIReporter()
+	reporter := cloudutils.NewCLIReporter()
 	reporter.Started("Retrieving AWS credentials from your OpenShift installation")
 	creds, err := getAWSCredentials(k8sConfig)
 	if err != nil {
