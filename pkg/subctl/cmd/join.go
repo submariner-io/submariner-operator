@@ -62,13 +62,11 @@ var (
 	forceUDPEncaps                bool
 	colorCodes                    string
 	natTraversal                  bool
-	disableNat                    bool
 	globalnetEnabled              bool
 	ipsecDebug                    bool
 	submarinerDebug               bool
 	operatorDebug                 bool
 	labelGateway                  bool
-	noLabel                       bool
 	cableDriver                   string
 	clienttoken                   *v1.Secret
 	globalnetClusterSize          uint
@@ -96,33 +94,16 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
 	cmd.Flags().BoolVar(&natTraversal, "natt", true, "enable NAT traversal for IPsec")
-	cmd.Flags().BoolVar(&disableNat, "disable-nat", false, "disable NAT for IPsec")
-	err := cmd.Flags().MarkDeprecated("disable-nat", "please use --natt=false instead")
 
 	cmd.Flags().BoolVar(&preferredServer, "preferred-server", false,
 		"enable this cluster as a preferred server for dataplane connections")
 	cmd.Flags().BoolVar(&forceUDPEncaps, "force-udp-encaps", false, "force UDP encapsulation for IPSec")
 
-	// Errors here are fatal programming errors
-	exitOnError("deprecation error", err)
 	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "enable IPsec debugging (verbose logging)")
-	cmd.Flags().BoolVar(&submarinerDebug, "subm-debug", false, "enable Submariner debugging (verbose logging)")
-	err = cmd.Flags().MarkDeprecated("subm-debug", "please use --pod-debug instead")
-	// Errors here are fatal programming errors
-	exitOnError("deprecation error", err)
 	cmd.Flags().BoolVar(&submarinerDebug, "pod-debug", false,
 		"enable Submariner pod debugging (verbose logging in the deployed pods)")
-	cmd.Flags().BoolVar(&submarinerDebug, "enable-pod-debugging", false,
-		"enable Submariner pod debugging (verbose logging in the deployed pods)")
-	err = cmd.Flags().MarkDeprecated("enable-pod-debugging", "please use --pod-debug instead")
 	cmd.Flags().BoolVar(&operatorDebug, "operator-debug", false, "enable operator debugging (verbose logging)")
-	// Errors here are fatal programming errors
-	exitOnError("deprecation error", err)
 	cmd.Flags().BoolVar(&labelGateway, "label-gateway", true, "label gateways if necessary")
-	cmd.Flags().BoolVar(&noLabel, "no-label", false, "skip gateway labeling")
-	err = cmd.Flags().MarkDeprecated("no-label", "please use --label-gateway=false instead")
-	// Errors here are fatal programming errors
-	exitOnError("deprecation error", err)
 	cmd.Flags().StringVar(&cableDriver, "cable-driver", "", "cable driver implementation")
 	cmd.Flags().UintVar(&globalnetClusterSize, "globalnet-cluster-size", 0,
 		"cluster size for GlobalCIDR allocated to this cluster (amount of global IPs)")
@@ -249,7 +230,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	}
 	exitOnError("Unable to check requirements", err)
 
-	if subctlData.IsConnectivityEnabled() && labelGateway && !noLabel {
+	if subctlData.IsConnectivityEnabled() && labelGateway {
 		err := handleNodeLabels(clientConfig)
 		exitOnError("Unable to set the gateway node up", err)
 	}
@@ -498,7 +479,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		BrokerK8sApiServerToken:  string(clienttoken.Data["token"]),
 		BrokerK8sApiServer:       brokerURL,
 		Broker:                   "k8s",
-		NatEnabled:               natTraversal && !disableNat,
+		NatEnabled:               natTraversal,
 		Debug:                    submarinerDebug,
 		ColorCodes:               colorCodes,
 		ClusterID:                clusterID,
