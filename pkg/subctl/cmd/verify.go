@@ -56,10 +56,6 @@ func init() {
 	addKubecontextsFlag(verifyCmd)
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
-	verifyCmd.Flags().BoolVar(&disruptiveTests, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
-	err := verifyCmd.Flags().MarkDeprecated("enable-disruptive", "please use --disruptive-tests instead")
-	// Errors here are fatal programming errors
-	exitOnError("deprecation error", err)
 	addVerifyFlags(verifyCmd)
 	rootCmd.AddCommand(verifyCmd)
 
