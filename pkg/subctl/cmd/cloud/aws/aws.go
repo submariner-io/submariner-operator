@@ -20,7 +20,9 @@ limitations under the License.
 package aws
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -46,12 +48,15 @@ var (
 	region          string
 	profile         string
 	credentialsFile string
+	ocpMetadataFile string
 )
 
 // AddAWSFlags adds basic flags needed by AWS
 func AddAWSFlags(command *cobra.Command) {
 	command.Flags().StringVar(&infraID, infraIDFlag, "", "AWS infra ID")
 	command.Flags().StringVar(&region, regionFlag, "", "AWS region")
+	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
+		"OCP metadata.json file (or directory containing it) to read AWS infra ID and region from (Takes precedence over the flags)")
 	command.Flags().StringVar(&profile, "profile", "default", "AWS profile to use for credentials")
 
 	dirname, err := os.UserHomeDir()
@@ -67,8 +72,13 @@ func AddAWSFlags(command *cobra.Command) {
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.
 func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 	function func(cloud api.Cloud, reporter api.Reporter) error) error {
-	utils.ExpectFlag(infraIDFlag, infraID)
-	utils.ExpectFlag(regionFlag, region)
+	if ocpMetadataFile != "" {
+		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
+		utils.ExitOnError("Failed to read AWS information from OCP metadata file", err)
+	} else {
+		utils.ExpectFlag(infraIDFlag, infraID)
+		utils.ExpectFlag(regionFlag, region)
+	}
 
 	reporter := cloudutils.NewCLIReporter()
 	reporter.Started("Retrieving AWS credentials from your AWS configuration")
@@ -98,6 +108,38 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 	gwDeployer := cloudprepareaws.NewK8sMachinesetDeployer(k8sConfig)
 	awsCloud := cloudprepareaws.NewCloud(gwDeployer, ec2.New(awsSession), infraID, region, gwInstanceType)
 	return function(awsCloud, reporter)
+}
+
+func initializeFlagsFromOCPMetadata(metadataFile string) error {
+	fileInfo, err := os.Stat(metadataFile)
+	if err != nil {
+		return err
+	}
+
+	if fileInfo.IsDir() {
+		metadataFile = filepath.Join(metadataFile, "metadata.json")
+	}
+
+	data, err := ioutil.ReadFile(metadataFile)
+	if err != nil {
+		return err
+	}
+
+	var metadata struct {
+		InfraID string `json:"infraID"`
+		AWS     struct {
+			Region string `json:"region"`
+		} `json:"aws"`
+	}
+
+	err = json.Unmarshal(data, &metadata)
+	if err != nil {
+		return err
+	}
+
+	infraID = metadata.InfraID
+	region = metadata.AWS.Region
+	return nil
 }
 
 // Retrieve AWS credentials from the AWS credentials file.
