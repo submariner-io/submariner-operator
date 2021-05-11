@@ -76,7 +76,7 @@ func init() {
 
 	deployBroker.PersistentFlags().BoolVar(&operatorDebug, "operator-debug", false, "enable operator debugging (verbose logging)")
 
-	addKubeconfigFlag(deployBroker)
+	addKubecontextFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
 
