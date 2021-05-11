@@ -10,12 +10,8 @@ rules:
 
 ignore: |
   /vendor
-  /deploy/submariner/crds/submariner.io_gateways.yaml
-  /deploy/submariner/crds/submariner.io_endpoints.yaml
-  /deploy/submariner/crds/submariner.io_clusters.yaml
-  /deploy/crds/submariner.io_brokers.yaml
-  /deploy/crds/submariner.io_submariners.yaml
-  /deploy/crds/submariner.io_servicediscoveries.yaml
+  /deploy/crds
+  /deploy/submariner/crds
   /deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml
   /deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml
   /config/crd/bases/submariner.io_brokers.yaml
