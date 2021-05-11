@@ -7,6 +7,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go v1.38.57
 	github.com/coreos/go-semver v0.3.0
+	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/go-errors/errors v1.2.0 // indirect
 	github.com/go-logr/logr v0.4.0
 	github.com/go-openapi/spec v0.20.3 // indirect
