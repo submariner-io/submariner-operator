@@ -17,6 +17,7 @@ limitations under the License.
 package datafile
 
 import (
+	"context"
 	"crypto/rand"
 
 	v1 "k8s.io/api/core/v1"
@@ -54,5 +55,5 @@ func newIPSECPSKSecret() (*v1.Secret, error) {
 }
 
 func GetIPSECPSKSecret(clientSet clientset.Interface, namespace string) (*v1.Secret, error) {
-	return clientSet.CoreV1().Secrets(namespace).Get(ipsecPSKSecretName, metav1.GetOptions{})
+	return clientSet.CoreV1().Secrets(namespace).Get(context.TODO(), ipsecPSKSecretName, metav1.GetOptions{})
 }

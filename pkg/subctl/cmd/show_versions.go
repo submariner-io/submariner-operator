@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -63,7 +64,7 @@ func getSubmarinerVersion(submariner *v1alpha1.Submariner, versions []versionIma
 }
 
 func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
-	operatorConfig, err := clientSet.AppsV1().Deployments(OperatorNamespace).Get(names.OperatorComponent, v1.GetOptions{})
+	operatorConfig, err := clientSet.AppsV1().Deployments(OperatorNamespace).Get(context.TODO(), names.OperatorComponent, v1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,7 @@ func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageI
 
 func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
 	lighthouseAgentConfig, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).Get(
-		names.ServiceDiscoveryCrName, v1.GetOptions{})
+		context.TODO(), names.ServiceDiscoveryCrName, v1.GetOptions{})
 
 	if err != nil {
 		if errors.IsNotFound(err) {

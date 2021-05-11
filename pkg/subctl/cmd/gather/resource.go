@@ -16,6 +16,7 @@ limitations under the License.
 package gather
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -31,7 +32,7 @@ import (
 
 func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
-		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(listOptions)
+		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(context.TODO(), listOptions)
 		if err != nil {
 			return errors.WithMessagef(err, "error listing %q", ofType.Resource)
 		}

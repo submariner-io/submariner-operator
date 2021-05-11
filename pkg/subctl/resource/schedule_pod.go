@@ -16,6 +16,7 @@ limitations under the License.
 package resource
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -147,7 +148,7 @@ func (np *NetworkPod) schedulePod() error {
 
 	pc := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 	var err error
-	np.Pod, err = pc.Create(&networkPod)
+	np.Pod, err = pc.Create(context.TODO(), &networkPod, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -161,7 +162,7 @@ func (np *NetworkPod) schedulePod() error {
 
 func (np *NetworkPod) DeletePod() {
 	pc := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
-	_ = pc.Delete(np.Pod.Name, &metav1.DeleteOptions{})
+	_ = pc.Delete(context.TODO(), np.Pod.Name, metav1.DeleteOptions{})
 }
 
 func (np *NetworkPod) awaitUntilPodScheduled() error {
@@ -169,7 +170,7 @@ func (np *NetworkPod) awaitUntilPodScheduled() error {
 
 	pod, _, err := framework.AwaitResultOrError("await pod ready",
 		func() (interface{}, error) {
-			return pods.Get(np.Pod.Name, metav1.GetOptions{})
+			return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
 		}, func(result interface{}) (bool, string, error) {
 			pod := result.(*v1.Pod)
 			if pod.Status.Phase != v1.PodRunning && pod.Status.Phase != v1.PodSucceeded {
@@ -195,7 +196,7 @@ func (np *NetworkPod) AwaitPodCompletion() error {
 
 	_, errorMsg, err := framework.AwaitResultOrError(
 		fmt.Sprintf("await pod %q finished", np.Pod.Name), func() (interface{}, error) {
-			return pods.Get(np.Pod.Name, metav1.GetOptions{})
+			return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
 		}, func(result interface{}) (bool, string, error) {
 			np.Pod = result.(*v1.Pod)
 

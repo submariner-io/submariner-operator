@@ -17,6 +17,7 @@ limitations under the License.
 package gateway
 
 import (
+	"context"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -29,15 +30,18 @@ import (
 // Ensure ensures that the required resources are deployed on the target system
 // The resources handled here are the gateway CRDs: Cluster and Endpoint
 func Ensure(crdUpdater crdutils.CRDUpdater) error {
-	_, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml)
+	_, err := utils.CreateOrUpdateEmbeddedCRD(
+		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Cluster CRD: %s", err)
 	}
-	_, err = utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_endpoints_yaml)
+	_, err = utils.CreateOrUpdateEmbeddedCRD(
+		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_endpoints_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Endpoint CRD: %s", err)
 	}
-	_, err = utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_gateways_yaml)
+	_, err = utils.CreateOrUpdateEmbeddedCRD(
+		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_gateways_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Gateway CRD: %s", err)
 	}

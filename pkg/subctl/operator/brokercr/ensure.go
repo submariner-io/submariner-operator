@@ -17,14 +17,16 @@ limitations under the License.
 package brokercr
 
 import (
-	"github.com/submariner-io/admiral/pkg/resource"
-	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"context"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 
+	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 )
 
 const (
@@ -44,15 +46,15 @@ func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerS
 		return err
 	}
 
-	return util.CreateAnew(&resource.InterfaceFuncs{
-		GetFunc: func(name string, options metav1.GetOptions) (runtime.Object, error) {
-			return client.SubmarinerV1alpha1().Brokers(namespace).Get(name, options)
+	return util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
+		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().Brokers(namespace).Get(ctx, name, options)
 		},
-		CreateFunc: func(obj runtime.Object) (runtime.Object, error) {
-			return client.SubmarinerV1alpha1().Brokers(namespace).Create(obj.(*submariner.Broker))
+		CreateFunc: func(ctx context.Context, obj runtime.Object, options metav1.CreateOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().Brokers(namespace).Create(ctx, obj.(*submariner.Broker), options)
 		},
-		DeleteFunc: func(name string, options *metav1.DeleteOptions) error {
-			return client.SubmarinerV1alpha1().Brokers(namespace).Delete(name, options)
+		DeleteFunc: func(ctx context.Context, name string, options metav1.DeleteOptions) error {
+			return client.SubmarinerV1alpha1().Brokers(namespace).Delete(ctx, name, options)
 		},
-	}, brokerCR, nil)
+	}, brokerCR, metav1.CreateOptions{}, metav1.DeleteOptions{})
 }

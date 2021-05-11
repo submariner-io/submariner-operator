@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -78,7 +79,7 @@ func checkOverlappingCIDRs(item restConfig, submariner *v1alpha1.Submariner) boo
 	}
 
 	localClusterName := submariner.Status.ClusterID
-	endpointList, err := submarinerClient.SubmarinerV1().Endpoints(submariner.Namespace).List(metav1.ListOptions{})
+	endpointList, err := submarinerClient.SubmarinerV1().Endpoints(submariner.Namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		message := fmt.Sprintf("Error listing the Submariner endpoints in cluster %q", localClusterName)
 		status.QueueFailureMessage(message)
@@ -179,7 +180,7 @@ func checkPods(item restConfig, submariner *v1alpha1.Submariner, operatorNamespa
 }
 
 func CheckDeployment(k8sClient kubernetes.Interface, namespace, deploymentName string) bool {
-	deployment, err := k8sClient.AppsV1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
+	deployment, err := k8sClient.AppsV1().Deployments(namespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
 	if err != nil {
 		message := fmt.Sprintf("Error obtaining Deployment %q: %v", deploymentName, err)
 		status.QueueFailureMessage(message)
@@ -205,7 +206,7 @@ func CheckDeployment(k8sClient kubernetes.Interface, namespace, deploymentName s
 }
 
 func CheckDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName string) bool {
-	daemonSet, err := k8sClient.AppsV1().DaemonSets(namespace).Get(daemonSetName, metav1.GetOptions{})
+	daemonSet, err := k8sClient.AppsV1().DaemonSets(namespace).Get(context.TODO(), daemonSetName, metav1.GetOptions{})
 	if err != nil {
 		message := fmt.Sprintf("Error obtaining Daemonset %q: %v", daemonSetName, err)
 		status.QueueFailureMessage(message)
@@ -226,7 +227,7 @@ func CheckDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName str
 }
 
 func checkPodsStatus(k8sClient kubernetes.Interface, operatorNamespace string) bool {
-	pods, err := k8sClient.CoreV1().Pods(operatorNamespace).List(metav1.ListOptions{})
+	pods, err := k8sClient.CoreV1().Pods(operatorNamespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		message := fmt.Sprintf("Error obtaining Pods list: %v", err)
 		status.QueueFailureMessage(message)

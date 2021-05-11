@@ -46,13 +46,13 @@ type BrokerReconciler struct {
 // from methods in order to be taken into account; but they produce ClusterRoles, not the Roles we want
 // +kubebuilder:rbac:groups=submariner.io,resources=brokers,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=brokers/status,verbs=get;update;patch
-func (r *BrokerReconciler) Reconcile(request ctrl.Request) (ctrl.Result, error) {
+func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
 	_ = r.Log.WithValues("broker", request.NamespacedName)
 
 	// Fetch the Broker instance
 	instance := &v1alpha1.Broker{}
-	err := r.Client.Get(context.TODO(), request.NamespacedName, instance)
+	err := r.Client.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.

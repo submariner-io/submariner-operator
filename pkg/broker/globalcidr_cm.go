@@ -16,6 +16,7 @@ limitations under the License.
 package broker
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -51,7 +52,7 @@ func CreateGlobalnetConfigMap(config *rest.Config, globalnetEnabled bool, defaul
 		return fmt.Errorf("error creating config map: %s", err)
 	}
 
-	_, err = clientset.CoreV1().ConfigMaps(namespace).Create(gnConfigMap)
+	_, err = clientset.CoreV1().ConfigMaps(namespace).Create(context.TODO(), gnConfigMap, metav1.CreateOptions{})
 	if err == nil || errors.IsAlreadyExists(err) {
 		return nil
 	}
@@ -124,12 +125,12 @@ func UpdateGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace stri
 	}
 
 	configMap.Data[ClusterInfoKey] = string(data)
-	_, err = k8sClientset.CoreV1().ConfigMaps(namespace).Update(configMap)
+	_, err = k8sClientset.CoreV1().ConfigMaps(namespace).Update(context.TODO(), configMap, metav1.UpdateOptions{})
 	return err
 }
 
 func GetGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace string) (*v1.ConfigMap, error) {
-	cm, err := k8sClientset.CoreV1().ConfigMaps(namespace).Get(GlobalCIDRConfigMapName, metav1.GetOptions{})
+	cm, err := k8sClientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), GlobalCIDRConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
