@@ -96,7 +96,7 @@ func getLogFromStream(logStream io.ReadCloser) (string, error) {
 }
 
 func writeLogToFile(data, podName string, info Info, fileExtension string) error {
-	fileName := filepath.Join(info.DirName, info.ClusterName+"_"+podName+fileExtension)
+	fileName := filepath.Join(info.DirName, escapeFileName(info.ClusterName+"_"+podName)+fileExtension)
 	f, err := os.Create(fileName)
 	if err != nil {
 		return errors.WithMessagef(err, "error opening file %s", fileName)
