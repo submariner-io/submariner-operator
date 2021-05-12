@@ -39,7 +39,7 @@ type restConfig struct {
 }
 
 func init() {
-	addKubecontextFlag(showCmd)
+	addKubeContextFlag(showCmd)
 	rootCmd.AddCommand(showCmd)
 }
 

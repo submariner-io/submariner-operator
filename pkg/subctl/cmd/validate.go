@@ -28,6 +28,6 @@ var (
 )
 
 func init() {
-	addKubecontextFlag(validateCmd)
+	addKubeContextFlag(validateCmd)
 	rootCmd.AddCommand(validateCmd)
 }

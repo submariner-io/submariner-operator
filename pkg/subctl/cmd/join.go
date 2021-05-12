@@ -80,7 +80,7 @@ var (
 
 func init() {
 	addJoinFlags(joinCmd)
-	addKubecontextFlag(joinCmd)
+	addKubeContextFlag(joinCmd)
 	rootCmd.AddCommand(joinCmd)
 }
 

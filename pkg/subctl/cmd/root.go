@@ -62,23 +62,23 @@ func Execute() error {
 func init() {
 	rootCmd.AddCommand(cmdversion.Cmd)
 	cloudCmd := cloud.NewCommand(&kubeConfig, &kubeContext)
-	addKubecontextFlag(cloudCmd)
+	addKubeContextFlag(cloudCmd)
 	rootCmd.AddCommand(cloudCmd)
 }
 
-func addKubeconfigFlag(cmd *cobra.Command) {
+func addKubeConfigFlag(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
 }
 
-// addKubecontextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once
-func addKubecontextFlag(cmd *cobra.Command) {
-	addKubeconfigFlag(cmd)
+// addKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once
+func addKubeContextFlag(cmd *cobra.Command) {
+	addKubeConfigFlag(cmd)
 	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
 }
 
-// addKubecontextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated)
-func addKubecontextMultiFlag(cmd *cobra.Command) {
-	addKubeconfigFlag(cmd)
+// addKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated)
+func addKubeContextMultiFlag(cmd *cobra.Command) {
+	addKubeConfigFlag(cmd)
 	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontexts", nil,
 		"comma separated list of kubeconfig contexts to use, can be specified multiple times.\n"+
 			"If none specified, all contexts referenced by kubeconfig are used")
