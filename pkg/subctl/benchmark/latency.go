@@ -48,9 +48,13 @@ func StartLatencyTests(intraCluster bool) {
 
 	f = initFramework("latency")
 
+	clusterAName := framework.TestContext.ClusterIDs[framework.ClusterA]
+
 	if !intraCluster {
+		clusterBName := framework.TestContext.ClusterIDs[framework.ClusterB]
+
 		if framework.TestContext.GlobalnetEnabled {
-			By("Latency test is not supported with Globalnet enabled, skipping the test...")
+			fmt.Println("Latency test is not supported with Globalnet enabled, skipping the test...")
 			cleanupFramework(f)
 			return
 		}
@@ -62,12 +66,14 @@ func StartLatencyTests(intraCluster bool) {
 			ClientPodScheduling: framework.GatewayNode,
 		}
 
-		framework.By("Performing latency tests from Gateway pod to Gateway pod")
+		fmt.Printf("Performing latency tests from Gateway pod on cluster %q to Gateway pod on cluster %q\n",
+			clusterAName, clusterBName)
 		runLatencyTest(f, latencyTestParams)
 
 		latencyTestParams.ServerPodScheduling = framework.NonGatewayNode
 		latencyTestParams.ClientPodScheduling = framework.NonGatewayNode
-		framework.By("Performing latency tests from Non-Gateway pod to Non-Gateway pod")
+		fmt.Printf("Performing latency tests from Non-Gateway pod on cluster %q to Non-Gateway pod on cluster %q\n",
+			clusterAName, clusterBName)
 		runLatencyTest(f, latencyTestParams)
 	} else {
 		latencyTestIntraClusterParams := benchmarkTestParams{
@@ -76,9 +82,7 @@ func StartLatencyTests(intraCluster bool) {
 			ServerPodScheduling: framework.GatewayNode,
 			ClientPodScheduling: framework.NonGatewayNode,
 		}
-
-		clusterAName := framework.TestContext.ClusterIDs[framework.ClusterA]
-		framework.By(fmt.Sprintf("Performing latency tests from Non-Gateway pod to Gateway pod on cluster %q", clusterAName))
+		fmt.Printf("Performing latency tests from Non-Gateway pod to Gateway pod on cluster %q\n", clusterAName)
 		runLatencyTest(f, latencyTestIntraClusterParams)
 	}
 
@@ -91,7 +95,7 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 	var connectionTimeout uint = 5
 	var connectionAttempts uint = 1
 
-	framework.By(fmt.Sprintf("Creating a Nettest Server Pod on %q", clusterBName))
+	By(fmt.Sprintf("Creating a Nettest Server Pod on %q", clusterBName))
 	nettestServerPod := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.LatencyServerPod,
 		Cluster:            testParams.ServerCluster,
@@ -115,10 +119,10 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 		ConnectionAttempts: connectionAttempts,
 	})
 
-	framework.By(fmt.Sprintf("Nettest Client Pod %q was created on cluster %q, node %q; connect to server pod ip %q",
+	By(fmt.Sprintf("Nettest Client Pod %q was created on cluster %q, node %q; connect to server pod ip %q",
 		nettestClientPod.Pod.Name, clusterAName, nettestClientPod.Pod.Spec.NodeName, remoteIP))
 
-	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
+	By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
 	nettestClientPod.AwaitFinishVerbose(Verbose)
 	nettestClientPod.CheckSuccessfulFinish()
 	latencyHeaders := strings.Split(nettestClientPod.TerminationMessage, "\n")[1]
