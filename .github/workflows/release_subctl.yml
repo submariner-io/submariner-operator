@@ -8,6 +8,7 @@ on:
 jobs:
   release-subctl:
     name: Release Subctl
+    if: github.repository_owner == 'submariner-io'
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
