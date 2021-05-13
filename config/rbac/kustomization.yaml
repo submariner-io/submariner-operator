@@ -8,6 +8,8 @@ resources:
   - submariner-gateway/service_account.yaml
   - submariner-gateway/role.yaml
   - submariner-gateway/role_binding.yaml
+  - submariner-gateway/cluster_role.yaml
+  - submariner-gateway/cluster_role_binding.yaml
   - submariner-route-agent/service_account.yaml
   - submariner-route-agent/role.yaml
   - submariner-route-agent/role_binding.yaml
