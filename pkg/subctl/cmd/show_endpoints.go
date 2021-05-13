@@ -93,7 +93,7 @@ func showEndpoints(cmd *cobra.Command, args []string) {
 		submariner := getSubmarinerResource(item.config)
 
 		if submariner == nil {
-			fmt.Println(submMissingMessage)
+			fmt.Println(SubmMissingMessage)
 		} else {
 			showEndpointsFor(submariner)
 		}

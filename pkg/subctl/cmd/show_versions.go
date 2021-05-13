@@ -127,7 +127,7 @@ func showVersions(cmd *cobra.Command, args []string) {
 		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
 		submariner := getSubmarinerResource(item.config)
 		if submariner == nil {
-			fmt.Println(submMissingMessage)
+			fmt.Println(SubmMissingMessage)
 		} else {
 			showVersionsFor(item.config, submariner)
 		}

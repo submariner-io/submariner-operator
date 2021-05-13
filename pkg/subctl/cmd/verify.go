@@ -56,7 +56,7 @@ var (
 )
 
 func init() {
-	addKubeContextMultiFlag(verifyCmd)
+	AddKubeContextMultiFlag(verifyCmd)
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
 	addVerifyFlags(verifyCmd)
@@ -213,7 +213,7 @@ func checkValidateArguments(args []string) error {
 		if strings.Compare(args[0], args[1]) == 0 {
 			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
 		}
-		same, err := compareFiles(args[0], args[1])
+		same, err := CompareFiles(args[0], args[1])
 		if err != nil {
 			return err
 		}

@@ -134,6 +134,21 @@ func (s *Status) End(output Result) {
 	s.warningQueue = []string{}
 }
 
+func (s *Status) EndWithFailure(message string) {
+	s.QueueFailureMessage(message)
+	s.End(Failure)
+}
+
+func (s *Status) EndWithSuccess(message string) {
+	s.QueueSuccessMessage(message)
+	s.End(Success)
+}
+
+func (s *Status) EndWithWarning(message string) {
+	s.QueueWarningMessage(message)
+	s.End(Warning)
+}
+
 // QueueSuccessMessage queues up a message, which will be displayed once
 // the status ends (using the success format)
 func (s *Status) QueueSuccessMessage(message string) {

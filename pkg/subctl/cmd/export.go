@@ -50,7 +50,7 @@ var (
 )
 
 func init() {
-	addKubeContextFlag(exportCmd)
+	AddKubeConfigFlag(exportCmd)
 	addServiceExportFlags(exportServiceCmd)
 	exportCmd.AddCommand(exportServiceCmd)
 	rootCmd.AddCommand(exportCmd)
