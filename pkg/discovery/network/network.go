@@ -41,13 +41,23 @@ func (cn *ClusterNetwork) Show() {
 	if cn == nil {
 		fmt.Println("    No network details discovered")
 	} else {
-		fmt.Printf("    Discovered network details:\n")
-		fmt.Printf("        Network plugin:  %s\n", cn.NetworkPlugin)
-		fmt.Printf("        Service CIDRs:   %v\n", cn.ServiceCIDRs)
-		fmt.Printf("        Cluster CIDRs:   %v\n", cn.PodCIDRs)
-		if cn.GlobalCIDR != "" {
-			fmt.Printf("        Global CIDR:     %v\n", cn.GlobalCIDR)
+		details := ClusterNetwork{
+			PodCIDRs:      cn.PodCIDRs,
+			ServiceCIDRs:  cn.ServiceCIDRs,
+			NetworkPlugin: cn.NetworkPlugin,
+			GlobalCIDR:    cn.GlobalCIDR,
 		}
+		PrintDetails(details)
+	}
+}
+
+func PrintDetails(details ClusterNetwork) {
+	fmt.Printf("    Discovered network details:\n")
+	fmt.Printf("        Network plugin:  %s\n", details.NetworkPlugin)
+	fmt.Printf("        Service CIDRs:   %v\n", details.ServiceCIDRs)
+	fmt.Printf("        Cluster CIDRs:   %v\n", details.PodCIDRs)
+	if details.GlobalCIDR != "" {
+		fmt.Printf("        Global CIDR:     %v\n", details.GlobalCIDR)
 	}
 }
 
