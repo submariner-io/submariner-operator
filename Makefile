@@ -89,12 +89,16 @@ build: $(BINARIES)
 
 build-cross: $(CROSS_TARBALLS)
 
+licensecheck: BUILD_ARGS=--noupx
+licensecheck: build bin/submariner-operator
+	lichen -c .lichen.yaml $(BINARIES) bin/submariner-operator
+
 package/Dockerfile.submariner-operator: bin/submariner-operator
 
 bin/submariner-operator: vendor/modules.txt main.go generate-embeddedyamls
 	${SCRIPTS_DIR}/compile.sh \
 	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
-	$@ main.go
+	$@ main.go $(BUILD_ARGS)
 
 bin/subctl: bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
 	ln -sf $(<F) $@
@@ -115,7 +119,7 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 	$(SCRIPTS_DIR)/compile.sh \
 		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION) \
 			   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
-		--noupx $@ ./pkg/subctl/main.go
+		--noupx $@ ./pkg/subctl/main.go $(BUILD_ARGS)
 
 ci: generate-embeddedyamls golangci-lint markdownlint unit build images
 
@@ -209,7 +213,7 @@ Makefile.dapper:
 
 include Makefile.dapper
 
-.PHONY: deploy bundle packagemanifests kustomization is-semantic-version
+.PHONY: deploy bundle packagemanifests kustomization is-semantic-version licensecheck
 
 endif
 

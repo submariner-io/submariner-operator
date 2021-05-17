@@ -10,7 +10,8 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} \
 ENV DAPPER_OUTPUT=${DAPPER_SOURCE}/output PATH=${DAPPER_SOURCE}/bin/:${PATH}
 
 RUN curl -Lo /usr/bin/operator-sdk "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk-v${OPERATOR_SDK_VERSION}-x86_64-linux-gnu" && \
-    chmod a+x /usr/bin/operator-sdk
+    chmod a+x /usr/bin/operator-sdk && \
+    GO111MODULE=off go get github.com/uw-labs/lichen
 
 WORKDIR ${DAPPER_SOURCE}
 

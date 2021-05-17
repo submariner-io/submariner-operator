@@ -32,7 +32,7 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/submariner-io/admiral v0.9.0-rc0.0.20210512114522-576fb44bfbdd
-	github.com/submariner-io/cloud-prepare v0.0.0-20210510154354-e7940f21b3c9
+	github.com/submariner-io/cloud-prepare v0.0.0-20210517131130-867624ac37e7
 	github.com/submariner-io/lighthouse v0.9.0-rc0.0.20210510224156-c8116fe90f3c
 	github.com/submariner-io/shipyard v0.9.1-0.20210510160832-b96b2941ec80
 	github.com/submariner-io/submariner v0.9.0-rc0.0.20210510232802-a7b0766324d4
