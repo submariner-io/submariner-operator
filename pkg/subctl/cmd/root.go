@@ -40,7 +40,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
-	goversion "github.com/hashicorp/go-version"
+	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 )
@@ -251,10 +251,10 @@ func checkVersionMismatch(cmd *cobra.Command, args []string) error {
 	submariner := getSubmarinerResource(config)
 
 	if submariner != nil && submariner.Spec.Version != "" {
-		subctlVer, _ := goversion.NewVersion(version.Version)
-		submarinerVer, _ := goversion.NewVersion(submariner.Spec.Version)
+		subctlVer, _ := semver.NewVersion(version.Version)
+		submarinerVer, _ := semver.NewVersion(submariner.Spec.Version)
 
-		if subctlVer != nil && submarinerVer != nil && subctlVer.LessThan(submarinerVer) {
+		if subctlVer != nil && submarinerVer != nil && subctlVer.LessThan(*submarinerVer) {
 			return fmt.Errorf(
 				"the subctl version %q is older than the deployed Submariner version %q. Please upgrade your subctl version",
 				version.Version, submariner.Spec.Version)
