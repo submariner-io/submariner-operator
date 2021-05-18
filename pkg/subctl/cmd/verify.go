@@ -53,7 +53,7 @@ var (
 )
 
 func init() {
-	addKubecontextsFlag(verifyCmd)
+	addKubeContextMultiFlag(verifyCmd)
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
