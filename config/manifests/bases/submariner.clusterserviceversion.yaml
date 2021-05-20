@@ -6,7 +6,7 @@ metadata:
     capabilities: Basic Install
     categories: Networking
     certified: "false"
-    containerImage: quay.io/submariner/submariner-operator:$(VERSION)
+    containerImage: $(SUBMARINER_OPERATOR_IMAGE)
     description: Creates and manages Submariner deployments.
     operators.operatorframework.io/builder: operator-sdk-v1.0.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
