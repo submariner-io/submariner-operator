@@ -1,22 +1,13 @@
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-
+---
 resources:
-- manager.yaml
-
-images:
-- name: controller
-  newName: quay.io/submariner/submariner-operator
-  newTag: 0.9.0
-- name: repo
-  newName: quay.io/submariner
+  - manager.yaml
 
 vars:
-- fieldref:
-    fieldPath: metadata.namespace
-  name: SUBMARINER_OPERATOR_NAMESPACE
-  objref:
-    group: apps
-    kind: Deployment
-    name: submariner-operator
-    version: v1
+  - fieldref:
+      fieldPath: metadata.namespace
+    name: SUBMARINER_OPERATOR_NAMESPACE
+    objref:
+      group: apps
+      kind: Deployment
+      name: submariner-operator
+      version: v1
