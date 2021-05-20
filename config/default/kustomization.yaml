@@ -43,14 +43,6 @@ patchesStrategicMerge:
 
 # the following config is for teaching kustomize how to do var substitution
 vars:
-  - name: SA_NAMESPACE
-    objref:
-      kind: Deployment
-      group: apps
-      version: v1
-      name: submariner-operator
-    fieldref:
-      fieldpath: metadata.namespace
 # [CERTMANAGER] To enable cert-manager, uncomment all sections with 'CERTMANAGER' prefix.
   # - name: CERTIFICATE_NAMESPACE # namespace of the certificate CR
   #  objref:
