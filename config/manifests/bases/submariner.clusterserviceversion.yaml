@@ -8,6 +8,7 @@ metadata:
     certified: "false"
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
     description: Creates and manages Submariner deployments.
+    operatorframework.io/suggested-namespace: submariner-operator
     operators.operatorframework.io/builder: operator-sdk-v1.0.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/submariner-io/submariner-operator
@@ -143,11 +144,11 @@ spec:
   installModes:
   - supported: true
     type: OwnNamespace
-  - supported: true
+  - supported: false
     type: SingleNamespace
   - supported: false
     type: MultiNamespace
-  - supported: true
+  - supported: false
     type: AllNamespaces
   keywords:
   - multi-cluster
