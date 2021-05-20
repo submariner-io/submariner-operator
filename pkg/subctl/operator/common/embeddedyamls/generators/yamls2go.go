@@ -124,7 +124,7 @@ const (
 	//    type: string`
 
 	re := regexp.MustCompile("`([^`]*)`")
-	reNS := regexp.MustCompile(`(?s)\s*namespace:\s*\$\(SA_NAMESPACE\)\s*`)
+	reNS := regexp.MustCompile(`(?s)\s*namespace:\s*placeholder\s*`)
 	reTilde := regexp.MustCompile("`")
 
 	for _, f := range files {
