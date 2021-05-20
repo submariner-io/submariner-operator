@@ -62,7 +62,8 @@ endif
 PKG_MAN_OPTS ?= $(PKG_FROM_VERSION) $(PKG_CHANNELS) $(PKG_IS_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/submariner/submariner-operator:$(VERSION)
+REPO ?= quay.io/submariner
+IMG ?= $(REPO)/submariner-operator:$(VERSION)
 # Produce v1 CRDs, requiring Kubernetes 1.16 or later
 CRD_OPTIONS ?= "crd:crdVersions=v1,trivialVersions=false"
 # Semantic versioning regex
@@ -170,9 +171,10 @@ $(KUSTOMIZE): vendor/modules.txt
 	mkdir -p $(@D)
 	go build -o $@ sigs.k8s.io/kustomize/kustomize/v3
 
-kustomization: $(KUSTOMIZE) is-semantic-version manifests
+kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 	operator-sdk generate kustomize manifests -q && \
-	(cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)) && \
+	(cd config/manifests && $(KUSTOMIZE) edit set image controller=$(IMG) && \
+	 $(KUSTOMIZE) edit set image repo=$(REPO)) && \
 	(cd config/bundle && \
 	sed -e 's/$${VERSION}/$(VERSION)/g' kustomization.template.yaml > kustomization.yaml && \
 	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
