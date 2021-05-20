@@ -2,26 +2,29 @@
 apiVersion: submariner.io/v1alpha1
 kind: Submariner
 metadata:
-  name: example-submariner
+  name: submariner
 spec:
-  namespace: "submariner-operator"
   serviceCIDR: "192.168.66.0/24"
   clusterCIDR: "192.168.67.0/24"
-  globalCIDR: "169.254.0.0/16"
-  clusterID: "east"
-  colorCodes: "blue"
+  globalCIDR: ""
+  clusterID: "cluster1"
   debug: false
   natEnabled: true
   serviceDiscoveryEnabled: true
   broker: "k8s"
   brokerK8sApiServer: "192.168.67.110:8443"
-  brokerK8sApiServerToken: "$(SECRET_API_SERVER_TOKEN)"
-  brokerK8sRemoteNamespace: "submariner-broker"
-  brokerK8sCA: "$(SECRET_CA)"
+  brokerK8sApiServerToken: "$(BROKER_K8S_API_TOKEN)"
+  brokerK8sRemoteNamespace: "submariner-k8s-broker"
+  brokerK8sCA: "$(BROKER_K8S_CA)"
   cableDriver: "libreswan"
-  ceIPSecPSK: "$(SECRET_IPSEC_PSK)"
+  ceIPSecPSK: "$(IPSEC_PSK)"
   ceIPSecDebug: false
-  ceIPSecIKEPort: 500
-  ceIPSecNATTPort: 4500
-  repository: "quay.io/submariner"
+  ceIPSecIKEPort: 501
+  ceIPSecNATTPort: 4501
+  namespace: "$(SUBMARINER_OPERATOR_NAMESPACE)"
+  repository: repo
   version: "$(VERSION)"
+  connectionHealthCheck:
+    enabled: true
+    intervalSeconds: 1
+    maxPacketLossCount: 5
