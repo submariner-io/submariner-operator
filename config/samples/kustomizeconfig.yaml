@@ -1,0 +1,21 @@
+---
+# the following config is for teaching kustomize where to look at when substituting vars.
+# It requires kustomize v2.1.0 or newer to work properly.
+
+varReference:
+  - kind: Submariner
+    group: submariner.io
+    version: v1alpha1
+    path: spec/namespace
+  - kind: Submariner
+    group: submariner.io
+    version: v1alpha1
+    path: spec/brokerK8sRemoteNamespace
+  - kind: ServiceDiscovery
+    group: submariner.io
+    version: v1alpha1
+    path: spec/namespace
+  - kind: ServiceDiscovery
+    group: submariner.io
+    version: v1alpha1
+    path: spec/brokerK8sRemoteNamespace

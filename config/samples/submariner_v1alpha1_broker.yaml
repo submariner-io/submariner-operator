@@ -2,9 +2,12 @@
 apiVersion: submariner.io/v1alpha1
 kind: Broker
 metadata:
-  name: broker-sample
+  name: submariner-broker
 spec:
-  #  defaultCustomDomains:
-  #  globalnetCIDRRange:
+  components:
+    - service-discovery
+    - connectivity
   defaultGlobalnetClusterSize: 8192
   globalnetEnabled: false
+  #globalnetCIDRRange: 169.254.0.0/16
+  #  defaultCustomDomains:
