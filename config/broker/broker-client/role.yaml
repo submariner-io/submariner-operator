@@ -1,0 +1,43 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: submariner-k8s-broker-cluster
+rules:
+  - apiGroups:
+      - submariner.io
+    resources:
+      - clusters
+      - endpoints
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - '*'
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
