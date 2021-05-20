@@ -65,7 +65,8 @@ endif
 PKG_MAN_OPTS ?= $(PKG_FROM_VERSION) $(PKG_CHANNELS) $(PKG_IS_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/submariner/submariner-operator:$(VERSION)
+REPO ?= quay.io/submariner
+IMG ?= $(REPO)/submariner-operator:$(VERSION)
 # Produce v1 CRDs, requiring Kubernetes 1.16 or later
 CRD_OPTIONS ?= "crd:crdVersions=v1,trivialVersions=false"
 # Semantic versioning regex
@@ -183,7 +184,8 @@ $(KUSTOMIZE): vendor/modules.txt
 
 kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 	$(OPERATOR_SDK) generate kustomize manifests -q && \
-	(cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)) && \
+	(cd config/manifests && $(KUSTOMIZE) edit set image controller=$(IMG) && \
+	 $(KUSTOMIZE) edit set image repo=$(REPO)) && \
 	(cd config/bundle && \
 	sed -e 's/$${VERSION}/$(VERSION)/g' kustomization.template.yaml > kustomization.yaml && \
 	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
@@ -197,7 +199,7 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 # Generate package manifests
-packagemanifests: $(KUSTOMIZE) kustomization
+packagemanifests: $(OPERATOR_SDK) $(KUSTOMIZE) kustomization
 	($(KUSTOMIZE) build config/manifests \
 	| $(OPERATOR_SDK) generate packagemanifests -q --version $(VERSION) $(PKG_MAN_OPTS)) && \
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
