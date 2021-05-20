@@ -98,7 +98,7 @@ func main() {
 	//    type: string`
 
 	re := regexp.MustCompile("`([^`]*)`")
-	reNS := regexp.MustCompile(`(?s)\s*namespace:\s*\$\(SA_NAMESPACE\)\s*`)
+	reNS := regexp.MustCompile(`(?s)\s*namespace:\s*placeholder\s*`)
 
 	for _, f := range files {
 		_, err = out.WriteString("\t" + constName(f) + " = `")
