@@ -6,6 +6,9 @@ export DEFAULT_IMAGE_VERSION
 
 ifneq (,$(DAPPER_HOST_ARCH))
 
+OPERATOR_SDK_VERSION := 1.0.1
+OPERATOR_SDK := $(CURDIR)/bin/operator-sdk
+
 # Running in Dapper
 
 IMAGES=submariner-operator
@@ -90,8 +93,12 @@ build: $(BINARIES)
 build-cross: $(CROSS_TARBALLS)
 
 licensecheck: BUILD_ARGS=--noupx
-licensecheck: build bin/submariner-operator
-	lichen -c .lichen.yaml $(BINARIES) bin/submariner-operator
+licensecheck: build bin/lichen bin/submariner-operator
+	bin/lichen -c .lichen.yaml $(BINARIES) bin/submariner-operator
+
+bin/lichen: vendor/modules.txt
+	mkdir -p $(@D)
+	go build -o $@ github.com/uw-labs/lichen
 
 package/Dockerfile.submariner-operator: bin/submariner-operator
 
@@ -174,25 +181,25 @@ $(KUSTOMIZE): vendor/modules.txt
 	mkdir -p $(@D)
 	go build -o $@ sigs.k8s.io/kustomize/kustomize/v3
 
-kustomization: $(KUSTOMIZE) is-semantic-version manifests
-	operator-sdk generate kustomize manifests -q && \
+kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
+	$(OPERATOR_SDK) generate kustomize manifests -q && \
 	(cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)) && \
 	(cd config/bundle && \
 	sed -e 's/$${VERSION}/$(VERSION)/g' kustomization.template.yaml > kustomization.yaml && \
 	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
 
 # Generate bundle manifests and metadata, then validate generated files
-bundle: $(KUSTOMIZE) kustomization
+bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	($(KUSTOMIZE) build config/manifests \
-	| operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)) && \
+	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)) && \
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml && cd ../../) && \
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
-	operator-sdk bundle validate ./bundle
+	$(OPERATOR_SDK) bundle validate ./bundle
 
 # Generate package manifests
 packagemanifests: $(KUSTOMIZE) kustomization
 	($(KUSTOMIZE) build config/manifests \
-	| operator-sdk generate packagemanifests -q --version $(VERSION) $(PKG_MAN_OPTS)) && \
+	| $(OPERATOR_SDK) generate packagemanifests -q --version $(VERSION) $(PKG_MAN_OPTS)) && \
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && \
 	mv packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(VERSION)/submariner.v$(VERSION).clusterserviceversion.yaml
@@ -200,6 +207,25 @@ packagemanifests: $(KUSTOMIZE) kustomization
 golangci-lint: generate-embeddedyamls
 
 unit: generate-embeddedyamls
+
+# Operator SDK
+# On version bumps, the checksum will need to be updated manually.
+# If necessary, the verification *keys* can be updated as follows:
+# * update scripts/operator-sdk-signing-key.asc, import the relevant key,
+#   and export it with
+#     gpg --armor --export-options export-minimal --export \
+#     ${fingerprint} >> scripts/operator-sdk-signing-key.asc
+#   (replacing ${fingerprint} with the full fingerprint);
+# * to update scripts/operator-sdk-signing-keyring.gpg, run
+#     gpg --no-options -q --batch --no-default-keyring \
+#     --output scripts/operator-sdk-signing-keyring.gpg \
+#     --dearmor scripts/operator-sdk-signing-key.asc
+$(OPERATOR_SDK):
+	curl -Lo $@ "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk-v${OPERATOR_SDK_VERSION}-x86_64-linux-gnu"
+	curl -Lo $@.asc "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk-v${OPERATOR_SDK_VERSION}-x86_64-linux-gnu.asc"
+	gpgv --keyring scripts/operator-sdk-signing-keyring.gpg $@.asc $@
+	sha256sum -c scripts/operator-sdk.sha256
+	chmod a+x $@
 
 .PHONY: build ci clean generate-clientset generate-embeddedyamls bundle packagemanifests kustomization is-semantic-version
 
