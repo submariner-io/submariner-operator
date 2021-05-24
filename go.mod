@@ -34,7 +34,7 @@ require (
 	github.com/submariner-io/admiral v0.9.0-rc0.0.20210512114522-576fb44bfbdd
 	github.com/submariner-io/cloud-prepare v0.0.0-20210517131130-867624ac37e7
 	github.com/submariner-io/lighthouse v0.9.0-rc0.0.20210510224156-c8116fe90f3c
-	github.com/submariner-io/shipyard v0.9.1-0.20210510160832-b96b2941ec80
+	github.com/submariner-io/shipyard v0.10.0-m1
 	github.com/submariner-io/submariner v0.9.0-rc0.0.20210510232802-a7b0766324d4
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
