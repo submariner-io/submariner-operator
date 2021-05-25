@@ -47,5 +47,20 @@ func Ensure(crdUpdater crdutils.CRDUpdater) error {
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Gateway CRD: %s", err)
 	}
+	_, err = utils.CreateOrUpdateEmbeddedCRD(
+		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_clusterglobalegressips_yaml)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return fmt.Errorf("error provisioning the ClusterGlobalEgressIP CRD: %s", err)
+	}
+	_, err = utils.CreateOrUpdateEmbeddedCRD(
+		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_globalegressips_yaml)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return fmt.Errorf("error provisioning the GlobalEgressIP CRD: %s", err)
+	}
+	_, err = utils.CreateOrUpdateEmbeddedCRD(
+		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_globalingressips_yaml)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		return fmt.Errorf("error provisioning the GlobalIngressIP CRD: %s", err)
+	}
 	return nil
 }
