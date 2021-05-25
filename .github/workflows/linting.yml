@@ -14,7 +14,7 @@ jobs:
       - name: Run make manifests to update CRDs
         run: make manifests
       - name: Validate that nothing has changed
-        run: git add -A && git diff --staged --exit-code
+        run: git add -A && git diff --staged --exit-code -- deploy
 
   gitlint:
     name: Commit Message(s)
