@@ -125,6 +125,7 @@ const (
 
 	re := regexp.MustCompile("`([^`]*)`")
 	reNS := regexp.MustCompile(`(?s)\s*namespace:\s*\$\(SA_NAMESPACE\)\s*`)
+	reTilde := regexp.MustCompile("`")
 
 	for _, f := range files {
 		_, err = out.WriteString("\t" + constName(f) + " = `")
@@ -134,8 +135,10 @@ const (
 		contents, err := ioutil.ReadFile(path.Join(yamlsDirectory, f))
 		panicOnErr(err)
 
-		_, err = out.Write(re.ReplaceAll(reNS.ReplaceAll(contents, []byte("\n")),
-			[]byte("` + \"`$1`\" + `")))
+		_, err = out.Write(
+			re.ReplaceAll(
+				reNS.ReplaceAll(reTilde.ReplaceAll(contents, []byte("`"+"`")), []byte("\n")),
+				[]byte("` + \"`$1`\" + `")))
 		panicOnErr(err)
 
 		_, err = out.WriteString("`\n")
