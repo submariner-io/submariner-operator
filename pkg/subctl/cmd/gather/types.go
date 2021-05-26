@@ -20,6 +20,8 @@ package gather
 import (
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -35,4 +37,49 @@ type Info struct {
 	ClusterName          string
 	DirName              string
 	IncludeSensitiveData bool
+}
+
+type version struct {
+	Subctl    string
+	Subm      string
+	K8sServer string
+}
+
+type clusterConfig struct {
+	CNIPlugin        string
+	CloudProvider    string
+	TotalNode        int
+	GatewayNode      map[string]types.UID
+	GWNodeNumber     int
+	MasterNode       map[string]types.UID
+	MasterNodeNumber int
+}
+
+type nodeConfig struct {
+	Name string
+	Info v1.NodeSystemInfo
+}
+
+type logInfo struct {
+	PodName      string
+	Namespace    string
+	RestartCount int32
+	PodState     v1.PodPhase
+	LogFileName  []string
+}
+
+type resourceInfo struct {
+	Name      string
+	Namespace string
+	Type      string
+	FileName  string
+}
+
+type data struct {
+	ClusterName   string
+	Versions      version
+	ClusterConfig clusterConfig
+	NodeConfig    []nodeConfig
+	PodLogs       []logInfo
+	ResourceInfo  []resourceInfo
 }

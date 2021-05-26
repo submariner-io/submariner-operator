@@ -239,6 +239,7 @@ func execCmdInBash(info Info, pod *v1.Pod, cmd string) (string, string, error) {
 }
 
 func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool) {
+	var cniResource resourceInfo
 	stdOut, _, err := execCmdInBash(info, pod, cmd)
 	if err != nil && !ignoreError {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error running %q on pod %q: %v", cmd, pod.Name, err))
@@ -251,6 +252,11 @@ func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool)
 		if err != nil {
 			info.Status.QueueFailureMessage(fmt.Sprintf("Error writing output from command %q on pod %q: %v", cmd, pod.Name, err))
 		}
+		cniResource.Namespace = pod.Namespace
+		cniResource.FileName = info.ClusterName + "_" + pod.Spec.NodeName + "_" + cmdName + ".log"
+		cniResource.Name = pod.Spec.NodeName
+		cniResource.Type = cmdName
+		resources = append(resources, cniResource)
 		return
 	}
 }

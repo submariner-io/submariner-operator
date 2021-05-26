@@ -34,6 +34,7 @@ import (
 )
 
 var fileNameRegexp = regexp.MustCompile(`[<>:"/\|?*]`)
+var resources []resourceInfo
 
 func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
@@ -55,8 +56,8 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 		for i := range list.Items {
 			item := &list.Items[i]
 
-			path := filepath.Join(info.DirName, escapeFileName(info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+
-				"_"+item.GetName())+".yaml")
+			name := escapeFileName(info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+"_"+item.GetName()) + ".yaml"
+			path := filepath.Join(info.DirName, name)
 			file, err := os.Create(path)
 			if err != nil {
 				return errors.WithMessagef(err, "error opening file %s", path)
@@ -73,8 +74,14 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 			if err != nil {
 				return errors.WithMessagef(err, "error writing to file %s", path)
 			}
+			resource := resourceInfo{
+				Name:      item.GetName(),
+				Namespace: item.GetNamespace(),
+				Type:      ofType.Resource,
+				FileName:  name,
+			}
+			resources = append(resources, resource)
 		}
-
 		return nil
 	}()
 
@@ -128,4 +135,8 @@ func scrubSensitiveData(info Info, dataString string) string {
 
 func escapeFileName(s string) string {
 	return fileNameRegexp.ReplaceAllString(s, "_")
+}
+
+func getResourceInfo() []resourceInfo {
+	return resources
 }

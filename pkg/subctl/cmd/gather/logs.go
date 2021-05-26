@@ -31,6 +31,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+var podLogInfos []logInfo
+var podLogInfo logInfo
+
 func gatherPodLogs(podLabelSelector string, info Info) {
 	gatherPodLogsByContainer(podLabelSelector, "", info)
 }
@@ -48,9 +51,10 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 		podLogOptions := corev1.PodLogOptions{}
 		podLogOptions.Container = container
 		for i := range pods.Items {
+			podLogInfo.LogFileName = nil
 			outputPodLogs(&pods.Items[i], podLogOptions, info)
+			podLogInfos = append(podLogInfos, podLogInfo)
 		}
-
 		return nil
 	}()
 
@@ -61,6 +65,9 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 }
 
 func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) {
+	podLogInfo.Namespace = pod.Namespace
+	podLogInfo.PodState = pod.Status.Phase
+	podLogInfo.PodName = pod.Name
 	err := outputPreviousPodLog(pod, podLogOptions, info)
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error outputting previous log for pod %q: %v", pod.Name, err))
@@ -98,18 +105,20 @@ func getLogFromStream(logStream io.ReadCloser) (string, error) {
 }
 
 func writeLogToFile(data, podName string, info Info, fileExtension string) error {
-	fileName := filepath.Join(info.DirName, escapeFileName(info.ClusterName+"_"+podName)+fileExtension)
-	f, err := os.Create(fileName)
+	fileName := escapeFileName(info.ClusterName+"_"+podName) + fileExtension
+	filePath := filepath.Join(info.DirName, fileName)
+	f, err := os.Create(filePath)
 	if err != nil {
-		return errors.WithMessagef(err, "error opening file %s", fileName)
+		return errors.WithMessagef(err, "error opening file %s", filePath)
 	}
 	defer f.Close()
 
 	_, err = f.WriteString(data)
 	if err != nil {
-		return errors.WithMessagef(err, "error writing to file %s", fileName)
+		return errors.WithMessagef(err, "error writing to file %s", filePath)
 	}
 
+	podLogInfo.LogFileName = append(podLogInfo.LogFileName, fileName)
 	return nil
 }
 
@@ -139,6 +148,7 @@ func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, i
 		}
 		defer logStream.Close()
 	}
+	podLogInfo.RestartCount = pod.Status.ContainerStatuses[0].RestartCount
 	return nil
 }
 
@@ -157,4 +167,8 @@ func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, in
 		return err
 	}
 	return nil
+}
+
+func getPodLogInfo() []logInfo {
+	return podLogInfos
 }
