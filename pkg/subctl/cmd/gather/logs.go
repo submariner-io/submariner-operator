@@ -45,12 +45,12 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 
 		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector))
 
-		podLogOptions := corev1.PodLogOptions{}
-		podLogOptions.Container = container
-		for i := range pods.Items {
-			outputPodLogs(&pods.Items[i], podLogOptions, info)
+		podLogOptions := corev1.PodLogOptions{
+			Container: container,
 		}
-
+		for i := range pods.Items {
+			info.Summary.PodLogs = append(info.Summary.PodLogs, outputPodLogs(&pods.Items[i], podLogOptions, info))
+		}
 		return nil
 	}()
 
@@ -60,31 +60,31 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 	}
 }
 
-func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) {
-	err := outputPreviousPodLog(pod, podLogOptions, info)
+func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) (podLogInfo LogInfo) {
+	podLogInfo.Namespace = pod.Namespace
+	podLogInfo.PodState = pod.Status.Phase
+	podLogInfo.PodName = pod.Name
+	err := outputPreviousPodLog(pod, podLogOptions, info, &podLogInfo)
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error outputting previous log for pod %q: %v", pod.Name, err))
 	}
 
-	err = outputCurrentPodLog(pod, podLogOptions, info)
+	err = outputCurrentPodLog(pod, podLogOptions, info, &podLogInfo)
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error outputting current log for pod %q: %v", pod.Name, err))
 	}
+
+	return podLogInfo
 }
 
-func writePodLogToFile(logStream io.ReadCloser, info Info, podName, fileExtension string) error {
+func writePodLogToFile(logStream io.ReadCloser, info Info, podName, fileExtension string) (string, error) {
 	logs, err := getLogFromStream(logStream)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	logs = scrubSensitiveData(info, logs)
-	err = writeLogToFile(logs, podName, info, fileExtension)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return writeLogToFile(logs, podName, info, fileExtension)
 }
 
 func getLogFromStream(logStream io.ReadCloser) (string, error) {
@@ -97,20 +97,21 @@ func getLogFromStream(logStream io.ReadCloser) (string, error) {
 	return logs.String(), nil
 }
 
-func writeLogToFile(data, podName string, info Info, fileExtension string) error {
-	fileName := filepath.Join(info.DirName, escapeFileName(info.ClusterName+"_"+podName)+fileExtension)
-	f, err := os.Create(fileName)
+func writeLogToFile(data, podName string, info Info, fileExtension string) (string, error) {
+	fileName := escapeFileName(info.ClusterName+"_"+podName) + fileExtension
+	filePath := filepath.Join(info.DirName, fileName)
+	f, err := os.Create(filePath)
 	if err != nil {
-		return errors.WithMessagef(err, "error opening file %s", fileName)
+		return "", errors.WithMessagef(err, "error opening file %s", filePath)
 	}
 	defer f.Close()
 
 	_, err = f.WriteString(data)
 	if err != nil {
-		return errors.WithMessagef(err, "error writing to file %s", fileName)
+		return "", errors.WithMessagef(err, "error writing to file %s", filePath)
 	}
 
-	return nil
+	return fileName, err
 }
 
 func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.PodList, error) {
@@ -123,7 +124,7 @@ func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.P
 	return pods, nil
 }
 
-func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) error {
+func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info, podLogInfo *LogInfo) error {
 	podLogOptions.Previous = true
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
 	logStream, _ := logRequest.Stream(context.TODO())
@@ -133,16 +134,18 @@ func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, i
 	// if no previous pods found, logstream == nil, ignore it
 	if logStream != nil {
 		info.Status.QueueWarningMessage(fmt.Sprintf("Found logs for previous instances of pod %s", pod.Name))
-		err := writePodLogToFile(logStream, info, pod.Name, ".log.prev")
+		fileName, err := writePodLogToFile(logStream, info, pod.Name, ".log.prev")
 		if err != nil {
 			return err
 		}
+		podLogInfo.LogFileName = append(podLogInfo.LogFileName, fileName)
 		defer logStream.Close()
 	}
+	podLogInfo.RestartCount = pod.Status.ContainerStatuses[0].RestartCount
 	return nil
 }
 
-func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) error {
+func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info, podLogInfo *LogInfo) error {
 	// Running with Previous = false on the same pod
 	podLogOptions.Previous = false
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
@@ -152,9 +155,8 @@ func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, in
 	}
 	defer logStream.Close()
 
-	err = writePodLogToFile(logStream, info, pod.Name, ".log")
-	if err != nil {
-		return err
-	}
-	return nil
+	fileName, err := writePodLogToFile(logStream, info, pod.Name, ".log")
+	podLogInfo.LogFileName = append(podLogInfo.LogFileName, fileName)
+
+	return err
 }
