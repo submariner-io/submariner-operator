@@ -19,6 +19,7 @@ limitations under the License.
 package network
 
 import (
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,7 +33,7 @@ var _ = Describe("discoverCanalFlannelNetwork", func() {
 		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			clusterNet := testDiscoverCanalFlannelWith(&canalFlannelCfgMap)
 			Expect(clusterNet).NotTo(BeNil())
-			Expect(clusterNet.NetworkPlugin).To(Equal("canal-flannel"))
+			Expect(clusterNet.NetworkPlugin).To(Equal(constants.NetworkPluginCanalFlannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testCannalFlannelPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
 		})
@@ -46,7 +47,7 @@ var _ = Describe("discoverCanalFlannelNetwork", func() {
 				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
-			Expect(clusterNet.NetworkPlugin).To(Equal("canal-flannel"))
+			Expect(clusterNet.NetworkPlugin).To(Equal(constants.NetworkPluginCanalFlannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testCannalFlannelPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})

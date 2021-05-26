@@ -19,6 +19,7 @@ limitations under the License.
 package network
 
 import (
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	. "github.com/onsi/ginkgo"
@@ -35,7 +36,7 @@ var _ = Describe("discoverOpenShift4Network", func() {
 			Expect(cn.ServiceCIDRs).To(HaveLen(1))
 			Expect(cn.PodCIDRs).To(Equal([]string{"10.128.0.0/14", "10.132.0.0/14"}))
 			Expect(cn.ServiceCIDRs).To(Equal([]string{"172.30.0.0/16"}))
-			Expect(cn.NetworkPlugin).To(Equal("OpenShiftSDN"))
+			Expect(cn.NetworkPlugin).To(Equal(constants.NetworkPluginOpenShiftSDN))
 		})
 	})
 
