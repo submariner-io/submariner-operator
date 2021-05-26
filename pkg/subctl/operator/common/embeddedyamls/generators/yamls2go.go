@@ -34,6 +34,9 @@ var files = []string{
 	"deploy/submariner/crds/submariner.io_clusters.yaml",
 	"deploy/submariner/crds/submariner.io_endpoints.yaml",
 	"deploy/submariner/crds/submariner.io_gateways.yaml",
+	"deploy/submariner/crds/submariner.io_clusterglobalegressips.yaml",
+	"deploy/submariner/crds/submariner.io_globalegressips.yaml",
+	"deploy/submariner/crds/submariner.io_globalingressips.yaml",
 	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml",
 	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml",
 	"config/rbac/submariner-operator/service_account.yaml",
@@ -122,6 +125,7 @@ const (
 
 	re := regexp.MustCompile("`([^`]*)`")
 	reNS := regexp.MustCompile(`(?s)\s*namespace:\s*\$\(SA_NAMESPACE\)\s*`)
+	reTilde := regexp.MustCompile("`")
 
 	for _, f := range files {
 		_, err = out.WriteString("\t" + constName(f) + " = `")
@@ -131,8 +135,10 @@ const (
 		contents, err := ioutil.ReadFile(path.Join(yamlsDirectory, f))
 		panicOnErr(err)
 
-		_, err = out.Write(re.ReplaceAll(reNS.ReplaceAll(contents, []byte("\n")),
-			[]byte("` + \"`$1`\" + `")))
+		_, err = out.Write(
+			re.ReplaceAll(
+				reNS.ReplaceAll(reTilde.ReplaceAll(contents, []byte("`"+"`")), []byte("\n")),
+				[]byte("` + \"`$1`\" + `")))
 		panicOnErr(err)
 
 		_, err = out.WriteString("`\n")
