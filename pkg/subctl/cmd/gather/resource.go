@@ -55,8 +55,8 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 		for i := range list.Items {
 			item := &list.Items[i]
 
-			path := filepath.Join(info.DirName, escapeFileName(info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+
-				"_"+item.GetName())+".yaml")
+			name := escapeFileName(info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+"_"+item.GetName()) + ".yaml"
+			path := filepath.Join(info.DirName, name)
 			file, err := os.Create(path)
 			if err != nil {
 				return errors.WithMessagef(err, "error opening file %s", path)
@@ -73,8 +73,13 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 			if err != nil {
 				return errors.WithMessagef(err, "error writing to file %s", path)
 			}
+			info.Summary.Resources = append(info.Summary.Resources, ResourceInfo{
+				Name:      item.GetName(),
+				Namespace: item.GetNamespace(),
+				Type:      ofType.Resource,
+				FileName:  name,
+			})
 		}
-
 		return nil
 	}()
 
