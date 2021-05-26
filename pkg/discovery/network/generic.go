@@ -25,6 +25,7 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -38,7 +39,7 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 	}
 
 	if clusterNetwork != nil {
-		clusterNetwork.NetworkPlugin = "generic"
+		clusterNetwork.NetworkPlugin = constants.NetworkPluginGeneric
 		return clusterNetwork, nil
 	}
 

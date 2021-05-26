@@ -19,6 +19,7 @@ limitations under the License.
 package network
 
 import (
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -36,7 +37,7 @@ func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, erro
 			if envVar.Name == "IPALLOC_RANGE" {
 				clusterNetwork = &ClusterNetwork{
 					PodCIDRs:      []string{envVar.Value},
-					NetworkPlugin: "weave-net",
+					NetworkPlugin: constants.NetworkPluginWeaveNet,
 				}
 				break
 			}

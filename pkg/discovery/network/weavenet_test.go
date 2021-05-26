@@ -21,6 +21,7 @@ package network
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -49,7 +50,7 @@ var _ = Describe("discoverWeaveNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as weave-net", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("weave-net"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginWeaveNet))
 		})
 	})
 
@@ -71,7 +72,7 @@ var _ = Describe("discoverWeaveNetwork", func() {
 		})
 
 		It("Should identify the network plugin as weave", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("weave-net"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginWeaveNet))
 		})
 	})
 })

@@ -57,6 +57,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 )
 
 const (
@@ -328,7 +329,7 @@ func (r *SubmarinerReconciler) reconcileGatewayDaemonSet(
 func (r *SubmarinerReconciler) reconcileNetworkPluginSyncerDeployment(instance *submopv1a1.Submariner,
 	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger) (*appsv1.Deployment, error) {
 	// Only OVNKubernetes needs networkplugin-syncer so far
-	if instance.Status.NetworkPlugin == network.OvnKubernetes {
+	if instance.Status.NetworkPlugin == constants.NetworkPluginOVNKubernetes {
 		return helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,
 			clusterNetwork), reqLogger, r.client, r.scheme)
 	}

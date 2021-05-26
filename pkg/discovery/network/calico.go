@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,19 +20,27 @@ package network
 import (
 	"context"
 
-	"github.com/pkg/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 func discoverCalicoNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	_, err := clientSet.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "calico-config", metav1.GetOptions{})
+	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
+		return nil, err
+	}
+
+	findCalicoConfigMap := false
+	for _, cm := range cmList.Items {
+		if cm.Name == "calico-config" {
+			findCalicoConfigMap = true
+			break
 		}
-		return nil, errors.WithMessage(err, "error obtaining the \"calico\" ConfigMap")
+	}
+
+	if !findCalicoConfigMap {
+		return nil, nil
 	}
 
 	clusterNetwork, err := discoverNetwork(clientSet)
@@ -39,7 +49,7 @@ func discoverCalicoNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, err
 	}
 
 	if clusterNetwork != nil {
-		clusterNetwork.NetworkPlugin = "calico"
+		clusterNetwork.NetworkPlugin = constants.NetworkPluginCalico
 		return clusterNetwork, nil
 	}
 
