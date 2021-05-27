@@ -37,6 +37,7 @@ require (
 	github.com/submariner-io/shipyard v0.10.0-m1
 	github.com/submariner-io/submariner v0.10.0-m1.0.20210526103719-0524d4765521
 	github.com/ulikunitz/xz v0.5.10 // indirect
+	github.com/uw-labs/lichen v0.1.3
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	golang.org/x/crypto v0.0.0-20210505212654-3497b51f5e64 // indirect
