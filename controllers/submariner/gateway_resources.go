@@ -153,6 +153,11 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 								FieldPath: "spec.nodeName",
 							},
 						}},
+						{Name: "POD_NAME", ValueFrom: &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "metadata.name",
+							},
+						}},
 					},
 				},
 			},
