@@ -22,7 +22,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onsi/ginkgo v1.16.2
-	github.com/onsi/gomega v1.12.0
+	github.com/onsi/gomega v1.13.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.4.0
@@ -35,7 +35,7 @@ require (
 	github.com/submariner-io/cloud-prepare v0.10.0-m1
 	github.com/submariner-io/lighthouse v0.10.0-m1
 	github.com/submariner-io/shipyard v0.10.0-m1
-	github.com/submariner-io/submariner v0.10.0-m1.0.20210526103719-0524d4765521
+	github.com/submariner-io/submariner v0.10.0-m1.0.20210527200531-1d146f074a87
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.3
 	github.com/xlab/treeprint v1.1.0 // indirect
