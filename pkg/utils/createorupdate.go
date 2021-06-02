@@ -24,8 +24,8 @@ import (
 
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	embeddedyamls "github.com/submariner-io/submariner-operator/pkg/yamls"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -63,10 +63,10 @@ func CreateOrUpdateCRD(ctx context.Context, updater crdutils.CRDUpdater, crd *ap
 	}, crd)
 }
 
-func CreateOrUpdateEmbeddedCRD(ctx context.Context, updater crdutils.CRDUpdater, crdYaml string) (bool, error) {
+func CreateOrUpdateEmbeddedCRD(ctx context.Context, updater crdutils.CRDUpdater, crdFile string) (bool, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
+	if err := embeddedyamls.GetObjectByName(crdFile, crd); err != nil {
 		return false, fmt.Errorf("error extracting embedded CRD: %s", err)
 	}
 

@@ -23,7 +23,6 @@ import (
 
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
@@ -39,16 +38,16 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
 	submarinerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
-		embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
+		"deploy/crds/submariner.io_submariners.yaml")
 	if err != nil {
 		return false, err
 	}
 	serviceDiscoveryCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
-		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
+		"deploy/crds/submariner.io_servicediscoveries.yaml")
 	if err != nil {
 		return false, err
 	}
 	brokerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
-		embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
+		"deploy/crds/submariner.io_brokers.yaml")
 	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, err
 }

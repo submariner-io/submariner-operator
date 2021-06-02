@@ -10,16 +10,16 @@ rules:
 
 ignore: |
   /vendor
-  /deploy/crds
-  /deploy/submariner/crds
-  /deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml
-  /deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml
-  /config/crd/bases/submariner.io_brokers.yaml
-  /config/crd/bases/submariner.io_submariners.yaml
-  /config/crd/bases/submariner.io_servicediscoveries.yaml
-  /config/manifests/kustomization.yaml
-  /config/manifests/bases/submariner.clusterserviceversion.yaml
-  /config/bundle/kustomization.yaml
+  /pkg/yamls/deploy/crds
+  /pkg/yamls/deploy/submariner/crds
+  /pkg/yamls/deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml
+  /pkg/yamls/deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml
+  /pkg/yamls/config/crd/bases/submariner.io_brokers.yaml
+  /pkg/yamls/config/crd/bases/submariner.io_submariners.yaml
+  /pkg/yamls/config/crd/bases/submariner.io_servicediscoveries.yaml
+  /pkg/yamls/config/manifests/kustomization.yaml
+  /pkg/yamls/config/manifests/bases/submariner.clusterserviceversion.yaml
+  /pkg/yamls/config/bundle/kustomization.yaml
   /bundle
   /packagemanifests
 

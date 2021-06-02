@@ -56,11 +56,9 @@ linters:
     - whitespace
 issues:
   exclude-rules:
-    # Ignore long line and variable name non-compliance warnings in auto-generated file
-    - linters:
-        - lll
-        - stylecheck
-      path: "pkg/subctl/operator/common/embeddedyamls/yamls.go"
+    # yamls.go needs go:embed comments, detailed export comments wouldn't be useful
+    - path: pkg/yamls/yamls.go
+      text: "ST1022"
     # BrokerK8sApiServer parameter is used by other projects, like ACM,
     # so not changing it to BrokerK8sAPIServer as suggested by stylecheck
     - linters:

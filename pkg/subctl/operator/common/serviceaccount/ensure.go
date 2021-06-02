@@ -21,8 +21,8 @@ package serviceaccount
 import (
 	"context"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
+	embeddedyamls "github.com/submariner-io/submariner-operator/pkg/yamls"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	clientset "k8s.io/client-go/kubernetes"

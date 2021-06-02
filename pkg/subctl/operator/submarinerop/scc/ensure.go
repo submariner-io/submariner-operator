@@ -19,33 +19,33 @@ limitations under the License.
 package scc
 
 import (
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
+	embeddedyamls "github.com/submariner-io/submariner-operator/pkg/yamls"
 	"k8s.io/client-go/rest"
 )
 
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
-	operatorSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_operator_service_account_yaml)
+	operatorSaName, err := embeddedyamls.GetObjectName(embeddedyamls.ConfigRbacSubmarinerOperatorServiceAccount)
 	if err != nil {
 		return false, err
 	}
 
-	gatewaySaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_gateway_service_account_yaml)
+	gatewaySaName, err := embeddedyamls.GetObjectName(embeddedyamls.ConfigRbacSubmarinerGatewayServiceAccount)
 	if err != nil {
 		return false, err
 	}
 
-	routeAgentSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_route_agent_service_account_yaml)
+	routeAgentSaName, err := embeddedyamls.GetObjectName(embeddedyamls.ConfigRbacSubmarinerRouteAgentServiceAccount)
 	if err != nil {
 		return false, err
 	}
 
-	globalnetSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_globalnet_service_account_yaml)
+	globalnetSaName, err := embeddedyamls.GetObjectName(embeddedyamls.ConfigRbacSubmarinerGlobalnetServiceAccount)
 	if err != nil {
 		return false, err
 	}
 
-	npSyncerSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_networkplugin_syncer_service_account_yaml)
+	npSyncerSaName, err := embeddedyamls.GetObjectName(embeddedyamls.ConfigRbacNetworkpluginSyncerServiceAccount)
 	if err != nil {
 		return false, err
 	}

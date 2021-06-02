@@ -23,7 +23,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	embeddedyamls "github.com/submariner-io/submariner-operator/pkg/yamls"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster
@@ -53,13 +53,13 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 
 func ensureServiceAccounts(clientSet *clientset.Clientset, namespace string) (bool, error) {
 	createdAgentSA, err := serviceaccount.Ensure(clientSet, namespace,
-		embeddedyamls.Config_rbac_lighthouse_agent_service_account_yaml)
+		embeddedyamls.ConfigRbacLighthouseAgentServiceAccount)
 	if err != nil {
 		return false, err
 	}
 
 	createdCoreDNSSA, err := serviceaccount.Ensure(clientSet, namespace,
-		embeddedyamls.Config_rbac_lighthouse_coredns_service_account_yaml)
+		embeddedyamls.ConfigRbacLighthouseCorednsServiceAccount)
 	if err != nil {
 		return false, err
 	}
@@ -68,13 +68,13 @@ func ensureServiceAccounts(clientSet *clientset.Clientset, namespace string) (bo
 
 func ensureClusterRoles(clientSet *clientset.Clientset) (bool, error) {
 	createdAgentCR, err := serviceaccount.EnsureClusterRole(clientSet,
-		embeddedyamls.Config_rbac_lighthouse_agent_cluster_role_yaml)
+		embeddedyamls.ConfigRbacLighthouseAgentClusterRole)
 	if err != nil {
 		return false, err
 	}
 
 	createdCoreDNSCR, err := serviceaccount.EnsureClusterRole(clientSet,
-		embeddedyamls.Config_rbac_lighthouse_coredns_cluster_role_yaml)
+		embeddedyamls.ConfigRbacLighthouseCorednsClusterRole)
 	if err != nil {
 		return false, err
 	}
@@ -84,13 +84,13 @@ func ensureClusterRoles(clientSet *clientset.Clientset) (bool, error) {
 
 func ensureClusterRoleBindings(clientSet *clientset.Clientset, namespace string) (bool, error) {
 	createdAgentCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_lighthouse_agent_cluster_role_binding_yaml)
+		embeddedyamls.ConfigRbacLighthouseAgentClusterRoleBinding)
 	if err != nil {
 		return false, err
 	}
 
 	createdCoreDNSCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_lighthouse_coredns_cluster_role_binding_yaml)
+		embeddedyamls.ConfigRbacLighthouseCorednsClusterRoleBinding)
 	if err != nil {
 		return false, err
 	}

@@ -20,6 +20,10 @@ CROSS_TARGETS := linux-amd64 linux-arm64 linux-arm linux-s390x linux-ppc64le win
 BINARIES := bin/subctl
 CROSS_BINARIES := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,bin/subctl-$(VERSION)-%,$(cross)))
 CROSS_TARBALLS := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,dist/subctl-$(VERSION)-%.tar.xz,$(cross)))
+GENERATED_YAMLS := pkg/yamls/deploy/crds/submariner.io_brokers.yaml pkg/yamls/deploy/crds/submariner.io_servicediscoveries.yaml \
+	pkg/yamls/deploy/crds/submariner.io_submariners.yaml \
+	pkg/yamls/deploy/submariner/crds/submariner.io_clusters.yaml pkg/yamls/deploy/submariner/crds/submariner.io_endpoints.yaml \
+	pkg/yamls/deploy/submariner/crds/submariner.io_gateways.yaml
 
 ifneq (,$(filter ovn,$(_using)))
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings.ovn
@@ -110,7 +114,7 @@ bin/lichen: vendor/modules.txt
 
 package/Dockerfile.submariner-operator: bin/submariner-operator
 
-bin/submariner-operator: vendor/modules.txt main.go generate-embeddedyamls
+bin/submariner-operator: vendor/modules.txt main.go $(GENERATED_YAMLS)
 	${SCRIPTS_DIR}/compile.sh \
 	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
 	$@ main.go $(BUILD_ARGS)
@@ -123,7 +127,8 @@ dist/subctl-%.tar.xz: bin/subctl-%
 	tar -cJf $@ --transform "s/^bin/subctl-$(VERSION)/" $<
 
 # Versions may include hyphens so it's easier to use $(VERSION) than to extract them from the target
-bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vendor/modules.txt
+bin/subctl-%: generate $(GENERATED_YAMLS) $(shell find pkg/subctl/ -name "*.go") vendor/modules.txt \
+		$(shell find pkg/yamls/ pkg/yamls/ -name "*.yaml")
 	mkdir -p $(@D)
 	target=$@; \
 	target=$${target%.exe}; \
@@ -136,12 +141,7 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 			   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
 		--noupx $@ ./pkg/subctl/main.go $(BUILD_ARGS)
 
-ci: generate-embeddedyamls golangci-lint markdownlint unit build images
-
-generate-embeddedyamls: generate pkg/subctl/operator/common/embeddedyamls/yamls.go
-
-pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") vendor/modules.txt
-	go generate pkg/subctl/operator/common/embeddedyamls/generate.go
+ci: generate golangci-lint markdownlint unit build images
 
 # Operator CRDs
 CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
@@ -149,15 +149,15 @@ $(CONTROLLER_GEN): vendor/modules.txt
 	mkdir -p $(@D)
 	go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
-deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
+pkg/yamls/deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths=./... output:crd:artifacts:config=pkg/yamls/deploy/crds
 
-deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
+pkg/yamls/deploy/crds/submariner.io_brokers.yaml pkg/yamls/deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths=./... output:crd:artifacts:config=pkg/yamls/deploy/crds
 
 # Submariner CRDs
-deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: $(CONTROLLER_GEN) vendor/modules.txt
-	cd vendor/github.com/submariner-io/submariner && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
+pkg/yamls/deploy/submariner/crds/submariner.io_clusters.yaml pkg/yamls/deploy/submariner/crds/submariner.io_endpoints.yaml pkg/yamls/deploy/submariner/crds/submariner.io_gateways.yaml: $(CONTROLLER_GEN) vendor/modules.txt
+	cd vendor/github.com/submariner-io/submariner && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths=./... output:crd:artifacts:config=../../../../pkg/yamls/deploy/submariner/crds
 
 # Generate the clientset for the Submariner APIs
 # It needs to be run when the Submariner APIs change
@@ -171,11 +171,11 @@ generate-clientset: vendor/modules.txt
 		submariner:v1alpha1
 
 # Generate code
-generate: $(CONTROLLER_GEN) vendor/modules.txt
+generate: $(CONTROLLER_GEN) $(GENERATED_YAMLS) vendor/modules.txt
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
 
 # Generate manifests e.g. CRD, RBAC etc
-manifests: generate $(CONTROLLER_GEN) vendor/modules.txt
+manifests: generate $(GENERATED_YAMLS) $(CONTROLLER_GEN) vendor/modules.txt
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # test if VERSION matches the semantic versioning rule
@@ -213,9 +213,9 @@ packagemanifests: $(OPERATOR_SDK) $(KUSTOMIZE) kustomization
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && \
 	mv packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(VERSION)/submariner.v$(VERSION).clusterserviceversion.yaml
 
-golangci-lint: generate-embeddedyamls
+golangci-lint: $(GENERATED_YAMLS)
 
-unit: generate-embeddedyamls
+unit: $(GENERATED_YAMLS)
 
 # Operator SDK
 # On version bumps, the checksum will need to be updated manually.
@@ -236,7 +236,7 @@ $(OPERATOR_SDK):
 	sha256sum -c scripts/operator-sdk.sha256
 	chmod a+x $@
 
-.PHONY: build ci clean generate-clientset generate-embeddedyamls bundle packagemanifests kustomization is-semantic-version
+.PHONY: build ci clean generate-clientset bundle packagemanifests kustomization is-semantic-version
 
 else
 

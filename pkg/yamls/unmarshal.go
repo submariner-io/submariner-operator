@@ -30,11 +30,15 @@ type IObject struct {
 func GetObject(yamlStr string, obj interface{}) error {
 	doc := []byte(yamlStr)
 
-	if err := yaml.Unmarshal(doc, obj); err != nil {
+	return yaml.Unmarshal(doc, obj)
+}
+
+func GetObjectByName(name string, obj interface{}) error {
+	yamlData, err := RetrieveEmbeddedData(name)
+	if err != nil {
 		return err
 	}
-
-	return nil
+	return yaml.Unmarshal(yamlData, obj)
 }
 
 func GetObjectName(yamlStr string) (string, error) {
@@ -42,6 +46,21 @@ func GetObjectName(yamlStr string) (string, error) {
 	var obj IObject
 
 	err := yaml.Unmarshal(doc, &obj)
+	if err != nil {
+		return "", err
+	}
+
+	return obj.Name, nil
+}
+
+func GetObjectNameByName(name string) (string, error) {
+	var obj IObject
+
+	yamlData, err := RetrieveEmbeddedData(name)
+	if err != nil {
+		return "", err
+	}
+	err = yaml.Unmarshal(yamlData, &obj)
 	if err != nil {
 		return "", err
 	}
