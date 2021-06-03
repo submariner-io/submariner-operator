@@ -47,17 +47,12 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 		"app": "submariner-routeagent",
 	}
 
-	allowPrivilegeEscalation := true
-	privileged := true
-	readOnlyFileSystem := false
+	// The route agent needs to be privileged so it can write to /proc/sys
+	privileged := false
+	allowPrivilegeEscalation := false
 	runAsNonRoot := false
-	securityContextAllCapAllowEscal := corev1.SecurityContext{
-		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
-		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-		Privileged:               &privileged,
-		ReadOnlyRootFilesystem:   &readOnlyFileSystem,
-		RunAsNonRoot:             &runAsNonRoot,
-	}
+	// We need to be able to update /var/lib/alternatives (for iptables)
+	readOnlyFileSystem := false
 
 	terminationGracePeriodSeconds := int64(1)
 	maxUnavailable := intstr.FromString("100%")
@@ -96,9 +91,19 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 							Image:           getImagePath(cr, names.RouteAgentImage, names.RouteAgentComponent),
 							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
-							Command:         []string{"submariner-route-agent.sh"},
-							SecurityContext: &securityContextAllCapAllowEscal,
+							Command: []string{"submariner-route-agent.sh"},
+							SecurityContext: &corev1.SecurityContext{
+								Capabilities: &corev1.Capabilities{
+									Add:  []corev1.Capability{"dac_override", "net_admin"},
+									Drop: []corev1.Capability{"all"},
+								},
+								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+								Privileged:               &privileged,
+								ReadOnlyRootFilesystem:   &readOnlyFileSystem,
+								RunAsNonRoot:             &runAsNonRoot,
+							},
 							VolumeMounts: []corev1.VolumeMount{
+								// These are required for ovs-vsctl, see https://github.com/submariner-io/submariner/issues/1282
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
 								{Name: "host-run", MountPath: "/run"},
 							},
