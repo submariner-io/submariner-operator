@@ -78,17 +78,12 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 
 	// Create privileged security context for Gateway pod
 	// FIXME: Seems like these have to be a var, so can pass pointer to bool var to SecurityContext. Cleaner option?
-	allowPrivilegeEscalation := true
+	// The gateway needs to be privileged so it can write to /proc/sys
 	privileged := true
+	allowPrivilegeEscalation := true
 	runAsNonRoot := false
+	// We need to be able to update /var/lib/alternatives (for iptables)
 	readOnlyRootFilesystem := false
-
-	securityContextAllCapsPrivileged := corev1.SecurityContext{
-		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
-		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-		Privileged:               &privileged,
-		ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
-		RunAsNonRoot:             &runAsNonRoot}
 
 	// Create Pod
 	terminationGracePeriodSeconds := int64(1)
@@ -127,7 +122,16 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 					Image:           getImagePath(cr, names.GatewayImage, names.GatewayComponent),
 					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayComponent]),
 					Command:         []string{"submariner.sh"},
-					SecurityContext: &securityContextAllCapsPrivileged,
+					SecurityContext: &corev1.SecurityContext{
+						Capabilities: &corev1.Capabilities{
+							Add:  []corev1.Capability{"net_admin"},
+							Drop: []corev1.Capability{"all"},
+						},
+						AllowPrivilegeEscalation: &allowPrivilegeEscalation,
+						Privileged:               &privileged,
+						ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
+						RunAsNonRoot:             &runAsNonRoot,
+					},
 					Env: []corev1.EnvVar{
 						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
@@ -159,6 +163,10 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 							},
 						}},
 					},
+					VolumeMounts: []corev1.VolumeMount{
+						{Name: "ipsecd", MountPath: "/etc/ipsec.d", ReadOnly: false},
+						{Name: "ipsecnss", MountPath: "/var/lib/ipsec/nss", ReadOnly: false},
+					},
 				},
 			},
 			// TODO: Use SA submariner-gateway or submariner?
@@ -169,6 +177,10 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 			DNSPolicy:                     corev1.DNSClusterFirst,
 			// The gateway engine must be able to run on any flagged node, regardless of existing taints
 			Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
+			Volumes: []corev1.Volume{
+				{Name: "ipsecd", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+				{Name: "ipsecnss", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+			},
 		},
 	}
 	if cr.Spec.CeIPSecIKEPort != 0 {
