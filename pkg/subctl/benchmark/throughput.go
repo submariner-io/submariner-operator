@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,6 +18,7 @@ limitations under the License.
 package benchmark
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/onsi/gomega"
@@ -52,15 +55,15 @@ func StartThroughputTests(intraCluster bool) {
 		}
 
 		clusterBName := framework.TestContext.ClusterIDs[framework.ClusterB]
-		framework.By(fmt.Sprintf("Performing throughput tests from Gateway pod on cluster %q to Gateway pod on cluster %q",
-			clusterAName, clusterBName))
+		fmt.Printf("Performing throughput tests from Gateway pod on cluster %q to Gateway pod on cluster %q\n",
+			clusterAName, clusterBName)
 		runThroughputTest(f, testParams)
 
 		testParams.ServerPodScheduling = framework.NonGatewayNode
 		testParams.ClientPodScheduling = framework.NonGatewayNode
 
-		framework.By(fmt.Sprintf("Performing throughput tests from Non-Gateway pod on cluster %q to Non-Gateway pod on cluster %q",
-			clusterAName, clusterBName))
+		fmt.Printf("Performing throughput tests from Non-Gateway pod on cluster %q to Non-Gateway pod on cluster %q\n",
+			clusterAName, clusterBName)
 		runThroughputTest(f, testParams)
 	} else {
 		testIntraClusterParams := benchmarkTestParams{
@@ -70,7 +73,7 @@ func StartThroughputTests(intraCluster bool) {
 			ClientPodScheduling: framework.NonGatewayNode,
 		}
 
-		framework.By(fmt.Sprintf("Performing throughput tests from Non-Gateway pod to Gateway pod on cluster %q", clusterAName))
+		fmt.Printf("Performing throughput tests from Non-Gateway pod to Gateway pod on cluster %q\n", clusterAName)
 		runThroughputTest(f, testIntraClusterParams)
 	}
 
@@ -105,7 +108,7 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	var connectionAttempts uint = 2
 	var iperf3Port = 5201
 
-	framework.By(fmt.Sprintf("Creating a Nettest Server Pod on %q", serverClusterName))
+	By(fmt.Sprintf("Creating a Nettest Server Pod on %q", serverClusterName))
 	nettestServerPod := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ThroughputServerPod,
 		Cluster:            testParams.ServerCluster,
@@ -116,8 +119,8 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	})
 
 	podsClusterB := framework.KubeClients[testParams.ServerCluster].CoreV1().Pods(f.Namespace)
-	p1, _ := podsClusterB.Get(nettestServerPod.Pod.Name, metav1.GetOptions{})
-	framework.By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
+	p1, _ := podsClusterB.Get(context.TODO(), nettestServerPod.Pod.Name, metav1.GetOptions{})
+	By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP
 
@@ -143,10 +146,10 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 		Port:               iperf3Port,
 	})
 
-	framework.By(fmt.Sprintf("Nettest Client Pod %q was created on cluster %q, node %q; connect to server pod ip %q",
+	By(fmt.Sprintf("Nettest Client Pod %q was created on cluster %q, node %q; connect to server pod ip %q",
 		nettestClientPod.Pod.Name, clientClusterName, nettestClientPod.Pod.Spec.NodeName, remoteIP))
 
-	framework.By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
+	By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
 	nettestClientPod.AwaitFinishVerbose(Verbose)
 	nettestClientPod.CheckSuccessfulFinish()
 	fmt.Println(nettestClientPod.TerminationMessage)

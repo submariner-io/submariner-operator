@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +21,7 @@ package network
 import (
 	"fmt"
 
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
@@ -49,7 +52,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {
@@ -72,7 +75,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {
@@ -95,7 +98,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {
@@ -118,7 +121,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {
@@ -141,7 +144,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {
@@ -164,7 +167,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 
 		It("Should return the ClusterNetwork structure with empty PodCIDRs", func() {
@@ -189,7 +192,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the network plugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 	})
 
@@ -208,7 +211,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {
@@ -231,7 +234,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {
@@ -255,7 +258,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 	})
 
@@ -296,7 +299,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 		})
 
 		It("Should identify the networkplugin as generic", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo("generic"))
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(constants.NetworkPluginGeneric))
 		})
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {

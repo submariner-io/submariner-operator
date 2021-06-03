@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package crds
 
 import (
+	"context"
 	"fmt"
 
 	"k8s.io/client-go/rest"
@@ -32,5 +35,5 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, fmt.Errorf("error creating the api extensions client: %s", err)
 	}
 
-	return utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
+	return utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater, embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 }

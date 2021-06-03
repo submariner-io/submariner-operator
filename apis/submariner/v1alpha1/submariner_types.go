@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -181,7 +183,7 @@ type BrokerStatus struct {
 // +kubebuilder:resource:path=brokers,scope=Namespaced
 // +genclient
 // +operator-sdk:csv:customresourcedefinitions:displayName="Broker"
-type Broker struct { //nolint:maligned // we want to keep the traditional order
+type Broker struct { //nolint:govet // we want to keep the traditional order
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 

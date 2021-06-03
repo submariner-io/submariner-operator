@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -29,7 +30,7 @@ spec:
           image: controller:0.0.0
           command:
             - submariner-operator
-          #args:
+          # args:
           #  - --enable-leader-election
           imagePullPolicy: Always
           env:

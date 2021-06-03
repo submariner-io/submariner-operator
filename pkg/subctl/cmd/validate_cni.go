@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,10 +18,12 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -32,13 +36,14 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-var supportedNetworkPlugins = []string{"generic", "canal-flannel", "weave-net", "OpenShiftSDN", "OVNKubernetes"}
+var supportedNetworkPlugins = []string{constants.NetworkPluginGeneric, constants.NetworkPluginCanalFlannel, constants.NetworkPluginWeaveNet,
+	constants.NetworkPluginOpenShiftSDN, constants.NetworkPluginOVNKubernetes, constants.NetworkPluginCalico}
 
-var validateCniCmd = &cobra.Command{
+var validateCNICmd = &cobra.Command{
 	Use:   "cni",
 	Short: "Check the CNI network plugin",
 	Long:  "This command checks if the detected CNI network plugin is supported by Submariner.",
-	Run:   validateCniConfig,
+	Run:   validateCNIConfig,
 }
 
 var (
@@ -50,10 +55,10 @@ var (
 )
 
 func init() {
-	validateCmd.AddCommand(validateCniCmd)
+	validateCmd.AddCommand(validateCNICmd)
 }
 
-func validateCniConfig(cmd *cobra.Command, args []string) {
+func validateCNIConfig(cmd *cobra.Command, args []string) {
 	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
@@ -108,7 +113,7 @@ func validateCNIInCluster(config *rest.Config, clusterName string, submariner *v
 }
 
 func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) {
-	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(metav1.ListOptions{})
+	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +160,7 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) bool {
 
 	client := dynClient.Resource(calicoGVR)
 
-	ippoolList, err := client.List(metav1.ListOptions{})
+	ippoolList, err := client.List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		message := fmt.Sprintf("Error obtaining IPPools: %v", err)
 		status.QueueFailureMessage(message)

@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,9 +19,11 @@ limitations under the License.
 package network
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +37,7 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 	//          defaultMode: 420
 	//          name: canal-config
 	//        name: flannel-cfg
-	cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get("canal-config", metav1.GetOptions{})
+	cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "canal-config", metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil
@@ -48,7 +52,7 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 	}
 
 	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: "canal-flannel",
+		NetworkPlugin: constants.NetworkPluginCanalFlannel,
 		PodCIDRs:      []string{*podCIDR},
 	}
 

@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +26,6 @@ import (
 	submariner_v1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	clientset "k8s.io/client-go/kubernetes"
 	fakeKubeClient "k8s.io/client-go/kubernetes/fake"
@@ -63,7 +64,7 @@ var _ = Describe("ServiceDiscovery controller tests", func() {
 
 func testReconciliation() {
 	var (
-		initClientObjs   []runtime.Object
+		initClientObjs   []controllerClient.Object
 		fakeClient       controllerClient.Client
 		fakeK8sClient    clientset.Interface
 		serviceDiscovery *submariner_v1.ServiceDiscovery
@@ -73,13 +74,13 @@ func testReconciliation() {
 	)
 
 	newClient := func() controllerClient.Client {
-		return fake.NewFakeClientWithScheme(scheme.Scheme, initClientObjs...)
+		return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(initClientObjs...).Build()
 	}
 
 	BeforeEach(func() {
 		fakeClient = nil
 		serviceDiscovery = newServiceDiscovery()
-		initClientObjs = []runtime.Object{serviceDiscovery}
+		initClientObjs = []controllerClient.Object{serviceDiscovery}
 	})
 
 	JustBeforeEach(func() {
@@ -93,7 +94,7 @@ func testReconciliation() {
 			operatorClientSet: fakeClient,
 		}
 
-		reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+		reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
 			Namespace: submarinerNamespace,
 			Name:      submarinerName,
 		}})
@@ -117,7 +118,7 @@ func testReconciliation() {
 
 			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
 
-			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+			reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
 				Namespace: submarinerNamespace,
 				Name:      submarinerName,
 			}})
@@ -145,7 +146,7 @@ func testReconciliation() {
 
 			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
 
-			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+			reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
 				Namespace: submarinerNamespace,
 				Name:      submarinerName,
 			}})
@@ -172,7 +173,7 @@ func testReconciliation() {
 
 			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
 
-			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+			reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
 				Namespace: submarinerNamespace,
 				Name:      submarinerName,
 			}})
@@ -201,7 +202,7 @@ func testReconciliation() {
 
 			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
 
-			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+			reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
 				Namespace: submarinerNamespace,
 				Name:      submarinerName,
 			}})
@@ -318,7 +319,7 @@ func expectDNSConfigUpdated(name string, client controllerClient.Client) *operat
 }
 
 func expectCoreMapUpdated(client clientset.Interface) *corev1.ConfigMap {
-	foundCoreMap, err := client.CoreV1().ConfigMaps(defaultCoreDNSNamespace).Get(coreDNSName, metav1.GetOptions{})
+	foundCoreMap, err := client.CoreV1().ConfigMaps(defaultCoreDNSNamespace).Get(context.TODO(), coreDNSName, metav1.GetOptions{})
 	Expect(err).To(Succeed())
 	return foundCoreMap
 }

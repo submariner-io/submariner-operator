@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +21,7 @@ package network
 import (
 	"fmt"
 
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -61,7 +64,7 @@ var _ = Describe("discoverOvnKubernetesNetwork", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(clusterNet).NotTo(BeNil())
-			Expect(clusterNet.NetworkPlugin).To(Equal("OVNKubernetes"))
+			Expect(clusterNet.NetworkPlugin).To(Equal(constants.NetworkPluginOVNKubernetes))
 			connectionStr := fmt.Sprintf("tcp:%s.%s", ovnKubeSvcTest, ovnKubeNamespace)
 			Expect(clusterNet.PluginSettings["OVN_NBDB"]).To(Equal(connectionStr + ":6641"))
 			Expect(clusterNet.PluginSettings["OVN_SBDB"]).To(Equal(connectionStr + ":6642"))

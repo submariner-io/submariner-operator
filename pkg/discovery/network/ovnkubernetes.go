@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,9 +19,11 @@ limitations under the License.
 package network
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -30,7 +34,6 @@ const (
 	OvnSBDB            = "OVN_SBDB"
 	OvnNBDBDefaultPort = 6641
 	OvnSBDBDefaultPort = 6642
-	OvnKubernetes      = "OVNKubernetes"
 )
 
 func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
@@ -40,7 +43,7 @@ func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwo
 		return nil, err
 	}
 
-	if _, err := clientSet.CoreV1().Services(ovnDBPod.Namespace).Get(ovnKubeService, v1.GetOptions{}); err != nil {
+	if _, err := clientSet.CoreV1().Services(ovnDBPod.Namespace).Get(context.TODO(), ovnKubeService, v1.GetOptions{}); err != nil {
 		return nil, fmt.Errorf("error finding %q service in %q namespace", ovnKubeService, ovnDBPod.Namespace)
 	}
 
@@ -57,7 +60,7 @@ func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwo
 	}
 
 	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: OvnKubernetes,
+		NetworkPlugin: constants.NetworkPluginOVNKubernetes,
 		PluginSettings: map[string]string{
 			OvnNBDB: fmt.Sprintf("%s:%s.%s:%d", dbConnectionProtocol, ovnKubeService, ovnDBPod.Namespace, OvnNBDBDefaultPort),
 			OvnSBDB: fmt.Sprintf("%s:%s.%s:%d", dbConnectionProtocol, ovnKubeService, ovnDBPod.Namespace, OvnSBDBDefaultPort),
@@ -65,7 +68,7 @@ func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwo
 	}
 
 	// If the cluster/service CIDRs weren't found we leave it to the generic functions to figure out later
-	if ovnConfig, err := clientSet.CoreV1().ConfigMaps(ovnDBPod.Namespace).Get("ovn-config", v1.GetOptions{}); err == nil {
+	if ovnConfig, err := clientSet.CoreV1().ConfigMaps(ovnDBPod.Namespace).Get(context.TODO(), "ovn-config", v1.GetOptions{}); err == nil {
 		if netCidr, ok := ovnConfig.Data["net_cidr"]; ok {
 			clusterNetwork.PodCIDRs = []string{netCidr}
 		}

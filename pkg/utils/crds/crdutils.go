@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,10 +30,10 @@ import (
 )
 
 type CRDUpdater interface {
-	Create(*apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error)
-	Update(*apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error)
-	Get(string, v1.GetOptions) (*apiextensions.CustomResourceDefinition, error)
-	Delete(string, *v1.DeleteOptions) error
+	Create(context.Context, *apiextensions.CustomResourceDefinition, v1.CreateOptions) (*apiextensions.CustomResourceDefinition, error)
+	Update(context.Context, *apiextensions.CustomResourceDefinition, v1.UpdateOptions) (*apiextensions.CustomResourceDefinition, error)
+	Get(context.Context, string, v1.GetOptions) (*apiextensions.CustomResourceDefinition, error)
+	Delete(context.Context, string, v1.DeleteOptions) error
 }
 
 type controllerClientCreator struct {
@@ -56,32 +58,39 @@ func NewFromControllerClient(controllerClient client.Client) CRDUpdater {
 	}
 }
 
-func (c *controllerClientCreator) Create(crd *apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error) {
-	err := c.client.Create(context.TODO(), crd)
+func (c *controllerClientCreator) Create(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
+	options v1.CreateOptions) (*apiextensions.CustomResourceDefinition, error) {
+	// TODO skitt handle options
+	err := c.client.Create(ctx, crd)
 	return crd, err
 }
 
-func (c *controllerClientCreator) Update(crd *apiextensions.CustomResourceDefinition) (*apiextensions.CustomResourceDefinition, error) {
-	err := c.client.Update(context.TODO(), crd)
+func (c *controllerClientCreator) Update(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
+	options v1.UpdateOptions) (*apiextensions.CustomResourceDefinition, error) {
+	// TODO skitt handle options
+	err := c.client.Update(ctx, crd)
 	return crd, err
 }
 
-func (c *controllerClientCreator) Get(name string, options v1.GetOptions) (*apiextensions.CustomResourceDefinition, error) {
+func (c *controllerClientCreator) Get(ctx context.Context, name string,
+	options v1.GetOptions) (*apiextensions.CustomResourceDefinition, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
-	err := c.client.Get(context.TODO(), client.ObjectKey{Name: name}, crd)
+	// TODO skitt handle options
+	err := c.client.Get(ctx, client.ObjectKey{Name: name}, crd)
 	if err != nil {
 		return nil, err
 	}
 	return crd, nil
 }
 
-func (c *controllerClientCreator) Delete(name string, options *v1.DeleteOptions) error {
-	crd, err := c.Get(name, v1.GetOptions{})
+func (c *controllerClientCreator) Delete(ctx context.Context, name string, options v1.DeleteOptions) error {
+	crd, err := c.Get(ctx, name, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
 	if crd == nil {
 		return nil
 	}
-	return c.client.Delete(context.TODO(), crd)
+	// TODO skitt handle options
+	return c.client.Delete(ctx, crd)
 }

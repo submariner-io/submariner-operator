@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package broker
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -130,7 +133,7 @@ func NewBrokerRoleBinding(serviceAccount, role string) *rbacv1.RoleBinding {
 }
 
 func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submarinerBrokerSA string) (*v1.Secret, error) {
-	sa, err := clientSet.CoreV1().ServiceAccounts(brokerNamespace).Get(submarinerBrokerSA, metav1.GetOptions{})
+	sa, err := clientSet.CoreV1().ServiceAccounts(brokerNamespace).Get(context.TODO(), submarinerBrokerSA, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("ServiceAccount %s get failed: %s", submarinerBrokerSA, err)
 	}
@@ -141,7 +144,7 @@ func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submar
 
 	for _, secret := range sa.Secrets {
 		if strings.HasPrefix(secret.Name, brokerTokenPrefix) {
-			return clientSet.CoreV1().Secrets(brokerNamespace).Get(secret.Name, metav1.GetOptions{})
+			return clientSet.CoreV1().Secrets(brokerNamespace).Get(context.TODO(), secret.Name, metav1.GetOptions{})
 		}
 	}
 

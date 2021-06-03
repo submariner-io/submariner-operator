@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,8 @@ limitations under the License.
 package serviceaccount
 
 import (
+	"context"
+
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	v1 "k8s.io/api/core/v1"
@@ -32,7 +36,7 @@ func Ensure(clientSet *clientset.Clientset, namespace, yaml string) (bool, error
 		return false, err
 	}
 
-	return utils.CreateOrUpdateServiceAccount(clientSet, namespace, sa)
+	return utils.CreateOrUpdateServiceAccount(context.TODO(), clientSet, namespace, sa)
 }
 
 func EnsureRole(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
@@ -42,7 +46,7 @@ func EnsureRole(clientSet *clientset.Clientset, namespace, yaml string) (bool, e
 		return false, err
 	}
 
-	return utils.CreateOrUpdateRole(clientSet, namespace, role)
+	return utils.CreateOrUpdateRole(context.TODO(), clientSet, namespace, role)
 }
 
 func EnsureRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
@@ -52,7 +56,7 @@ func EnsureRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (
 		return false, err
 	}
 
-	return utils.CreateOrUpdateRoleBinding(clientSet, namespace, roleBinding)
+	return utils.CreateOrUpdateRoleBinding(context.TODO(), clientSet, namespace, roleBinding)
 }
 
 func EnsureClusterRole(clientSet *clientset.Clientset, yaml string) (bool, error) {
@@ -62,7 +66,7 @@ func EnsureClusterRole(clientSet *clientset.Clientset, yaml string) (bool, error
 		return false, err
 	}
 
-	return utils.CreateOrUpdateClusterRole(clientSet, clusterRole)
+	return utils.CreateOrUpdateClusterRole(context.TODO(), clientSet, clusterRole)
 }
 
 func EnsureClusterRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
@@ -73,5 +77,5 @@ func EnsureClusterRoleBinding(clientSet *clientset.Clientset, namespace, yaml st
 	}
 
 	clusterRoleBinding.Subjects[0].Namespace = namespace
-	return utils.CreateOrUpdateClusterRoleBinding(clientSet, clusterRoleBinding)
+	return utils.CreateOrUpdateClusterRoleBinding(context.TODO(), clientSet, clusterRoleBinding)
 }

@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,8 @@ limitations under the License.
 package crds
 
 import (
+	"context"
+
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
@@ -34,15 +38,17 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	// Attempt to update or create the CRD definitions
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
-	submarinerCreated, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
+	submarinerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
+		embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
 	if err != nil {
 		return false, err
 	}
-	serviceDiscoveryCreated, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater,
+	serviceDiscoveryCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
 		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
 		return false, err
 	}
-	brokerCreated, err := utils.CreateOrUpdateEmbeddedCRD(crdUpdater, embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
+	brokerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
+		embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
 	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, err
 }

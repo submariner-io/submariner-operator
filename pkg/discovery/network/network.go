@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package network
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-logr/logr"
@@ -122,6 +125,10 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 		return ovnClusterNet, err
 	}
 
+	calicoClusterNet, err := discoverCalicoNetwork(clientSet)
+	if err != nil || calicoClusterNet != nil {
+		return calicoClusterNet, err
+	}
 	return nil, nil
 }
 
@@ -129,7 +136,8 @@ func getGlobalCIDRs(submClient submarinerclientset.Interface, operatorNamespace 
 	if submClient == nil {
 		return "", nil
 	}
-	existingCfg, err := submClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(submarinercr.SubmarinerName, v1.GetOptions{})
+	existingCfg, err := submClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(
+		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
 	if err != nil {
 		return "", err
 	}

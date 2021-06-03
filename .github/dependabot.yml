@@ -4,24 +4,15 @@ updates:
     directory: "/"
     schedule:
       interval: daily
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     ignore:
-      - dependency-name: github.com/go-logr/logr
-        versions:
-          - "> 0.1.0"
-      - dependency-name: github.com/operator-framework/operator-sdk
-        versions:
-          - "> 0.17.0"
-      - dependency-name: k8s.io/api
-        versions:
-          - "> 0.18.6"
-      - dependency-name: k8s.io/apiextensions-apiserver
-        versions:
-          - "> 0.18.6"
-      - dependency-name: k8s.io/apimachinery
-        versions:
-          - "> 0.18.6"
-      - dependency-name: sigs.k8s.io/controller-runtime
-        versions:
-          - "> 0.6.2"
+      # Pinned
+      - dependency-name: github.com/go-openapi/spec
+      # K8s and operator SDK, we need to handle these manually
+      - dependency-name: github.com/operator-framework/*
+      - dependency-name: k8s.io/*
+      - dependency-name: sigs.k8s.io/*
+      # We get this from cloud-prepare
+      - dependency-name: github.com/aws/aws-sdk-go
+      # Our internal dependencies
       - dependency-name: github.com/submariner-io/*

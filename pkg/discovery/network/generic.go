@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,11 +19,13 @@ limitations under the License.
 package network
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -29,9 +33,21 @@ import (
 )
 
 func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: "generic",
+	clusterNetwork, err := discoverNetwork(clientSet)
+	if err != nil {
+		return nil, err
 	}
+
+	if clusterNetwork != nil {
+		clusterNetwork.NetworkPlugin = constants.NetworkPluginGeneric
+		return clusterNetwork, nil
+	}
+
+	return nil, nil
+}
+
+func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
+	clusterNetwork := &ClusterNetwork{}
 
 	podIPRange, err := findPodIPRange(clientSet)
 	if err != nil {
@@ -103,7 +119,7 @@ func findClusterIPRangeFromServiceCreation(clientSet kubernetes.Interface) (stri
 	}
 
 	// create service to the namespace
-	_, err := clientSet.CoreV1().Services(ns).Create(invalidSvcSpec)
+	_, err := clientSet.CoreV1().Services(ns).Create(context.TODO(), invalidSvcSpec, v1meta.CreateOptions{})
 
 	// creating invalid service didn't fail as expected
 	if err == nil {
@@ -161,7 +177,7 @@ func findPodIPRangeKubeProxy(clientSet kubernetes.Interface) (string, error) {
 }
 
 func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) {
-	nodes, err := clientSet.CoreV1().Nodes().List(v1meta.ListOptions{})
+	nodes, err := clientSet.CoreV1().Nodes().List(context.TODO(), v1meta.ListOptions{})
 
 	if err != nil {
 		return "", errors.WithMessagef(err, "error listing nodes")

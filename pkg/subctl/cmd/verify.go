@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -53,13 +56,9 @@ var (
 )
 
 func init() {
-	addKubecontextsFlag(verifyCmd)
+	addKubeContextMultiFlag(verifyCmd)
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
-	verifyCmd.Flags().BoolVar(&disruptiveTests, "enable-disruptive", false, "enable disruptive verifications like gateway-failover")
-	err := verifyCmd.Flags().MarkDeprecated("enable-disruptive", "please use --disruptive-tests instead")
-	// Errors here are fatal programming errors
-	exitOnError("deprecation error", err)
 	addVerifyFlags(verifyCmd)
 	rootCmd.AddCommand(verifyCmd)
 
@@ -334,8 +333,8 @@ func detectGlobalnet() {
 	submarinerClient, err := submarinerclientset.NewForConfig(framework.RestConfigs[framework.ClusterA])
 	exitOnError("Error creating submariner client: %v", err)
 
-	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(submarinercr.SubmarinerName,
-		v1.GetOptions{})
+	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(
+		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
 	if errors.IsNotFound(err) {
 		exitWithErrorMsg(`
 The Submariner resource was not found. Either submariner has not been deployed in this cluster or was deployed using helm.

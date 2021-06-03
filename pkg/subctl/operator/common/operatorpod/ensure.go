@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package operatorpod
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -98,7 +101,7 @@ func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debu
 		},
 	}
 
-	created, err := utils.CreateOrUpdateDeployment(clientSet, namespace, deployment)
+	created, err := utils.CreateOrUpdateDeployment(context.TODO(), clientSet, namespace, deployment)
 	if err != nil {
 		return false, err
 	}

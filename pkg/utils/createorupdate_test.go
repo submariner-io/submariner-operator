@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package utils
 
 import (
+	"context"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -37,6 +40,7 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 	var (
 		clusterRole *rbacv1.ClusterRole
 		client      *fakeclientset.Clientset
+		ctx         context.Context
 	)
 
 	BeforeEach(func() {
@@ -45,15 +49,16 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_yaml, clusterRole)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
+		ctx = context.TODO()
 	})
 
 	When("When called", func() {
 		It("Should add the ClusterRole properly", func() {
-			created, err := CreateOrUpdateClusterRole(client, clusterRole)
+			created, err := CreateOrUpdateClusterRole(ctx, client, clusterRole)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdClusterRole, err := client.RbacV1().ClusterRoles().Get(clusterRole.Name, metav1.GetOptions{})
+			createdClusterRole, err := client.RbacV1().ClusterRoles().Get(ctx, clusterRole.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdClusterRole.ObjectMeta.Name).Should(Equal("submariner-globalnet"))
 		})
@@ -61,10 +66,10 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 
 	When("When called twice", func() {
 		It("Should add the ClusterRole properly, and return false on second call", func() {
-			created, err := CreateOrUpdateClusterRole(client, clusterRole)
+			created, err := CreateOrUpdateClusterRole(ctx, client, clusterRole)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateClusterRole(client, clusterRole)
+			created, err = CreateOrUpdateClusterRole(ctx, client, clusterRole)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -75,6 +80,7 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 	var (
 		clusterRoleBinding *rbacv1.ClusterRoleBinding
 		client             *fakeclientset.Clientset
+		ctx                context.Context
 	)
 
 	BeforeEach(func() {
@@ -83,15 +89,16 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_binding_yaml, clusterRoleBinding)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
+		ctx = context.TODO()
 	})
 
 	When("When called", func() {
 		It("Should add the ClusterRoleBinding properly", func() {
-			created, err := CreateOrUpdateClusterRoleBinding(client, clusterRoleBinding)
+			created, err := CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdClusterRoleBinding, err := client.RbacV1().ClusterRoleBindings().Get(clusterRoleBinding.Name, metav1.GetOptions{})
+			createdClusterRoleBinding, err := client.RbacV1().ClusterRoleBindings().Get(ctx, clusterRoleBinding.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdClusterRoleBinding.ObjectMeta.Name).Should(Equal("submariner-globalnet"))
 		})
@@ -99,10 +106,10 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 
 	When("When called twice", func() {
 		It("Should add the ClusterRoleBinding properly, and return false on second call", func() {
-			created, err := CreateOrUpdateClusterRoleBinding(client, clusterRoleBinding)
+			created, err := CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateClusterRoleBinding(client, clusterRoleBinding)
+			created, err = CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -113,6 +120,7 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 	var (
 		crd    *apiextensions.CustomResourceDefinition
 		client *extendedfakeclientset.Clientset
+		ctx    context.Context
 	)
 
 	BeforeEach(func() {
@@ -120,15 +128,16 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 		err := embeddedyamls.GetObject(embeddedyamls.Deploy_crds_submariner_io_submariners_yaml, crd)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = extendedfakeclientset.NewSimpleClientset()
+		ctx = context.TODO()
 	})
 
 	When("When called", func() {
 		It("Should add the CRD properly", func() {
-			created, err := CreateOrUpdateCRD(crdutils.NewFromClientSet(client), crd)
+			created, err := CreateOrUpdateCRD(ctx, crdutils.NewFromClientSet(client), crd)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdCrd, err := client.ApiextensionsV1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
+			createdCrd, err := client.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdCrd.Spec.Names.Kind).Should(Equal("Submariner"))
 		})
@@ -137,10 +146,10 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 	When("When called twice", func() {
 		It("Should add the CRD properly, and return false on second call", func() {
 			crdUpdater := crdutils.NewFromClientSet(client)
-			created, err := CreateOrUpdateCRD(crdUpdater, crd)
+			created, err := CreateOrUpdateCRD(ctx, crdUpdater, crd)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateCRD(crdUpdater, crd)
+			created, err = CreateOrUpdateCRD(ctx, crdUpdater, crd)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -153,6 +162,7 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 		name       = "test-deployment"
 		deployment *appsv1.Deployment
 		client     *fakeclientset.Clientset
+		ctx        context.Context
 	)
 
 	BeforeEach(func() {
@@ -168,15 +178,16 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 			},
 		}
 		client = fakeclientset.NewSimpleClientset()
+		ctx = context.TODO()
 	})
 
 	When("When called", func() {
 		It("Should add the Deployment properly", func() {
-			created, err := CreateOrUpdateDeployment(client, namespace, deployment)
+			created, err := CreateOrUpdateDeployment(ctx, client, namespace, deployment)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdDeployment, err := client.AppsV1().Deployments(namespace).Get(deployment.Name, metav1.GetOptions{})
+			createdDeployment, err := client.AppsV1().Deployments(namespace).Get(ctx, deployment.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdDeployment.ObjectMeta.Name).Should(Equal(name))
 		})
@@ -184,10 +195,10 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 
 	When("When called twice", func() {
 		It("Should add the Deployment properly, and return false on second call", func() {
-			created, err := CreateOrUpdateDeployment(client, namespace, deployment)
+			created, err := CreateOrUpdateDeployment(ctx, client, namespace, deployment)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateDeployment(client, namespace, deployment)
+			created, err = CreateOrUpdateDeployment(ctx, client, namespace, deployment)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -199,6 +210,7 @@ var _ = Describe("CreateOrUpdateRole", func() {
 		namespace = "test-namespace"
 		role      *rbacv1.Role
 		client    *fakeclientset.Clientset
+		ctx       context.Context
 	)
 
 	BeforeEach(func() {
@@ -207,15 +219,16 @@ var _ = Describe("CreateOrUpdateRole", func() {
 		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_operator_role_yaml, role)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
+		ctx = context.TODO()
 	})
 
 	When("When called", func() {
 		It("Should add the Role properly", func() {
-			created, err := CreateOrUpdateRole(client, namespace, role)
+			created, err := CreateOrUpdateRole(ctx, client, namespace, role)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdRole, err := client.RbacV1().Roles(namespace).Get(role.Name, metav1.GetOptions{})
+			createdRole, err := client.RbacV1().Roles(namespace).Get(ctx, role.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdRole.ObjectMeta.Name).Should(Equal("submariner-operator"))
 		})
@@ -223,10 +236,10 @@ var _ = Describe("CreateOrUpdateRole", func() {
 
 	When("When called twice", func() {
 		It("Should add the Role properly, and return false on second call", func() {
-			created, err := CreateOrUpdateRole(client, namespace, role)
+			created, err := CreateOrUpdateRole(ctx, client, namespace, role)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateRole(client, namespace, role)
+			created, err = CreateOrUpdateRole(ctx, client, namespace, role)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -238,6 +251,7 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 		namespace   = "test-namespace"
 		roleBinding *rbacv1.RoleBinding
 		client      *fakeclientset.Clientset
+		ctx         context.Context
 	)
 
 	BeforeEach(func() {
@@ -246,15 +260,16 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_operator_role_binding_yaml, roleBinding)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
+		ctx = context.TODO()
 	})
 
 	When("When called", func() {
 		It("Should add the RoleBinding properly", func() {
-			created, err := CreateOrUpdateRoleBinding(client, namespace, roleBinding)
+			created, err := CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
-			createdRoleBinding, err := client.RbacV1().RoleBindings(namespace).Get(roleBinding.Name, metav1.GetOptions{})
+			createdRoleBinding, err := client.RbacV1().RoleBindings(namespace).Get(ctx, roleBinding.Name, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdRoleBinding.ObjectMeta.Name).Should(Equal("submariner-operator"))
 		})
@@ -262,10 +277,10 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 
 	When("When called twice", func() {
 		It("Should add the RoleBinding properly, and return false on second call", func() {
-			created, err := CreateOrUpdateRoleBinding(client, namespace, roleBinding)
+			created, err := CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateRoleBinding(client, namespace, roleBinding)
+			created, err = CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})

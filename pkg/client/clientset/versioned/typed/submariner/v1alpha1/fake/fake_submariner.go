@@ -19,6 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	"context"
+
 	v1alpha1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -39,7 +41,7 @@ var submarinersResource = schema.GroupVersionResource{Group: "submariner.io", Ve
 var submarinersKind = schema.GroupVersionKind{Group: "submariner.io", Version: "v1alpha1", Kind: "Submariner"}
 
 // Get takes name of the submariner, and returns the corresponding submariner object, and an error if there is any.
-func (c *FakeSubmariners) Get(name string, options v1.GetOptions) (result *v1alpha1.Submariner, err error) {
+func (c *FakeSubmariners) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Submariner, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(submarinersResource, c.ns, name), &v1alpha1.Submariner{})
 
@@ -50,7 +52,7 @@ func (c *FakeSubmariners) Get(name string, options v1.GetOptions) (result *v1alp
 }
 
 // List takes label and field selectors, and returns the list of Submariners that match those selectors.
-func (c *FakeSubmariners) List(opts v1.ListOptions) (result *v1alpha1.SubmarinerList, err error) {
+func (c *FakeSubmariners) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.SubmarinerList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(submarinersResource, submarinersKind, c.ns, opts), &v1alpha1.SubmarinerList{})
 
@@ -72,14 +74,14 @@ func (c *FakeSubmariners) List(opts v1.ListOptions) (result *v1alpha1.Submariner
 }
 
 // Watch returns a watch.Interface that watches the requested submariners.
-func (c *FakeSubmariners) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeSubmariners) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(submarinersResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a submariner and creates it.  Returns the server's representation of the submariner, and an error, if there is any.
-func (c *FakeSubmariners) Create(submariner *v1alpha1.Submariner) (result *v1alpha1.Submariner, err error) {
+func (c *FakeSubmariners) Create(ctx context.Context, submariner *v1alpha1.Submariner, opts v1.CreateOptions) (result *v1alpha1.Submariner, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(submarinersResource, c.ns, submariner), &v1alpha1.Submariner{})
 
@@ -90,7 +92,7 @@ func (c *FakeSubmariners) Create(submariner *v1alpha1.Submariner) (result *v1alp
 }
 
 // Update takes the representation of a submariner and updates it. Returns the server's representation of the submariner, and an error, if there is any.
-func (c *FakeSubmariners) Update(submariner *v1alpha1.Submariner) (result *v1alpha1.Submariner, err error) {
+func (c *FakeSubmariners) Update(ctx context.Context, submariner *v1alpha1.Submariner, opts v1.UpdateOptions) (result *v1alpha1.Submariner, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(submarinersResource, c.ns, submariner), &v1alpha1.Submariner{})
 
@@ -102,7 +104,7 @@ func (c *FakeSubmariners) Update(submariner *v1alpha1.Submariner) (result *v1alp
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeSubmariners) UpdateStatus(submariner *v1alpha1.Submariner) (*v1alpha1.Submariner, error) {
+func (c *FakeSubmariners) UpdateStatus(ctx context.Context, submariner *v1alpha1.Submariner, opts v1.UpdateOptions) (*v1alpha1.Submariner, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(submarinersResource, "status", c.ns, submariner), &v1alpha1.Submariner{})
 
@@ -113,7 +115,7 @@ func (c *FakeSubmariners) UpdateStatus(submariner *v1alpha1.Submariner) (*v1alph
 }
 
 // Delete takes name of the submariner and deletes it. Returns an error if one occurs.
-func (c *FakeSubmariners) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeSubmariners) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(submarinersResource, c.ns, name), &v1alpha1.Submariner{})
 
@@ -121,15 +123,15 @@ func (c *FakeSubmariners) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeSubmariners) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(submarinersResource, c.ns, listOptions)
+func (c *FakeSubmariners) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(submarinersResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.SubmarinerList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched submariner.
-func (c *FakeSubmariners) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Submariner, err error) {
+func (c *FakeSubmariners) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Submariner, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(submarinersResource, c.ns, name, pt, data, subresources...), &v1alpha1.Submariner{})
 

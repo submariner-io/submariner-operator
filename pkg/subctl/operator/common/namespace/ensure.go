@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,8 @@ limitations under the License.
 package namespace
 
 import (
+	"context"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,7 +37,7 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 
 	ns := &v1.Namespace{ObjectMeta: v1meta.ObjectMeta{Name: namespace}}
 
-	_, err = clientSet.CoreV1().Namespaces().Create(ns)
+	_, err = clientSet.CoreV1().Namespaces().Create(context.TODO(), ns, v1meta.CreateOptions{})
 
 	if err == nil {
 		return true, nil

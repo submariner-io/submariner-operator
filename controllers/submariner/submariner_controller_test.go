@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,7 +32,6 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog"
@@ -55,7 +56,7 @@ type failingClient struct {
 	onUpdate reflect.Type
 }
 
-func (c *failingClient) Create(ctx context.Context, obj runtime.Object, opts ...controllerClient.CreateOption) error {
+func (c *failingClient) Create(ctx context.Context, obj controllerClient.Object, opts ...controllerClient.CreateOption) error {
 	if c.onCreate == reflect.TypeOf(obj) {
 		return fmt.Errorf("Mock Create error")
 	}
@@ -63,7 +64,7 @@ func (c *failingClient) Create(ctx context.Context, obj runtime.Object, opts ...
 	return c.Client.Create(ctx, obj, opts...)
 }
 
-func (c *failingClient) Get(ctx context.Context, key controllerClient.ObjectKey, obj runtime.Object) error {
+func (c *failingClient) Get(ctx context.Context, key controllerClient.ObjectKey, obj controllerClient.Object) error {
 	if c.onGet == reflect.TypeOf(obj) {
 		return fmt.Errorf("Mock Get error")
 	}
@@ -71,7 +72,7 @@ func (c *failingClient) Get(ctx context.Context, key controllerClient.ObjectKey,
 	return c.Client.Get(ctx, key, obj)
 }
 
-func (c *failingClient) Update(ctx context.Context, obj runtime.Object, opts ...controllerClient.UpdateOption) error {
+func (c *failingClient) Update(ctx context.Context, obj controllerClient.Object, opts ...controllerClient.UpdateOption) error {
 	if c.onUpdate == reflect.TypeOf(obj) {
 		return fmt.Errorf("Mock Update error")
 	}
@@ -103,29 +104,32 @@ const testConfiguredClusterCIDR = "192.168.67.0/24"
 
 func testReconciliation() {
 	var (
-		initClientObjs  []runtime.Object
+		initClientObjs  []controllerClient.Object
 		fakeClient      controllerClient.Client
 		submariner      *submariner_v1.Submariner
 		controller      *SubmarinerReconciler
 		reconcileErr    error
 		reconcileResult reconcile.Result
 		clusterNetwork  *network.ClusterNetwork
+		ctx             context.Context
 	)
 
 	newClient := func() controllerClient.Client {
-		return fake.NewFakeClientWithScheme(scheme.Scheme, initClientObjs...)
+		return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(initClientObjs...).Build()
 	}
 
 	BeforeEach(func() {
 		fakeClient = nil
 		submariner = newSubmariner()
-		initClientObjs = []runtime.Object{submariner}
+		initClientObjs = []controllerClient.Object{submariner}
 
 		clusterNetwork = &network.ClusterNetwork{
 			NetworkPlugin: "fake",
 			ServiceCIDRs:  []string{testDetectedServiceCIDR},
 			PodCIDRs:      []string{testDetectedClusterCIDR},
 		}
+
+		ctx = context.TODO()
 	})
 
 	JustBeforeEach(func() {
@@ -139,7 +143,7 @@ func testReconciliation() {
 			clusterNetwork: clusterNetwork,
 		}
 
-		reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+		reconcileResult, reconcileErr = controller.Reconcile(ctx, reconcile.Request{NamespacedName: types.NamespacedName{
 			Namespace: submarinerNamespace,
 			Name:      submarinerName,
 		}})
@@ -147,12 +151,12 @@ func testReconciliation() {
 
 	When("the network details are not provided", func() {
 		It("should use the detected network", func() {
-			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+			reconcileResult, reconcileErr = controller.Reconcile(ctx, reconcile.Request{NamespacedName: types.NamespacedName{
 				Namespace: submarinerNamespace,
 				Name:      submarinerName,
 			}})
 			updated := &submariner_v1.Submariner{}
-			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
+			err := fakeClient.Get(ctx, types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(updated.Status.ServiceCIDR).To(Equal(testDetectedServiceCIDR))
 			Expect(updated.Status.ClusterCIDR).To(Equal(testDetectedClusterCIDR))
@@ -161,18 +165,22 @@ func testReconciliation() {
 
 	When("the network details are provided", func() {
 		It("should use the provided ones instead of the detected ones", func() {
-			submariner.Spec.ServiceCIDR = testConfiguredServiceCIDR
-			submariner.Spec.ClusterCIDR = testConfiguredClusterCIDR
+			initial := &submariner_v1.Submariner{}
+			err := fakeClient.Get(ctx, types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, initial)
+			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeClient.Update(context.TODO(), submariner)).To(Succeed())
+			initial.Spec.ServiceCIDR = testConfiguredServiceCIDR
+			initial.Spec.ClusterCIDR = testConfiguredClusterCIDR
 
-			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+			Expect(fakeClient.Update(ctx, initial)).To(Succeed())
+
+			reconcileResult, reconcileErr = controller.Reconcile(ctx, reconcile.Request{NamespacedName: types.NamespacedName{
 				Namespace: submarinerNamespace,
 				Name:      submarinerName,
 			}})
 
 			updated := &submariner_v1.Submariner{}
-			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
+			err = fakeClient.Get(ctx, types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(updated.Status.ServiceCIDR).To(Equal(testConfiguredServiceCIDR))
 			Expect(updated.Status.ClusterCIDR).To(Equal(testConfiguredClusterCIDR))
@@ -183,7 +191,7 @@ func testReconciliation() {
 		It("should create it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			verifyGatewayDaemonSet(withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
+			verifyGatewayDaemonSet(ctx, withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
 		})
 	})
 
@@ -199,18 +207,22 @@ func testReconciliation() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
 
-			submariner.Spec.ServiceCIDR = "101.96.1.0/16"
-			Expect(fakeClient.Update(context.TODO(), submariner)).To(Succeed())
+			initial := &submariner_v1.Submariner{}
+			err := fakeClient.Get(ctx, types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, initial)
+			Expect(err).NotTo(HaveOccurred())
 
-			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+			initial.Spec.ServiceCIDR = "101.96.1.0/16"
+			Expect(fakeClient.Update(ctx, initial)).To(Succeed())
+
+			reconcileResult, reconcileErr = controller.Reconcile(ctx, reconcile.Request{NamespacedName: types.NamespacedName{
 				Namespace: submarinerNamespace,
 				Name:      submarinerName,
 			}})
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(gatewayDaemonSetName, fakeClient).Spec).To(
-				Equal(newGatewayDaemonSet(withNetworkDiscovery(submariner, clusterNetwork)).Spec))
+			Expect(expectDaemonSet(ctx, gatewayDaemonSetName, fakeClient).Spec).To(
+				Equal(newGatewayDaemonSet(withNetworkDiscovery(initial, clusterNetwork)).Spec))
 		})
 	})
 
@@ -218,7 +230,7 @@ func testReconciliation() {
 		It("should create it", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			verifyRouteAgentDaemonSet(withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
+			verifyRouteAgentDaemonSet(ctx, withNetworkDiscovery(submariner, clusterNetwork), fakeClient)
 		})
 	})
 
@@ -234,18 +246,22 @@ func testReconciliation() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
 
-			submariner.Spec.ClusterCIDR = "11.245.1.0/16"
-			Expect(fakeClient.Update(context.TODO(), submariner)).To(Succeed())
+			initial := &submariner_v1.Submariner{}
+			err := fakeClient.Get(ctx, types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, initial)
+			Expect(err).NotTo(HaveOccurred())
 
-			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: types.NamespacedName{
+			initial.Spec.ClusterCIDR = "11.245.1.0/16"
+			Expect(fakeClient.Update(ctx, initial)).To(Succeed())
+
+			reconcileResult, reconcileErr = controller.Reconcile(ctx, reconcile.Request{NamespacedName: types.NamespacedName{
 				Namespace: submarinerNamespace,
 				Name:      submarinerName,
 			}})
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(routeAgentDaemonSetName, fakeClient).Spec).To(Equal(newRouteAgentDaemonSet(
-				withNetworkDiscovery(submariner, clusterNetwork)).Spec))
+			Expect(expectDaemonSet(ctx, routeAgentDaemonSetName, fakeClient).Spec).To(Equal(newRouteAgentDaemonSet(
+				withNetworkDiscovery(initial, clusterNetwork)).Spec))
 		})
 	})
 
@@ -257,8 +273,8 @@ func testReconciliation() {
 		It("should return success without creating any resources", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			expectNoDaemonSet(gatewayDaemonSetName, fakeClient)
-			expectNoDaemonSet(routeAgentDaemonSetName, fakeClient)
+			expectNoDaemonSet(ctx, gatewayDaemonSetName, fakeClient)
+			expectNoDaemonSet(ctx, routeAgentDaemonSetName, fakeClient)
 		})
 	})
 
@@ -273,7 +289,7 @@ func testReconciliation() {
 			Expect(reconcileResult.Requeue).To(BeFalse())
 
 			updated := &submariner_v1.Submariner{}
-			err := fakeClient.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
+			err := fakeClient.Get(ctx, types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
 			Expect(err).To(Succeed())
 
 			Expect(updated.Spec.Repository).To(Equal(versions.DefaultRepo))
@@ -312,8 +328,8 @@ func testReconciliation() {
 	})
 }
 
-func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client controllerClient.Client) {
-	daemonSet := expectDaemonSet(routeAgentDaemonSetName, client)
+func verifyRouteAgentDaemonSet(ctx context.Context, submariner *submariner_v1.Submariner, client controllerClient.Client) {
+	daemonSet := expectDaemonSet(ctx, routeAgentDaemonSetName, client)
 
 	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-routeagent"))
 	Expect(daemonSet.Spec.Selector).To(Equal(&metav1.LabelSelector{MatchLabels: map[string]string{"app": "submariner-routeagent"}}))
@@ -335,8 +351,8 @@ func verifyRouteAgentDaemonSet(submariner *submariner_v1.Submariner, client cont
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
 
-func verifyGatewayDaemonSet(submariner *submariner_v1.Submariner, client controllerClient.Client) {
-	daemonSet := expectDaemonSet(gatewayDaemonSetName, client)
+func verifyGatewayDaemonSet(ctx context.Context, submariner *submariner_v1.Submariner, client controllerClient.Client) {
+	daemonSet := expectDaemonSet(ctx, gatewayDaemonSetName, client)
 
 	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-gateway"))
 	Expect(daemonSet.Spec.Template.ObjectMeta.Labels["app"]).To(Equal("submariner-gateway"))
@@ -419,20 +435,20 @@ func getServiceCIDR(submariner *submariner_v1.Submariner, clusterNetwork *networ
 	}
 }
 
-func getDaemonSet(name string, client controllerClient.Client) (*appsv1.DaemonSet, error) {
+func getDaemonSet(ctx context.Context, name string, client controllerClient.Client) (*appsv1.DaemonSet, error) {
 	foundDaemonSet := &appsv1.DaemonSet{}
-	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: submarinerNamespace}, foundDaemonSet)
+	err := client.Get(ctx, types.NamespacedName{Name: name, Namespace: submarinerNamespace}, foundDaemonSet)
 	return foundDaemonSet, err
 }
 
-func expectDaemonSet(name string, client controllerClient.Client) *appsv1.DaemonSet {
-	foundDaemonSet, err := getDaemonSet(name, client)
+func expectDaemonSet(ctx context.Context, name string, client controllerClient.Client) *appsv1.DaemonSet {
+	foundDaemonSet, err := getDaemonSet(ctx, name, client)
 	Expect(err).To(Succeed())
 	return foundDaemonSet
 }
 
-func expectNoDaemonSet(name string, client controllerClient.Client) {
-	_, err := getDaemonSet(name, client)
+func expectNoDaemonSet(ctx context.Context, name string, client controllerClient.Client) {
+	_, err := getDaemonSet(ctx, name, client)
 	Expect(err).To(HaveOccurred())
 	Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
 }

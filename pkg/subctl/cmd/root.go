@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -39,7 +42,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 
-	goversion "github.com/hashicorp/go-version"
+	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 )
@@ -60,20 +63,27 @@ func Execute() error {
 
 func init() {
 	rootCmd.AddCommand(cmdversion.Cmd)
-	rootCmd.AddCommand(cloud.NewCommand(&kubeConfig, &kubeContext))
+	cloudCmd := cloud.NewCommand(&kubeConfig, &kubeContext)
+	addKubeContextFlag(cloudCmd)
+	rootCmd.AddCommand(cloudCmd)
 }
 
-func addKubeconfigFlag(cmd *cobra.Command) {
+func addKubeConfigFlag(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
-	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontext", nil, "kubeconfig context to use")
-	if len(kubeContexts) > 0 {
-		kubeContext = kubeContexts[0]
-	}
 }
 
-func addKubecontextsFlag(cmd *cobra.Command) {
+// addKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once
+func addKubeContextFlag(cmd *cobra.Command) {
+	addKubeConfigFlag(cmd)
+	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
+}
+
+// addKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated)
+func addKubeContextMultiFlag(cmd *cobra.Command) {
+	addKubeConfigFlag(cmd)
 	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontexts", nil,
-		"comma separated list of kubeconfig contexts to use. If none specified, all contexts referenced by kubeconfig are used")
+		"comma separated list of kubeconfig contexts to use, can be specified multiple times.\n"+
+			"If none specified, all contexts referenced by kubeconfig are used")
 }
 
 const (
@@ -110,11 +120,11 @@ func getClusterNameFromContext(rawConfig clientcmdapi.Config, overridesContext s
 		// No context provided, use the current context
 		overridesContext = rawConfig.CurrentContext
 	}
-	context, ok := rawConfig.Contexts[overridesContext]
+	configContext, ok := rawConfig.Contexts[overridesContext]
 	if !ok {
 		return nil
 	}
-	return &context.Cluster
+	return &configContext.Cluster
 }
 
 func getRestConfig(kubeConfigPath, kubeContext string) (*rest.Config, error) {
@@ -132,7 +142,7 @@ func handleNodeLabels(config *rest.Config) error {
 	const submarinerGatewayLabel = "submariner.io/gateway"
 	const trueLabel = "true"
 	selector := labels.SelectorFromSet(labels.Set(map[string]string{submarinerGatewayLabel: trueLabel}))
-	labeledNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: selector.String()})
+	labeledNodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
 		return err
 	}
@@ -158,13 +168,15 @@ func handleNodeLabels(config *rest.Config) error {
 
 func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, error) {
 	// List the worker nodes and select one
-	workerNodes, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker"})
+	workerNodes, err := clientset.CoreV1().Nodes().List(
+		context.TODO(), metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker"})
 	if err != nil {
 		return struct{ Node string }{}, err
 	}
 	if len(workerNodes.Items) == 0 {
 		// In some deployments (like KIND), worker nodes are not explicitly labelled. So list non-master nodes.
-		workerNodes, err = clientset.CoreV1().Nodes().List(metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
+		workerNodes, err = clientset.CoreV1().Nodes().List(
+			context.TODO(), metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
 		if err != nil {
 			return struct{ Node string }{}, err
 		}
@@ -214,7 +226,7 @@ func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[st
 
 	var lastErr error
 	err := wait.ExponentialBackoff(nodeLabelBackoff, func() (bool, error) {
-		_, lastErr = c.CoreV1().Nodes().Patch(nodeName, types.MergePatchType, []byte(patch))
+		_, lastErr = c.CoreV1().Nodes().Patch(context.TODO(), nodeName, types.MergePatchType, []byte(patch), metav1.PatchOptions{})
 		if lastErr != nil {
 			if !errors.IsConflict(lastErr) {
 				return false, lastErr
@@ -246,10 +258,10 @@ func checkVersionMismatch(cmd *cobra.Command, args []string) error {
 	submariner := getSubmarinerResource(config)
 
 	if submariner != nil && submariner.Spec.Version != "" {
-		subctlVer, _ := goversion.NewVersion(version.Version)
-		submarinerVer, _ := goversion.NewVersion(submariner.Spec.Version)
+		subctlVer, _ := semver.NewVersion(version.Version)
+		submarinerVer, _ := semver.NewVersion(submariner.Spec.Version)
 
-		if subctlVer != nil && submarinerVer != nil && subctlVer.LessThan(submarinerVer) {
+		if subctlVer != nil && submarinerVer != nil && subctlVer.LessThan(*submarinerVer) {
 			return fmt.Errorf(
 				"the subctl version %q is older than the deployed Submariner version %q. Please upgrade your subctl version",
 				version.Version, submariner.Spec.Version)

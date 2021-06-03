@@ -12,10 +12,11 @@ linters-settings:
       - unnecessaryDefer
   gocyclo:
     min-complexity: 20
+  govet:
+    enable:
+      - fieldalignment
   lll:
     line-length: 140
-  maligned:
-    suggest-new: true
 linters:
   disable-all: true
   enable:
@@ -41,7 +42,6 @@ linters:
     # - interfacer
     - lll
     - misspell
-    - maligned
     - nakedret
     - prealloc
     - staticcheck
@@ -66,9 +66,17 @@ issues:
     - linters:
         - stylecheck
       text: "ST1003: struct field BrokerK8sApiServer"
+    - path: .
+      text: "ST1003: struct field NatEnabled"
     # Temporary, until https://github.com/submariner-io/submariner-operator/issues/1236
     # is addressed (sigs.k8s.io/controller-runtime/pkg/client/fake is deprecated)
     - path: controllers/servicediscovery/servicediscovery_controller_test.go
       text: "SA1019: package sigs.k8s.io/controller-runtime/pkg/client/fake is deprecated"
     - path: controllers/submariner/submariner_controller_test.go
       text: "SA1019: package sigs.k8s.io/controller-runtime/pkg/client/fake is deprecated"
+
+    # Ignore pointer bytes in struct alignment tests (this is a very
+    # minor optimisation)
+    - linters:
+        - govet
+      text: "pointer bytes could be"

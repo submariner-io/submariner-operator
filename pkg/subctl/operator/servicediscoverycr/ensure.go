@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,8 @@ limitations under the License.
 package servicediscoverycr
 
 import (
+	"context"
+
 	"github.com/submariner-io/admiral/pkg/resource"
 	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
@@ -50,15 +54,15 @@ func Ensure(config *rest.Config, namespace string, serviceDiscoverySpec *submari
 		Spec: *serviceDiscoverySpec,
 	}
 
-	_, err = utils.CreateOrUpdate(&resource.InterfaceFuncs{
-		GetFunc: func(name string, options metav1.GetOptions) (runtime.Object, error) {
-			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Get(name, options)
+	_, err = utils.CreateOrUpdate(context.TODO(), &resource.InterfaceFuncs{
+		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Get(ctx, name, options)
 		},
-		CreateFunc: func(obj runtime.Object) (runtime.Object, error) {
-			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Create(obj.(*submariner.ServiceDiscovery))
+		CreateFunc: func(ctx context.Context, obj runtime.Object, options metav1.CreateOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Create(ctx, obj.(*submariner.ServiceDiscovery), options)
 		},
-		UpdateFunc: func(obj runtime.Object) (runtime.Object, error) {
-			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Update(obj.(*submariner.ServiceDiscovery))
+		UpdateFunc: func(ctx context.Context, obj runtime.Object, options metav1.UpdateOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Update(ctx, obj.(*submariner.ServiceDiscovery), options)
 		},
 	}, sd)
 

@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ package gather
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -95,7 +98,7 @@ func getLogFromStream(logStream io.ReadCloser) (string, error) {
 }
 
 func writeLogToFile(data, podName string, info Info, fileExtension string) error {
-	fileName := filepath.Join(info.DirName, info.ClusterName+"_"+podName+fileExtension)
+	fileName := filepath.Join(info.DirName, escapeFileName(info.ClusterName+"_"+podName)+fileExtension)
 	f, err := os.Create(fileName)
 	if err != nil {
 		return errors.WithMessagef(err, "error opening file %s", fileName)
@@ -111,7 +114,7 @@ func writeLogToFile(data, podName string, info Info, fileExtension string) error
 }
 
 func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.PodList, error) {
-	pods, err := clientSet.CoreV1().Pods("").List(metav1.ListOptions{LabelSelector: byLabelSelector})
+	pods, err := clientSet.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: byLabelSelector})
 
 	if err != nil {
 		return nil, errors.WithMessage(err, "error listing pods")
@@ -123,7 +126,7 @@ func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.P
 func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) error {
 	podLogOptions.Previous = true
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
-	logStream, _ := logRequest.Stream()
+	logStream, _ := logRequest.Stream(context.TODO())
 
 	// TODO: Check for error other than "no previous pods found"
 
@@ -143,7 +146,7 @@ func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, in
 	// Running with Previous = false on the same pod
 	podLogOptions.Previous = false
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
-	logStream, err := logRequest.Stream()
+	logStream, err := logRequest.Stream(context.TODO())
 	if err != nil {
 		return errors.WithMessage(err, "error opening log stream")
 	}

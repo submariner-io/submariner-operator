@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package deployments
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -32,7 +35,7 @@ func WaitForReady(clientSet *clientset.Clientset, namespace, deployment string, 
 	deployments := clientSet.AppsV1().Deployments(namespace)
 
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {
-		dp, err := deployments.Get(deployment, metav1.GetOptions{})
+		dp, err := deployments.Get(context.TODO(), deployment, metav1.GetOptions{})
 		if err != nil && !errors.IsNotFound(err) {
 			return false, fmt.Errorf("error waiting for controller deployment to come up: %s", err)
 		}

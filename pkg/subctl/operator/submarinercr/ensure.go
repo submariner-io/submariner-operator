@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,8 @@ limitations under the License.
 package submarinercr
 
 import (
+	"context"
+
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,17 +50,17 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 
 	propagationPolicy := metav1.DeletePropagationForeground
 
-	return util.CreateAnew(&resource.InterfaceFuncs{
-		GetFunc: func(name string, options metav1.GetOptions) (runtime.Object, error) {
-			return client.SubmarinerV1alpha1().Submariners(namespace).Get(name, options)
+	return util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
+		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().Submariners(namespace).Get(ctx, name, options)
 		},
-		CreateFunc: func(obj runtime.Object) (runtime.Object, error) {
-			return client.SubmarinerV1alpha1().Submariners(namespace).Create(obj.(*submariner.Submariner))
+		CreateFunc: func(ctx context.Context, obj runtime.Object, options metav1.CreateOptions) (runtime.Object, error) {
+			return client.SubmarinerV1alpha1().Submariners(namespace).Create(ctx, obj.(*submariner.Submariner), options)
 		},
-		DeleteFunc: func(name string, options *metav1.DeleteOptions) error {
-			return client.SubmarinerV1alpha1().Submariners(namespace).Delete(name, options)
+		DeleteFunc: func(ctx context.Context, name string, options metav1.DeleteOptions) error {
+			return client.SubmarinerV1alpha1().Submariners(namespace).Delete(ctx, name, options)
 		},
-	}, submarinerCR, &metav1.DeleteOptions{
+	}, submarinerCR, metav1.CreateOptions{}, metav1.DeleteOptions{
 		PropagationPolicy: &propagationPolicy,
 	})
 }

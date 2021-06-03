@@ -16,21 +16,24 @@ patchesJson6902:
       name: submariner.v${VERSION}
       namespace: placeholder
       version: v1alpha1
-# - path: patches/servicediscoveries.crd.config.yaml
-#  target:
-#    group: operators.coreos.com
-#    kind: ClusterServiceVersion
-#    name: submariner.v*
-#    namespace: placeholder
-#    version: v1alpha1
+
 vars:
   - fieldref:
-      fieldpath: spec.version
+      fieldPath: spec.version
     name: VERSION
     objref:
       group: operators.coreos.com
       kind: ClusterServiceVersion
       name: submariner.v${VERSION}
       version: v1alpha1
+  - fieldref:
+      fieldPath: spec.install.spec.deployments.0.spec.template.spec.containers.0.image
+    name: SUBMARINER_OPERATOR_IMAGE
+    objref:
+      group: operators.coreos.com
+      kind: ClusterServiceVersion
+      name: submariner.v${VERSION}
+      version: v1alpha1
+
 commonAnnotations:
   createdAt: null

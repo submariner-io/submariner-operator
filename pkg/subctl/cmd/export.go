@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -47,7 +50,7 @@ var (
 )
 
 func init() {
-	addKubeconfigFlag(exportCmd)
+	addKubeContextFlag(exportCmd)
 	addServiceExportFlags(exportServiceCmd)
 	exportCmd.AddCommand(exportServiceCmd)
 	rootCmd.AddCommand(exportCmd)
@@ -82,7 +85,7 @@ func exportService(cmd *cobra.Command, args []string) {
 
 	svcName := args[0]
 
-	_, err = clientSet.CoreV1().Services(serviceNamespace).Get(svcName, metav1.GetOptions{})
+	_, err = clientSet.CoreV1().Services(serviceNamespace).Get(context.TODO(), svcName, metav1.GetOptions{})
 	exitOnError(fmt.Sprintf("Unable to find the Service %q in namespace %q", svcName, serviceNamespace), err)
 
 	mcsServiceExport := &mcsv1a1.ServiceExport{
@@ -94,7 +97,7 @@ func exportService(cmd *cobra.Command, args []string) {
 	resourceServiceExport, gvr, err := autil.ToUnstructuredResource(mcsServiceExport, restMapper)
 	exitOnError("Failed to convert to Unstructured", err)
 
-	_, err = dynClient.Resource(*gvr).Namespace(serviceNamespace).Create(resourceServiceExport, metav1.CreateOptions{})
+	_, err = dynClient.Resource(*gvr).Namespace(serviceNamespace).Create(context.TODO(), resourceServiceExport, metav1.CreateOptions{})
 	if k8serrors.IsAlreadyExists(err) {
 		fmt.Fprintln(os.Stdout, "Service already exported")
 		return
