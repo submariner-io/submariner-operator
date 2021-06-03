@@ -47,17 +47,8 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 		"app": "submariner-routeagent",
 	}
 
-	allowPrivilegeEscalation := true
-	privileged := true
-	readOnlyFileSystem := false
-	runAsNonRoot := false
-	securityContextAllCapAllowEscal := corev1.SecurityContext{
-		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
-		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-		Privileged:               &privileged,
-		ReadOnlyRootFilesystem:   &readOnlyFileSystem,
-		RunAsNonRoot:             &runAsNonRoot,
-	}
+	valTrue := true
+	valFalse := false
 
 	terminationGracePeriodSeconds := int64(1)
 	maxUnavailable := intstr.FromString("100%")
@@ -95,15 +86,40 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 							Path: "/sys",
 						}}},
 					},
+					InitContainers: []corev1.Container{
+						{
+							Name:  "submariner-routeagent-init",
+							Image: "busybox:1.28",
+							Command: []string{"sh", "-c",
+								"echo 2 > /proc/sys/net/ipv4/conf/weave/rp_filter; echo 2 > /proc/sys/net/ipv4/conf/default/rp_filter"},
+							SecurityContext: &corev1.SecurityContext{
+								Privileged:             &valTrue,
+								ReadOnlyRootFilesystem: &valFalse,
+								RunAsNonRoot:           &valFalse,
+							},
+						},
+					},
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-routeagent",
 							Image:           getImagePath(cr, names.RouteAgentImage, names.RouteAgentComponent),
 							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
-							Command:         []string{"submariner-route-agent.sh"},
-							SecurityContext: &securityContextAllCapAllowEscal,
+							Command: []string{"submariner-route-agent.sh"},
+							SecurityContext: &corev1.SecurityContext{
+								Capabilities: &corev1.Capabilities{
+									// We need DAC_OVERRIDE to be able to write to /etc/alternatives (and choose the appropriate iptables)
+									// We need NET_ADMIN and NET_RAW to be able to modify iptables
+									Add:  []corev1.Capability{"dac_override", "net_admin", "net_raw"},
+									Drop: []corev1.Capability{"all"},
+								},
+								AllowPrivilegeEscalation: &valFalse,
+								Privileged:               &valFalse,
+								ReadOnlyRootFilesystem:   &valFalse,
+								RunAsNonRoot:             &valFalse,
+							},
 							VolumeMounts: []corev1.VolumeMount{
+								// These are required for ovs-vsctl, see https://github.com/submariner-io/submariner/issues/1282
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
 								{Name: "host-run-openvswitch-db-sock", MountPath: "/run/openvswitch/db.sock"},

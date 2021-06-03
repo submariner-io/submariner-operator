@@ -333,9 +333,11 @@ function verify_subm_routeagent_pod() {
     json_file=/tmp/${subm_gateway_pod_name}.${cluster}.json
     kubectl get pod $subm_routeagent_pod_name --namespace=$subm_ns -o json | tee $json_file
     validate_pod_container_equals 'image' "${subm_gateway_image_repo}/submariner-route-agent:$subm_gateway_image_tag"
-    validate_pod_container_has 'securityContext.capabilities.add' 'ALL'
-    validate_pod_container_equals 'securityContext.allowPrivilegeEscalation' 'true'
-    validate_pod_container_equals 'securityContext.privileged' 'true'
+    validate_pod_container_has 'securityContext.capabilities.add' 'dac_override'
+    validate_pod_container_has 'securityContext.capabilities.add' 'net_admin'
+    validate_pod_container_has 'securityContext.capabilities.add' 'net_raw'
+    validate_pod_container_equals 'securityContext.allowPrivilegeEscalation' 'false'
+    validate_pod_container_equals 'securityContext.privileged' 'false'
     validate_pod_container_equals 'securityContext.readOnlyRootFilesystem' 'false'
     validate_pod_container_equals 'securityContext.runAsNonRoot' 'false'
     validate_pod_container_has 'command' 'submariner-route-agent.sh'
