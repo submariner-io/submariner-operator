@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"k8s.io/client-go/rest"
 )
 
@@ -41,13 +42,13 @@ func init() {
 }
 
 func showNetwork(cmd *cobra.Command, args []string) {
-	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
+	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
 		fmt.Println()
-		fmt.Printf("Showing network details for cluster %q:\n", item.clusterName)
-		showNetworkSingleCluster(item.config)
+		fmt.Printf("Showing network details for cluster %q:\n", item.ClusterName)
+		showNetworkSingleCluster(item.Config)
 	}
 }
 
@@ -66,7 +67,7 @@ func showNetworkSingleCluster(config *rest.Config) {
 		}
 	} else {
 		msg = "    Discovered network details"
-		dynClient, clientSet, err := getClients(config)
+		dynClient, clientSet, err := restconfig.Clients(config)
 		exitOnError("Error creating clients for cluster", err)
 
 		submarinerClient, err := submarinerclientset.NewForConfig(config)

@@ -28,6 +28,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,10 +71,10 @@ func init() {
 }
 
 func validateTunnelConfig(command *cobra.Command, args []string) {
-	localCfg, err := utils.GetRestConfig(args[0], "")
+	localCfg, err := restconfig.ForCluster(args[0], "")
 	utils.ExitOnError("The provided local kubeconfig is invalid", err)
 
-	remoteCfg, err := utils.GetRestConfig(args[1], "")
+	remoteCfg, err := restconfig.ForCluster(args[1], "")
 	utils.ExitOnError("The provided remote kubeconfig is invalid", err)
 
 	if !validateTunnelConfigAcrossClusters(localCfg, remoteCfg) {
