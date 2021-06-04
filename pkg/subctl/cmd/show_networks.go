@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"k8s.io/client-go/rest"
 )
@@ -43,7 +44,7 @@ func init() {
 
 func showNetwork(cmd *cobra.Command, args []string) {
 	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	exitOnError("Error getting REST config for cluster", err)
+	utils.ExitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
 		fmt.Println()
@@ -68,13 +69,13 @@ func showNetworkSingleCluster(config *rest.Config) {
 	} else {
 		msg = "    Discovered network details"
 		dynClient, clientSet, err := restconfig.Clients(config)
-		exitOnError("Error creating clients for cluster", err)
+		utils.ExitOnError("Error creating clients for cluster", err)
 
 		submarinerClient, err := submarinerclientset.NewForConfig(config)
-		exitOnError("Unable to get the Submariner client", err)
+		utils.ExitOnError("Unable to get the Submariner client", err)
 
 		clusterNetwork, err = network.Discover(dynClient, clientSet, submarinerClient, OperatorNamespace)
-		exitOnError("There was an error discovering network details for this cluster", err)
+		utils.ExitOnError("There was an error discovering network details for this cluster", err)
 	}
 	if clusterNetwork != nil {
 		fmt.Println(msg)

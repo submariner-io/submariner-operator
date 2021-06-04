@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 	autil "github.com/submariner-io/admiral/pkg/util"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,18 +64,18 @@ func addServiceExportFlags(cmd *cobra.Command) {
 
 func exportService(cmd *cobra.Command, args []string) {
 	err := validateArguments(args)
-	exitOnError("Insufficient arguments", err)
+	utils.ExitOnError("Insufficient arguments", err)
 
 	clientConfig := restconfig.ClientConfig(kubeConfig, kubeContext)
 	restConfig, err := clientConfig.ClientConfig()
 
-	exitOnError("Error connecting to the target cluster", err)
+	utils.ExitOnError("Error connecting to the target cluster", err)
 
 	dynClient, clientSet, err := restconfig.Clients(restConfig)
-	exitOnError("Error connecting to the target cluster", err)
+	utils.ExitOnError("Error connecting to the target cluster", err)
 	restMapper, err := autil.BuildRestMapper(restConfig)
 
-	exitOnError("Error creating RestMapper for ServiceExport", err)
+	utils.ExitOnError("Error creating RestMapper for ServiceExport", err)
 	if serviceNamespace == "" {
 		if serviceNamespace, _, err = clientConfig.Namespace(); err != nil {
 			serviceNamespace = "default"
@@ -82,12 +83,12 @@ func exportService(cmd *cobra.Command, args []string) {
 	}
 
 	err = mcsv1a1.AddToScheme(scheme.Scheme)
-	exitOnError("Failed to add to scheme", err)
+	utils.ExitOnError("Failed to add to scheme", err)
 
 	svcName := args[0]
 
 	_, err = clientSet.CoreV1().Services(serviceNamespace).Get(context.TODO(), svcName, metav1.GetOptions{})
-	exitOnError(fmt.Sprintf("Unable to find the Service %q in namespace %q", svcName, serviceNamespace), err)
+	utils.ExitOnError(fmt.Sprintf("Unable to find the Service %q in namespace %q", svcName, serviceNamespace), err)
 
 	mcsServiceExport := &mcsv1a1.ServiceExport{
 		ObjectMeta: metav1.ObjectMeta{
@@ -96,14 +97,14 @@ func exportService(cmd *cobra.Command, args []string) {
 		},
 	}
 	resourceServiceExport, gvr, err := autil.ToUnstructuredResource(mcsServiceExport, restMapper)
-	exitOnError("Failed to convert to Unstructured", err)
+	utils.ExitOnError("Failed to convert to Unstructured", err)
 
 	_, err = dynClient.Resource(*gvr).Namespace(serviceNamespace).Create(context.TODO(), resourceServiceExport, metav1.CreateOptions{})
 	if k8serrors.IsAlreadyExists(err) {
 		fmt.Fprintln(os.Stdout, "Service already exported")
 		return
 	}
-	exitOnError("Failed to export Service", err)
+	utils.ExitOnError("Failed to export Service", err)
 	fmt.Fprintln(os.Stdout, "Service exported successfully")
 }
 
