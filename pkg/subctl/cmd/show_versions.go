@@ -26,6 +26,7 @@ import (
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -98,19 +99,19 @@ func getVersions(config *rest.Config, submariner *v1alpha1.Submariner) []version
 	var versions []versionImageInfo
 
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
-	exitOnError("Unable to get Submariner client", err)
+	utils.ExitOnError("Unable to get Submariner client", err)
 
 	clientSet, err := kubernetes.NewForConfig(config)
-	exitOnError("Unable to get the Operator config", err)
+	utils.ExitOnError("Unable to get the Operator config", err)
 
 	versions = getSubmarinerVersion(submariner, versions)
-	exitOnError("Unable to get the Submariner versions", err)
+	utils.ExitOnError("Unable to get the Submariner versions", err)
 
 	versions, err = getOperatorVersion(clientSet, versions)
-	exitOnError("Unable to get the Operator version", err)
+	utils.ExitOnError("Unable to get the Operator version", err)
 
 	versions, err = getServiceDiscoveryVersions(submarinerClient, versions)
-	exitOnError("Unable to get the Service-Discovery version", err)
+	utils.ExitOnError("Unable to get the Service-Discovery version", err)
 
 	return versions
 }
@@ -122,7 +123,8 @@ func showVersionsFor(config *rest.Config, submariner *v1alpha1.Submariner) {
 
 func showVersions(cmd *cobra.Command, args []string) {
 	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	exitOnError("Error getting REST config for cluster", err)
+	utils.ExitOnError("Error getting REST config for cluster", err)
+
 	for _, item := range configs {
 		fmt.Println()
 		fmt.Printf("Showing information for cluster %q:\n", item.ClusterName)

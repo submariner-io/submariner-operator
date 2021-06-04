@@ -22,6 +22,8 @@ import (
 	"context"
 	"io/ioutil"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -52,7 +54,7 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 		if apierrors.IsNotFound(err) {
 			return nil
 		}
-		exitOnError("Error obtaining the Submariner resource", err)
+		utils.ExitOnError("Error obtaining the Submariner resource", err)
 	}
 
 	return submariner

@@ -34,6 +34,7 @@ import (
 	_ "github.com/submariner-io/lighthouse/test/e2e/framework"
 	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
@@ -119,7 +120,7 @@ The following verifications are deemed disruptive:
 You have specified disruptive verifications (%s) but subctl is running non-interactively and thus cannot
 prompt for confirmation therefore you must specify --enable-disruptive to run them.`, strings.Join(disruptive, ","))
 				} else {
-					exitWithErrorMsg(fmt.Sprintf("Prompt failure: %#v", err))
+					utils.ExitWithErrorMsg(fmt.Sprintf("Prompt failure: %#v", err))
 				}
 			}
 		}
@@ -135,7 +136,7 @@ prompt for confirmation therefore you must specify --enable-disruptive to run th
 		fmt.Printf("Performing the following verifications: %s\n", strings.Join(verifications, ", "))
 
 		if !e2e.RunE2ETests(&testing.T{}) {
-			exitWithErrorMsg(fmt.Sprintf("[%s] E2E failed", testType))
+			utils.ExitWithErrorMsg(fmt.Sprintf("[%s] E2E failed", testType))
 		}
 	},
 }
@@ -197,10 +198,11 @@ func configureTestingFramework(args []string) error {
 
 func clusterNameFromConfig(kubeConfigPath, kubeContext string) string {
 	rawConfig, err := restconfig.ClientConfig(kubeConfigPath, "").RawConfig()
-	exitOnError(fmt.Sprintf("Error obtaining the kube config for path %q", kubeConfigPath), err)
+	utils.ExitOnError(fmt.Sprintf("Error obtaining the kube config for path %q", kubeConfigPath), err)
 	cluster := restconfig.ClusterNameFromContext(rawConfig, kubeContext)
+
 	if cluster == nil {
-		exitWithErrorMsg(fmt.Sprintf("Could not obtain the cluster name from kube config: %#v", rawConfig))
+		utils.ExitWithErrorMsg(fmt.Sprintf("Could not obtain the cluster name from kube config: %#v", rawConfig))
 	}
 
 	return *cluster
@@ -332,18 +334,18 @@ func getVerifyPatterns(csv string, includeDisruptive bool) ([]string, []string, 
 
 func detectGlobalnet() {
 	submarinerClient, err := submarinerclientset.NewForConfig(framework.RestConfigs[framework.ClusterA])
-	exitOnError("Error creating submariner client: %v", err)
+	utils.ExitOnError("Error creating submariner client: %v", err)
 
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(
 		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
 	if errors.IsNotFound(err) {
-		exitWithErrorMsg(`
+		utils.ExitWithErrorMsg(`
 The Submariner resource was not found. Either submariner has not been deployed in this cluster or was deployed using helm.
 This command only supports submariner deployed using the operator via 'subctl join'.`)
 	}
 
 	if err != nil {
-		exitOnError("Error obtaining Submariner resource: %v", err)
+		utils.ExitOnError("Error obtaining Submariner resource: %v", err)
 	}
 
 	framework.TestContext.GlobalnetEnabled = submariner.Spec.GlobalCIDR != ""

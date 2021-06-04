@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/table"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
@@ -57,7 +58,7 @@ func getConnectionsStatus(submariner *v1alpha1.Submariner) []interface{} {
 
 	gateways := submariner.Status.Gateways
 	if gateways == nil {
-		exitWithErrorMsg("No endpoints found")
+		utils.ExitWithErrorMsg("No endpoints found")
 	}
 
 	for _, gateway := range *gateways {
@@ -108,7 +109,7 @@ func remoteIPAndNATForConnection(connection submv1.Connection) (string, string) 
 
 func showConnections(cmd *cobra.Command, args []string) {
 	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	exitOnError("Error getting REST config for cluster", err)
+	utils.ExitOnError("Error getting REST config for cluster", err)
 	for _, item := range configs {
 		fmt.Println()
 		fmt.Printf("Showing information for cluster %q:\n", item.ClusterName)
