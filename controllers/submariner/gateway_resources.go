@@ -70,10 +70,13 @@ func newGatewayDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 	return deployment
 }
 
+const appLabel = "app"
+const appGatewayLabel = "submariner-gateway"
+
 // newGatewayPodTemplate returns a submariner pod with the same fields as the cr
 func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 	labels := map[string]string{
-		"app": "submariner-gateway",
+		appLabel: appGatewayLabel,
 	}
 
 	// Create privileged security context for Gateway pod
@@ -194,10 +197,16 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 	}
 
 	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
-		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer)})
+		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer ||
+			cr.Spec.LoadBalancerEnabled)})
 
 	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
 		corev1.EnvVar{Name: "CE_IPSEC_FORCEENCAPS", Value: strconv.FormatBool(cr.Spec.CeIPSecForceUDPEncaps)})
+
+	if cr.Spec.LoadBalancerEnabled {
+		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+			corev1.EnvVar{Name: "SUBMARINER_PUBLICIP", Value: "lb:" + loadBalancerName})
+	}
 
 	return podTemplate
 }

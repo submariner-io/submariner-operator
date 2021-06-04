@@ -24,6 +24,7 @@ import (
 
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -132,6 +133,14 @@ func (r *SubmarinerReconciler) Reconcile(ctx context.Context, request reconcile.
 		return reconcile.Result{}, err
 	}
 
+	var loadBalancer *corev1.Service
+	if instance.Spec.LoadBalancerEnabled {
+		loadBalancer, err = r.reconcileLoadBalancer(instance, reqLogger)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
 	routeagentDaemonSet, err := r.reconcileRouteagentDaemonSet(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -182,6 +191,13 @@ func (r *SubmarinerReconciler) Reconcile(ctx context.Context, request reconcile.
 		reqLogger.Error(err, "failed to check gateway daemonset containers")
 		return reconcile.Result{}, err
 	}
+
+	if loadBalancer != nil {
+		instance.Status.LoadBalancerStatus.Status = &loadBalancer.Status.LoadBalancer
+	} else {
+		instance.Status.LoadBalancerStatus.Status = nil
+	}
+
 	if !reflect.DeepEqual(instance.Status, initialStatus) {
 		err := r.client.Status().Update(ctx, instance)
 		if err != nil {
