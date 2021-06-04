@@ -26,6 +26,7 @@ import (
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -120,16 +121,16 @@ func showVersionsFor(config *rest.Config, submariner *v1alpha1.Submariner) {
 }
 
 func showVersions(cmd *cobra.Command, args []string) {
-	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
+	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 	for _, item := range configs {
 		fmt.Println()
-		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
-		submariner := getSubmarinerResource(item.config)
+		fmt.Printf("Showing information for cluster %q:\n", item.ClusterName)
+		submariner := getSubmarinerResource(item.Config)
 		if submariner == nil {
 			fmt.Println(SubmMissingMessage)
 		} else {
-			showVersionsFor(item.config, submariner)
+			showVersionsFor(item.Config, submariner)
 		}
 	}
 }

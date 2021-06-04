@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -88,10 +89,10 @@ func (c *Cluster) GetGateways() (*submarinerv1.GatewayList, error) {
 func ExecuteMultiCluster(run func(*Cluster) bool) {
 	success := true
 
-	for _, config := range mustGetMultipleRestConfigs(kubeConfig, kubeContexts) {
-		fmt.Printf("Cluster %q\n", config.clusterName)
+	for _, config := range restconfig.MustGetForClusters(kubeConfig, kubeContexts) {
+		fmt.Printf("Cluster %q\n", config.ClusterName)
 
-		cluster, errMsg := NewCluster(config.config, config.clusterName)
+		cluster, errMsg := NewCluster(config.Config, config.ClusterName)
 		if cluster == nil {
 			success = false
 			fmt.Println(errMsg)

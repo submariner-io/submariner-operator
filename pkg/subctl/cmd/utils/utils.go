@@ -23,8 +23,6 @@ import (
 	"os"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // PanicOnError will print the subctl version and then panic in case of an actual error
@@ -51,25 +49,6 @@ func ExitWithErrorMsg(message string) {
 	version.PrintSubctlVersion(os.Stderr)
 	fmt.Fprintln(os.Stderr, "")
 	os.Exit(1)
-}
-
-// GetRestConfig returns a rest.Config to use when communicating with K8s
-func GetRestConfig(kubeConfigPath, kubeContext string) (*rest.Config, error) {
-	return GetClientConfig(kubeConfigPath, kubeContext).ClientConfig()
-}
-
-// GetClientConfig returns a clientcmd.ClientConfig to use when communicating with K8s
-func GetClientConfig(kubeConfigPath, kubeContext string) clientcmd.ClientConfig {
-	rules := clientcmd.NewDefaultClientConfigLoadingRules()
-	rules.ExplicitPath = kubeConfigPath
-
-	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
-	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
-	if kubeContext != "" {
-		overrides.CurrentContext = kubeContext
-	}
-
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
 }
 
 // ExpectFlag exits with an error if the flag value is empty

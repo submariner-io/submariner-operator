@@ -28,6 +28,8 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	cmdVersion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -152,7 +154,7 @@ var joinCmd = &cobra.Command{
 		exitOnError("Error connecting to broker cluster", err)
 		err = isValidCustomCoreDNSConfig()
 		exitOnError("Invalid Custom CoreDNS configuration", err)
-		config := getClientConfig(kubeConfig, kubeContext)
+		config := restconfig.ClientConfig(kubeConfig, kubeContext)
 		joinSubmarinerCluster(config, kubeContext, subctlData)
 	},
 }
@@ -174,7 +176,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		rawConfig, err := config.RawConfig()
 		// This will be fatal later, no point in continuing
 		exitOnError("Error connecting to the target cluster", err)
-		clusterName := getClusterNameFromContext(rawConfig, contextName)
+		clusterName := restconfig.ClusterNameFromContext(rawConfig, contextName)
 		if clusterName != nil {
 			clusterID = *clusterName
 		}
@@ -342,7 +344,7 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 }
 
 func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
-	dynClient, clientSet, err := getClients(config)
+	dynClient, clientSet, err := restconfig.Clients(config)
 	exitOnError("Unable to set the Kubernetes cluster connection up", err)
 
 	submarinerClient, err := submarinerclientset.NewForConfig(config)

@@ -34,6 +34,7 @@ import (
 	_ "github.com/submariner-io/lighthouse/test/e2e/framework"
 	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -195,9 +196,9 @@ func configureTestingFramework(args []string) error {
 }
 
 func clusterNameFromConfig(kubeConfigPath, kubeContext string) string {
-	rawConfig, err := getClientConfig(kubeConfigPath, "").RawConfig()
+	rawConfig, err := restconfig.ClientConfig(kubeConfigPath, "").RawConfig()
 	exitOnError(fmt.Sprintf("Error obtaining the kube config for path %q", kubeConfigPath), err)
-	cluster := getClusterNameFromContext(rawConfig, kubeContext)
+	cluster := restconfig.ClusterNameFromContext(rawConfig, kubeContext)
 	if cluster == nil {
 		exitWithErrorMsg(fmt.Sprintf("Could not obtain the cluster name from kube config: %#v", rawConfig))
 	}
