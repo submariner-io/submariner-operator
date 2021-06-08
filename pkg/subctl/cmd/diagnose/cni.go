@@ -25,6 +25,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -32,7 +33,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-var supportedNetworkPlugins = []string{"generic", "canal-flannel", "weave-net", "OpenShiftSDN", "OVNKubernetes"}
+var supportedNetworkPlugins = []string{constants.NetworkPluginGeneric, constants.NetworkPluginCanalFlannel, constants.NetworkPluginWeaveNet,
+	constants.NetworkPluginOpenShiftSDN, constants.NetworkPluginOVNKubernetes, constants.NetworkPluginCalico}
 
 var (
 	calicoGVR = schema.GroupVersionResource{
@@ -73,13 +75,12 @@ func checkCNIConfig(cluster *cmd.Cluster) bool {
 	}
 
 	if !isSupportedPlugin {
-		status.EndWithFailure(fmt.Sprintf("The detected CNI network plugin (%q) is not supported by Submariner."+
-			" Supported network plugins: %v\n", cluster.Submariner.Status.NetworkPlugin, supportedNetworkPlugins))
+		status.EndWithFailure("The detected CNI network plugin (%q) is not supported by Submariner."+
+			" Supported network plugins: %v\n", cluster.Submariner.Status.NetworkPlugin, supportedNetworkPlugins)
 		return false
 	}
 
-	status.EndWithSuccess(fmt.Sprintf("The detected CNI network plugin (%q) is supported",
-		cluster.Submariner.Status.NetworkPlugin))
+	status.EndWithSuccess("The detected CNI network plugin (%q) is supported", cluster.Submariner.Status.NetworkPlugin)
 
 	return checkCalicoIPPoolsIfCalicoCNI(cluster)
 }
@@ -116,7 +117,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 
 	gateways, err := info.GetGateways()
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error retrieving Gateways: %v", err))
+		status.EndWithFailure("Error retrieving Gateways: %v", err)
 		return false
 	}
 
@@ -129,7 +130,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 
 	ippoolList, err := client.List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error obtaining IPPools: %v", err))
+		status.EndWithFailure("Error obtaining IPPools: %v", err)
 		return false
 	}
 

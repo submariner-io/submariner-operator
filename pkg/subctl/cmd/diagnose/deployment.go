@@ -62,7 +62,7 @@ func checkOverlappingCIDRs(cluster *cmd.Cluster) bool {
 	endpointList, err := cluster.SubmClient.SubmarinerV1().Endpoints(cluster.Submariner.Namespace).List(context.TODO(),
 		metav1.ListOptions{})
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error listing the Submariner endpoints: %v", err))
+		status.EndWithFailure("Error listing the Submariner endpoints: %v", err)
 		return false
 	}
 

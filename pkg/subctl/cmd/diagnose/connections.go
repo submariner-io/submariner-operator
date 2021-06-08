@@ -50,7 +50,7 @@ func checkConnections(cluster *cmd.Cluster) bool {
 
 	gateways, err := cluster.GetGateways()
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error retrieving gateways: %v", err))
+		status.EndWithFailure("Error retrieving gateways: %v", err)
 		return false
 	}
 

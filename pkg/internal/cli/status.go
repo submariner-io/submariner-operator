@@ -134,18 +134,18 @@ func (s *Status) End(output Result) {
 	s.warningQueue = []string{}
 }
 
-func (s *Status) EndWithFailure(message string) {
-	s.QueueFailureMessage(message)
+func (s *Status) EndWithFailure(message string, a ...interface{}) {
+	s.QueueFailureMessage(fmt.Sprintf(message, a...))
 	s.End(Failure)
 }
 
-func (s *Status) EndWithSuccess(message string) {
-	s.QueueSuccessMessage(message)
+func (s *Status) EndWithSuccess(message string, a ...interface{}) {
+	s.QueueSuccessMessage(fmt.Sprintf(message, a...))
 	s.End(Success)
 }
 
-func (s *Status) EndWithWarning(message string) {
-	s.QueueWarningMessage(message)
+func (s *Status) EndWithWarning(message string, a ...interface{}) {
+	s.QueueWarningMessage(fmt.Sprintf(message, a...))
 	s.End(Warning)
 }
 

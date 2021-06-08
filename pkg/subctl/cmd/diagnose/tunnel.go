@@ -127,7 +127,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 		validationTimeout, tunnelPort, clientMessage)
 	sPod, err := spawnSnifferPodOnNode(localCluster.KubeClient, gwNodeName, podNamespace, podCommand)
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error spawning the sniffer pod on the Gateway node: %v", err))
+		status.EndWithFailure("Error spawning the sniffer pod on the Gateway node: %v", err)
 		return false
 	}
 
@@ -145,20 +145,20 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	// sometimes drop the udp traffic from client pod until the tunnels are properly setup.
 	cPod, err := spawnClientPodOnNonGatewayNode(remoteCluster.KubeClient, podNamespace, podCommand)
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error spawning the client pod on non-Gateway node of cluster %q: %v",
-			remoteCluster.Name, err))
+		status.EndWithFailure("Error spawning the client pod on non-Gateway node of cluster %q: %v",
+			remoteCluster.Name, err)
 		return false
 	}
 
 	defer cPod.DeletePod()
 
 	if err = cPod.AwaitPodCompletion(); err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error waiting for the client pod to finish its execution: %v", err))
+		status.EndWithFailure("Error waiting for the client pod to finish its execution: %v", err)
 		return false
 	}
 
 	if err = sPod.AwaitPodCompletion(); err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error waiting for the sniffer pod to finish its execution: %v", err))
+		status.EndWithFailure("Error waiting for the sniffer pod to finish its execution: %v", err)
 		return false
 	}
 
@@ -168,10 +168,9 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	}
 
 	if !strings.Contains(sPod.PodOutput, clientMessage) {
-		message := fmt.Sprintf("The tcpdump output from the sniffer pod does not include the message"+
+		status.EndWithFailure("The tcpdump output from the sniffer pod does not include the message"+
 			" sent from client pod. Please check that your firewall configuration allows UDP/%d traffic"+
 			" on the %q node.", tunnelPort, localEndpoint.Spec.Hostname)
-		status.EndWithFailure(message)
 		return false
 	}
 
@@ -183,7 +182,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 func getEndpointResource(cluster *cmd.Cluster, status *cli.Status) *subv1.Endpoint {
 	endpoints, err := cluster.SubmClient.SubmarinerV1().Endpoints(cmd.OperatorNamespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error obtaining the Endpoints in cluster %q: %v", cluster.Name, err))
+		status.EndWithFailure("Error obtaining the Endpoints in cluster %q: %v", cluster.Name, err)
 		return nil
 	}
 
@@ -193,14 +192,14 @@ func getEndpointResource(cluster *cmd.Cluster, status *cli.Status) *subv1.Endpoi
 		}
 	}
 
-	status.EndWithFailure(fmt.Sprintf("Could not find the local Endpoint in cluster %q", cluster.Name))
+	status.EndWithFailure("Could not find the local Endpoint in cluster %q", cluster.Name)
 	return nil
 }
 
 func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli.Status) string {
 	nodes, err := cluster.KubeClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error obtaining the Nodes in cluster %q: %v", cluster.Name, err))
+		status.EndWithFailure("Error obtaining the Nodes in cluster %q: %v", cluster.Name, err)
 		return ""
 	}
 
@@ -214,8 +213,8 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 		}
 	}
 
-	status.EndWithFailure(fmt.Sprintf("Could not find the active Gateway node %q in local cluster in cluster %q",
-		hostname, cluster.Name))
+	status.EndWithFailure("Could not find the active Gateway node %q in local cluster in cluster %q",
+		hostname, cluster.Name)
 	return ""
 }
 
@@ -241,12 +240,12 @@ func getTunnelPort(submariner *v1alpha1.Submariner, endpoint *subv1.Endpoint, st
 func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Status) string {
 	gateways, err := cluster.GetGateways()
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error retrieving gateways from cluster %q: %v", cluster.Name, err))
+		status.EndWithFailure("Error retrieving gateways from cluster %q: %v", cluster.Name, err)
 		return ""
 	}
 
 	if gateways == nil {
-		status.EndWithFailure(fmt.Sprintf("There are no gateways detected on cluster %q", cluster.Name))
+		status.EndWithFailure("There are no gateways detected on cluster %q", cluster.Name)
 		return ""
 	}
 
@@ -263,7 +262,7 @@ func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Statu
 		}
 	}
 
-	status.EndWithFailure(fmt.Sprintf("The gateway on cluster %q does not have an active connection to cluster %q",
-		cluster.Name, localClusterID))
+	status.EndWithFailure("The gateway on cluster %q does not have an active connection to cluster %q",
+		cluster.Name, localClusterID)
 	return ""
 }

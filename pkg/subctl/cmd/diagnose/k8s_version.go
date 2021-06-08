@@ -18,8 +18,6 @@ limitations under the License.
 package diagnose
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
@@ -58,7 +56,7 @@ func checkK8sVersion(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	status.EndWithSuccess(fmt.Sprintf("Kubernetes version %q is supported", k8sVersion))
+	status.EndWithSuccess("Kubernetes version %q is supported", k8sVersion)
 
 	return true
 }

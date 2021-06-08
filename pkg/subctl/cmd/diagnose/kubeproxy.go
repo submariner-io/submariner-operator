@@ -18,7 +18,6 @@ limitations under the License.
 package diagnose
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -60,7 +59,7 @@ func checkKubeProxyMode(cluster *cmd.Cluster) bool {
 	})
 
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error spawning the network pod: %v", err))
+		status.EndWithFailure("Error spawning the network pod: %v", err)
 		return false
 	}
 

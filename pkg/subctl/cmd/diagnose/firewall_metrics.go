@@ -54,7 +54,7 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffMetricsCommand)
 	sPod, err := spawnSnifferPodOnGatewayNode(cluster.KubeClient, podNamespace, podCommand)
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error spawning the sniffer pod on the Gateway node: %v", err))
+		status.EndWithFailure("Error spawning the sniffer pod on the Gateway node: %v", err)
 		return false
 	}
 
@@ -64,18 +64,18 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 	podCommand = fmt.Sprintf("for i in $(seq 10); do timeout 2 nc -p 9898 %s 8080; done", gatewayPodIP)
 	cPod, err := spawnClientPodOnNonGatewayNode(cluster.KubeClient, podNamespace, podCommand)
 	if err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error spawning the client pod on non-Gateway node: %v", err))
+		status.EndWithFailure("Error spawning the client pod on non-Gateway node: %v", err)
 		return false
 	}
 
 	defer cPod.DeletePod()
 	if err = cPod.AwaitPodCompletion(); err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error waiting for the client pod to finish its execution: %v", err))
+		status.EndWithFailure("Error waiting for the client pod to finish its execution: %v", err)
 		return false
 	}
 
 	if err = sPod.AwaitPodCompletion(); err != nil {
-		status.EndWithFailure(fmt.Sprintf("Error waiting for the sniffer pod to finish its execution: %v", err))
+		status.EndWithFailure("Error waiting for the sniffer pod to finish its execution: %v", err)
 		return false
 	}
 
@@ -86,9 +86,9 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 
 	// Verify that tcpdump output (i.e, from snifferPod) contains the HostIP of clientPod
 	if !strings.Contains(sPod.PodOutput, cPod.Pod.Status.HostIP) {
-		status.EndWithFailure(fmt.Sprintf("The tcpdump output from the sniffer pod does not contain the"+
+		status.EndWithFailure("The tcpdump output from the sniffer pod does not contain the"+
 			" client pod HostIP. Please check that your firewall configuration allows TCP/8080 traffic"+
-			" on the %q node.", sPod.Pod.Spec.NodeName))
+			" on the %q node.", sPod.Pod.Spec.NodeName)
 		return false
 	}
 

@@ -89,13 +89,7 @@ func ExecuteMultiCluster(run func(*Cluster) bool) {
 	success := true
 
 	for _, config := range mustGetMultipleRestConfigs(kubeConfig, kubeContexts) {
-		cluster := &Cluster{
-			Config:     config.config,
-			Name:       config.clusterName,
-			Submariner: nil,
-		}
-
-		fmt.Printf("Cluster %q\n", cluster.Name)
+		fmt.Printf("Cluster %q\n", config.clusterName)
 
 		cluster, errMsg := NewCluster(config.config, config.clusterName)
 		if cluster == nil {
