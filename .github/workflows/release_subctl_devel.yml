@@ -8,7 +8,7 @@ on:
       - release-*
 
 jobs:
-  release-subctl-release-0.9:
+  release-subctl-release-09:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
