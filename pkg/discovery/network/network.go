@@ -43,7 +43,6 @@ func (cn *ClusterNetwork) Show() {
 	if cn == nil {
 		fmt.Println("    No network details discovered")
 	} else {
-		fmt.Printf("    Discovered network details:\n")
 		fmt.Printf("        Network plugin:  %s\n", cn.NetworkPlugin)
 		fmt.Printf("        Service CIDRs:   %v\n", cn.ServiceCIDRs)
 		fmt.Printf("        Cluster CIDRs:   %v\n", cn.PodCIDRs)
