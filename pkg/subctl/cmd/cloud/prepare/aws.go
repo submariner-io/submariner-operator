@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,31 +21,43 @@ package prepare
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 var (
-	gwInstanceType string
-	infraID        string
-	region         string
-	gateways       int
+	gwInstanceType           string
+	gateways                 int
+	disableDedicatedGateways bool
 )
+
+const DefaultDedicatedGateways = 1
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
 func newAWSPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "aws",
-		Short: "Prepare an AWS cloud",
-		Long:  "This command prepares an AWS based cloud for Submariner installation.",
-		Run:   prepareAws,
+		Use:    "aws",
+		Short:  "Prepare an AWS cloud",
+		Long:   "This command prepares an AWS-based cloud for Submariner installation.",
+		Run:    prepareAws,
+		PreRun: validateArgsAws,
 	}
 
-	cloudutils.AddAWSFlags(cmd, &infraID, &region)
+	aws.AddAWSFlags(cmd)
 	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "m5n.large", "Type of gateways instance machine")
-	cmd.Flags().IntVar(&gateways, "gateways", 1, "Amount of gateways to prepare (0 = gateway per public subnet)")
-
+	cmd.Flags().IntVar(&gateways, "gateways", DefaultDedicatedGateways, "Number of gateways to prepare (0 = gateway per public subnet)")
+	cmd.Flags().BoolVarP(&disableDedicatedGateways, "disable-gateways", "d", false, "Set up no dedicated gateways "+
+		"for use with the --load-balancer mode")
 	return cmd
+}
+
+func validateArgsAws(cmd *cobra.Command, args []string) {
+	if gateways != DefaultDedicatedGateways && disableDedicatedGateways {
+		utils.ExitWithErrorMsg("gateways and disable-gateways parameters can't be used together")
+	}
+	if disableDedicatedGateways {
+		gateways = api.NoGateways
+	}
 }
 
 func prepareAws(cmd *cobra.Command, args []string) {
@@ -58,7 +72,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		},
 		Gateways: gateways,
 	}
-	err := cloudutils.RunOnAWS(infraID, region, gwInstanceType, *kubeConfig, *kubeContext,
+	err := aws.RunOnAWS(gwInstanceType, *kubeConfig, *kubeContext,
 		func(cloud api.Cloud, reporter api.Reporter) error {
 			return cloud.PrepareForSubmariner(input, reporter)
 		})

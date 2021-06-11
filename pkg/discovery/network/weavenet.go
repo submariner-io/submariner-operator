@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +19,7 @@ limitations under the License.
 package network
 
 import (
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -34,7 +37,7 @@ func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, erro
 			if envVar.Name == "IPALLOC_RANGE" {
 				clusterNetwork = &ClusterNetwork{
 					PodCIDRs:      []string{envVar.Value},
-					NetworkPlugin: "weave-net",
+					NetworkPlugin: constants.NetworkPluginWeaveNet,
 				}
 				break
 			}

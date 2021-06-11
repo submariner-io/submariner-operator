@@ -2,12 +2,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   creationTimestamp: null
-  name: submariner-lighthouse
+  name: submariner-gateway
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: submariner-lighthouse
+  name: submariner-gateway
 subjects:
 - kind: ServiceAccount
-  name: submariner-lighthouse
+  name: submariner-gateway
   namespace: submariner-operator

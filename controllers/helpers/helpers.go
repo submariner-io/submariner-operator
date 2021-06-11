@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -197,19 +199,25 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		toUpdate := &corev1.Service{ObjectMeta: metav1.ObjectMeta{
-			Name:      service.Name,
-			Namespace: service.Namespace,
-			Labels:    map[string]string{},
+			Name:        service.Name,
+			Namespace:   service.Namespace,
+			Labels:      map[string]string{},
+			Annotations: map[string]string{},
 		}}
 
 		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
-			if toUpdate.Spec.Type == corev1.ServiceTypeClusterIP {
+			if toUpdate.Spec.Type == corev1.ServiceTypeClusterIP || toUpdate.Spec.Type == corev1.ServiceTypeLoadBalancer {
 				// Make sure we don't lose the ClusterIP, see https://github.com/kubernetes/kubectl/issues/798
 				service.Spec.ClusterIP = toUpdate.Spec.ClusterIP
+				// We also need to copy the existing healthCheckNodePort which can't change
+				service.Spec.HealthCheckNodePort = toUpdate.Spec.HealthCheckNodePort
 			}
 			toUpdate.Spec = service.Spec
 			for k, v := range service.Labels {
 				toUpdate.Labels[k] = v
+			}
+			for k, v := range service.Annotations {
+				toUpdate.Annotations[k] = v
 			}
 			// Set the owner and controller
 			return controllerutil.SetControllerReference(owner, toUpdate, scheme)

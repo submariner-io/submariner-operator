@@ -1,5 +1,7 @@
 /*
-© 2021 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -29,6 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"
 )
+
+var fileNameRegexp = regexp.MustCompile(`[<>:"/\|?*]`)
 
 func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
@@ -50,7 +55,8 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 		for i := range list.Items {
 			item := &list.Items[i]
 
-			path := filepath.Join(info.DirName, info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+"_"+item.GetName()+".yaml")
+			path := filepath.Join(info.DirName, escapeFileName(info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+
+				"_"+item.GetName())+".yaml")
 			file, err := os.Create(path)
 			if err != nil {
 				return errors.WithMessagef(err, "error opening file %s", path)
@@ -118,4 +124,8 @@ func scrubSensitiveData(info Info, dataString string) string {
 	}
 
 	return dataString
+}
+
+func escapeFileName(s string) string {
+	return fileNameRegexp.ReplaceAllString(s, "_")
 }

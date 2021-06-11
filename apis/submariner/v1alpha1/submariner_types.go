@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -56,6 +58,7 @@ type SubmarinerSpec struct {
 	CeIPSecForceUDPEncaps    bool                 `json:"ceIPSecForceUDPEncaps,omitempty"`
 	Debug                    bool                 `json:"debug"`
 	NatEnabled               bool                 `json:"natEnabled"`
+	LoadBalancerEnabled      bool                 `json:"loadBalancerEnabled,omitempty"`
 	ServiceDiscoveryEnabled  bool                 `json:"serviceDiscoveryEnabled,omitempty"`
 	CoreDNSCustomConfig      *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
 	// +listType=set
@@ -81,10 +84,15 @@ type SubmarinerStatus struct {
 	GatewayDaemonSetStatus    DaemonSetStatus         `json:"gatewayDaemonSetStatus,omitempty"`
 	RouteAgentDaemonSetStatus DaemonSetStatus         `json:"routeAgentDaemonSetStatus,omitempty"`
 	GlobalnetDaemonSetStatus  DaemonSetStatus         `json:"globalnetDaemonSetStatus,omitempty"`
+	LoadBalancerStatus        LoadBalancerStatus      `json:"loadBalancerStatus,omitempty"`
 	Gateways                  *[]submv1.GatewayStatus `json:"gateways,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+}
+
+type LoadBalancerStatus struct {
+	Status *corev1.LoadBalancerStatus `json:"status,omitempty"`
 }
 
 type DaemonSetStatus struct {

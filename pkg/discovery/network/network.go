@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -122,6 +124,10 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 		return ovnClusterNet, err
 	}
 
+	calicoClusterNet, err := discoverCalicoNetwork(clientSet)
+	if err != nil || calicoClusterNet != nil {
+		return calicoClusterNet, err
+	}
 	return nil, nil
 }
 

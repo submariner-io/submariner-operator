@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -67,6 +69,7 @@ var (
 	submarinerDebug               bool
 	operatorDebug                 bool
 	labelGateway                  bool
+	loadBalancerEnabled           bool
 	cableDriver                   string
 	clienttoken                   *v1.Secret
 	globalnetClusterSize          uint
@@ -80,7 +83,7 @@ var (
 
 func init() {
 	addJoinFlags(joinCmd)
-	addKubeconfigFlag(joinCmd)
+	addKubeContextFlag(joinCmd)
 	rootCmd.AddCommand(joinCmd)
 }
 
@@ -97,6 +100,10 @@ func addJoinFlags(cmd *cobra.Command) {
 
 	cmd.Flags().BoolVar(&preferredServer, "preferred-server", false,
 		"enable this cluster as a preferred server for dataplane connections")
+
+	cmd.Flags().BoolVar(&loadBalancerEnabled, "load-balancer", false,
+		"enable automatic LoadBalancer in front of the gateways")
+
 	cmd.Flags().BoolVar(&forceUDPEncaps, "force-udp-encaps", false, "force UDP encapsulation for IPSec")
 
 	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "enable IPsec debugging (verbose logging)")
@@ -489,6 +496,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
 		ImageOverrides:           getImageOverrides(),
+		LoadBalancerEnabled:      loadBalancerEnabled,
 		ConnectionHealthCheck: &submariner.HealthCheckSpec{
 			Enabled:            healthCheckEnable,
 			IntervalSeconds:    healthCheckInterval,

@@ -1,5 +1,7 @@
 /*
-© 2019 Red Hat, Inc. and others.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,6 +25,7 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -30,9 +33,21 @@ import (
 )
 
 func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: "generic",
+	clusterNetwork, err := discoverNetwork(clientSet)
+	if err != nil {
+		return nil, err
 	}
+
+	if clusterNetwork != nil {
+		clusterNetwork.NetworkPlugin = constants.NetworkPluginGeneric
+		return clusterNetwork, nil
+	}
+
+	return nil, nil
+}
+
+func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
+	clusterNetwork := &ClusterNetwork{}
 
 	podIPRange, err := findPodIPRange(clientSet)
 	if err != nil {
