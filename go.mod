@@ -28,10 +28,10 @@ require (
 	github.com/operator-framework/operator-lib v0.4.0
 	github.com/operator-framework/operator-sdk v0.19.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.10.0
+	github.com/prometheus/client_golang v1.11.0
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.1.3
-	github.com/submariner-io/admiral v0.10.0-m1.0.20210602113843-3b8dfd67945b
+	github.com/submariner-io/admiral v0.10.0-m2
 	github.com/submariner-io/cloud-prepare v0.10.0-m1.0.20210609164526-e3506b211821
 	github.com/submariner-io/lighthouse v0.10.0-m1
 	github.com/submariner-io/shipyard v0.10.0-m2
@@ -42,7 +42,6 @@ require (
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	golang.org/x/crypto v0.0.0-20210505212654-3497b51f5e64 // indirect
 	golang.org/x/net v0.0.0-20210505214959-0714010a04ed // indirect
-	golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6 // indirect
 	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
 	gopkg.in/ini.v1 v1.62.0
 	k8s.io/api v0.21.0
