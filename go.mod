@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.12
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.38.57
+	github.com/aws/aws-sdk-go v1.38.60
 	github.com/coreos/go-semver v0.3.0
 	github.com/go-errors/errors v1.2.0 // indirect
 	github.com/go-logr/logr v0.4.0
@@ -32,12 +32,12 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/submariner-io/admiral v0.10.0-m2
-	github.com/submariner-io/cloud-prepare v0.10.0-m1.0.20210609164526-e3506b211821
-	github.com/submariner-io/lighthouse v0.10.0-m1
+	github.com/submariner-io/cloud-prepare v0.10.0-m2
+	github.com/submariner-io/lighthouse v0.10.0-m2
 	github.com/submariner-io/shipyard v0.10.0-m2
-	github.com/submariner-io/submariner v0.10.0-m1.0.20210603162033-dfea1b48c717
+	github.com/submariner-io/submariner v0.10.0-m2
 	github.com/ulikunitz/xz v0.5.10 // indirect
-	github.com/uw-labs/lichen v0.1.3
+	github.com/uw-labs/lichen v0.1.4
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	golang.org/x/crypto v0.0.0-20210505212654-3497b51f5e64 // indirect
