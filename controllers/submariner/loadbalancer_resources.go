@@ -30,8 +30,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-const loadBalancerName = "submariner-gateway"
-const gatewayStatusLabel = "gateway.submariner.io/status"
+const (
+	loadBalancerName      = "submariner-gateway"
+	gatewayStatusLabel    = "gateway.submariner.io/status"
+	encapsPortName        = "cable-encaps"
+	nattDiscoveryPortName = "natt-discovery"
+)
 
 func (r *SubmarinerReconciler) reconcileLoadBalancer(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*corev1.Service, error) {
@@ -63,12 +67,12 @@ func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {
 				gatewayStatusLabel: string(submv1.HAStatusActive),
 			},
 			Ports: []corev1.ServicePort{
-				{Name: "cable-encaps",
+				{Name: encapsPortName,
 					Port:       int32(instance.Spec.CeIPSecNATTPort),
 					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(instance.Spec.CeIPSecNATTPort)},
 					Protocol:   corev1.ProtocolUDP,
 				},
-				{Name: "natt-discovery",
+				{Name: nattDiscoveryPortName,
 					Port:       int32(nattPort),
 					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(nattPort)},
 					Protocol:   corev1.ProtocolUDP,
