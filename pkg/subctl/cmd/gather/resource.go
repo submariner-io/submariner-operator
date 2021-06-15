@@ -34,7 +34,6 @@ import (
 )
 
 var fileNameRegexp = regexp.MustCompile(`[<>:"/\|?*]`)
-var resources []resourceInfo
 
 func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
@@ -74,13 +73,12 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 			if err != nil {
 				return errors.WithMessagef(err, "error writing to file %s", path)
 			}
-			resource := resourceInfo{
+			info.Summary.Resources = append(info.Summary.Resources, ResourceInfo{
 				Name:      item.GetName(),
 				Namespace: item.GetNamespace(),
 				Type:      ofType.Resource,
 				FileName:  name,
-			}
-			resources = append(resources, resource)
+			})
 		}
 		return nil
 	}()
@@ -135,8 +133,4 @@ func scrubSensitiveData(info Info, dataString string) string {
 
 func escapeFileName(s string) string {
 	return fileNameRegexp.ReplaceAllString(s, "_")
-}
-
-func getResourceInfo() []resourceInfo {
-	return resources
 }

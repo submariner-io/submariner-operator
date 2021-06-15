@@ -42,8 +42,6 @@ func ClusterSummary(info Info) {
 	dataGathered := getClusterInfo(info)
 	file := createFile(info.DirName)
 	writeToHTML(file, dataGathered)
-	podLogInfos = nil
-	resources = nil
 }
 
 func getClusterInfo(info Info) data {
@@ -53,16 +51,14 @@ func getClusterInfo(info Info) data {
 	if err != nil {
 		fmt.Println(err)
 	}
-	podLogs := getPodLogInfo()
-	resourcesInfo := getResourceInfo()
 
 	d := data{
 		ClusterName:   info.ClusterName,
 		Versions:      versions,
 		ClusterConfig: config,
 		NodeConfig:    nConfig,
-		PodLogs:       podLogs,
-		ResourceInfo:  resourcesInfo,
+		PodLogs:       info.Summary.PodLogs,
+		ResourceInfo:  info.Summary.Resources,
 	}
 	return d
 }

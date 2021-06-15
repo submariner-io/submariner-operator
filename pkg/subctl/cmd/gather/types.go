@@ -37,6 +37,12 @@ type Info struct {
 	ClusterName          string
 	DirName              string
 	IncludeSensitiveData bool
+	Summary              *SummaryInfo
+}
+
+type SummaryInfo struct {
+	Resources []ResourceInfo
+	PodLogs   []LogInfo
 }
 
 type version struct {
@@ -60,7 +66,7 @@ type nodeConfig struct {
 	Info v1.NodeSystemInfo
 }
 
-type logInfo struct {
+type LogInfo struct {
 	PodName      string
 	Namespace    string
 	RestartCount int32
@@ -68,7 +74,7 @@ type logInfo struct {
 	LogFileName  []string
 }
 
-type resourceInfo struct {
+type ResourceInfo struct {
 	Name      string
 	Namespace string
 	Type      string
@@ -80,6 +86,6 @@ type data struct {
 	Versions      version
 	ClusterConfig clusterConfig
 	NodeConfig    []nodeConfig
-	PodLogs       []logInfo
-	ResourceInfo  []resourceInfo
+	PodLogs       []LogInfo
+	ResourceInfo  []ResourceInfo
 }
