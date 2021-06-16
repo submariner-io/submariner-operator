@@ -33,7 +33,7 @@ var showCmd = &cobra.Command{
 	Long:  `This command shows information about some aspect of the submariner deployment in a cluster.`,
 }
 
-const submMissingMessage = "Submariner is not installed"
+const SubmMissingMessage = "Submariner is not installed"
 
 type restConfig struct {
 	config      *rest.Config
@@ -41,7 +41,7 @@ type restConfig struct {
 }
 
 func init() {
-	addKubeContextFlag(showCmd)
+	AddKubeContextFlag(showCmd)
 	rootCmd.AddCommand(showCmd)
 }
 
