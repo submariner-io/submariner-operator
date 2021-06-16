@@ -52,14 +52,31 @@ func showNetwork(cmd *cobra.Command, args []string) {
 }
 
 func showNetworkSingleCluster(config *rest.Config) {
-	dynClient, clientSet, err := getClients(config)
-	exitOnError("Error creating clients for cluster", err)
+	submariner := getSubmarinerResource(config)
 
-	submarinerClient, err := submarinerclientset.NewForConfig(config)
-	exitOnError("Unable to get the Submariner client", err)
+	var clusterNetwork *network.ClusterNetwork
+	var msg string
+	if submariner != nil {
+		msg = "    Discovered network details via Submariner:"
+		clusterNetwork = &network.ClusterNetwork{
+			PodCIDRs:      []string{submariner.Status.ClusterCIDR},
+			ServiceCIDRs:  []string{submariner.Status.ServiceCIDR},
+			NetworkPlugin: submariner.Status.NetworkPlugin,
+			GlobalCIDR:    submariner.Status.GlobalCIDR,
+		}
+	} else {
+		msg = "    Discovered network details"
+		dynClient, clientSet, err := getClients(config)
+		exitOnError("Error creating clients for cluster", err)
 
-	clusterNetwork, err := network.Discover(dynClient, clientSet, submarinerClient, OperatorNamespace)
-	exitOnError("There was an error discovering network details for this cluster", err)
+		submarinerClient, err := submarinerclientset.NewForConfig(config)
+		exitOnError("Unable to get the Submariner client", err)
 
+		clusterNetwork, err = network.Discover(dynClient, clientSet, submarinerClient, OperatorNamespace)
+		exitOnError("There was an error discovering network details for this cluster", err)
+	}
+	if clusterNetwork != nil {
+		fmt.Println(msg)
+	}
 	clusterNetwork.Show()
 }
