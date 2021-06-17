@@ -15,14 +15,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package diagnose
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
 var (
-	validateCmd = &cobra.Command{
+	podNamespace  string
+	verboseOutput bool
+
+	diagnoseCmd = &cobra.Command{
 		Use:   "diagnose",
 		Short: "Run diagnostic checks on the Submariner deployment and report any issues",
 		Long:  "This command runs various diagnostic checks on the Submariner deployment and reports any issues",
@@ -30,6 +34,15 @@ var (
 )
 
 func init() {
-	addKubeContextFlag(validateCmd)
-	rootCmd.AddCommand(validateCmd)
+	cmd.AddKubeConfigFlag(diagnoseCmd)
+	cmd.AddToRootCommand(diagnoseCmd)
+}
+
+func addVerboseFlag(command *cobra.Command) {
+	command.Flags().BoolVar(&verboseOutput, "verbose", false, "produce verbose output")
+}
+
+func addNamespaceFlag(command *cobra.Command) {
+	command.Flags().StringVar(&podNamespace, "namespace", "default",
+		"namespace in which validation pods should be deployed")
 }

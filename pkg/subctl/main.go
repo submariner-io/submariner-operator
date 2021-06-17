@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	_ "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/diagnose"
 )
 
 func main() {

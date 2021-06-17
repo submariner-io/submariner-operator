@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package diagnose
 
 import (
 	"github.com/spf13/cobra"
@@ -24,7 +24,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 )
 
-var validateFirewallConfigCmd = &cobra.Command{
+var diagnoseFirewallConfigCmd = &cobra.Command{
 	Use:   "firewall",
 	Short: "Check the firewall configuration",
 	Long:  "This command checks if the firewall is configured as per Submariner pre-requisites.",
@@ -32,44 +32,37 @@ var validateFirewallConfigCmd = &cobra.Command{
 
 var validationTimeout uint
 
-func addValidateFWConfigFlags(cmd *cobra.Command) {
+func addDiagnoseFWConfigFlags(cmd *cobra.Command) {
 	cmd.Flags().UintVar(&validationTimeout, "validation-timeout", 90,
 		"timeout in seconds while validating the connection attempt")
-	cmd.Flags().StringVar(&namespace, "namespace", "default",
-		"namespace in which validation pods should be deployed")
+	addNamespaceFlag(cmd)
 }
 
 func init() {
-	validateCmd.AddCommand(validateFirewallConfigCmd)
+	diagnoseCmd.AddCommand(diagnoseFirewallConfigCmd)
 }
 
-func spawnSnifferPodOnGatewayNode(clientSet *kubernetes.Clientset,
-	namespace, podCommand string) (*resource.NetworkPod, error) {
+func spawnSnifferPodOnGatewayNode(client kubernetes.Interface, namespace, podCommand string) (*resource.NetworkPod, error) {
 	scheduling := resource.PodScheduling{ScheduleOn: resource.GatewayNode, Networking: resource.HostNetworking}
-	return spawnPod(clientSet, scheduling, "validate-sniffer",
-		namespace, podCommand)
+	return spawnPod(client, scheduling, "validate-sniffer", namespace, podCommand)
 }
 
-func spawnSnifferPodOnNode(clientSet *kubernetes.Clientset,
-	nodeName, namespace, podCommand string) (*resource.NetworkPod, error) {
+func spawnSnifferPodOnNode(client kubernetes.Interface, nodeName, namespace, podCommand string) (*resource.NetworkPod, error) {
 	scheduling := resource.PodScheduling{ScheduleOn: resource.CustomNode, NodeName: nodeName,
 		Networking: resource.HostNetworking}
-	return spawnPod(clientSet, scheduling, "validate-sniffer",
-		namespace, podCommand)
+	return spawnPod(client, scheduling, "validate-sniffer", namespace, podCommand)
 }
 
-func spawnClientPodOnNonGatewayNode(clientSet *kubernetes.Clientset,
-	namespace, podCommand string) (*resource.NetworkPod, error) {
+func spawnClientPodOnNonGatewayNode(client kubernetes.Interface, namespace, podCommand string) (*resource.NetworkPod, error) {
 	scheduling := resource.PodScheduling{ScheduleOn: resource.NonGatewayNode, Networking: resource.PodNetworking}
-	return spawnPod(clientSet, scheduling, "validate-client",
-		namespace, podCommand)
+	return spawnPod(client, scheduling, "validate-client", namespace, podCommand)
 }
 
-func spawnPod(clientSet *kubernetes.Clientset, scheduling resource.PodScheduling, podName, namespace,
+func spawnPod(client kubernetes.Interface, scheduling resource.PodScheduling, podName, namespace,
 	podCommand string) (*resource.NetworkPod, error) {
 	pod, err := resource.SchedulePod(&resource.PodConfig{
 		Name:       podName,
-		ClientSet:  clientSet,
+		ClientSet:  client,
 		Scheduling: scheduling,
 		Namespace:  namespace,
 		Command:    podCommand,
@@ -78,5 +71,6 @@ func spawnPod(clientSet *kubernetes.Clientset, scheduling resource.PodScheduling
 	if err != nil {
 		return nil, err
 	}
+
 	return pod, nil
 }

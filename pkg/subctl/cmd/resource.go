@@ -20,26 +20,27 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io/ioutil"
-	"strings"
 
-	k8sV1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/submariner-io/admiral/pkg/resource"
-	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
-
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
+	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
+
+func mustGetMultipleRestConfigs(kubeConfigPath string, kubeContexts []string) []restConfig {
+	configs, err := getMultipleRestConfigs(kubeConfigPath, kubeContexts)
+	exitOnError("Error getting REST Config for cluster", err)
+
+	return configs
+}
 
 func getMultipleRestConfigs(kubeConfigPath string, kubeContexts []string) ([]restConfig, error) {
 	var restConfigs []restConfig
@@ -105,59 +106,6 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	return submariner
 }
 
-func getEndpointResource(config *rest.Config, clusterID string) *submarinerv1.Endpoint {
-	submarinerClient, err := subClientsetv1.NewForConfig(config)
-	exitOnError("Unable to get the Submariner client", err)
-
-	endpoints, err := submarinerClient.SubmarinerV1().Endpoints(OperatorNamespace).List(context.TODO(), v1opts.ListOptions{})
-	if err != nil {
-		exitOnError(fmt.Sprintf("Error obtaining the Endpoints in the cluster %q", clusterID), err)
-	}
-
-	for _, endpoint := range endpoints.Items {
-		if endpoint.Spec.ClusterID == clusterID {
-			return &endpoint
-		}
-	}
-
-	return nil
-}
-
-func getActiveGatewayNodeName(clientSet *kubernetes.Clientset, hostname string) string {
-	nodes, err := clientSet.CoreV1().Nodes().List(context.TODO(), v1opts.ListOptions{})
-	if err != nil {
-		exitOnError("Error listing the Nodes in the local cluster", err)
-	}
-
-	for _, node := range nodes.Items {
-		for _, addr := range node.Status.Addresses {
-			if addr.Type == k8sV1.NodeHostName {
-				if strings.HasPrefix(addr.Address, hostname) {
-					return node.Name
-				}
-			}
-		}
-	}
-
-	return ""
-}
-
-func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
-	submarinerClient, err := subClientsetv1.NewForConfig(config)
-	exitOnError("Unable to get the Submariner client", err)
-
-	gateways, err := submarinerClient.SubmarinerV1().Gateways(OperatorNamespace).
-		List(context.TODO(), v1opts.ListOptions{})
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-		exitOnError("Error obtaining the Gateways resource", err)
-	}
-
-	return gateways
-}
-
 func getBrokerRestConfigAndNamespace(submariner *v1alpha1.Submariner,
 	serviceDisc *v1alpha1.ServiceDiscovery) (*rest.Config, string, error) {
 	if submariner != nil {
@@ -189,7 +137,7 @@ func getBrokerRestConfigAndNamespace(submariner *v1alpha1.Submariner,
 	return nil, "", nil
 }
 
-func compareFiles(file1, file2 string) (bool, error) {
+func CompareFiles(file1, file2 string) (bool, error) {
 	first, err := ioutil.ReadFile(file1)
 	if err != nil {
 		return false, err
