@@ -99,7 +99,7 @@ func ExecuteMultiCluster(run func(*Cluster) bool) {
 			continue
 		}
 
-		success = success && run(cluster)
+		success = run(cluster) && success
 		fmt.Println()
 	}
 
