@@ -103,6 +103,8 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 		healthCheckMaxPacketLossCount = cr.Spec.ConnectionHealthCheck.MaxPacketLossCount
 	}
 
+	nattPort, _ := strconv.ParseInt(submarinerv1.DefaultNATTDiscoveryPort, 10, 32)
+
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,
@@ -134,6 +136,18 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 						Privileged:               &privileged,
 						ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
 						RunAsNonRoot:             &runAsNonRoot,
+					},
+					Ports: []corev1.ContainerPort{
+						{Name: encapsPortName,
+							HostPort:      int32(cr.Spec.CeIPSecNATTPort),
+							ContainerPort: int32(cr.Spec.CeIPSecNATTPort),
+							Protocol:      corev1.ProtocolUDP,
+						},
+						{Name: nattDiscoveryPortName,
+							HostPort:      int32(nattPort),
+							ContainerPort: int32(nattPort),
+							Protocol:      corev1.ProtocolUDP,
+						},
 					},
 					Env: []corev1.EnvVar{
 						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
