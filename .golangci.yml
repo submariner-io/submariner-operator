@@ -60,7 +60,7 @@ issues:
     - linters:
         - lll
         - stylecheck
-      path: "pkg/subctl/operator/common/embeddedyamls/yamls.go"
+      path: "pkg/yamls/yamls.go"
     # BrokerK8sApiServer parameter is used by other projects, like ACM,
     # so not changing it to BrokerK8sAPIServer as suggested by stylecheck
     - linters:

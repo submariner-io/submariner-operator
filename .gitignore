@@ -2,10 +2,10 @@
 bin/
 build/_output/
 dist/
-deploy/crds
-deploy/submariner/crds
-deploy/lighthouse/crds
-config/bundle/kustomization.yaml
+pkg/yamls/deploy/crds
+pkg/yamls/deploy/submariner/crds
+pkg/yamls/deploy/lighthouse/crds
+pkg/yamls/config/bundle/kustomization.yaml
 package/.image.*
 output/
 vendor/

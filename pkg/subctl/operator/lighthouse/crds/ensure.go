@@ -24,9 +24,9 @@ import (
 
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	embeddedyamls "github.com/submariner-io/submariner-operator/pkg/yamls"
 )
 
 func Ensure(restConfig *rest.Config) (bool, error) {

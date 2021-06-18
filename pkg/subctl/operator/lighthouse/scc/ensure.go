@@ -19,8 +19,8 @@ limitations under the License.
 package scc
 
 import (
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
+	embeddedyamls "github.com/submariner-io/submariner-operator/pkg/yamls"
 	"k8s.io/client-go/rest"
 )
 

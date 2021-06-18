@@ -23,7 +23,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	embeddedyamls "github.com/submariner-io/submariner-operator/pkg/yamls"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster

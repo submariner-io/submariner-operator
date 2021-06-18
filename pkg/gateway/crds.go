@@ -24,9 +24,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	embeddedyamls "github.com/submariner-io/submariner-operator/pkg/yamls"
 )
 
 // Ensure ensures that the required resources are deployed on the target system
