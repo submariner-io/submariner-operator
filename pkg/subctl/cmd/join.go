@@ -182,7 +182,8 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		}
 	}
 
-	if valid, _ := isValidClusterID(clusterID); !valid {
+	if valid, err := isValidClusterID(clusterID); !valid {
+		fmt.Printf("Error: %s\n", err.Error())
 		qs = append(qs, &survey.Question{
 			Name:   "clusterID",
 			Prompt: &survey.Input{Message: "What is your cluster ID?"},
