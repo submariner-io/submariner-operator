@@ -151,9 +151,10 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 
 	By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
 	nettestClientPod.AwaitFinishVerbose(Verbose)
-	nettestClientPod.CheckSuccessfulFinish()
-	fmt.Println(nettestClientPod.TerminationMessage)
-
+	if !Verbose {
+		nettestClientPod.CheckSuccessfulFinish()
+		fmt.Println(nettestClientPod.TerminationMessage)
+	}
 	// In Globalnet deployments, when backend pods finish their execution, kubeproxy-iptables driver tries
 	// to delete the iptables-chain associated with the service (even when the service is present) as there are
 	// no active backend pods. Since the iptables-chain is also referenced by Globalnet Ingress rules, the chain
