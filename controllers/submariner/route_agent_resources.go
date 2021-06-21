@@ -83,8 +83,13 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					Volumes: []corev1.Volume{
-						{Name: "host-run", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/run",
+						// We need to share /run/xtables.lock with the host for iptables
+						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+							Path: "/run/xtables.lock",
+						}}},
+						// We need to share /run/openvswitch/db.sock with the host for OVS
+						{Name: "host-run-openvswitch-db-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+							Path: "/run/openvswitch/db.sock",
 						}}},
 						{Name: "host-sys", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
 							Path: "/sys",
@@ -100,7 +105,8 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 							SecurityContext: &securityContextAllCapAllowEscal,
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
-								{Name: "host-run", MountPath: "/run"},
+								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
+								{Name: "host-run-openvswitch-db-sock", MountPath: "/run/openvswitch/db.sock"},
 							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
