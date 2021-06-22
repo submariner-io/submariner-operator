@@ -131,9 +131,8 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 		service = nettestServerPod.CreateService()
 		f.CreateServiceExport(testParams.ServerCluster, service.Name)
 
-		// Wait for the globalIP annotation on the service.
-		service = f.AwaitUntilAnnotationOnService(testParams.ServerCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
-		remoteIP = service.GetAnnotations()[globalnetGlobalIPAnnotation]
+		// Wait for the globalIP on the service.
+		remoteIP = f.AwaitGlobalIngressIP(testParams.ServerCluster, service.Name, service.Namespace)
 	}
 
 	nettestClientPod := f.NewNetworkPod(&framework.NetworkPodConfig{
