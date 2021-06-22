@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 	autil "github.com/submariner-io/admiral/pkg/util"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -50,7 +51,7 @@ var (
 )
 
 func init() {
-	addKubeContextFlag(exportCmd)
+	AddKubeConfigFlag(exportCmd)
 	addServiceExportFlags(exportServiceCmd)
 	exportCmd.AddCommand(exportServiceCmd)
 	rootCmd.AddCommand(exportCmd)
@@ -64,12 +65,12 @@ func exportService(cmd *cobra.Command, args []string) {
 	err := validateArguments(args)
 	exitOnError("Insufficient arguments", err)
 
-	clientConfig := getClientConfig(kubeConfig, kubeContext)
+	clientConfig := restconfig.ClientConfig(kubeConfig, kubeContext)
 	restConfig, err := clientConfig.ClientConfig()
 
 	exitOnError("Error connecting to the target cluster", err)
 
-	dynClient, clientSet, err := getClients(restConfig)
+	dynClient, clientSet, err := restconfig.Clients(restConfig)
 	exitOnError("Error connecting to the target cluster", err)
 	restMapper, err := autil.BuildRestMapper(restConfig)
 

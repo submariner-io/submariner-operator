@@ -78,12 +78,20 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
+					Volumes: []corev1.Volume{
+						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+							Path: "/run/xtables.lock",
+						}}},
+					},
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-globalnet",
 							Image:           getImagePath(cr, names.GlobalnetImage, names.GlobalnetComponent),
 							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetComponent]),
 							SecurityContext: &securityContextAllCapAllowEscal,
+							VolumeMounts: []corev1.VolumeMount{
+								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
+							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},

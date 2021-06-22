@@ -34,6 +34,7 @@ import (
 	_ "github.com/submariner-io/lighthouse/test/e2e/framework"
 	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -56,7 +57,7 @@ var (
 )
 
 func init() {
-	addKubeContextMultiFlag(verifyCmd)
+	AddKubeContextMultiFlag(verifyCmd)
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
 	addVerifyFlags(verifyCmd)
@@ -195,9 +196,9 @@ func configureTestingFramework(args []string) error {
 }
 
 func clusterNameFromConfig(kubeConfigPath, kubeContext string) string {
-	rawConfig, err := getClientConfig(kubeConfigPath, "").RawConfig()
+	rawConfig, err := restconfig.ClientConfig(kubeConfigPath, "").RawConfig()
 	exitOnError(fmt.Sprintf("Error obtaining the kube config for path %q", kubeConfigPath), err)
-	cluster := getClusterNameFromContext(rawConfig, kubeContext)
+	cluster := restconfig.ClusterNameFromContext(rawConfig, kubeContext)
 	if cluster == nil {
 		exitWithErrorMsg(fmt.Sprintf("Could not obtain the cluster name from kube config: %#v", rawConfig))
 	}
@@ -213,7 +214,7 @@ func checkValidateArguments(args []string) error {
 		if strings.Compare(args[0], args[1]) == 0 {
 			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
 		}
-		same, err := compareFiles(args[0], args[1])
+		same, err := CompareFiles(args[0], args[1])
 		if err != nil {
 			return err
 		}

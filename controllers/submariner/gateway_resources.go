@@ -70,10 +70,13 @@ func newGatewayDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 	return deployment
 }
 
+const appLabel = "app"
+const appGatewayLabel = "submariner-gateway"
+
 // newGatewayPodTemplate returns a submariner pod with the same fields as the cr
 func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 	labels := map[string]string{
-		"app": "submariner-gateway",
+		appLabel: appGatewayLabel,
 	}
 
 	// Create privileged security context for Gateway pod
@@ -99,6 +102,8 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 		healthCheckInterval = cr.Spec.ConnectionHealthCheck.IntervalSeconds
 		healthCheckMaxPacketLossCount = cr.Spec.ConnectionHealthCheck.MaxPacketLossCount
 	}
+
+	nattPort, _ := strconv.ParseInt(submarinerv1.DefaultNATTDiscoveryPort, 10, 32)
 
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
@@ -131,6 +136,18 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 						Privileged:               &privileged,
 						ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
 						RunAsNonRoot:             &runAsNonRoot,
+					},
+					Ports: []corev1.ContainerPort{
+						{Name: encapsPortName,
+							HostPort:      int32(cr.Spec.CeIPSecNATTPort),
+							ContainerPort: int32(cr.Spec.CeIPSecNATTPort),
+							Protocol:      corev1.ProtocolUDP,
+						},
+						{Name: nattDiscoveryPortName,
+							HostPort:      int32(nattPort),
+							ContainerPort: int32(nattPort),
+							Protocol:      corev1.ProtocolUDP,
+						},
 					},
 					Env: []corev1.EnvVar{
 						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
@@ -194,10 +211,16 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 	}
 
 	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
-		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer)})
+		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer ||
+			cr.Spec.LoadBalancerEnabled)})
 
 	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
 		corev1.EnvVar{Name: "CE_IPSEC_FORCEENCAPS", Value: strconv.FormatBool(cr.Spec.CeIPSecForceUDPEncaps)})
+
+	if cr.Spec.LoadBalancerEnabled {
+		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+			corev1.EnvVar{Name: "SUBMARINER_PUBLICIP", Value: "lb:" + loadBalancerName})
+	}
 
 	return podTemplate
 }

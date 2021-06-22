@@ -24,6 +24,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/stringset"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
@@ -78,7 +79,7 @@ func init() {
 
 	deployBroker.PersistentFlags().BoolVar(&operatorDebug, "operator-debug", false, "enable operator debugging (verbose logging)")
 
-	addKubeContextFlag(deployBroker)
+	AddKubeConfigFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
 
@@ -108,7 +109,7 @@ var deployBroker = &cobra.Command{
 		if valid, err := isValidGlobalnetConfig(); !valid {
 			exitOnError("Invalid GlobalCIDR configuration", err)
 		}
-		config, err := getRestConfig(kubeConfig, kubeContext)
+		config, err := restconfig.ForCluster(kubeConfig, kubeContext)
 		exitOnError("The provided kubeconfig is invalid", err)
 
 		status := cli.NewStatus()

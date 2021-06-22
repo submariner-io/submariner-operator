@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"k8s.io/client-go/rest"
 )
 
@@ -41,25 +42,42 @@ func init() {
 }
 
 func showNetwork(cmd *cobra.Command, args []string) {
-	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
+	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
 		fmt.Println()
-		fmt.Printf("Showing network details for cluster %q:\n", item.clusterName)
-		showNetworkSingleCluster(item.config)
+		fmt.Printf("Showing network details for cluster %q:\n", item.ClusterName)
+		showNetworkSingleCluster(item.Config)
 	}
 }
 
 func showNetworkSingleCluster(config *rest.Config) {
-	dynClient, clientSet, err := getClients(config)
-	exitOnError("Error creating clients for cluster", err)
+	submariner := getSubmarinerResource(config)
 
-	submarinerClient, err := submarinerclientset.NewForConfig(config)
-	exitOnError("Unable to get the Submariner client", err)
+	var clusterNetwork *network.ClusterNetwork
+	var msg string
+	if submariner != nil {
+		msg = "    Discovered network details via Submariner:"
+		clusterNetwork = &network.ClusterNetwork{
+			PodCIDRs:      []string{submariner.Status.ClusterCIDR},
+			ServiceCIDRs:  []string{submariner.Status.ServiceCIDR},
+			NetworkPlugin: submariner.Status.NetworkPlugin,
+			GlobalCIDR:    submariner.Status.GlobalCIDR,
+		}
+	} else {
+		msg = "    Discovered network details"
+		dynClient, clientSet, err := restconfig.Clients(config)
+		exitOnError("Error creating clients for cluster", err)
 
-	clusterNetwork, err := network.Discover(dynClient, clientSet, submarinerClient, OperatorNamespace)
-	exitOnError("There was an error discovering network details for this cluster", err)
+		submarinerClient, err := submarinerclientset.NewForConfig(config)
+		exitOnError("Unable to get the Submariner client", err)
 
+		clusterNetwork, err = network.Discover(dynClient, clientSet, submarinerClient, OperatorNamespace)
+		exitOnError("There was an error discovering network details for this cluster", err)
+	}
+	if clusterNetwork != nil {
+		fmt.Println(msg)
+	}
 	clusterNetwork.Show()
 }

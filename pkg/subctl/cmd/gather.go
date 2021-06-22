@@ -30,6 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
@@ -70,7 +71,7 @@ var gatherFuncs = map[string]func(string, gather.Info) bool{
 }
 
 func init() {
-	addKubeContextMultiFlag(gatherCmd)
+	AddKubeContextMultiFlag(gatherCmd)
 	addGatherFlags(gatherCmd)
 	rootCmd.AddCommand(gatherCmd)
 }
@@ -102,7 +103,7 @@ func gatherData() {
 	err := checkGatherArguments()
 	exitOnError("Invalid arguments", err)
 
-	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
+	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST configs", err)
 
 	if directory == "" {
@@ -123,26 +124,26 @@ func gatherData() {
 	fmt.Printf("Files are stored under directory %q\n", directory)
 }
 
-func gatherDataByCluster(restConfig restConfig, directory string) {
+func gatherDataByCluster(restConfig restconfig.RestConfig, directory string) {
 	var err error
-	clusterName := restConfig.clusterName
+	clusterName := restConfig.ClusterName
 
 	fmt.Printf("Gathering information from cluster %q\n", clusterName)
 
 	info := gather.Info{
-		RestConfig:           restConfig.config,
+		RestConfig:           restConfig.Config,
 		ClusterName:          clusterName,
 		DirName:              directory,
 		IncludeSensitiveData: includeSensitiveData,
 	}
 
-	info.DynClient, info.ClientSet, err = getClients(restConfig.config)
+	info.DynClient, info.ClientSet, err = restconfig.Clients(restConfig.Config)
 	if err != nil {
 		fmt.Printf("Error getting client: %s\n", err)
 		return
 	}
 
-	submarinerClient, err := subOperatorClientset.NewForConfig(restConfig.config)
+	submarinerClient, err := subOperatorClientset.NewForConfig(restConfig.Config)
 	if err != nil {
 		fmt.Printf("Error getting Submariner client: %s\n", err)
 		return
@@ -236,7 +237,7 @@ func gatherDiscovery(dataType string, info gather.Info) bool {
 func gatherBroker(dataType string, info gather.Info) bool {
 	switch dataType {
 	case Resources:
-		brokerRestConfig, brokerNamespace, err := getBrokerRestConfigAndNamespace(info.Submariner, info.ServiceDiscovery)
+		brokerRestConfig, brokerNamespace, err := restconfig.ForBroker(info.Submariner, info.ServiceDiscovery)
 		if err != nil {
 			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker's rest config: %s", err))
 			return true
@@ -244,7 +245,7 @@ func gatherBroker(dataType string, info gather.Info) bool {
 
 		if brokerRestConfig != nil {
 			info.RestConfig = brokerRestConfig
-			info.DynClient, info.ClientSet, err = getClients(brokerRestConfig)
+			info.DynClient, info.ClientSet, err = restconfig.Clients(brokerRestConfig)
 			if err != nil {
 				info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker client: %s", err))
 				return true

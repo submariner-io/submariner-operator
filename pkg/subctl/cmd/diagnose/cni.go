@@ -15,36 +15,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package diagnose
 
 import (
 	"context"
 	"fmt"
-	"os"
 
+	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
-
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/kubernetes"
 )
 
 var supportedNetworkPlugins = []string{constants.NetworkPluginGeneric, constants.NetworkPluginCanalFlannel, constants.NetworkPluginWeaveNet,
 	constants.NetworkPluginOpenShiftSDN, constants.NetworkPluginOVNKubernetes, constants.NetworkPluginCalico}
-
-var validateCNICmd = &cobra.Command{
-	Use:   "cni",
-	Short: "Check the CNI network plugin",
-	Long:  "This command checks if the detected CNI network plugin is supported by Submariner.",
-	Run:   validateCNIConfig,
-}
 
 var (
 	calicoGVR = schema.GroupVersionResource{
@@ -55,61 +45,43 @@ var (
 )
 
 func init() {
-	validateCmd.AddCommand(validateCNICmd)
+	diagnoseCmd.AddCommand(&cobra.Command{
+		Use:   "cni",
+		Short: "Check the CNI network plugin",
+		Long:  "This command checks if the detected CNI network plugin is supported by Submariner.",
+		Run: func(command *cobra.Command, args []string) {
+			cmd.ExecuteMultiCluster(checkCNIConfig)
+		},
+	})
 }
+func checkCNIConfig(cluster *cmd.Cluster) bool {
+	status := cli.NewStatus()
 
-func validateCNIConfig(cmd *cobra.Command, args []string) {
-	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
-	exitOnError("Error getting REST config for cluster", err)
-
-	validationStatus := true
-
-	for _, item := range configs {
-		status.Start(fmt.Sprintf("Retrieving Submariner resource from %q", item.clusterName))
-		submariner := getSubmarinerResource(item.config)
-		if submariner == nil {
-			status.QueueWarningMessage(submMissingMessage)
-			status.End(cli.Success)
-			continue
-		}
-		status.End(cli.Success)
-		if !validateCNIInCluster(item.config, item.clusterName, submariner) {
-			validationStatus = false
-		}
+	if cluster.Submariner == nil {
+		status.Start(cmd.SubmMissingMessage)
+		status.End(cli.Warning)
+		return true
 	}
-	if !validationStatus {
-		os.Exit(1)
-	}
-}
 
-func validateCNIInCluster(config *rest.Config, clusterName string, submariner *v1alpha1.Submariner) bool {
-	message := fmt.Sprintf("Checking Submariner support for the CNI network"+
-		" plugin in cluster %q", clusterName)
-	status.Start(message)
+	status.Start("Checking Submariner support for the CNI network plugin")
 
 	isSupportedPlugin := false
 	for _, np := range supportedNetworkPlugins {
-		if submariner.Status.NetworkPlugin == np {
+		if cluster.Submariner.Status.NetworkPlugin == np {
 			isSupportedPlugin = true
 			break
 		}
 	}
 
 	if !isSupportedPlugin {
-		message := fmt.Sprintf("The detected CNI network plugin (%q) is not supported by Submariner."+
-			" Supported network plugins: %v\n", submariner.Status.NetworkPlugin, supportedNetworkPlugins)
-		status.QueueFailureMessage(message)
-		status.End(cli.Failure)
+		status.EndWithFailure("The detected CNI network plugin (%q) is not supported by Submariner."+
+			" Supported network plugins: %v\n", cluster.Submariner.Status.NetworkPlugin, supportedNetworkPlugins)
 		return false
 	}
 
-	message = fmt.Sprintf("The detected CNI network plugin (%q) is supported by Submariner.",
-		submariner.Status.NetworkPlugin)
-	status.QueueSuccessMessage(message)
-	status.End(cli.Success)
+	status.EndWithSuccess("The detected CNI network plugin (%q) is supported", cluster.Submariner.Status.NetworkPlugin)
 
-	calicoCNIStatus := validateCalicoIPPoolsIfCalicoCNI(config)
-	return calicoCNIStatus
+	return checkCalicoIPPoolsIfCalicoCNI(cluster)
 }
 
 func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) {
@@ -126,19 +98,12 @@ func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) 
 	return nil, nil
 }
 
-func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) bool {
-	dynClient, clientSet, err := getClients(config)
-	if err != nil {
-		message := fmt.Sprintf("Error creating client - unable to detect the Calico CNI: %s", err)
-		status.Start(message)
-		status.End(cli.Failure)
-		return false
-	}
+func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
+	status := cli.NewStatus()
 
-	calicoConfig, err := findCalicoConfigMap(clientSet)
+	calicoConfig, err := findCalicoConfigMap(info.KubeClient)
 	if err != nil {
-		message := fmt.Sprintf("Error trying to detect the Calico ConfigMap: %s", err)
-		status.Start(message)
+		status.Start(fmt.Sprintf("Error trying to detect the Calico ConfigMap: %s", err))
 		status.End(cli.Failure)
 		return false
 	}
@@ -147,31 +112,29 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) bool {
 		return true
 	}
 
-	message := "Calico CNI detected, verifying if the Submariner IPPool pre-requisites are configured."
-	status.Start(message)
+	status.Start("Calico CNI detected, checking if the Submariner IPPool pre-requisites are configured.")
 
-	gateways := getGatewaysResource(config)
-	if gateways == nil {
-		message = "There are no gateways detected on the cluster"
-		status.QueueWarningMessage(message)
-		status.End(cli.Warning)
+	gateways, err := info.GetGateways()
+	if err != nil {
+		status.EndWithFailure("Error retrieving Gateways: %v", err)
 		return false
 	}
 
-	client := dynClient.Resource(calicoGVR)
+	if gateways == nil {
+		status.EndWithWarning("There are no gateways detected on the cluster")
+		return false
+	}
+
+	client := info.DynClient.Resource(calicoGVR)
 
 	ippoolList, err := client.List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		message := fmt.Sprintf("Error obtaining IPPools: %v", err)
-		status.QueueFailureMessage(message)
-		status.End(cli.Failure)
+		status.EndWithFailure("Error obtaining IPPools: %v", err)
 		return false
 	}
 
 	if len(ippoolList.Items) < 1 {
-		message := "Could not find any IPPools in the cluster"
-		status.QueueFailureMessage(message)
-		status.End(cli.Failure)
+		status.EndWithFailure("Could not find any IPPools in the cluster")
 		return false
 	}
 
@@ -179,14 +142,12 @@ func validateCalicoIPPoolsIfCalicoCNI(config *rest.Config) bool {
 	for _, pool := range ippoolList.Items {
 		cidr, found, err := unstructured.NestedString(pool.Object, "spec", "cidr")
 		if err != nil {
-			message := fmt.Sprintf("Error extracting field cidr from IPPool %q", pool.GetName())
-			status.QueueFailureMessage(message)
+			status.QueueFailureMessage(fmt.Sprintf("Error extracting field cidr from IPPool %q", pool.GetName()))
 			continue
 		}
 
 		if !found {
-			message := fmt.Sprintf("No CIDR found in IPPool %q", pool.GetName())
-			status.QueueFailureMessage(message)
+			status.QueueFailureMessage(fmt.Sprintf("No CIDR found in IPPool %q", pool.GetName()))
 			continue
 		}
 		ippools[cidr] = pool

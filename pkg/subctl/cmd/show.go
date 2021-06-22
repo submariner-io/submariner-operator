@@ -19,11 +19,7 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // showCmd represents the show command
@@ -33,35 +29,9 @@ var showCmd = &cobra.Command{
 	Long:  `This command shows information about some aspect of the submariner deployment in a cluster.`,
 }
 
-const submMissingMessage = "Submariner is not installed"
-
-type restConfig struct {
-	config      *rest.Config
-	clusterName string
-}
+const SubmMissingMessage = "Submariner is not installed"
 
 func init() {
-	addKubeContextFlag(showCmd)
+	AddKubeContextFlag(showCmd)
 	rootCmd.AddCommand(showCmd)
-}
-
-func getClientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, overrides *clientcmd.ConfigOverrides) (restConfig, error) {
-	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
-	clientConfig, err := config.ClientConfig()
-	if err != nil {
-		return restConfig{}, err
-	}
-
-	raw, err := config.RawConfig()
-	if err != nil {
-		return restConfig{}, err
-	}
-
-	clusterName := getClusterNameFromContext(raw, overrides.CurrentContext)
-
-	if clusterName == nil {
-		return restConfig{}, fmt.Errorf("could not obtain the cluster name from kube config: %#v", raw)
-	}
-
-	return restConfig{config: clientConfig, clusterName: *clusterName}, nil
 }
