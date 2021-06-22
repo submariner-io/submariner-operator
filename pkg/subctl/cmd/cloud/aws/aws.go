@@ -35,6 +35,7 @@ import (
 	cloudprepareaws "github.com/submariner-io/cloud-prepare/pkg/aws"
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"gopkg.in/ini.v1"
 )
 
@@ -102,7 +103,7 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 	}
 	reporter.Succeeded("")
 
-	k8sConfig, err := utils.GetRestConfig(kubeConfig, kubeContext)
+	k8sConfig, err := restconfig.ForCluster(kubeConfig, kubeContext)
 	utils.ExitOnError("Failed to initialize a Kubernetes config", err)
 
 	gwDeployer := cloudprepareaws.NewK8sMachinesetDeployer(k8sConfig)

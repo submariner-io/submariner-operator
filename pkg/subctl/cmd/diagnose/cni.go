@@ -54,7 +54,6 @@ func init() {
 		},
 	})
 }
-
 func checkCNIConfig(cluster *cmd.Cluster) bool {
 	status := cli.NewStatus()
 

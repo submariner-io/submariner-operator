@@ -20,31 +20,26 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
-	"fmt"
-
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/coreos/go-semver/semver"
+	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	cmdversion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
+	"github.com/submariner-io/submariner-operator/pkg/version"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-
-	"github.com/coreos/go-semver/semver"
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/version"
 )
 
 var (
@@ -107,40 +102,8 @@ func exitWithErrorMsg(message string) {
 	utils.ExitWithErrorMsg(message)
 }
 
-func getClients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, error) {
-	dynClient, err := dynamic.NewForConfig(config)
-	if err != nil {
-		return nil, nil, err
-	}
-	clientSet, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, nil, err
-	}
-	return dynClient, clientSet, nil
-}
-
-func getClusterNameFromContext(rawConfig clientcmdapi.Config, overridesContext string) *string {
-	if overridesContext == "" {
-		// No context provided, use the current context
-		overridesContext = rawConfig.CurrentContext
-	}
-	configContext, ok := rawConfig.Contexts[overridesContext]
-	if !ok {
-		return nil
-	}
-	return &configContext.Cluster
-}
-
-func getRestConfig(kubeConfigPath, kubeContext string) (*rest.Config, error) {
-	return utils.GetRestConfig(kubeConfigPath, kubeContext)
-}
-
-func getClientConfig(kubeConfigPath, kubeContext string) clientcmd.ClientConfig {
-	return utils.GetClientConfig(kubeConfigPath, kubeContext)
-}
-
 func handleNodeLabels(config *rest.Config) error {
-	_, clientset, err := getClients(config)
+	_, clientset, err := restconfig.Clients(config)
 	exitOnError("Unable to set the Kubernetes cluster connection up", err)
 	// List Submariner-labeled nodes
 	const submarinerGatewayLabel = "submariner.io/gateway"
@@ -256,7 +219,7 @@ var nodeLabelBackoff wait.Backoff = wait.Backoff{
 }
 
 func checkVersionMismatch(cmd *cobra.Command, args []string) error {
-	config, err := getRestConfig(kubeConfig, kubeContext)
+	config, err := restconfig.ForCluster(kubeConfig, kubeContext)
 	exitOnError("The provided kubeconfig is invalid", err)
 
 	submariner := getSubmarinerResource(config)

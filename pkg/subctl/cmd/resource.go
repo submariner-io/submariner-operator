@@ -24,60 +24,12 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
-	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
-
-func mustGetMultipleRestConfigs(kubeConfigPath string, kubeContexts []string) []restConfig {
-	configs, err := getMultipleRestConfigs(kubeConfigPath, kubeContexts)
-	exitOnError("Error getting REST Config for cluster", err)
-
-	return configs
-}
-
-func getMultipleRestConfigs(kubeConfigPath string, kubeContexts []string) ([]restConfig, error) {
-	var restConfigs []restConfig
-
-	rules := clientcmd.NewDefaultClientConfigLoadingRules()
-	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
-	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
-	rules.ExplicitPath = kubeConfigPath
-
-	contexts := []string{}
-	if len(kubeContexts) > 0 {
-		contexts = append(contexts, kubeContexts...)
-	} else {
-		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
-		rawConfig, err := kubeConfig.RawConfig()
-		if err != nil {
-			return restConfigs, err
-		}
-		for context := range rawConfig.Contexts {
-			contexts = append(contexts, context)
-		}
-	}
-
-	for _, context := range contexts {
-		if context != "" {
-			overrides.CurrentContext = context
-			config, err := getClientConfigAndClusterName(rules, overrides)
-			if err != nil {
-				return nil, err
-			}
-
-			restConfigs = append(restConfigs, config)
-		}
-	}
-
-	return restConfigs, nil
-}
 
 func getSubmarinerResourceWithError(config *rest.Config) (*v1alpha1.Submariner, error) {
 	submarinerClient, err := subOperatorClientset.NewForConfig(config)
@@ -104,37 +56,6 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	}
 
 	return submariner
-}
-
-func getBrokerRestConfigAndNamespace(submariner *v1alpha1.Submariner,
-	serviceDisc *v1alpha1.ServiceDiscovery) (*rest.Config, string, error) {
-	if submariner != nil {
-		// Try to authorize against the submariner Cluster resource as we know the CRD should exist and the credentials
-		// should allow read access.
-		restConfig, _, err := resource.GetAuthorizedRestConfig(submariner.Spec.BrokerK8sApiServer, submariner.Spec.BrokerK8sApiServerToken,
-			submariner.Spec.BrokerK8sCA, rest.TLSClientConfig{}, schema.GroupVersionResource{
-				Group:    submarinerv1.SchemeGroupVersion.Group,
-				Version:  submarinerv1.SchemeGroupVersion.Version,
-				Resource: "clusters",
-			}, submariner.Spec.BrokerK8sRemoteNamespace)
-
-		return restConfig, submariner.Spec.BrokerK8sRemoteNamespace, err
-	}
-
-	if serviceDisc != nil {
-		// Try to authorize against the ServiceImport resource as we know the CRD should exist and the credentials
-		// should allow read access.
-		restConfig, _, err := resource.GetAuthorizedRestConfig(serviceDisc.Spec.BrokerK8sApiServer, serviceDisc.Spec.BrokerK8sApiServerToken,
-			serviceDisc.Spec.BrokerK8sCA, rest.TLSClientConfig{}, schema.GroupVersionResource{
-				Group:    "multicluster.x-k8s.io",
-				Version:  "v1alpha1",
-				Resource: "serviceimports",
-			}, serviceDisc.Spec.BrokerK8sRemoteNamespace)
-
-		return restConfig, serviceDisc.Spec.BrokerK8sRemoteNamespace, err
-	}
-
-	return nil, "", nil
 }
 
 func CompareFiles(file1, file2 string) (bool, error) {
