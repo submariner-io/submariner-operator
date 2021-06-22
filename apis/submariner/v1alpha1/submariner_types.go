@@ -58,6 +58,7 @@ type SubmarinerSpec struct {
 	CeIPSecForceUDPEncaps    bool                 `json:"ceIPSecForceUDPEncaps,omitempty"`
 	Debug                    bool                 `json:"debug"`
 	NatEnabled               bool                 `json:"natEnabled"`
+	LoadBalancerEnabled      bool                 `json:"loadBalancerEnabled,omitempty"`
 	ServiceDiscoveryEnabled  bool                 `json:"serviceDiscoveryEnabled,omitempty"`
 	CoreDNSCustomConfig      *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
 	// +listType=set
@@ -83,10 +84,16 @@ type SubmarinerStatus struct {
 	GatewayDaemonSetStatus    DaemonSetStatus         `json:"gatewayDaemonSetStatus,omitempty"`
 	RouteAgentDaemonSetStatus DaemonSetStatus         `json:"routeAgentDaemonSetStatus,omitempty"`
 	GlobalnetDaemonSetStatus  DaemonSetStatus         `json:"globalnetDaemonSetStatus,omitempty"`
+	LoadBalancerStatus        LoadBalancerStatus      `json:"loadBalancerStatus,omitempty"`
 	Gateways                  *[]submv1.GatewayStatus `json:"gateways,omitempty"`
+	DeploymentInfo            DeploymentInfo          `json:"deploymentInfo,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+}
+
+type LoadBalancerStatus struct {
+	Status *corev1.LoadBalancerStatus `json:"status,omitempty"`
 }
 
 type DaemonSetStatus struct {
@@ -94,6 +101,13 @@ type DaemonSetStatus struct {
 	Status                    *appsv1.DaemonSetStatus  `json:"status,omitempty"`
 	NonReadyContainerStates   *[]corev1.ContainerState `json:"nonReadyContainerStates,omitempty"`
 	MismatchedContainerImages bool                     `json:"mismatchedContainerImages"`
+}
+
+type DeploymentInfo struct {
+	KubernetesType        KubernetesType `json:"kubernetesType,omitempty"`
+	KubernetesTypeVersion string         `json:"kubernetesTypeVersion,omitempty"`
+	KubernetesVersion     string         `json:"kubernetesVersion,omitempty"`
+	CloudProvider         CloudProvider  `json:"cloudProvider,omitempty"`
 }
 
 type HealthCheckSpec struct {
@@ -104,7 +118,23 @@ type HealthCheckSpec struct {
 	MaxPacketLossCount uint64 `json:"maxPacketLossCount,omitempty"`
 }
 
-const DefaultColorCode = "blue"
+type KubernetesType string
+type CloudProvider string
+
+const (
+	DefaultColorCode                     = "blue"
+	K8s                   KubernetesType = "k8s"
+	OCP                                  = "ocp"
+	EKS                                  = "eks"
+	AKS                                  = "aks"
+	GKE                                  = "gke"
+	DefaultKubernetesType                = K8s
+	Kind                  CloudProvider  = "kind"
+	AWS                                  = "aws"
+	GCP                                  = "gcp"
+	Azure                                = "azure"
+	Openstack                            = "openstack"
+)
 
 // +kubebuilder:object:root=true
 

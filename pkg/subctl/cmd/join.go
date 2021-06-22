@@ -23,12 +23,14 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
+	cmdVersion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -69,6 +71,7 @@ var (
 	submarinerDebug               bool
 	operatorDebug                 bool
 	labelGateway                  bool
+	loadBalancerEnabled           bool
 	cableDriver                   string
 	clienttoken                   *v1.Secret
 	globalnetClusterSize          uint
@@ -82,7 +85,7 @@ var (
 
 func init() {
 	addJoinFlags(joinCmd)
-	addKubeContextFlag(joinCmd)
+	AddKubeContextFlag(joinCmd)
 	rootCmd.AddCommand(joinCmd)
 }
 
@@ -99,6 +102,10 @@ func addJoinFlags(cmd *cobra.Command) {
 
 	cmd.Flags().BoolVar(&preferredServer, "preferred-server", false,
 		"enable this cluster as a preferred server for dataplane connections")
+
+	cmd.Flags().BoolVar(&loadBalancerEnabled, "load-balancer", false,
+		"enable automatic LoadBalancer in front of the gateways")
+
 	cmd.Flags().BoolVar(&forceUDPEncaps, "force-udp-encaps", false, "force UDP encapsulation for IPSec")
 
 	cmd.Flags().BoolVar(&ipsecDebug, "ipsec-debug", false, "enable IPsec debugging (verbose logging)")
@@ -130,8 +137,6 @@ func addJoinFlags(cmd *cobra.Command) {
 
 const (
 	SubmarinerNamespace = "submariner-operator" // We currently expect everything in submariner-operator
-	minK8sMajor         = 1                     // We need K8s 1.17 for endpoint slices
-	minK8sMinor         = 17
 )
 
 var joinCmd = &cobra.Command{
@@ -149,7 +154,7 @@ var joinCmd = &cobra.Command{
 		exitOnError("Error connecting to broker cluster", err)
 		err = isValidCustomCoreDNSConfig()
 		exitOnError("Invalid Custom CoreDNS configuration", err)
-		config := getClientConfig(kubeConfig, kubeContext)
+		config := restconfig.ClientConfig(kubeConfig, kubeContext)
 		joinSubmarinerCluster(config, kubeContext, subctlData)
 	},
 }
@@ -171,13 +176,14 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		rawConfig, err := config.RawConfig()
 		// This will be fatal later, no point in continuing
 		exitOnError("Error connecting to the target cluster", err)
-		clusterName := getClusterNameFromContext(rawConfig, contextName)
+		clusterName := restconfig.ClusterNameFromContext(rawConfig, contextName)
 		if clusterName != nil {
 			clusterID = *clusterName
 		}
 	}
 
-	if valid, _ := isValidClusterID(clusterID); !valid {
+	if valid, err := isValidClusterID(clusterID); !valid {
+		fmt.Printf("Error: %s\n", err.Error())
 		qs = append(qs, &survey.Question{
 			Name:   "clusterID",
 			Prompt: &survey.Input{Message: "What is your cluster ID?"},
@@ -220,7 +226,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	clientConfig, err := config.ClientConfig()
 	exitOnError("Error connecting to the target cluster", err)
 
-	failedRequirements, err := checkRequirements(clientConfig)
+	_, failedRequirements, err := cmdVersion.CheckRequirements(clientConfig)
 	// We display failed requirements even if an error occurred
 	if len(failedRequirements) > 0 {
 		fmt.Println("The target cluster fails to meet Submariner's requirements:")
@@ -303,37 +309,6 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	}
 }
 
-func checkRequirements(config *rest.Config) ([]string, error) {
-	failedRequirements := []string{}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return failedRequirements, errors.WithMessage(err, "error creating API server client")
-	}
-	serverVersion, err := clientset.Discovery().ServerVersion()
-	if err != nil {
-		return failedRequirements, errors.WithMessage(err, "error obtaining API server version")
-	}
-	major, err := strconv.Atoi(serverVersion.Major)
-	if err != nil {
-		return failedRequirements, errors.WithMessagef(err, "error parsing API server major version %v", serverVersion.Major)
-	}
-	var minor int
-	if strings.HasSuffix(serverVersion.Minor, "+") {
-		minor, err = strconv.Atoi(serverVersion.Minor[0 : len(serverVersion.Minor)-1])
-	} else {
-		minor, err = strconv.Atoi(serverVersion.Minor)
-	}
-	if err != nil {
-		return failedRequirements, errors.WithMessagef(err, "error parsing API server minor version %v", serverVersion.Minor)
-	}
-	if major < minK8sMajor || (major == minK8sMajor && minor < minK8sMinor) {
-		failedRequirements = append(failedRequirements,
-			fmt.Sprintf("Submariner requires Kubernetes %d.%d; your cluster is running %s.%s",
-				minK8sMajor, minK8sMinor, serverVersion.Major, serverVersion.Minor))
-	}
-	return failedRequirements, nil
-}
-
 func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clientset, brokerNamespace string,
 	netconfig *globalnet.Config) error {
 	status.Start("Discovering multi cluster details")
@@ -370,7 +345,7 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 }
 
 func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
-	dynClient, clientSet, err := getClients(config)
+	dynClient, clientSet, err := restconfig.Clients(config)
 	exitOnError("Unable to set the Kubernetes cluster connection up", err)
 
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
@@ -491,6 +466,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
 		ImageOverrides:           getImageOverrides(),
+		LoadBalancerEnabled:      loadBalancerEnabled,
 		ConnectionHealthCheck: &submariner.HealthCheckSpec{
 			Enabled:            healthCheckEnable,
 			IntervalSeconds:    healthCheckInterval,

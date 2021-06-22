@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 )
 
 var showAllCmd = &cobra.Command{
@@ -37,21 +38,21 @@ func init() {
 }
 
 func showAll(cmd *cobra.Command, args []string) {
-	configs, err := getMultipleRestConfigs(kubeConfig, kubeContexts)
+	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
 	exitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
 		fmt.Println()
-		fmt.Printf("Showing information for cluster %q:\n", item.clusterName)
+		fmt.Printf("Showing information for cluster %q:\n", item.ClusterName)
 
 		fmt.Println("Showing Network details")
-		showNetworkSingleCluster(item.config)
+		showNetworkSingleCluster(item.Config)
 		fmt.Println("")
 
-		submariner := getSubmarinerResource(item.config)
+		submariner := getSubmarinerResource(item.Config)
 
 		if submariner == nil {
-			fmt.Println(submMissingMessage)
+			fmt.Println(SubmMissingMessage)
 			continue
 		}
 
@@ -62,6 +63,6 @@ func showAll(cmd *cobra.Command, args []string) {
 		fmt.Println("\nShowing Gateway details")
 		showGatewaysFor(submariner)
 		fmt.Println("\nShowing version details")
-		showVersionsFor(item.config, submariner)
+		showVersionsFor(item.Config, submariner)
 	}
 }

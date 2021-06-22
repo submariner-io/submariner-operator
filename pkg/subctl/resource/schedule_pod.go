@@ -52,7 +52,7 @@ type PodScheduling struct {
 
 type PodConfig struct {
 	Name       string
-	ClientSet  *kubernetes.Clientset
+	ClientSet  kubernetes.Interface
 	Scheduling PodScheduling
 	Namespace  string
 	Command    string
