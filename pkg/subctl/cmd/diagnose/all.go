@@ -47,25 +47,25 @@ func diagnoseAll(cluster *cmd.Cluster) bool {
 		return success
 	}
 
-	success = success && checkCNIConfig(cluster)
+	success = checkCNIConfig(cluster) && success
 	fmt.Println()
 
-	success = success && checkConnections(cluster)
+	success = checkConnections(cluster) && success
 	fmt.Println()
 
-	success = success && checkPods(cluster)
+	success = checkPods(cluster) && success
 	fmt.Println()
 
-	success = success && checkOverlappingCIDRs(cluster)
+	success = checkOverlappingCIDRs(cluster) && success
 	fmt.Println()
 
-	success = success && checkKubeProxyMode(cluster)
+	success = checkKubeProxyMode(cluster) && success
 	fmt.Println()
 
-	success = success && checkFirewallMetricsConfig(cluster)
+	success = checkFirewallMetricsConfig(cluster) && success
 	fmt.Println()
 
-	success = success && checkVxLANConfig(cluster)
+	success = checkVxLANConfig(cluster) && success
 	fmt.Println()
 
 	fmt.Printf("Skipping tunnel firewall check as it requires two kubeconfigs." +

@@ -27,8 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const globalnetGlobalIPAnnotation = "submariner.io/globalIp"
-
 type benchmarkTestParams struct {
 	ClientCluster       framework.ClusterIndex
 	ServerCluster       framework.ClusterIndex
