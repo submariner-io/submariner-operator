@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 )
 
@@ -39,7 +40,7 @@ func init() {
 
 func showAll(cmd *cobra.Command, args []string) {
 	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	exitOnError("Error getting REST config for cluster", err)
+	utils.ExitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
 		fmt.Println()

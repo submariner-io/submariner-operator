@@ -29,6 +29,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	cmdVersion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	v1 "k8s.io/api/core/v1"
@@ -146,14 +147,14 @@ var joinCmd = &cobra.Command{
 	PreRunE: checkVersionMismatch,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := checkArgumentPassed(args)
-		exitOnError("Argument missing", err)
+		utils.ExitOnError("Argument missing", err)
 		subctlData, err := datafile.NewFromFile(args[0])
-		exitOnError("Argument missing", err)
-		exitOnError("Error loading the broker information from the given file", err)
+		utils.ExitOnError("Argument missing", err)
+		utils.ExitOnError("Error loading the broker information from the given file", err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
-		exitOnError("Error connecting to broker cluster", err)
+		utils.ExitOnError("Error connecting to broker cluster", err)
 		err = isValidCustomCoreDNSConfig()
-		exitOnError("Invalid Custom CoreDNS configuration", err)
+		utils.ExitOnError("Invalid Custom CoreDNS configuration", err)
 		config := restconfig.ClientConfig(kubeConfig, kubeContext)
 		joinSubmarinerCluster(config, kubeContext, subctlData)
 	},
@@ -175,7 +176,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	if clusterID == "" {
 		rawConfig, err := config.RawConfig()
 		// This will be fatal later, no point in continuing
-		exitOnError("Error connecting to the target cluster", err)
+		utils.ExitOnError("Error connecting to the target cluster", err)
 		clusterName := restconfig.ClusterNameFromContext(rawConfig, contextName)
 		if clusterName != nil {
 			clusterID = *clusterName
@@ -213,7 +214,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 
 		err := survey.Ask(qs, &answers)
 		// Most likely a programming error
-		panicOnError(err)
+		utils.PanicOnError(err)
 
 		if len(answers.ClusterID) > 0 {
 			clusterID = answers.ClusterID
@@ -224,7 +225,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	}
 
 	clientConfig, err := config.ClientConfig()
-	exitOnError("Error connecting to the target cluster", err)
+	utils.ExitOnError("Error connecting to the target cluster", err)
 
 	_, failedRequirements, err := cmdVersion.CheckRequirements(clientConfig)
 	// We display failed requirements even if an error occurred
@@ -233,14 +234,14 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		for i := range failedRequirements {
 			fmt.Printf("* %s\n", (failedRequirements)[i])
 		}
-		exitOnError("Unable to check all requirements", err)
+		utils.ExitOnError("Unable to check all requirements", err)
 		os.Exit(1)
 	}
-	exitOnError("Unable to check requirements", err)
+	utils.ExitOnError("Unable to check requirements", err)
 
 	if subctlData.IsConnectivityEnabled() && labelGateway {
 		err := handleNodeLabels(clientConfig)
-		exitOnError("Unable to set the gateway node up", err)
+		utils.ExitOnError("Unable to set the gateway node up", err)
 	}
 
 	status.Start("Discovering network details")
@@ -248,15 +249,15 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	status.End(cli.Success)
 
 	serviceCIDR, serviceCIDRautoDetected, err := getServiceCIDR(serviceCIDR, networkDetails)
-	exitOnError("Error determining the service CIDR", err)
+	utils.ExitOnError("Error determining the service CIDR", err)
 
 	clusterCIDR, clusterCIDRautoDetected, err := getPodCIDR(clusterCIDR, networkDetails)
-	exitOnError("Error determining the pod CIDR", err)
+	utils.ExitOnError("Error determining the pod CIDR", err)
 
 	brokerAdminConfig, err := subctlData.GetBrokerAdministratorConfig()
-	exitOnError("Error retrieving broker admin config", err)
+	utils.ExitOnError("Error retrieving broker admin config", err)
 	brokerAdminClientset, err := kubernetes.NewForConfig(brokerAdminConfig)
-	exitOnError("Error retrieving broker admin connection", err)
+	utils.ExitOnError("Error retrieving broker admin connection", err)
 	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
 
 	netconfig := globalnet.Config{ClusterID: clusterID,
@@ -269,19 +270,19 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 
 	if globalnetEnabled {
 		err = AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace, &netconfig)
-		exitOnError("Error Discovering multi cluster details", err)
+		utils.ExitOnError("Error Discovering multi cluster details", err)
 	}
 
 	status.Start("Deploying the Submariner operator")
 
 	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage(), operatorDebug)
 	status.End(cli.CheckForError(err))
-	exitOnError("Error deploying the operator", err)
+	utils.ExitOnError("Error deploying the operator", err)
 
 	status.Start("Creating SA for cluster")
 	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID)
 	status.End(cli.CheckForError(err))
-	exitOnError("Error creating SA for cluster", err)
+	utils.ExitOnError("Error creating SA for cluster", err)
 
 	if subctlData.IsConnectivityEnabled() {
 		status.Start("Deploying Submariner")
@@ -294,7 +295,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 			status.End(cli.Failure)
 		}
 
-		exitOnError("Error deploying Submariner", err)
+		utils.ExitOnError("Error deploying Submariner", err)
 	} else if subctlData.IsServiceDiscoveryEnabled() {
 		status.Start("Deploying service discovery only")
 		err = servicediscoverycr.Ensure(clientConfig, OperatorNamespace, populateServiceDiscoverySpec(subctlData))
@@ -305,7 +306,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 			status.QueueFailureMessage("Service discovery deployment failed")
 			status.End(cli.Failure)
 		}
-		exitOnError("Error deploying service discovery", err)
+		utils.ExitOnError("Error deploying service discovery", err)
 	}
 }
 
@@ -346,10 +347,10 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 
 func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 	dynClient, clientSet, err := restconfig.Clients(config)
-	exitOnError("Unable to set the Kubernetes cluster connection up", err)
+	utils.ExitOnError("Unable to set the Kubernetes cluster connection up", err)
 
 	submarinerClient, err := submarinerclientset.NewForConfig(config)
-	exitOnError("Unable to get the Submariner client", err)
+	utils.ExitOnError("Unable to get the Submariner client", err)
 
 	networkDetails, err := network.Discover(dynClient, clientSet, submarinerClient, OperatorNamespace)
 	if err != nil {

@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 
@@ -48,7 +49,7 @@ func init() {
 func getGatewaysStatus(submariner *v1alpha1.Submariner) []gatewayStatus {
 	gateways := submariner.Status.Gateways
 	if gateways == nil {
-		exitWithErrorMsg("no gateways found")
+		utils.ExitWithErrorMsg("no gateways found")
 	}
 
 	var status = make([]gatewayStatus, 0, len(*gateways))
@@ -86,7 +87,7 @@ func getGatewaysStatus(submariner *v1alpha1.Submariner) []gatewayStatus {
 
 func showGateways(cmd *cobra.Command, args []string) {
 	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	exitOnError("Error getting REST config for cluster", err)
+	utils.ExitOnError("Error getting REST config for cluster", err)
 
 	for _, item := range configs {
 		fmt.Println()
