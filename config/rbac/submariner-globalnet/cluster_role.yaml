@@ -48,6 +48,7 @@ rules:
       - watch
       - update
       - delete
+      - deletecollection
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
