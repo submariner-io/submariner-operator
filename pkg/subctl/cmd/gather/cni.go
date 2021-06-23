@@ -20,6 +20,7 @@ package gather
 
 import (
 	"fmt"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 	v1 "k8s.io/api/core/v1"
@@ -87,9 +88,7 @@ func CNIResources(info Info, networkPlugin string) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
 
-		if err != nil {
-			return err
-		}
+		utils.ReturnOnError(err)
 
 		info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering CNI data from %d pods matching label selector %q",
 			len(pods.Items), podLabelSelector))
@@ -120,9 +119,7 @@ func logCNIGatewayNodeResources(info Info) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
 
-		if err != nil {
-			return err
-		}
+		utils.ReturnOnError(err)
 
 		info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering CNI data from %d pods matching label selector %q",
 			len(pods.Items), podLabelSelector))
@@ -201,9 +198,7 @@ func CableDriverResources(info Info, cableDriver string) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
 
-		if err != nil {
-			return err
-		}
+		utils.ReturnOnError(err)
 
 		info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering cable driver data from %d pods matching label selector %q",
 			len(pods.Items), podLabelSelector))

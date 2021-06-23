@@ -57,3 +57,22 @@ func ExpectFlag(flag, value string) {
 		ExitWithErrorMsg(fmt.Sprintf("You must specify the %v flag", flag))
 	}
 }
+
+func PrintOnError(err error) {
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func PrintMsgOnError(err error, msg string)  {
+	if err != nil {
+		fmt.Println(msg, err)
+	}
+}
+
+func ReturnOnError(err error) (interface{}, error) {
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
+}

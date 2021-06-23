@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"io"
 	"os"
 	"path/filepath"
@@ -39,9 +40,7 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
 
-		if err != nil {
-			return err
-		}
+		utils.ReturnOnError(err)
 
 		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector))
 
@@ -79,9 +78,8 @@ func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Inf
 
 func writePodLogToFile(logStream io.ReadCloser, info Info, podName, fileExtension string) (string, error) {
 	logs, err := getLogFromStream(logStream)
-	if err != nil {
-		return "", err
-	}
+
+	utils.ReturnOnError(err)
 
 	logs = scrubSensitiveData(info, logs)
 	return writeLogToFile(logs, podName, info, fileExtension)
@@ -90,9 +88,7 @@ func writePodLogToFile(logStream io.ReadCloser, info Info, podName, fileExtensio
 func getLogFromStream(logStream io.ReadCloser) (string, error) {
 	logs := new(bytes.Buffer)
 	_, err := io.Copy(logs, logStream)
-	if err != nil {
-		return "", errors.WithMessage(err, "error copying the log stream")
-	}
+	utils.ReturnOnError(errors.WithMessage(err, "error copying the log stream"))
 
 	return logs.String(), nil
 }
@@ -101,15 +97,11 @@ func writeLogToFile(data, podName string, info Info, fileExtension string) (stri
 	fileName := escapeFileName(info.ClusterName+"_"+podName) + fileExtension
 	filePath := filepath.Join(info.DirName, fileName)
 	f, err := os.Create(filePath)
-	if err != nil {
-		return "", errors.WithMessagef(err, "error opening file %s", filePath)
-	}
+	utils.ReturnOnError(errors.WithMessagef(err, "error opening file %s", filePath))
 	defer f.Close()
 
 	_, err = f.WriteString(data)
-	if err != nil {
-		return "", errors.WithMessagef(err, "error writing to file %s", filePath)
-	}
+	utils.ReturnOnError(errors.WithMessagef(err, "error writing to file %s", filePath))
 
 	return fileName, err
 }
@@ -117,9 +109,7 @@ func writeLogToFile(data, podName string, info Info, fileExtension string) (stri
 func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.PodList, error) {
 	pods, err := clientSet.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: byLabelSelector})
 
-	if err != nil {
-		return nil, errors.WithMessage(err, "error listing pods")
-	}
+	utils.ReturnOnError(errors.WithMessage(err, "error listing pods"))
 
 	return pods, nil
 }
@@ -135,9 +125,7 @@ func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, i
 	if logStream != nil {
 		info.Status.QueueWarningMessage(fmt.Sprintf("Found logs for previous instances of pod %s", pod.Name))
 		fileName, err := writePodLogToFile(logStream, info, pod.Name, ".log.prev")
-		if err != nil {
-			return err
-		}
+		utils.ReturnOnError(err)
 		podLogInfo.LogFileName = append(podLogInfo.LogFileName, fileName)
 		defer logStream.Close()
 	}
@@ -150,9 +138,7 @@ func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, in
 	podLogOptions.Previous = false
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
 	logStream, err := logRequest.Stream(context.TODO())
-	if err != nil {
-		return errors.WithMessage(err, "error opening log stream")
-	}
+	utils.ReturnOnError(errors.WithMessage(err, "error opening log stream"))
 	defer logStream.Close()
 
 	fileName, err := writePodLogToFile(logStream, info, pod.Name, ".log")

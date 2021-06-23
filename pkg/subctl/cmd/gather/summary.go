@@ -22,6 +22,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"html/template"
 	"io"
 	"os"
@@ -48,9 +49,7 @@ func getClusterInfo(info Info) data {
 	versions := getVersions(info)
 	config := getClusterConfig(info)
 	nConfig, err := getNodeConfig(info)
-	if err != nil {
-		fmt.Println(err)
-	}
+	utils.PrintOnError(err)
 
 	d := data{
 		ClusterName:   info.ClusterName,
@@ -65,17 +64,11 @@ func getClusterInfo(info Info) data {
 
 func getClusterConfig(info Info) clusterConfig {
 	gwNodes, err := getGWNodes(info)
-	if err != nil {
-		fmt.Println(err)
-	}
+	utils.PrintOnError(err)
 	mNodes, err := getMasterNodes(info)
-	if err != nil {
-		fmt.Println(err)
-	}
+	utils.PrintOnError(err)
 	allNodes, err := listNodes(info, metav1.ListOptions{})
-	if err != nil {
-		fmt.Println(err)
-	}
+	utils.PrintOnError(err)
 	config := clusterConfig{
 		TotalNode:        len(allNodes.Items),
 		GatewayNode:      gwNodes,
@@ -88,7 +81,6 @@ func getClusterConfig(info Info) clusterConfig {
 	config.CloudProvider = "N/A" // Broker clusters won't have Submariner to gather information from
 	if info.Submariner != nil {
 		config.CNIPlugin = info.Submariner.Status.NetworkPlugin
-		fmt.Println(info.Submariner.Status)
 		config.CloudProvider = info.Submariner.Status.DeploymentInfo.CloudProvider
 	}
 	return config
@@ -100,8 +92,8 @@ func getVersions(info Info) version {
 	}
 
 	k8sServerVersion, err := info.ClientSet.Discovery().ServerVersion()
+	utils.PrintMsgOnError(err, "error in getting k8s server version")
 	if err != nil {
-		fmt.Println("error in getting k8s server version", err)
 		Versions.K8sServer = err.Error()
 	}
 	Versions.K8sServer = k8sServerVersion.String()
@@ -115,9 +107,7 @@ func getVersions(info Info) version {
 
 func getSpecificNode(info Info, selector string) (map[string]types.UID, error) {
 	nodes, err := listNodes(info, metav1.ListOptions{LabelSelector: selector})
-	if err != nil {
-		return nil, err
-	}
+	utils.ReturnOnError(err)
 	node := make(map[string]types.UID, len(nodes.Items))
 	for _, n := range nodes.Items {
 		node[n.GetName()] = n.GetUID()
@@ -128,26 +118,20 @@ func getSpecificNode(info Info, selector string) (map[string]types.UID, error) {
 func getGWNodes(info Info) (map[string]types.UID, error) {
 	selector := labels.SelectorFromSet(labels.Set(map[string]string{"submariner.io/gateway": "true"}))
 	nodes, err := getSpecificNode(info, selector.String())
-	if err != nil {
-		return nil, err
-	}
+	utils.ReturnOnError(err)
 	return nodes, nil
 }
 
 func getMasterNodes(info Info) (map[string]types.UID, error) {
 	selector := "node-role.kubernetes.io/master="
 	nodes, err := getSpecificNode(info, selector)
-	if err != nil {
-		return nil, err
-	}
+	utils.ReturnOnError(err)
 	return nodes, nil
 }
 
 func getNodeConfig(info Info) ([]nodeConfig, error) {
 	nodes, err := listNodes(info, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
+	utils.ReturnOnError(err)
 
 	nodeConfigs := make([]nodeConfig, len(nodes.Items))
 	for _, allNode := range nodes.Items {
@@ -172,25 +156,19 @@ func getNodeConfig(info Info) ([]nodeConfig, error) {
 
 func listNodes(info Info, listOptions metav1.ListOptions) (*v1.NodeList, error) {
 	nodes, err := info.ClientSet.CoreV1().Nodes().List(context.TODO(), listOptions)
-	if err != nil {
-		return nil, err
-	}
+	utils.ReturnOnError(err)
 	return nodes, nil
 }
 
 func createFile(dirname string) io.Writer {
 	fileName := filepath.Join(dirname, "summary.html")
 	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		fmt.Printf("Error creating file %s\n", fileName)
-	}
+	utils.PrintMsgOnError(err, fmt.Sprintf("Error creating file %s\n", fileName))
 	return f
 }
 
 func writeToHTML(fileWriter io.Writer, cData data) {
 	t := template.Must(template.New("layout.html").Parse(layout))
 	err := t.Execute(fileWriter, cData)
-	if err != nil {
-		fmt.Println(err)
-	}
+	utils.PrintOnError(err)
 }

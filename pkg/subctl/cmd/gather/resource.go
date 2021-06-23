@@ -20,6 +20,7 @@ package gather
 import (
 	"context"
 	"fmt"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -38,9 +39,7 @@ var fileNameRegexp = regexp.MustCompile(`[<>:"/\|?*]`)
 func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
 		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(context.TODO(), listOptions)
-		if err != nil {
-			return errors.WithMessagef(err, "error listing %q", ofType.Resource)
-		}
+		utils.ReturnOnError(errors.WithMessagef(err, "error listing %q", ofType.Resource))
 
 		selectorStr := ""
 		if listOptions.LabelSelector != "" {
@@ -58,21 +57,15 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 			name := escapeFileName(info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+"_"+item.GetName()) + ".yaml"
 			path := filepath.Join(info.DirName, name)
 			file, err := os.Create(path)
-			if err != nil {
-				return errors.WithMessagef(err, "error opening file %s", path)
-			}
+			utils.ReturnOnError(errors.WithMessagef(err, "error opening file %s", path))
 
 			defer file.Close()
 
 			data, err := yaml.Marshal(item)
-			if err != nil {
-				return errors.WithMessage(err, "error marshaling to YAML")
-			}
+			utils.ReturnOnError(errors.WithMessage(err, "error marshaling to YAML"))
 			scrubbedData := scrubSensitiveData(info, string(data))
 			_, err = file.Write([]byte(scrubbedData))
-			if err != nil {
-				return errors.WithMessagef(err, "error writing to file %s", path)
-			}
+			utils.ReturnOnError(errors.WithMessagef(err, "error writing to file %s", path))
 			info.Summary.Resources = append(info.Summary.Resources, ResourceInfo{
 				Name:      item.GetName(),
 				Namespace: item.GetNamespace(),
