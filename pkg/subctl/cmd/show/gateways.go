@@ -15,14 +15,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package show
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
@@ -34,25 +34,31 @@ type gatewayStatus struct {
 	summary  string
 }
 
-var showGatewaysCmd = &cobra.Command{
-	Use:     "gateways",
-	Short:   "Show submariner gateway summary information",
-	Long:    `This command shows summary information about the submariner gateways in a cluster.`,
-	PreRunE: checkVersionMismatch,
-	Run:     showGateways,
-}
-
 func init() {
-	showCmd.AddCommand(showGatewaysCmd)
+	showCmd.AddCommand(&cobra.Command{
+		Use:     "gateways",
+		Short:   "Show submariner gateway summary information",
+		Long:    `This command shows summary information about the submariner gateways in a cluster.`,
+		PreRunE: cmd.CheckVersionMismatch,
+		Run: func(command *cobra.Command, args []string) {
+			cmd.ExecuteMultiCluster(showGateways)
+		},
+	})
 }
 
-func getGatewaysStatus(submariner *v1alpha1.Submariner) []gatewayStatus {
+func getGatewaysStatus(submariner *v1alpha1.Submariner) bool {
+	status := cli.NewStatus()
+
+	fmt.Println("Showing Gateways")
+	status.Start("")
 	gateways := submariner.Status.Gateways
+
 	if gateways == nil {
-		utils.ExitWithErrorMsg("no gateways found")
+		status.EndWithFailure("There are no gateways detected")
+		return false
 	}
 
-	var status = make([]gatewayStatus, 0, len(*gateways))
+	var gwStatus = make([]gatewayStatus, 0, len(*gateways))
 	for _, gateway := range *gateways {
 		haStatus := gateway.HAStatus
 		enpoint := gateway.LocalEndpoint.Hostname
@@ -74,45 +80,35 @@ func getGatewaysStatus(submariner *v1alpha1.Submariner) []gatewayStatus {
 		} else {
 			summary = fmt.Sprintf("%d connections out of %d are established", countConnected, totalConnections)
 		}
-		status = append(status,
+		gwStatus = append(gwStatus,
 			gatewayStatus{
 				node:     enpoint,
 				haStatus: haStatus,
 				summary:  summary,
 			})
 	}
-
-	return status
-}
-
-func showGateways(cmd *cobra.Command, args []string) {
-	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	utils.ExitOnError("Error getting REST config for cluster", err)
-
-	for _, item := range configs {
-		fmt.Println()
-		fmt.Printf("Showing information for cluster %q:\n", item.ClusterName)
-		submariner := getSubmarinerResource(item.Config)
-
-		if submariner == nil {
-			fmt.Println(SubmMissingMessage)
-		} else {
-			showGatewaysFor(submariner)
-		}
+	if len(gwStatus) == 0 {
+		status.EndWithFailure("No Gateways found")
+		return false
 	}
+	status.End(cli.Success)
+	printGateways(gwStatus)
+	return true
 }
 
-func showGatewaysFor(submariner *v1alpha1.Submariner) {
-	status := getGatewaysStatus(submariner)
-	printGateways(status)
+func showGateways(cluster *cmd.Cluster) bool {
+	status := cli.NewStatus()
+
+	if cluster.Submariner == nil {
+		status.Start(cmd.SubmMissingMessage)
+		status.End(cli.Warning)
+		return true
+	}
+
+	return getGatewaysStatus(cluster.Submariner)
 }
 
 func printGateways(gateways []gatewayStatus) {
-	if len(gateways) == 0 {
-		fmt.Println("No resources found.")
-		return
-	}
-
 	template := "%-32.31s%-16s%-32s\n"
 	fmt.Printf(template, "NODE", "HA STATUS", "SUMMARY")
 

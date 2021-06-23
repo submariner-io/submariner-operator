@@ -144,7 +144,7 @@ var joinCmd = &cobra.Command{
 	Use:     "join",
 	Short:   "Connect a cluster to an existing broker",
 	Args:    cobra.MaximumNArgs(1),
-	PreRunE: checkVersionMismatch,
+	PreRunE: CheckVersionMismatch,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := checkArgumentPassed(args)
 		utils.ExitOnError("Argument missing", err)

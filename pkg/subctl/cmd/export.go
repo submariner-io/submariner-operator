@@ -45,7 +45,7 @@ var (
 		Short: "Exports a Service to other clusters",
 		Long: "This command creates a ServiceExport resource with the given name which causes the Service of the same name to be accessible" +
 			" to other clusters",
-		PreRunE: checkVersionMismatch,
+		PreRunE: CheckVersionMismatch,
 		Run:     exportService,
 	}
 	serviceNamespace string

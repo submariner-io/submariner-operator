@@ -15,19 +15,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package show
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/table"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 )
 
 type connectionStatus struct {
@@ -41,33 +40,37 @@ type connectionStatus struct {
 	status      submv1.ConnectionStatus
 }
 
-var showConnectionsCmd = &cobra.Command{
-	Use:     "connections",
-	Short:   "Show cluster connectivity information",
-	Long:    `This command shows information about submariner endpoint connections with other clusters.`,
-	PreRunE: checkVersionMismatch,
-	Run:     showConnections,
-}
-
 func init() {
-	showCmd.AddCommand(showConnectionsCmd)
+	showCmd.AddCommand(&cobra.Command{
+		Use:     "connections",
+		Short:   "Show cluster connectivity information",
+		Long:    `This command shows information about submariner endpoint connections with other clusters.`,
+		PreRunE: cmd.CheckVersionMismatch,
+		Run: func(command *cobra.Command, args []string) {
+			cmd.ExecuteMultiCluster(showConnections)
+		},
+	})
 }
 
-func getConnectionsStatus(submariner *v1alpha1.Submariner) []interface{} {
-	var status []interface{}
+func getConnectionsStatus(cluster *cmd.Cluster) bool {
+	status := cli.NewStatus()
 
-	gateways := submariner.Status.Gateways
+	fmt.Println("Showing Connections")
+	status.Start("")
+	gateways := cluster.Submariner.Status.Gateways
 	if gateways == nil {
-		utils.ExitWithErrorMsg("No endpoints found")
+		status.EndWithFailure("There are no gateways detected")
+		return false
 	}
 
+	var connStatus []interface{}
 	for _, gateway := range *gateways {
 		for _, connection := range gateway.Connections {
 			subnets := strings.Join(connection.Endpoint.Subnets, ", ")
 
 			ip, nat := remoteIPAndNATForConnection(connection)
 
-			status = append(status, connectionStatus{
+			connStatus = append(connStatus, connectionStatus{
 				gateway:     connection.Endpoint.Hostname,
 				cluster:     connection.Endpoint.ClusterID,
 				remoteIP:    ip,
@@ -80,7 +83,13 @@ func getConnectionsStatus(submariner *v1alpha1.Submariner) []interface{} {
 		}
 	}
 
-	return status
+	if len(connStatus) == 0 {
+		status.EndWithFailure("No connections found")
+		return false
+	}
+	status.End(cli.Success)
+	connectionPrinter.Print(connStatus)
+	return true
 }
 
 func getAverageRTTForConnection(connection submv1.Connection) string {
@@ -107,30 +116,16 @@ func remoteIPAndNATForConnection(connection submv1.Connection) (string, string) 
 	}
 }
 
-func showConnections(cmd *cobra.Command, args []string) {
-	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	utils.ExitOnError("Error getting REST config for cluster", err)
-	for _, item := range configs {
-		fmt.Println()
-		fmt.Printf("Showing information for cluster %q:\n", item.ClusterName)
-		submariner := getSubmarinerResource(item.Config)
+func showConnections(cluster *cmd.Cluster) bool {
+	status := cli.NewStatus()
 
-		if submariner == nil {
-			fmt.Println(SubmMissingMessage)
-		} else {
-			showConnectionsFor(submariner)
-		}
+	if cluster.Submariner == nil {
+		status.Start(cmd.SubmMissingMessage)
+		status.End(cli.Warning)
+		return true
 	}
-}
 
-func showConnectionsFor(submariner *v1alpha1.Submariner) {
-	connections := getConnectionsStatus(submariner)
-
-	if len(connections) == 0 {
-		fmt.Println("No resources found.")
-		return
-	}
-	connectionPrinter.Print(connections)
+	return getConnectionsStatus(cluster)
 }
 
 var connectionPrinter = table.Printer{
