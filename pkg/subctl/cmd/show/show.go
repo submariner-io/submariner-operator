@@ -16,10 +16,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package show
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
 // showCmd represents the show command
@@ -29,9 +30,7 @@ var showCmd = &cobra.Command{
 	Long:  `This command shows information about some aspect of the submariner deployment in a cluster.`,
 }
 
-const SubmMissingMessage = "Submariner is not installed"
-
 func init() {
-	AddKubeContextFlag(showCmd)
-	rootCmd.AddCommand(showCmd)
+	cmd.AddKubeConfigFlag(showCmd)
+	cmd.AddToRootCommand(showCmd)
 }

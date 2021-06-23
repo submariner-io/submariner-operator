@@ -24,6 +24,7 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	_ "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/diagnose"
+	_ "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/show"
 )
 
 func main() {

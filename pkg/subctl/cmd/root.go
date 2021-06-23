@@ -52,6 +52,8 @@ var (
 	}
 )
 
+const SubmMissingMessage = "Submariner is not installed"
+
 func Execute() error {
 	return rootCmd.Execute()
 }
@@ -205,7 +207,7 @@ var nodeLabelBackoff wait.Backoff = wait.Backoff{
 	Jitter:   1,
 }
 
-func checkVersionMismatch(cmd *cobra.Command, args []string) error {
+func CheckVersionMismatch(cmd *cobra.Command, args []string) error {
 	config, err := restconfig.ForCluster(kubeConfig, kubeContext)
 	utils.ExitOnError("The provided kubeconfig is invalid", err)
 
