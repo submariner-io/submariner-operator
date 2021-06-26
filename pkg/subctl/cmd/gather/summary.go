@@ -88,8 +88,8 @@ func getClusterConfig(info Info) clusterConfig {
 	config.CloudProvider = "N/A" // Broker clusters won't have Submariner to gather information from
 	if info.Submariner != nil {
 		config.CNIPlugin = info.Submariner.Status.NetworkPlugin
-		fmt.Println(info.Submariner.Status)
-		config.CloudProvider = info.Submariner.Status.DeploymentInfo.CloudProvider
+		// TODO uncomment this once the logic to fetch DeploymentInfo is added
+		//config.CloudProvider = info.Submariner.Status.DeploymentInfo.CloudProvider
 	}
 	return config
 }
