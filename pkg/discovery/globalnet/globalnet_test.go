@@ -215,3 +215,37 @@ var _ = Describe("AllocateGlobalCIDR: Fail", func() {
 		})
 	})
 })
+
+var _ = Describe("IsValidCidr", func() {
+	When("Unspecified CIDR", func() {
+		err := IsValidCIDR("")
+		It("Should return error", func() {
+			Expect(err).To(HaveOccurred())
+		})
+		err = IsValidCIDR("1.2")
+		It("Should return error", func() {
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	When("Loopback CIDR", func() {
+		err := IsValidCIDR("127.0.0.0/16")
+		It("Should return error", func() {
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	When("Link-Local CIDR", func() {
+		err := IsValidCIDR("169.254.0.0/16")
+		It("Should return error", func() {
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	When("Link-Local Multicast CIDR", func() {
+		err := IsValidCIDR("224.0.0.0/24")
+		It("Should return error", func() {
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})
