@@ -176,7 +176,13 @@ func ensureRoles(clientSet *clientset.Clientset, namespace string) (bool, error)
 		return false, err
 	}
 
-	return createdOperatorRole || createdSubmarinerRole || createdRouteAgentRole || createdGlobalnetRole, err
+	createdMetricsReaderRole, err := serviceaccount.EnsureRole(clientSet, namespace,
+		embeddedyamls.Config_rbac_submariner_metrics_reader_role_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	return createdOperatorRole || createdSubmarinerRole || createdRouteAgentRole || createdGlobalnetRole || createdMetricsReaderRole, err
 }
 
 func ensureRoleBindings(clientSet *clientset.Clientset, namespace string) (bool, error) {
@@ -204,5 +210,11 @@ func ensureRoleBindings(clientSet *clientset.Clientset, namespace string) (bool,
 		return false, err
 	}
 
-	return createdOperatorRB || createdSubmarinerRB || createdRouteAgentRB || createdGlobalnetRB, err
+	createdMetricsReaderRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
+		embeddedyamls.Config_rbac_submariner_metrics_reader_role_binding_yaml)
+	if err != nil {
+		return false, err
+	}
+
+	return createdOperatorRB || createdSubmarinerRB || createdRouteAgentRB || createdGlobalnetRB || createdMetricsReaderRB, err
 }
