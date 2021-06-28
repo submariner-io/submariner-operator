@@ -30,6 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
@@ -101,10 +102,10 @@ var gatherCmd = &cobra.Command{
 
 func gatherData() {
 	err := checkGatherArguments()
-	exitOnError("Invalid arguments", err)
+	utils.ExitOnError("Invalid arguments", err)
 
 	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	exitOnError("Error getting REST configs", err)
+	utils.ExitOnError("Error getting REST configs", err)
 
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
@@ -113,7 +114,7 @@ func gatherData() {
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
 		err := os.MkdirAll(directory, 0700)
 		if err != nil {
-			exitOnError(fmt.Sprintf("Error creating directory %q", directory), err)
+			utils.ExitOnError(fmt.Sprintf("Error creating directory %q", directory), err)
 		}
 	}
 
@@ -135,6 +136,7 @@ func gatherDataByCluster(restConfig restconfig.RestConfig, directory string) {
 		ClusterName:          clusterName,
 		DirName:              directory,
 		IncludeSensitiveData: includeSensitiveData,
+		Summary:              &gather.Summary{},
 	}
 
 	info.DynClient, info.ClientSet, err = restconfig.Clients(restConfig.Config)
@@ -183,6 +185,7 @@ func gatherDataByCluster(restConfig restconfig.RestConfig, directory string) {
 			}
 		}
 	}
+	gather.ClusterSummary(info)
 }
 
 func gatherConnectivity(dataType string, info gather.Info) bool {
