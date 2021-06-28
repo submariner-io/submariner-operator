@@ -21,7 +21,7 @@ require (
 	github.com/submariner-io/admiral v0.9.0
 	github.com/submariner-io/cloud-prepare v0.9.0
 	github.com/submariner-io/lighthouse v0.9.0
-	github.com/submariner-io/shipyard v0.9.0
+	github.com/submariner-io/shipyard v0.9.1
 	github.com/submariner-io/submariner v0.9.0
 	gopkg.in/ini.v1 v1.62.0
 	k8s.io/api v0.20.2
