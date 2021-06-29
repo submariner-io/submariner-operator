@@ -74,6 +74,8 @@ var files = []string{
 	"config/rbac/networkplugin_syncer/service_account.yaml",
 	"config/rbac/networkplugin_syncer/cluster_role.yaml",
 	"config/rbac/networkplugin_syncer/cluster_role_binding.yaml",
+	"config/rbac/submariner-metrics-reader/role.yaml",
+	"config/rbac/submariner-metrics-reader/role_binding.yaml",
 }
 
 // Reads all .yaml files in the crdDirectory

@@ -136,6 +136,7 @@ func gatherDataByCluster(restConfig restconfig.RestConfig, directory string) {
 		ClusterName:          clusterName,
 		DirName:              directory,
 		IncludeSensitiveData: includeSensitiveData,
+		Summary:              &gather.Summary{},
 	}
 
 	info.DynClient, info.ClientSet, err = restconfig.Clients(restConfig.Config)
@@ -184,6 +185,7 @@ func gatherDataByCluster(restConfig restconfig.RestConfig, directory string) {
 			}
 		}
 	}
+	gather.ClusterSummary(info)
 }
 
 func gatherConnectivity(dataType string, info gather.Info) bool {

@@ -573,12 +573,24 @@ func getImageOverrides() map[string]string {
 		imageOverrides := make(map[string]string)
 		for _, s := range imageOverrideArr {
 			key := strings.Split(s, "=")[0]
+			if invalidImageName(key) {
+				utils.ExitWithErrorMsg(fmt.Sprintf("Invalid image name %s provided. Please choose from %q", key, names.ValidImageNames))
+			}
 			value := strings.Split(s, "=")[1]
 			imageOverrides[key] = value
 		}
 		return imageOverrides
 	}
 	return nil
+}
+
+func invalidImageName(key string) bool {
+	for _, name := range names.ValidImageNames {
+		if key == name {
+			return false
+		}
+	}
+	return true
 }
 
 func isValidCustomCoreDNSConfig() error {
