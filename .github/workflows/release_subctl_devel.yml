@@ -18,24 +18,19 @@ jobs:
 
       - name: Generate subctl version
         run: |
-          echo "SUBCTL_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
-          echo "RELEASE=release-${GITHUB_REF##*/}" >> $GITHUB_ENV
+          echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          echo "RELEASE=subctl-${GITHUB_REF##*/}" >> $GITHUB_ENV
 
       - name: Generate the subctl release artifacts
-        run: make build-cross VERSION=${{ env.SUBCTL_TAG }}
+        run: make build-cross VERSION=${{ env.BRANCH }}
 
-      - name: Install GH CLI
-        run: |
-          curl -sLo /tmp/gh.deb https://github.com/cli/cli/releases/download/v1.11.0/gh_1.11.0_linux_amd64.deb
-          sudo apt install /tmp/gh.deb
-
-      - name: Delete old release
-        run: git push -d origin ${{ env.RELEASE }} || true
-
-      - name: Create the release with the updated artifacts
+      - name: Recreate the release with the updated artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh release delete ${{ env.RELEASE }} -y || true
+          git push -d origin ${{ env.RELEASE }} || true
           gh release create ${{ env.RELEASE }} dist/*.tar.xz --prerelease \
-            --title "Cutting Edge: ${{ env.SUBCTL_TAG }}" \
+            --title "Cutting Edge: ${{ env.BRANCH }}" \
+            --notes "Cutting edge binaries of \`subctl\` for '${{ env.BRANCH }}' branch, always updated to the latest merged code." \
             --target ${GITHUB_SHA}
