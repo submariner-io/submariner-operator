@@ -17,28 +17,26 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch all git tags
-        run: git fetch origin +refs/tags/*:refs/tags/*
-
       - name: Generate subctl version
-        run: echo "SUBCTL_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        run: |
+          echo "SUBCTL_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          echo "RELEASE=release-${GITHUB_REF##*/}" >> $GITHUB_ENV
 
       - name: Generate the subctl release artifacts
+        run: make build-cross VERSION=${{ env.SUBCTL_TAG }}
+
+      - name: Install GH CLI
         run: |
-          make build-cross VERSION=${{ env.SUBCTL_TAG }}
-          echo "BINARIES=$(find dist/ -type f -name '*.tar.xz' -printf '%p ')" >> $GITHUB_ENV
+          curl -sLo /tmp/gh.deb https://github.com/cli/cli/releases/download/v1.11.0/gh_1.11.0_linux_amd64.deb
+          sudo apt install /tmp/gh.deb
 
-      - name: Update the subctl devel GitHub release with the built artifacts
-        uses: johnwbyrd/update-release@v1.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          release: "Cutting Edge: ${{ env.SUBCTL_TAG }}"
-          tag: subctl-${{ env.SUBCTL_TAG }}
-          files: ${{ env.BINARIES }}
+      - name: Delete old release
+        run: git push -d origin ${{ env.RELEASE }} || true
 
-      - name: Update the subctl-devel git tag to point to the released commit
-        uses: richardsimko/update-tag@v1.0.5
-        with:
-          tag_name: subctl-${{ env.SUBCTL_TAG }}
+      - name: Create the release with the updated artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ env.RELEASE }} dist/*.tar.xz --prerelease \
+            --title "Cutting Edge: ${{ env.SUBCTL_TAG }}" \
+            --target ${GITHUB_SHA}
