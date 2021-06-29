@@ -28,7 +28,7 @@ jobs:
       - name: Install GH CLI
         run: |
           curl -sLo /tmp/gh.deb https://github.com/cli/cli/releases/download/v1.11.0/gh_1.11.0_linux_amd64.deb
-          sudo dpkg -i /tmp/gh.deb
+          sudo apt install /tmp/gh.deb
 
       - name: Delete old release
         run: git push -d origin ${{ env.RELEASE }} || true
