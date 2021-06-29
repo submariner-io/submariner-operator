@@ -89,7 +89,7 @@ func getClusterConfig(info Info) clusterConfig {
 	if info.Submariner != nil {
 		config.CNIPlugin = info.Submariner.Status.NetworkPlugin
 		// TODO uncomment this once the logic to fetch DeploymentInfo is added
-		//config.CloudProvider = info.Submariner.Status.DeploymentInfo.CloudProvider
+		// config.CloudProvider = info.Submariner.Status.DeploymentInfo.CloudProvider
 	}
 	return config
 }
