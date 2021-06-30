@@ -293,7 +293,7 @@ func ValidateGlobalnetConfiguration(globalnetInfo *GlobalnetInfo, netconfig Conf
 func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace string) (*GlobalnetInfo, *v1.ConfigMap, error) {
 	configMap, err := broker.GetGlobalnetConfigMap(k8sClientset, brokerNamespace)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error reading configMap: %s", err)
+		return nil, nil, err
 	}
 
 	globalnetInfo := GlobalnetInfo{}
