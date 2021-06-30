@@ -27,7 +27,9 @@ import (
 	"net"
 
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
@@ -269,7 +271,7 @@ func ValidateGlobalnetConfiguration(globalnetInfo *GlobalnetInfo, netconfig Conf
 	}
 
 	if globalnetCIDR != "" {
-		_, _, err := net.ParseCIDR(globalnetCIDR)
+		err := IsValidCIDR(globalnetCIDR)
 		if err != nil {
 			return "", fmt.Errorf("specified globalnet-cidr is invalid: %s", err)
 		}
@@ -367,4 +369,48 @@ func AssignGlobalnetIPs(globalnetInfo *GlobalnetInfo, netconfig Config) (string,
 	}
 	status.End(cli.Success)
 	return globalnetCIDR, nil
+}
+
+func IsValidCIDR(cidr string) error {
+	ip, _, err := net.ParseCIDR(cidr)
+
+	if err != nil {
+		return err
+	}
+	if ip.IsUnspecified() {
+		return fmt.Errorf("%s can't be unspecified", cidr)
+	}
+	if ip.IsLoopback() {
+		return fmt.Errorf("%s can't be in loopback range", cidr)
+	}
+	if ip.IsLinkLocalUnicast() {
+		return fmt.Errorf("%s can't be in link-local range", cidr)
+	}
+	if ip.IsLinkLocalMulticast() {
+		return fmt.Errorf("%s can't be in link-local multicast range", cidr)
+	}
+
+	return nil
+}
+
+func ValidateExistingGlobalNetworks(config *rest.Config, namespace string) error {
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("error creating the kubernetes clientset: %s", err)
+	}
+
+	globalnetInfo, _, err := GetGlobalNetworks(clientset, namespace)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		return fmt.Errorf("error getting existing globalnet configmap: %s", err)
+	}
+
+	if globalnetInfo != nil {
+		err = IsValidCIDR(globalnetInfo.GlobalnetCidrRange)
+		return fmt.Errorf("invalid GlobalnetCidrRange: %s", err)
+	}
+
+	return nil
 }

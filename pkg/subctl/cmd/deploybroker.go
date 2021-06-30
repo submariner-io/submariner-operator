@@ -24,12 +24,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/stringset"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
-	v1 "k8s.io/api/core/v1"
-
-	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	v1 "k8s.io/api/core/v1"
 
 	submarinerv1a1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
@@ -56,9 +55,9 @@ var validComponents = []string{components.ServiceDiscovery, components.Connectiv
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
 		"enable support for Overlapping CIDRs in connecting clusters (default disabled)")
-	deployBroker.PersistentFlags().StringVar(&globalnetCIDRRange, "globalnet-cidr-range", "169.254.0.0/16",
+	deployBroker.PersistentFlags().StringVar(&globalnetCIDRRange, "globalnet-cidr-range", "242.0.0.0/8",
 		"GlobalCIDR supernet range for allocating GlobalCIDRs to each cluster")
-	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 8192,
+	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 65536,
 		"default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
 
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
@@ -167,6 +166,9 @@ var deployBroker = &cobra.Command{
 
 		utils.ExitOnError("Error setting up service discovery information", err)
 
+		err = globalnet.ValidateExistingGlobalNetworks(config, broker.SubmarinerBrokerNamespace)
+		utils.ExitOnError("Error validating existing globalCIDR configmap", err)
+
 		err = broker.CreateGlobalnetConfigMap(config, globalnetEnable, globalnetCIDRRange,
 			defaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace)
 		utils.ExitOnError("Error creating globalCIDR configmap on Broker", err)
@@ -203,7 +205,9 @@ func isValidGlobalnetConfig() (bool, error) {
 	if err != nil || defaultGlobalnetClusterSize == 0 {
 		return false, err
 	}
-	return true, err
+
+	err = globalnet.IsValidCIDR(globalnetCIDRRange)
+	return err == nil, err
 }
 
 func populateBrokerSpec() submarinerv1a1.BrokerSpec {
