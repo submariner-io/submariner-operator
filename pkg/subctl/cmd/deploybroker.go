@@ -166,8 +166,10 @@ var deployBroker = &cobra.Command{
 
 		utils.ExitOnError("Error setting up service discovery information", err)
 
-		err = globalnet.ValidateExistingGlobalNetworks(config, broker.SubmarinerBrokerNamespace)
-		utils.ExitOnError("Error validating existing globalCIDR configmap", err)
+		if globalnetEnable {
+			err = globalnet.ValidateExistingGlobalNetworks(config, broker.SubmarinerBrokerNamespace)
+			utils.ExitOnError("Error validating existing globalCIDR configmap", err)
+		}
 
 		err = broker.CreateGlobalnetConfigMap(config, globalnetEnable, globalnetCIDRRange,
 			defaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace)
