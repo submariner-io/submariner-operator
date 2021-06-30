@@ -22,6 +22,7 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -85,6 +86,11 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 	}
 
 	// Globalnet
+	err = globalnet.ValidateExistingGlobalNetworks(r.Config, broker.SubmarinerBrokerNamespace)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	err = broker.CreateGlobalnetConfigMap(r.Config, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
 		instance.Spec.DefaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace)
 	if err != nil {
