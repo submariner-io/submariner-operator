@@ -52,6 +52,8 @@ var (
 	}
 )
 
+const SubmMissingMessage = "Submariner is not installed"
+
 func Execute() error {
 	return rootCmd.Execute()
 }
@@ -89,22 +91,9 @@ const (
 	OperatorNamespace = "submariner-operator"
 )
 
-func panicOnError(err error) {
-	utils.PanicOnError(err)
-}
-
-// exitOnError will print your error nicely and exit in case of error
-func exitOnError(message string, err error) {
-	utils.ExitOnError(message, err)
-}
-
-func exitWithErrorMsg(message string) {
-	utils.ExitWithErrorMsg(message)
-}
-
 func handleNodeLabels(config *rest.Config) error {
 	_, clientset, err := restconfig.Clients(config)
-	exitOnError("Unable to set the Kubernetes cluster connection up", err)
+	utils.ExitOnError("Unable to set the Kubernetes cluster connection up", err)
 	// List Submariner-labeled nodes
 	const submarinerGatewayLabel = "submariner.io/gateway"
 	const trueLabel = "true"
@@ -127,7 +116,7 @@ func handleNodeLabels(config *rest.Config) error {
 			fmt.Printf("* No worker node found to label as the gateway\n")
 		} else {
 			err = addLabelsToNode(clientset, answer.Node, map[string]string{submarinerGatewayLabel: trueLabel})
-			exitOnError("Error labeling the gateway node", err)
+			utils.ExitOnError("Error labeling the gateway node", err)
 		}
 	}
 	return nil
@@ -218,9 +207,9 @@ var nodeLabelBackoff wait.Backoff = wait.Backoff{
 	Jitter:   1,
 }
 
-func checkVersionMismatch(cmd *cobra.Command, args []string) error {
+func CheckVersionMismatch(cmd *cobra.Command, args []string) error {
 	config, err := restconfig.ForCluster(kubeConfig, kubeContext)
-	exitOnError("The provided kubeconfig is invalid", err)
+	utils.ExitOnError("The provided kubeconfig is invalid", err)
 
 	submariner := getSubmarinerResource(config)
 

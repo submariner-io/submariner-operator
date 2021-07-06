@@ -1,0 +1,16 @@
+---
+name: Cross-Build Checks
+
+on:
+  pull_request:
+
+jobs:
+  cross:
+    name: Cross-Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Build all supported binaries
+        run: make build-cross

@@ -50,11 +50,9 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(ctx context.Context, s
 					Namespace:                submariner.Spec.Namespace,
 					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
 					ImageOverrides:           submariner.Spec.ImageOverrides,
+					CoreDNSCustomConfig:      submariner.Spec.CoreDNSCustomConfig,
 				}
-				if submariner.Spec.CoreDNSCustomConfig != nil {
-					sd.Spec.CoreDNSCustomConfig.ConfigMapName = submariner.Spec.CoreDNSCustomConfig.ConfigMapName
-					sd.Spec.CoreDNSCustomConfig.Namespace = submariner.Spec.CoreDNSCustomConfig.Namespace
-				}
+
 				if len(submariner.Spec.CustomDomains) > 0 {
 					sd.Spec.CustomDomains = submariner.Spec.CustomDomains
 				}

@@ -79,9 +79,16 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+# Ensure we prefer binaries we build
+export PATH := $(CURDIR)/bin:$(PATH)
+
 # Targets to make
 
 images: build
+
+# Build subctl before deploying to ensure we use that
+# (with the PATH set above)
+deploy: bin/subctl
 
 e2e: deploy
 	scripts/kind-e2e/e2e.sh

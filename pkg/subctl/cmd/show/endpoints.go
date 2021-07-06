@@ -15,15 +15,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package cmd
+package show
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
-
 	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
 type endpointStatus struct {
@@ -44,29 +44,34 @@ func newEndpointsStatusFrom(clusterID, endpointIP, publicIP, cableDriver, endpoi
 	}
 }
 
-var showEndpointsCmd = &cobra.Command{
-	Use:     "endpoints",
-	Short:   "Show submariner endpoint information",
-	Long:    `This command shows information about submariner endpoints in a cluster.`,
-	PreRunE: checkVersionMismatch,
-	Run:     showEndpoints,
-}
-
 func init() {
-	showCmd.AddCommand(showEndpointsCmd)
+	showCmd.AddCommand(&cobra.Command{
+		Use:     "endpoints",
+		Short:   "Show submariner endpoint information",
+		Long:    `This command shows information about submariner endpoints in a cluster.`,
+		PreRunE: cmd.CheckVersionMismatch,
+		Run: func(command *cobra.Command, args []string) {
+			cmd.ExecuteMultiCluster(showEndpoints)
+		},
+	})
 }
 
-func getEndpointsStatus(submariner *v1alpha1.Submariner) []endpointStatus {
+func getEndpointsStatus(submariner *v1alpha1.Submariner) bool {
+	status := cli.NewStatus()
+
+	fmt.Println("Showing Endpoints")
+	status.Start("")
 	gateways := submariner.Status.Gateways
 
 	if gateways == nil {
-		exitWithErrorMsg("No endpoints found")
+		status.EndWithFailure("There are no gateways detected")
+		return false
 	}
 
-	var status = make([]endpointStatus, 0, len(*gateways))
+	var epStatus = make([]endpointStatus, 0, len(*gateways))
 
 	for _, gateway := range *gateways {
-		status = append(status, newEndpointsStatusFrom(
+		epStatus = append(epStatus, newEndpointsStatusFrom(
 			gateway.LocalEndpoint.ClusterID,
 			gateway.LocalEndpoint.PrivateIP,
 			gateway.LocalEndpoint.PublicIP,
@@ -74,7 +79,7 @@ func getEndpointsStatus(submariner *v1alpha1.Submariner) []endpointStatus {
 			"local"))
 
 		for _, connection := range gateway.Connections {
-			status = append(status, newEndpointsStatusFrom(
+			epStatus = append(epStatus, newEndpointsStatusFrom(
 				connection.Endpoint.ClusterID,
 				connection.Endpoint.PrivateIP,
 				connection.Endpoint.PublicIP,
@@ -82,36 +87,28 @@ func getEndpointsStatus(submariner *v1alpha1.Submariner) []endpointStatus {
 				"remote"))
 		}
 	}
-	return status
-}
-
-func showEndpoints(cmd *cobra.Command, args []string) {
-	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	exitOnError("Error getting REST config for cluster", err)
-	for _, item := range configs {
-		fmt.Println()
-		fmt.Printf("Showing information for cluster %q:\n", item.ClusterName)
-		submariner := getSubmarinerResource(item.Config)
-
-		if submariner == nil {
-			fmt.Println(SubmMissingMessage)
-		} else {
-			showEndpointsFor(submariner)
-		}
+	if len(epStatus) == 0 {
+		status.EndWithFailure("No Endpoints found")
+		return false
 	}
+	status.End(cli.Success)
+	printEndpoints(epStatus)
+	return true
 }
 
-func showEndpointsFor(submariner *v1alpha1.Submariner) {
-	status := getEndpointsStatus(submariner)
-	printEndpoints(status)
+func showEndpoints(cluster *cmd.Cluster) bool {
+	status := cli.NewStatus()
+
+	if cluster.Submariner == nil {
+		status.Start(cmd.SubmMissingMessage)
+		status.End(cli.Warning)
+		return true
+	}
+
+	return getEndpointsStatus(cluster.Submariner)
 }
 
 func printEndpoints(endpoints []endpointStatus) {
-	if len(endpoints) == 0 {
-		fmt.Println("No resources found.")
-		return
-	}
-
 	template := "%-30.29s%-16.15s%-16.15s%-20.19s%-16.15s\n"
 
 	fmt.Printf(template, "CLUSTER ID", "ENDPOINT IP", "PUBLIC IP", "CABLE DRIVER", "TYPE")

@@ -24,11 +24,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/stringset"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	v1 "k8s.io/api/core/v1"
 
 	submarinerv1a1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
@@ -55,9 +55,9 @@ var validComponents = []string{components.ServiceDiscovery, components.Connectiv
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
 		"enable support for Overlapping CIDRs in connecting clusters (default disabled)")
-	deployBroker.PersistentFlags().StringVar(&globalnetCIDRRange, "globalnet-cidr-range", "169.254.0.0/16",
+	deployBroker.PersistentFlags().StringVar(&globalnetCIDRRange, "globalnet-cidr-range", "242.0.0.0/8",
 		"GlobalCIDR supernet range for allocating GlobalCIDRs to each cluster")
-	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 8192,
+	deployBroker.PersistentFlags().UintVar(&defaultGlobalnetClusterSize, "globalnet-cluster-size", 65536,
 		"default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
 
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
@@ -93,7 +93,7 @@ var deployBroker = &cobra.Command{
 		componentSet := stringset.New(componentArr...)
 
 		if err := isValidComponents(componentSet); err != nil {
-			exitOnError("Invalid components parameter", err)
+			utils.ExitOnError("Invalid components parameter", err)
 		}
 
 		// TODO: Remove this in the future, while service-discovery is marked as
@@ -107,22 +107,22 @@ var deployBroker = &cobra.Command{
 		}
 
 		if valid, err := isValidGlobalnetConfig(); !valid {
-			exitOnError("Invalid GlobalCIDR configuration", err)
+			utils.ExitOnError("Invalid GlobalCIDR configuration", err)
 		}
 		config, err := restconfig.ForCluster(kubeConfig, kubeContext)
-		exitOnError("The provided kubeconfig is invalid", err)
+		utils.ExitOnError("The provided kubeconfig is invalid", err)
 
 		status := cli.NewStatus()
 
 		status.Start("Setting up broker RBAC")
 		err = broker.Ensure(config, componentArr, false)
 		status.End(cli.CheckForError(err))
-		exitOnError("Error setting up broker RBAC", err)
+		utils.ExitOnError("Error setting up broker RBAC", err)
 
 		status.Start("Deploying the Submariner operator")
 		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage(), operatorDebug)
 		status.End(cli.CheckForError(err))
-		exitOnError("Error deploying the operator", err)
+		utils.ExitOnError("Error deploying the operator", err)
 
 		status.Start("Deploying the broker")
 		err = brokercr.Ensure(config, OperatorNamespace, populateBrokerSpec())
@@ -133,7 +133,7 @@ var deployBroker = &cobra.Command{
 			status.QueueFailureMessage("Broker deployment failed")
 			status.End(cli.Failure)
 		}
-		exitOnError("Error deploying the broker", err)
+		utils.ExitOnError("Error deploying the broker", err)
 
 		status.Start(fmt.Sprintf("Creating %s file", brokerDetailsFilename))
 
@@ -148,10 +148,10 @@ var deployBroker = &cobra.Command{
 		}
 
 		subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace, ipsecSubmFile)
-		exitOnError("Error retrieving preparing the subm data file", err)
+		utils.ExitOnError("Error retrieving preparing the subm data file", err)
 
 		newFilename, err := datafile.BackupIfExists(brokerDetailsFilename)
-		exitOnError("Error backing up the brokerfile", err)
+		utils.ExitOnError("Error backing up the brokerfile", err)
 
 		if newFilename != "" {
 			status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
@@ -164,15 +164,20 @@ var deployBroker = &cobra.Command{
 			subctlData.CustomDomains = &defaultCustomDomains
 		}
 
-		exitOnError("Error setting up service discovery information", err)
+		utils.ExitOnError("Error setting up service discovery information", err)
+
+		if globalnetEnable {
+			err = globalnet.ValidateExistingGlobalNetworks(config, broker.SubmarinerBrokerNamespace)
+			utils.ExitOnError("Error validating existing globalCIDR configmap", err)
+		}
 
 		err = broker.CreateGlobalnetConfigMap(config, globalnetEnable, globalnetCIDRRange,
 			defaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace)
-		exitOnError("Error creating globalCIDR configmap on Broker", err)
+		utils.ExitOnError("Error creating globalCIDR configmap on Broker", err)
 
 		err = subctlData.WriteToFile(brokerDetailsFilename)
 		status.End(cli.CheckForError(err))
-		exitOnError("Error writing the broker information", err)
+		utils.ExitOnError("Error writing the broker information", err)
 
 	},
 }
@@ -202,7 +207,9 @@ func isValidGlobalnetConfig() (bool, error) {
 	if err != nil || defaultGlobalnetClusterSize == 0 {
 		return false, err
 	}
-	return true, err
+
+	err = globalnet.IsValidCIDR(globalnetCIDRRange)
+	return err == nil, err
 }
 
 func populateBrokerSpec() submarinerv1a1.BrokerSpec {
