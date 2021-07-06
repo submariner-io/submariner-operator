@@ -183,6 +183,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 					VolumeMounts: []corev1.VolumeMount{
 						{Name: "ipsecd", MountPath: "/etc/ipsec.d", ReadOnly: false},
 						{Name: "ipsecnss", MountPath: "/var/lib/ipsec/nss", ReadOnly: false},
+						{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
 					},
 				},
 			},
@@ -197,6 +198,8 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 			Volumes: []corev1.Volume{
 				{Name: "ipsecd", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
 				{Name: "ipsecnss", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+				{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+					Path: "/run/xtables.lock"}}},
 			},
 		},
 	}
