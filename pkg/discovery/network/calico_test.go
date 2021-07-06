@@ -32,7 +32,7 @@ var _ = Describe("discoverCalicoNetwork", func() {
 		initObjs     []runtime.Object
 		clusterNet   *ClusterNetwork
 		err          error
-		calicoCfgMap *v1.ConfigMap = &v1.ConfigMap{
+		calicoCfgMap = &v1.ConfigMap{
 			ObjectMeta: v1meta.ObjectMeta{
 				Name:      "calico-config",
 				Namespace: "kube-system",
