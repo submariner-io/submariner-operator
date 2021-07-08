@@ -58,7 +58,7 @@ var (
 )
 
 func init() {
-	AddKubeContextMultiFlag(verifyCmd)
+	AddKubeContextMultiFlag(verifyCmd, "comma separated list of kubeconfig contexts to use, must specified 2 contexts.")
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
 	addVerifyFlags(verifyCmd)
@@ -182,6 +182,9 @@ func configureTestingFramework(args []string) error {
 		}
 	} else {
 		framework.TestContext.KubeContexts = kubeContexts
+		if kubeConfig != "" {
+			framework.TestContext.KubeConfig = kubeConfig
+		}
 	}
 	framework.TestContext.OperationTimeout = operationTimeout
 	framework.TestContext.ConnectionTimeout = connectionTimeout
