@@ -58,7 +58,7 @@ var (
 )
 
 func init() {
-	AddKubeContextMultiFlag(verifyCmd, "comma separated list of kubeconfig contexts to use, must specified 2 contexts.")
+	AddKubeContextMultiFlag(verifyCmd, "comma-separated list of exactly two kubeconfig contexts to use.")
 	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
 	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
 	addVerifyFlags(verifyCmd)

@@ -83,8 +83,8 @@ func AddKubeContextFlag(cmd *cobra.Command) {
 func AddKubeContextMultiFlag(cmd *cobra.Command, usage string) {
 	AddKubeConfigFlag(cmd)
 	if usage == "" {
-		usage = "comma separated list of kubeconfig contexts to use, can be specified multiple times.\n" +
-			"If none specified, all contexts referenced by kubeconfig are used"
+		usage = "comma-separated list of kubeconfig contexts to use, can be specified multiple times.\n" +
+			"If none specified, all contexts referenced by the kubeconfig are used"
 	}
 
 	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontexts", nil, usage)
