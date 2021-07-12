@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 
@@ -35,7 +36,7 @@ var (
 		Long:  "This command runs various benchmark tests",
 	}
 	benchmarkThroughputCmd = &cobra.Command{
-		Use:   "throughput <kubeconfig1> [<kubeconfig2>]",
+		Use:   "throughput --kubecontexts <kubeContext1>[,<kubeContext2>]",
 		Short: "Benchmark throughput",
 		Long:  "This command runs throughput tests within a cluster or between two clusters",
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -44,7 +45,7 @@ var (
 		Run: testThroughput,
 	}
 	benchmarkLatencyCmd = &cobra.Command{
-		Use:   "latency <kubeconfig1> [<kubeconfig2>]",
+		Use:   "latency --kubecontexts <kubeContext1>[,<kubeContext2>]",
 		Short: "Benchmark latency",
 		Long:  "This command runs latency benchmark tests within a cluster or between two clusters",
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -66,15 +67,30 @@ func init() {
 }
 
 func addBenchmarkFlags(cmd *cobra.Command) {
+	AddKubeContextMultiFlag(cmd, "comma-separated list of one or two kubeconfig contexts to use.")
 	cmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, "run the test within a single cluster")
 	cmd.PersistentFlags().BoolVar(&benchmark.Verbose, "verbose", false, "produce verbose logs during benchmark tests")
 }
 
 func checkBenchmarkArguments(args []string, intraCluster bool) error {
-	if !intraCluster && len(args) != 2 {
-		return fmt.Errorf("two kubeconfigs must be specified")
-	} else if intraCluster && len(args) != 1 {
-		return fmt.Errorf("only one kubeconfig should be specified")
+	if !intraCluster && len(args) != 2 && len(kubeContexts) != 2 {
+		return fmt.Errorf("two kubecontexts must be specified")
+	} else if intraCluster && len(args) != 1 && len(kubeContexts) != 1 {
+		return fmt.Errorf("only one kubecontext should be specified")
+	}
+	if len(args) == 2 {
+		if strings.Compare(args[0], args[1]) == 0 {
+			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
+		}
+		same, err := CompareFiles(args[0], args[1])
+		if err != nil {
+			return err
+		}
+		if same {
+			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> need to have a unique content")
+		}
+	} else if len(kubeContexts) == 2 && strings.Compare(kubeContexts[0], kubeContexts[1]) == 0 {
+		return fmt.Errorf("the two kubecontexts must be different")
 	}
 	return nil
 }
