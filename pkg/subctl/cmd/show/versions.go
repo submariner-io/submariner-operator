@@ -96,9 +96,10 @@ func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface,
 }
 
 func getVersions(cluster *cmd.Cluster) bool {
-	var versions []versionImageInfo
+	status := cli.NewStatus()
+	status.Start("Showing versions")
 
-	fmt.Println("Showing versions")
+	var versions []versionImageInfo
 	submarinerClient, err := submarinerclientset.NewForConfig(cluster.Config)
 	utils.ExitOnError("Unable to get the Submariner client", err)
 
@@ -111,6 +112,7 @@ func getVersions(cluster *cmd.Cluster) bool {
 	utils.ExitOnError("Unable to get the Service-Discovery version", err)
 
 	printVersions(versions)
+	status.End(cli.Success)
 	return true
 }
 

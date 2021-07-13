@@ -20,6 +20,8 @@ package show
 import (
 	"fmt"
 
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 
@@ -42,7 +44,9 @@ func init() {
 }
 
 func showNetwork(cluster *cmd.Cluster) bool {
-	fmt.Println("Showing Network details")
+	status := cli.NewStatus()
+	status.Start("Showing Network details")
+
 	var clusterNetwork *network.ClusterNetwork
 	var msg string
 	if cluster.Submariner != nil {
@@ -66,5 +70,6 @@ func showNetwork(cluster *cmd.Cluster) bool {
 		fmt.Println(msg)
 	}
 	clusterNetwork.Show()
+	status.End(cli.Success)
 	return true
 }

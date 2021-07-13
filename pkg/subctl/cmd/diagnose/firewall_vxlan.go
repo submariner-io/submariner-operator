@@ -82,7 +82,7 @@ func checkFWConfig(cluster *cmd.Cluster, status *cli.Status) {
 		return
 	}
 
-	if gateways == nil {
+	if len(gateways.Items) == 0 {
 		status.QueueWarningMessage("There are no gateways detected")
 		return
 	}

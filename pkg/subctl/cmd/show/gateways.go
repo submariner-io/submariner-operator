@@ -24,8 +24,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 )
 
 type gatewayStatus struct {
@@ -46,33 +44,37 @@ func init() {
 	})
 }
 
-func getGatewaysStatus(submariner *v1alpha1.Submariner) bool {
+func getGatewaysStatus(cluster *cmd.Cluster) bool {
 	status := cli.NewStatus()
+	status.Start("Showing Gateways")
 
-	fmt.Println("Showing Gateways")
-	status.Start("")
-	gateways := submariner.Status.Gateways
+	gateways, err := cluster.GetGateways()
 
-	if gateways == nil {
+	if err != nil {
+		status.EndWithFailure("Error retrieving gateways: %v", err)
+		return false
+	}
+
+	if len(gateways.Items) == 0 {
 		status.EndWithFailure("There are no gateways detected")
 		return false
 	}
 
-	var gwStatus = make([]gatewayStatus, 0, len(*gateways))
-	for _, gateway := range *gateways {
-		haStatus := gateway.HAStatus
-		enpoint := gateway.LocalEndpoint.Hostname
-		totalConnections := len(gateway.Connections)
+	var gwStatus = make([]gatewayStatus, 0, len(gateways.Items))
+	for _, gateway := range gateways.Items {
+		haStatus := gateway.Status.HAStatus
+		enpoint := gateway.Status.LocalEndpoint.Hostname
+		totalConnections := len(gateway.Status.Connections)
 		countConnected := 0
-		for _, connection := range gateway.Connections {
+		for _, connection := range gateway.Status.Connections {
 			if connection.Status == submv1.Connected {
 				countConnected += 1
 			}
 		}
 
 		var summary string
-		if gateway.StatusFailure != "" {
-			summary = gateway.StatusFailure
+		if gateway.Status.StatusFailure != "" {
+			summary = gateway.Status.StatusFailure
 		} else if totalConnections == 0 {
 			summary = "There are no connections"
 		} else if totalConnections == countConnected {
@@ -105,7 +107,7 @@ func showGateways(cluster *cmd.Cluster) bool {
 		return true
 	}
 
-	return getGatewaysStatus(cluster.Submariner)
+	return getGatewaysStatus(cluster)
 }
 
 func printGateways(gateways []gatewayStatus) {

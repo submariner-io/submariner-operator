@@ -245,7 +245,7 @@ func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Statu
 		return ""
 	}
 
-	if gateways == nil {
+	if len(gateways.Items) == 0 {
 		status.EndWithFailure("There are no gateways detected on cluster %q", cluster.Name)
 		return ""
 	}
