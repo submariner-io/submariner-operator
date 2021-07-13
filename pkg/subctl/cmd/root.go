@@ -80,11 +80,14 @@ func AddKubeContextFlag(cmd *cobra.Command) {
 }
 
 // AddKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated)
-func AddKubeContextMultiFlag(cmd *cobra.Command) {
+func AddKubeContextMultiFlag(cmd *cobra.Command, usage string) {
 	AddKubeConfigFlag(cmd)
-	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontexts", nil,
-		"comma separated list of kubeconfig contexts to use, can be specified multiple times.\n"+
-			"If none specified, all contexts referenced by kubeconfig are used")
+	if usage == "" {
+		usage = "comma-separated list of kubeconfig contexts to use, can be specified multiple times.\n" +
+			"If none specified, all contexts referenced by the kubeconfig are used"
+	}
+
+	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontexts", nil, usage)
 }
 
 const (
