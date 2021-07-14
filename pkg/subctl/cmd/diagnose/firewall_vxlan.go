@@ -76,32 +76,31 @@ func checkFWConfig(cluster *cmd.Cluster, status *cli.Status) {
 		return
 	}
 
-	gateways, err := cluster.GetGateways()
-	if err != nil {
-		status.QueueFailureMessage(fmt.Sprintf("Error retrieving Gateways: %v", err))
+	localEndpoint := getLocalEndpointResource(cluster, status)
+	if localEndpoint == nil {
 		return
 	}
 
-	if len(gateways.Items) == 0 {
-		status.QueueWarningMessage("There are no gateways detected")
+	remoteEndpoint := getAnyRemoteEndpointResource(cluster, status)
+	if remoteEndpoint == nil {
 		return
 	}
 
-	if len(gateways.Items[0].Status.Connections) == 0 {
-		status.QueueWarningMessage("There are no active connections to remote clusters")
+	gwNodeName := getActiveGatewayNodeName(cluster, localEndpoint.Spec.Hostname, status)
+	if gwNodeName == "" {
 		return
 	}
 
 	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffVxLANCommand)
-	sPod, err := spawnSnifferPodOnGatewayNode(cluster.KubeClient, podNamespace, podCommand)
+	sPod, err := spawnSnifferPodOnNode(cluster.KubeClient, gwNodeName, podNamespace, podCommand)
 	if err != nil {
-		status.QueueFailureMessage(fmt.Sprintf("Error spawning the sniffer pod on the Gateway node: %v", err))
+		status.EndWithFailure("Error spawning the sniffer pod on the Gateway node: %v", err)
 		return
 	}
 
 	defer sPod.DeletePod()
 
-	remoteClusterIP := strings.Split(gateways.Items[0].Status.Connections[0].Endpoint.Subnets[0], "/")[0]
+	remoteClusterIP := strings.Split(remoteEndpoint.Spec.Subnets[0], "/")[0]
 	podCommand = fmt.Sprintf("nc -w %d %s 8080", validationTimeout/2, remoteClusterIP)
 	cPod, err := spawnClientPodOnNonGatewayNode(cluster.KubeClient, podNamespace, podCommand)
 	if err != nil {

@@ -18,7 +18,13 @@ limitations under the License.
 package diagnose
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
@@ -32,10 +38,10 @@ var diagnoseFirewallConfigCmd = &cobra.Command{
 
 var validationTimeout uint
 
-func addDiagnoseFWConfigFlags(cmd *cobra.Command) {
-	cmd.Flags().UintVar(&validationTimeout, "validation-timeout", 90,
+func addDiagnoseFWConfigFlags(command *cobra.Command) {
+	command.Flags().UintVar(&validationTimeout, "validation-timeout", 90,
 		"timeout in seconds while validating the connection attempt")
-	addNamespaceFlag(cmd)
+	addNamespaceFlag(command)
 }
 
 func init() {
@@ -73,4 +79,78 @@ func spawnPod(client kubernetes.Interface, scheduling resource.PodScheduling, po
 	}
 
 	return pod, nil
+}
+
+func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli.Status) string {
+	nodes, err := cluster.KubeClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+		LabelSelector: "submariner.io/gateway=true",
+	})
+	if err != nil {
+		status.EndWithFailure("Error obtaining the Gateway Nodes in cluster %q: %v", cluster.Name, err)
+		return ""
+	}
+
+	for _, node := range nodes.Items {
+		if node.Name == hostname {
+			return hostname
+		}
+
+		// On some platforms, the nodeName does not match with the hostname.
+		// Submariner Endpoint stores the hostname info in the endpoint and not the nodeName. So, we spawn a
+		// tiny pod to read the hostname and return the corresponding node.
+		sPod, err := spawnSnifferPodOnNode(cluster.KubeClient, node.Name, "default", "hostname")
+		if err != nil {
+			status.EndWithFailure("Error spawning the sniffer pod on the node %q: %v", node.Name, err)
+			return ""
+		}
+
+		defer sPod.DeletePod()
+
+		if err = sPod.AwaitPodCompletion(); err != nil {
+			status.EndWithFailure("Error waiting for the sniffer pod to finish its execution on node %q: %v", node.Name, err)
+			return ""
+		}
+
+		if sPod.PodOutput[:len(sPod.PodOutput)-1] == hostname {
+			return node.Name
+		}
+	}
+
+	status.EndWithFailure("Could not find the active Gateway node %q in local cluster in cluster %q",
+		hostname, cluster.Name)
+	return ""
+}
+
+func getLocalEndpointResource(cluster *cmd.Cluster, status *cli.Status) *subv1.Endpoint {
+	endpoints, err := cluster.SubmClient.SubmarinerV1().Endpoints(cmd.OperatorNamespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		status.EndWithFailure("Error obtaining the Endpoints in cluster %q: %v", cluster.Name, err)
+		return nil
+	}
+
+	for _, endpoint := range endpoints.Items {
+		if endpoint.Spec.ClusterID == cluster.Name {
+			return &endpoint
+		}
+	}
+
+	status.EndWithFailure("Could not find the local Endpoint in cluster %q", cluster.Name)
+	return nil
+}
+
+func getAnyRemoteEndpointResource(cluster *cmd.Cluster, status *cli.Status) *subv1.Endpoint {
+	endpoints, err := cluster.SubmClient.SubmarinerV1().Endpoints(cmd.OperatorNamespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		status.EndWithFailure("Error obtaining the Endpoints in cluster %q: %v", cluster.Name, err)
+		return nil
+	}
+
+	for _, endpoint := range endpoints.Items {
+		if endpoint.Spec.ClusterID != cluster.Name {
+			return &endpoint
+		}
+	}
+
+	status.EndWithFailure("Could not find any remote Endpoint in cluster %q", cluster.Name)
+	return nil
 }
