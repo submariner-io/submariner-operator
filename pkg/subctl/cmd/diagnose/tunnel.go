@@ -18,7 +18,6 @@ limitations under the License.
 package diagnose
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -30,8 +29,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/rest"
 )
@@ -108,7 +105,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	status := cli.NewStatus()
 	status.Start(fmt.Sprintf("Checking if tunnels can be setup on the gateway node of cluster %q", localCluster.Name))
 
-	localEndpoint := getEndpointResource(localCluster, status)
+	localEndpoint := getLocalEndpointResource(localCluster, status)
 	if localEndpoint == nil {
 		return false
 	}
@@ -178,45 +175,6 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	status.EndWithSuccess("Tunnels can be established on the gateway node")
 
 	return true
-}
-
-func getEndpointResource(cluster *cmd.Cluster, status *cli.Status) *subv1.Endpoint {
-	endpoints, err := cluster.SubmClient.SubmarinerV1().Endpoints(cmd.OperatorNamespace).List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		status.EndWithFailure("Error obtaining the Endpoints in cluster %q: %v", cluster.Name, err)
-		return nil
-	}
-
-	for _, endpoint := range endpoints.Items {
-		if endpoint.Spec.ClusterID == cluster.Name {
-			return &endpoint
-		}
-	}
-
-	status.EndWithFailure("Could not find the local Endpoint in cluster %q", cluster.Name)
-	return nil
-}
-
-func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli.Status) string {
-	nodes, err := cluster.KubeClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		status.EndWithFailure("Error obtaining the Nodes in cluster %q: %v", cluster.Name, err)
-		return ""
-	}
-
-	for _, node := range nodes.Items {
-		for _, addr := range node.Status.Addresses {
-			if addr.Type == corev1.NodeHostName {
-				if strings.HasPrefix(addr.Address, hostname) {
-					return node.Name
-				}
-			}
-		}
-	}
-
-	status.EndWithFailure("Could not find the active Gateway node %q in local cluster in cluster %q",
-		hostname, cluster.Name)
-	return ""
 }
 
 func getTunnelPort(submariner *v1alpha1.Submariner, endpoint *subv1.Endpoint, status *cli.Status) (int32, bool) {
