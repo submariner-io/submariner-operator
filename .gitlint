@@ -7,3 +7,7 @@ ignore=body-is-missing,body-min-length
 # Dependabot doesn't follow our conventions, unfortunately
 regex=^Signed-off-by: dependabot\[bot\](.*)
 ignore=all
+
+[ignore-body-lines]
+# Allow long URLs in commit messages
+regex=^https?://[^ ]*$
