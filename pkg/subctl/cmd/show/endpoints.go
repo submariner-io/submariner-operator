@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
@@ -56,29 +55,33 @@ func init() {
 	})
 }
 
-func getEndpointsStatus(submariner *v1alpha1.Submariner) bool {
+func getEndpointsStatus(cluster *cmd.Cluster) bool {
 	status := cli.NewStatus()
+	status.Start("Showing Endpoints")
 
-	fmt.Println("Showing Endpoints")
-	status.Start("")
-	gateways := submariner.Status.Gateways
+	gateways, err := cluster.GetGateways()
 
-	if gateways == nil {
+	if err != nil {
+		status.EndWithFailure("Error retrieving gateways: %v", err)
+		return false
+	}
+
+	if len(gateways.Items) == 0 {
 		status.EndWithFailure("There are no gateways detected")
 		return false
 	}
 
-	var epStatus = make([]endpointStatus, 0, len(*gateways))
+	var epStatus = make([]endpointStatus, 0, len(gateways.Items))
 
-	for _, gateway := range *gateways {
+	for _, gateway := range gateways.Items {
 		epStatus = append(epStatus, newEndpointsStatusFrom(
-			gateway.LocalEndpoint.ClusterID,
-			gateway.LocalEndpoint.PrivateIP,
-			gateway.LocalEndpoint.PublicIP,
-			gateway.LocalEndpoint.Backend,
+			gateway.Status.LocalEndpoint.ClusterID,
+			gateway.Status.LocalEndpoint.PrivateIP,
+			gateway.Status.LocalEndpoint.PublicIP,
+			gateway.Status.LocalEndpoint.Backend,
 			"local"))
 
-		for _, connection := range gateway.Connections {
+		for _, connection := range gateway.Status.Connections {
 			epStatus = append(epStatus, newEndpointsStatusFrom(
 				connection.Endpoint.ClusterID,
 				connection.Endpoint.PrivateIP,
@@ -105,7 +108,7 @@ func showEndpoints(cluster *cmd.Cluster) bool {
 		return true
 	}
 
-	return getEndpointsStatus(cluster.Submariner)
+	return getEndpointsStatus(cluster)
 }
 
 func printEndpoints(endpoints []endpointStatus) {

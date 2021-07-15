@@ -54,7 +54,7 @@ func checkConnections(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	if gateways == nil {
+	if len(gateways.Items) == 0 {
 		status.EndWithFailure("There are no gateways detected")
 		return false
 	}

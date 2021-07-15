@@ -120,7 +120,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 		return false
 	}
 
-	if gateways == nil {
+	if len(gateways.Items) == 0 {
 		status.EndWithWarning("There are no gateways detected on the cluster")
 		return false
 	}
