@@ -48,7 +48,7 @@ func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerS
 		return err
 	}
 
-	return util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
+	_, err = util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
 			return client.SubmarinerV1alpha1().Brokers(namespace).Get(ctx, name, options)
 		},
@@ -59,4 +59,5 @@ func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerS
 			return client.SubmarinerV1alpha1().Brokers(namespace).Delete(ctx, name, options)
 		},
 	}, brokerCR, metav1.CreateOptions{}, metav1.DeleteOptions{})
+	return err
 }
