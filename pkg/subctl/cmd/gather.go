@@ -191,7 +191,7 @@ func gatherDataByCluster(restConfig restconfig.RestConfig, directory string) {
 func gatherConnectivity(dataType string, info gather.Info) bool {
 	if info.Submariner == nil {
 		info.Status.QueueWarningMessage("The Submariner connectivity components are not installed")
-		return false
+		return true
 	}
 
 	switch dataType {
@@ -207,6 +207,9 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 		gather.Endpoints(info, SubmarinerNamespace)
 		gather.Clusters(info, SubmarinerNamespace)
 		gather.Gateways(info, SubmarinerNamespace)
+		gather.ClusterGlobalEgressIPs(info)
+		gather.GlobalEgressIPs(info)
+		gather.GlobalIngressIPs(info)
 	default:
 		return false
 	}
@@ -217,7 +220,7 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 func gatherDiscovery(dataType string, info gather.Info) bool {
 	if info.ServiceDiscovery == nil {
 		info.Status.QueueWarningMessage("The Submariner service discovery components are not installed")
-		return false
+		return true
 	}
 
 	switch dataType {

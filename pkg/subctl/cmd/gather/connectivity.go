@@ -20,6 +20,7 @@ package gather
 
 import (
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -71,4 +72,28 @@ func Gateways(info Info, namespace string) {
 		Version:  submarinerv1.SchemeGroupVersion.Version,
 		Resource: "gateways",
 	}, namespace, v1.ListOptions{})
+}
+
+func ClusterGlobalEgressIPs(info Info) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    submarinerv1.SchemeGroupVersion.Group,
+		Version:  submarinerv1.SchemeGroupVersion.Version,
+		Resource: "clusterglobalegressips",
+	}, corev1.NamespaceAll, v1.ListOptions{})
+}
+
+func GlobalEgressIPs(info Info) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    submarinerv1.SchemeGroupVersion.Group,
+		Version:  submarinerv1.SchemeGroupVersion.Version,
+		Resource: "globalegressips",
+	}, corev1.NamespaceAll, v1.ListOptions{})
+}
+
+func GlobalIngressIPs(info Info) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    submarinerv1.SchemeGroupVersion.Group,
+		Version:  submarinerv1.SchemeGroupVersion.Version,
+		Resource: "globalingressips",
+	}, corev1.NamespaceAll, v1.ListOptions{})
 }

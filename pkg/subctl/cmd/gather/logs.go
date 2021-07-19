@@ -160,3 +160,25 @@ func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, in
 
 	return err
 }
+
+func logPodInfo(info Info, what, podLabelSelector string, process func(info Info, pod *corev1.Pod)) {
+	err := func() error {
+		pods, err := findPods(info.ClientSet, podLabelSelector)
+
+		if err != nil {
+			return err
+		}
+
+		info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering %s from %d pods matching label selector %q",
+			what, len(pods.Items), podLabelSelector))
+
+		for i := range pods.Items {
+			process(info, &pods.Items[i])
+		}
+		return nil
+	}()
+	if err != nil {
+		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather %s from pods matching label selector %q: %s",
+			what, podLabelSelector, err))
+	}
+}

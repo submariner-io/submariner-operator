@@ -29,6 +29,9 @@ function validate_gathered_files () {
   validate_resource_files $subm_ns 'endpoints.submariner.io' 'Endpoint'
   validate_resource_files $subm_ns 'clusters.submariner.io' 'Cluster'
   validate_resource_files $subm_ns 'gateways.submariner.io' 'Gateway'
+  validate_resource_files all 'clusterglobalegressips.submariner.io' 'ClusterGlobalEgressIP'
+  validate_resource_files all 'globalegressips.submariner.io' 'GlobalEgressIP'
+  validate_resource_files all 'globalingressips.submariner.io' 'GlobalIngressIP'
 
   validate_pod_log_files $subm_ns '-l app=submariner-gateway'
   validate_pod_log_files $subm_ns '-l app=submariner-routeagent'
@@ -51,7 +54,7 @@ function validate_gathered_files () {
   # Service Discovery
   validate_resource_files all 'serviceexports.multicluster.x-k8s.io' 'ServiceExport'
   validate_resource_files all 'serviceimports.multicluster.x-k8s.io' 'ServiceImport'
-  validate_resource_files all 'endpointslices.discovery.k8s.io' 'EndpointSlice'
+  validate_resource_files all 'endpointslices.discovery.k8s.io' 'EndpointSlice' '-l endpointslice.kubernetes.io/managed-by=lighthouse-agent.submariner.io'
   validate_resource_files $subm_ns 'configmaps' 'ConfigMap' '-l component=submariner-lighthouse'
   validate_resource_files kube-system 'configmaps' 'ConfigMap' '--field-selector metadata.name=coredns'
 
@@ -83,18 +86,30 @@ function validate_resource_files() {
   local kind=$3
   local selector=$4
   local cluster_name=$5
+  local nsarg="--namespace=${ns}"
+
+  if [[ "$ns" == "all" ]]; then
+    nsarg="-A"
+  fi
 
   if [[ $cluster_name == "" ]]; then
     cluster_name=${cluster}
   fi
 
-  names=$(kubectl get $resource --namespace=$ns $selector -o=jsonpath='{.items..metadata.name}')
+  json=$(kubectl get $resource $nsarg $selector -o=json)
+  names=$(jq .items[].metadata.name <<< "$json")
+  names=$(echo "$names" | tr '\n' ' ' | tr -d '"')
+  namespaces=$(jq .items[].metadata.namespace <<< "$json")
+  namespaces=$(echo "$namespaces" | tr '\n' ' ' | tr -d '"' | sed 's/null//g')
   read -ra names_array <<< "$names"
+  read -ra namespaces_array <<< "$namespaces"
 
   short_res=$(echo $resource | awk -F. '{ print $1 }')
 
-  for name in "${names_array[@]}"; do
-    file=$out_dir/${cluster_name}_${short_res}_${ns}_${name}.yaml
+  for i in "${!names_array[@]}"; do
+    name=${names_array[$i]}
+    namespace=${namespaces_array[$i]}
+    file=$out_dir/${cluster_name}_${short_res}_${namespace}_${name}.yaml
     cat $file
 
     kind_count=$(grep "kind: $kind$" $file | wc -l)
