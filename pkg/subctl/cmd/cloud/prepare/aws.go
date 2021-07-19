@@ -55,9 +55,6 @@ func validateArgsAws(cmd *cobra.Command, args []string) {
 	if gateways != DefaultDedicatedGateways && disableDedicatedGateways {
 		utils.ExitWithErrorMsg("gateways and disable-gateways parameters can't be used together")
 	}
-	if disableDedicatedGateways {
-		gateways = api.NoGateways
-	}
 }
 
 func prepareAws(cmd *cobra.Command, args []string) {
@@ -66,6 +63,9 @@ func prepareAws(cmd *cobra.Command, args []string) {
 			{Port: vxlanPort, Protocol: "udp"},
 			{Port: metricsPort, Protocol: "tcp"},
 		},
+	}
+
+	gwInput := api.GatewayDeployInput{
 		PublicPorts: []api.PortSpec{
 			{Port: nattPort, Protocol: "udp"},
 			{Port: natDiscoveryPort, Protocol: "udp"},
@@ -73,7 +73,14 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		Gateways: gateways,
 	}
 	err := aws.RunOnAWS(gwInstanceType, *kubeConfig, *kubeContext,
-		func(cloud api.Cloud, reporter api.Reporter) error {
+		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
+			if !disableDedicatedGateways {
+				err := gwDeployer.Deploy(gwInput, reporter)
+				if err != nil {
+					return err
+				}
+			}
+
 			return cloud.PrepareForSubmariner(input, reporter)
 		})
 

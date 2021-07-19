@@ -42,7 +42,12 @@ func newAWSCleanupCommand() *cobra.Command {
 
 func cleanupAws(cmd *cobra.Command, args []string) {
 	err := aws.RunOnAWS("", *kubeConfig, *kubeContext,
-		func(cloud api.Cloud, reporter api.Reporter) error {
+		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
+			err := gwDeployer.Cleanup(reporter)
+			if err != nil {
+				return err
+			}
+
 			return cloud.CleanupAfterSubmariner(reporter)
 		})
 
