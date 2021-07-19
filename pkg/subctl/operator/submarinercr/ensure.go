@@ -50,7 +50,7 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 
 	propagationPolicy := metav1.DeletePropagationForeground
 
-	return util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
+	_, err = util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
 			return client.SubmarinerV1alpha1().Submariners(namespace).Get(ctx, name, options)
 		},
@@ -63,4 +63,5 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.Sub
 	}, submarinerCR, metav1.CreateOptions{}, metav1.DeleteOptions{
 		PropagationPolicy: &propagationPolicy,
 	})
+	return err
 }
