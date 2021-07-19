@@ -33,6 +33,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	cloudprepareaws "github.com/submariner-io/cloud-prepare/pkg/aws"
+	"github.com/submariner-io/cloud-prepare/pkg/ocp"
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
@@ -72,7 +73,7 @@ func AddAWSFlags(command *cobra.Command) {
 // RunOnAWS runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.
 func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
-	function func(cloud api.Cloud, reporter api.Reporter) error) error {
+	function func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error) error {
 	if ocpMetadataFile != "" {
 		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
 		utils.ExitOnError("Failed to read AWS information from OCP metadata file", err)
@@ -106,9 +107,12 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 	k8sConfig, err := restconfig.ForCluster(kubeConfig, kubeContext)
 	utils.ExitOnError("Failed to initialize a Kubernetes config", err)
 
-	gwDeployer := cloudprepareaws.NewK8sMachinesetDeployer(k8sConfig)
-	awsCloud := cloudprepareaws.NewCloud(gwDeployer, ec2.New(awsSession), infraID, region, gwInstanceType)
-	return function(awsCloud, reporter)
+	awsCloud := cloudprepareaws.NewCloud(ec2.New(awsSession), infraID, region)
+	msDeployer := ocp.NewK8sMachinesetDeployer(k8sConfig)
+	gwDeployer, err := cloudprepareaws.NewOcpGatewayDeployer(awsCloud, msDeployer, gwInstanceType)
+	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
+
+	return function(awsCloud, gwDeployer, reporter)
 }
 
 func initializeFlagsFromOCPMetadata(metadataFile string) error {
