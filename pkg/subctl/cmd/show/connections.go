@@ -62,13 +62,13 @@ func getConnectionsStatus(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	if len(gateways.Items) == 0 {
+	if len(gateways) == 0 {
 		status.EndWithFailure("There are no gateways detected")
 		return false
 	}
 
 	var connStatus []interface{}
-	for _, gateway := range gateways.Items {
+	for _, gateway := range gateways {
 		for _, connection := range gateway.Status.Connections {
 			subnets := strings.Join(connection.Endpoint.Subnets, ", ")
 

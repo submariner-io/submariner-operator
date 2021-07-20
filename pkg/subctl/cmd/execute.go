@@ -73,7 +73,7 @@ func NewCluster(config *rest.Config, clusterName string) (*Cluster, string) {
 	return cluster, ""
 }
 
-func (c *Cluster) GetGateways() (*submarinerv1.GatewayList, error) {
+func (c *Cluster) GetGateways() ([]submarinerv1.Gateway, error) {
 	gateways, err := c.SubmClient.SubmarinerV1().Gateways(OperatorNamespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -83,7 +83,7 @@ func (c *Cluster) GetGateways() (*submarinerv1.GatewayList, error) {
 		return nil, err
 	}
 
-	return gateways, nil
+	return gateways.Items, nil
 }
 
 func ExecuteMultiCluster(run func(*Cluster) bool) {
