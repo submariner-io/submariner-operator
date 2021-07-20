@@ -120,7 +120,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 		return false
 	}
 
-	if len(gateways.Items) == 0 {
+	if len(gateways) == 0 {
 		status.EndWithWarning("There are no gateways detected on the cluster")
 		return false
 	}
@@ -153,7 +153,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 		ippools[cidr] = pool
 	}
 
-	for _, gateway := range gateways.Items {
+	for _, gateway := range gateways {
 		if gateway.Status.HAStatus != submv1.HAStatusActive {
 			continue
 		}

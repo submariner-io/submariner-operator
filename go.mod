@@ -33,11 +33,11 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.2.0
-	github.com/submariner-io/admiral v0.10.0-rc0.0.20210716072440-ec821f011430
+	github.com/submariner-io/admiral v0.10.0-rc0.0.20210716074658-80e46214671b
 	github.com/submariner-io/cloud-prepare v0.10.0-rc0
 	github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd
-	github.com/submariner-io/shipyard v0.10.0-rc0
-	github.com/submariner-io/submariner v0.10.0-rc0
+	github.com/submariner-io/shipyard v0.10.0-rc0.0.20210719115546-4e6aefed5ecd
+	github.com/submariner-io/submariner v0.10.0-rc0.0.20210721111558-ee4aa093b719
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.4
 	github.com/xlab/treeprint v1.1.0 // indirect
