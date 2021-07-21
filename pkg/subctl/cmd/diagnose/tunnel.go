@@ -204,13 +204,13 @@ func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Statu
 		return ""
 	}
 
-	if len(gateways.Items) == 0 {
+	if len(gateways) == 0 {
 		status.EndWithFailure("There are no gateways detected on cluster %q", cluster.Name)
 		return ""
 	}
 
-	for i := range gateways.Items {
-		gw := &gateways.Items[i]
+	for i := range gateways {
+		gw := &gateways[i]
 		if gw.Status.HAStatus != subv1.HAStatusActive {
 			continue
 		}
