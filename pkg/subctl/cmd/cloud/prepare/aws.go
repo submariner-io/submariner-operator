@@ -26,9 +26,8 @@ import (
 )
 
 var (
-	gwInstanceType           string
-	gateways                 int
-	disableDedicatedGateways bool
+	gwInstanceType string
+	gateways       int
 )
 
 const DefaultDedicatedGateways = 1
@@ -36,25 +35,17 @@ const DefaultDedicatedGateways = 1
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
 func newAWSPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "aws",
-		Short:  "Prepare an AWS cloud",
-		Long:   "This command prepares an AWS-based cloud for Submariner installation.",
-		Run:    prepareAws,
-		PreRun: validateArgsAws,
+		Use:   "aws",
+		Short: "Prepare an AWS cloud",
+		Long:  "This command prepares an AWS-based cloud for Submariner installation.",
+		Run:   prepareAws,
 	}
 
 	aws.AddAWSFlags(cmd)
 	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "m5n.large", "Type of gateways instance machine")
-	cmd.Flags().IntVar(&gateways, "gateways", DefaultDedicatedGateways, "Number of gateways to prepare (0 = gateway per public subnet)")
-	cmd.Flags().BoolVarP(&disableDedicatedGateways, "disable-gateways", "d", false, "Set up no dedicated gateways "+
-		"for use with the --load-balancer mode")
+	cmd.Flags().IntVar(&gateways, "gateways", DefaultDedicatedGateways,
+		"Number of dedicated gateways to deploy (Set to `0` when using --load-balancer mode)")
 	return cmd
-}
-
-func validateArgsAws(cmd *cobra.Command, args []string) {
-	if gateways != DefaultDedicatedGateways && disableDedicatedGateways {
-		utils.ExitWithErrorMsg("gateways and disable-gateways parameters can't be used together")
-	}
 }
 
 func prepareAws(cmd *cobra.Command, args []string) {
@@ -74,7 +65,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 	}
 	err := aws.RunOnAWS(gwInstanceType, *kubeConfig, *kubeContext,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
-			if !disableDedicatedGateways {
+			if gateways > 0 {
 				err := gwDeployer.Deploy(gwInput, reporter)
 				if err != nil {
 					return err
