@@ -191,7 +191,15 @@ func getGatewayIP(remoteCfg *rest.Config, localClusterID string) string {
 
 		for _, conn := range gw.Status.Connections {
 			if conn.Endpoint.ClusterID == localClusterID {
-				return conn.UsingIP
+				if conn.UsingIP != "" {
+					return conn.UsingIP
+				}
+
+				if conn.Endpoint.NATEnabled {
+					return conn.Endpoint.PublicIP
+				} else {
+					return conn.Endpoint.PrivateIP
+				}
 			}
 		}
 	}
