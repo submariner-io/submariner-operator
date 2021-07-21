@@ -89,7 +89,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	status.Start(fmt.Sprintf("Checking if tunnels can be setup on Gateway node of cluster %q.",
 		submariner.Spec.ClusterID))
 
-	localEndpoint := getEndpointResource(localCfg, submariner.Spec.ClusterID)
+	localEndpoint := getLocalEndpointResource(localCfg, submariner.Spec.ClusterID)
 	if localEndpoint == nil {
 		status.QueueWarningMessage("Could not find the local cluster Endpoint")
 		return false

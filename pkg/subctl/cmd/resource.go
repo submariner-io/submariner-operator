@@ -19,9 +19,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"strings"
 
-	k8sV1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -102,7 +100,7 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 	return submariner
 }
 
-func getEndpointResource(config *rest.Config, clusterID string) *submarinerv1.Endpoint {
+func getLocalEndpointResource(config *rest.Config, clusterID string) *submarinerv1.Endpoint {
 	submarinerClient, err := subClientsetv1.NewForConfig(config)
 	exitOnError("Unable to get the Submariner client", err)
 
@@ -127,16 +125,48 @@ func getActiveGatewayNodeName(clientSet *kubernetes.Clientset, hostname string) 
 	}
 
 	for _, node := range nodes.Items {
-		for _, addr := range node.Status.Addresses {
-			if addr.Type == k8sV1.NodeHostName {
-				if strings.HasPrefix(addr.Address, hostname) {
-					return node.Name
-				}
-			}
+		if node.Name == hostname {
+			return hostname
+		}
+
+		// On some platforms, the nodeName does not match with the hostname.
+		// Submariner Endpoint stores the hostname info in the endpoint and not the nodeName. So, we spawn a
+		// tiny pod to read the hostname and return the corresponding node.
+		sPod, err := spawnSnifferPodOnNode(clientSet, node.Name, "default", "hostname")
+		if err != nil {
+			return ""
+		}
+
+		defer sPod.DeletePod()
+
+		if err = sPod.AwaitPodCompletion(); err != nil {
+			return ""
+		}
+
+		if sPod.PodOutput[:len(sPod.PodOutput)-1] == hostname {
+			return node.Name
 		}
 	}
 
 	return ""
+}
+
+func getAnyRemoteEndpointResource(config *rest.Config, clusterID string) *submarinerv1.Endpoint {
+	submarinerClient, err := subClientsetv1.NewForConfig(config)
+	exitOnError("Unable to get the Submariner client", err)
+
+	endpoints, err := submarinerClient.SubmarinerV1().Endpoints(OperatorNamespace).List(v1opts.ListOptions{})
+	if err != nil {
+		return nil
+	}
+
+	for _, endpoint := range endpoints.Items {
+		if endpoint.Spec.ClusterID != clusterID {
+			return &endpoint
+		}
+	}
+
+	return nil
 }
 
 func getGatewaysResource(config *rest.Config) *submarinerv1.GatewayList {
