@@ -55,13 +55,13 @@ func getGatewaysStatus(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	if len(gateways.Items) == 0 {
+	if len(gateways) == 0 {
 		status.EndWithFailure("There are no gateways detected")
 		return false
 	}
 
-	var gwStatus = make([]gatewayStatus, 0, len(gateways.Items))
-	for _, gateway := range gateways.Items {
+	var gwStatus = make([]gatewayStatus, 0, len(gateways))
+	for _, gateway := range gateways {
 		haStatus := gateway.Status.HAStatus
 		enpoint := gateway.Status.LocalEndpoint.Hostname
 		totalConnections := len(gateway.Status.Connections)
