@@ -49,6 +49,14 @@ func newAWSPrepareCommand() *cobra.Command {
 }
 
 func prepareAws(cmd *cobra.Command, args []string) {
+	gwPorts := []api.PortSpec{
+		{Port: nattPort, Protocol: "udp"},
+		{Port: natDiscoveryPort, Protocol: "udp"},
+
+		// ESP & AH protocols are used for private-ip to private-ip gateway communications
+		{Port: 0, Protocol: "50"},
+		{Port: 0, Protocol: "51"},
+	}
 	input := api.PrepareForSubmarinerInput{
 		InternalPorts: []api.PortSpec{
 			{Port: vxlanPort, Protocol: "udp"},
@@ -56,16 +64,18 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		},
 	}
 
-	gwInput := api.GatewayDeployInput{
-		PublicPorts: []api.PortSpec{
-			{Port: nattPort, Protocol: "udp"},
-			{Port: natDiscoveryPort, Protocol: "udp"},
-		},
-		Gateways: gateways,
+	// For load-balanced gateways we want these ports open internally to facilitate private-ip to pivate-ip gateways communications.
+	if gateways == 0 {
+		input.InternalPorts = append(input.InternalPorts, gwPorts...)
 	}
+
 	err := aws.RunOnAWS(gwInstanceType, *kubeConfig, *kubeContext,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {
+				gwInput := api.GatewayDeployInput{
+					PublicPorts: gwPorts,
+					Gateways:    gateways,
+				}
 				err := gwDeployer.Deploy(gwInput, reporter)
 				if err != nil {
 					return err
