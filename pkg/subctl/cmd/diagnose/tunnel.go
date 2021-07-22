@@ -133,6 +133,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 
 	gatewayPodIP := getGatewayIP(remoteCluster, localCluster.Name, status)
 	if gatewayPodIP == "" {
+		status.EndWithFailure("Error retrieving the gateway IP of cluster %q", localCluster.Name)
 		return false
 	}
 
@@ -203,20 +204,28 @@ func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Statu
 		return ""
 	}
 
-	if len(gateways.Items) == 0 {
+	if len(gateways) == 0 {
 		status.EndWithFailure("There are no gateways detected on cluster %q", cluster.Name)
 		return ""
 	}
 
-	for i := range gateways.Items {
-		gw := &gateways.Items[i]
+	for i := range gateways {
+		gw := &gateways[i]
 		if gw.Status.HAStatus != subv1.HAStatusActive {
 			continue
 		}
 
 		for _, conn := range gw.Status.Connections {
 			if conn.Endpoint.ClusterID == localClusterID {
-				return conn.UsingIP
+				if conn.UsingIP != "" {
+					return conn.UsingIP
+				}
+
+				if conn.Endpoint.NATEnabled {
+					return conn.Endpoint.PublicIP
+				} else {
+					return conn.Endpoint.PrivateIP
+				}
 			}
 		}
 	}
