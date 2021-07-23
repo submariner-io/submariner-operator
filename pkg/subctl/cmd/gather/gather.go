@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package gather
 
 import (
 	"context"
@@ -25,11 +25,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+
 	"github.com/spf13/cobra"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
@@ -64,7 +65,7 @@ var gatherTypeFlags = map[string]bool{
 	"resources": false,
 }
 
-var gatherFuncs = map[string]func(string, gather.Info) bool{
+var gatherFuncs = map[string]func(string, Info) bool{
 	components.Connectivity:     gatherConnectivity,
 	components.ServiceDiscovery: gatherDiscovery,
 	components.Broker:           gatherBroker,
@@ -72,9 +73,9 @@ var gatherFuncs = map[string]func(string, gather.Info) bool{
 }
 
 func init() {
-	AddKubeContextMultiFlag(gatherCmd, "")
+	cmd.AddKubeContextMultiFlag(gatherCmd, "")
 	addGatherFlags(gatherCmd)
-	rootCmd.AddCommand(gatherCmd)
+	cmd.AddToRootCommand(gatherCmd)
 }
 
 func addGatherFlags(gatherCmd *cobra.Command) {
@@ -95,17 +96,14 @@ var gatherCmd = &cobra.Command{
 	Long: fmt.Sprintf("This command gathers information from a submariner cluster for troubleshooting. The information gathered "+
 		"can be selected by component (%v) and type (%v). Default is to capture all data.",
 		strings.Join(getAllModuleKeys(), ","), strings.Join(getAllTypeKeys(), ",")),
-	Run: func(cmd *cobra.Command, args []string) {
-		gatherData()
+	Run: func(command *cobra.Command, args []string) {
+		cmd.ExecuteMultiCluster(gatherData)
 	},
 }
 
-func gatherData() {
+func gatherData(cluster *cmd.Cluster) bool {
 	err := checkGatherArguments()
 	utils.ExitOnError("Invalid arguments", err)
-
-	configs, err := restconfig.ForClusters(kubeConfig, kubeContexts)
-	utils.ExitOnError("Error getting REST configs", err)
 
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
@@ -118,40 +116,36 @@ func gatherData() {
 		}
 	}
 
-	for _, config := range configs {
-		gatherDataByCluster(config, directory)
-	}
+	gatherDataByCluster(cluster, directory)
 
 	fmt.Printf("Files are stored under directory %q\n", directory)
+	return true
 }
 
-func gatherDataByCluster(restConfig restconfig.RestConfig, directory string) {
+func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 	var err error
-	clusterName := restConfig.ClusterName
+	clusterName := cluster.Name
 
 	fmt.Printf("Gathering information from cluster %q\n", clusterName)
 
-	info := gather.Info{
-		RestConfig:           restConfig.Config,
+	info := Info{
+		RestConfig:           cluster.Config,
 		ClusterName:          clusterName,
 		DirName:              directory,
 		IncludeSensitiveData: includeSensitiveData,
-		Summary:              &gather.Summary{},
+		Summary:              &Summary{},
 	}
 
-	info.DynClient, info.ClientSet, err = restconfig.Clients(restConfig.Config)
-	if err != nil {
-		fmt.Printf("Error getting client: %s\n", err)
-		return
-	}
+	info.DynClient = cluster.DynClient
+	info.ClientSet = cluster.KubeClient
 
-	submarinerClient, err := subOperatorClientset.NewForConfig(restConfig.Config)
+	submarinerClient, err := subOperatorClientset.NewForConfig(cluster.Config)
 	if err != nil {
 		fmt.Printf("Error getting Submariner client: %s\n", err)
 		return
 	}
 
-	info.Submariner, err = submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
+	info.Submariner, err = submarinerClient.SubmarinerV1alpha1().Submariners(cmd.OperatorNamespace).
 		Get(context.TODO(), submarinercr.SubmarinerName, metav1.GetOptions{})
 	if err != nil {
 		info.Submariner = nil
@@ -161,7 +155,7 @@ func gatherDataByCluster(restConfig restconfig.RestConfig, directory string) {
 		}
 	}
 
-	info.ServiceDiscovery, err = submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(OperatorNamespace).
+	info.ServiceDiscovery, err = submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(cmd.OperatorNamespace).
 		Get(context.TODO(), names.ServiceDiscoveryCrName, metav1.GetOptions{})
 	if err != nil {
 		info.ServiceDiscovery = nil
@@ -185,10 +179,10 @@ func gatherDataByCluster(restConfig restconfig.RestConfig, directory string) {
 			}
 		}
 	}
-	gather.ClusterSummary(info)
+	ClusterSummary(info)
 }
 
-func gatherConnectivity(dataType string, info gather.Info) bool {
+func gatherConnectivity(dataType string, info Info) bool {
 	if info.Submariner == nil {
 		info.Status.QueueWarningMessage("The Submariner connectivity components are not installed")
 		return false
@@ -196,17 +190,17 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 
 	switch dataType {
 	case Logs:
-		gather.GatewayPodLogs(info)
-		gather.RouteAgentPodLogs(info)
-		gather.GlobalnetPodLogs(info)
-		gather.NetworkPluginSyncerPodLogs(info)
+		GatewayPodLogs(info)
+		RouteAgentPodLogs(info)
+		GlobalnetPodLogs(info)
+		NetworkPluginSyncerPodLogs(info)
 	case Resources:
-		gather.CNIResources(info, info.Submariner.Status.NetworkPlugin)
-		gather.CableDriverResources(info, info.Submariner.Spec.CableDriver)
-		gather.OVNResources(info, info.Submariner.Status.NetworkPlugin)
-		gather.Endpoints(info, SubmarinerNamespace)
-		gather.Clusters(info, SubmarinerNamespace)
-		gather.Gateways(info, SubmarinerNamespace)
+		CNIResources(info, info.Submariner.Status.NetworkPlugin)
+		CableDriverResources(info, info.Submariner.Spec.CableDriver)
+		OVNResources(info, info.Submariner.Status.NetworkPlugin)
+		Endpoints(info, cmd.SubmarinerNamespace)
+		Clusters(info, cmd.SubmarinerNamespace)
+		Gateways(info, cmd.SubmarinerNamespace)
 	default:
 		return false
 	}
@@ -214,7 +208,7 @@ func gatherConnectivity(dataType string, info gather.Info) bool {
 	return true
 }
 
-func gatherDiscovery(dataType string, info gather.Info) bool {
+func gatherDiscovery(dataType string, info Info) bool {
 	if info.ServiceDiscovery == nil {
 		info.Status.QueueWarningMessage("The Submariner service discovery components are not installed")
 		return false
@@ -222,14 +216,14 @@ func gatherDiscovery(dataType string, info gather.Info) bool {
 
 	switch dataType {
 	case Logs:
-		gather.ServiceDiscoveryPodLogs(info)
-		gather.CoreDNSPodLogs(info)
+		ServiceDiscoveryPodLogs(info)
+		CoreDNSPodLogs(info)
 	case Resources:
-		gather.ServiceExports(info, corev1.NamespaceAll)
-		gather.ServiceImports(info, corev1.NamespaceAll)
-		gather.EndpointSlices(info, corev1.NamespaceAll)
-		gather.ConfigMapLighthouseDNS(info, SubmarinerNamespace)
-		gather.ConfigMapCoreDNS(info)
+		ServiceExports(info, corev1.NamespaceAll)
+		ServiceImports(info, corev1.NamespaceAll)
+		EndpointSlices(info, corev1.NamespaceAll)
+		ConfigMapLighthouseDNS(info, cmd.SubmarinerNamespace)
+		ConfigMapCoreDNS(info)
 	default:
 		return false
 	}
@@ -237,7 +231,7 @@ func gatherDiscovery(dataType string, info gather.Info) bool {
 	return true
 }
 
-func gatherBroker(dataType string, info gather.Info) bool {
+func gatherBroker(dataType string, info Info) bool {
 	switch dataType {
 	case Resources:
 		brokerRestConfig, brokerNamespace, err := restconfig.ForBroker(info.Submariner, info.ServiceDiscovery)
@@ -260,7 +254,7 @@ func gatherBroker(dataType string, info gather.Info) bool {
 				return true
 			}
 
-			_, err = submarinerClient.SubmarinerV1alpha1().Brokers(OperatorNamespace).Get(
+			_, err = submarinerClient.SubmarinerV1alpha1().Brokers(cmd.OperatorNamespace).Get(
 				context.TODO(), brokercr.BrokerName, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return false
@@ -277,10 +271,10 @@ func gatherBroker(dataType string, info gather.Info) bool {
 		info.ClusterName = "broker"
 
 		// The broker's ClusterRole used by member clusters only allows the below resources to be queried
-		gather.Endpoints(info, brokerNamespace)
-		gather.Clusters(info, brokerNamespace)
-		gather.EndpointSlices(info, brokerNamespace)
-		gather.ServiceImports(info, brokerNamespace)
+		Endpoints(info, brokerNamespace)
+		Clusters(info, brokerNamespace)
+		EndpointSlices(info, brokerNamespace)
+		ServiceImports(info, brokerNamespace)
 	default:
 		return false
 	}
@@ -288,20 +282,20 @@ func gatherBroker(dataType string, info gather.Info) bool {
 	return true
 }
 
-func gatherOperator(dataType string, info gather.Info) bool {
+func gatherOperator(dataType string, info Info) bool {
 	switch dataType {
 	case Logs:
-		gather.SubmarinerOperatorPodLogs(info)
+		SubmarinerOperatorPodLogs(info)
 	case Resources:
-		gather.Submariners(info, SubmarinerNamespace)
-		gather.ServiceDiscoveries(info, SubmarinerNamespace)
-		gather.SubmarinerOperatorDeployment(info, SubmarinerNamespace)
-		gather.GatewayDaemonSet(info, SubmarinerNamespace)
-		gather.RouteAgentDaemonSet(info, SubmarinerNamespace)
-		gather.GlobalnetDaemonSet(info, SubmarinerNamespace)
-		gather.NetworkPluginSyncerDeployment(info, SubmarinerNamespace)
-		gather.LighthouseAgentDeployment(info, SubmarinerNamespace)
-		gather.LighthouseCoreDNSDeployment(info, SubmarinerNamespace)
+		Submariners(info, cmd.SubmarinerNamespace)
+		ServiceDiscoveries(info, cmd.SubmarinerNamespace)
+		SubmarinerOperatorDeployment(info, cmd.SubmarinerNamespace)
+		GatewayDaemonSet(info, cmd.SubmarinerNamespace)
+		RouteAgentDaemonSet(info, cmd.SubmarinerNamespace)
+		GlobalnetDaemonSet(info, cmd.SubmarinerNamespace)
+		NetworkPluginSyncerDeployment(info, cmd.SubmarinerNamespace)
+		LighthouseAgentDeployment(info, cmd.SubmarinerNamespace)
+		LighthouseCoreDNSDeployment(info, cmd.SubmarinerNamespace)
 	default:
 		return false
 	}
