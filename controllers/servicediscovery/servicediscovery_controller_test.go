@@ -60,6 +60,91 @@ var _ = Describe("", func() {
 
 var _ = Describe("ServiceDiscovery controller tests", func() {
 	Context("Reconciliation", testReconciliation)
+	Context("coreDNS configmap parsing", func() {
+		When("no port is found", func() {
+			It("should return the default port", func() {
+				Expect(findCoreDNSListeningPort("")).To(Equal(coreDNSDefaultPort))
+			})
+		})
+
+		When("non-standard port is found and the coreconfig was already modified", func() {
+			It("should return the port", func() {
+				coreFileContents := `
+#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT
+clusterset.local:123 {
+    forward . 10.43.188.46
+}
+#lighthouse-end
+.:456 {
+    errors
+    health
+    kubernetes cluster.local in-addr.arpa ip6.arpa {
+        pods insecure
+        upstream
+        fallthrough in-addr.arpa ip6.arpa
+    }
+    prometheus :9153
+    forward . /etc/resolv.conf {
+        policy sequential
+    }
+    cache 30
+    reload
+}
+`
+				Expect(findCoreDNSListeningPort(coreFileContents)).To(Equal("456"))
+			})
+
+			When("non-standard port is found and Coreconfig was not modified (OCP coreconfig)", func() {
+				coreFileContents := `.:5353 {
+    bufsize 1232
+    errors
+    health {
+        lameduck 20s
+    }
+    ready
+    kubernetes cluster.local in-addr.arpa ip6.arpa {
+        pods insecure
+        upstream
+        fallthrough in-addr.arpa ip6.arpa
+    }
+    prometheus 127.0.0.1:9153
+    forward . /etc/resolv.conf {
+        policy sequential
+    }
+    cache 900 {
+        denial 9984 30
+    }
+    reload
+}`
+				Expect(findCoreDNSListeningPort(coreFileContents)).To(Equal("5353"))
+			})
+
+			When("standard port is found and Coreconfig was not modified (kind Coreconfig)", func() {
+				coreFileContents := `.:53 {
+    errors
+    health {
+       lameduck 5s
+    }
+    ready
+    kubernetes cluster1.local in-addr.arpa ip6.arpa {
+       pods insecure
+       fallthrough in-addr.arpa ip6.arpa
+       ttl 30
+    }
+    prometheus :9153
+    forward . /etc/resolv.conf {
+       max_concurrent 1000
+    }
+    cache 30
+    loop
+    reload
+    loadbalance
+}
+`
+				Expect(findCoreDNSListeningPort(coreFileContents)).To(Equal("53"))
+			})
+		})
+	})
 })
 
 func testReconciliation() {
