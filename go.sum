@@ -180,8 +180,8 @@ github.com/aws/aws-sdk-go v1.23.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN
 github.com/aws/aws-sdk-go v1.25.48/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.37.10/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
-github.com/aws/aws-sdk-go v1.39.4 h1:nXBChUaG5cinrl3yg4/rUyssOOLH/ohk4S9K03kJirE=
-github.com/aws/aws-sdk-go v1.39.4/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
+github.com/aws/aws-sdk-go v1.40.7 h1:dD5+UZxedqHeE4WakJHEhTsEARYlq8kHkYEf89R1tEo=
+github.com/aws/aws-sdk-go v1.40.7/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
 github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f/go.mod h1:AuiFmCCPBSrqvVMvuqFuk0qogytodnVFVSN5CeJB8Gc=
 github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
@@ -1290,8 +1290,8 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/submariner-io/admiral v0.10.0-rc0/go.mod h1:kpbW6dzbRetPshT/Tq2W+peYCeI8eF4JOiH9y+UtGEM=
 github.com/submariner-io/admiral v0.10.0-rc0.0.20210716074658-80e46214671b h1:cRnk6yE+0x7g7ZNU8RCwhpQliFaqnnUKAYLFUlxZI+A=
 github.com/submariner-io/admiral v0.10.0-rc0.0.20210716074658-80e46214671b/go.mod h1:kpbW6dzbRetPshT/Tq2W+peYCeI8eF4JOiH9y+UtGEM=
-github.com/submariner-io/cloud-prepare v0.10.0-rc0 h1:ZnpkFHTBSaeI8Ry6bkbh3nPzxU0REUjL3AquVSTN90Y=
-github.com/submariner-io/cloud-prepare v0.10.0-rc0/go.mod h1:Dob7aL6ZYUTGh8vIo4sUtw2zl8VPVy3bG8WmVbPmK5U=
+github.com/submariner-io/cloud-prepare v0.10.0-rc0.0.20210727150757-5e29b6472b99 h1:eEYGcx/fhMFK8rLUymGBWkz/LfmcdR4tOZZolzrTYcU=
+github.com/submariner-io/cloud-prepare v0.10.0-rc0.0.20210727150757-5e29b6472b99/go.mod h1:YCHY5GqUZkc3diPHeMBfy/vQUS/jhn1qYdA1fTlq19o=
 github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd h1:2kNzGLWrobmyPuo68Cyb4uhEaJetWovjf754Smk05go=
 github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd/go.mod h1:R78rfRvGMIFM66qDcfY9ks1crOfSHWb1eaSgpAYw5CA=
 github.com/submariner-io/shipyard v0.10.0-rc0/go.mod h1:+B8Hrs2vYg7XKFMk61HVg1ev/twSYFIJg3hWiJnCuq0=
