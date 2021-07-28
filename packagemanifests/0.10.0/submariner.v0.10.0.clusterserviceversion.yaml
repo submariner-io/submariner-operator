@@ -58,7 +58,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: quay.io/submariner/submariner-operator:0.10.0
-    createdAt: "2021-07-28 09:34:01"
+    createdAt: "2021-07-28 09:34:16"
     description: Creates and manages Submariner deployments.
     operatorframework.io/suggested-namespace: submariner-operator
     operators.operatorframework.io/builder: operator-sdk-v1.0.1
