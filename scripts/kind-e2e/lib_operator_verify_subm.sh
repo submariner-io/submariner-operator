@@ -54,10 +54,12 @@ function verify_subm_operator() {
   kubectl get sa --namespace=$subm_ns submariner-operator
 
   # Verify SubM Operator role
-  kubectl get roles --namespace=$subm_ns submariner-operator
+  kubectl get roles --namespace=$subm_ns submariner-operator || \
+  kubectl get roles -n $subm_ns -l olm.owner.namespace=submariner-operator
 
   # Verify SubM Operator role binding
-  kubectl get rolebindings --namespace=$subm_ns submariner-operator
+  kubectl get rolebindings --namespace=$subm_ns submariner-operator || \
+  kubectl get roles -n $subm_ns -l olm.owner.namespace=submariner-operator
 
   # Verify SubM Operator deployment
   kubectl get deployments --namespace=$subm_ns submariner-operator
