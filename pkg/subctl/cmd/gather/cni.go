@@ -57,6 +57,10 @@ var libreswanCmds = map[string]string{
 	"ipsec-trafficstatus": "ipsec --trafficstatus",
 }
 
+var globalnetCmds = map[string]string{
+	"ipset-list": "ipset list",
+}
+
 const ovnShowCmd = "ovn-nbctl show"
 
 var ovnCmds = map[string]string{
@@ -83,60 +87,24 @@ var networkPluginCNIType = map[string]string{
 }
 
 func CNIResources(info Info, networkPlugin string) {
-	podLabelSelector := routeagentPodLabel
-	err := func() error {
-		pods, err := findPods(info.ClientSet, podLabelSelector)
-
-		if err != nil {
-			return err
+	logPodInfo(info, "CNI data", routeagentPodLabel, func(info Info, pod *v1.Pod) {
+		logSystemCmds(info, pod)
+		switch networkPluginCNIType[networkPlugin] {
+		case typeIPTables:
+			logIPTablesCmds(info, pod)
+		case typeOvn:
+			// no-op. Handled in OVNResources()
+		case typeUnknown:
+			info.Status.QueueFailureMessage("Unsupported CNI Type")
 		}
+	})
 
-		info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering CNI data from %d pods matching label selector %q",
-			len(pods.Items), podLabelSelector))
-
-		for i := range pods.Items {
-			pod := &pods.Items[i]
-			logSystemCmds(info, pod)
-			switch networkPluginCNIType[networkPlugin] {
-			case typeIPTables:
-				logIPTablesCmds(info, pod)
-			case typeOvn:
-				// no-op. Handled in OVNResources()
-			case typeUnknown:
-				info.Status.QueueFailureMessage("Unsupported CNI Type")
-			}
-		}
-		return nil
-	}()
-	if err != nil {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather CNI data from pods matching label selector %q: %s",
-			podLabelSelector, err))
-	}
 	logCNIGatewayNodeResources(info)
+	logGlobalnetCmds(info)
 }
 
 func logCNIGatewayNodeResources(info Info) {
-	podLabelSelector := gatewayPodLabel
-	err := func() error {
-		pods, err := findPods(info.ClientSet, podLabelSelector)
-
-		if err != nil {
-			return err
-		}
-
-		info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering CNI data from %d pods matching label selector %q",
-			len(pods.Items), podLabelSelector))
-
-		for i := range pods.Items {
-			pod := &pods.Items[i]
-			logIPGatewayCmds(info, pod)
-		}
-		return nil
-	}()
-	if err != nil {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather CNI data from pods matching label selector %q: %s",
-			podLabelSelector, err))
-	}
+	logPodInfo(info, "CNI data", gatewayPodLabel, logIPGatewayCmds)
 }
 
 func logSystemCmds(info Info, pod *v1.Pod) {
@@ -155,6 +123,14 @@ func logIPTablesCmds(info Info, pod *v1.Pod) {
 	for name, cmd := range ipTablesCmds {
 		logCmdOutput(info, pod, cmd, name, false)
 	}
+}
+
+func logGlobalnetCmds(info Info) {
+	logPodInfo(info, "globalnet data", globalnetPodLabel, func(info Info, pod *v1.Pod) {
+		for name, cmd := range globalnetCmds {
+			logCmdOutput(info, pod, cmd, name, false)
+		}
+	})
 }
 
 func OVNResources(info Info, networkPlugin string) {
@@ -197,29 +173,11 @@ func OVNResources(info Info, networkPlugin string) {
 }
 
 func CableDriverResources(info Info, cableDriver string) {
-	podLabelSelector := gatewayPodLabel
-	err := func() error {
-		pods, err := findPods(info.ClientSet, podLabelSelector)
-
-		if err != nil {
-			return err
+	logPodInfo(info, "cable driver data", gatewayPodLabel, func(info Info, pod *v1.Pod) {
+		if cableDriver == libreswan {
+			logLibreswanCmds(info, pod)
 		}
-
-		info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering cable driver data from %d pods matching label selector %q",
-			len(pods.Items), podLabelSelector))
-
-		for i := range pods.Items {
-			pod := &pods.Items[i]
-			if cableDriver == libreswan {
-				logLibreswanCmds(info, pod)
-			}
-		}
-		return nil
-	}()
-	if err != nil {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather CNI data from pods matching label selector %q: %s",
-			podLabelSelector, err))
-	}
+	})
 }
 
 func logLibreswanCmds(info Info, pod *v1.Pod) {
