@@ -64,6 +64,13 @@ PKG_IS_DEFAULT_CHANNEL := --default-channel
 endif
 PKG_MAN_OPTS ?= $(PKG_FROM_VERSION) $(PKG_CHANNELS) $(PKG_IS_DEFAULT_CHANNEL)
 
+# Set the kustomize base path
+ifeq ($(IS_OCP), true)
+KUSTOMIZE_BASE_PATH := $(CURDIR)/config/openshift
+else
+KUSTOMIZE_BASE_PATH := $(CURDIR)/config/manifests
+endif
+
 # Image URL to use all building/pushing image targets
 REPO ?= quay.io/submariner
 IMG ?= $(REPO)/submariner-operator:$(VERSION)
@@ -199,7 +206,7 @@ kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 
 # Generate bundle manifests and metadata, then validate generated files
 bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
-	($(KUSTOMIZE) build config/manifests \
+	($(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
 	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)) && \
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml && cd ../../) && \
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
@@ -207,7 +214,7 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 
 # Generate package manifests
 packagemanifests: $(OPERATOR_SDK) $(KUSTOMIZE) kustomization
-	($(KUSTOMIZE) build config/manifests \
+	($(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
 	| $(OPERATOR_SDK) generate packagemanifests -q --version $(VERSION) $(PKG_MAN_OPTS)) && \
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && \

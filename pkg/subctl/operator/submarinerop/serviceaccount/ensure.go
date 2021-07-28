@@ -177,7 +177,7 @@ func ensureRoles(clientSet *clientset.Clientset, namespace string) (bool, error)
 	}
 
 	createdMetricsReaderRole, err := serviceaccount.EnsureRole(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_metrics_reader_role_yaml)
+		embeddedyamls.Config_openshift_rbac_submariner_metrics_reader_role_yaml)
 	if err != nil {
 		return false, err
 	}
@@ -211,7 +211,7 @@ func ensureRoleBindings(clientSet *clientset.Clientset, namespace string) (bool,
 	}
 
 	createdMetricsReaderRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_metrics_reader_role_binding_yaml)
+		embeddedyamls.Config_openshift_rbac_submariner_metrics_reader_role_binding_yaml)
 	if err != nil {
 		return false, err
 	}
