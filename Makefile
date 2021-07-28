@@ -9,6 +9,9 @@ ifneq (,$(DAPPER_HOST_ARCH))
 OPERATOR_SDK_VERSION := 1.0.1
 OPERATOR_SDK := $(CURDIR)/bin/operator-sdk
 
+KUSTOMIZE_VERSION := 3.10.0
+KUSTOMIZE := $(CURDIR)/bin/kustomize
+
 # Running in Dapper
 
 IMAGES=submariner-operator
@@ -193,12 +196,13 @@ is-semantic-version:
 	[[ $(VERSION) =~ $(PATTERN) ]] || \
 	(printf '\nerror: VERSION does not match the format required by operator-sdk.\n\n' && exit 1)
 
-# Generate kustomization.yaml for bundle
-KUSTOMIZE := $(CURDIR)/bin/kustomize
-$(KUSTOMIZE): vendor/modules.txt
+# TODO: a workaround until this issue will be fixed https://github.com/kubernetes-sigs/kustomize/issues/4008
+$(KUSTOMIZE):
 	mkdir -p $(@D)
-	go build -o $@ sigs.k8s.io/kustomize/kustomize/v3
+	#GOBIN=$(CURDIR)/bin GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3
+	scripts/kustomize/install_kustomize.sh $(KUSTOMIZE_VERSION) $(CURDIR)/bin
 
+# Generate kustomization.yaml for bundle
 kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 	$(OPERATOR_SDK) generate kustomize manifests -q && \
 	(cd config/manifests && $(KUSTOMIZE) edit set image controller=$(IMG) && \
