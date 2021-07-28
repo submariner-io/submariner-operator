@@ -14,7 +14,15 @@ KUSTOMIZE := $(CURDIR)/bin/kustomize
 
 # Running in Dapper
 
-IMAGES=submariner-operator
+# Semantic versioning regex
+PATTERN := ^([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$
+# Test if VERSION matches the semantic versioning rule
+IS_SEMANTIC_VERSION != [[ $(or $(VERSION),'undefined') =~ $(PATTERN) ]] && echo true || echo false
+
+IMAGES = submariner-operator
+ifeq ($(IS_SEMANTIC_VERSION),true)
+IMAGES += submariner-operator-index
+endif
 PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-route-agent lighthouse-agent lighthouse-coredns
 
 include $(SHIPYARD_DIR)/Makefile.inc
@@ -79,8 +87,6 @@ REPO ?= quay.io/submariner
 IMG ?= $(REPO)/submariner-operator:$(VERSION)
 # Produce v1 CRDs, requiring Kubernetes 1.16 or later
 CRD_OPTIONS ?= "crd:crdVersions=v1,trivialVersions=false"
-# Semantic versioning regex
-PATTERN := ^([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -119,6 +125,8 @@ bin/lichen: vendor/modules.txt
 	go build -o $@ github.com/uw-labs/lichen
 
 package/Dockerfile.submariner-operator: bin/submariner-operator
+
+package/Dockerfile.submariner-operator-index: packagemanifests
 
 bin/submariner-operator: vendor/modules.txt main.go generate-embeddedyamls
 	${SCRIPTS_DIR}/compile.sh \
@@ -193,8 +201,9 @@ manifests: generate $(CONTROLLER_GEN) vendor/modules.txt
 
 # test if VERSION matches the semantic versioning rule
 is-semantic-version:
-	[[ $(VERSION) =~ $(PATTERN) ]] || \
-	(printf '\nerror: VERSION does not match the format required by operator-sdk.\n\n' && exit 1)
+    ifneq ($(IS_SEMANTIC_VERSION),true)
+	    $(error 'ERROR: VERSION "$(VERSION)" does not match the format required by operator-sdk.'))
+    endif
 
 # TODO: a workaround until this issue will be fixed https://github.com/kubernetes-sigs/kustomize/issues/4008
 $(KUSTOMIZE):
