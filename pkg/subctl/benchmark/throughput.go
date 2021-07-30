@@ -30,7 +30,15 @@ import (
 
 var Verbose bool
 
-func StartThroughputTests(intraCluster bool) {
+type ThroughputTestOptions struct {
+	IntraCluster    bool
+	Concurrency     uint
+	TestTimeSeconds uint
+	TCPWindowSizeKB uint
+	TCPMaxMSS       uint
+}
+
+func StartThroughputTests(options *ThroughputTestOptions) {
 	var f *framework.Framework
 
 	gomega.RegisterFailHandler(func(message string, callerSkip ...int) {
@@ -46,7 +54,7 @@ func StartThroughputTests(intraCluster bool) {
 
 	clusterAName := framework.TestContext.ClusterIDs[framework.ClusterA]
 
-	if !intraCluster {
+	if !options.IntraCluster {
 		testParams := benchmarkTestParams{
 			ClientCluster:       framework.ClusterA,
 			ServerCluster:       framework.ClusterB,
@@ -57,14 +65,14 @@ func StartThroughputTests(intraCluster bool) {
 		clusterBName := framework.TestContext.ClusterIDs[framework.ClusterB]
 		fmt.Printf("Performing throughput tests from Gateway pod on cluster %q to Gateway pod on cluster %q\n",
 			clusterAName, clusterBName)
-		runThroughputTest(f, testParams)
+		runThroughputTest(f, testParams, options)
 
 		testParams.ServerPodScheduling = framework.NonGatewayNode
 		testParams.ClientPodScheduling = framework.NonGatewayNode
 
 		fmt.Printf("Performing throughput tests from Non-Gateway pod on cluster %q to Non-Gateway pod on cluster %q\n",
 			clusterAName, clusterBName)
-		runThroughputTest(f, testParams)
+		runThroughputTest(f, testParams, options)
 	} else {
 		testIntraClusterParams := benchmarkTestParams{
 			ClientCluster:       framework.ClusterA,
@@ -74,7 +82,7 @@ func StartThroughputTests(intraCluster bool) {
 		}
 
 		fmt.Printf("Performing throughput tests from Non-Gateway pod to Gateway pod on cluster %q\n", clusterAName)
-		runThroughputTest(f, testIntraClusterParams)
+		runThroughputTest(f, testIntraClusterParams, options)
 	}
 
 	cleanupFramework(f)
@@ -101,7 +109,7 @@ func cleanupFramework(f *framework.Framework) {
 	framework.RunCleanupActions()
 }
 
-func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
+func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams, options *ThroughputTestOptions) {
 	clientClusterName := framework.TestContext.ClusterIDs[testParams.ClientCluster]
 	serverClusterName := framework.TestContext.ClusterIDs[testParams.ServerCluster]
 	var connectionTimeout uint = 10
@@ -143,6 +151,10 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 		ConnectionTimeout:  connectionTimeout,
 		ConnectionAttempts: connectionAttempts,
 		Port:               iperf3Port,
+		Concurrency:        options.Concurrency,
+		TestTimeSeconds:    options.TestTimeSeconds,
+		TCPWindowSizeKB:    options.TCPWindowSizeKB,
+		TCPMaxMSS:          options.TCPMaxMSS,
 	})
 
 	By(fmt.Sprintf("Nettest Client Pod %q was created on cluster %q, node %q; connect to server pod ip %q",

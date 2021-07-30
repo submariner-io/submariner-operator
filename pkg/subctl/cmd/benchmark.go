@@ -30,6 +30,8 @@ import (
 var (
 	intraCluster bool
 
+	throughputOptions benchmark.ThroughputTestOptions
+
 	benchmarkCmd = &cobra.Command{
 		Use:   "benchmark",
 		Short: "Benchmark tests",
@@ -40,6 +42,7 @@ var (
 		Short: "Benchmark throughput",
 		Long:  "This command runs throughput tests within a cluster or between two clusters",
 		Args: func(cmd *cobra.Command, args []string) error {
+			throughputOptions.IntraCluster = intraCluster
 			return checkBenchmarkArguments(args, intraCluster)
 		},
 		Run: testThroughput,
@@ -58,6 +61,15 @@ var (
 func init() {
 	addBenchmarkFlags(benchmarkLatencyCmd)
 	addBenchmarkFlags(benchmarkThroughputCmd)
+
+	benchmarkThroughputCmd.PersistentFlags().UintVarP(&throughputOptions.Concurrency, "parallel", "P", 100,
+		"number of parallel client streams to run")
+	benchmarkThroughputCmd.PersistentFlags().UintVarP(&throughputOptions.TCPWindowSizeKB, "window", "w", 256,
+		"set TCP window size in kilobytes")
+	benchmarkThroughputCmd.PersistentFlags().UintVarP(&throughputOptions.TCPMaxMSS, "set-mss", "M", 0,
+		"set TCP MSS in bytes")
+	benchmarkThroughputCmd.PersistentFlags().UintVarP(&throughputOptions.TestTimeSeconds, "time", "t", 10,
+		"test time in seconds")
 
 	benchmarkCmd.AddCommand(benchmarkThroughputCmd)
 	benchmarkCmd.AddCommand(benchmarkLatencyCmd)
@@ -105,7 +117,7 @@ func testThroughput(cmd *cobra.Command, args []string) {
 	if benchmark.Verbose {
 		fmt.Printf("Performing throughput tests\n")
 	}
-	benchmark.StartThroughputTests(intraCluster)
+	benchmark.StartThroughputTests(&throughputOptions)
 }
 
 func testLatency(cmd *cobra.Command, args []string) {
