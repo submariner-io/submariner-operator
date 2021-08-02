@@ -217,6 +217,10 @@ golangci-lint: generate-embeddedyamls
 
 unit: generate-embeddedyamls
 
+backport:
+	./cherry_pick_pull.sh $@
+
+NON_DAPPER_GOALS += backport
 # Operator SDK
 # On version bumps, the checksum will need to be updated manually.
 # If necessary, the verification *keys* can be updated as follows:
