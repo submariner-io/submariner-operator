@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
         with:
           fetch-depth: 0
 
@@ -23,7 +23,7 @@ jobs:
         run: make build-cross
 
       - name: Publish built artifacts to GitHub for release
-        uses: skx/github-action-publish-binaries@release-0.15
+        uses: skx/github-action-publish-binaries@c881a3f8ffb80b684f367660178d38ceabc065c2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
