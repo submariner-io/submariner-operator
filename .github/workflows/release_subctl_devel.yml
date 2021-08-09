@@ -4,11 +4,11 @@ name: Release Subctl Devel
 on:
   push:
     branches:
-      - devel
+      - release-0.10
       - release-*
 
 jobs:
-  release-subctl-devel:
+  release-subctl-release-0.10:
     if: github.repository_owner == 'submariner-io'
     runs-on: ubuntu-latest
     steps:
