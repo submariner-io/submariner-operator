@@ -9,5 +9,5 @@ spec:
     - connectivity
   defaultGlobalnetClusterSize: 8192
   globalnetEnabled: false
-  #globalnetCIDRRange: 169.254.0.0/16
+  # globalnetCIDRRange: 169.254.0.0/16
   #  defaultCustomDomains:

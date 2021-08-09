@@ -3,7 +3,7 @@
 resources:
   - submariner_v1alpha1_broker.yaml
   - submariner_v1alpha1_submariner.yaml
-  #- submariner_v1alpha1_servicediscovery.yaml
+  # - submariner_v1alpha1_servicediscovery.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
 
 configurations:
