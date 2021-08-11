@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.13
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.40.7
+	github.com/aws/aws-sdk-go v1.40.17
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/go-errors/errors v1.2.0 // indirect
@@ -34,10 +34,10 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.2.0
 	github.com/submariner-io/admiral v0.10.1
-	github.com/submariner-io/cloud-prepare v0.10.0-rc0.0.20210727150757-5e29b6472b99
-	github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd
+	github.com/submariner-io/cloud-prepare v0.10.1
+	github.com/submariner-io/lighthouse v0.10.1
 	github.com/submariner-io/shipyard v0.10.1
-	github.com/submariner-io/submariner v0.10.0-rc0.0.20210721111558-ee4aa093b719
+	github.com/submariner-io/submariner v0.10.1
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.4
 	github.com/xlab/treeprint v1.1.0 // indirect
