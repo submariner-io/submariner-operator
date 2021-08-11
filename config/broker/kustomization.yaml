@@ -10,14 +10,14 @@ resources:
   - broker-client/role.yaml
   - broker-client/role_binding.yaml
 
-#vars:
-#  - name: SUBMARINER_BROKER_NAMESPACE
-#    objref:
-#      kind: Namespace
-#      version: v1
-#      name: submariner-k8s-broker
-#    fieldref:
-#      fieldpath: metadata.name
+# vars:
+#   - name: SUBMARINER_BROKER_NAMESPACE
+#     objref:
+#       kind: Namespace
+#       version: v1
+#       name: submariner-k8s-broker
+#     fieldref:
+#       fieldpath: metadata.name
 
 configurations:
   - kustomizeconfig.yaml
