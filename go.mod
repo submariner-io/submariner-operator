@@ -24,7 +24,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.14.0
+	github.com/onsi/gomega v1.15.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.4.0
@@ -37,7 +37,9 @@ require (
 	github.com/submariner-io/cloud-prepare v0.10.0-rc0.0.20210727150757-5e29b6472b99
 	github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd
 	github.com/submariner-io/shipyard v0.10.0
-	github.com/submariner-io/submariner v0.10.0-rc0.0.20210721111558-ee4aa093b719
+	github.com/submariner-io/submariner v0.10.0-rc1.0.20210816153739-c8e6654e3930
+	github.com/submariner-io/submariner-operator/apis v0.0.0
+	github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.4
 	github.com/xlab/treeprint v1.1.0 // indirect
@@ -72,3 +74,6 @@ replace (
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.19.10
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.7.0
 )
+
+// Local packages
+replace github.com/submariner-io/submariner-operator/apis => ./apis

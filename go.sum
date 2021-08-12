@@ -1048,8 +1048,9 @@ github.com/onsi/gomega v1.8.1/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoT
 github.com/onsi/gomega v1.9.0/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoTdcA=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.10.2/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
-github.com/onsi/gomega v1.14.0 h1:ep6kpPVwmr/nTbklSx2nrLNSIO62DoYAhnPNIMhK8gI=
 github.com/onsi/gomega v1.14.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
+github.com/onsi/gomega v1.15.0 h1:WjP/FQ/sk43MRmnEcT+MlDw2TFvkrXlprrPST/IudjU=
+github.com/onsi/gomega v1.15.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
 github.com/opencontainers/go-digest v0.0.0-20170106003457-a6d0ee40d420/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/opencontainers/go-digest v0.0.0-20180430190053-c9281466c8b2/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
@@ -1288,7 +1289,6 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/submariner-io/admiral v0.10.0-rc0/go.mod h1:kpbW6dzbRetPshT/Tq2W+peYCeI8eF4JOiH9y+UtGEM=
-github.com/submariner-io/admiral v0.10.0-rc0.0.20210716074658-80e46214671b/go.mod h1:kpbW6dzbRetPshT/Tq2W+peYCeI8eF4JOiH9y+UtGEM=
 github.com/submariner-io/admiral v0.10.0-rc1 h1:govtA7uxpqc0jZ2JKmvlWlukacp7FXqzX3qyJqQPICs=
 github.com/submariner-io/admiral v0.10.0-rc1/go.mod h1:kpbW6dzbRetPshT/Tq2W+peYCeI8eF4JOiH9y+UtGEM=
 github.com/submariner-io/cloud-prepare v0.10.0-rc0.0.20210727150757-5e29b6472b99 h1:eEYGcx/fhMFK8rLUymGBWkz/LfmcdR4tOZZolzrTYcU=
@@ -1296,11 +1296,13 @@ github.com/submariner-io/cloud-prepare v0.10.0-rc0.0.20210727150757-5e29b6472b99
 github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd h1:2kNzGLWrobmyPuo68Cyb4uhEaJetWovjf754Smk05go=
 github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd/go.mod h1:R78rfRvGMIFM66qDcfY9ks1crOfSHWb1eaSgpAYw5CA=
 github.com/submariner-io/shipyard v0.10.0-rc0/go.mod h1:+B8Hrs2vYg7XKFMk61HVg1ev/twSYFIJg3hWiJnCuq0=
-github.com/submariner-io/shipyard v0.10.0-rc0.0.20210719115546-4e6aefed5ecd/go.mod h1:+B8Hrs2vYg7XKFMk61HVg1ev/twSYFIJg3hWiJnCuq0=
 github.com/submariner-io/shipyard v0.10.0 h1:qAopwUlfahVon8WVgCG5FXiVvRqugDrTwgC2LGe+VCI=
 github.com/submariner-io/shipyard v0.10.0/go.mod h1:Wi1G4N4EiwwPINAL5PCSdeQh52DWnPanqUNIC9R+Zl0=
-github.com/submariner-io/submariner v0.10.0-rc0.0.20210721111558-ee4aa093b719 h1:3wFEWyiC0rWgNApmWiwcfXgWwJVFi9q90Gia4n5lohc=
-github.com/submariner-io/submariner v0.10.0-rc0.0.20210721111558-ee4aa093b719/go.mod h1:QUFVRrVIhZYMED/usHZGzLFWVBBIDpeQAuP/m5A+AZk=
+github.com/submariner-io/submariner v0.10.0-rc1.0.20210816153739-c8e6654e3930 h1:Tmlwi24EvKFI69s5LONRrludmrJcBGV3rdbleCZncHQ=
+github.com/submariner-io/submariner v0.10.0-rc1.0.20210816153739-c8e6654e3930/go.mod h1:7mAVck+eUcmEKeUe8GRw8xbOUGzgVakck8aIg7o8CSE=
+github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816112556-6e4bb78fab88/go.mod h1:VfjgFyeFkEzNCmZnTFdxWYuEvLyvH4429fwdue6gq1o=
+github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930 h1:6J41oeHHXCyP4Y/RNa8jfAiTuNEtnoc3gc6Sxj4S800=
+github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930/go.mod h1:VfjgFyeFkEzNCmZnTFdxWYuEvLyvH4429fwdue6gq1o=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
 github.com/thanos-io/thanos v0.11.0/go.mod h1:N/Yes7J68KqvmY+xM6J5CJqEvWIvKSR5sqGtmuD6wDc=
