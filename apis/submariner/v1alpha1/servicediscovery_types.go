@@ -21,7 +21,6 @@ package v1alpha1
 import (
 	"encoding/json"
 
-	"github.com/submariner-io/submariner-operator/pkg/versions"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -96,8 +95,8 @@ func (sd *ServiceDiscovery) UnmarshalJSON(data []byte) error {
 	type serviceDiscoveryAlias ServiceDiscovery
 	serviceDiscovery := &serviceDiscoveryAlias{
 		Spec: ServiceDiscoverySpec{
-			Version:    versions.DefaultLighthouseVersion,
-			Repository: versions.DefaultRepo,
+			Version:    DefaultLighthouseVersion,
+			Repository: DefaultRepo,
 		},
 	}
 

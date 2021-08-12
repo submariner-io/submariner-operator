@@ -27,7 +27,6 @@ import (
 	. "github.com/onsi/gomega"
 	submariner_v1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner-operator/pkg/versions"
 	appsv1 "k8s.io/api/apps/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -292,8 +291,8 @@ func testReconciliation() {
 			err := fakeClient.Get(ctx, types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, updated)
 			Expect(err).To(Succeed())
 
-			Expect(updated.Spec.Repository).To(Equal(versions.DefaultRepo))
-			Expect(updated.Spec.Version).To(Equal(versions.DefaultSubmarinerVersion))
+			Expect(updated.Spec.Repository).To(Equal(submariner_v1.DefaultRepo))
+			Expect(updated.Spec.Version).To(Equal(submariner_v1.DefaultSubmarinerVersion))
 		})
 	})
 
