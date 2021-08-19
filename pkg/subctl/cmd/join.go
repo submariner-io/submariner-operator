@@ -66,6 +66,7 @@ var (
 	forceUDPEncaps                bool
 	colorCodes                    string
 	natTraversal                  bool
+	ignoreRequirements            bool
 	globalnetEnabled              bool
 	ipsecDebug                    bool
 	submarinerDebug               bool
@@ -133,6 +134,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&corednsCustomConfigMap, "coredns-custom-configmap", "",
 		"Name of the custom CoreDNS configmap to configure forwarding to lighthouse. It should be in "+
 			"<namespace>/<name> format where <namespace> is optional and defaults to kube-system")
+	cmd.Flags().BoolVar(&ignoreRequirements, "ignore-requirements", false, "ignore requirement failures (unsupported)")
 }
 
 const (
@@ -233,8 +235,11 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		for i := range failedRequirements {
 			fmt.Printf("* %s\n", (failedRequirements)[i])
 		}
-		utils.ExitOnError("Unable to check all requirements", err)
-		os.Exit(1)
+
+		if !ignoreRequirements {
+			utils.ExitOnError("Unable to check all requirements", err)
+			os.Exit(1)
+		}
 	}
 	utils.ExitOnError("Unable to check requirements", err)
 
