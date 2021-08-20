@@ -39,8 +39,8 @@ const (
 
 func init() {
 	command := &cobra.Command{
-		Use:   "tunnel <localkubeconfig> <remotekubeconfig>",
-		Short: "Check firewall access to Gateway node tunnels",
+		Use:   "inter-cluster <localkubeconfig> <remotekubeconfig>",
+		Short: "Check firewall access to setup tunnels between the Gateway node",
 		Long:  "This command checks if the firewall configuration allows tunnels to be configured on the Gateway nodes.",
 		Args: func(command *cobra.Command, args []string) error {
 			if len(args) != 2 {
@@ -63,8 +63,17 @@ func init() {
 
 	addDiagnoseFWConfigFlags(command)
 	addVerboseFlag(command)
-
 	diagnoseFirewallConfigCmd.AddCommand(command)
+
+	deprecatedCommand := &cobra.Command{
+		Use:        "tunnel <localkubeconfig> <remotekubeconfig>",
+		Deprecated: "please use inter-cluster",
+		Short:      command.Short,
+		Long:       command.Long,
+		Args:       command.Args,
+		Run:        command.Run,
+	}
+	diagnoseFirewallConfigCmd.AddCommand(deprecatedCommand)
 }
 
 func validateTunnelConfig(command *cobra.Command, args []string) {

@@ -33,9 +33,9 @@ const (
 
 func init() {
 	command := &cobra.Command{
-		Use:   "vxlan",
-		Short: "Check firewall access for Submariner VXLAN traffic",
-		Long:  "This command checks if the firewall configuration allows traffic via the Submariner VXLAN interface.",
+		Use:   "intra-cluster",
+		Short: "Check firewall access for intra-cluster Submariner VxLAN traffic",
+		Long:  "This command checks if the firewall configuration allows traffic over vx-submariner interface.",
 		Run: func(command *cobra.Command, args []string) {
 			cmd.ExecuteMultiCluster(checkVxLANConfig)
 		},
@@ -43,8 +43,17 @@ func init() {
 
 	addDiagnoseFWConfigFlags(command)
 	addVerboseFlag(command)
-
 	diagnoseFirewallConfigCmd.AddCommand(command)
+
+	deprecatedCommand := &cobra.Command{
+		Use:        "vxlan",
+		Deprecated: "please use intra-cluster",
+		Short:      command.Short,
+		Long:       command.Long,
+		Args:       command.Args,
+		Run:        command.Run,
+	}
+	diagnoseFirewallConfigCmd.AddCommand(deprecatedCommand)
 }
 
 func checkVxLANConfig(cluster *cmd.Cluster) bool {
