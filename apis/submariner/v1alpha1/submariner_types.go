@@ -26,8 +26,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-
-	"github.com/submariner-io/submariner-operator/pkg/versions"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -215,8 +213,8 @@ func (s *Submariner) UnmarshalJSON(data []byte) error {
 	type submarinerAlias Submariner
 	subm := &submarinerAlias{
 		Spec: SubmarinerSpec{
-			Repository: versions.DefaultRepo,
-			Version:    versions.DefaultSubmarinerVersion,
+			Repository: DefaultRepo,
+			Version:    DefaultSubmarinerVersion,
 			ColorCodes: DefaultColorCode,
 		},
 	}

@@ -50,22 +50,22 @@ metadata:
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "0.10.0"
+            "version": "0.10.1"
           }
         }
       ]
     capabilities: Basic Install
     categories: Networking
     certified: "false"
-    containerImage: quay.io/submariner/submariner-operator:0.10.0
-    createdAt: "2021-07-28 09:34:16"
+    containerImage: quay.io/submariner/submariner-operator:0.10.1
+    createdAt: "2021-08-17 07:04:50"
     description: Creates and manages Submariner deployments.
     operatorframework.io/suggested-namespace: submariner-operator
     operators.operatorframework.io/builder: operator-sdk-v1.0.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/submariner-io/submariner-operator
     support: Submariner
-  name: submariner.v0.10.0
+  name: submariner.v0.10.1
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -126,7 +126,7 @@ spec:
     2. Apply the broker RBAC definitions:
 
         ```shell
-        git clone --depth 1 --single-branch --branch release-0.9 https://github.com/submariner-io/submariner-operator
+        git clone --depth 1 --single-branch --branch release-0.10 https://github.com/submariner-io/submariner-operator
         kubectl apply -k submariner-operator/config/broker -n submariner-k8s-broker
         ```
 
@@ -294,7 +294,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: submariner-operator
-                image: quay.io/submariner/submariner-operator:0.10.0
+                image: quay.io/submariner/submariner-operator:0.10.1
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources: {}
@@ -396,4 +396,4 @@ spec:
   selector:
     matchLabels:
       control-plane: submariner-operator
-  version: 0.10.0
+  version: 0.10.1

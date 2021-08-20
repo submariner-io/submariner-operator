@@ -51,7 +51,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/servicediscoverycr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
-	"github.com/submariner-io/submariner-operator/pkg/versions"
 )
 
 var (
@@ -500,7 +499,7 @@ func getImageVersion() string {
 	version := imageVersion
 
 	if imageVersion == "" {
-		version = versions.DefaultSubmarinerOperatorVersion
+		version = submariner.DefaultSubmarinerOperatorVersion
 	}
 
 	return version
@@ -510,7 +509,7 @@ func getImageRepo() string {
 	repo := repository
 
 	if repository == "" {
-		repo = versions.DefaultRepo
+		repo = submariner.DefaultRepo
 	}
 
 	return repo
@@ -564,11 +563,11 @@ func operatorImage() string {
 	repo := repository
 
 	if imageVersion == "" {
-		version = versions.DefaultSubmarinerOperatorVersion
+		version = submariner.DefaultSubmarinerOperatorVersion
 	}
 
 	if repository == "" {
-		repo = versions.DefaultRepo
+		repo = submariner.DefaultRepo
 	}
 
 	return images.GetImagePath(repo, version, names.OperatorImage, names.OperatorComponent, getImageOverrides())

@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/submariner-io/submariner-operator/pkg/versions"
+	apis "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 )
 
 var imageTests = []struct {
@@ -37,7 +37,7 @@ var imageTests = []struct {
 	{"quay.io/submariner/submariner-operator:local", "quay.io/submariner", "local"},
 	{"any.reg/subm-tech-preview/submariner-custom-operator:0.8.0", "any.reg/subm-tech-preview", "0.8.0"},
 	{"submariner-operator:0.8.1", "", "0.8.1"},
-	{"submariner-operator", "", versions.DefaultSubmarinerOperatorVersion},
+	{"submariner-operator", "", apis.DefaultSubmarinerOperatorVersion},
 }
 
 var _ = Describe("image parsing", func() {

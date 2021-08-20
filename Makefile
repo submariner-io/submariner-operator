@@ -139,8 +139,8 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 	GOARCH=$${components[-1]}; \
 	export GOARCH GOOS; \
 	$(SCRIPTS_DIR)/compile.sh \
-		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION) \
-			   -X=github.com/submariner-io/submariner-operator/pkg/versions.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
+		--ldflags "-X github.com/submariner-io/submariner-operator/apis.Version=$(VERSION) \
+			   -X=github.com/submariner-io/submariner-operator/apis.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
 		--noupx $@ ./pkg/subctl/main.go $(BUILD_ARGS)
 
 ci: generate-embeddedyamls golangci-lint markdownlint unit build images
@@ -160,7 +160,8 @@ deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./apis/subm
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
 
 deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
+	cd apis && go mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
+	test -f $@
 
 # Submariner CRDs
 deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: $(CONTROLLER_GEN) vendor/modules.txt
