@@ -157,7 +157,8 @@ $(CONTROLLER_GEN): vendor/modules.txt
 	go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
 deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
+	cd apis && go mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
+	test -f $@
 
 deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
 	cd apis && go mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
@@ -166,6 +167,7 @@ deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yam
 # Submariner CRDs
 deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: $(CONTROLLER_GEN) vendor/modules.txt
 	cd vendor/github.com/submariner-io/submariner && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
+	test -f $@
 
 # Generate the clientset for the Submariner APIs
 # It needs to be run when the Submariner APIs change
