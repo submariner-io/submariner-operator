@@ -42,7 +42,7 @@ func newAWSPrepareCommand() *cobra.Command {
 	}
 
 	aws.AddAWSFlags(cmd)
-	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "m5n.large", "Type of gateways instance machine")
+	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "c5d.large", "Type of gateways instance machine")
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultDedicatedGateways,
 		"Number of dedicated gateways to deploy (Set to `0` when using --load-balancer mode)")
 	return cmd
