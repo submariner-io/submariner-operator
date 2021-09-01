@@ -34,11 +34,11 @@ const (
 	ocpCoreDNSPodLabel        = "dns.operator.openshift.io/daemonset-dns=default"
 )
 
-func ServiceDiscoveryPodLogs(info Info) {
+func gatherServiceDiscoveryPodLogs(info Info) {
 	gatherPodLogs(lighthouseComponentsLabel, info)
 }
 
-func CoreDNSPodLogs(info Info) {
+func gatherCoreDNSPodLogs(info Info) {
 	if isCoreDNSTypeOcp(info) {
 		gatherPodLogsByContainer(ocpCoreDNSPodLabel, "dns", info)
 	} else {
@@ -46,7 +46,7 @@ func CoreDNSPodLogs(info Info) {
 	}
 }
 
-func ServiceExports(info Info, namespace string) {
+func gatherServiceExports(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    mcsv1a1.GroupName,
 		Version:  mcsv1a1.GroupVersion.Version,
@@ -54,7 +54,7 @@ func ServiceExports(info Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
-func ServiceImports(info Info, namespace string) {
+func gatherServiceImports(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    mcsv1a1.GroupName,
 		Version:  mcsv1a1.GroupVersion.Version,
@@ -62,7 +62,7 @@ func ServiceImports(info Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
-func EndpointSlices(info Info, namespace string) {
+func gatherEndpointSlices(info Info, namespace string) {
 	labelMap := map[string]string{
 		discoveryv1beta1.LabelManagedBy: lhconstants.LabelValueManagedBy,
 	}
@@ -75,7 +75,7 @@ func EndpointSlices(info Info, namespace string) {
 	}, namespace, metav1.ListOptions{LabelSelector: labelSelector})
 }
 
-func ConfigMapCoreDNS(info Info) {
+func gatherConfigMapCoreDNS(info Info) {
 	namespace := "kube-system"
 	name := "coredns"
 	if isCoreDNSTypeOcp(info) {
@@ -102,7 +102,7 @@ func ConfigMapCoreDNS(info Info) {
 	}
 }
 
-func ConfigMapLighthouseDNS(info Info, namespace string) {
+func gatherConfigMapLighthouseDNS(info Info, namespace string) {
 	gatherConfigMaps(info, namespace, metav1.ListOptions{LabelSelector: lighthouseComponentsLabel})
 }
 

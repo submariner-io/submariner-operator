@@ -34,23 +34,23 @@ const (
 	ovnMasterPodLabelGeneric    = "name=ovnkube-master"
 )
 
-func GatewayPodLogs(info Info) {
+func gatherGatewayPodLogs(info Info) {
 	gatherPodLogs(gatewayPodLabel, info)
 }
 
-func RouteAgentPodLogs(info Info) {
+func gatherRouteAgentPodLogs(info Info) {
 	gatherPodLogs(routeagentPodLabel, info)
 }
 
-func GlobalnetPodLogs(info Info) {
+func gatherGlobalnetPodLogs(info Info) {
 	gatherPodLogs(globalnetPodLabel, info)
 }
 
-func NetworkPluginSyncerPodLogs(info Info) {
+func gatherNetworkPluginSyncerPodLogs(info Info) {
 	gatherPodLogs(networkpluginSyncerPodLabel, info)
 }
 
-func Endpoints(info Info, namespace string) {
+func gatherEndpoints(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
@@ -58,7 +58,7 @@ func Endpoints(info Info, namespace string) {
 	}, namespace, v1.ListOptions{})
 }
 
-func Clusters(info Info, namespace string) {
+func gatherClusters(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
@@ -66,7 +66,7 @@ func Clusters(info Info, namespace string) {
 	}, namespace, v1.ListOptions{})
 }
 
-func Gateways(info Info, namespace string) {
+func gatherGateways(info Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
@@ -74,7 +74,7 @@ func Gateways(info Info, namespace string) {
 	}, namespace, v1.ListOptions{})
 }
 
-func ClusterGlobalEgressIPs(info Info) {
+func gatherClusterGlobalEgressIPs(info Info) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
@@ -82,7 +82,7 @@ func ClusterGlobalEgressIPs(info Info) {
 	}, corev1.NamespaceAll, v1.ListOptions{})
 }
 
-func GlobalEgressIPs(info Info) {
+func gatherGlobalEgressIPs(info Info) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,
@@ -90,7 +90,7 @@ func GlobalEgressIPs(info Info) {
 	}, corev1.NamespaceAll, v1.ListOptions{})
 }
 
-func GlobalIngressIPs(info Info) {
+func gatherGlobalIngressIPs(info Info) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    submarinerv1.SchemeGroupVersion.Group,
 		Version:  submarinerv1.SchemeGroupVersion.Version,

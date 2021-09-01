@@ -86,7 +86,7 @@ var networkPluginCNIType = map[string]string{
 	"unknown":       typeUnknown,
 }
 
-func CNIResources(info Info, networkPlugin string) {
+func gatherCNIResources(info Info, networkPlugin string) {
 	logPodInfo(info, "CNI data", routeagentPodLabel, func(info Info, pod *v1.Pod) {
 		logSystemCmds(info, pod)
 		switch networkPluginCNIType[networkPlugin] {
@@ -133,7 +133,7 @@ func logGlobalnetCmds(info Info) {
 	})
 }
 
-func OVNResources(info Info, networkPlugin string) {
+func gatherOVNResources(info Info, networkPlugin string) {
 	if networkPluginCNIType[networkPlugin] != typeOvn {
 		return
 	}
@@ -172,7 +172,7 @@ func OVNResources(info Info, networkPlugin string) {
 	}
 }
 
-func CableDriverResources(info Info, cableDriver string) {
+func gatherCableDriverResources(info Info, cableDriver string) {
 	logPodInfo(info, "cable driver data", gatewayPodLabel, func(info Info, pod *v1.Pod) {
 		if cableDriver == libreswan {
 			logLibreswanCmds(info, pod)
