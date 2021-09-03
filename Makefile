@@ -47,9 +47,10 @@ ifneq (,$(filter lighthouse,$(_using)))
 override DEPLOY_ARGS += --deploytool_broker_args '--service-discovery'
 endif
 
-GOARCH = $(shell go env GOARCH)
-GOEXE = $(shell go env GOEXE)
-GOOS = $(shell go env GOOS)
+GO ?= go
+GOARCH = $(shell $(GO) env GOARCH)
+GOEXE = $(shell $(GO) env GOEXE)
+GOOS = $(shell $(GO) env GOOS)
 
 # Options for 'submariner-operator-bundle' image
 ifeq ($(IS_SEMANTIC_VERSION),true)
@@ -95,10 +96,10 @@ IMG ?= $(REPO)/submariner-operator:$(VERSION)
 CRD_OPTIONS ?= "crd:crdVersions=v1,trivialVersions=false"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
+ifeq (,$(shell $(GO) env GOBIN))
+GOBIN=$(shell $(GO) env GOPATH)/bin
 else
-GOBIN=$(shell go env GOBIN)
+GOBIN=$(shell $(GO) env GOBIN)
 endif
 
 # Ensure we prefer binaries we build
@@ -128,7 +129,7 @@ licensecheck: build bin/lichen bin/submariner-operator
 
 bin/lichen: vendor/modules.txt
 	mkdir -p $(@D)
-	go build -o $@ github.com/uw-labs/lichen
+	$(GO) build -o $@ github.com/uw-labs/lichen
 
 package/Dockerfile.submariner-operator: bin/submariner-operator
 
@@ -165,20 +166,20 @@ ci: generate-embeddedyamls golangci-lint markdownlint unit build images
 generate-embeddedyamls: generate pkg/subctl/operator/common/embeddedyamls/yamls.go
 
 pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") vendor/modules.txt
-	go generate pkg/subctl/operator/common/embeddedyamls/generate.go
+	$(GO) generate pkg/subctl/operator/common/embeddedyamls/generate.go
 
 # Operator CRDs
 CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
 $(CONTROLLER_GEN): vendor/modules.txt
 	mkdir -p $(@D)
-	go build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
+	$(GO) build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
 deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
-	cd apis && go mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
+	cd apis && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
 	test -f $@
 
 deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
-	cd apis && go mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
+	cd apis && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
 	test -f $@
 
 # Submariner CRDs
@@ -190,7 +191,7 @@ deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submar
 # It needs to be run when the Submariner APIs change
 generate-clientset: vendor/modules.txt
 	git clone https://github.com/kubernetes/code-generator -b kubernetes-1.19.10 $${GOPATH}/src/k8s.io/code-generator
-	cd $${GOPATH}/src/k8s.io/code-generator && go mod vendor
+	cd $${GOPATH}/src/k8s.io/code-generator && $(GO) mod vendor
 	GO111MODULE=on $${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \
 		client,deepcopy \
 		github.com/submariner-io/submariner-operator/pkg/client \
@@ -214,7 +215,7 @@ is-semantic-version:
 # TODO: a workaround until this issue will be fixed https://github.com/kubernetes-sigs/kustomize/issues/4008
 $(KUSTOMIZE):
 	mkdir -p $(@D)
-	#GOBIN=$(CURDIR)/bin GO111MODULE=on go get sigs.k8s.io/kustomize/kustomize/v3
+	#GOBIN=$(CURDIR)/bin GO111MODULE=on $(GO) get sigs.k8s.io/kustomize/kustomize/v3
 	scripts/kustomize/install_kustomize.sh $(KUSTOMIZE_VERSION) $(CURDIR)/bin
 
 # Generate kustomization.yaml for bundle
