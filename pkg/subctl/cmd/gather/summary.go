@@ -38,7 +38,7 @@ import (
 //go:embed layout.gohtml
 var layout string
 
-func ClusterSummary(info Info) {
+func gatherClusterSummary(info Info) {
 	dataGathered := getClusterInfo(info)
 	file := createFile(info.DirName)
 	writeToHTML(file, dataGathered)
