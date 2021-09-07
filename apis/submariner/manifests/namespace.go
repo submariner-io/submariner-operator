@@ -16,21 +16,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package broker
+package manifests
 
 import (
+	"context"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
-const (
-	SubmarinerBrokerNamespace = "submariner-k8s-broker"
-)
+func CreateNewBrokerNamespace(clientset *kubernetes.Clientset, namespace string) (brokernamespace *v1.Namespace, err error) {
+	return clientset.CoreV1().Namespaces().Create(context.TODO(), NewBrokerNamespace(namespace), metav1.CreateOptions{})
+}
 
-func NewBrokerNamespace() *v1.Namespace {
+func NewBrokerNamespace(namespace string) *v1.Namespace {
 	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: SubmarinerBrokerNamespace,
+			Name: namespace,
 		},
 	}
 

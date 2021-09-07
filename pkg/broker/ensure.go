@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/submariner-io/submariner-operator/apis/submariner/manifests"
+
 	v1 "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -36,6 +38,10 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+)
+
+const (
+	SubmarinerBrokerNamespace = "submariner-k8s-broker"
 )
 
 func Ensure(config *rest.Config, componentArr []string, crds bool) error {
@@ -73,7 +79,7 @@ func Ensure(config *rest.Config, componentArr []string, crds bool) error {
 	}
 
 	// Create the namespace
-	_, err = CreateNewBrokerNamespace(clientset)
+	_, err = manifests.CreateNewBrokerNamespace(clientset, SubmarinerBrokerNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("error creating the broker namespace %s", err)
 	}
@@ -179,10 +185,6 @@ func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA stri
 	}
 
 	return secret, err
-}
-
-func CreateNewBrokerNamespace(clientset *kubernetes.Clientset) (brokernamespace *v1.Namespace, err error) {
-	return clientset.CoreV1().Namespaces().Create(context.TODO(), NewBrokerNamespace(), metav1.CreateOptions{})
 }
 
 func CreateOrUpdateClusterBrokerRole(clientset *kubernetes.Clientset) (created bool, err error) {
