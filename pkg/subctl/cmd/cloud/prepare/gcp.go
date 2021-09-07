@@ -21,34 +21,36 @@ package prepare
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/gcp"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
-func newAWSPrepareCommand() *cobra.Command {
+func newGCPPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "aws",
-		Short: "Prepare an AWS cloud",
-		Long:  "This command prepares an AWS-based cloud for Submariner installation.",
-		Run:   prepareAws,
+		Use:   "gcp",
+		Short: "Prepare the GCP cloud",
+		Long:  "This command prepares the GCP-based cloud for Submariner installation.",
+		Run:   prepareGCP,
 	}
 
-	aws.AddAWSFlags(cmd)
-	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "c5d.large", "Type of gateways instance machine")
+	gcp.AddGCPFlags(cmd)
+	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "n1-standard-4", "Type of gateways instance machine")
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
-		"Number of dedicated gateways to deploy (Set to `0` when using --load-balancer mode)")
+		"Number of gateways to deploy")
+	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", false,
+		"If a dedicated gateway node has to be deployed (default false)")
 	return cmd
 }
 
-func prepareAws(cmd *cobra.Command, args []string) {
+func prepareGCP(cmd *cobra.Command, args []string) {
 	gwPorts := []api.PortSpec{
 		{Port: nattPort, Protocol: "udp"},
 		{Port: natDiscoveryPort, Protocol: "udp"},
 
 		// ESP & AH protocols are used for private-ip to private-ip gateway communications
-		{Port: 0, Protocol: "50"},
-		{Port: 0, Protocol: "51"},
+		{Port: 0, Protocol: "esp"},
+		{Port: 0, Protocol: "ah"},
 	}
 	input := api.PrepareForSubmarinerInput{
 		InternalPorts: []api.PortSpec{
@@ -57,12 +59,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		},
 	}
 
-	// For load-balanced gateways we want these ports open internally to facilitate private-ip to pivate-ip gateways communications.
-	if gateways == 0 {
-		input.InternalPorts = append(input.InternalPorts, gwPorts...)
-	}
-
-	err := aws.RunOnAWS(gwInstanceType, *kubeConfig, *kubeContext,
+	err := gcp.RunOnGCP(gwInstanceType, *kubeConfig, *kubeContext, dedicatedGateway,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {
 				gwInput := api.GatewayDeployInput{
@@ -78,5 +75,5 @@ func prepareAws(cmd *cobra.Command, args []string) {
 			return cloud.PrepareForSubmariner(input, reporter)
 		})
 
-	utils.ExitOnError("Failed to prepare AWS cloud", err)
+	utils.ExitOnError("Failed to prepare GCP cloud", err)
 }
