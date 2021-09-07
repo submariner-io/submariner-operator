@@ -17,12 +17,9 @@ KUSTOMIZE := $(CURDIR)/bin/kustomize
 # Semantic versioning regex
 PATTERN := ^([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$
 # Test if VERSION matches the semantic versioning rule
-IS_SEMANTIC_VERSION != [[ $(or $(VERSION),'undefined') =~ $(PATTERN) ]] && echo true || echo false
+IS_SEMANTIC_VERSION = $(shell [[ $(or $(BUNDLE_VERSION),$(VERSION),'undefined') =~ $(PATTERN) ]] && echo true || echo false)
 
-IMAGES = submariner-operator
-ifeq ($(IS_SEMANTIC_VERSION),true)
-IMAGES += submariner-operator-index
-endif
+IMAGES = submariner-operator submariner-operator-index
 PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-route-agent lighthouse-agent lighthouse-coredns
 
 include $(SHIPYARD_DIR)/Makefile.inc
@@ -55,6 +52,15 @@ GOEXE = $(shell go env GOEXE)
 GOOS = $(shell go env GOOS)
 
 # Options for 'submariner-operator-bundle' image
+ifeq ($(IS_SEMANTIC_VERSION),true)
+BUNDLE_VERSION := $(VERSION)
+else
+BUNDLE_VERSION := $(shell (git describe --abbrev=0 --tags --match=v[0-9]*\.[0-9]*\.[0-9]* 2>/dev/null || echo v9.9.9) \
+| cut -d'-' -f1 | cut -c2-)
+endif
+FROM_VERSION ?= $(shell (git describe --abbrev=0 --tags --match=v[0-9]*\.[0-9]*\.[0-9]* --exclude=?${BUNDLE_VERSION}* 2>/dev/null || echo v0.0.0) \
+          | cut -d'-' -f1 | cut -c2-)
+CHANNEL ?= alpha-$(shell echo ${BUNDLE_VERSION} | cut -d'.' -f1,2)
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
 endif
@@ -202,7 +208,7 @@ manifests: generate $(CONTROLLER_GEN) vendor/modules.txt
 # test if VERSION matches the semantic versioning rule
 is-semantic-version:
     ifneq ($(IS_SEMANTIC_VERSION),true)
-	    $(error 'ERROR: VERSION "$(VERSION)" does not match the format required by operator-sdk.'))
+	    $(error 'ERROR: VERSION "$(BUNDLE_VERSION)" does not match the format required by operator-sdk.'))
     endif
 
 # TODO: a workaround until this issue will be fixed https://github.com/kubernetes-sigs/kustomize/issues/4008
@@ -217,13 +223,13 @@ kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 	(cd config/manifests && $(KUSTOMIZE) edit set image controller=$(IMG) && \
 	 $(KUSTOMIZE) edit set image repo=$(REPO)) && \
 	(cd config/bundle && \
-	sed -e 's/$${VERSION}/$(VERSION)/g' kustomization.template.yaml > kustomization.yaml && \
+	sed -e 's/$${VERSION}/$(BUNDLE_VERSION)/g' kustomization.template.yaml > kustomization.yaml && \
 	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
 
 # Generate bundle manifests and metadata, then validate generated files
 bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	($(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
-	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)) && \
+	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)) && \
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml && cd ../../) && \
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
 	$(OPERATOR_SDK) bundle validate ./bundle
@@ -231,10 +237,10 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 # Generate package manifests
 packagemanifests: $(OPERATOR_SDK) $(KUSTOMIZE) kustomization
 	($(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
-	| $(OPERATOR_SDK) generate packagemanifests -q --version $(VERSION) $(PKG_MAN_OPTS)) && \
-	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
-	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml && \
-	mv packagemanifests/$(VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(VERSION)/submariner.v$(VERSION).clusterserviceversion.yaml
+	| $(OPERATOR_SDK) generate packagemanifests -q --version $(BUNDLE_VERSION) $(PKG_MAN_OPTS)) && \
+	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
+	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
+	mv packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(BUNDLE_VERSION)/submariner.v$(BUNDLE_VERSION).clusterserviceversion.yaml
 
 golangci-lint: generate-embeddedyamls
 
