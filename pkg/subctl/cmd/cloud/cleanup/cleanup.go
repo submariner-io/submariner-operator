@@ -38,6 +38,7 @@ func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
 	}
 
 	cmd.AddCommand(newAWSCleanupCommand())
+	cmd.AddCommand(newGCPCleanupCommand())
 
 	return cmd
 }

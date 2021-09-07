@@ -44,7 +44,9 @@ require (
 	github.com/uw-labs/lichen v0.1.4
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
+	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
+	google.golang.org/api v0.56.0
 	gopkg.in/ini.v1 v1.62.0
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.1

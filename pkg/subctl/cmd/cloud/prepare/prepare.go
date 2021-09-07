@@ -31,6 +31,14 @@ var (
 	kubeContext      *string
 )
 
+var (
+	gwInstanceType   string
+	gateways         int
+	dedicatedGateway bool
+)
+
+const DefaultNumGateways = 1
+
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
 func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
 	kubeConfig = origKubeConfig
@@ -47,6 +55,7 @@ func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
 	cmd.PersistentFlags().Uint16Var(&metricsPort, "metrics-port", 8080, "Metrics port")
 
 	cmd.AddCommand(newAWSPrepareCommand())
+	cmd.AddCommand(newGCPPrepareCommand())
 
 	return cmd
 }
