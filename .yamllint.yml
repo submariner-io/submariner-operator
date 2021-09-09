@@ -23,5 +23,3 @@ ignore: |
   /config/bundle/kustomization.yaml
   /bundle
   /packagemanifests
-
-strict: true
