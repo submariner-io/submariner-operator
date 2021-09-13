@@ -1049,8 +1049,9 @@ github.com/onsi/gomega v1.9.0/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoT
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.10.2/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.14.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
-github.com/onsi/gomega v1.15.0 h1:WjP/FQ/sk43MRmnEcT+MlDw2TFvkrXlprrPST/IudjU=
 github.com/onsi/gomega v1.15.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
+github.com/onsi/gomega v1.16.0 h1:6gjqkI8iiRHMvdccRJM8rVKjCWk6ZIm6FTm3ddIe4/c=
+github.com/onsi/gomega v1.16.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
 github.com/opencontainers/go-digest v0.0.0-20170106003457-a6d0ee40d420/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/opencontainers/go-digest v0.0.0-20180430190053-c9281466c8b2/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
@@ -1296,8 +1297,9 @@ github.com/submariner-io/cloud-prepare v0.10.0-rc0.0.20210727150757-5e29b6472b99
 github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd h1:2kNzGLWrobmyPuo68Cyb4uhEaJetWovjf754Smk05go=
 github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd/go.mod h1:R78rfRvGMIFM66qDcfY9ks1crOfSHWb1eaSgpAYw5CA=
 github.com/submariner-io/shipyard v0.10.0-rc0/go.mod h1:+B8Hrs2vYg7XKFMk61HVg1ev/twSYFIJg3hWiJnCuq0=
-github.com/submariner-io/shipyard v0.10.0 h1:qAopwUlfahVon8WVgCG5FXiVvRqugDrTwgC2LGe+VCI=
 github.com/submariner-io/shipyard v0.10.0/go.mod h1:Wi1G4N4EiwwPINAL5PCSdeQh52DWnPanqUNIC9R+Zl0=
+github.com/submariner-io/shipyard v0.11.0-m2 h1:PQQ7UwsdNmzhMd+bdG8k7U5kltw7ZLNFUUM4qannNZI=
+github.com/submariner-io/shipyard v0.11.0-m2/go.mod h1:YeKUW3r/c94M27Xao/3E1D4xc6nWstkSNA8QeL7+WXs=
 github.com/submariner-io/submariner v0.10.0-rc1.0.20210816153739-c8e6654e3930 h1:Tmlwi24EvKFI69s5LONRrludmrJcBGV3rdbleCZncHQ=
 github.com/submariner-io/submariner v0.10.0-rc1.0.20210816153739-c8e6654e3930/go.mod h1:7mAVck+eUcmEKeUe8GRw8xbOUGzgVakck8aIg7o8CSE=
 github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816112556-6e4bb78fab88/go.mod h1:VfjgFyeFkEzNCmZnTFdxWYuEvLyvH4429fwdue6gq1o=
