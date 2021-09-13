@@ -24,7 +24,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onsi/ginkgo v1.16.4
-	github.com/onsi/gomega v1.15.0
+	github.com/onsi/gomega v1.16.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.4.0
@@ -36,7 +36,7 @@ require (
 	github.com/submariner-io/admiral v0.10.0-rc1
 	github.com/submariner-io/cloud-prepare v0.10.0-rc0.0.20210727150757-5e29b6472b99
 	github.com/submariner-io/lighthouse v0.10.0-rc0.0.20210713134647-2739f14330cd
-	github.com/submariner-io/shipyard v0.10.0
+	github.com/submariner-io/shipyard v0.11.0-m2
 	github.com/submariner-io/submariner v0.10.0-rc1.0.20210816153739-c8e6654e3930
 	github.com/submariner-io/submariner-operator/apis v0.0.0-20210817145008-861856b068a1
 	github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930
