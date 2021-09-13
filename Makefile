@@ -62,6 +62,8 @@ endif
 FROM_VERSION ?= $(shell (git describe --abbrev=0 --tags --match=v[0-9]*\.[0-9]*\.[0-9]* --exclude=?${BUNDLE_VERSION}* 2>/dev/null || echo v0.0.0) \
           | cut -d'-' -f1 | cut -c2-)
 CHANNEL ?= alpha-$(shell echo ${BUNDLE_VERSION} | cut -d'.' -f1,2)
+CHANNELS ?= $(CHANNEL)
+DEFAULT_CHANNEL ?= $(CHANNEL)
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
 endif
@@ -71,6 +73,7 @@ endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Options for 'packagemanifests'
+IS_CHANNEL_DEFAULT ?= 1
 ifneq ($(origin FROM_VERSION), undefined)
 PKG_FROM_VERSION := --from-version=$(FROM_VERSION)
 endif
