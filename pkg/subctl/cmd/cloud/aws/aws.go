@@ -31,6 +31,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	cloudprepareaws "github.com/submariner-io/cloud-prepare/pkg/aws"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
@@ -38,6 +39,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"gopkg.in/ini.v1"
+	"k8s.io/client-go/dynamic"
 )
 
 const (
@@ -107,8 +109,14 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 	k8sConfig, err := restconfig.ForCluster(kubeConfig, kubeContext)
 	utils.ExitOnError("Failed to initialize a Kubernetes config", err)
 
+	restMapper, err := util.BuildRestMapper(k8sConfig)
+	utils.ExitOnError("Failed to create restmapper", err)
+
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	utils.ExitOnError("Failed to create dynamic client", err)
+
 	awsCloud := cloudprepareaws.NewCloud(ec2.New(awsSession), infraID, region)
-	msDeployer := ocp.NewK8sMachinesetDeployer(k8sConfig)
+	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
 	gwDeployer, err := cloudprepareaws.NewOcpGatewayDeployer(awsCloud, msDeployer, gwInstanceType)
 	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
 
