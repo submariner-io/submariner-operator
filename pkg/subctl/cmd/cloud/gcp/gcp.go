@@ -28,9 +28,11 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	cloudpreparegcp "github.com/submariner-io/cloud-prepare/pkg/gcp"
 	gcpClientIface "github.com/submariner-io/cloud-prepare/pkg/gcp/client"
+	"github.com/submariner-io/cloud-prepare/pkg/k8s"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
@@ -38,6 +40,8 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
 	"google.golang.org/api/option"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -60,7 +64,8 @@ func AddGCPFlags(command *cobra.Command) {
 	command.Flags().StringVar(&region, regionFlag, "", "GCP region")
 	command.Flags().StringVar(&projectID, projectIDFlag, "", "GCP project ID")
 	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
-		"OCP metadata.json file (or directory containing it) to read GCP infra ID and region from (takes precedence over the flags)")
+		"OCP metadata.json file (or the directory containing it) from which to read the GCP infra ID "+
+			"and region from (takes precedence over the specific flags)")
 
 	dirname, err := os.UserHomeDir()
 	if err != nil {
@@ -106,11 +111,23 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 	k8sConfig, err := restconfig.ForCluster(kubeConfig, kubeContext)
 	utils.ExitOnError("Failed to initialize a Kubernetes config", err)
 
+	clientSet, err := kubernetes.NewForConfig(k8sConfig)
+	utils.ExitOnError("Failed to create Kubernetes client", err)
+
+	k8sClientSet, err := k8s.NewK8sInterface(clientSet)
+	utils.ExitOnError("Failed to create cloud-prepare k8s client", err)
+
+	restMapper, err := util.BuildRestMapper(k8sConfig)
+	utils.ExitOnError("Failed to create restmapper", err)
+
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	utils.ExitOnError("Failed to create dynamic client", err)
+
 	gcpCloud := cloudpreparegcp.NewCloud(projectID, infraID, region, gcpClient)
-	msDeployer := ocp.NewK8sMachinesetDeployer(k8sConfig)
+	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
 	// TODO: Ideally we should be able to specify the image for GWNode, but it was seen that
 	// with certain images, the instance is not coming up. Needs to be investigated further.
-	gwDeployer, err := cloudpreparegcp.NewOcpGatewayDeployer(gcpCloud, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sConfig)
+	gwDeployer, err := cloudpreparegcp.NewOcpGatewayDeployer(gcpCloud, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sClientSet)
 	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
 
 	return function(gcpCloud, gwDeployer, reporter)
