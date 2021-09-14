@@ -35,11 +35,11 @@ func newGCPPrepareCommand() *cobra.Command {
 	}
 
 	gcp.AddGCPFlags(cmd)
-	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "n1-standard-4", "Type of gateways instance machine")
+	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "n1-standard-4", "Type of gateway instance machine")
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of gateways to deploy")
 	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", false,
-		"If a dedicated gateway node has to be deployed (default false)")
+		"Whether a dedicated gateway node has to be deployed (default false)")
 	return cmd
 }
 
