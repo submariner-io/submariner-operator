@@ -92,10 +92,7 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 	reporter := cloudutils.NewCLIReporter()
 	reporter.Started("Retrieving GCP credentials from your GCP configuration")
 	creds, err := getGCPCredentials()
-	if err != nil {
-		reporter.Failed(err)
-		return err
-	}
+	utils.ExitOnError("Failed to get GCP credentials", err)
 	reporter.Succeeded("")
 
 	reporter.Started("Initializing GCP connectivity")
