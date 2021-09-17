@@ -35,7 +35,7 @@ func newAWSPrepareCommand() *cobra.Command {
 	}
 
 	aws.AddAWSFlags(cmd)
-	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "c5d.large", "Type of gateways instance machine")
+	cmd.Flags().StringVar(&awsGWInstanceType, "gateway-instance", "c5d.large", "Type of gateways instance machine")
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of dedicated gateways to deploy (Set to `0` when using --load-balancer mode)")
 	return cmd
@@ -62,7 +62,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		input.InternalPorts = append(input.InternalPorts, gwPorts...)
 	}
 
-	err := aws.RunOnAWS(gwInstanceType, *kubeConfig, *kubeContext,
+	err := aws.RunOnAWS(awsGWInstanceType, *kubeConfig, *kubeContext,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {
 				gwInput := api.GatewayDeployInput{

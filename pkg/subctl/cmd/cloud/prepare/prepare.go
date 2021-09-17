@@ -32,9 +32,10 @@ var (
 )
 
 var (
-	gwInstanceType   string
-	gateways         int
-	dedicatedGateway bool
+	awsGWInstanceType string
+	gcpGWInstanceType string
+	gateways          int
+	dedicatedGateway  bool
 )
 
 const DefaultNumGateways = 1
