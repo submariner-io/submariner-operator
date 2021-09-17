@@ -35,7 +35,7 @@ func newGCPPrepareCommand() *cobra.Command {
 	}
 
 	gcp.AddGCPFlags(cmd)
-	cmd.Flags().StringVar(&gwInstanceType, "gateway-instance", "n1-standard-4", "Type of gateway instance machine")
+	cmd.Flags().StringVar(&gcpGWInstanceType, "gateway-instance", "n1-standard-4", "Type of gateway instance machine")
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of gateways to deploy")
 	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", false,
@@ -59,7 +59,7 @@ func prepareGCP(cmd *cobra.Command, args []string) {
 		},
 	}
 
-	err := gcp.RunOnGCP(gwInstanceType, *kubeConfig, *kubeContext, dedicatedGateway,
+	err := gcp.RunOnGCP(gcpGWInstanceType, *kubeConfig, *kubeContext, dedicatedGateway,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {
 				gwInput := api.GatewayDeployInput{
