@@ -11,6 +11,7 @@ rules:
   - services
   - namespaces
   - nodes
+  - endpoints
   verbs:
   - get
   - list
