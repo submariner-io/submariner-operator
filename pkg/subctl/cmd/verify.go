@@ -20,6 +20,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -38,7 +39,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
@@ -148,7 +149,7 @@ func isNonInteractive(err error) bool {
 
 	if pathError, ok := err.(*os.PathError); ok {
 		if syserr, ok := pathError.Err.(syscall.Errno); ok {
-			if pathError.Path == "/dev/stdin" && (syserr == syscall.EBADF || syserr == syscall.EINVAL) {
+			if pathError.Path == "/dev/stdin" && (errors.Is(syserr, syscall.EBADF) || errors.Is(syserr, syscall.EINVAL)) {
 				return true
 			}
 		}
@@ -341,7 +342,7 @@ func detectGlobalnet() {
 
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(
 		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
-	if errors.IsNotFound(err) {
+	if k8serrors.IsNotFound(err) {
 		utils.ExitWithErrorMsg(`
 The Submariner resource was not found. Either submariner has not been deployed in this cluster or was deployed using helm.
 This command only supports submariner deployed using the operator via 'subctl join'.`)

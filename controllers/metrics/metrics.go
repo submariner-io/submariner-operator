@@ -18,6 +18,7 @@ limitations under the License.
 package metrics
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
@@ -25,7 +26,7 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -51,9 +52,9 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 		if err != nil {
 			// If this operator is deployed to a cluster without the prometheus-operator running, it will return
 			// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
-			if err == metrics.ErrServiceMonitorNotPresent {
+			if errors.Is(err, metrics.ErrServiceMonitorNotPresent) {
 				reqLogger.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
-			} else if !errors.IsAlreadyExists(err) {
+			} else if !k8serrors.IsAlreadyExists(err) {
 				return err
 			}
 		}
