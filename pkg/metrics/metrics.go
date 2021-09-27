@@ -19,6 +19,7 @@ package metrics
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/submariner-io/admiral/pkg/resource"
@@ -62,7 +63,7 @@ func CreateMetricsService(ctx context.Context, cfg *rest.Config, servicePorts []
 	}
 	s, err := initOperatorService(ctx, client, servicePorts)
 	if err != nil {
-		if err == k8sutil.ErrNoNamespace || err == k8sutil.ErrRunLocal {
+		if errors.Is(err, k8sutil.ErrNoNamespace) || errors.Is(err, k8sutil.ErrRunLocal) {
 			log.Info("Skipping metrics Service creation; not running in a cluster.")
 			return nil, nil
 		}

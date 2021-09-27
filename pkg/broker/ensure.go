@@ -20,6 +20,7 @@ package broker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -174,7 +175,7 @@ func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA stri
 		}
 		return true, nil
 	})
-	if err == wait.ErrWaitTimeout {
+	if errors.Is(err, wait.ErrWaitTimeout) {
 		return nil, lastErr
 	}
 

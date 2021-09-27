@@ -20,6 +20,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -32,7 +33,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	cmdversion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	"github.com/submariner-io/submariner-operator/pkg/version"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -187,7 +188,7 @@ func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[st
 	err := wait.ExponentialBackoff(nodeLabelBackoff, func() (bool, error) {
 		_, lastErr = c.CoreV1().Nodes().Patch(context.TODO(), nodeName, types.MergePatchType, []byte(patch), metav1.PatchOptions{})
 		if lastErr != nil {
-			if !errors.IsConflict(lastErr) {
+			if !k8serrors.IsConflict(lastErr) {
 				return false, lastErr
 			}
 			return false, nil
@@ -196,7 +197,7 @@ func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[st
 		}
 	})
 
-	if err == wait.ErrWaitTimeout {
+	if errors.Is(err, wait.ErrWaitTimeout) {
 		return lastErr
 	}
 
