@@ -20,26 +20,27 @@ package cleanup
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/generic"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-var (
-	kubeConfig  *string
-	kubeContext *string
-)
-
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
-func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
-	kubeConfig = origKubeConfig
-	kubeContext = origKubeContext
+func newGenericCleanupCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cleanup",
-		Short: "Clean up the cloud",
-		Long:  `This command cleans up the cloud after Submariner uninstallation.`,
+		Use:   "generic",
+		Short: "Clean up a k8s cluster",
+		Long:  "This command cleans up a K8s cluster after Submariner uninstallation.",
+		Run:   cleanupGenericCluster,
 	}
 
-	cmd.AddCommand(newAWSCleanupCommand())
-	cmd.AddCommand(newGCPCleanupCommand())
-	cmd.AddCommand(newGenericCleanupCommand())
-
 	return cmd
+}
+
+func cleanupGenericCluster(cmd *cobra.Command, args []string) {
+	err := generic.RunOnK8sCluster(*kubeConfig, *kubeContext,
+		func(gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
+			return gwDeployer.Cleanup(reporter)
+		})
+
+	utils.ExitOnError("Failed to cleanup K8s cluster", err)
 }

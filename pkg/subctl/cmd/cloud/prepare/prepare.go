@@ -57,6 +57,7 @@ func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
 
 	cmd.AddCommand(newAWSPrepareCommand())
 	cmd.AddCommand(newGCPPrepareCommand())
+	cmd.AddCommand(newGenericPrepareCommand())
 
 	return cmd
 }
