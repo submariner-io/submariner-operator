@@ -59,7 +59,7 @@ function verify_subm_operator() {
 
   # Verify SubM Operator role binding
   kubectl get rolebindings --namespace=$subm_ns submariner-operator || \
-  kubectl get roles -n $subm_ns -l olm.owner.namespace=submariner-operator
+  kubectl get rolebindings -n $subm_ns -l olm.owner.namespace=submariner-operator
 
   # Verify SubM Operator deployment
   kubectl get deployments --namespace=$subm_ns submariner-operator
@@ -217,6 +217,9 @@ function verify_subm_cr() {
 
 function verify_subm_op_pod() {
   subm_operator_pod_name=$(kubectl get pods --namespace=$subm_ns -l name=$operator_deployment_name -o=jsonpath='{.items..metadata.name}')
+  if [ -z $subm_operator_pod_name ]; then
+    subm_operator_pod_name=$(kubectl get pods --namespace=$subm_ns -l control-plane=$operator_deployment_name -o=jsonpath='{.items..metadata.name}')
+  fi
 
   # Show SubM Operator pod info
   kubectl get pod $subm_operator_pod_name --namespace=$subm_ns -o json
