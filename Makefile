@@ -160,7 +160,7 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 	GOARCH=$${components[-1]}; \
 	export GOARCH GOOS; \
 	$(SCRIPTS_DIR)/compile.sh \
-		--ldflags "-X github.com/submariner-io/submariner-operator/apis.Version=$(VERSION) \
+		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION) \
 			   -X=github.com/submariner-io/submariner-operator/apis.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
 		--noupx $@ ./pkg/subctl/main.go $(BUILD_ARGS)
 
