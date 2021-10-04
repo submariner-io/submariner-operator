@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.13
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.40.41
+	github.com/aws/aws-sdk-go v1.40.54
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/go-errors/errors v1.2.0 // indirect
@@ -34,10 +34,10 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.2.0
 	github.com/submariner-io/admiral v0.11.0-rc0
-	github.com/submariner-io/cloud-prepare v0.11.0-m2
-	github.com/submariner-io/lighthouse v0.11.0-m2
+	github.com/submariner-io/cloud-prepare v0.11.0-rc0
+	github.com/submariner-io/lighthouse v0.11.0-rc0
 	github.com/submariner-io/shipyard v0.11.0-rc0
-	github.com/submariner-io/submariner v0.11.0-m2
+	github.com/submariner-io/submariner v0.11.0-rc0
 	github.com/submariner-io/submariner-operator/apis v0.0.0-20210817145008-861856b068a1
 	github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930
 	github.com/ulikunitz/xz v0.5.10 // indirect
@@ -46,7 +46,7 @@ require (
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
-	google.golang.org/api v0.56.0
+	google.golang.org/api v0.58.0
 	gopkg.in/ini.v1 v1.62.0
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.1
