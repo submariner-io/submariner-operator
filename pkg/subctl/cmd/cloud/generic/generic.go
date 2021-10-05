@@ -36,11 +36,9 @@ func RunOnK8sCluster(kubeConfig, kubeContext string,
 	clientSet, err := kubernetes.NewForConfig(k8sConfig)
 	utils.ExitOnError("Failed to create Kubernetes client", err)
 
-	k8sClientSet, err := k8s.NewK8sInterface(clientSet)
-	utils.ExitOnError("Failed to create cloud-prepare k8s client", err)
+	k8sClientSet := k8s.NewK8sInterface(clientSet)
 
-	gwDeployer, err := generic.NewGatewayDeployer(k8sClientSet)
-	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
+	gwDeployer := generic.NewGatewayDeployer(k8sClientSet)
 
 	reporter := cloudutils.NewCLIReporter()
 

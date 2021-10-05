@@ -111,8 +111,7 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 	clientSet, err := kubernetes.NewForConfig(k8sConfig)
 	utils.ExitOnError("Failed to create Kubernetes client", err)
 
-	k8sClientSet, err := k8s.NewK8sInterface(clientSet)
-	utils.ExitOnError("Failed to create cloud-prepare k8s client", err)
+	k8sClientSet := k8s.NewK8sInterface(clientSet)
 
 	restMapper, err := util.BuildRestMapper(k8sConfig)
 	utils.ExitOnError("Failed to create restmapper", err)

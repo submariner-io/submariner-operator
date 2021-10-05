@@ -28,8 +28,8 @@ import (
 func newGenericPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generic",
-		Short: "Prepare a generic K8s Cluster for Submariner",
-		Long:  "This command prepares the K8s cluster for Submariner installation.",
+		Short: "Prepares a generic cluster for Submariner",
+		Long:  "This command prepares a generic cluster for Submariner installation.",
 		Run:   prepareGenericCluster,
 	}
 
