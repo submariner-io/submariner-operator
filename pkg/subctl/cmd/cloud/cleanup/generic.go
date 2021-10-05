@@ -28,8 +28,8 @@ import (
 func newGenericCleanupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generic",
-		Short: "Clean up a k8s cluster",
-		Long:  "This command cleans up a K8s cluster after Submariner uninstallation.",
+		Short: "Cleans up a cluster after Submariner uninstallation",
+		Long:  "This command cleans up Submariner components in a cluster after Submariner uninstallation.",
 		Run:   cleanupGenericCluster,
 	}
 
