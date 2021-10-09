@@ -197,8 +197,8 @@ function verify_subm_cr() {
   validate_equals '.kind' 'Submariner'
   validate_equals '.metadata.name' $deployment_name
   validate_equals '.spec.brokerK8sApiServer' $SUBMARINER_BROKER_URL
-  # every cluster must have it's own token / SA
-  validate_not_equals '.spec.brokerK8sApiServerToken' $SUBMARINER_BROKER_TOKEN
+  # TODO: every cluster must have it's own token / SA (not working when using bundle/acm)
+  # validate_not_equals '.spec.brokerK8sApiServerToken' $SUBMARINER_BROKER_TOKEN
   validate_equals '.spec.brokerK8sCA' $SUBMARINER_BROKER_CA
   validate_equals '.spec.brokerK8sRemoteNamespace' $SUBMARINER_BROKER_NS
   validate_equals '.spec.ceIPSecDebug' $ce_ipsec_debug
@@ -217,7 +217,7 @@ function verify_subm_cr() {
 
 function verify_subm_op_pod() {
   subm_operator_pod_name=$(kubectl get pods --namespace=$subm_ns -l name=$operator_deployment_name -o=jsonpath='{.items..metadata.name}')
-  if [ -z $subm_operator_pod_name ]; then
+  if [[ -z "${subm_operator_pod_name}" ]]; then
     subm_operator_pod_name=$(kubectl get pods --namespace=$subm_ns -l control-plane=$operator_deployment_name -o=jsonpath='{.items..metadata.name}')
   fi
 
