@@ -43,7 +43,7 @@ jobs:
 
       - name: Run E2E using the bundle deployment method
         run: |
-          make e2e using=olm REPO=localhost:5000 IMG=localhost:5000/submariner-operator:local
+          make e2e using=olm,lighthouse REPO=localhost:5000 IMG=localhost:5000/submariner-operator:local
 
       - name: Raise an Issue to report broken bundle
         if: ${{ failure() }}
