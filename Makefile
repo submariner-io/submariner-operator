@@ -61,7 +61,8 @@ BUNDLE_VERSION := $(shell (git describe --abbrev=0 --tags --match=v[0-9]*\.[0-9]
 endif
 FROM_VERSION ?= $(shell (git describe --abbrev=0 --tags --match=v[0-9]*\.[0-9]*\.[0-9]* --exclude=?${BUNDLE_VERSION}* 2>/dev/null || echo v0.0.0) \
           | cut -d'-' -f1 | cut -c2-)
-CHANNEL ?= alpha-$(shell echo ${BUNDLE_VERSION} | cut -d'.' -f1,2)
+SHORT_VERSION := $(shell echo ${BUNDLE_VERSION} | cut -d'.' -f1,2)
+CHANNEL ?= alpha-$(SHORT_VERSION)
 CHANNELS ?= $(CHANNEL)
 DEFAULT_CHANNEL ?= $(CHANNEL)
 ifneq ($(origin CHANNELS), undefined)
@@ -75,7 +76,12 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # Options for 'packagemanifests'
 IS_CHANNEL_DEFAULT ?= 1
 ifneq ($(origin FROM_VERSION), undefined)
+ifneq ($(FROM_VERSION), 0.0.0)
 PKG_FROM_VERSION := --from-version=$(FROM_VERSION)
+REPLACES_OP := add
+else
+REPLACES_OP := remove
+endif
 endif
 ifneq ($(origin CHANNEL), undefined)
 PKG_CHANNELS := --channel=$(CHANNEL)
@@ -228,6 +234,9 @@ kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 	 $(KUSTOMIZE) edit set image repo=$(REPO)) && \
 	(cd config/bundle && \
 	sed -e 's/$${VERSION}/$(BUNDLE_VERSION)/g' kustomization.template.yaml > kustomization.yaml && \
+	cat ./patches/submariner.csv.template.yaml \
+	 | sed -e 's/$${REPLACES_OP}/$(REPLACES_OP)/g' -e 's/$${FROM_VERSION}/$(FROM_VERSION)/g' \
+	 > ./patches/submariner.csv.config.yaml && \
 	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
 
 # Generate bundle manifests and metadata, then validate generated files
@@ -236,6 +245,7 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)) && \
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml && cd ../../) && \
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
+	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml && \
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 # Generate package manifests
@@ -244,6 +254,7 @@ packagemanifests: $(OPERATOR_SDK) $(KUSTOMIZE) kustomization
 	| $(OPERATOR_SDK) generate packagemanifests -q --version $(BUNDLE_VERSION) $(PKG_MAN_OPTS)) && \
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
+	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
 	mv packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(BUNDLE_VERSION)/submariner.v$(BUNDLE_VERSION).clusterserviceversion.yaml
 
 golangci-lint: generate-embeddedyamls
