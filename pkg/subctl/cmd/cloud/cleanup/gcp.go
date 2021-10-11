@@ -31,7 +31,7 @@ func newGCPCleanupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gcp",
 		Short: "Clean up a GCP cloud",
-		Long:  "This command cleans up a GCP-based cloud after Submariner uninstallation.",
+		Long:  "This command cleans up an installer-provisioned infrastructure (IPI) on GCP-based cloud after Submariner uninstallation.",
 		Run:   cleanupGCP,
 	}
 
