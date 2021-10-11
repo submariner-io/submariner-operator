@@ -29,8 +29,8 @@ import (
 func newAWSPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aws",
-		Short: "Prepare an AWS cloud",
-		Long:  "This command prepares an AWS-based cloud for Submariner installation.",
+		Short: "Prepare an OpenShift AWS cloud",
+		Long:  "This command prepares an OpenShift installer-provisioned infrastructure (IPI) on AWS cloud for Submariner installation.",
 		Run:   prepareAws,
 	}
 

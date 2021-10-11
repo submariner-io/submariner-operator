@@ -29,8 +29,8 @@ import (
 func newGCPPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gcp",
-		Short: "Prepare the GCP cloud",
-		Long:  "This command prepares the GCP-based cloud for Submariner installation.",
+		Short: "Prepare an OpenShift GCP cloud",
+		Long:  "This command prepares an OpenShift installer-provisioned infrastructure (IPI) on GCP cloud for Submariner installation.",
 		Run:   prepareGCP,
 	}
 

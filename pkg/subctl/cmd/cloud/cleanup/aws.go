@@ -31,8 +31,9 @@ func newAWSCleanupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aws",
 		Short: "Clean up an AWS cloud",
-		Long:  "This command cleans up an AWS based cloud after Submariner uninstallation.",
-		Run:   cleanupAws,
+		Long: "This command cleans up an OpenShift installer-provisioned infrastructure (IPI) on AWS-based" +
+			" cloud after Submariner uninstallation.",
+		Run: cleanupAws,
 	}
 
 	aws.AddAWSFlags(cmd)

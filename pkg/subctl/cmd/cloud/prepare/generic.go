@@ -29,7 +29,7 @@ func newGenericPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generic",
 		Short: "Prepares a generic cluster for Submariner",
-		Long:  "This command prepares a generic cluster for Submariner installation.",
+		Long:  "This command labels the required number of gateway nodes for Submariner installation.",
 		Run:   prepareGenericCluster,
 	}
 
