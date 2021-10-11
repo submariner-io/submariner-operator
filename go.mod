@@ -34,10 +34,10 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.2.0
 	github.com/submariner-io/admiral v0.11.0-rc1
-	github.com/submariner-io/cloud-prepare v0.11.0-rc0.0.20211005005326-4c93f6818e91
-	github.com/submariner-io/lighthouse v0.11.0-rc0
+	github.com/submariner-io/cloud-prepare v0.11.0-rc1
+	github.com/submariner-io/lighthouse v0.11.0-rc1
 	github.com/submariner-io/shipyard v0.11.0-rc1
-	github.com/submariner-io/submariner v0.11.0-rc0
+	github.com/submariner-io/submariner v0.11.0-rc1
 	github.com/submariner-io/submariner-operator/apis v0.0.0-20210817145008-861856b068a1
 	github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930
 	github.com/ulikunitz/xz v0.5.10 // indirect
