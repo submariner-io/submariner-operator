@@ -63,7 +63,7 @@ spec:
     2. Apply the broker RBAC definitions:
 
         ```shell
-        git clone --depth 1 --single-branch --branch release-0.9 https://github.com/submariner-io/submariner-operator
+        git clone --depth 1 --single-branch --branch release-$(SHORT_VERSION) https://github.com/submariner-io/submariner-operator
         kubectl apply -k submariner-operator/config/broker -n submariner-k8s-broker
         ```
 
