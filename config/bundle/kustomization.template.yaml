@@ -16,7 +16,14 @@ patchesJson6902:
       name: submariner.v${VERSION}
       namespace: placeholder
       version: v1alpha1
-
+patches:
+  - path: patches/submariner.csv.config.yaml
+    target:
+      group: operators.coreos.com
+      kind: ClusterServiceVersion
+      name: submariner.v${VERSION}
+      namespace: placeholder
+      version: v1alpha1
 vars:
   - fieldref:
       fieldPath: spec.version
