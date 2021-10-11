@@ -12,6 +12,8 @@ OPERATOR_SDK := $(CURDIR)/bin/operator-sdk
 KUSTOMIZE_VERSION := 3.10.0
 KUSTOMIZE := $(CURDIR)/bin/kustomize
 
+CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
+
 # Running in Dapper
 
 # Semantic versioning regex
@@ -176,13 +178,18 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") $(VE
 
 ci: generate-embeddedyamls golangci-lint markdownlint unit build images
 
-generate-embeddedyamls: generate pkg/subctl/operator/common/embeddedyamls/yamls.go
+# Generate deep-copy code
+CONTROLLER_DEEPCOPY := api/submariner/v1alpha1/zz_generated.deepcopy.go
+$(CONTROLLER_DEEPCOPY): $(CONTROLLER_GEN) $(VENDOR_MODULES)
+	cd api && $(CONTROLLER_GEN) object:headerFile="$(CURDIR)/hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
+
+# Generate embedded YAMLs
+generate-embeddedyamls: $(CONTROLLER_DEEPCOPY) pkg/subctl/operator/common/embeddedyamls/yamls.go
 
 pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(VENDOR_MODULES)
 	$(GO) generate pkg/subctl/operator/common/embeddedyamls/generate.go
 
 # Operator CRDs
-CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
 $(CONTROLLER_GEN): $(VENDOR_MODULES)
 	mkdir -p $(@D)
 	$(GO) build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
@@ -211,12 +218,8 @@ generate-clientset: $(VENDOR_MODULES)
 		github.com/submariner-io/submariner-operator/api \
 		submariner:v1alpha1
 
-# Generate code
-generate: $(CONTROLLER_GEN) $(VENDOR_MODULES)
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
-
 # Generate manifests e.g. CRD, RBAC etc
-manifests: generate $(CONTROLLER_GEN) $(VENDOR_MODULES)
+manifests: $(CONTROLLER_DEEPCOPY) $(CONTROLLER_GEN) $(VENDOR_MODULES)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # test if VERSION matches the semantic versioning rule
