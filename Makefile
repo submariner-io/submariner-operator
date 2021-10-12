@@ -218,7 +218,7 @@ manifests: generate $(CONTROLLER_GEN) vendor/modules.txt
 # test if VERSION matches the semantic versioning rule
 is-semantic-version:
     ifneq ($(IS_SEMANTIC_VERSION),true)
-	    $(error 'ERROR: VERSION "$(BUNDLE_VERSION)" does not match the format required by operator-sdk.'))
+	    $(error 'ERROR: VERSION "$(BUNDLE_VERSION)" does not match the format required by operator-sdk.')
     endif
 
 # TODO: a workaround until this issue will be fixed https://github.com/kubernetes-sigs/kustomize/issues/4008
@@ -257,6 +257,16 @@ packagemanifests: $(OPERATOR_SDK) $(KUSTOMIZE) kustomization
 	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
 	mv packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(BUNDLE_VERSION)/submariner.v$(BUNDLE_VERSION).clusterserviceversion.yaml
 
+# Statically validate the operator bundle using Scorecard.
+scorecard: bundle olm clusters
+	timeout 60 bash -c "until KUBECONFIG=$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 \
+	$(OPERATOR_SDK) olm status > /dev/null; do sleep 10; done" && \
+	$(OPERATOR_SDK) scorecard --kubeconfig=$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 -o text ./bundle
+
+# Create the clusters with olm
+olm:
+	$(eval override CLUSTERS_ARGS += --olm)
+
 golangci-lint: generate-embeddedyamls
 
 unit: generate-embeddedyamls
@@ -280,7 +290,7 @@ $(OPERATOR_SDK):
 	sha256sum -c scripts/operator-sdk.sha256
 	chmod a+x $@
 
-.PHONY: build ci clean generate-clientset generate-embeddedyamls bundle packagemanifests kustomization is-semantic-version
+.PHONY: build ci clean generate-clientset generate-embeddedyamls bundle packagemanifests kustomization is-semantic-version olm scorecard
 
 else
 

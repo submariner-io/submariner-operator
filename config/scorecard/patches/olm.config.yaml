@@ -45,7 +45,7 @@
     entrypoint:
       - scorecard-test
       - olm-status-descriptors
-    image: quay.io/operator-framework/scorecard-test:v1.0.1
+    image: quay.io/operator-framework/scorecard-test:v1.2.0
     labels:
       suite: olm
       test: olm-status-descriptors-test
