@@ -140,7 +140,7 @@ licensecheck: BUILD_ARGS=--noupx
 licensecheck: build bin/lichen bin/submariner-operator
 	bin/lichen -c .lichen.yaml $(BINARIES) bin/submariner-operator
 
-bin/lichen: vendor/modules.txt
+bin/lichen: $(VENDOR_MODULES)
 	mkdir -p $(@D)
 	$(GO) build -o $@ github.com/uw-labs/lichen
 
@@ -148,7 +148,7 @@ package/Dockerfile.submariner-operator: bin/submariner-operator
 
 package/Dockerfile.submariner-operator-index: packagemanifests
 
-bin/submariner-operator: vendor/modules.txt main.go generate-embeddedyamls
+bin/submariner-operator: $(VENDOR_MODULES) main.go generate-embeddedyamls
 	${SCRIPTS_DIR}/compile.sh \
 	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
 	$@ main.go $(BUILD_ARGS)
@@ -161,7 +161,7 @@ dist/subctl-%.tar.xz: bin/subctl-%
 	tar -cJf $@ --transform "s/^bin/subctl-$(VERSION)/" $<
 
 # Versions may include hyphens so it's easier to use $(VERSION) than to extract them from the target
-bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vendor/modules.txt
+bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") $(VENDOR_MODULES)
 	mkdir -p $(@D)
 	target=$@; \
 	target=$${target%.exe}; \
@@ -178,31 +178,31 @@ ci: generate-embeddedyamls golangci-lint markdownlint unit build images
 
 generate-embeddedyamls: generate pkg/subctl/operator/common/embeddedyamls/yamls.go
 
-pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") vendor/modules.txt
+pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(VENDOR_MODULES)
 	$(GO) generate pkg/subctl/operator/common/embeddedyamls/generate.go
 
 # Operator CRDs
 CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
-$(CONTROLLER_GEN): vendor/modules.txt
+$(CONTROLLER_GEN): $(VENDOR_MODULES)
 	mkdir -p $(@D)
 	$(GO) build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
-deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./api/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
+deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./api/submariner/v1alpha1/servicediscovery_types.go $(VENDOR_MODULES)
 	cd api && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
 	test -f $@
 
-deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./api/submariner/v1alpha1/submariner_types.go vendor/modules.txt
+deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./api/submariner/v1alpha1/submariner_types.go $(VENDOR_MODULES)
 	cd api && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
 	test -f $@
 
 # Submariner CRDs
-deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: $(CONTROLLER_GEN) vendor/modules.txt
+deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: $(CONTROLLER_GEN) $(VENDOR_MODULES)
 	cd vendor/github.com/submariner-io/submariner && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
 	test -f $@
 
 # Generate the clientset for the Submariner APIs
 # It needs to be run when the Submariner APIs change
-generate-clientset: vendor/modules.txt
+generate-clientset: $(VENDOR_MODULES)
 	git clone https://github.com/kubernetes/code-generator -b kubernetes-1.19.10 $${GOPATH}/src/k8s.io/code-generator
 	cd $${GOPATH}/src/k8s.io/code-generator && $(GO) mod vendor
 	GO111MODULE=on $${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \
@@ -212,11 +212,11 @@ generate-clientset: vendor/modules.txt
 		submariner:v1alpha1
 
 # Generate code
-generate: $(CONTROLLER_GEN) vendor/modules.txt
+generate: $(CONTROLLER_GEN) $(VENDOR_MODULES)
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
 
 # Generate manifests e.g. CRD, RBAC etc
-manifests: generate $(CONTROLLER_GEN) vendor/modules.txt
+manifests: generate $(CONTROLLER_GEN) $(VENDOR_MODULES)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # test if VERSION matches the semantic versioning rule
