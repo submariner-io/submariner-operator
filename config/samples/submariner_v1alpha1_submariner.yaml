@@ -19,12 +19,12 @@ spec:
   cableDriver: "libreswan"
   ceIPSecPSK: "$(IPSEC_PSK)"
   ceIPSecDebug: false
-  ceIPSecIKEPort: 501
-  ceIPSecNATTPort: 4501
+  ceIPSecIKEPort: 500
+  ceIPSecNATTPort: 4500
   namespace: "$(SUBMARINER_OPERATOR_NAMESPACE)"
   repository: repo
   version: "$(VERSION)"
   connectionHealthCheck:
-    enabled: true
+    enabled: false
     intervalSeconds: 1
     maxPacketLossCount: 5
