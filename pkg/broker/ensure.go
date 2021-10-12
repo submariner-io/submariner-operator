@@ -49,6 +49,7 @@ func Ensure(config *rest.Config, componentArr []string, crds bool) error {
 		for i := range componentArr {
 			switch componentArr[i] {
 			case components.Connectivity:
+				fmt.Println("in broker.Ensure connectivity component")
 				err = gateway.Ensure(crdCreator)
 				if err != nil {
 					return fmt.Errorf("error setting up the connectivity requirements: %s", err)

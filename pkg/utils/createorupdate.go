@@ -21,10 +21,10 @@ package utils
 import (
 	"context"
 	"fmt"
+	"github.com/submariner-io/submariner-operator/config"
 
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -66,7 +66,10 @@ func CreateOrUpdateCRD(ctx context.Context, updater crdutils.CRDUpdater, crd *ap
 func CreateOrUpdateEmbeddedCRD(ctx context.Context, updater crdutils.CRDUpdater, crdYaml string) (bool, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
+	fmt.Printf("in utis.CreateOrUpdateEmbeddedCRD, crdYamls is %s crd is %s\n", crdYaml, crd)
+	fmt.Println("1st line %s", config.GetObject(crdYaml, crd))
+	fmt.Println("2nd line %s\n %s\n", config.GetObject(config.GetEmbeddedYaml(crdYaml), crd))
+	if err := config.GetObject(config.GetEmbeddedYaml(crdYaml), crd); err != nil {
 		return false, fmt.Errorf("error extracting embedded CRD: %s", err)
 	}
 

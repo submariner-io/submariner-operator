@@ -21,10 +21,10 @@ package crds
 import (
 	"context"
 	"fmt"
+	"github.com/submariner-io/submariner-operator/deploy"
 
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
@@ -35,5 +35,5 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 		return false, fmt.Errorf("error creating the api extensions client: %s", err)
 	}
 
-	return utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater, embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
+	return utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater, deploy.GetEmbeddedYaml("crds/submariner.io_servicediscoveries.yaml")) //embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 }

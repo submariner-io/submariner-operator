@@ -20,8 +20,7 @@ package serviceaccount
 
 import (
 	"context"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/config"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -31,7 +30,7 @@ import (
 // Ensure creates the given service account
 func Ensure(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
 	sa := &v1.ServiceAccount{}
-	err := embeddedyamls.GetObject(yaml, sa)
+	err := config.GetObject(config.GetEmbeddedYaml(yaml), sa)
 	if err != nil {
 		return false, err
 	}
@@ -41,7 +40,7 @@ func Ensure(clientSet *clientset.Clientset, namespace, yaml string) (bool, error
 
 func EnsureRole(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
 	role := &rbacv1.Role{}
-	err := embeddedyamls.GetObject(yaml, role)
+	err := config.GetObject(config.GetEmbeddedYaml(yaml), role)
 	if err != nil {
 		return false, err
 	}
@@ -51,7 +50,7 @@ func EnsureRole(clientSet *clientset.Clientset, namespace, yaml string) (bool, e
 
 func EnsureRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
 	roleBinding := &rbacv1.RoleBinding{}
-	err := embeddedyamls.GetObject(yaml, roleBinding)
+	err := config.GetObject(config.GetEmbeddedYaml(yaml), roleBinding)
 	if err != nil {
 		return false, err
 	}
@@ -61,7 +60,7 @@ func EnsureRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (
 
 func EnsureClusterRole(clientSet *clientset.Clientset, yaml string) (bool, error) {
 	clusterRole := &rbacv1.ClusterRole{}
-	err := embeddedyamls.GetObject(yaml, clusterRole)
+	err := config.GetObject(config.GetEmbeddedYaml(yaml), clusterRole)
 	if err != nil {
 		return false, err
 	}
@@ -71,7 +70,7 @@ func EnsureClusterRole(clientSet *clientset.Clientset, yaml string) (bool, error
 
 func EnsureClusterRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
 	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
-	err := embeddedyamls.GetObject(yaml, clusterRoleBinding)
+	err := config.GetObject(config.GetEmbeddedYaml(yaml), clusterRoleBinding)
 	if err != nil {
 		return false, err
 	}

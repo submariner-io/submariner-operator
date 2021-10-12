@@ -19,11 +19,10 @@ limitations under the License.
 package serviceaccount
 
 import (
+	"github.com/submariner-io/submariner-operator/config"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/serviceaccount"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster
@@ -63,121 +62,121 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 
 func ensureServiceAccounts(clientSet *clientset.Clientset, namespace string) (bool, error) {
 	createdOperatorSA, err := serviceaccount.Ensure(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_operator_service_account_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-operator/service_account.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdSubmarinerSA, err := serviceaccount.Ensure(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_gateway_service_account_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-gateway/service_account.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdRouteAgentSA, err := serviceaccount.Ensure(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_route_agent_service_account_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-route-agent/service_account.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdGlobalnetSA, err := serviceaccount.Ensure(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_globalnet_service_account_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-globalnet/service_account.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdNPSyncerSA, err := serviceaccount.Ensure(clientSet, namespace,
-		embeddedyamls.Config_rbac_networkplugin_syncer_service_account_yaml)
+		config.GetEmbeddedYaml("rbac/networkplugin_syncer/service_account.yaml"))
 	return createdOperatorSA || createdSubmarinerSA || createdRouteAgentSA || createdGlobalnetSA || createdNPSyncerSA, err
 }
 
 func ensureClusterRoles(clientSet *clientset.Clientset) (bool, error) {
 	createdOperatorCR, err := serviceaccount.EnsureClusterRole(clientSet,
-		embeddedyamls.Config_rbac_submariner_operator_cluster_role_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-operator/cluster_role.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdSubmarinerCR, err := serviceaccount.EnsureClusterRole(clientSet,
-		embeddedyamls.Config_rbac_submariner_gateway_cluster_role_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-gateway/cluster_role.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdRouteAgentCR, err := serviceaccount.EnsureClusterRole(clientSet,
-		embeddedyamls.Config_rbac_submariner_route_agent_cluster_role_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-route-agent/cluster_role.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdGlobalnetCR, err := serviceaccount.EnsureClusterRole(clientSet,
-		embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-globalnet/cluster_role.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdNPSyncerCR, err := serviceaccount.EnsureClusterRole(clientSet,
-		embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_yaml)
+		config.GetEmbeddedYaml("rbac/networkplugin_syncer/cluster_role.yaml"))
 	return createdOperatorCR || createdSubmarinerCR || createdRouteAgentCR || createdGlobalnetCR || createdNPSyncerCR, err
 }
 
 func ensureClusterRoleBindings(clientSet *clientset.Clientset, namespace string) (bool, error) {
 	createdOperatorCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_operator_cluster_role_binding_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-operator/cluster_role_binding.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdSubmarinerCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_gateway_cluster_role_binding_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-gateway/cluster_role_binding.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdRouteAgentCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_route_agent_cluster_role_binding_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-route-agent/cluster_role_binding.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdGlobalnetCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_binding_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-globalnet/cluster_role_binding.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdNPSyncerCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_binding_yaml)
+		config.GetEmbeddedYaml("rbac/networkplugin_syncer/cluster_role_binding.yaml"))
 	return createdOperatorCRB || createdSubmarinerCRB || createdRouteAgentCRB || createdGlobalnetCRB || createdNPSyncerCRB, err
 }
 
 func ensureRoles(clientSet *clientset.Clientset, namespace string) (bool, error) {
 	createdOperatorRole, err := serviceaccount.EnsureRole(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_operator_role_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-operator/role.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdSubmarinerRole, err := serviceaccount.EnsureRole(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_gateway_role_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-gateway/role.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdRouteAgentRole, err := serviceaccount.EnsureRole(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_route_agent_role_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-route-agent/role.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdGlobalnetRole, err := serviceaccount.EnsureRole(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_globalnet_role_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-globalnet/role.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdMetricsReaderRole, err := serviceaccount.EnsureRole(clientSet, namespace,
-		embeddedyamls.Config_openshift_rbac_submariner_metrics_reader_role_yaml)
+		config.GetEmbeddedYaml("openshift/rbac/submariner-metrics-reader/role.yaml"))
 	if err != nil {
 		return false, err
 	}
@@ -187,31 +186,31 @@ func ensureRoles(clientSet *clientset.Clientset, namespace string) (bool, error)
 
 func ensureRoleBindings(clientSet *clientset.Clientset, namespace string) (bool, error) {
 	createdOperatorRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_operator_role_binding_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-operator/role_binding.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdSubmarinerRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_gateway_role_binding_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-gateway/role_binding.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdRouteAgentRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_route_agent_role_binding_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-route-agent/role_binding.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdGlobalnetRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_rbac_submariner_globalnet_role_binding_yaml)
+		config.GetEmbeddedYaml("rbac/submariner-globalnet/role_binding.yaml"))
 	if err != nil {
 		return false, err
 	}
 
 	createdMetricsReaderRB, err := serviceaccount.EnsureRoleBinding(clientSet, namespace,
-		embeddedyamls.Config_openshift_rbac_submariner_metrics_reader_role_binding_yaml)
+		config.GetEmbeddedYaml("openshift/rbac/submariner-metrics-reader/role_binding.yaml"))
 	if err != nil {
 		return false, err
 	}

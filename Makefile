@@ -166,10 +166,10 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 
 ci: generate-embeddedyamls golangci-lint markdownlint unit build images
 
-generate-embeddedyamls: generate pkg/subctl/operator/common/embeddedyamls/yamls.go
+generate-embeddedyamls: generate #pkg/subctl/operator/common/embeddedyamls/yamls.go
 
-pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") vendor/modules.txt
-	$(GO) generate pkg/subctl/operator/common/embeddedyamls/generate.go
+pkg/subctl/operator/common/embeddedyamls/yamls.go: deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") vendor/modules.txt
+#	$(GO) generate pkg/subctl/operator/common/embeddedyamls/generate.go
 
 # Operator CRDs
 CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
@@ -202,7 +202,7 @@ generate-clientset: vendor/modules.txt
 		submariner:v1alpha1
 
 # Generate code
-generate: $(CONTROLLER_GEN) vendor/modules.txt
+generate: $(CONTROLLER_GEN) vendor/modules.txt pkg/subctl/operator/common/embeddedyamls/yamls.go
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
 
 # Generate manifests e.g. CRD, RBAC etc

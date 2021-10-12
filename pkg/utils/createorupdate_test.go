@@ -20,6 +20,8 @@ package utils
 
 import (
 	"context"
+	"github.com/submariner-io/submariner-operator/config"
+	"github.com/submariner-io/submariner-operator/deploy"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -32,7 +34,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
@@ -46,7 +47,8 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 	BeforeEach(func() {
 		clusterRole = &rbacv1.ClusterRole{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_yaml, clusterRole)
+		//fmt.Println(embeddedyamls.Yamls)
+		err := config.GetObject(config.GetEmbeddedYaml("rbac/submariner-globalnet/cluster_role.yaml"), clusterRole)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 		ctx = context.TODO()
@@ -86,7 +88,8 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 	BeforeEach(func() {
 		clusterRoleBinding = &rbacv1.ClusterRoleBinding{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_binding_yaml, clusterRoleBinding)
+		err := config.GetObject(config.GetEmbeddedYaml("rbac/submariner-globalnet/cluster_role_binding.yaml"),
+			clusterRoleBinding)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 		ctx = context.TODO()
@@ -125,7 +128,7 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 
 	BeforeEach(func() {
 		crd = &apiextensions.CustomResourceDefinition{}
-		err := embeddedyamls.GetObject(embeddedyamls.Deploy_crds_submariner_io_submariners_yaml, crd)
+		err := config.GetObject(deploy.GetEmbeddedYaml("crds/submariner.io_submariners.yaml"), crd) //generatedembeddedyamls.Deploy_crds_submariner_io_submariners_yaml, crd)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = extendedfakeclientset.NewSimpleClientset()
 		ctx = context.TODO()
@@ -216,7 +219,7 @@ var _ = Describe("CreateOrUpdateRole", func() {
 	BeforeEach(func() {
 		role = &rbacv1.Role{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_operator_role_yaml, role)
+		err := config.GetObject(config.GetEmbeddedYaml("rbac/submariner-operator/role.yaml"), role)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 		ctx = context.TODO()
@@ -257,7 +260,7 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 	BeforeEach(func() {
 		roleBinding = &rbacv1.RoleBinding{}
 		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_operator_role_binding_yaml, roleBinding)
+		err := config.GetObject(config.GetEmbeddedYaml("rbac/submariner-operator/role_binding.yaml"), roleBinding)
 		Expect(err).ShouldNot(HaveOccurred())
 		client = fakeclientset.NewSimpleClientset()
 		ctx = context.TODO()

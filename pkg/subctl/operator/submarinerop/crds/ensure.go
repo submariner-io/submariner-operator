@@ -20,10 +20,10 @@ package crds
 
 import (
 	"context"
+	"github.com/submariner-io/submariner-operator/deploy"
 
 	"k8s.io/client-go/rest"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
@@ -39,16 +39,16 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
 	submarinerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
-		embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
+		deploy.GetEmbeddedYaml("crds/submariner.io_submariners.yaml")) //embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
 	if err != nil {
 		return false, err
 	}
 	serviceDiscoveryCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
-		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
+		deploy.GetEmbeddedYaml("crds/submariner.io_servicediscoveries.yaml")) //embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
 		return false, err
 	}
 	brokerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
-		embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
+		deploy.GetEmbeddedYaml("crds/submariner.io_brokers.yaml")) //embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
 	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, err
 }

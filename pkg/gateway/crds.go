@@ -21,10 +21,10 @@ package gateway
 import (
 	"context"
 	"fmt"
+	"github.com/submariner-io/submariner-operator/deploy"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
@@ -33,32 +33,33 @@ import (
 // The resources handled here are the gateway CRDs: Cluster and Endpoint
 func Ensure(crdUpdater crdutils.CRDUpdater) error {
 	_, err := utils.CreateOrUpdateEmbeddedCRD(
-		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml)
+		context.TODO(), crdUpdater, deploy.GetEmbeddedYaml("submariner/crds/submariner.io_clusters.yaml")) //embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Cluster CRD: %s", err)
 	}
 	_, err = utils.CreateOrUpdateEmbeddedCRD(
-		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_endpoints_yaml)
+		context.TODO(), crdUpdater, deploy.GetEmbeddedYaml("submariner/crds/submariner.io_endpoints.yaml")) //embeddedyamls.Deploy_submariner_crds_submariner_io_endpoints_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Endpoint CRD: %s", err)
 	}
+	fmt.Println("in gateway.Ensure")
 	_, err = utils.CreateOrUpdateEmbeddedCRD(
-		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_gateways_yaml)
+		context.TODO(), crdUpdater, deploy.GetEmbeddedYaml("submariner/crds/submariner.io_gateways.yaml")) //embeddedyamls.Deploy_submariner_crds_submariner_io_gateways_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the Gateway CRD: %s", err)
 	}
 	_, err = utils.CreateOrUpdateEmbeddedCRD(
-		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_clusterglobalegressips_yaml)
+		context.TODO(), crdUpdater, deploy.GetEmbeddedYaml("submariner/crds/submariner.io_clusterglobalegressips.yaml")) //embeddedyamls.Deploy_submariner_crds_submariner_io_clusterglobalegressips_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the ClusterGlobalEgressIP CRD: %s", err)
 	}
 	_, err = utils.CreateOrUpdateEmbeddedCRD(
-		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_globalegressips_yaml)
+		context.TODO(), crdUpdater, deploy.GetEmbeddedYaml("ubmariner/crds/submariner.io_globalegressips.yaml")) //embeddedyamls.Deploy_submariner_crds_submariner_io_globalegressips_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the GlobalEgressIP CRD: %s", err)
 	}
 	_, err = utils.CreateOrUpdateEmbeddedCRD(
-		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_globalingressips_yaml)
+		context.TODO(), crdUpdater, deploy.GetEmbeddedYaml("ubmariner/crds/submariner.io_globalingressips.yaml")) //embeddedyamls.Deploy_submariner_crds_submariner_io_globalingressips_yaml)
 	if err != nil && !errors.IsAlreadyExists(err) {
 		return fmt.Errorf("error provisioning the GlobalIngressIP CRD: %s", err)
 	}

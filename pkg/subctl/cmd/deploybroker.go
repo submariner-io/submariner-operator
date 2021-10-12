@@ -115,6 +115,7 @@ var deployBroker = &cobra.Command{
 		status := cli.NewStatus()
 
 		status.Start("Setting up broker RBAC")
+		fmt.Printf("in deploybroker componentArr is %s\n", componentArr)
 		err = broker.Ensure(config, componentArr, false)
 		status.End(cli.CheckForError(err))
 		utils.ExitOnError("Error setting up broker RBAC", err)
