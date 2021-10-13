@@ -129,7 +129,7 @@ func getLocalEndpointResource(cluster *cmd.Cluster, status *cli.Status) *subv1.E
 	}
 
 	for _, endpoint := range endpoints.Items {
-		if endpoint.Spec.ClusterID == cluster.Name {
+		if endpoint.Spec.ClusterID == cluster.Submariner.Spec.ClusterID {
 			return &endpoint
 		}
 	}
@@ -146,7 +146,7 @@ func getAnyRemoteEndpointResource(cluster *cmd.Cluster, status *cli.Status) *sub
 	}
 
 	for _, endpoint := range endpoints.Items {
-		if endpoint.Spec.ClusterID != cluster.Name {
+		if endpoint.Spec.ClusterID != cluster.Submariner.Spec.ClusterID {
 			return &endpoint
 		}
 	}
