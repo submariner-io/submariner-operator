@@ -52,7 +52,7 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 		ctx = context.TODO()
 	})
 
-	When("When called", func() {
+	When("called", func() {
 		It("Should add the ClusterRole properly", func() {
 			created, err := CreateOrUpdateClusterRole(ctx, client, clusterRole)
 			Expect(created).To(BeTrue())
@@ -64,7 +64,7 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 		})
 	})
 
-	When("When called twice", func() {
+	When("called twice", func() {
 		It("Should add the ClusterRole properly, and return false on second call", func() {
 			created, err := CreateOrUpdateClusterRole(ctx, client, clusterRole)
 			Expect(created).To(BeTrue())
@@ -92,7 +92,7 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 		ctx = context.TODO()
 	})
 
-	When("When called", func() {
+	When("called", func() {
 		It("Should add the ClusterRoleBinding properly", func() {
 			created, err := CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
 			Expect(created).To(BeTrue())
@@ -104,7 +104,7 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 		})
 	})
 
-	When("When called twice", func() {
+	When("called twice", func() {
 		It("Should add the ClusterRoleBinding properly, and return false on second call", func() {
 			created, err := CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
 			Expect(created).To(BeTrue())
@@ -131,7 +131,7 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 		ctx = context.TODO()
 	})
 
-	When("When called", func() {
+	When("called", func() {
 		It("Should add the CRD properly", func() {
 			created, err := CreateOrUpdateCRD(ctx, crdutils.NewFromClientSet(client), crd)
 			Expect(created).To(BeTrue())
@@ -143,7 +143,7 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 		})
 	})
 
-	When("When called twice", func() {
+	When("called twice", func() {
 		It("Should add the CRD properly, and return false on second call", func() {
 			crdUpdater := crdutils.NewFromClientSet(client)
 			created, err := CreateOrUpdateCRD(ctx, crdUpdater, crd)
@@ -181,7 +181,7 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 		ctx = context.TODO()
 	})
 
-	When("When called", func() {
+	When("called", func() {
 		It("Should add the Deployment properly", func() {
 			created, err := CreateOrUpdateDeployment(ctx, client, namespace, deployment)
 			Expect(created).To(BeTrue())
@@ -193,7 +193,7 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 		})
 	})
 
-	When("When called twice", func() {
+	When("called twice", func() {
 		It("Should add the Deployment properly, and return false on second call", func() {
 			created, err := CreateOrUpdateDeployment(ctx, client, namespace, deployment)
 			Expect(created).To(BeTrue())
@@ -222,7 +222,7 @@ var _ = Describe("CreateOrUpdateRole", func() {
 		ctx = context.TODO()
 	})
 
-	When("When called", func() {
+	When("called", func() {
 		It("Should add the Role properly", func() {
 			created, err := CreateOrUpdateRole(ctx, client, namespace, role)
 			Expect(created).To(BeTrue())
@@ -234,7 +234,7 @@ var _ = Describe("CreateOrUpdateRole", func() {
 		})
 	})
 
-	When("When called twice", func() {
+	When("called twice", func() {
 		It("Should add the Role properly, and return false on second call", func() {
 			created, err := CreateOrUpdateRole(ctx, client, namespace, role)
 			Expect(created).To(BeTrue())
@@ -263,7 +263,7 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 		ctx = context.TODO()
 	})
 
-	When("When called", func() {
+	When("called", func() {
 		It("Should add the RoleBinding properly", func() {
 			created, err := CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
 			Expect(created).To(BeTrue())
@@ -275,7 +275,7 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 		})
 	})
 
-	When("When called twice", func() {
+	When("called twice", func() {
 		It("Should add the RoleBinding properly, and return false on second call", func() {
 			created, err := CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
 			Expect(created).To(BeTrue())
