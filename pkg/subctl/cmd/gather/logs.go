@@ -64,6 +64,7 @@ func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Inf
 	podLogInfo.Namespace = pod.Namespace
 	podLogInfo.PodState = pod.Status.Phase
 	podLogInfo.PodName = pod.Name
+	podLogInfo.NodeName = pod.Spec.NodeName
 	err := outputPreviousPodLog(pod, podLogOptions, info, &podLogInfo)
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error outputting previous log for pod %q: %v", pod.Name, err))

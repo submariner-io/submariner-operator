@@ -152,22 +152,41 @@ func getNodeConfig(info Info) ([]nodeConfig, error) {
 	nodeConfigs := make([]nodeConfig, len(nodes.Items))
 	for _, allNode := range nodes.Items {
 		nodeInfo := v1.NodeSystemInfo{
-			KernelVersion:           allNode.Status.NodeInfo.KernelVersion,
-			OSImage:                 allNode.Status.NodeInfo.OSImage,
-			ContainerRuntimeVersion: allNode.Status.NodeInfo.ContainerRuntimeVersion,
-			KubeletVersion:          allNode.Status.NodeInfo.KubeletVersion,
-			KubeProxyVersion:        allNode.Status.NodeInfo.KubeProxyVersion,
-			OperatingSystem:         allNode.Status.NodeInfo.OperatingSystem,
-			Architecture:            allNode.Status.NodeInfo.Architecture,
+			KernelVersion:    allNode.Status.NodeInfo.KernelVersion,
+			OSImage:          allNode.Status.NodeInfo.OSImage,
+			KubeProxyVersion: allNode.Status.NodeInfo.KubeProxyVersion,
+			OperatingSystem:  allNode.Status.NodeInfo.OperatingSystem,
+			Architecture:     allNode.Status.NodeInfo.Architecture,
 		}
 		name := allNode.GetName()
 		config := nodeConfig{
 			Name: name,
 			Info: nodeInfo,
 		}
+
+		for _, addr := range allNode.Status.Addresses {
+			if addr.Type == v1.NodeInternalIP {
+				config.InternalIPs = getFormattedIP(config.InternalIPs, addr.Address)
+			} else if addr.Type == v1.NodeExternalIP {
+				config.ExternalIPs = getFormattedIP(config.ExternalIPs, addr.Address)
+			}
+		}
+
+		if config.ExternalIPs == "" {
+			config.ExternalIPs = "<none>"
+		}
+
 		nodeConfigs = append(nodeConfigs, config)
 	}
 	return nodeConfigs, nil
+}
+
+func getFormattedIP(ipAddrList, ipaddr string) string {
+	if ipAddrList != "" {
+		return fmt.Sprintf("%s, %s", ipAddrList, ipaddr)
+	}
+
+	return ipaddr
 }
 
 func listNodes(info Info, listOptions metav1.ListOptions) (*v1.NodeList, error) {
