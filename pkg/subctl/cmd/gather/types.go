@@ -62,13 +62,16 @@ type clusterConfig struct {
 }
 
 type nodeConfig struct {
-	Name string
-	Info v1.NodeSystemInfo
+	Name        string
+	Info        v1.NodeSystemInfo
+	InternalIPs string
+	ExternalIPs string
 }
 
 type LogInfo struct {
 	PodName      string
 	Namespace    string
+	NodeName     string
 	RestartCount int32
 	PodState     v1.PodPhase
 	LogFileName  []string

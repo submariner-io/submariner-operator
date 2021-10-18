@@ -63,17 +63,17 @@
   <tr>
     <th style="width: 15%;">Node name</th>
     <th style="width: 30%;">Operating System</th>
-    <th style="width: 25%;">Container Runtime Version</th>
-    <th style="width: 15%;">Kubelet Version</th>
     <th style="width: 15%;">KubeProxy Version</th>
+    <th style="width: 15%;">Internal IP</th>
+    <th style="width: 15%;">External IP</th>
   </tr>
   {{range .NodeConfig}}
     <tr>
       <td>{{.Name}}</td>
       <td>{{.Info.OperatingSystem}} {{.Info.OSImage}} {{.Info.KernelVersion}} {{.Info.Architecture}}</td>
-      <td>{{.Info.ContainerRuntimeVersion}}</td>
-      <td>{{.Info.KubeletVersion}}</td>
       <td>{{.Info.KubeProxyVersion}}</td>
+      <td>{{.InternalIPs}}</td>
+      <td>{{.ExternalIPs}}</td>
     </tr>
   {{end}}
 </table>
@@ -84,6 +84,7 @@
       <th style="width: 20%;">Pod name</th>
       <th style="width: 15%;">Namespace</th>
       <th style="width: 10%;">Pod state</th>
+      <th style="width: 10%;">Node name</th>
       <th style="width: 5%;">Restart count</th>
       <th style="width: 25%;">Log file(s)</th>
     </tr>
@@ -92,6 +93,7 @@
         <td>{{.PodName}}</td>
         <td>{{.Namespace}}</td>
         <td>{{.PodState}}</td>
+        <td>{{.NodeName}}</td>
         {{ if gt .RestartCount 0 }}
           <td style="color: red">{{.RestartCount}}</td>
         {{ else }}
