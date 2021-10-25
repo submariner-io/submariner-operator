@@ -77,7 +77,7 @@ func NewBrokerAdminRole() *rbacv1.Role {
 			{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"discovery.k8s.io"},
-				Resources: []string{"endpointslices"},
+				Resources: []string{"endpointslices", "endpointslices/restricted"},
 			},
 		},
 	}
@@ -103,7 +103,7 @@ func NewBrokerClusterRole() *rbacv1.Role {
 			{
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"discovery.k8s.io"},
-				Resources: []string{"endpointslices"},
+				Resources: []string{"endpointslices", "endpointslices/restricted"},
 			},
 		},
 	}
