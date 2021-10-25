@@ -33,6 +33,7 @@ rules:
       - discovery.k8s.io
     resources:
       - endpointslices
+      - endpointslices/restricted
     verbs:
       - create
       - get
