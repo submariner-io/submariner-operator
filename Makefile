@@ -59,8 +59,8 @@ else
 BUNDLE_VERSION := $(shell (git describe --abbrev=0 --tags --match=v[0-9]*\.[0-9]*\.[0-9]* 2>/dev/null || echo v9.9.9) \
 | cut -d'-' -f1 | cut -c2-)
 endif
-FROM_VERSION ?= $(shell (git describe --abbrev=0 --tags --match=v[0-9]*\.[0-9]*\.[0-9]* --exclude=?${BUNDLE_VERSION}* 2>/dev/null || echo v0.0.0) \
-          | cut -d'-' -f1 | cut -c2-)
+FROM_VERSION ?= $(shell (git tag -l --sort=-v:refname v[0-9]*\.[0-9]*\.[0-9]* | grep -v ${BUNDLE_VERSION} 2>/dev/null || echo v0.0.0) \
+          | head -n1 | cut -d'-' -f1 | cut -c2-)
 SHORT_VERSION := $(shell echo ${BUNDLE_VERSION} | cut -d'.' -f1,2)
 CHANNEL ?= alpha-$(SHORT_VERSION)
 CHANNELS ?= $(CHANNEL)
