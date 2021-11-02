@@ -27,7 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 
-	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 )
 

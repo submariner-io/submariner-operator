@@ -42,7 +42,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"k8s.io/client-go/rest"
 
-	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"

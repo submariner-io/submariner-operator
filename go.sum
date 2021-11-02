@@ -1320,6 +1320,8 @@ github.com/submariner-io/shipyard v0.12.0-m0 h1:XEpIu0INoTfZg6y56ybX/jBbYizOjldv
 github.com/submariner-io/shipyard v0.12.0-m0/go.mod h1:DOtp7FHzb1JjUSZWP1dWkTfLwGhfse1/VFjjsl1XFQk=
 github.com/submariner-io/submariner v0.12.0-m0 h1:DYAajVk5H19CL/vv+siBOPQ1pvh6iAVoMYySaNHt/+M=
 github.com/submariner-io/submariner v0.12.0-m0/go.mod h1:dHqGBDtzdL7V3UBRRn42ZehnqU2h0nAp+BoUa9zJeJo=
+github.com/submariner-io/submariner-operator/apis v0.0.0-20211108185031-39851b39dec6 h1:M1TjJR7Puqm8qF1nbROlweqYzbf5hCjIZuzcfv2vmDE=
+github.com/submariner-io/submariner-operator/apis v0.0.0-20211108185031-39851b39dec6/go.mod h1:B+zRDZfMVnyRkVGas8SffK3ECWYVdDrzQVqimrdhuvo=
 github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816112556-6e4bb78fab88/go.mod h1:VfjgFyeFkEzNCmZnTFdxWYuEvLyvH4429fwdue6gq1o=
 github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930 h1:6J41oeHHXCyP4Y/RNa8jfAiTuNEtnoc3gc6Sxj4S800=
 github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930/go.mod h1:VfjgFyeFkEzNCmZnTFdxWYuEvLyvH4429fwdue6gq1o=
