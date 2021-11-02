@@ -31,7 +31,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/resource"
 	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 

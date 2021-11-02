@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 )
 
 func (r *SubmarinerReconciler) updateDaemonSetStatus(ctx context.Context, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,

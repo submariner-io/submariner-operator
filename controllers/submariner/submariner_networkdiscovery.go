@@ -20,7 +20,7 @@ package submariner
 import (
 	"fmt"
 
-	submopv1a1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 )
 

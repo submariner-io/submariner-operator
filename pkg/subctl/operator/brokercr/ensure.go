@@ -27,7 +27,7 @@ import (
 
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
-	submariner "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 )
 

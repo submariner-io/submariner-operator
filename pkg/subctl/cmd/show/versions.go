@@ -26,7 +26,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"

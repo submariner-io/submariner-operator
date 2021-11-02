@@ -18,7 +18,7 @@ limitations under the License.
 package gather
 
 import (
-	submarinerOp "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	submarinerOp "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"

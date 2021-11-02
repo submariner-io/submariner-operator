@@ -18,7 +18,7 @@ limitations under the License.
 package gather
 
 import (
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
