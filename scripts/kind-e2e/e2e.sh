@@ -1,22 +1,31 @@
 #!/usr/bin/env bash
 
+## Process command line flags ##
+
+source ${SCRIPTS_DIR}/lib/shflags
+DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
+DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
+FLAGS "$@" || exit $?
+eval set -- "${FLAGS_ARGV}"
+
+settings="${FLAGS_settings}"
+[[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
+
 set -em -o pipefail
 
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
 source ${SCRIPTS_DIR}/lib/deploy_funcs
 source ${SCRIPTS_DIR}/lib/deploy_operator
-source ${SCRIPTS_DIR}/lib/cluster_settings
-source ${DAPPER_SOURCE}/scripts/kind-e2e/cluster_settings
 
 ### Variables ###
 
-[[ ! ${DEPLOY_ARGS} =~ "--globalnet" ]] || globalnet=true
 [[ ! ${DEPLOY_ARGS} =~ "--service-discovery" ]] || lighthouse=true
 timeout="2m" # Used by deploy_resource
 
 ### Main ###
 
+load_settings
 declare_kubeconfig
 
 # Import functions for testing with Operator
