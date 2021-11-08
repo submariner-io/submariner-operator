@@ -28,6 +28,7 @@ import (
 	submariner_v1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -261,6 +262,31 @@ func testReconciliation() {
 			Expect(reconcileResult.Requeue).To(BeFalse())
 			Expect(expectDaemonSet(ctx, routeAgentDaemonSetName, fakeClient).Spec).To(Equal(newRouteAgentDaemonSet(
 				withNetworkDiscovery(initial, clusterNetwork)).Spec))
+		})
+
+		When("a selected pod has a nil Started field", func() {
+			BeforeEach(func() {
+				initClientObjs = append(initClientObjs, &corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: existingDaemonSet.ObjectMeta.Namespace,
+						Name:      "submariner-routeagent-pod",
+						Labels:    existingDaemonSet.ObjectMeta.Labels,
+					},
+					Spec: corev1.PodSpec{},
+					Status: corev1.PodStatus{
+						ContainerStatuses: []corev1.ContainerStatus{
+							{
+								State: corev1.ContainerState{
+									Waiting: &corev1.ContainerStateWaiting{},
+								},
+							},
+						},
+					},
+				})
+			})
+			It("should not crash", func() {
+				Expect(reconcileErr).To(Succeed())
+			})
 		})
 	})
 
