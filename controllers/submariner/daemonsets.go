@@ -29,7 +29,7 @@ import (
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 )
 
-func (r *SubmarinerReconciler) updateDaemonSetStatus(ctx context.Context, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,
+func updateDaemonSetStatus(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,
 	namespace string) error {
 	if daemonSet != nil {
 		if status == nil {
@@ -39,7 +39,7 @@ func (r *SubmarinerReconciler) updateDaemonSetStatus(ctx context.Context, daemon
 		if status.LastResourceVersion != daemonSet.ObjectMeta.ResourceVersion {
 			// The daemonset has changed, check its containers
 			mismatchedContainerImages, nonReadyContainerStates, err :=
-				r.checkDaemonSetContainers(ctx, daemonSet, namespace)
+				checkDaemonSetContainers(clnt, ctx, daemonSet, namespace)
 			if err != nil {
 				return err
 			}
@@ -51,9 +51,9 @@ func (r *SubmarinerReconciler) updateDaemonSetStatus(ctx context.Context, daemon
 	return nil
 }
 
-func (r *SubmarinerReconciler) checkDaemonSetContainers(ctx context.Context, daemonSet *appsv1.DaemonSet,
+func checkDaemonSetContainers(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet,
 	namespace string) (bool, *[]corev1.ContainerState, error) {
-	containerStatuses, err := r.retrieveDaemonSetContainerStatuses(ctx, daemonSet, namespace)
+	containerStatuses, err := retrieveDaemonSetContainerStatuses(clnt, ctx, daemonSet, namespace)
 	if err != nil {
 		return false, nil, err
 	}
@@ -75,14 +75,14 @@ func (r *SubmarinerReconciler) checkDaemonSetContainers(ctx context.Context, dae
 	return mismatchedContainerImages, &nonReadyContainerStates, nil
 }
 
-func (r *SubmarinerReconciler) retrieveDaemonSetContainerStatuses(ctx context.Context, daemonSet *appsv1.DaemonSet,
+func retrieveDaemonSetContainerStatuses(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet,
 	namespace string) (*[]corev1.ContainerStatus, error) {
 	pods := &corev1.PodList{}
 	selector, err := metav1.LabelSelectorAsSelector(daemonSet.Spec.Selector)
 	if err != nil {
 		return nil, err
 	}
-	err = r.client.List(ctx, pods, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
+	err = clnt.List(ctx, pods, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, err
 	}
