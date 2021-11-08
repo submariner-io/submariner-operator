@@ -21,6 +21,9 @@ IS_SEMANTIC_VERSION = $(shell [[ $(or $(BUNDLE_VERSION),$(VERSION),'undefined') 
 
 IMAGES = submariner-operator submariner-operator-index
 PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-route-agent lighthouse-agent lighthouse-coredns
+undefine SKIP
+undefine FOCUS
+undefine E2E_TESTDIR
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
@@ -30,13 +33,14 @@ CROSS_BINARIES := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,bin/subctl-$(VER
 CROSS_TARBALLS := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,dist/subctl-$(VERSION)-%.tar.xz,$(cross)))
 
 ifneq (,$(filter ovn,$(_using)))
-CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings.ovn
+CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
 else
-CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/kind-e2e/cluster_settings
+CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
+override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG)
 export DEPLOY_ARGS
 override UNIT_TEST_ARGS += cmd pkg/internal
 override VALIDATE_ARGS += --skip-dirs pkg/client
@@ -123,7 +127,7 @@ images: build
 deploy: bin/subctl
 
 e2e: deploy
-	scripts/kind-e2e/e2e.sh
+	scripts/kind-e2e/e2e.sh $(E2E_ARGS)
 
 clean:
 	rm -f $(BINARIES) $(CROSS_BINARIES) $(CROSS_TARBALLS)
