@@ -61,15 +61,16 @@ func (r *SubmarinerReconciler) checkDaemonSetContainers(ctx context.Context, dae
 	var mismatchedContainerImages = false
 	var nonReadyContainerStates = []corev1.ContainerState{}
 	for i := range *containerStatuses {
+		containerStatus := (*containerStatuses)[i]
 		if containerImageManifest == nil {
-			containerImageManifest = &((*containerStatuses)[i].ImageID)
-		} else if *containerImageManifest != (*containerStatuses)[i].ImageID {
+			containerImageManifest = &(containerStatus.ImageID)
+		} else if *containerImageManifest != containerStatus.ImageID {
 			// Container mismatch
 			mismatchedContainerImages = true
 		}
-		if !*(*containerStatuses)[i].Started {
+		if containerStatus.Started == nil || !*containerStatus.Started {
 			// Not (yet) ready
-			nonReadyContainerStates = append(nonReadyContainerStates, (*containerStatuses)[i].State)
+			nonReadyContainerStates = append(nonReadyContainerStates, containerStatus.State)
 		}
 	}
 	return mismatchedContainerImages, &nonReadyContainerStates, nil
