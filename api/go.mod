@@ -1,4 +1,4 @@
-module github.com/submariner-io/submariner-operator/apis
+module github.com/submariner-io/submariner-operator/api
 
 go 1.15
 

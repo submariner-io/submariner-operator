@@ -31,7 +31,7 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	errorsPkg "github.com/pkg/errors"
-	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/pkg/images"

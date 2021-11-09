@@ -30,7 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	v1 "k8s.io/api/core/v1"
 
-	submarinerv1a1 "github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	submarinerv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"

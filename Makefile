@@ -171,7 +171,7 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") vend
 	export GOARCH GOOS; \
 	$(SCRIPTS_DIR)/compile.sh \
 		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION) \
-			   -X=github.com/submariner-io/submariner-operator/apis.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
+			   -X=github.com/submariner-io/submariner-operator/api.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
 		--noupx $@ ./pkg/subctl/main.go $(BUILD_ARGS)
 
 ci: generate-embeddedyamls golangci-lint markdownlint unit build images
@@ -187,12 +187,12 @@ $(CONTROLLER_GEN): vendor/modules.txt
 	mkdir -p $(@D)
 	$(GO) build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
-deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
-	cd apis && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
+deploy/crds/submariner.io_servicediscoveries.yaml: $(CONTROLLER_GEN) ./api/submariner/v1alpha1/servicediscovery_types.go vendor/modules.txt
+	cd api && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
 	test -f $@
 
-deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./apis/submariner/v1alpha1/submariner_types.go vendor/modules.txt
-	cd apis && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
+deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: $(CONTROLLER_GEN) ./api/submariner/v1alpha1/submariner_types.go vendor/modules.txt
+	cd api && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
 	test -f $@
 
 # Submariner CRDs
@@ -208,7 +208,7 @@ generate-clientset: vendor/modules.txt
 	GO111MODULE=on $${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \
 		client,deepcopy \
 		github.com/submariner-io/submariner-operator/pkg/client \
-		github.com/submariner-io/submariner-operator/apis \
+		github.com/submariner-io/submariner-operator/api \
 		submariner:v1alpha1
 
 # Generate code

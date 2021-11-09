@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/submariner-io/submariner-operator/apis/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"

@@ -17,7 +17,7 @@ allow:
   - "Zlib"
 
 override:
-  - path: "./apis"
+  - path: "./api"
     licenses: ["Apache-2.0"]
   - path: "github.com/rdegges/go-ipify"
     licenses: ["Unlicense"]

@@ -10,7 +10,7 @@ rules:
 
 ignore: |
   /vendor
-  /apis/vendor
+  /api/vendor
   /deploy/crds
   /deploy/submariner/crds
   /deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml

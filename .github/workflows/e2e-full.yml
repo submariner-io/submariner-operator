@@ -15,6 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         globalnet: ['', 'globalnet']
+        # Default version to test
         k8s_version: ['1.20']
         lighthouse: ['', 'lighthouse']
         ovn: ['', 'ovn']
@@ -24,8 +25,11 @@ jobs:
           - ovn: 'ovn'
             globalnet: 'globalnet'
         include:
-          # This is the oldest K8s version we try to support
-          - k8s_version: '1.17'
+          # All the versions we support
+          - k8s_version: '1.19'
+          - k8s_version: '1.20'
+          - k8s_version: '1.21'
+          - k8s_version: '1.22'
     steps:
       - name: Check out the repository
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
