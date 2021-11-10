@@ -175,7 +175,7 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[string]string) error {
 	var tokens = make([]string, 0, len(labelsToAdd))
 	for k, v := range labelsToAdd {
-		tokens = append(tokens, fmt.Sprintf("\"%s\":\"%s\"", k, v))
+		tokens = append(tokens, fmt.Sprintf("%q:%q", k, v))
 	}
 
 	labelString := "{" + strings.Join(tokens, ",") + "}"

@@ -20,9 +20,9 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -79,7 +79,7 @@ var files = []string{
 }
 
 // Reads all .yaml files in the crdDirectory
-// and encodes them as constants in crdyamls.go
+// and encodes them as constants in yamls.go
 func main() {
 	if len(os.Args) < 3 {
 		fmt.Println("yamls2go needs two arguments, the base directory containing the YAML files, and the target directory")
@@ -90,7 +90,7 @@ func main() {
 	goDirectory := os.Args[2]
 
 	fmt.Println("Generating yamls.go")
-	out, err := os.Create(goDirectory + string(os.PathSeparator) + "yamls.go")
+	out, err := os.Create(filepath.Join(goDirectory, "yamls.go"))
 	panicOnErr(err)
 
 	_, err = out.WriteString(`/*
@@ -140,7 +140,7 @@ const (
 		panicOnErr(err)
 
 		fmt.Println(f)
-		contents, err := ioutil.ReadFile(path.Join(yamlsDirectory, f))
+		contents, err := os.ReadFile(path.Join(yamlsDirectory, f))
 		panicOnErr(err)
 
 		_, err = out.Write(
