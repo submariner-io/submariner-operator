@@ -199,7 +199,7 @@ func listNodes(info Info, listOptions metav1.ListOptions) (*v1.NodeList, error) 
 
 func createFile(dirname string) io.Writer {
 	fileName := filepath.Join(dirname, "summary.html")
-	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o666)
 	if err != nil {
 		fmt.Printf("Error creating file %s\n", fileName)
 	}

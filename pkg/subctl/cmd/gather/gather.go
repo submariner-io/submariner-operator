@@ -110,7 +110,7 @@ func gatherData(cluster *cmd.Cluster) bool {
 	}
 
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
-		err := os.MkdirAll(directory, 0700)
+		err := os.MkdirAll(directory, 0o700)
 		if err != nil {
 			utils.ExitOnError(fmt.Sprintf("Error creating directory %q", directory), err)
 		}
