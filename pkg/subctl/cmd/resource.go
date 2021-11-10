@@ -20,7 +20,7 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"os"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 
@@ -61,11 +61,11 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 }
 
 func CompareFiles(file1, file2 string) (bool, error) {
-	first, err := ioutil.ReadFile(file1)
+	first, err := os.ReadFile(file1)
 	if err != nil {
 		return false, err
 	}
-	second, err := ioutil.ReadFile(file2)
+	second, err := os.ReadFile(file2)
 	if err != nil {
 		return false, err
 	}

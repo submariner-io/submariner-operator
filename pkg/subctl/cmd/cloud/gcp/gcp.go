@@ -23,7 +23,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -139,7 +138,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 		metadataFile = filepath.Join(metadataFile, "metadata.json")
 	}
 
-	data, err := ioutil.ReadFile(metadataFile)
+	data, err := os.ReadFile(metadataFile)
 	if err != nil {
 		return err
 	}
@@ -164,7 +163,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 }
 
 func getGCPCredentials() (*google.Credentials, error) {
-	authJSON, err := ioutil.ReadFile(credentialsFile)
+	authJSON, err := os.ReadFile(credentialsFile)
 	if err != nil {
 		return nil, err
 	}

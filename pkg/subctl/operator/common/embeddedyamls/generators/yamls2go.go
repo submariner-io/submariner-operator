@@ -20,7 +20,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -140,7 +139,7 @@ const (
 		panicOnErr(err)
 
 		fmt.Println(f)
-		contents, err := ioutil.ReadFile(path.Join(yamlsDirectory, f))
+		contents, err := os.ReadFile(path.Join(yamlsDirectory, f))
 		panicOnErr(err)
 
 		_, err = out.Write(
