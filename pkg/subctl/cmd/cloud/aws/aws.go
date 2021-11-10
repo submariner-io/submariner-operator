@@ -22,7 +22,6 @@ package aws
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -133,7 +132,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 		metadataFile = filepath.Join(metadataFile, "metadata.json")
 	}
 
-	data, err := ioutil.ReadFile(metadataFile)
+	data, err := os.ReadFile(metadataFile)
 	if err != nil {
 		return err
 	}

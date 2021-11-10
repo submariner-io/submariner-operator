@@ -24,8 +24,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/url"
+	"os"
 
 	"github.com/submariner-io/admiral/pkg/stringset"
 	v1 "k8s.io/api/core/v1"
@@ -93,7 +93,7 @@ func (data *SubctlData) WriteToFile(filename string) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filename, []byte(dataStr), 0o600); err != nil {
+	if err := os.WriteFile(filename, []byte(dataStr), 0o600); err != nil {
 		return err
 	}
 
@@ -101,7 +101,7 @@ func (data *SubctlData) WriteToFile(filename string) error {
 }
 
 func NewFromFile(filename string) (*SubctlData, error) {
-	dat, err := ioutil.ReadFile(filename)
+	dat, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
