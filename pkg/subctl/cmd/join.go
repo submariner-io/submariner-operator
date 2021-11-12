@@ -21,6 +21,7 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/submariner-io/submariner-operator/internal"
 	"os"
 	"regexp"
 	"strings"
@@ -39,14 +40,12 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	"k8s.io/client-go/rest"
 
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/servicediscoverycr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
@@ -279,7 +278,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 
 	status.Start("Deploying the Submariner operator")
 
-	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage(), operatorDebug)
+	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, internal.OperatorImage(imageVersion, repository, imageOverrideArr), operatorDebug)
 	status.End(cli.CheckForError(err))
 	utils.ExitOnError("Error deploying the operator", err)
 
@@ -476,7 +475,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
-		ImageOverrides:           getImageOverrides(),
+		ImageOverrides:           internal.GetImageOverrides(imageOverrideArr),
 		LoadBalancerEnabled:      loadBalancerEnabled,
 		ConnectionHealthCheck: &submariner.HealthCheckSpec{
 			Enabled:            healthCheckEnable,
@@ -546,7 +545,7 @@ func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.S
 		Debug:                    submarinerDebug,
 		ClusterID:                clusterID,
 		Namespace:                SubmarinerNamespace,
-		ImageOverrides:           getImageOverrides(),
+		ImageOverrides:           internal.GetImageOverrides(imageOverrideArr),
 	}
 
 	if corednsCustomConfigMap != "" {
@@ -561,46 +560,6 @@ func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.S
 		serviceDiscoverySpec.CustomDomains = customDomains
 	}
 	return &serviceDiscoverySpec
-}
-
-func operatorImage() string {
-	version := imageVersion
-	repo := repository
-
-	if imageVersion == "" {
-		version = submariner.DefaultSubmarinerOperatorVersion
-	}
-
-	if repository == "" {
-		repo = submariner.DefaultRepo
-	}
-
-	return images.GetImagePath(repo, version, names.OperatorImage, names.OperatorComponent, getImageOverrides())
-}
-
-func getImageOverrides() map[string]string {
-	if len(imageOverrideArr) > 0 {
-		imageOverrides := make(map[string]string)
-		for _, s := range imageOverrideArr {
-			key := strings.Split(s, "=")[0]
-			if invalidImageName(key) {
-				utils.ExitWithErrorMsg(fmt.Sprintf("Invalid image name %s provided. Please choose from %q", key, names.ValidImageNames))
-			}
-			value := strings.Split(s, "=")[1]
-			imageOverrides[key] = value
-		}
-		return imageOverrides
-	}
-	return nil
-}
-
-func invalidImageName(key string) bool {
-	for _, name := range names.ValidImageNames {
-		if key == name {
-			return false
-		}
-	}
-	return true
 }
 
 func isValidCustomCoreDNSConfig() error {

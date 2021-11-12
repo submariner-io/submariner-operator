@@ -20,6 +20,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/submariner-io/submariner-operator/internal"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -115,7 +116,7 @@ var deployBroker = &cobra.Command{
 		utils.ExitOnError("Error setting up broker RBAC", err)
 
 		status.Start("Deploying the Submariner operator")
-		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage(), operatorDebug)
+		err = submarinerop.Ensure(status, config, OperatorNamespace, internal.OperatorImage(imageVersion, repository, nil), operatorDebug)
 		status.End(cli.CheckForError(err))
 		utils.ExitOnError("Error deploying the operator", err)
 
