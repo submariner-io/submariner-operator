@@ -16,11 +16,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package broker
+package pkg
 
 import (
 	"fmt"
 	"github.com/submariner-io/submariner-operator/internal"
+	"github.com/submariner-io/submariner-operator/pkg/broker"
 
 	"github.com/submariner-io/admiral/pkg/stringset"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
@@ -81,7 +82,7 @@ func Deploy(do DeployOptions, kubeConfig string, kubeContext string) error {
 	utils.ExitOnError("The provided kubeconfig is invalid", err)
 
 	status.Start("Setting up broker RBAC")
-	err = Ensure(config, do.ComponentArr, false)
+	err = broker.Ensure(config, do.ComponentArr, false)
 	status.End(cli.CheckForError(err))
 	utils.ExitOnError("Error setting up broker RBAC", err)
 
@@ -113,7 +114,7 @@ func Deploy(do DeployOptions, kubeConfig string, kubeContext string) error {
 		}
 	}
 
-	subctlData, err := datafile.NewFromCluster(config, SubmarinerBrokerNamespace, do.IpsecSubmFile)
+	subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace, do.IpsecSubmFile)
 	utils.ExitOnError("Error retrieving preparing the subm data file", err)
 
 	newFilename, err := datafile.BackupIfExists(brokerDetailsFilename)
@@ -132,12 +133,12 @@ func Deploy(do DeployOptions, kubeConfig string, kubeContext string) error {
 	utils.ExitOnError("Error setting up service discovery information", err)
 
 	if do.GlobalnetEnable {
-		err = globalnet.ValidateExistingGlobalNetworks(config, SubmarinerBrokerNamespace)
+		err = globalnet.ValidateExistingGlobalNetworks(config, broker.SubmarinerBrokerNamespace)
 		utils.ExitOnError("Error validating existing globalCIDR configmap", err)
 	}
 
-	err = CreateGlobalnetConfigMap(config, do.GlobalnetEnable, do.GlobalnetCIDRRange,
-		do.DefaultGlobalnetClusterSize, SubmarinerBrokerNamespace)
+	err = broker.CreateGlobalnetConfigMap(config, do.GlobalnetEnable, do.GlobalnetCIDRRange,
+		do.DefaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace)
 	utils.ExitOnError("Error creating globalCIDR configmap on Broker", err)
 
 	err = subctlData.WriteToFile(brokerDetailsFilename)
