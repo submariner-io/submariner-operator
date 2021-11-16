@@ -29,7 +29,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	cloudpreparegcp "github.com/submariner-io/cloud-prepare/pkg/gcp"
+	"github.com/submariner-io/cloud-prepare/pkg/gcp"
 	gcpClientIface "github.com/submariner-io/cloud-prepare/pkg/gcp/client"
 	"github.com/submariner-io/cloud-prepare/pkg/k8s"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
@@ -110,7 +110,7 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 	clientSet, err := kubernetes.NewForConfig(k8sConfig)
 	utils.ExitOnError("Failed to create Kubernetes client", err)
 
-	k8sClientSet := k8s.NewK8sInterface(clientSet)
+	k8sClientSet := k8s.NewInterface(clientSet)
 
 	restMapper, err := util.BuildRestMapper(k8sConfig)
 	utils.ExitOnError("Failed to create restmapper", err)
@@ -118,11 +118,17 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
 	utils.ExitOnError("Failed to create dynamic client", err)
 
-	gcpCloud := cloudpreparegcp.NewCloud(projectID, infraID, region, gcpClient)
+	gcpCloudInfo := gcp.CloudInfo{
+		ProjectID: projectID,
+		InfraID:   infraID,
+		Region:    region,
+		Client:    gcpClient,
+	}
+	gcpCloud := gcp.NewCloud(gcpCloudInfo)
 	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
 	// TODO: Ideally we should be able to specify the image for GWNode, but it was seen that
 	// with certain images, the instance is not coming up. Needs to be investigated further.
-	gwDeployer, err := cloudpreparegcp.NewOcpGatewayDeployer(gcpCloud, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sClientSet)
+	gwDeployer := gcp.NewOcpGatewayDeployer(gcpCloudInfo, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sClientSet)
 	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
 
 	return function(gcpCloud, gwDeployer, reporter)

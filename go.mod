@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.13
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go v1.41.14
+	github.com/aws/aws-sdk-go v1.42.4
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/go-errors/errors v1.2.0 // indirect
@@ -24,7 +24,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.16.0
+	github.com/onsi/gomega v1.17.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.4.0
@@ -34,7 +34,7 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.2.0
 	github.com/submariner-io/admiral v0.12.0-m0
-	github.com/submariner-io/cloud-prepare v0.12.0-m0
+	github.com/submariner-io/cloud-prepare v0.12.0-m0.0.20211116130020-35850d4f248a
 	github.com/submariner-io/lighthouse v0.12.0-m0
 	github.com/submariner-io/shipyard v0.12.0-m0
 	github.com/submariner-io/submariner v0.12.0-m0
