@@ -20,15 +20,15 @@ limitations under the License.
 package aws
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
@@ -93,16 +93,12 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 	reporter.Succeeded("")
 
 	reporter.Started("Initializing AWS connectivity")
-	awsConfig := aws.Config{
-		Credentials: creds,
-		Region:      aws.String(region),
-	}
-
-	awsSession, err := session.NewSession(&awsConfig)
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region), config.WithCredentialsProvider(creds))
 	if err != nil {
 		reporter.Failed(err)
 		return err
 	}
+	ec2Client := ec2.NewFromConfig(cfg)
 	reporter.Succeeded("")
 
 	k8sConfig, err := restconfig.ForCluster(kubeConfig, kubeContext)
@@ -114,7 +110,7 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
 	utils.ExitOnError("Failed to create dynamic client", err)
 
-	awsCloud := cloudprepareaws.NewCloud(ec2.New(awsSession), infraID, region)
+	awsCloud := cloudprepareaws.NewCloud(ec2Client, infraID, region)
 	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
 	gwDeployer, err := cloudprepareaws.NewOcpGatewayDeployer(awsCloud, msDeployer, gwInstanceType)
 	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
@@ -155,26 +151,30 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 }
 
 // Retrieve AWS credentials from the AWS credentials file.
-func getAWSCredentials() (*credentials.Credentials, error) {
+func getAWSCredentials() (credentials.StaticCredentialsProvider, error) {
 	cfg, err := ini.Load(credentialsFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read AWS credentials from %s: %w", credentialsFile, err)
+		return credentials.StaticCredentialsProvider{},
+			fmt.Errorf("failed to read AWS credentials from %s: %w", credentialsFile, err)
 	}
 
 	profileSection, err := cfg.GetSection(profile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find profile %s in AWS credentials file %s", profile, credentialsFile)
+		return credentials.StaticCredentialsProvider{},
+			fmt.Errorf("failed to find profile %s in AWS credentials file %s", profile, credentialsFile)
 	}
 
 	accessKeyID, err := profileSection.GetKey("aws_access_key_id")
 	if err != nil {
-		return nil, fmt.Errorf("failed to find access key ID in profile %s in AWS credentials file %s", profile, credentialsFile)
+		return credentials.StaticCredentialsProvider{},
+			fmt.Errorf("failed to find access key ID in profile %s in AWS credentials file %s", profile, credentialsFile)
 	}
 
 	secretAccessKey, err := profileSection.GetKey("aws_secret_access_key")
 	if err != nil {
-		return nil, fmt.Errorf("failed to find secret access key in profile %s in AWS credentials file %s", profile, credentialsFile)
+		return credentials.StaticCredentialsProvider{},
+			fmt.Errorf("failed to find secret access key in profile %s in AWS credentials file %s", profile, credentialsFile)
 	}
 
-	return credentials.NewStaticCredentials(accessKeyID.String(), secretAccessKey.String(), ""), nil
+	return credentials.NewStaticCredentialsProvider(accessKeyID.String(), secretAccessKey.String(), ""), nil
 }
