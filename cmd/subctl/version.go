@@ -15,18 +15,27 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package version
+
+package subctl
 
 import (
-	"fmt"
-	"io"
+	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/version"
+	"os"
 )
 
-var (
-	Version = "devel"
-)
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Get version information on subctl",
+	Long: `This command shows the version tag, and git commit for your
+subctl binary.`,
+	Run: subctlVersion,
+}
 
-// PrintSubctlVersion will print the version subctl was compiled under
-func PrintSubctlVersion(w io.Writer) {
-	fmt.Fprintf(w, "subctl version: %s\n", Version)
+func subctlVersion(cmd *cobra.Command, args []string) {
+	version.PrintSubctlVersion(os.Stdout)
+}
+
+func init() {
+	rootCmd.AddCommand(versionCmd)
 }

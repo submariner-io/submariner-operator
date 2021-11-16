@@ -2,7 +2,7 @@ package subctl
 
 import (
 	"fmt"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
+	"github.com/submariner-io/submariner-operator/pkg/version"
 	"os"
 )
 

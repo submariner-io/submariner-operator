@@ -24,6 +24,7 @@ import (
 	"github.com/submariner-io/submariner-operator/internal"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -32,7 +33,6 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
-	cmdVersion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -81,6 +81,11 @@ var (
 	healthCheckInterval           uint64
 	healthCheckMaxPacketLossCount uint64
 	corednsCustomConfigMap        string
+)
+
+const (
+	minK8sMajor = 1 // We need K8s 1.17 for endpoint slices
+	minK8sMinor = 17
 )
 
 func init() {
@@ -227,7 +232,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	clientConfig, err := config.ClientConfig()
 	utils.ExitOnError("Error connecting to the target cluster", err)
 
-	_, failedRequirements, err := cmdVersion.CheckRequirements(clientConfig)
+	_, failedRequirements, err := checkRequirements(clientConfig)
 	// We display failed requirements even if an error occurred
 	if len(failedRequirements) > 0 {
 		fmt.Println("The target cluster fails to meet Submariner's requirements:")
@@ -579,4 +584,37 @@ func getCustomCoreDNSParams() (namespace, name string) {
 		}
 	}
 	return namespace, name
+}
+
+func checkRequirements(config *rest.Config) (string, []string, error) {
+	failedRequirements := []string{}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return "", failedRequirements, errors.WithMessage(err, "error creating API server client")
+	}
+	serverVersion, err := clientset.Discovery().ServerVersion()
+	if err != nil {
+		return "", failedRequirements, errors.WithMessage(err, "error obtaining API server version")
+	}
+	major, err := strconv.Atoi(serverVersion.Major)
+	if err != nil {
+		return serverVersion.String(), failedRequirements,
+			errors.WithMessagef(err, "error parsing API server major version %v", serverVersion.Major)
+	}
+	var minor int
+	if strings.HasSuffix(serverVersion.Minor, "+") {
+		minor, err = strconv.Atoi(serverVersion.Minor[0 : len(serverVersion.Minor)-1])
+	} else {
+		minor, err = strconv.Atoi(serverVersion.Minor)
+	}
+	if err != nil {
+		return serverVersion.String(), failedRequirements,
+			errors.WithMessagef(err, "error parsing API server minor version %v", serverVersion.Minor)
+	}
+	if major < minK8sMajor || (major == minK8sMajor && minor < minK8sMinor) {
+		failedRequirements = append(failedRequirements,
+			fmt.Sprintf("Submariner requires Kubernetes %d.%d; your cluster is running %s.%s",
+				minK8sMajor, minK8sMinor, serverVersion.Major, serverVersion.Minor))
+	}
+	return serverVersion.String(), failedRequirements, nil
 }

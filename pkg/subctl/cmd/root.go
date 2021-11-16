@@ -22,6 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
 	"strings"
 	"time"
 
@@ -31,7 +32,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
-	cmdversion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
