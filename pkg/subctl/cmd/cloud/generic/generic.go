@@ -36,7 +36,7 @@ func RunOnK8sCluster(kubeConfig, kubeContext string,
 	clientSet, err := kubernetes.NewForConfig(k8sConfig)
 	utils.ExitOnError("Failed to create Kubernetes client", err)
 
-	k8sClientSet := k8s.NewK8sInterface(clientSet)
+	k8sClientSet := k8s.NewInterface(clientSet)
 
 	gwDeployer := generic.NewGatewayDeployer(k8sClientSet)
 
