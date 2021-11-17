@@ -20,7 +20,9 @@ package pkg
 
 import (
 	"fmt"
+
 	"github.com/submariner-io/submariner-operator/internal"
+	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 
 	"github.com/submariner-io/admiral/pkg/stringset"
@@ -38,8 +40,9 @@ import (
 )
 
 type DeployOptions struct {
-	IpsecSubmFile               string
+	OperatorDebug               bool
 	GlobalnetEnable             bool
+	IpsecSubmFile               string
 	GlobalnetCIDRRange          string
 	DefaultGlobalnetClusterSize uint
 	ComponentArr                []string
@@ -47,15 +50,14 @@ type DeployOptions struct {
 	DefaultCustomDomains        []string
 	Repository                  string
 	ImageVersion                string
-	OperatorDebug               bool
 }
 
 var ValidComponents = []string{components.ServiceDiscovery, components.Connectivity}
 
 const brokerDetailsFilename = "broker-info.subm"
 
-func Deploy(do DeployOptions, kubeConfig string, kubeContext string) error {
-	fmt.Println("in broker.deploy, flags are %s", do)
+func Deploy(do DeployOptions, kubeConfig, kubeContext string) error {
+	fmt.Printf("in broker.deploy, flags are %q\n", do)
 
 	status := cli.NewStatus()
 	componentSet := stringset.New(do.ComponentArr...)
@@ -68,14 +70,8 @@ func Deploy(do DeployOptions, kubeConfig string, kubeContext string) error {
 		componentSet.Add(components.Globalnet)
 	}
 
-	globalnetSettings := DeployOptions{
-		GlobalnetEnable:             do.GlobalnetEnable,
-		GlobalnetCIDRRange:          do.GlobalnetCIDRRange,
-		DefaultGlobalnetClusterSize: do.DefaultGlobalnetClusterSize,
-	}
-
-	if valid, err := isValidGlobalnetConfig(globalnetSettings); !valid {
-			utils.ExitOnError("Invalid GlobalCIDR configuration", err)
+	if valid, err := isValidGlobalnetConfig(do); !valid {
+		utils.ExitOnError("Invalid GlobalCIDR configuration", err)
 	}
 
 	config, err := restconfig.ForCluster(kubeConfig, kubeContext)
@@ -87,7 +83,8 @@ func Deploy(do DeployOptions, kubeConfig string, kubeContext string) error {
 	utils.ExitOnError("Error setting up broker RBAC", err)
 
 	status.Start("Deploying the Submariner operator")
-	err = submarinerop.Ensure(status, config, internal.OperatorNamespace, internal.OperatorImage(do.ImageVersion, do.Repository, nil), do.OperatorDebug)
+	err = submarinerop.Ensure(status, config, internal.OperatorNamespace,
+		image.Operator(do.ImageVersion, do.Repository, nil), do.OperatorDebug)
 	status.End(cli.CheckForError(err))
 	utils.ExitOnError("Error deploying the operator", err)
 
@@ -168,7 +165,8 @@ func isValidGlobalnetConfig(gnSettings DeployOptions) (bool, error) {
 	if !gnSettings.GlobalnetEnable {
 		return true, nil
 	}
-	gnSettings.DefaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(gnSettings.GlobalnetCIDRRange, gnSettings.DefaultGlobalnetClusterSize)
+	gnSettings.DefaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(gnSettings.GlobalnetCIDRRange,
+		gnSettings.DefaultGlobalnetClusterSize)
 	if err != nil || gnSettings.DefaultGlobalnetClusterSize == 0 {
 		return false, err
 	}

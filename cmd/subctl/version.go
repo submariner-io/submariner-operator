@@ -19,12 +19,13 @@ limitations under the License.
 package subctl
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/version"
-	"os"
 )
 
-var versionCmd = &cobra.Command{
+var VersionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Get version information on subctl",
 	Long: `This command shows the version tag, and git commit for your
@@ -37,5 +38,5 @@ func subctlVersion(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(VersionCmd)
 }

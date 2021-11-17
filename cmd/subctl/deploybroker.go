@@ -15,9 +15,10 @@ package subctl
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/submariner-io/submariner-operator/pkg"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
-	"strings"
 
 	"github.com/spf13/cobra"
 )

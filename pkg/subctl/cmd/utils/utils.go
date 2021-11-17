@@ -20,8 +20,9 @@ package utils
 
 import (
 	"fmt"
-	"github.com/submariner-io/submariner-operator/pkg/version"
 	"os"
+
+	"github.com/submariner-io/submariner-operator/pkg/version"
 )
 
 // PanicOnError will print the subctl version and then panic in case of an actual error

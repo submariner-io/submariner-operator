@@ -19,12 +19,13 @@ package version
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 var (

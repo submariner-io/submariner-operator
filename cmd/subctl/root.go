@@ -15,19 +15,18 @@ package subctl
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 
-	//homedir "github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
+	// homedir "github.com/mitchellh/go-homedir"
 	// "github.com/spf13/viper"
 )
 
 // var cfgFile string
 
 var (
-	kubeConfig   string
-	kubeContext  string
-	kubeContexts []string
+	kubeConfig  string
+	kubeContext string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -88,15 +87,4 @@ func addKubeConfigFlag(cmd *cobra.Command) {
 func addKubeContextFlag(cmd *cobra.Command) {
 	addKubeConfigFlag(cmd)
 	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
-}
-
-// addKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated)
-func addKubeContextMultiFlag(cmd *cobra.Command, usage string) {
-	addKubeConfigFlag(cmd)
-	if usage == "" {
-		usage = "comma-separated list of kubeconfig contexts to use, can be specified multiple times.\n" +
-			"If none specified, all contexts referenced by the kubeconfig are used"
-	}
-
-	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontexts", nil, usage)
 }

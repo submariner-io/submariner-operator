@@ -21,7 +21,7 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/submariner-io/submariner-operator/internal"
+	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 	"os"
 	"regexp"
@@ -278,7 +278,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 
 	status.Start("Deploying the Submariner operator")
 
-	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, internal.OperatorImage(imageVersion, repository, imageOverrideArr), operatorDebug)
+	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, image.Operator(imageVersion, repository, imageOverrideArr), operatorDebug)
 	status.End(cli.CheckForError(err))
 	utils.ExitOnError("Error deploying the operator", err)
 
@@ -475,7 +475,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
-		ImageOverrides:           internal.GetImageOverrides(imageOverrideArr),
+		ImageOverrides:           image.GetOverrides(imageOverrideArr),
 		LoadBalancerEnabled:      loadBalancerEnabled,
 		ConnectionHealthCheck: &submariner.HealthCheckSpec{
 			Enabled:            healthCheckEnable,
@@ -545,7 +545,7 @@ func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.S
 		Debug:                    submarinerDebug,
 		ClusterID:                clusterID,
 		Namespace:                SubmarinerNamespace,
-		ImageOverrides:           internal.GetImageOverrides(imageOverrideArr),
+		ImageOverrides:           image.GetOverrides(imageOverrideArr),
 	}
 
 	if corednsCustomConfigMap != "" {

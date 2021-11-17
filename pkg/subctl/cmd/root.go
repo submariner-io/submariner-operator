@@ -60,7 +60,7 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.AddCommand(cmdversion.Cmd)
+	rootCmd.AddCommand(cmdversion.VersionCmd)
 	cloudCmd := cloud.NewCommand(&kubeConfig, &kubeContext)
 	AddKubeContextFlag(cloudCmd)
 	rootCmd.AddCommand(cloudCmd)
