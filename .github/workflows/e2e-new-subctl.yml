@@ -1,0 +1,35 @@
+---
+name: End to End Default
+
+on:
+  pull_request:
+
+jobs:
+  e2e:
+    name: new_subctl
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+
+      - name: make old subctl
+        run: |
+          make bin/subctl
+
+      - name: make new subctl
+        run: |
+          make cmd/bin/subctl
+
+      - name: show subctl help
+        run: |
+          cmd/bin/subctl help
+          cmd/bin/subctl deploy-broker --help
+
+      - name: Deploy clusters and broker
+        run: |
+          make clusters
+
+      - name: Deploy broker
+        run: |
+          cmd/bin/subctl deploy-broker --kubeconfig output/kubeconfigs/kind-config-cluster1

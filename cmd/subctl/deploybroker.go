@@ -15,15 +15,15 @@ package subctl
 
 import (
 	"fmt"
+	"github.com/submariner-io/submariner-operator/pkg/deploy"
 	"strings"
 
-	"github.com/submariner-io/submariner-operator/pkg"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 
 	"github.com/spf13/cobra"
 )
 
-var deployflags pkg.DeployOptions
+var deployflags deploy.DeployOptions
 var defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
 
 // deployBroker represents the deployBroker command
@@ -32,7 +32,7 @@ var deployBroker = &cobra.Command{
 	Short: "Set the broker up",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("deployBroker called")
-		err := pkg.Deploy(deployflags, kubeConfig, kubeContext)
+		err := deploy.Broker(deployflags, kubeConfig, kubeContext)
 		exitOnError("Error deploying Broker", err)
 	},
 }
@@ -58,7 +58,7 @@ func addDeployBrokerFlags() {
 		"list of domains to use for multicluster service discovery")
 
 	deployBroker.PersistentFlags().StringSliceVar(&deployflags.ComponentArr, "components", defaultComponents,
-		fmt.Sprintf("The components to be installed - any of %s", strings.Join(pkg.ValidComponents, ",")))
+		fmt.Sprintf("The components to be installed - any of %s", strings.Join(deploy.ValidComponents, ",")))
 
 	deployBroker.PersistentFlags().StringVar(&deployflags.Repository, "repository", "", "image repository")
 	deployBroker.PersistentFlags().StringVar(&deployflags.ImageVersion, "version", "", "image version")

@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pkg
+package deploy
 
 import (
 	"fmt"
@@ -56,7 +56,7 @@ var ValidComponents = []string{components.ServiceDiscovery, components.Connectiv
 
 const brokerDetailsFilename = "broker-info.subm"
 
-func Deploy(do DeployOptions, kubeConfig, kubeContext string) error {
+func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	fmt.Printf("in broker.deploy, flags are %q\n", do)
 
 	status := cli.NewStatus()
