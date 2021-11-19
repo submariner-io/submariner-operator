@@ -101,7 +101,7 @@ func handleNodeLabels(config *rest.Config) error {
 	// List Submariner-labeled nodes
 	const submarinerGatewayLabel = "submariner.io/gateway"
 	const trueLabel = "true"
-	selector := labels.SelectorFromSet(labels.Set(map[string]string{submarinerGatewayLabel: trueLabel}))
+	selector := labels.SelectorFromSet(map[string]string{submarinerGatewayLabel: trueLabel})
 	labeledNodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
 		return err
