@@ -408,8 +408,10 @@ func ValidateExistingGlobalNetworks(config *rest.Config, namespace string) error
 	}
 
 	if globalnetInfo != nil {
-		if err = IsValidCIDR(globalnetInfo.GlobalnetCidrRange); err != nil {
-			return fmt.Errorf("invalid GlobalnetCidrRange: %s", err)
+		if globalnetInfo.GlobalnetEnabled {
+			if err = IsValidCIDR(globalnetInfo.GlobalnetCidrRange); err != nil {
+				return fmt.Errorf("invalid GlobalnetCidrRange: %s", err)
+			}
 		}
 	}
 
