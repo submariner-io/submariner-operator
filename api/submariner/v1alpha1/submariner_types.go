@@ -58,6 +58,7 @@ type SubmarinerSpec struct {
 	NatEnabled               bool                 `json:"natEnabled"`
 	LoadBalancerEnabled      bool                 `json:"loadBalancerEnabled,omitempty"`
 	ServiceDiscoveryEnabled  bool                 `json:"serviceDiscoveryEnabled,omitempty"`
+	BrokerK8sInsecure        bool                 `json:"brokerK8sInsecure,omitempty"`
 	CoreDNSCustomConfig      *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
 	// +listType=set
 	CustomDomains  []string          `json:"customDomains,omitempty"`
