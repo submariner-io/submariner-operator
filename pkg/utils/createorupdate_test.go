@@ -16,6 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// nolint:dupl // The test cases are similar but not duplicated.
 package utils
 
 import (
