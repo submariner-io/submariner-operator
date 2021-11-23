@@ -164,6 +164,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 						{Name: "BROKER_K8S_APISERVERTOKEN", Value: cr.Spec.BrokerK8sApiServerToken},
 						{Name: "BROKER_K8S_REMOTENAMESPACE", Value: cr.Spec.BrokerK8sRemoteNamespace},
 						{Name: "BROKER_K8S_CA", Value: cr.Spec.BrokerK8sCA},
+						{Name: "BROKER_INSECURE", Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
 						{Name: "CE_IPSEC_PSK", Value: cr.Spec.CeIPSecPSK},
 						{Name: "CE_IPSEC_DEBUG", Value: strconv.FormatBool(cr.Spec.CeIPSecDebug)},
 						{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
