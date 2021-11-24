@@ -16,6 +16,7 @@ package subctl
 import (
 	"fmt"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
+	"github.com/submariner-io/submariner-operator/internal/utils"
 	"strings"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
@@ -33,7 +34,7 @@ var deployBroker = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("deployBroker called")
 		err := deploy.Broker(deployflags, kubeConfig, kubeContext)
-		exitOnError("Error deploying Broker", err)
+		utils.ExitOnError("Error deploying Broker", err)
 	},
 }
 

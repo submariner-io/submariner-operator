@@ -27,7 +27,6 @@ import (
 
 	"github.com/submariner-io/admiral/pkg/stringset"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	v1 "k8s.io/api/core/v1"
@@ -63,7 +62,7 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	componentSet := stringset.New(do.ComponentArr...)
 
 	if err := isValidComponents(componentSet); err != nil {
-		utils.ExitOnError("Invalid components parameter", err)
+		return fmt.Errorf("Invalid components parameter %s", err)
 	}
 
 	if do.GlobalnetEnable {
@@ -71,22 +70,30 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	}
 
 	if valid, err := isValidGlobalnetConfig(do); !valid {
-		utils.ExitOnError("Invalid GlobalCIDR configuration", err)
+		if err != nil {
+			return fmt.Errorf("Invalid GlobalCIDR configuration %s", err)
+		}
 	}
 
 	config, err := restconfig.ForCluster(kubeConfig, kubeContext)
-	utils.ExitOnError("The provided kubeconfig is invalid", err)
+	if err != nil {
+		return fmt.Errorf("The provided kubeconfig is invalid %s", err)
+	}
 
 	status.Start("Setting up broker RBAC")
 	err = broker.Ensure(config, do.ComponentArr, false)
 	status.End(cli.CheckForError(err))
-	utils.ExitOnError("Error setting up broker RBAC", err)
+	if err != nil {
+		return fmt.Errorf("Error setting up broker RBAC %s", err)
+	}
 
 	status.Start("Deploying the Submariner operator")
 	err = submarinerop.Ensure(status, config, internal.OperatorNamespace,
 		image.Operator(do.ImageVersion, do.Repository, nil), do.OperatorDebug)
 	status.End(cli.CheckForError(err))
-	utils.ExitOnError("Error deploying the operator", err)
+	if err != nil {
+		return fmt.Errorf("Error deploying the operator %s", err)
+	}
 
 	status.Start("Deploying the broker")
 	err = brokercr.Ensure(config, internal.OperatorNamespace, populateBrokerSpec(do))
@@ -96,8 +103,8 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	} else {
 		status.QueueFailureMessage("Broker deployment failed")
 		status.End(cli.Failure)
+		return fmt.Errorf("Error deploying the broker %s", err)
 	}
-	utils.ExitOnError("Error deploying the broker", err)
 
 	status.Start(fmt.Sprintf("Creating %s file", brokerDetailsFilename))
 
@@ -112,10 +119,14 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	}
 
 	subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace, do.IpsecSubmFile)
-	utils.ExitOnError("Error retrieving preparing the subm data file", err)
+	if err != nil {
+		return fmt.Errorf("Error retrieving preparing the subm data file %s", err)
+	}
 
 	newFilename, err := datafile.BackupIfExists(brokerDetailsFilename)
-	utils.ExitOnError("Error backing up the brokerfile", err)
+	if err != nil {
+		return fmt.Errorf("Error backing up the brokerfile %s", err)
+	}
 
 	if newFilename != "" {
 		status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
@@ -127,20 +138,22 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 		subctlData.CustomDomains = &do.DefaultCustomDomains
 	}
 
-	utils.ExitOnError("Error setting up service discovery information", err)
-
 	if do.GlobalnetEnable {
-		err = globalnet.ValidateExistingGlobalNetworks(config, broker.SubmarinerBrokerNamespace)
-		utils.ExitOnError("Error validating existing globalCIDR configmap", err)
+		if err = globalnet.ValidateExistingGlobalNetworks(config, broker.SubmarinerBrokerNamespace); err != nil {
+			return fmt.Errorf("Error validating existing globalCIDR configmap %s", err)
+		}
 	}
 
-	err = broker.CreateGlobalnetConfigMap(config, do.GlobalnetEnable, do.GlobalnetCIDRRange,
-		do.DefaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace)
-	utils.ExitOnError("Error creating globalCIDR configmap on Broker", err)
+	if err = broker.CreateGlobalnetConfigMap(config, do.GlobalnetEnable, do.GlobalnetCIDRRange,
+		do.DefaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace); err != nil {
+		return fmt.Errorf("Error creating globalCIDR configmap on Broker %s", err)
+	}
 
 	err = subctlData.WriteToFile(brokerDetailsFilename)
 	status.End(cli.CheckForError(err))
-	utils.ExitOnError("Error writing the broker information", err)
+	if err != nil {
+		return fmt.Errorf("Error writing the broker information %s", err)
+	}
 	return nil
 }
 
