@@ -49,13 +49,10 @@ import (
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var log = logf.Log.WithName("controller_servicediscovery")
@@ -619,28 +616,12 @@ func (r *ServiceDiscoveryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := operatorv1.Install(mgr.GetScheme()); err != nil {
 		return err
 	}
-	// Create a new controller
-	c, err := controller.New("servicediscovery-controller", mgr, controller.Options{Reconciler: r})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to primary resource ServiceDiscovery
-	err = c.Watch(&source.Kind{Type: &submarinerv1alpha1.ServiceDiscovery{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// Watch for changes to secondary resource Deployment and requeue the owner ServiceDiscovery
-	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &submarinerv1alpha1.ServiceDiscovery{},
-	})
-	if err != nil {
-		return err
-	}
 
 	return ctrl.NewControllerManagedBy(mgr).
+		Named("servicediscovery-controller").
+		// Watch for changes to primary resource ServiceDiscovery
 		For(&submarinerv1alpha1.ServiceDiscovery{}).
+		// Watch for changes to secondary resource Deployment and requeue the owner ServiceDiscovery
+		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }
