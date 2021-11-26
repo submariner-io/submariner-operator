@@ -27,14 +27,11 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/coreos/go-semver/semver"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
-	"github.com/submariner-io/submariner-operator/pkg/version"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -46,13 +43,11 @@ import (
 )
 
 var (
-	kubeConfig   string
-	kubeContext  string
-	kubeContexts []string
-	rootCmd      = &cobra.Command{
+	rootCmd = &cobra.Command{
 		Use:   "subctl",
 		Short: "An installer for Submariner",
 	}
+	restConfigProducer = restconfig.NewProducer()
 )
 
 const SubmMissingMessage = "Submariner is not installed"
@@ -63,37 +58,10 @@ func Execute() error {
 
 func init() {
 	rootCmd.AddCommand(cmdversion.VersionCmd)
-
-	cloudCmd := cloud.NewCommand(&kubeConfig, &kubeContext)
-
-	AddKubeContextFlag(cloudCmd)
-	rootCmd.AddCommand(cloudCmd)
 }
 
 func AddToRootCommand(cmd *cobra.Command) {
 	rootCmd.AddCommand(cmd)
-}
-
-func AddKubeConfigFlag(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
-}
-
-// AddKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once.
-func AddKubeContextFlag(cmd *cobra.Command) {
-	AddKubeConfigFlag(cmd)
-	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
-}
-
-// AddKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated).
-func AddKubeContextMultiFlag(cmd *cobra.Command, usage string) {
-	AddKubeConfigFlag(cmd)
-
-	if usage == "" {
-		usage = "comma-separated list of kubeconfig contexts to use, can be specified multiple times.\n" +
-			"If none specified, all contexts referenced by the kubeconfig are used"
-	}
-
-	cmd.PersistentFlags().StringSliceVar(&kubeContexts, "kubecontexts", nil, usage)
 }
 
 const (
@@ -228,24 +196,4 @@ var nodeLabelBackoff wait.Backoff = wait.Backoff{
 	Duration: 1 * time.Second,
 	Factor:   1.2,
 	Jitter:   1,
-}
-
-func CheckVersionMismatch(cmd *cobra.Command, args []string) error {
-	config, err := restconfig.ForCluster(kubeConfig, kubeContext)
-	utils.ExitOnError("The provided kubeconfig is invalid", err)
-
-	submariner := getSubmarinerResource(config)
-
-	if submariner != nil && submariner.Spec.Version != "" {
-		subctlVer, _ := semver.NewVersion(version.Version)
-		submarinerVer, _ := semver.NewVersion(submariner.Spec.Version)
-
-		if subctlVer != nil && submarinerVer != nil && subctlVer.LessThan(*submarinerVer) {
-			return fmt.Errorf(
-				"the subctl version %q is older than the deployed Submariner version %q. Please upgrade your subctl version",
-				version.Version, submariner.Spec.Version)
-		}
-	}
-
-	return nil
 }

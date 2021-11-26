@@ -66,15 +66,15 @@ func init() {
 }
 
 func addBenchmarkFlags(cmd *cobra.Command) {
-	AddKubeContextMultiFlag(cmd, "comma-separated list of one or two kubeconfig contexts to use.")
+	restConfigProducer.AddKubeContextMultiFlag(cmd, "comma-separated list of one or two kubeconfig contexts to use.")
 	cmd.PersistentFlags().BoolVar(&intraCluster, "intra-cluster", false, "run the test within a single cluster")
 	cmd.PersistentFlags().BoolVar(&benchmark.Verbose, "verbose", false, "produce verbose logs during benchmark tests")
 }
 
 func checkBenchmarkArguments(args []string, intraCluster bool) error {
-	if !intraCluster && len(args) != 2 && len(kubeContexts) != 2 {
+	if !intraCluster && len(args) != 2 && restConfigProducer.CountRequestedClusters() != 2 {
 		return fmt.Errorf("two kubecontexts must be specified")
-	} else if intraCluster && len(args) != 1 && len(kubeContexts) != 1 {
+	} else if intraCluster && len(args) != 1 && restConfigProducer.CountRequestedClusters() != 1 {
 		return fmt.Errorf("only one kubecontext should be specified")
 	}
 
@@ -91,8 +91,6 @@ func checkBenchmarkArguments(args []string, intraCluster bool) error {
 		if same {
 			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> need to have a unique content")
 		}
-	} else if len(kubeContexts) == 2 && strings.Compare(kubeContexts[0], kubeContexts[1]) == 0 {
-		return fmt.Errorf("the two kubecontexts must be different")
 	}
 
 	return nil

@@ -30,13 +30,13 @@ import (
 	"github.com/spf13/cobra"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/image"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokersecret"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/servicediscoverycr"
@@ -47,7 +47,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/retry"
 )
 
@@ -83,7 +82,7 @@ var (
 
 func init() {
 	addJoinFlags(joinCmd)
-	AddKubeContextFlag(joinCmd)
+	restConfigProducer.AddKubeContextFlag(joinCmd)
 	rootCmd.AddCommand(joinCmd)
 }
 
@@ -142,7 +141,7 @@ var joinCmd = &cobra.Command{
 	Use:     "join",
 	Short:   "Connect a cluster to an existing broker",
 	Args:    cobra.MaximumNArgs(1),
-	PreRunE: CheckVersionMismatch,
+	PreRunE: restConfigProducer.CheckVersionMismatch,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := checkArgumentPassed(args)
 		utils.ExitOnError("Argument missing", err)
@@ -153,8 +152,7 @@ var joinCmd = &cobra.Command{
 		utils.ExitOnError("Error connecting to broker cluster", err)
 		err = isValidCustomCoreDNSConfig()
 		utils.ExitOnError("Invalid Custom CoreDNS configuration", err)
-		config := restconfig.ClientConfig(kubeConfig, kubeContext)
-		joinSubmarinerCluster(config, kubeContext, subctlData)
+		joinSubmarinerCluster(subctlData)
 	},
 }
 
@@ -168,11 +166,11 @@ func checkArgumentPassed(args []string) error {
 
 var status = cli.NewStatus()
 
-func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, subctlData *datafile.SubctlData) {
+func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	// Missing information
 	qs := []*survey.Question{}
 
-	determineClusterID(config, contextName)
+	determineClusterID()
 
 	if valid, err := isValidClusterID(clusterID); !valid {
 		fmt.Printf("Error: %s\n", err.Error())
@@ -218,7 +216,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		}
 	}
 
-	clientConfig, err := config.ClientConfig()
+	clientConfig, err := restConfigProducer.ClientConfig().ClientConfig()
 	utils.ExitOnError("Error connecting to the target cluster", err)
 
 	checkRequirements(clientConfig)
@@ -326,13 +324,11 @@ func checkRequirements(clientConfig *rest.Config) {
 	utils.ExitOnError("Unable to check requirements", err)
 }
 
-func determineClusterID(config clientcmd.ClientConfig, contextName string) {
+func determineClusterID() {
 	if clusterID == "" {
-		rawConfig, err := config.RawConfig()
-		// This will be fatal later, no point in continuing
+		clusterName, err := restConfigProducer.ClusterNameFromContext()
 		utils.ExitOnError("Error connecting to the target cluster", err)
 
-		clusterName := restconfig.ClusterNameFromContext(&rawConfig, contextName)
 		if clusterName != nil {
 			clusterID = *clusterName
 		}

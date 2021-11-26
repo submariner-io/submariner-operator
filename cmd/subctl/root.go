@@ -18,12 +18,10 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 )
 
-var (
-	kubeConfig  string
-	kubeContext string
-)
+var restConfigProducer = restconfig.NewProducer()
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
@@ -38,15 +36,4 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
-
-// addKubeConfigFlag adds a "kubeconfig" flag.
-func addKubeConfigFlag(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
-}
-
-// addKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once.
-func addKubeContextFlag(cmd *cobra.Command) {
-	addKubeConfigFlag(cmd)
-	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
 }

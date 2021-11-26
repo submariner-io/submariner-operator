@@ -20,6 +20,7 @@ package prepare
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 )
 
 var (
@@ -27,8 +28,6 @@ var (
 	natDiscoveryPort uint16
 	vxlanPort        uint16
 	metricsPort      uint16
-	kubeConfig       *string
-	kubeContext      *string
 )
 
 var (
@@ -38,12 +37,13 @@ var (
 	dedicatedGateway  bool
 )
 
+var parentRestConfigProducer *restconfig.Producer
+
 const DefaultNumGateways = 1
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
-	kubeConfig = origKubeConfig
-	kubeContext = origKubeContext
+func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
+	parentRestConfigProducer = restConfigProducer
 	cmd := &cobra.Command{
 		Use:   "prepare",
 		Short: "Prepare the cloud",

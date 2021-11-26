@@ -20,22 +20,19 @@ package cleanup
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 )
 
-var (
-	kubeConfig  *string
-	kubeContext *string
-)
+var parentRestConfigProducer *restconfig.Producer
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
-	kubeConfig = origKubeConfig
-	kubeContext = origKubeContext
+func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cleanup",
 		Short: "Clean up the cloud",
 		Long:  `This command cleans up the cloud after Submariner uninstallation.`,
 	}
+	parentRestConfigProducer = restConfigProducer
 
 	cmd.AddCommand(newAWSCleanupCommand())
 	cmd.AddCommand(newGCPCleanupCommand())
