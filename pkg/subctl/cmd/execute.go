@@ -24,7 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -66,7 +66,7 @@ func NewCluster(config *rest.Config, clusterName string) (*Cluster, string) {
 		return nil, fmt.Sprintf("Error creating Submariner client: %v", err)
 	}
 
-	cluster.Submariner, err = getSubmarinerResourceWithError(cluster.Config)
+	cluster.Submariner, err = utils.GetSubmarinerResourceWithError(cluster.Config)
 	if err != nil && !apierrors.IsNotFound(err) {
 		return nil, fmt.Sprintf("Error retrieving Submariner resource: %v", err)
 	}
@@ -90,7 +90,7 @@ func (c *Cluster) GetGateways() ([]submarinerv1.Gateway, error) {
 func ExecuteMultiCluster(run func(*Cluster) bool) {
 	success := true
 
-	for _, config := range restconfig.MustGetForClusters(kubeConfig, kubeContexts) {
+	for _, config := range restConfigProducer.MustGetForClusters() {
 		fmt.Printf("Cluster %q\n", config.ClusterName)
 
 		cluster, errMsg := NewCluster(config.Config, config.ClusterName)

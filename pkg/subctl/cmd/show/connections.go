@@ -43,7 +43,7 @@ func init() {
 		Use:     "connections",
 		Short:   "Show cluster connectivity information",
 		Long:    `This command shows information about submariner endpoint connections with other clusters.`,
-		PreRunE: cmd.CheckVersionMismatch,
+		PreRunE: restConfigProducer.CheckVersionMismatch,
 		Run: func(command *cobra.Command, args []string) {
 			cmd.ExecuteMultiCluster(showConnections)
 		},

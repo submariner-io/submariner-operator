@@ -20,20 +20,24 @@ package cloud
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/cleanup"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/prepare"
 )
 
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
-	cmd := &cobra.Command{
+var (
+	cloudCmd = &cobra.Command{
 		Use:   "cloud",
 		Short: "Cloud operations",
 		Long:  `This command contains cloud operations related to Submariner installation.`,
 	}
+	restConfigProducer = restconfig.NewProducer()
+)
 
-	cmd.AddCommand(prepare.NewCommand(origKubeConfig, origKubeContext))
-	cmd.AddCommand(cleanup.NewCommand(origKubeConfig, origKubeContext))
-
-	return cmd
+func init() {
+	cloudCmd.AddCommand(prepare.NewCommand(&restConfigProducer))
+	cloudCmd.AddCommand(cleanup.NewCommand(&restConfigProducer))
+	restConfigProducer.AddKubeContextFlag(cloudCmd)
+	cmd.AddToRootCommand(cloudCmd)
 }

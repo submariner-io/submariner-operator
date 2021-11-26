@@ -30,7 +30,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
@@ -82,7 +81,7 @@ func init() {
 
 	deployBroker.PersistentFlags().StringVar(&brokerNamespace, "broker-namespace", defaultBrokerNamespace, "namespace for broker")
 
-	AddKubeContextFlag(deployBroker)
+	restConfigProducer.AddKubeContextFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
 
@@ -105,7 +104,7 @@ var deployBroker = &cobra.Command{
 		if valid, err := isValidGlobalnetConfig(); !valid {
 			utils.ExitOnError("Invalid GlobalCIDR configuration", err)
 		}
-		config, err := restconfig.ForCluster(kubeConfig, kubeContext)
+		config, err := restConfigProducer.ForCluster()
 		utils.ExitOnError("The provided kubeconfig is invalid", err)
 
 		status := cli.NewStatus()

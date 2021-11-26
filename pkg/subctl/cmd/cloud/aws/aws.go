@@ -35,9 +35,9 @@ import (
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	cloudprepareaws "github.com/submariner-io/cloud-prepare/pkg/aws"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"gopkg.in/ini.v1"
 	"k8s.io/client-go/dynamic"
 )
@@ -74,7 +74,7 @@ func AddAWSFlags(command *cobra.Command) {
 
 // RunOnAWS runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.
-func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
+func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string,
 	function func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error) error {
 	if ocpMetadataFile != "" {
 		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
@@ -108,7 +108,7 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 
 	reporter.Succeeded("")
 
-	k8sConfig, err := restconfig.ForCluster(kubeConfig, kubeContext)
+	k8sConfig, err := restConfigProducer.ForCluster()
 	utils.ExitOnError("Failed to initialize a Kubernetes config", err)
 
 	restMapper, err := util.BuildRestMapper(k8sConfig)

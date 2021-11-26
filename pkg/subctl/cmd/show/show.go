@@ -20,17 +20,21 @@ package show
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
-// showCmd represents the show command.
-var showCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Show information about submariner",
-	Long:  `This command shows information about some aspect of the submariner deployment in a cluster.`,
-}
+var (
+	// showCmd represents the show command.
+	showCmd = &cobra.Command{
+		Use:   "show",
+		Short: "Show information about submariner",
+		Long:  `This command shows information about some aspect of the submariner deployment in a cluster.`,
+	}
+	restConfigProducer = restconfig.NewProducer()
+)
 
 func init() {
-	cmd.AddKubeConfigFlag(showCmd)
+	restConfigProducer.AddKubeConfigFlag(showCmd)
 	cmd.AddToRootCommand(showCmd)
 }

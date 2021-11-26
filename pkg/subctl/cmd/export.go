@@ -26,8 +26,8 @@ import (
 
 	"github.com/spf13/cobra"
 	autil "github.com/submariner-io/admiral/pkg/util"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -45,14 +45,14 @@ var (
 		Short: "Exports a Service to other clusters",
 		Long: "This command creates a ServiceExport resource with the given name which causes the Service of the same name to be accessible" +
 			" to other clusters",
-		PreRunE: CheckVersionMismatch,
+		PreRunE: restConfigProducer.CheckVersionMismatch,
 		Run:     exportService,
 	}
 	serviceNamespace string
 )
 
 func init() {
-	AddKubeConfigFlag(exportCmd)
+	restConfigProducer.AddKubeConfigFlag(exportCmd)
 	addServiceExportFlags(exportServiceCmd)
 	exportCmd.AddCommand(exportServiceCmd)
 	rootCmd.AddCommand(exportCmd)
@@ -66,7 +66,7 @@ func exportService(cmd *cobra.Command, args []string) {
 	err := validateArguments(args)
 	utils.ExitOnError("Insufficient arguments", err)
 
-	clientConfig := restconfig.ClientConfig(kubeConfig, kubeContext)
+	clientConfig := restConfigProducer.ClientConfig()
 	restConfig, err := clientConfig.ClientConfig()
 
 	utils.ExitOnError("Error connecting to the target cluster", err)

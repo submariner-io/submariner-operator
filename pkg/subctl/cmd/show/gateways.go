@@ -37,7 +37,7 @@ func init() {
 		Use:     "gateways",
 		Short:   "Show submariner gateway summary information",
 		Long:    `This command shows summary information about the submariner gateways in a cluster.`,
-		PreRunE: cmd.CheckVersionMismatch,
+		PreRunE: restConfigProducer.CheckVersionMismatch,
 		Run: func(command *cobra.Command, args []string) {
 			cmd.ExecuteMultiCluster(showGateways)
 		},

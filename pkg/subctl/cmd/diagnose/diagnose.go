@@ -19,12 +19,14 @@ package diagnose
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
 var (
-	podNamespace  string
-	verboseOutput bool
+	podNamespace       string
+	verboseOutput      bool
+	restConfigProducer = restconfig.NewProducer()
 
 	diagnoseCmd = &cobra.Command{
 		Use:   "diagnose",
@@ -34,7 +36,7 @@ var (
 )
 
 func init() {
-	cmd.AddKubeConfigFlag(diagnoseCmd)
+	restConfigProducer.AddKubeConfigFlag(diagnoseCmd)
 	cmd.AddToRootCommand(diagnoseCmd)
 }
 
