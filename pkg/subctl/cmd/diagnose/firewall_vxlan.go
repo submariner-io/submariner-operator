@@ -57,6 +57,11 @@ func checkVxLANConfig(cluster *cmd.Cluster) bool {
 
 	status.Start("Checking the firewall configuration to determine if VXLAN traffic is allowed")
 
+	if isClusterSingleNode(cluster, status) {
+		// Skip the check if it's a single node cluster
+		return true
+	}
+
 	checkFWConfig(cluster, status)
 
 	if status.HasFailureMessages() {
