@@ -64,16 +64,6 @@ func init() {
 	addDiagnoseFWConfigFlags(command)
 	addVerboseFlag(command)
 	diagnoseFirewallConfigCmd.AddCommand(command)
-
-	deprecatedCommand := &cobra.Command{
-		Use:        "tunnel <localkubeconfig> <remotekubeconfig>",
-		Deprecated: "please use inter-cluster",
-		Short:      command.Short,
-		Long:       command.Long,
-		Args:       command.Args,
-		Run:        command.Run,
-	}
-	diagnoseFirewallConfigCmd.AddCommand(deprecatedCommand)
 }
 
 func validateTunnelConfig(command *cobra.Command, args []string) {

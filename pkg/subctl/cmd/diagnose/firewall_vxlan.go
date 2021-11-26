@@ -44,16 +44,6 @@ func init() {
 	addDiagnoseFWConfigFlags(command)
 	addVerboseFlag(command)
 	diagnoseFirewallConfigCmd.AddCommand(command)
-
-	deprecatedCommand := &cobra.Command{
-		Use:        "vxlan",
-		Deprecated: "please use intra-cluster",
-		Short:      command.Short,
-		Long:       command.Long,
-		Args:       command.Args,
-		Run:        command.Run,
-	}
-	diagnoseFirewallConfigCmd.AddCommand(deprecatedCommand)
 }
 
 func checkVxLANConfig(cluster *cmd.Cluster) bool {
