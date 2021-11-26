@@ -51,6 +51,11 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 
 	status.Start("Checking the firewall configuration to determine if the metrics port (8080) is allowed")
 
+	if isClusterSingleNode(cluster, status) {
+		// Skip the check if it's a single node cluster
+		return true
+	}
+
 	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffMetricsCommand)
 	sPod, err := spawnSnifferPodOnGatewayNode(cluster.KubeClient, podNamespace, podCommand)
 	if err != nil {
