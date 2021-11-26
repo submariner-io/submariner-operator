@@ -17,11 +17,11 @@ jobs:
         globalnet: ['', 'globalnet']
         # Default version to test
         k8s_version: ['1.20']
-        lighthouse: ['', 'lighthouse']
+        lighthouse: ['', 'nolighthouse']
         ovn: ['', 'ovn']
         exclude:
           - ovn: 'ovn'
-            lighthouse: 'lighthouse'
+            lighthouse: ''
           - ovn: 'ovn'
             globalnet: 'globalnet'
         include:
