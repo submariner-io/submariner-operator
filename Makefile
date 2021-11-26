@@ -50,7 +50,7 @@ override VALIDATE_ARGS += --skip-dirs pkg/client
 # Process extra flags from the `using=a,b,c` optional flag
 
 ifneq (,$(filter lighthouse,$(_using)))
-override DEPLOY_ARGS += --deploytool_broker_args '--service-discovery'
+override DEPLOY_ARGS += --deploytool_broker_args '--components service-discovery,connectivity'
 endif
 
 GO ?= go

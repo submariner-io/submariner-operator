@@ -43,7 +43,6 @@ var (
 	globalnetEnable             bool
 	globalnetCIDRRange          string
 	defaultGlobalnetClusterSize uint
-	serviceDiscoveryEnabled     bool
 	componentArr                []string
 	GlobalCIDRConfigMap         *v1.ConfigMap
 	defaultCustomDomains        []string
@@ -62,11 +61,6 @@ func init() {
 
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
 		"import IPsec PSK from existing submariner broker file, like broker-info.subm")
-
-	deployBroker.PersistentFlags().BoolVar(&serviceDiscoveryEnabled, "service-discovery", true,
-		"enable multi-cluster service discovery")
-
-	_ = deployBroker.PersistentFlags().MarkDeprecated("service-discovery", "please use --components instead")
 
 	deployBroker.PersistentFlags().StringSliceVar(&defaultCustomDomains, "custom-domains", nil,
 		"list of domains to use for multicluster service discovery")
@@ -94,12 +88,6 @@ var deployBroker = &cobra.Command{
 
 		if err := isValidComponents(componentSet); err != nil {
 			utils.ExitOnError("Invalid components parameter", err)
-		}
-
-		// TODO: Remove this in the future, while service-discovery is marked as
-		//       deprecated we should still provide a consistent broker config file
-		if !serviceDiscoveryEnabled {
-			componentSet.Remove(components.ServiceDiscovery)
 		}
 
 		if globalnetEnable {
@@ -157,7 +145,7 @@ var deployBroker = &cobra.Command{
 			status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
 		}
 
-		subctlData.ServiceDiscovery = serviceDiscoveryEnabled
+		subctlData.ServiceDiscovery = componentSet.Contains(components.ServiceDiscovery)
 		subctlData.SetComponents(componentSet)
 
 		if len(defaultCustomDomains) > 0 {

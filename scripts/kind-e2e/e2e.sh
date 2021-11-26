@@ -20,7 +20,7 @@ source ${SCRIPTS_DIR}/lib/deploy_operator
 
 ### Variables ###
 
-[[ ! ${DEPLOY_ARGS} =~ "--service-discovery" ]] || lighthouse=true
+[[ ! ${DEPLOY_ARGS} =~ "service-discovery" ]] || lighthouse=true
 timeout="2m" # Used by deploy_resource
 
 ### Main ###
@@ -57,7 +57,7 @@ test_subctl_gather
 # Run subctl diagnose as a sanity check
 
 ${DAPPER_SOURCE}/bin/subctl diagnose all
-${DAPPER_SOURCE}/bin/subctl diagnose firewall tunnel ${KUBECONFIGS_DIR}/kind-config-cluster1 ${KUBECONFIGS_DIR}/kind-config-cluster2
+${DAPPER_SOURCE}/bin/subctl diagnose firewall inter-cluster ${KUBECONFIGS_DIR}/kind-config-cluster1 ${KUBECONFIGS_DIR}/kind-config-cluster2
 
 # Run benchmark commands for sanity checks
 
