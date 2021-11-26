@@ -52,14 +52,16 @@ function validate_gathered_files () {
   validate_pod_log_files $subm_ns '-l name=submariner-operator'
 
   # Service Discovery
-  validate_resource_files all 'serviceexports.multicluster.x-k8s.io' 'ServiceExport'
-  validate_resource_files all 'serviceimports.multicluster.x-k8s.io' 'ServiceImport'
-  validate_resource_files all 'endpointslices.discovery.k8s.io' 'EndpointSlice' '-l endpointslice.kubernetes.io/managed-by=lighthouse-agent.submariner.io'
-  validate_resource_files $subm_ns 'configmaps' 'ConfigMap' '-l component=submariner-lighthouse'
-  validate_resource_files kube-system 'configmaps' 'ConfigMap' '--field-selector metadata.name=coredns'
+  if [[ "$lighthouse" == "true" ]]; then
+    validate_resource_files all 'serviceexports.multicluster.x-k8s.io' 'ServiceExport'
+    validate_resource_files all 'serviceimports.multicluster.x-k8s.io' 'ServiceImport'
+    validate_resource_files all 'endpointslices.discovery.k8s.io' 'EndpointSlice' '-l endpointslice.kubernetes.io/managed-by=lighthouse-agent.submariner.io'
+    validate_resource_files $subm_ns 'configmaps' 'ConfigMap' '-l component=submariner-lighthouse'
+    validate_resource_files kube-system 'configmaps' 'ConfigMap' '--field-selector metadata.name=coredns'
 
-  validate_pod_log_files $subm_ns '-l component=submariner-lighthouse'
-  validate_pod_log_files kube-system '-l k8s-app=kube-dns'
+    validate_pod_log_files $subm_ns '-l component=submariner-lighthouse'
+    validate_pod_log_files kube-system '-l k8s-app=kube-dns'
+  fi
 }
 
 function validate_pod_log_files() {
