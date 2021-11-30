@@ -39,6 +39,7 @@ func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerS
 	brokerCR := &submariner.Broker{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: BrokerName,
+			Namespace: namespace,
 		},
 		Spec: brokerSpec,
 	}

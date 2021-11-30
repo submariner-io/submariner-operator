@@ -110,7 +110,7 @@ func NewBrokerClusterRole() *rbacv1.Role {
 }
 
 // Create a role for to bind the cluster admin (subctl) SA
-func NewBrokerRoleBinding(serviceAccount, role string) *rbacv1.RoleBinding {
+func NewBrokerRoleBinding(serviceAccount, role, namespace string) *rbacv1.RoleBinding {
 	binding := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("%s-%s", serviceAccount, role),
@@ -122,7 +122,7 @@ func NewBrokerRoleBinding(serviceAccount, role string) *rbacv1.RoleBinding {
 		},
 		Subjects: []rbacv1.Subject{
 			{
-				Namespace: "submariner-k8s-broker",
+				Namespace: namespace,
 				Name:      serviceAccount,
 				Kind:      "ServiceAccount",
 			},

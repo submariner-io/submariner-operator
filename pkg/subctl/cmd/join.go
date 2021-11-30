@@ -284,7 +284,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	utils.ExitOnError("Error deploying the operator", err)
 
 	status.Start("Creating SA for cluster")
-	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID)
+	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID, brokerNamespace)
 	status.End(cli.CheckForError(err))
 	utils.ExitOnError("Error creating SA for cluster", err)
 

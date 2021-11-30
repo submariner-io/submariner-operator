@@ -86,13 +86,13 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 	}
 
 	// Globalnet
-	err = globalnet.ValidateExistingGlobalNetworks(r.Config, broker.SubmarinerBrokerNamespace)
+	err = globalnet.ValidateExistingGlobalNetworks(r.Config, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	err = broker.CreateGlobalnetConfigMap(r.Config, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
-		instance.Spec.DefaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace)
+		instance.Spec.DefaultGlobalnetClusterSize, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
