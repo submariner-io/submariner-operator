@@ -155,7 +155,7 @@ func createBrokerAdministratorRoleAndSA(clientset *kubernetes.Clientset, namespa
 	return nil
 }
 
-func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA string, namespace string) (secret *v1.Secret, err error) {
+func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, namespace string) (secret *v1.Secret, err error) {
 	// wait for the client token to be ready, while implementing
 	// exponential backoff pattern, it will wait a total of:
 	// sum(n=0..9, 1.2^n * 5) seconds, = 130 seconds
@@ -200,13 +200,13 @@ func CreateOrUpdateBrokerAdminRole(clientset *kubernetes.Clientset, namespace st
 	return utils.CreateOrUpdateRole(context.TODO(), clientset, namespace, NewBrokerAdminRole())
 }
 
-func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, serviceAccount, role, namespace string) (brokerRoleBinding *rbac.RoleBinding,
-	err error) {
+func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, serviceAccount, role, namespace string) (
+	brokerRoleBinding *rbac.RoleBinding, err error) {
 	return clientset.RbacV1().RoleBindings(namespace).Create(
 		context.TODO(), NewBrokerRoleBinding(serviceAccount, role, namespace), metav1.CreateOptions{})
 }
 
-func CreateNewBrokerSA(clientset *kubernetes.Clientset, submarinerBrokerSA string, namespace string) (brokerSA *v1.ServiceAccount, err error) {
+func CreateNewBrokerSA(clientset *kubernetes.Clientset, submarinerBrokerSA, namespace string) (brokerSA *v1.ServiceAccount, err error) {
 	return clientset.CoreV1().ServiceAccounts(namespace).Create(
 		context.TODO(), NewBrokerSA(submarinerBrokerSA), metav1.CreateOptions{})
 }
