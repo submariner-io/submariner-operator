@@ -39,7 +39,7 @@ import (
 )
 
 const (
-	DefaultBrokerNamespace = "submariner-k8s-broker"
+	defaultBrokerNamespace = "submariner-k8s-broker"
 )
 
 var (
@@ -78,7 +78,7 @@ func init() {
 
 	deployBroker.PersistentFlags().BoolVar(&operatorDebug, "operator-debug", false, "enable operator debugging (verbose logging)")
 
-	deployBroker.PersistentFlags().StringVar(&brokerNamespace, "broker-namespace", DefaultBrokerNamespace, "namespace for broker")
+	deployBroker.PersistentFlags().StringVar(&brokerNamespace, "broker-namespace", defaultBrokerNamespace, "namespace for broker")
 
 	AddKubeContextFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
