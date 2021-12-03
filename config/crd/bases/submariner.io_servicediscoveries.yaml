@@ -19,7 +19,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: ServiceDiscovery is the Schema for the servicediscoveries API
+        description: ServiceDiscovery is the Schema for the servicediscoveries API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -42,7 +42,11 @@ spec:
                 type: string
               brokerK8sCA:
                 type: string
+              brokerK8sInsecure:
+                type: boolean
               brokerK8sRemoteNamespace:
+                type: string
+              brokerK8sSecret:
                 type: string
               clusterID:
                 type: string
@@ -74,8 +78,6 @@ spec:
                 type: string
             required:
             - brokerK8sApiServer
-            - brokerK8sApiServerToken
-            - brokerK8sCA
             - brokerK8sRemoteNamespace
             - clusterID
             - debug

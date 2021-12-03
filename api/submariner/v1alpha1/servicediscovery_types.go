@@ -31,8 +31,9 @@ import (
 // +k8s:openapi-gen=true
 type ServiceDiscoverySpec struct {
 	BrokerK8sApiServer       string               `json:"brokerK8sApiServer"`
-	BrokerK8sApiServerToken  string               `json:"brokerK8sApiServerToken"`
-	BrokerK8sCA              string               `json:"brokerK8sCA"`
+	BrokerK8sApiServerToken  string               `json:"brokerK8sApiServerToken,omitempty"`
+	BrokerK8sCA              string               `json:"brokerK8sCA,omitempty"`
+	BrokerK8sSecret          string               `json:"brokerK8sSecret,omitempty"`
 	BrokerK8sRemoteNamespace string               `json:"brokerK8sRemoteNamespace"`
 	ClusterID                string               `json:"clusterID"`
 	Namespace                string               `json:"namespace"`
