@@ -34,7 +34,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: BrokerSpec defines the desired state of Broker
+            description: BrokerSpec defines the desired state of Broker.
             properties:
               components:
                 items:
