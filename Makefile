@@ -277,6 +277,31 @@ golangci-lint: $(EMBEDDED_YAMLS)
 
 unit: $(EMBEDDED_YAMLS)
 
+# Test as many of the config/context-dependent subctl commands as possible
+test-subctl: bin/subctl deploy
+# benchmark
+	bin/subctl benchmark latency --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1:$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster2 \
+		--kubecontexts cluster1,cluster2
+	bin/subctl benchmark latency --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 \
+		--kubecontexts cluster1 --intra-cluster
+	bin/subctl benchmark throughput --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1:$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster2 \
+		--kubecontexts cluster1,cluster2
+	bin/subctl benchmark throughput --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 \
+		--kubecontexts cluster1 --intra-cluster
+# cloud
+	bin/subctl cloud prepare generic --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 --kubecontext cluster1
+# deploy-broker is tested by the deploy target
+# diagnose
+	bin/subctl diagnose all --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1
+	bin/subctl diagnose firewall inter-cluster $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster2
+# export TBD
+# gather
+	bin/subctl gather $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1
+# join is tested by the deploy target
+# show
+	bin/subctl show all --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1
+# verify is tested by the e2e target (run elsewhere)
+
 # Operator SDK
 # On version bumps, the checksum will need to be updated manually.
 # If necessary, the verification *keys* can be updated as follows:
