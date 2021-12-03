@@ -57,7 +57,6 @@ var ValidComponents = []string{components.ServiceDiscovery, components.Connectiv
 const brokerDetailsFilename = "broker-info.subm"
 
 func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
-
 	status := cli.NewStatus()
 	componentSet := stringset.New(do.ComponentArr...)
 
@@ -84,7 +83,7 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	err = broker.Ensure(config, do.ComponentArr, false, do.BrokerNamespace)
 	status.End(cli.CheckForError(err))
 	if err != nil {
-		return fmt.Errorf("Error setting up broker RBAC %s", err)
+		return fmt.Errorf("error setting up broker RBAC %s", err)
 	}
 
 	status.Start("Deploying the Submariner operator")
@@ -92,7 +91,7 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 		image.Operator(do.ImageVersion, do.Repository, nil), do.OperatorDebug)
 	status.End(cli.CheckForError(err))
 	if err != nil {
-		return fmt.Errorf("Error deploying the operator %s", err)
+		return fmt.Errorf("error deploying the operator %s", err)
 	}
 
 	status.Start("Deploying the broker")
@@ -103,7 +102,7 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	} else {
 		status.QueueFailureMessage("Broker deployment failed")
 		status.End(cli.Failure)
-		return fmt.Errorf("Error deploying the broker %s", err)
+		return fmt.Errorf("error deploying the broker %s", err)
 	}
 
 	status.Start(fmt.Sprintf("Creating %s file", brokerDetailsFilename))
@@ -120,12 +119,12 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 
 	subctlData, err := datafile.NewFromCluster(config, do.BrokerNamespace, do.IpsecSubmFile)
 	if err != nil {
-		return fmt.Errorf("Error retrieving preparing the subm data file %s", err)
+		return fmt.Errorf("error retrieving preparing the subm data file %s", err)
 	}
 
 	newFilename, err := datafile.BackupIfExists(brokerDetailsFilename)
 	if err != nil {
-		return fmt.Errorf("Error backing up the brokerfile %s", err)
+		return fmt.Errorf("error backing up the brokerfile %s", err)
 	}
 
 	if newFilename != "" {
@@ -141,19 +140,19 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 
 	if do.GlobalnetEnable {
 		if err = globalnet.ValidateExistingGlobalNetworks(config, do.BrokerNamespace); err != nil {
-			return fmt.Errorf("Error validating existing globalCIDR configmap %s", err)
+			return fmt.Errorf("error validating existing globalCIDR configmap %s", err)
 		}
 	}
 
 	if err = broker.CreateGlobalnetConfigMap(config, do.GlobalnetEnable, do.GlobalnetCIDRRange,
 		do.DefaultGlobalnetClusterSize, do.BrokerNamespace); err != nil {
-		return fmt.Errorf("Error creating globalCIDR configmap on Broker %s", err)
+		return fmt.Errorf("error creating globalCIDR configmap on Broker %s", err)
 	}
 
 	err = subctlData.WriteToFile(brokerDetailsFilename)
 	status.End(cli.CheckForError(err))
 	if err != nil {
-		return fmt.Errorf("Error writing the broker information %s", err)
+		return fmt.Errorf("error writing the broker information %s", err)
 	}
 	return nil
 }

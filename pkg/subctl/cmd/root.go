@@ -22,9 +22,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
 	"strings"
 	"time"
+
+	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/coreos/go-semver/semver"

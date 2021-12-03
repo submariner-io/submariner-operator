@@ -21,11 +21,12 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/submariner-io/submariner-operator/internal/image"
-	"github.com/submariner-io/submariner-operator/pkg/version"
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/submariner-io/submariner-operator/internal/image"
+	"github.com/submariner-io/submariner-operator/pkg/version"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
@@ -501,7 +502,6 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 }
 
 func getImageVersion() string {
-
 	if imageVersion == "" {
 		return submariner.DefaultSubmarinerOperatorVersion
 	}
