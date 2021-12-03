@@ -18,11 +18,13 @@ limitations under the License.
 package diagnose
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
@@ -72,4 +74,28 @@ func diagnoseAll(cluster *cmd.Cluster) bool {
 		" Please run \"subctl diagnose firewall inter-cluster\" command manually.\n")
 
 	return success
+}
+
+func getNumNodesOfCluster(cluster *cmd.Cluster) (int, error) {
+	nodes, err := cluster.KubeClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return 0, err
+	}
+
+	return len(nodes.Items), nil
+}
+
+func isClusterSingleNode(cluster *cmd.Cluster, status *cli.Status) bool {
+	numNodesOfCluster, err := getNumNodesOfCluster(cluster)
+	if err != nil {
+		status.EndWithFailure("Error listing the number of nodes of the cluster: %v", err)
+		return true
+	}
+
+	if numNodesOfCluster == 1 {
+		status.EndWithSuccess("Skipping this check as it's a single node cluster.")
+		return true
+	}
+
+	return false
 }

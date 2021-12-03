@@ -104,6 +104,11 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	status := cli.NewStatus()
 	status.Start(fmt.Sprintf("Checking if tunnels can be setup on the gateway node of cluster %q", localCluster.Name))
 
+	if isClusterSingleNode(remoteCluster, status) {
+		// Skip the check if it's a single node cluster
+		return true
+	}
+
 	localEndpoint := getLocalEndpointResource(localCluster, status)
 	if localEndpoint == nil {
 		return false
