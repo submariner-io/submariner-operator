@@ -278,7 +278,8 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 
 	status.Start("Deploying the Submariner operator")
 
-	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, image.Operator(imageVersion, repository, imageOverrideArr), operatorDebug)
+	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace,
+		image.Operator(imageVersion, repository, imageOverrideArr), operatorDebug)
 	status.End(cli.CheckForError(err))
 	utils.ExitOnError("Error deploying the operator", err)
 
@@ -500,13 +501,11 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 }
 
 func getImageVersion() string {
-	version := imageVersion
 
 	if imageVersion == "" {
-		version = submariner.DefaultSubmarinerOperatorVersion
+		return submariner.DefaultSubmarinerOperatorVersion
 	}
-
-	return version
+	return imageVersion
 }
 
 func getImageRepo() string {

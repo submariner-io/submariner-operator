@@ -15,9 +15,10 @@ package subctl
 
 import (
 	"fmt"
-	"github.com/submariner-io/submariner-operator/pkg/deploy"
-	"github.com/submariner-io/submariner-operator/internal/utils"
 	"strings"
+
+	"github.com/submariner-io/submariner-operator/internal/utils"
+	"github.com/submariner-io/submariner-operator/pkg/deploy"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 

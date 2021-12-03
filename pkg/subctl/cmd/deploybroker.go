@@ -20,8 +20,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/submariner-io/submariner-operator/internal/image"
 	"strings"
+
+	"github.com/submariner-io/submariner-operator/internal/image"
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/stringset"

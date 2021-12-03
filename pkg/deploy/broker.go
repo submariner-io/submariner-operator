@@ -56,13 +56,12 @@ var ValidComponents = []string{components.ServiceDiscovery, components.Connectiv
 const brokerDetailsFilename = "broker-info.subm"
 
 func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
-	fmt.Printf("in broker.deploy, flags are %q\n", do)
 
 	status := cli.NewStatus()
 	componentSet := stringset.New(do.ComponentArr...)
 
 	if err := isValidComponents(componentSet); err != nil {
-		return fmt.Errorf("Invalid components parameter %s", err)
+		return fmt.Errorf("invalid components parameter %s", err)
 	}
 
 	if do.GlobalnetEnable {
@@ -71,13 +70,13 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 
 	if valid, err := isValidGlobalnetConfig(do); !valid {
 		if err != nil {
-			return fmt.Errorf("Invalid GlobalCIDR configuration %s", err)
+			return fmt.Errorf("invalid GlobalCIDR configuration %s", err)
 		}
 	}
 
 	config, err := restconfig.ForCluster(kubeConfig, kubeContext)
 	if err != nil {
-		return fmt.Errorf("The provided kubeconfig is invalid %s", err)
+		return fmt.Errorf("the provided kubeconfig is invalid %s", err)
 	}
 
 	status.Start("Setting up broker RBAC")

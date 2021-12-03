@@ -19,8 +19,9 @@ package utils
 
 import (
 	"fmt"
-	"github.com/submariner-io/submariner-operator/pkg/version"
 	"os"
+
+	"github.com/submariner-io/submariner-operator/pkg/version"
 )
 
 // ExitOnError will print your error nicely and exit in case of error
