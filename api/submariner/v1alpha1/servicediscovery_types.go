@@ -40,6 +40,7 @@ type ServiceDiscoverySpec struct {
 	Version                  string               `json:"version,omitempty"`
 	Debug                    bool                 `json:"debug"`
 	GlobalnetEnabled         bool                 `json:"globalnetEnabled,omitempty"`
+	BrokerK8sInsecure        bool                 `json:"brokerK8sInsecure,omitempty"`
 	CoreDNSCustomConfig      *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
 	// +listType=set
 	CustomDomains  []string          `json:"customDomains,omitempty"`

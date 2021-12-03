@@ -45,6 +45,7 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(ctx context.Context, s
 					BrokerK8sRemoteNamespace: submariner.Spec.BrokerK8sRemoteNamespace,
 					BrokerK8sApiServerToken:  submariner.Spec.BrokerK8sApiServerToken,
 					BrokerK8sApiServer:       submariner.Spec.BrokerK8sApiServer,
+					BrokerK8sInsecure:        submariner.Spec.BrokerK8sInsecure,
 					Debug:                    submariner.Spec.Debug,
 					ClusterID:                submariner.Spec.ClusterID,
 					Namespace:                submariner.Spec.Namespace,
