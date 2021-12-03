@@ -240,6 +240,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 								{Name: "BROKER_K8S_APISERVERTOKEN", Value: cr.Spec.BrokerK8sApiServerToken},
 								{Name: "BROKER_K8S_REMOTENAMESPACE", Value: cr.Spec.BrokerK8sRemoteNamespace},
 								{Name: "BROKER_K8S_CA", Value: cr.Spec.BrokerK8sCA},
+								{Name: "BROKER_INSECURE", Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
 							},
 						},
 					},
