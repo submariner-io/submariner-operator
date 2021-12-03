@@ -32,4 +32,4 @@ jobs:
 
       - name: Deploy broker
         run: |
-          cmd/bin/subctl deploy-broker --kubeconfig output/kubeconfigs/kind-config-cluster1
+          cmd/bin/subctl deploy-broker --kubeconfig output/kubeconfigs/kind-config-cluster1 --broker-namespace newnamespace

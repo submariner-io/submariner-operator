@@ -49,6 +49,7 @@ type DeployOptions struct {
 	DefaultCustomDomains        []string
 	Repository                  string
 	ImageVersion                string
+	BrokerNamespace             string
 }
 
 var ValidComponents = []string{components.ServiceDiscovery, components.Connectivity}
@@ -80,7 +81,7 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	}
 
 	status.Start("Setting up broker RBAC")
-	err = broker.Ensure(config, do.ComponentArr, false)
+	err = broker.Ensure(config, do.ComponentArr, false, do.BrokerNamespace)
 	status.End(cli.CheckForError(err))
 	if err != nil {
 		return fmt.Errorf("Error setting up broker RBAC %s", err)
@@ -95,7 +96,7 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	}
 
 	status.Start("Deploying the broker")
-	err = brokercr.Ensure(config, internal.OperatorNamespace, populateBrokerSpec(do))
+	err = brokercr.Ensure(config, do.BrokerNamespace, populateBrokerSpec(do))
 	if err == nil {
 		status.QueueSuccessMessage("The broker has been deployed")
 		status.End(cli.Success)
@@ -117,7 +118,7 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 		}
 	}
 
-	subctlData, err := datafile.NewFromCluster(config, broker.SubmarinerBrokerNamespace, do.IpsecSubmFile)
+	subctlData, err := datafile.NewFromCluster(config, do.BrokerNamespace, do.IpsecSubmFile)
 	if err != nil {
 		return fmt.Errorf("Error retrieving preparing the subm data file %s", err)
 	}
@@ -131,6 +132,7 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 		status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
 	}
 
+	subctlData.ServiceDiscovery = componentSet.Contains(components.ServiceDiscovery)
 	subctlData.SetComponents(componentSet)
 
 	if len(do.DefaultCustomDomains) > 0 {
@@ -138,13 +140,13 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	}
 
 	if do.GlobalnetEnable {
-		if err = globalnet.ValidateExistingGlobalNetworks(config, broker.SubmarinerBrokerNamespace); err != nil {
+		if err = globalnet.ValidateExistingGlobalNetworks(config, do.BrokerNamespace); err != nil {
 			return fmt.Errorf("Error validating existing globalCIDR configmap %s", err)
 		}
 	}
 
 	if err = broker.CreateGlobalnetConfigMap(config, do.GlobalnetEnable, do.GlobalnetCIDRRange,
-		do.DefaultGlobalnetClusterSize, broker.SubmarinerBrokerNamespace); err != nil {
+		do.DefaultGlobalnetClusterSize, do.BrokerNamespace); err != nil {
 		return fmt.Errorf("Error creating globalCIDR configmap on Broker %s", err)
 	}
 

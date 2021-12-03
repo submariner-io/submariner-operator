@@ -39,6 +39,10 @@ var deployBroker = &cobra.Command{
 	},
 }
 
+const (
+	defaultBrokerNamespace = "submariner-k8s-broker"
+)
+
 func init() {
 	addDeployBrokerFlags()
 	addKubeContextFlag(deployBroker)
@@ -66,4 +70,5 @@ func addDeployBrokerFlags() {
 	deployBroker.PersistentFlags().StringVar(&deployflags.ImageVersion, "version", "", "image version")
 
 	deployBroker.PersistentFlags().BoolVar(&deployflags.OperatorDebug, "operator-debug", false, "enable operator debugging (verbose logging)")
+	deployBroker.PersistentFlags().StringVar(&deployflags.BrokerNamespace, "broker-namespace", defaultBrokerNamespace, "namespace for broker")
 }
