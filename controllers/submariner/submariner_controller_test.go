@@ -407,6 +407,7 @@ func verifyGatewayDaemonSet(ctx context.Context, submariner *submariner_v1.Subma
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("ApiServerToken"), submariner.Spec.BrokerK8sApiServerToken))
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("CA"), submariner.Spec.BrokerK8sCA))
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("Insecure"), strconv.FormatBool(submariner.Spec.BrokerK8sInsecure)))
+	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("Secret"), submariner.Spec.BrokerK8sSecret))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_BROKER", submariner.Spec.Broker))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NATENABLED", strconv.FormatBool(submariner.Spec.NatEnabled)))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))

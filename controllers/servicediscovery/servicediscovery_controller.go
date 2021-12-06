@@ -211,6 +211,23 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 
 	terminationGracePeriodSeconds := int64(0)
 
+	volumeMounts := []corev1.VolumeMount{}
+	volumes := []corev1.Volume{}
+
+	if cr.Spec.BrokerK8sSecret != "" {
+		// We've got a secret, mount it where the syncer expects it
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      "brokersecret",
+			MountPath: broker.SecretPath(cr.Spec.BrokerK8sSecret),
+			ReadOnly:  true,
+		})
+
+		volumes = append(volumes, corev1.Volume{
+			Name:         "brokersecret",
+			VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: cr.Spec.BrokerK8sSecret}},
+		})
+	}
+
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
@@ -243,12 +260,15 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 								{Name: broker.EnvironmentVariable("RemoteNamespace"), Value: cr.Spec.BrokerK8sRemoteNamespace},
 								{Name: broker.EnvironmentVariable("CA"), Value: cr.Spec.BrokerK8sCA},
 								{Name: broker.EnvironmentVariable("Insecure"), Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
+								{Name: broker.EnvironmentVariable("Secret"), Value: cr.Spec.BrokerK8sSecret},
 							},
+							VolumeMounts: volumeMounts,
 						},
 					},
 
 					ServiceAccountName:            "submariner-lighthouse-agent",
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					Volumes:                       volumes,
 				},
 			},
 		},
