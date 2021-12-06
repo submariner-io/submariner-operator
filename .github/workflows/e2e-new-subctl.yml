@@ -26,7 +26,7 @@ jobs:
           cmd/bin/subctl help
           cmd/bin/subctl deploy-broker --help
 
-      - name: Deploy clusters and broker
+      - name: Deploy clusters
         run: |
           make clusters
 

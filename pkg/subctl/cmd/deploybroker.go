@@ -117,7 +117,9 @@ var deployBroker = &cobra.Command{
 		utils.ExitOnError("Error setting up broker RBAC", err)
 
 		status.Start("Deploying the Submariner operator")
-		err = submarinerop.Ensure(status, config, OperatorNamespace, image.Operator(imageVersion, repository, nil), operatorDebug)
+		operatorImage, err := image.ForOperator(imageVersion, repository, nil)
+		utils.ExitOnError("Error overriding Operator Image", err)
+		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage, operatorDebug)
 		status.End(cli.CheckForError(err))
 		utils.ExitOnError("Error deploying the operator", err)
 

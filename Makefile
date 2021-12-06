@@ -197,10 +197,10 @@ cmd/bin/subctl-%: $(shell find cmd/ -name "*.go") $(VENDOR_MODULES)
 	GOOS=$${components[-2]}; \
 	GOARCH=$${components[-1]}; \
 	export GOARCH GOOS; \
-	CGO_ENABLED=0 $(GO) build -trimpath \
-		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION) \
-			   -X=github.com/submariner-io/submariner-operator/api.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
-		-o $@ cmd/main.go $(BUILD_ARGS)
+	$(SCRIPTS_DIR)/compile.sh \
+		--ldflags "-X 'github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)' \
+		       -X 'github.com/submariner-io/submariner-operator/api/submariner/v1alpha1.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}'" \
+        --noupx $@ cmd/main.go $(BUILD_ARGS)
 
 ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
 

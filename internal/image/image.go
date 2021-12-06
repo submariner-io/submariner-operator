@@ -24,10 +24,9 @@ import (
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-func Operator(imageVersion, repo string, imageOverrideArr []string) string {
+func ForOperator(imageVersion, repo string, imageOverrideArr []string) (string, error) {
 	if imageVersion == "" {
 		imageVersion = submariner.DefaultSubmarinerOperatorVersion
 	}
@@ -36,23 +35,27 @@ func Operator(imageVersion, repo string, imageOverrideArr []string) string {
 		repo = submariner.DefaultRepo
 	}
 
-	return images.GetImagePath(repo, imageVersion, names.OperatorImage, names.OperatorComponent, GetOverrides(imageOverrideArr))
+	imageOverrides, err := GetOverrides(imageOverrideArr)
+	if err != nil {
+		return "", fmt.Errorf("error overriding Operator image %q", err)
+	}
+	return images.GetImagePath(repo, imageVersion, names.OperatorImage, names.OperatorComponent, imageOverrides), nil
 }
 
-func GetOverrides(imageOverrideArr []string) map[string]string {
+func GetOverrides(imageOverrideArr []string) (map[string]string, error) {
 	if len(imageOverrideArr) > 0 {
 		imageOverrides := make(map[string]string)
 		for _, s := range imageOverrideArr {
 			key := strings.Split(s, "=")[0]
 			if invalidImageName(key) {
-				utils.ExitWithErrorMsg(fmt.Sprintf("Invalid image name %s provided. Please choose from %q", key, names.ValidImageNames))
+				return nil, fmt.Errorf("invalid image name %s provided. Please choose from %q", key, names.ValidImageNames)
 			}
 			value := strings.Split(s, "=")[1]
 			imageOverrides[key] = value
 		}
-		return imageOverrides
+		return imageOverrides, nil
 	}
-	return nil
+	return nil, nil
 }
 
 func invalidImageName(key string) bool {

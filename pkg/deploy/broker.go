@@ -21,7 +21,8 @@ package deploy
 import (
 	"fmt"
 
-	"github.com/submariner-io/submariner-operator/internal"
+	"github.com/submariner-io/submariner-operator/internal/constants"
+
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 
@@ -39,17 +40,13 @@ import (
 )
 
 type DeployOptions struct {
-	OperatorDebug               bool
-	GlobalnetEnable             bool
-	IpsecSubmFile               string
-	GlobalnetCIDRRange          string
-	DefaultGlobalnetClusterSize uint
-	ComponentArr                []string
-	GlobalCIDRConfigMap         *v1.ConfigMap
-	DefaultCustomDomains        []string
-	Repository                  string
-	ImageVersion                string
-	BrokerNamespace             string
+	OperatorDebug       bool
+	IpsecSubmFile       string
+	GlobalCIDRConfigMap *v1.ConfigMap
+	Repository          string
+	ImageVersion        string
+	BrokerNamespace     string
+	BrokerSpec          submarinerv1a1.BrokerSpec
 }
 
 var ValidComponents = []string{components.ServiceDiscovery, components.Connectivity}
@@ -58,13 +55,13 @@ const brokerDetailsFilename = "broker-info.subm"
 
 func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	status := cli.NewStatus()
-	componentSet := stringset.New(do.ComponentArr...)
+	componentSet := stringset.New(do.BrokerSpec.Components...)
 
 	if err := isValidComponents(componentSet); err != nil {
 		return fmt.Errorf("invalid components parameter %s", err)
 	}
 
-	if do.GlobalnetEnable {
+	if do.BrokerSpec.GlobalnetEnabled {
 		componentSet.Add(components.Globalnet)
 	}
 
@@ -80,22 +77,25 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	}
 
 	status.Start("Setting up broker RBAC")
-	err = broker.Ensure(config, do.ComponentArr, false, do.BrokerNamespace)
+	err = broker.Ensure(config, do.BrokerSpec.Components, false, do.BrokerNamespace)
 	status.End(cli.CheckForError(err))
 	if err != nil {
 		return fmt.Errorf("error setting up broker RBAC %s", err)
 	}
 
 	status.Start("Deploying the Submariner operator")
-	err = submarinerop.Ensure(status, config, internal.OperatorNamespace,
-		image.Operator(do.ImageVersion, do.Repository, nil), do.OperatorDebug)
+	operatorImage, err := image.ForOperator(do.ImageVersion, do.Repository, nil)
+	if err != nil {
+		return fmt.Errorf("error getting Operator image %q", err)
+	}
+	err = submarinerop.Ensure(status, config, constants.OperatorNamespace, operatorImage, do.OperatorDebug)
 	status.End(cli.CheckForError(err))
 	if err != nil {
 		return fmt.Errorf("error deploying the operator %s", err)
 	}
 
 	status.Start("Deploying the broker")
-	err = brokercr.Ensure(config, do.BrokerNamespace, populateBrokerSpec(do))
+	err = brokercr.Ensure(config, do.BrokerNamespace, do.BrokerSpec)
 	if err == nil {
 		status.QueueSuccessMessage("The broker has been deployed")
 		status.End(cli.Success)
@@ -134,18 +134,18 @@ func Broker(do DeployOptions, kubeConfig, kubeContext string) error {
 	subctlData.ServiceDiscovery = componentSet.Contains(components.ServiceDiscovery)
 	subctlData.SetComponents(componentSet)
 
-	if len(do.DefaultCustomDomains) > 0 {
-		subctlData.CustomDomains = &do.DefaultCustomDomains
+	if len(do.BrokerSpec.DefaultCustomDomains) > 0 {
+		subctlData.CustomDomains = &do.BrokerSpec.DefaultCustomDomains
 	}
 
-	if do.GlobalnetEnable {
+	if do.BrokerSpec.GlobalnetEnabled {
 		if err = globalnet.ValidateExistingGlobalNetworks(config, do.BrokerNamespace); err != nil {
 			return fmt.Errorf("error validating existing globalCIDR configmap %s", err)
 		}
 	}
 
-	if err = broker.CreateGlobalnetConfigMap(config, do.GlobalnetEnable, do.GlobalnetCIDRRange,
-		do.DefaultGlobalnetClusterSize, do.BrokerNamespace); err != nil {
+	if err = broker.CreateGlobalnetConfigMap(config, do.BrokerSpec.GlobalnetEnabled, do.BrokerSpec.GlobalnetCIDRRange,
+		do.BrokerSpec.DefaultGlobalnetClusterSize, do.BrokerNamespace); err != nil {
 		return fmt.Errorf("error creating globalCIDR configmap on Broker %s", err)
 	}
 
@@ -175,26 +175,15 @@ func isValidComponents(componentSet stringset.Interface) error {
 
 func isValidGlobalnetConfig(gnSettings DeployOptions) (bool, error) {
 	var err error
-	if !gnSettings.GlobalnetEnable {
+	if !gnSettings.BrokerSpec.GlobalnetEnabled {
 		return true, nil
 	}
-	gnSettings.DefaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(gnSettings.GlobalnetCIDRRange,
-		gnSettings.DefaultGlobalnetClusterSize)
-	if err != nil || gnSettings.DefaultGlobalnetClusterSize == 0 {
+	gnSettings.BrokerSpec.DefaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(gnSettings.BrokerSpec.GlobalnetCIDRRange,
+		gnSettings.BrokerSpec.DefaultGlobalnetClusterSize)
+	if err != nil || gnSettings.BrokerSpec.DefaultGlobalnetClusterSize == 0 {
 		return false, err
 	}
 
-	err = globalnet.IsValidCIDR(gnSettings.GlobalnetCIDRRange)
+	err = globalnet.IsValidCIDR(gnSettings.BrokerSpec.GlobalnetCIDRRange)
 	return err == nil, err
-}
-
-func populateBrokerSpec(do DeployOptions) submarinerv1a1.BrokerSpec {
-	brokerSpec := submarinerv1a1.BrokerSpec{
-		GlobalnetEnabled:            do.GlobalnetEnable,
-		GlobalnetCIDRRange:          do.GlobalnetCIDRRange,
-		DefaultGlobalnetClusterSize: do.DefaultGlobalnetClusterSize,
-		Components:                  do.ComponentArr,
-		DefaultCustomDomains:        do.DefaultCustomDomains,
-	}
-	return brokerSpec
 }

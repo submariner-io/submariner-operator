@@ -279,8 +279,9 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 
 	status.Start("Deploying the Submariner operator")
 
-	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace,
-		image.Operator(imageVersion, repository, imageOverrideArr), operatorDebug)
+	operatorImage, err := image.ForOperator(imageVersion, repository, imageOverrideArr)
+	utils.ExitOnError("Error overriding Operator Image", err)
+	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage, operatorDebug)
 	status.End(cli.CheckForError(err))
 	utils.ExitOnError("Error deploying the operator", err)
 
@@ -454,6 +455,9 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		customDomains = *subctlData.CustomDomains
 	}
 
+	imageOverrides, err := image.GetOverrides(imageOverrideArr)
+	utils.ExitOnError("Error overriding Operator image", err)
+
 	submarinerSpec := submariner.SubmarinerSpec{
 		Repository:               getImageRepo(),
 		Version:                  getImageVersion(),
@@ -477,7 +481,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
-		ImageOverrides:           image.GetOverrides(imageOverrideArr),
+		ImageOverrides:           imageOverrides,
 		LoadBalancerEnabled:      loadBalancerEnabled,
 		ConnectionHealthCheck: &submariner.HealthCheckSpec{
 			Enabled:            healthCheckEnable,
@@ -534,6 +538,9 @@ func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.S
 		customDomains = *subctlData.CustomDomains
 	}
 
+	imageOverrides, err := image.GetOverrides(imageOverrideArr)
+	utils.ExitOnError("Error overriding Operator image", err)
+
 	serviceDiscoverySpec := submariner.ServiceDiscoverySpec{
 		Repository:               repository,
 		Version:                  imageVersion,
@@ -544,7 +551,7 @@ func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.S
 		Debug:                    submarinerDebug,
 		ClusterID:                clusterID,
 		Namespace:                SubmarinerNamespace,
-		ImageOverrides:           image.GetOverrides(imageOverrideArr),
+		ImageOverrides:           imageOverrides,
 	}
 
 	if corednsCustomConfigMap != "" {
