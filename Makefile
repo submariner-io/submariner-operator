@@ -182,8 +182,8 @@ bin/subctl-%: $(EMBEDDED_YAMLS) $(shell find pkg/subctl/ -name "*.go") $(VENDOR_
 	GOARCH=$${components[-1]}; \
 	export GOARCH GOOS; \
 	$(SCRIPTS_DIR)/compile.sh \
-		--ldflags "-X github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION) \
-			   -X=github.com/submariner-io/submariner-operator/api.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
+		--ldflags "-X 'github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)' \
+			   -X 'github.com/submariner-io/submariner-operator/api/submariner/v1alpha1.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}'" \
 		--noupx $@ ./pkg/subctl/main.go $(BUILD_ARGS)
 
 ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
