@@ -38,13 +38,13 @@ import (
 //go:embed layout.gohtml
 var layout string
 
-func gatherClusterSummary(info Info) {
+func gatherClusterSummary(info *Info) {
 	dataGathered := getClusterInfo(info)
 	file := createFile(info.DirName)
-	writeToHTML(file, dataGathered)
+	writeToHTML(file, &dataGathered)
 }
 
-func getClusterInfo(info Info) data {
+func getClusterInfo(info *Info) data {
 	versions := getVersions(info)
 	config := getClusterConfig(info)
 	nConfig, err := getNodeConfig(info)
@@ -63,7 +63,7 @@ func getClusterInfo(info Info) data {
 	return d
 }
 
-func getClusterConfig(info Info) clusterConfig {
+func getClusterConfig(info *Info) clusterConfig {
 	gwNodes, err := getGWNodes(info)
 	if err != nil {
 		fmt.Println(err)
@@ -94,7 +94,7 @@ func getClusterConfig(info Info) clusterConfig {
 	return config
 }
 
-func getVersions(info Info) version {
+func getVersions(info *Info) version {
 	Versions := version{
 		Subctl: subctlversion.Version,
 	}
@@ -113,19 +113,19 @@ func getVersions(info Info) version {
 	return Versions
 }
 
-func getSpecificNode(info Info, selector string) (map[string]types.UID, error) {
+func getSpecificNode(info *Info, selector string) (map[string]types.UID, error) {
 	nodes, err := listNodes(info, metav1.ListOptions{LabelSelector: selector})
 	if err != nil {
 		return nil, err
 	}
 	node := make(map[string]types.UID, len(nodes.Items))
-	for _, n := range nodes.Items {
-		node[n.GetName()] = n.GetUID()
+	for i := range nodes.Items {
+		node[nodes.Items[i].GetName()] = nodes.Items[i].GetUID()
 	}
 	return node, nil
 }
 
-func getGWNodes(info Info) (map[string]types.UID, error) {
+func getGWNodes(info *Info) (map[string]types.UID, error) {
 	selector := labels.SelectorFromSet(labels.Set(map[string]string{"submariner.io/gateway": "true"}))
 	nodes, err := getSpecificNode(info, selector.String())
 	if err != nil {
@@ -134,7 +134,7 @@ func getGWNodes(info Info) (map[string]types.UID, error) {
 	return nodes, nil
 }
 
-func getMasterNodes(info Info) (map[string]types.UID, error) {
+func getMasterNodes(info *Info) (map[string]types.UID, error) {
 	selector := "node-role.kubernetes.io/master="
 	nodes, err := getSpecificNode(info, selector)
 	if err != nil {
@@ -143,28 +143,29 @@ func getMasterNodes(info Info) (map[string]types.UID, error) {
 	return nodes, nil
 }
 
-func getNodeConfig(info Info) ([]nodeConfig, error) {
+func getNodeConfig(info *Info) ([]nodeConfig, error) {
 	nodes, err := listNodes(info, metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	nodeConfigs := make([]nodeConfig, len(nodes.Items))
-	for _, allNode := range nodes.Items {
+	for i := range nodes.Items {
+		node := &nodes.Items[i]
 		nodeInfo := v1.NodeSystemInfo{
-			KernelVersion:    allNode.Status.NodeInfo.KernelVersion,
-			OSImage:          allNode.Status.NodeInfo.OSImage,
-			KubeProxyVersion: allNode.Status.NodeInfo.KubeProxyVersion,
-			OperatingSystem:  allNode.Status.NodeInfo.OperatingSystem,
-			Architecture:     allNode.Status.NodeInfo.Architecture,
+			KernelVersion:    node.Status.NodeInfo.KernelVersion,
+			OSImage:          node.Status.NodeInfo.OSImage,
+			KubeProxyVersion: node.Status.NodeInfo.KubeProxyVersion,
+			OperatingSystem:  node.Status.NodeInfo.OperatingSystem,
+			Architecture:     node.Status.NodeInfo.Architecture,
 		}
-		name := allNode.GetName()
+		name := node.GetName()
 		config := nodeConfig{
 			Name: name,
 			Info: nodeInfo,
 		}
 
-		for _, addr := range allNode.Status.Addresses {
+		for _, addr := range node.Status.Addresses {
 			if addr.Type == v1.NodeInternalIP {
 				config.InternalIPs = getFormattedIP(config.InternalIPs, addr.Address)
 			} else if addr.Type == v1.NodeExternalIP {
@@ -189,7 +190,8 @@ func getFormattedIP(ipAddrList, ipaddr string) string {
 	return ipaddr
 }
 
-func listNodes(info Info, listOptions metav1.ListOptions) (*v1.NodeList, error) {
+// nolint:gocritic // hugeParam: listOptions - match K8s API.
+func listNodes(info *Info, listOptions metav1.ListOptions) (*v1.NodeList, error) {
 	nodes, err := info.ClientSet.CoreV1().Nodes().List(context.TODO(), listOptions)
 	if err != nil {
 		return nil, err
@@ -206,7 +208,7 @@ func createFile(dirname string) io.Writer {
 	return f
 }
 
-func writeToHTML(fileWriter io.Writer, cData data) {
+func writeToHTML(fileWriter io.Writer, cData *data) {
 	t := template.Must(template.New("layout.html").Parse(layout))
 	err := t.Execute(fileWriter, cData)
 	if err != nil {

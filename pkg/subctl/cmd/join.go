@@ -174,7 +174,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		rawConfig, err := config.RawConfig()
 		// This will be fatal later, no point in continuing
 		utils.ExitOnError("Error connecting to the target cluster", err)
-		clusterName := restconfig.ClusterNameFromContext(rawConfig, contextName)
+		clusterName := restconfig.ClusterNameFromContext(&rawConfig, contextName)
 		if clusterName != nil {
 			clusterID = *clusterName
 		}
@@ -428,7 +428,7 @@ func isValidClusterID(clusterID string) (bool, error) {
 	return true, nil
 }
 
-func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet.Config) submariner.SubmarinerSpec {
+func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet.Config) *submariner.SubmarinerSpec {
 	brokerURL := subctlData.BrokerURL
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
@@ -454,7 +454,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 	imageOverrides, err := image.GetOverrides(imageOverrideArr)
 	utils.ExitOnError("Error overriding Operator image", err)
 
-	submarinerSpec := submariner.SubmarinerSpec{
+	submarinerSpec := &submariner.SubmarinerSpec{
 		Repository:               getImageRepo(),
 		Version:                  getImageVersion(),
 		CeIPSecNATTPort:          nattPort,

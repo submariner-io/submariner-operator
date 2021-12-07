@@ -86,8 +86,8 @@ var networkPluginCNIType = map[string]string{
 	"unknown":       typeUnknown,
 }
 
-func gatherCNIResources(info Info, networkPlugin string) {
-	logPodInfo(info, "CNI data", routeagentPodLabel, func(info Info, pod *v1.Pod) {
+func gatherCNIResources(info *Info, networkPlugin string) {
+	logPodInfo(info, "CNI data", routeagentPodLabel, func(info *Info, pod *v1.Pod) {
 		logSystemCmds(info, pod)
 		switch networkPluginCNIType[networkPlugin] {
 		case typeIPTables:
@@ -103,37 +103,37 @@ func gatherCNIResources(info Info, networkPlugin string) {
 	logGlobalnetCmds(info)
 }
 
-func logCNIGatewayNodeResources(info Info) {
+func logCNIGatewayNodeResources(info *Info) {
 	logPodInfo(info, "CNI data", gatewayPodLabel, logIPGatewayCmds)
 }
 
-func logSystemCmds(info Info, pod *v1.Pod) {
+func logSystemCmds(info *Info, pod *v1.Pod) {
 	for name, cmd := range systemCmds {
 		logCmdOutput(info, pod, cmd, name, false)
 	}
 }
 
-func logIPGatewayCmds(info Info, pod *v1.Pod) {
+func logIPGatewayCmds(info *Info, pod *v1.Pod) {
 	for name, cmd := range ipGatewayCmds {
 		logCmdOutput(info, pod, cmd, name, true)
 	}
 }
 
-func logIPTablesCmds(info Info, pod *v1.Pod) {
+func logIPTablesCmds(info *Info, pod *v1.Pod) {
 	for name, cmd := range ipTablesCmds {
 		logCmdOutput(info, pod, cmd, name, false)
 	}
 }
 
-func logGlobalnetCmds(info Info) {
-	logPodInfo(info, "globalnet data", globalnetPodLabel, func(info Info, pod *v1.Pod) {
+func logGlobalnetCmds(info *Info) {
+	logPodInfo(info, "globalnet data", globalnetPodLabel, func(info *Info, pod *v1.Pod) {
 		for name, cmd := range globalnetCmds {
 			logCmdOutput(info, pod, cmd, name, false)
 		}
 	})
 }
 
-func gatherOVNResources(info Info, networkPlugin string) {
+func gatherOVNResources(info *Info, networkPlugin string) {
 	if networkPluginCNIType[networkPlugin] != typeOvn {
 		return
 	}
@@ -172,31 +172,31 @@ func gatherOVNResources(info Info, networkPlugin string) {
 	}
 }
 
-func gatherCableDriverResources(info Info, cableDriver string) {
-	logPodInfo(info, "cable driver data", gatewayPodLabel, func(info Info, pod *v1.Pod) {
+func gatherCableDriverResources(info *Info, cableDriver string) {
+	logPodInfo(info, "cable driver data", gatewayPodLabel, func(info *Info, pod *v1.Pod) {
 		if cableDriver == libreswan {
 			logLibreswanCmds(info, pod)
 		}
 	})
 }
 
-func logLibreswanCmds(info Info, pod *v1.Pod) {
+func logLibreswanCmds(info *Info, pod *v1.Pod) {
 	for name, cmd := range libreswanCmds {
 		logCmdOutput(info, pod, cmd, name, true)
 	}
 }
 
-func execCmdInBash(info Info, pod *v1.Pod, cmd string) (string, string, error) {
+func execCmdInBash(info *Info, pod *v1.Pod, cmd string) (string, string, error) {
 	execOptions := resource.ExecOptionsFromPod(pod)
 	execConfig := resource.ExecConfig{
 		RestConfig: info.RestConfig,
 		ClientSet:  info.ClientSet,
 	}
 	execOptions.Command = []string{"/bin/bash", "-c", cmd}
-	return resource.ExecWithOptions(execConfig, execOptions)
+	return resource.ExecWithOptions(execConfig, &execOptions)
 }
 
-func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool) {
+func logCmdOutput(info *Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool) {
 	stdOut, _, err := execCmdInBash(info, pod, cmd)
 	if err != nil && !ignoreError {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error running %q on pod %q: %v", cmd, pod.Name, err))
@@ -219,7 +219,7 @@ func logCmdOutput(info Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool)
 	}
 }
 
-func tryCmd(info Info, pod *v1.Pod, cmd string) error {
+func tryCmd(info *Info, pod *v1.Pod, cmd string) error {
 	_, _, err := execCmdInBash(info, pod, cmd)
 	return err
 }

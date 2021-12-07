@@ -67,8 +67,10 @@ func getConnectionsStatus(cluster *cmd.Cluster) bool {
 	}
 
 	var connStatus []interface{}
-	for _, gateway := range gateways {
-		for _, connection := range gateway.Status.Connections {
+	for i := range gateways {
+		gateway := &gateways[i]
+		for i := range gateway.Status.Connections {
+			connection := &gateway.Status.Connections[i]
 			subnets := strings.Join(connection.Endpoint.Subnets, ", ")
 
 			ip, nat := remoteIPAndNATForConnection(connection)
@@ -95,7 +97,7 @@ func getConnectionsStatus(cluster *cmd.Cluster) bool {
 	return true
 }
 
-func getAverageRTTForConnection(connection submv1.Connection) string {
+func getAverageRTTForConnection(connection *submv1.Connection) string {
 	rtt := ""
 	if connection.LatencyRTT != nil {
 		rtt = connection.LatencyRTT.Average
@@ -103,7 +105,7 @@ func getAverageRTTForConnection(connection submv1.Connection) string {
 	return rtt
 }
 
-func remoteIPAndNATForConnection(connection submv1.Connection) (string, string) {
+func remoteIPAndNATForConnection(connection *submv1.Connection) (string, string) {
 	usingNAT := "no"
 	if connection.UsingIP != "" {
 		if connection.UsingNAT {

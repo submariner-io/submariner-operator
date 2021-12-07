@@ -60,7 +60,8 @@ func checkConnections(cluster *cmd.Cluster) bool {
 	}
 
 	foundActive := false
-	for _, gateway := range gateways {
+	for i := range gateways {
+		gateway := &gateways[i]
 		if gateway.Status.HAStatus != submv1.HAStatusActive {
 			continue
 		}
@@ -70,7 +71,8 @@ func checkConnections(cluster *cmd.Cluster) bool {
 			status.QueueFailureMessage(fmt.Sprintf("There are no active connections on gateway %q", gateway.Name))
 		}
 
-		for _, connection := range gateway.Status.Connections {
+		for j := range gateway.Status.Connections {
+			connection := &gateway.Status.Connections[j]
 			if connection.Status == submv1.Connecting {
 				status.QueueFailureMessage(fmt.Sprintf("Connection to cluster %q is in progress", connection.Endpoint.ClusterID))
 			} else if connection.Status == submv1.ConnectionError {

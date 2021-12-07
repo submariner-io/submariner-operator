@@ -28,7 +28,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 )
 
-var deployflags deploy.DeployOptions
+var deployflags deploy.BrokerOptions
 var defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
 
 // deployBroker represents the deployBroker command
@@ -37,7 +37,7 @@ var deployBroker = &cobra.Command{
 	Short: "Deploys the broker",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("deployBroker called")
-		err := deploy.Broker(deployflags, kubeConfig, kubeContext)
+		err := deploy.Broker(&deployflags, kubeConfig, kubeContext)
 		exit.OnError("Error deploying Broker", err)
 	},
 }

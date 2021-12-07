@@ -31,11 +31,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func gatherPodLogs(podLabelSelector string, info Info) {
+func gatherPodLogs(podLabelSelector string, info *Info) {
 	gatherPodLogsByContainer(podLabelSelector, "", info)
 }
 
-func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
+func gatherPodLogsByContainer(podLabelSelector, container string, info *Info) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
 
@@ -60,7 +60,8 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 	}
 }
 
-func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) (podLogInfo LogInfo) {
+// nolint:gocritic // hugeParam: podLogOptions - purposely passed by value.
+func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info *Info) (podLogInfo LogInfo) {
 	podLogInfo.Namespace = pod.Namespace
 	podLogInfo.PodState = pod.Status.Phase
 	podLogInfo.PodName = pod.Name
@@ -78,7 +79,7 @@ func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Inf
 	return podLogInfo
 }
 
-func writePodLogToFile(logStream io.ReadCloser, info Info, podName, fileExtension string) (string, error) {
+func writePodLogToFile(logStream io.ReadCloser, info *Info, podName, fileExtension string) (string, error) {
 	logs, err := getLogFromStream(logStream)
 	if err != nil {
 		return "", err
@@ -98,7 +99,7 @@ func getLogFromStream(logStream io.ReadCloser) (string, error) {
 	return logs.String(), nil
 }
 
-func writeLogToFile(data, podName string, info Info, fileExtension string) (string, error) {
+func writeLogToFile(data, podName string, info *Info, fileExtension string) (string, error) {
 	fileName := escapeFileName(info.ClusterName+"_"+podName) + fileExtension
 	filePath := filepath.Join(info.DirName, fileName)
 	f, err := os.Create(filePath)
@@ -125,7 +126,8 @@ func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.P
 	return pods, nil
 }
 
-func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info, podLogInfo *LogInfo) error {
+// nolint:gocritic // hugeParam: podLogOptions - purposely passed by value.
+func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info *Info, podLogInfo *LogInfo) error {
 	podLogOptions.Previous = true
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
 	logStream, _ := logRequest.Stream(context.TODO())
@@ -146,7 +148,8 @@ func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, i
 	return nil
 }
 
-func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info, podLogInfo *LogInfo) error {
+// nolint:gocritic // hugeParam: podLogOptions - purposely passed by value.
+func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info *Info, podLogInfo *LogInfo) error {
 	// Running with Previous = false on the same pod
 	podLogOptions.Previous = false
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
@@ -162,7 +165,7 @@ func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, in
 	return err
 }
 
-func logPodInfo(info Info, what, podLabelSelector string, process func(info Info, pod *corev1.Pod)) {
+func logPodInfo(info *Info, what, podLabelSelector string, process func(info *Info, pod *corev1.Pod)) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
 

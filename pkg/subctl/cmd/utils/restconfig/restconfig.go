@@ -124,7 +124,7 @@ func clientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, overr
 		return RestConfig{}, err
 	}
 
-	clusterName := ClusterNameFromContext(raw, overrides.CurrentContext)
+	clusterName := ClusterNameFromContext(&raw, overrides.CurrentContext)
 
 	if clusterName == nil {
 		return RestConfig{}, fmt.Errorf("could not obtain the cluster name from kube config: %#v", raw)
@@ -145,7 +145,7 @@ func Clients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, erro
 	return dynClient, clientSet, nil
 }
 
-func ClusterNameFromContext(rawConfig api.Config, overridesContext string) *string {
+func ClusterNameFromContext(rawConfig *api.Config, overridesContext string) *string {
 	if overridesContext == "" {
 		// No context provided, use the current context
 		overridesContext = rawConfig.CurrentContext

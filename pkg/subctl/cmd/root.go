@@ -108,8 +108,8 @@ func handleNodeLabels(config *rest.Config) error {
 	}
 	if len(labeledNodes.Items) > 0 {
 		fmt.Printf("* There are %d labeled nodes in the cluster:\n", len(labeledNodes.Items))
-		for _, node := range labeledNodes.Items {
-			fmt.Printf("  - %s\n", node.GetName())
+		for i := range labeledNodes.Items {
+			fmt.Printf("  - %s\n", labeledNodes.Items[i].GetName())
 		}
 	} else {
 		answer, err := askForGatewayNode(clientset)
@@ -149,8 +149,8 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 		return struct{ Node string }{workerNodes.Items[0].GetName()}, nil
 	}
 	allNodeNames := []string{}
-	for _, node := range workerNodes.Items {
-		allNodeNames = append(allNodeNames, node.GetName())
+	for i := range workerNodes.Items {
+		allNodeNames = append(allNodeNames, workerNodes.Items[i].GetName())
 	}
 	var qs = []*survey.Question{
 		{

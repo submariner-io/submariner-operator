@@ -90,9 +90,9 @@ func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) 
 		return nil, err
 	}
 
-	for _, cm := range cmList.Items {
-		if cm.Name == "calico-config" {
-			return &cm, nil
+	for i := range cmList.Items {
+		if cmList.Items[i].Name == "calico-config" {
+			return &cmList.Items[i], nil
 		}
 	}
 	return nil, nil
@@ -162,12 +162,14 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 }
 
 func checkGatewaySubnets(gateways []submv1.Gateway, ippools map[string]unstructured.Unstructured, status *cli.Status) {
-	for _, gateway := range gateways {
+	for i := range gateways {
+		gateway := &gateways[i]
 		if gateway.Status.HAStatus != submv1.HAStatusActive {
 			continue
 		}
 
-		for _, connection := range gateway.Status.Connections {
+		for j := range gateway.Status.Connections {
+			connection := &gateway.Status.Connections[j]
 			for _, subnet := range connection.Endpoint.Subnets {
 				ipPool, found := ippools[subnet]
 				if found {

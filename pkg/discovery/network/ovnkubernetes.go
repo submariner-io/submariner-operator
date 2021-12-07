@@ -49,10 +49,10 @@ func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwo
 
 	dbConnectionProtocol := "tcp"
 
-	for _, container := range ovnDBPod.Spec.Containers {
-		for _, envVar := range container.Env {
+	for i := range ovnDBPod.Spec.Containers {
+		for _, envVar := range ovnDBPod.Spec.Containers[i].Env {
 			if envVar.Name == "OVN_SSL_ENABLE" {
-				if strings.ToUpper(envVar.Value) != "NO" {
+				if !strings.EqualFold(envVar.Value, "NO") {
 					dbConnectionProtocol = "ssl"
 				}
 			}

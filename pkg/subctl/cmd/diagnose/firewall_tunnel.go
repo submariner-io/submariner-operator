@@ -219,7 +219,8 @@ func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Statu
 			continue
 		}
 
-		for _, conn := range gw.Status.Connections {
+		for j := range gw.Status.Connections {
+			conn := &gw.Status.Connections[j]
 			if conn.Endpoint.ClusterID == localClusterID {
 				if conn.UsingIP != "" {
 					return conn.UsingIP

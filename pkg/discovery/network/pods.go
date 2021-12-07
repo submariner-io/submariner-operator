@@ -34,8 +34,8 @@ func findPodCommandParameter(clientSet kubernetes.Interface, labelSelector, para
 	if err != nil || pod == nil {
 		return "", err
 	}
-	for _, container := range pod.Spec.Containers {
-		for _, arg := range container.Command {
+	for i := range pod.Spec.Containers {
+		for _, arg := range pod.Spec.Containers[i].Command {
 			if strings.HasPrefix(arg, parameter) {
 				return strings.Split(arg, "=")[1], nil
 			}

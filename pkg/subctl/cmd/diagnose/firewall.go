@@ -89,7 +89,8 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 		return ""
 	}
 
-	for _, node := range nodes.Items {
+	for i := range nodes.Items {
+		node := &nodes.Items[i]
 		if node.Name == hostname {
 			return hostname
 		}
@@ -127,9 +128,9 @@ func getLocalEndpointResource(cluster *cmd.Cluster, status *cli.Status) *subv1.E
 		return nil
 	}
 
-	for _, endpoint := range endpoints.Items {
-		if endpoint.Spec.ClusterID == cluster.Submariner.Spec.ClusterID {
-			return &endpoint
+	for i := range endpoints.Items {
+		if endpoints.Items[i].Spec.ClusterID == cluster.Submariner.Spec.ClusterID {
+			return &endpoints.Items[i]
 		}
 	}
 
@@ -144,9 +145,9 @@ func getAnyRemoteEndpointResource(cluster *cmd.Cluster, status *cli.Status) *sub
 		return nil
 	}
 
-	for _, endpoint := range endpoints.Items {
-		if endpoint.Spec.ClusterID != cluster.Submariner.Spec.ClusterID {
-			return &endpoint
+	for i := range endpoints.Items {
+		if endpoints.Items[i].Spec.ClusterID != cluster.Submariner.Spec.ClusterID {
+			return &endpoints.Items[i]
 		}
 	}
 

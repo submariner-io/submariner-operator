@@ -32,8 +32,8 @@ func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, erro
 
 	var clusterNetwork *ClusterNetwork
 
-	for _, container := range weaveNetPod.Spec.Containers {
-		for _, envVar := range container.Env {
+	for i := range weaveNetPod.Spec.Containers {
+		for _, envVar := range weaveNetPod.Spec.Containers[i].Env {
 			if envVar.Name == "IPALLOC_RANGE" {
 				clusterNetwork = &ClusterNetwork{
 					PodCIDRs:      []string{envVar.Value},

@@ -66,7 +66,7 @@ type ExecOptions struct {
 // ExecWithOptions executes a command in the specified container,
 // returning stdout, stderr and error. `options` allowed for
 // additional parameters to be passed.
-func ExecWithOptions(config ExecConfig, options ExecOptions) (string, string, error) {
+func ExecWithOptions(config ExecConfig, options *ExecOptions) (string, string, error) {
 	const tty = false
 
 	req := config.ClientSet.CoreV1().RESTClient().Post().
