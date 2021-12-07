@@ -21,11 +21,10 @@ package crds
 import (
 	"context"
 
-	"k8s.io/client-go/rest"
-
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	"k8s.io/client-go/rest"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster

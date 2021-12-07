@@ -21,8 +21,6 @@ package submarinerop
 import (
 	"fmt"
 
-	"k8s.io/client-go/rest"
-
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/namespace"
 	lighthouseop "github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse"
@@ -30,6 +28,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/serviceaccount"
+	"k8s.io/client-go/rest"
 )
 
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace, operatorImage string, debug bool) error {

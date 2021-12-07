@@ -21,12 +21,11 @@ package submariner
 import (
 	"context"
 
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 )
 
 func updateDaemonSetStatus(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,

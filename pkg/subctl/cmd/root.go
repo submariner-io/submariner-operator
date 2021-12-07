@@ -25,11 +25,10 @@ import (
 	"strings"
 	"time"
 
-	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
+	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"

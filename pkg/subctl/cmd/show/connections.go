@@ -20,10 +20,9 @@ package show
 import (
 	"strings"
 
+	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-
-	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/table"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )

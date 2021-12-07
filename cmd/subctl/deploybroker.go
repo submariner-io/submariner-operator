@@ -21,14 +21,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/constants"
-
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
-
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
-
-	"github.com/spf13/cobra"
 )
 
 var deployflags deploy.DeployOptions

@@ -22,11 +22,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
-
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
