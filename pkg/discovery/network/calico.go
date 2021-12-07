@@ -32,8 +32,8 @@ func discoverCalicoNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, err
 	}
 
 	findCalicoConfigMap := false
-	for _, cm := range cmList.Items {
-		if cm.Name == "calico-config" {
+	for i := range cmList.Items {
+		if cmList.Items[i].Name == "calico-config" {
 			findCalicoConfigMap = true
 			break
 		}

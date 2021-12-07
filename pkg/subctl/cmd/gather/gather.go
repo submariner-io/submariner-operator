@@ -178,9 +178,10 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 			}
 		}
 	}
-	gatherClusterSummary(info)
+	gatherClusterSummary(&info)
 }
 
+// nolint:gocritic // hugeParam: info - purposely passed by value.
 func gatherConnectivity(dataType string, info Info) bool {
 	if info.Submariner == nil {
 		info.Status.QueueWarningMessage("The Submariner connectivity components are not installed")
@@ -189,20 +190,20 @@ func gatherConnectivity(dataType string, info Info) bool {
 
 	switch dataType {
 	case Logs:
-		gatherGatewayPodLogs(info)
-		gatherRouteAgentPodLogs(info)
-		gatherGlobalnetPodLogs(info)
-		gatherNetworkPluginSyncerPodLogs(info)
+		gatherGatewayPodLogs(&info)
+		gatherRouteAgentPodLogs(&info)
+		gatherGlobalnetPodLogs(&info)
+		gatherNetworkPluginSyncerPodLogs(&info)
 	case Resources:
-		gatherCNIResources(info, info.Submariner.Status.NetworkPlugin)
-		gatherCableDriverResources(info, info.Submariner.Spec.CableDriver)
-		gatherOVNResources(info, info.Submariner.Status.NetworkPlugin)
-		gatherEndpoints(info, cmd.SubmarinerNamespace)
-		gatherClusters(info, cmd.SubmarinerNamespace)
-		gatherGateways(info, cmd.SubmarinerNamespace)
-		gatherClusterGlobalEgressIPs(info)
-		gatherGlobalEgressIPs(info)
-		gatherGlobalIngressIPs(info)
+		gatherCNIResources(&info, info.Submariner.Status.NetworkPlugin)
+		gatherCableDriverResources(&info, info.Submariner.Spec.CableDriver)
+		gatherOVNResources(&info, info.Submariner.Status.NetworkPlugin)
+		gatherEndpoints(&info, cmd.SubmarinerNamespace)
+		gatherClusters(&info, cmd.SubmarinerNamespace)
+		gatherGateways(&info, cmd.SubmarinerNamespace)
+		gatherClusterGlobalEgressIPs(&info)
+		gatherGlobalEgressIPs(&info)
+		gatherGlobalIngressIPs(&info)
 	default:
 		return false
 	}
@@ -210,6 +211,7 @@ func gatherConnectivity(dataType string, info Info) bool {
 	return true
 }
 
+// nolint:gocritic // hugeParam: info - purposely passed by value.
 func gatherDiscovery(dataType string, info Info) bool {
 	if info.ServiceDiscovery == nil {
 		info.Status.QueueWarningMessage("The Submariner service discovery components are not installed")
@@ -218,14 +220,14 @@ func gatherDiscovery(dataType string, info Info) bool {
 
 	switch dataType {
 	case Logs:
-		gatherServiceDiscoveryPodLogs(info)
-		gatherCoreDNSPodLogs(info)
+		gatherServiceDiscoveryPodLogs(&info)
+		gatherCoreDNSPodLogs(&info)
 	case Resources:
-		gatherServiceExports(info, corev1.NamespaceAll)
-		gatherServiceImports(info, corev1.NamespaceAll)
-		gatherEndpointSlices(info, corev1.NamespaceAll)
-		gatherConfigMapLighthouseDNS(info, cmd.SubmarinerNamespace)
-		gatherConfigMapCoreDNS(info)
+		gatherServiceExports(&info, corev1.NamespaceAll)
+		gatherServiceImports(&info, corev1.NamespaceAll)
+		gatherEndpointSlices(&info, corev1.NamespaceAll)
+		gatherConfigMapLighthouseDNS(&info, cmd.SubmarinerNamespace)
+		gatherConfigMapCoreDNS(&info)
 	default:
 		return false
 	}
@@ -233,6 +235,7 @@ func gatherDiscovery(dataType string, info Info) bool {
 	return true
 }
 
+// nolint:gocritic // hugeParam: info - purposely passed by value.
 func gatherBroker(dataType string, info Info) bool {
 	switch dataType {
 	case Resources:
@@ -273,10 +276,10 @@ func gatherBroker(dataType string, info Info) bool {
 		info.ClusterName = "broker"
 
 		// The broker's ClusterRole used by member clusters only allows the below resources to be queried
-		gatherEndpoints(info, brokerNamespace)
-		gatherClusters(info, brokerNamespace)
-		gatherEndpointSlices(info, brokerNamespace)
-		gatherServiceImports(info, brokerNamespace)
+		gatherEndpoints(&info, brokerNamespace)
+		gatherClusters(&info, brokerNamespace)
+		gatherEndpointSlices(&info, brokerNamespace)
+		gatherServiceImports(&info, brokerNamespace)
 	default:
 		return false
 	}
@@ -284,20 +287,21 @@ func gatherBroker(dataType string, info Info) bool {
 	return true
 }
 
+// nolint:gocritic // hugeParam: info - purposely passed by value.
 func gatherOperator(dataType string, info Info) bool {
 	switch dataType {
 	case Logs:
-		gatherSubmarinerOperatorPodLogs(info)
+		gatherSubmarinerOperatorPodLogs(&info)
 	case Resources:
-		gatherSubmariners(info, cmd.SubmarinerNamespace)
-		gatherServiceDiscoveries(info, cmd.SubmarinerNamespace)
-		gatherSubmarinerOperatorDeployment(info, cmd.SubmarinerNamespace)
-		gatherGatewayDaemonSet(info, cmd.SubmarinerNamespace)
-		gatherRouteAgentDaemonSet(info, cmd.SubmarinerNamespace)
-		gatherGlobalnetDaemonSet(info, cmd.SubmarinerNamespace)
-		gatherNetworkPluginSyncerDeployment(info, cmd.SubmarinerNamespace)
-		gatherLighthouseAgentDeployment(info, cmd.SubmarinerNamespace)
-		gatherLighthouseCoreDNSDeployment(info, cmd.SubmarinerNamespace)
+		gatherSubmariners(&info, cmd.SubmarinerNamespace)
+		gatherServiceDiscoveries(&info, cmd.SubmarinerNamespace)
+		gatherSubmarinerOperatorDeployment(&info, cmd.SubmarinerNamespace)
+		gatherGatewayDaemonSet(&info, cmd.SubmarinerNamespace)
+		gatherRouteAgentDaemonSet(&info, cmd.SubmarinerNamespace)
+		gatherGlobalnetDaemonSet(&info, cmd.SubmarinerNamespace)
+		gatherNetworkPluginSyncerDeployment(&info, cmd.SubmarinerNamespace)
+		gatherLighthouseAgentDeployment(&info, cmd.SubmarinerNamespace)
+		gatherLighthouseCoreDNSDeployment(&info, cmd.SubmarinerNamespace)
 	default:
 		return false
 	}

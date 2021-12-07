@@ -219,9 +219,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 
 	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
 		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer ||
-			cr.Spec.LoadBalancerEnabled)})
-
-	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+			cr.Spec.LoadBalancerEnabled)},
 		corev1.EnvVar{Name: "CE_IPSEC_FORCEENCAPS", Value: strconv.FormatBool(cr.Spec.CeIPSecForceUDPEncaps)})
 
 	if cr.Spec.LoadBalancerEnabled {
@@ -249,14 +247,15 @@ func buildGatewayStatusAndUpdateMetrics(gateways *[]submarinerv1.Gateway) []subm
 		recordGateways(len(*gateways))
 		// Clear the connections so we don’t remember stale status information
 		recordNoConnections()
-		for _, gateway := range *gateways {
+		for i := range *gateways {
+			gateway := &(*gateways)[i]
 			gatewayStatuses = append(gatewayStatuses, gateway.Status)
-			recordGatewayCreationTime(gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
+			recordGatewayCreationTime(&gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
 
 			for j := range gateway.Status.Connections {
 				recordConnection(
-					gateway.Status.LocalEndpoint,
-					gateway.Status.Connections[j].Endpoint,
+					&gateway.Status.LocalEndpoint,
+					&gateway.Status.Connections[j].Endpoint,
 					string(gateway.Status.Connections[j].Status),
 				)
 			}

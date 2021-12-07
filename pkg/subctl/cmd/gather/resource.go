@@ -35,7 +35,8 @@ import (
 
 var fileNameRegexp = regexp.MustCompile(`[<>:"/\|?*]`)
 
-func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
+// nolint:gocritic // hugeParam: listOptions - match K8s API.
+func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
 		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(context.TODO(), listOptions)
 		if err != nil {
@@ -88,7 +89,8 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 	}
 }
 
-func gatherDaemonSet(info Info, namespace string, listOptions metav1.ListOptions) {
+// nolint:gocritic // hugeParam: listOptions - match K8s API.
+func gatherDaemonSet(info *Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
@@ -96,7 +98,8 @@ func gatherDaemonSet(info Info, namespace string, listOptions metav1.ListOptions
 	}, namespace, listOptions)
 }
 
-func gatherDeployment(info Info, namespace string, listOptions metav1.ListOptions) {
+// nolint:gocritic // hugeParam: listOptions - match K8s API.
+func gatherDeployment(info *Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
@@ -104,7 +107,8 @@ func gatherDeployment(info Info, namespace string, listOptions metav1.ListOption
 	}, namespace, listOptions)
 }
 
-func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOptions) {
+// nolint:gocritic // hugeParam: listOptions - match K8s API.
+func gatherConfigMaps(info *Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    corev1.SchemeGroupVersion.Group,
 		Version:  corev1.SchemeGroupVersion.Version,
@@ -112,7 +116,7 @@ func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOption
 	}, namespace, listOptions)
 }
 
-func scrubSensitiveData(info Info, dataString string) string {
+func scrubSensitiveData(info *Info, dataString string) string {
 	if info.IncludeSensitiveData {
 		return dataString
 	}

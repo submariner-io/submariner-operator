@@ -34,12 +34,12 @@ const (
 	SubmarinerName = "submariner"
 )
 
-func Ensure(config *rest.Config, namespace string, submarinerSpec submariner.SubmarinerSpec) error {
+func Ensure(config *rest.Config, namespace string, submarinerSpec *submariner.SubmarinerSpec) error {
 	submarinerCR := &submariner.Submariner{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SubmarinerName,
 		},
-		Spec: submarinerSpec,
+		Spec: *submarinerSpec,
 	}
 
 	client, err := submarinerClientset.NewForConfig(config)

@@ -61,13 +61,14 @@ func getGatewaysStatus(cluster *cmd.Cluster) bool {
 	}
 
 	var gwStatus = make([]gatewayStatus, 0, len(gateways))
-	for _, gateway := range gateways {
+	for i := range gateways {
+		gateway := &gateways[i]
 		haStatus := gateway.Status.HAStatus
 		enpoint := gateway.Status.LocalEndpoint.Hostname
 		totalConnections := len(gateway.Status.Connections)
 		countConnected := 0
-		for _, connection := range gateway.Status.Connections {
-			if connection.Status == submv1.Connected {
+		for i := range gateway.Status.Connections {
+			if gateway.Status.Connections[i].Status == submv1.Connected {
 				countConnected += 1
 			}
 		}

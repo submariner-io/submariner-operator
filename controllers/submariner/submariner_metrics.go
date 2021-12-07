@@ -75,7 +75,7 @@ func recordGateways(count int) {
 	}
 }
 
-func recordGatewayCreationTime(localEndpoint submv1.EndpointSpec, upTime time.Time) {
+func recordGatewayCreationTime(localEndpoint *submv1.EndpointSpec, upTime time.Time) {
 	gatewayCreationTimeGauge.With(prometheus.Labels{
 		connectionsLocalClusterLabel:  localEndpoint.ClusterID,
 		connectionsLocalHostnameLabel: localEndpoint.Hostname,
@@ -86,7 +86,7 @@ func recordNoConnections() {
 	connectionsGauge.Reset()
 }
 
-func recordConnection(localEndpoint, remoteEndpoint submv1.EndpointSpec, status string) {
+func recordConnection(localEndpoint, remoteEndpoint *submv1.EndpointSpec, status string) {
 	connectionsGauge.With(prometheus.Labels{
 		connectionsLocalClusterLabel:   localEndpoint.ClusterID,
 		connectionsLocalHostnameLabel:  localEndpoint.Hostname,

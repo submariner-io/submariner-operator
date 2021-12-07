@@ -187,9 +187,9 @@ func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) 
 }
 
 func parseToPodCidr(nodes []v1.Node) (string, error) {
-	for _, node := range nodes {
-		if node.Spec.PodCIDR != "" {
-			return node.Spec.PodCIDR, nil
+	for i := range nodes {
+		if nodes[i].Spec.PodCIDR != "" {
+			return nodes[i].Spec.PodCIDR, nil
 		}
 	}
 

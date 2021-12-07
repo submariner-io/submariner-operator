@@ -4,12 +4,11 @@ linters-settings:
     enabled-tags:
       - diagnostic
       - opinionated
-      # - performance
+      - performance
       - style
     disabled-checks:
       - ifElseChain
       - unnamedResult
-      - unnecessaryDefer
   gocyclo:
     min-complexity: 20
   govet:

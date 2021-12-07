@@ -73,7 +73,8 @@ func getEndpointsStatus(cluster *cmd.Cluster) bool {
 
 	var epStatus = make([]endpointStatus, 0, len(gateways))
 
-	for _, gateway := range gateways {
+	for i := range gateways {
+		gateway := &gateways[i]
 		epStatus = append(epStatus, newEndpointsStatusFrom(
 			gateway.Status.LocalEndpoint.ClusterID,
 			gateway.Status.LocalEndpoint.PrivateIP,
@@ -81,7 +82,8 @@ func getEndpointsStatus(cluster *cmd.Cluster) bool {
 			gateway.Status.LocalEndpoint.Backend,
 			"local"))
 
-		for _, connection := range gateway.Status.Connections {
+		for i := range gateway.Status.Connections {
+			connection := &gateway.Status.Connections[i]
 			epStatus = append(epStatus, newEndpointsStatusFrom(
 				connection.Endpoint.ClusterID,
 				connection.Endpoint.PrivateIP,

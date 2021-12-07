@@ -83,7 +83,8 @@ func (c *controllerClientCreator) Get(ctx context.Context, name string,
 	return crd, nil
 }
 
-func (c *controllerClientCreator) Delete(ctx context.Context, name string, options v1.DeleteOptions) error {
+func (c *controllerClientCreator) Delete(ctx context.Context, name string,
+	options v1.DeleteOptions) error { // nolint:gocritic // Match K8s API
 	crd, err := c.Get(ctx, name, v1.GetOptions{})
 	if err != nil {
 		return err
