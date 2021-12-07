@@ -46,6 +46,8 @@ func nodeAffinity(scheduling schedulingType) *v1.Affinity {
 			v1.NodeSelectorOpDoesNotExist, nil)
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,
 			v1.NodeSelectorOpNotIn, []string{"true"})
+	case InvalidScheduling:
+	case CustomNode:
 	}
 
 	return &v1.Affinity{
