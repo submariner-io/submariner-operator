@@ -22,14 +22,13 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/helpers"
-	"github.com/submariner-io/submariner-operator/pkg/names"
 )
 
 func (r *SubmarinerReconciler) reconcileRouteagentDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,

@@ -22,9 +22,8 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"sigs.k8s.io/controller-runtime/pkg/metrics"
-
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 const (

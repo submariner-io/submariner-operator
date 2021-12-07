@@ -21,15 +21,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

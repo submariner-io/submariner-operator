@@ -19,11 +19,10 @@ limitations under the License.
 package lighthouseop
 
 import (
-	"k8s.io/client-go/rest"
-
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/serviceaccount"
+	"k8s.io/client-go/rest"
 )
 
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string) (bool, error) {

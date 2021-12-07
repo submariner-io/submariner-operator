@@ -22,7 +22,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	apis "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 )
 

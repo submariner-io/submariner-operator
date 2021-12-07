@@ -26,11 +26,11 @@ import (
 	"runtime"
 	"syscall"
 
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/rest"
-
+	// TODO: in operator-sdk v1 the below utilities were moved to internal
+	"github.com/operator-framework/operator-lib/leader"
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
+	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/submariner-io/submariner-operator/api"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers"
@@ -39,19 +39,14 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/metrics"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	"github.com/submariner-io/submariner-operator/pkg/version"
-
-	// TODO: in opeartor-sdk v1 the below utilities were moved to internal
-	// TODO: update to operator-sdk v1 or find an alternate way and then change the code accordingly
-	"github.com/operator-framework/operator-lib/leader"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
-	sdkVersion "github.com/operator-framework/operator-sdk/version"
-
 	v1 "k8s.io/api/core/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 	"k8s.io/klog/klogr"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -59,7 +54,6 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
-	// +kubebuilder:scaffold:imports
 )
 
 // Change below variables to serve metrics on different host or port.

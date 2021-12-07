@@ -21,7 +21,6 @@ package network
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	"k8s.io/client-go/kubernetes/fake"
 )
 

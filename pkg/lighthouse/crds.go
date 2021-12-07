@@ -21,12 +21,11 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (

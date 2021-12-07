@@ -20,14 +20,12 @@ package show
 import (
 	"fmt"
 
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-
 	"github.com/spf13/cobra"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 func init() {

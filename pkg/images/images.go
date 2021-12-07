@@ -23,7 +23,6 @@ import (
 
 	apis "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-
 	v1 "k8s.io/api/core/v1"
 )
 

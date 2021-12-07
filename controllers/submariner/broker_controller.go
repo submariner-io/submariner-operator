@@ -22,19 +22,18 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
+	"github.com/submariner-io/submariner-operator/pkg/gateway"
+	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/broker"
-	"github.com/submariner-io/submariner-operator/pkg/gateway"
-	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 // BrokerReconciler reconciles a Broker object

@@ -22,7 +22,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/gcp"
-
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 

@@ -21,18 +21,16 @@ package restconfig
 import (
 	"fmt"
 
+	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
-
-	"github.com/submariner-io/admiral/pkg/resource"
-	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 type RestConfig struct {

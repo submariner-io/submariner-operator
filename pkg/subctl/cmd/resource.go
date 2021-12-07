@@ -22,15 +22,13 @@ import (
 	"context"
 	"os"
 
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 )
 
 func getSubmarinerResourceWithError(config *rest.Config) (*v1alpha1.Submariner, error) {

@@ -23,12 +23,11 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 )
 
 type ClusterNetwork struct {

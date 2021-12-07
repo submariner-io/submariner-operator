@@ -23,7 +23,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	// +kubebuilder:scaffold:imports
 )
 
 func TestSubmariner(t *testing.T) {

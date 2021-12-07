@@ -19,11 +19,10 @@ limitations under the License.
 package network
 
 import (
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 var _ = Describe("discoverOpenShift4Network", func() {

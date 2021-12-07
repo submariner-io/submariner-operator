@@ -23,14 +23,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/deployments"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/deployments"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
 )
 
 const deploymentCheckInterval = 5 * time.Second

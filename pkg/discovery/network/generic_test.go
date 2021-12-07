@@ -21,15 +21,14 @@ package network
 import (
 	"fmt"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	"k8s.io/client-go/testing"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
 const testPodCIDR = "1.2.3.4/16"

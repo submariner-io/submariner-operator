@@ -23,12 +23,11 @@ import (
 
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
+	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-
-	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 )
 
 const (

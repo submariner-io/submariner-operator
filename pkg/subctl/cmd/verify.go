@@ -35,16 +35,15 @@ import (
 	_ "github.com/submariner-io/lighthouse/test/e2e/framework"
 	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 )
 
 var (

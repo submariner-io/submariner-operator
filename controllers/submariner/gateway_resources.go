@@ -24,6 +24,10 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/controllers/metrics"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -32,11 +36,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/helpers"
-	"github.com/submariner-io/submariner-operator/controllers/metrics"
-	"github.com/submariner-io/submariner-operator/pkg/names"
 )
 
 func newGatewayDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
@@ -71,8 +70,10 @@ func newGatewayDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 	return deployment
 }
 
-const appLabel = "app"
-const appGatewayLabel = "submariner-gateway"
+const (
+	appLabel        = "app"
+	appGatewayLabel = "submariner-gateway"
+)
 
 // newGatewayPodTemplate returns a submariner pod with the same fields as the cr
 func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
@@ -139,12 +140,14 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 						RunAsNonRoot:             &runAsNonRoot,
 					},
 					Ports: []corev1.ContainerPort{
-						{Name: encapsPortName,
+						{
+							Name:          encapsPortName,
 							HostPort:      int32(cr.Spec.CeIPSecNATTPort),
 							ContainerPort: int32(cr.Spec.CeIPSecNATTPort),
 							Protocol:      corev1.ProtocolUDP,
 						},
-						{Name: nattDiscoveryPortName,
+						{
+							Name:          nattDiscoveryPortName,
 							HostPort:      int32(nattPort),
 							ContainerPort: int32(nattPort),
 							Protocol:      corev1.ProtocolUDP,
@@ -240,7 +243,7 @@ func (r *SubmarinerReconciler) reconcileGatewayDaemonSet(
 }
 
 func buildGatewayStatusAndUpdateMetrics(gateways *[]submarinerv1.Gateway) []submarinerv1.GatewayStatus {
-	var gatewayStatuses = []submarinerv1.GatewayStatus{}
+	gatewayStatuses := []submarinerv1.GatewayStatus{}
 
 	if gateways != nil {
 		recordGateways(len(*gateways))
