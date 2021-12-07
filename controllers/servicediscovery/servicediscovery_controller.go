@@ -540,49 +540,9 @@ func (r *ServiceDiscoveryReconciler) updateOpenshiftClusterDNSOperator(ctx conte
 			return goerrors.New("lighthouseDNSService ClusterIp should be available")
 		}
 
-		var updatedForwardServers []operatorv1.Server
-		changed := false
-		containsLighthouse := false
-		lighthouseDomains := append([]string{"clusterset.local"}, instance.Spec.CustomDomains...)
-		existingDomains := make([]string, 0)
-		for _, forwardServer := range dnsOperator.Spec.Servers {
-			if forwardServer.Name == lighthouseForwardPluginName {
-				containsLighthouse = true
-				existingDomains = append(existingDomains, forwardServer.Zones...)
-				for _, upstreams := range forwardServer.ForwardPlugin.Upstreams {
-					if upstreams != lighthouseDNSService.Spec.ClusterIP {
-						changed = true
-					}
-				}
-				if changed {
-					continue
-				}
-			} else {
-				updatedForwardServers = append(updatedForwardServers, forwardServer)
-			}
-		}
-
-		sort.Strings(lighthouseDomains)
-		sort.Strings(existingDomains)
-		if !reflect.DeepEqual(lighthouseDomains, existingDomains) {
-			changed = true
-			reqLogger.Info(fmt.Sprintf("Configured lighthouse zones changed from %v to %v", existingDomains, lighthouseDomains))
-		}
-		if containsLighthouse && !changed {
-			reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
+		updatedForwardServers := getUpdatedForwardServers(instance, dnsOperator, lighthouseDNSService, reqLogger)
+		if updatedForwardServers == nil {
 			return nil
-		}
-		reqLogger.Info("Lighthouse DNS configuration changed, hence updating Cluster DNS Operator CR")
-
-		for _, domain := range lighthouseDomains {
-			lighthouseServer := operatorv1.Server{
-				Name:  lighthouseForwardPluginName,
-				Zones: []string{domain},
-				ForwardPlugin: operatorv1.ForwardPlugin{
-					Upstreams: []string{lighthouseDNSService.Spec.ClusterIP},
-				},
-			}
-			updatedForwardServers = append(updatedForwardServers, lighthouseServer)
 		}
 
 		dnsOperator.Spec.Servers = updatedForwardServers
@@ -606,6 +566,56 @@ func (r *ServiceDiscoveryReconciler) updateOpenshiftClusterDNSOperator(ctx conte
 		return err
 	})
 	return retryErr
+}
+
+func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dnsOperator *operatorv1.DNS,
+	lighthouseDNSService *corev1.Service, reqLogger logr.Logger) []operatorv1.Server {
+	updatedForwardServers := make([]operatorv1.Server, 0)
+	changed := false
+	containsLighthouse := false
+	lighthouseDomains := append([]string{"clusterset.local"}, instance.Spec.CustomDomains...)
+	existingDomains := make([]string, 0)
+	for _, forwardServer := range dnsOperator.Spec.Servers {
+		if forwardServer.Name == lighthouseForwardPluginName {
+			containsLighthouse = true
+			existingDomains = append(existingDomains, forwardServer.Zones...)
+			for _, upstreams := range forwardServer.ForwardPlugin.Upstreams {
+				if upstreams != lighthouseDNSService.Spec.ClusterIP {
+					changed = true
+				}
+			}
+			if changed {
+				continue
+			}
+		} else {
+			updatedForwardServers = append(updatedForwardServers, forwardServer)
+		}
+	}
+
+	sort.Strings(lighthouseDomains)
+	sort.Strings(existingDomains)
+	if !reflect.DeepEqual(lighthouseDomains, existingDomains) {
+		changed = true
+		reqLogger.Info(fmt.Sprintf("Configured lighthouse zones changed from %v to %v", existingDomains, lighthouseDomains))
+	}
+	if containsLighthouse && !changed {
+		reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
+		return nil
+	}
+	reqLogger.Info("Lighthouse DNS configuration changed, hence updating Cluster DNS Operator CR")
+
+	for _, domain := range lighthouseDomains {
+		lighthouseServer := operatorv1.Server{
+			Name:  lighthouseForwardPluginName,
+			Zones: []string{domain},
+			ForwardPlugin: operatorv1.ForwardPlugin{
+				Upstreams: []string{lighthouseDNSService.Spec.ClusterIP},
+			},
+		}
+		updatedForwardServers = append(updatedForwardServers, lighthouseServer)
+	}
+
+	return updatedForwardServers
 }
 
 func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, imageName, componentName string) string {

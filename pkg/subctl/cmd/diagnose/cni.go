@@ -153,6 +153,15 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 		ippools[cidr] = pool
 	}
 
+	checkGatewaySubnets(gateways, ippools, status)
+
+	result := status.ResultFromMessages()
+	status.End(result)
+
+	return result != cli.Failure
+}
+
+func checkGatewaySubnets(gateways []submv1.Gateway, ippools map[string]unstructured.Unstructured, status *cli.Status) {
 	for _, gateway := range gateways {
 		if gateway.Status.HAStatus != submv1.HAStatusActive {
 			continue
@@ -183,11 +192,6 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 			}
 		}
 	}
-
-	result := status.ResultFromMessages()
-	status.End(result)
-
-	return result != cli.Failure
 }
 
 func getSpecBool(pool unstructured.Unstructured, key string) (bool, error) {
