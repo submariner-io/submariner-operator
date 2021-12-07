@@ -31,6 +31,7 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	errorsPkg "github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
@@ -236,11 +237,11 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner,kube-system,operators"},
 								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
 								{Name: "SUBMARINER_GLOBALNET_ENABLED", Value: strconv.FormatBool(cr.Spec.GlobalnetEnabled)},
-								{Name: "BROKER_K8S_APISERVER", Value: cr.Spec.BrokerK8sApiServer},
-								{Name: "BROKER_K8S_APISERVERTOKEN", Value: cr.Spec.BrokerK8sApiServerToken},
-								{Name: "BROKER_K8S_REMOTENAMESPACE", Value: cr.Spec.BrokerK8sRemoteNamespace},
-								{Name: "BROKER_K8S_CA", Value: cr.Spec.BrokerK8sCA},
-								{Name: "BROKER_INSECURE", Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
+								{Name: broker.EnvironmentVariable("ApiServer"), Value: cr.Spec.BrokerK8sApiServer},
+								{Name: broker.EnvironmentVariable("ApiServerToken"), Value: cr.Spec.BrokerK8sApiServerToken},
+								{Name: broker.EnvironmentVariable("RemoteNamespace"), Value: cr.Spec.BrokerK8sRemoteNamespace},
+								{Name: broker.EnvironmentVariable("CA"), Value: cr.Spec.BrokerK8sCA},
+								{Name: broker.EnvironmentVariable("Insecure"), Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
 							},
 						},
 					},

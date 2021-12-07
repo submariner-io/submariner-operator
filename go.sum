@@ -858,6 +858,7 @@ github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 h1:Z9n2FFNUXsshfwJMBgNA0RU6/i7WVaAegv3PtuIHPMs=
 github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51/go.mod h1:CzGEWj7cYgsdH8dAjBGEr58BoE7ScuLd+fwFZ44+/x8=
+github.com/kelseyhightower/envconfig v1.4.0 h1:Im6hONhd3pLkfDFsbRgu68RDNkGF1r3dvMUtDTo2cv8=
 github.com/kelseyhightower/envconfig v1.4.0/go.mod h1:cccZRl6mQpaq41TPp5QxidR+Sa3axMbJDNb//FQX6Gg=
 github.com/kevinburke/go-bindata v3.11.0+incompatible/go.mod h1:/pEEZ72flUW2p0yi30bslSp9YqD9pysLxunQDdb2CPM=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
@@ -1333,8 +1334,9 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/submariner-io/admiral v0.12.0-m1 h1:6GBtMyeFTZAP0Tjf689xcUR9q/STGdsmd1vrt2Ta+dQ=
 github.com/submariner-io/admiral v0.12.0-m1/go.mod h1:vjW5SFdXOQIVo6wvvLVh8uipruHnopP1gYInOhxy9gk=
+github.com/submariner-io/admiral v0.12.0-m1.0.20211209141450-f39009d93c9d h1:Y6odrLRFwvSWv4u9yOEmX5+9x68wdIVsqhp0P6hBq/8=
+github.com/submariner-io/admiral v0.12.0-m1.0.20211209141450-f39009d93c9d/go.mod h1:vjW5SFdXOQIVo6wvvLVh8uipruHnopP1gYInOhxy9gk=
 github.com/submariner-io/cloud-prepare v0.12.0-m1 h1:u034PljM3NQTb4p4nf5/yPbWdcLoaA3fW8DvbDJ9XtY=
 github.com/submariner-io/cloud-prepare v0.12.0-m1/go.mod h1:bMLl0JUT94idqHj9MKZATtEfETDkV4lt5pE3VRfb0H0=
 github.com/submariner-io/lighthouse v0.12.0-m1 h1:EdCZtoiEfXSTIUMDAQTaTCmYohZaGF7ZFDOJ7qF58oI=
