@@ -25,13 +25,14 @@ import (
 	"strings"
 	"time"
 
+	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/coreos/go-semver/semver"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
-	cmdversion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,7 +61,7 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.AddCommand(cmdversion.Cmd)
+	rootCmd.AddCommand(cmdversion.VersionCmd)
 	cloudCmd := cloud.NewCommand(&kubeConfig, &kubeContext)
 	AddKubeContextFlag(cloudCmd)
 	rootCmd.AddCommand(cloudCmd)

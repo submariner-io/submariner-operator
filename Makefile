@@ -168,6 +168,9 @@ bin/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
 bin/subctl: bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
 	ln -sf $(<F) $@
 
+cmd/bin/subctl: cmd/bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
+	ln -sf $(<F) $@
+
 dist/subctl-%.tar.xz: bin/subctl-%
 	mkdir -p dist
 	tar -cJf $@ --transform "s/^bin/subctl-$(VERSION)/" $<
@@ -185,6 +188,19 @@ bin/subctl-%: $(EMBEDDED_YAMLS) $(shell find pkg/subctl/ -name "*.go") $(VENDOR_
 		--ldflags "-X 'github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)' \
 			   -X 'github.com/submariner-io/submariner-operator/api/submariner/v1alpha1.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}'" \
 		--noupx $@ ./pkg/subctl/main.go $(BUILD_ARGS)
+
+cmd/bin/subctl-%: $(shell find cmd/ -name "*.go") $(VENDOR_MODULES)
+	mkdir -p cmd/bin
+	target=$@; \
+	target=$${target%.exe}; \
+	components=($$(echo $${target//-/ })); \
+	GOOS=$${components[-2]}; \
+	GOARCH=$${components[-1]}; \
+	export GOARCH GOOS; \
+	$(SCRIPTS_DIR)/compile.sh \
+		--ldflags "-X 'github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)' \
+		       -X 'github.com/submariner-io/submariner-operator/api/submariner/v1alpha1.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}'" \
+        --noupx $@ cmd/main.go $(BUILD_ARGS)
 
 ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
 
