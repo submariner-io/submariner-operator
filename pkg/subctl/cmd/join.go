@@ -322,18 +322,18 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		globalnetInfo, globalnetConfigMap, err := globalnet.GetGlobalNetworks(brokerAdminClientset, brokerNamespace)
 		if err != nil {
-			return fmt.Errorf("error reading Global network details on Broker: %s", err)
+			return errors.Wrap(err, "error reading Global network details on Broker")
 		}
 
 		netconfig.GlobalnetCIDR, err = globalnet.ValidateGlobalnetConfiguration(globalnetInfo, *netconfig)
 		if err != nil {
-			return fmt.Errorf("error validating Globalnet configuration: %s", err)
+			return errors.Wrap(err, "error validating Globalnet configuration")
 		}
 
 		if globalnetInfo.GlobalnetEnabled {
 			netconfig.GlobalnetCIDR, err = globalnet.AssignGlobalnetIPs(globalnetInfo, *netconfig)
 			if err != nil {
-				return fmt.Errorf("error assigning Globalnet IPs: %s", err)
+				return errors.Wrap(err, "error assigning Globalnet IPs")
 			}
 
 			if globalnetInfo.GlobalCidrInfo[clusterID] == nil ||

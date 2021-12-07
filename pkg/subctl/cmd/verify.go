@@ -143,12 +143,14 @@ prompt for confirmation therefore you must specify --enable-disruptive to run th
 }
 
 func isNonInteractive(err error) bool {
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return true
 	}
 
-	if pathError, ok := err.(*os.PathError); ok {
-		if syserr, ok := pathError.Err.(syscall.Errno); ok {
+	var pathError *os.PathError
+	if errors.As(err, &pathError) {
+		var syserr syscall.Errno
+		if errors.As(pathError, &syserr) {
 			if pathError.Path == "/dev/stdin" && (errors.Is(syserr, syscall.EBADF) || errors.Is(syserr, syscall.EINVAL)) {
 				return true
 			}

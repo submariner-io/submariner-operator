@@ -20,12 +20,12 @@ package deployments
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	clientset "k8s.io/client-go/kubernetes"
@@ -36,8 +36,8 @@ func WaitForReady(clientSet *clientset.Clientset, namespace, deployment string, 
 
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {
 		dp, err := deployments.Get(context.TODO(), deployment, metav1.GetOptions{})
-		if err != nil && !errors.IsNotFound(err) {
-			return false, fmt.Errorf("error waiting for controller deployment to come up: %s", err)
+		if err != nil && !apierrors.IsNotFound(err) {
+			return false, errors.Wrap(err, "error waiting for controller deployment to come up")
 		}
 
 		for _, cond := range dp.Status.Conditions {

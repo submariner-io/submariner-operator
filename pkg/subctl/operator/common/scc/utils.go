@@ -21,7 +21,8 @@ import (
 	"context"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -50,7 +51,7 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		cr, err := sccClient.Get(context.TODO(), "privileged", metav1.GetOptions{})
 		if err != nil {
-			if errors.IsNotFound(err) {
+			if apierrors.IsNotFound(err) {
 				return nil
 			}
 			return err
@@ -74,7 +75,7 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 		}
 
 		if _, err = sccClient.Update(context.TODO(), cr, metav1.UpdateOptions{}); err != nil {
-			return fmt.Errorf("error updating OpenShift privileged SCC: %s", err)
+			return errors.Wrap(err, "error updating OpenShift privileged SCC")
 		}
 		created = true
 		return nil

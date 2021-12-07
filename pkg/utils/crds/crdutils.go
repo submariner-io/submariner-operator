@@ -20,8 +20,8 @@ package crdutils
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/pkg/errors"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +43,7 @@ type controllerClientCreator struct {
 func NewFromRestConfig(config *rest.Config) (CRDUpdater, error) {
 	apiext, err := clientset.NewForConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("error creating the api extensions client: %s", err)
+		return nil, errors.Wrap(err, "error creating the api extensions client")
 	}
 	return NewFromClientSet(apiext), nil
 }

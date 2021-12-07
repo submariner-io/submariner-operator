@@ -20,16 +20,15 @@ package datafile
 
 import (
 	"context"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
-	"net/url"
 	"os"
 
+	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/stringset"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -133,8 +132,7 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 	if ipsecSubmFile != "" {
 		datafile, err := NewFromFile(ipsecSubmFile)
 		if err != nil {
-			return nil, fmt.Errorf("error happened trying to import IPsec PSK from subm file: %s: %s", ipsecSubmFile,
-				err.Error())
+			return nil, errors.Wrapf(err, "error happened trying to import IPsec PSK from subm file: %s", ipsecSubmFile)
 		}
 		subctlData.IPSecPSK = datafile.IPSecPSK
 		return subctlData, err
@@ -147,14 +145,11 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 func (data *SubctlData) GetBrokerAdministratorConfig() (*rest.Config, error) {
 	// We need to try a connection to determine whether the trust chain needs to be provided
 	config, err := data.getAndCheckBrokerAdministratorConfig(false)
-	if err != nil {
-		if urlError, ok := err.(*url.Error); ok {
-			if _, ok := urlError.Unwrap().(x509.UnknownAuthorityError); ok {
-				// Certificate error, try with the trust chain
-				config, err = data.getAndCheckBrokerAdministratorConfig(true)
-			}
-		}
+	if resource.IsUnknownAuthorityError(err) {
+		// Certificate error, try with the trust chain
+		config, err = data.getAndCheckBrokerAdministratorConfig(true)
 	}
+
 	return config, err
 }
 
@@ -169,7 +164,7 @@ func (data *SubctlData) getAndCheckBrokerAdministratorConfig(private bool) (*res
 	// likely means we couldn’t connect
 	_, err = submClientset.SubmarinerV1().Clusters(string(data.ClientToken.Data["namespace"])).List(
 		context.TODO(), metav1.ListOptions{})
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		err = nil
 	}
 	return config, err
