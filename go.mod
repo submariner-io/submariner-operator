@@ -40,7 +40,6 @@ require (
 	github.com/submariner-io/lighthouse v0.12.0-m0
 	github.com/submariner-io/shipyard v0.12.0-m0
 	github.com/submariner-io/submariner v0.12.0-m0
-	github.com/submariner-io/submariner-operator/api v0.0.0-20211116094042-78967cc133c2
 	github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.4
@@ -78,6 +77,3 @@ replace (
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.19.10
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.7.0
 )
-
-// Local packages
-replace github.com/submariner-io/submariner-operator/api => ./api
