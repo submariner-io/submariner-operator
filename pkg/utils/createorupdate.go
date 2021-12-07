@@ -20,8 +20,8 @@ package utils
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
@@ -67,7 +67,7 @@ func CreateOrUpdateEmbeddedCRD(ctx context.Context, updater crdutils.CRDUpdater,
 	crd := &apiextensions.CustomResourceDefinition{}
 
 	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
-		return false, fmt.Errorf("error extracting embedded CRD: %s", err)
+		return false, errors.Wrap(err, "error extracting embedded CRD")
 	}
 
 	return CreateOrUpdateCRD(ctx, updater, crd)

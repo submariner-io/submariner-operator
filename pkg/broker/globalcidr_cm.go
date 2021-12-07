@@ -22,8 +22,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -46,16 +47,16 @@ func CreateGlobalnetConfigMap(config *rest.Config, globalnetEnabled bool, defaul
 	defaultGlobalClusterSize uint, namespace string) error {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("error creating the core kubernetes clientset: %s", err)
+		return errors.Wrap(err, "error creating the core kubernetes clientset")
 	}
 
 	gnConfigMap, err := NewGlobalnetConfigMap(globalnetEnabled, defaultGlobalCidrRange, defaultGlobalClusterSize, namespace)
 	if err != nil {
-		return fmt.Errorf("error creating config map: %s", err)
+		return errors.Wrap(err, "error creating config map")
 	}
 
 	_, err = clientset.CoreV1().ConfigMaps(namespace).Create(context.TODO(), gnConfigMap, metav1.CreateOptions{})
-	if err == nil || errors.IsAlreadyExists(err) {
+	if err == nil || apierrors.IsAlreadyExists(err) {
 		return nil
 	}
 	return err

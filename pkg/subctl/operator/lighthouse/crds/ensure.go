@@ -20,8 +20,8 @@ package crds
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
@@ -32,7 +32,7 @@ import (
 func Ensure(restConfig *rest.Config) (bool, error) {
 	crdUpdater, err := crdutils.NewFromRestConfig(restConfig)
 	if err != nil {
-		return false, fmt.Errorf("error creating the api extensions client: %s", err)
+		return false, errors.Wrap(err, "error creating the api extensions client")
 	}
 
 	return utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater, embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)

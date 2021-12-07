@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -139,7 +140,7 @@ const MaxGeneratedNameLength = 63 - 5
 func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submarinerBrokerSA string) (*v1.Secret, error) {
 	sa, err := clientSet.CoreV1().ServiceAccounts(brokerNamespace).Get(context.TODO(), submarinerBrokerSA, metav1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("ServiceAccount %s get failed: %s", submarinerBrokerSA, err)
+		return nil, errors.Wrapf(err, "ServiceAccount %s get failed", submarinerBrokerSA)
 	}
 	if len(sa.Secrets) < 1 {
 		return nil, fmt.Errorf("ServiceAccount %s does not have any secret", sa.Name)

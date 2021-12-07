@@ -21,15 +21,16 @@ package helpers
 
 import (
 	"context"
+	goerrors "errors"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/go-logr/logr"
-	errorutil "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -95,7 +96,7 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 		err = client.Get(context.TODO(), types.NamespacedName{Namespace: daemonSet.Namespace, Name: daemonSet.Name}, daemonSet)
 	}
 
-	return daemonSet, errorutil.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
+	return daemonSet, errors.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
 }
 
 func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, reqLogger logr.Logger,
@@ -141,7 +142,7 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 		err = client.Get(context.TODO(), types.NamespacedName{Namespace: deployment.Namespace, Name: deployment.Name}, deployment)
 	}
 
-	return deployment, errorutil.WithMessagef(err, "error creating or updating Deployment %s/%s", deployment.Namespace, deployment.Name)
+	return deployment, errors.WithMessagef(err, "error creating or updating Deployment %s/%s", deployment.Namespace, deployment.Name)
 }
 
 func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLogger logr.Logger,
@@ -187,7 +188,7 @@ func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLog
 		err = client.Get(context.TODO(), types.NamespacedName{Namespace: configMap.Namespace, Name: configMap.Name}, configMap)
 	}
 
-	return configMap, errorutil.WithMessagef(err, "error creating or updating ConfigMap %s/%s", configMap.Namespace, configMap.Name)
+	return configMap, errors.WithMessagef(err, "error creating or updating ConfigMap %s/%s", configMap.Namespace, configMap.Name)
 }
 
 func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger logr.Logger,
@@ -243,7 +244,7 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 		err = client.Get(context.TODO(), types.NamespacedName{Namespace: service.Namespace, Name: service.Name}, service)
 	}
 
-	return service, errorutil.WithMessagef(err, "error creating or updating Service %s/%s", service.Namespace, service.Name)
+	return service, errors.WithMessagef(err, "error creating or updating Service %s/%s", service.Namespace, service.Name)
 }
 
 func GetPullPolicy(version, override string) corev1.PullPolicy {
@@ -255,12 +256,12 @@ func GetPullPolicy(version, override string) corev1.PullPolicy {
 }
 
 func IsImmutableError(err error) bool {
-	if !errors.IsInvalid(err) {
+	if !apierrors.IsInvalid(err) {
 		return false
 	}
 
-	if errStatus, ok := err.(errors.APIStatus); ok {
-		if strings.Contains(errStatus.Status().Message, "immutable") {
+	if status := apierrors.APIStatus(nil); goerrors.As(err, &status) {
+		if strings.Contains(status.Status().Message, "immutable") {
 			return true
 		}
 	}
