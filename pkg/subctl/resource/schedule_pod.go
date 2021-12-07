@@ -202,7 +202,7 @@ func (np *NetworkPod) AwaitPodCompletion() error {
 		}, func(result interface{}) (bool, string, error) {
 			np.Pod = result.(*v1.Pod)
 
-			switch np.Pod.Status.Phase {
+			switch np.Pod.Status.Phase { // nolint:exhaustive // 'missing cases in switch' - OK
 			case v1.PodSucceeded:
 				return true, "", nil
 			case v1.PodFailed:
