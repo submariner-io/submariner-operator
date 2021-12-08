@@ -96,6 +96,7 @@ type SubmarinerReconciler struct {
 
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners/status,verbs=get;update;patch
+// nolint:gocyclo // Refactoring would yield functions with a lot of params which isn't ideal either.
 func (r *SubmarinerReconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Submariner")

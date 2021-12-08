@@ -170,15 +170,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	// Missing information
 	var qs = []*survey.Question{}
 
-	if clusterID == "" {
-		rawConfig, err := config.RawConfig()
-		// This will be fatal later, no point in continuing
-		utils.ExitOnError("Error connecting to the target cluster", err)
-		clusterName := restconfig.ClusterNameFromContext(&rawConfig, contextName)
-		if clusterName != nil {
-			clusterID = *clusterName
-		}
-	}
+	determineClusterID(config, contextName)
 
 	if valid, err := isValidClusterID(clusterID); !valid {
 		fmt.Printf("Error: %s\n", err.Error())
@@ -224,20 +216,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	clientConfig, err := config.ClientConfig()
 	utils.ExitOnError("Error connecting to the target cluster", err)
 
-	_, failedRequirements, err := version.CheckRequirements(clientConfig)
-	// We display failed requirements even if an error occurred
-	if len(failedRequirements) > 0 {
-		fmt.Println("The target cluster fails to meet Submariner's requirements:")
-		for i := range failedRequirements {
-			fmt.Printf("* %s\n", (failedRequirements)[i])
-		}
-
-		if !ignoreRequirements {
-			utils.ExitOnError("Unable to check all requirements", err)
-			os.Exit(1)
-		}
-	}
-	utils.ExitOnError("Unable to check requirements", err)
+	checkRequirements(clientConfig)
 
 	if subctlData.IsConnectivityEnabled() && labelGateway {
 		err := handleNodeLabels(clientConfig)
@@ -309,6 +288,35 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 			status.End(cli.Failure)
 		}
 		utils.ExitOnError("Error deploying service discovery", err)
+	}
+}
+
+func checkRequirements(clientConfig *rest.Config) {
+	_, failedRequirements, err := version.CheckRequirements(clientConfig)
+	// We display failed requirements even if an error occurred
+	if len(failedRequirements) > 0 {
+		fmt.Println("The target cluster fails to meet Submariner's requirements:")
+		for i := range failedRequirements {
+			fmt.Printf("* %s\n", (failedRequirements)[i])
+		}
+
+		if !ignoreRequirements {
+			utils.ExitOnError("Unable to check all requirements", err)
+			os.Exit(1)
+		}
+	}
+	utils.ExitOnError("Unable to check requirements", err)
+}
+
+func determineClusterID(config clientcmd.ClientConfig, contextName string) {
+	if clusterID == "" {
+		rawConfig, err := config.RawConfig()
+		// This will be fatal later, no point in continuing
+		utils.ExitOnError("Error connecting to the target cluster", err)
+		clusterName := restconfig.ClusterNameFromContext(&rawConfig, contextName)
+		if clusterName != nil {
+			clusterID = *clusterName
+		}
 	}
 }
 
