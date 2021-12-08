@@ -155,7 +155,7 @@ func createBrokerAdministratorRoleAndSA(clientset *kubernetes.Clientset, namespa
 	return nil
 }
 
-func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, namespace string) (secret *v1.Secret, err error) {
+func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, namespace string) (*v1.Secret, error) {
 	// wait for the client token to be ready, while implementing
 	// exponential backoff pattern, it will wait a total of:
 	// sum(n=0..9, 1.2^n * 5) seconds, = 130 seconds
@@ -167,14 +167,18 @@ func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, nam
 		Jitter:   1,
 	}
 
+	var secret *v1.Secret
 	var lastErr error
-	err = wait.ExponentialBackoff(backoff, func() (bool, error) {
+
+	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
 		secret, lastErr = GetClientTokenSecret(clientset, namespace, submarinerBrokerSA)
 		if lastErr != nil {
-			return false, nil
+			return false, nil // nolint:nilerr // Intentional - the error is propagated via the outer-scoped var 'lastErr'
 		}
+
 		return true, nil
 	})
+
 	if goerrors.Is(err, wait.ErrWaitTimeout) {
 		return nil, lastErr
 	}

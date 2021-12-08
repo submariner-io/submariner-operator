@@ -49,6 +49,7 @@ linters:
     - makezero
     - misspell
     - nakedret
+    - nilerr
     - prealloc
     - staticcheck
     - structcheck
