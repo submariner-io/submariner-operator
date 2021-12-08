@@ -40,7 +40,7 @@ var (
 
 const DefaultNumGateways = 1
 
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
+// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
 	kubeConfig = origKubeConfig
 	kubeContext = origKubeContext

@@ -75,7 +75,7 @@ const (
 	appGatewayLabel = "submariner-gateway"
 )
 
-// newGatewayPodTemplate returns a submariner pod with the same fields as the cr
+// newGatewayPodTemplate returns a submariner pod with the same fields as the cr.
 func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 	labels := map[string]string{
 		appLabel: appGatewayLabel,

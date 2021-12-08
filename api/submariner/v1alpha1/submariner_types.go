@@ -154,14 +154,14 @@ type Submariner struct {
 
 // +kubebuilder:object:root=true
 
-// SubmarinerList contains a list of Submariner
+// SubmarinerList contains a list of Submariner.
 type SubmarinerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Submariner `json:"items"`
 }
 
-// BrokerSpec defines the desired state of Broker
+// BrokerSpec defines the desired state of Broker.
 // +k8s:openapi-gen=true
 type BrokerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -198,7 +198,7 @@ type Broker struct { //nolint:govet // we want to keep the traditional order
 
 // +kubebuilder:object:root=true
 
-// BrokerList contains a list of Broker
+// BrokerList contains a list of Broker.
 type BrokerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

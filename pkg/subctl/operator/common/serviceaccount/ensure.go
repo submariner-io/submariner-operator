@@ -28,7 +28,7 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 )
 
-// Ensure creates the given service account
+// Ensure creates the given service account.
 func Ensure(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
 	sa := &v1.ServiceAccount{}
 	err := embeddedyamls.GetObject(yaml, sa)

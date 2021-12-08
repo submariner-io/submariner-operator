@@ -25,7 +25,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-// newGCPCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure
+// newGCPCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newGCPCleanupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gcp",

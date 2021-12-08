@@ -17,7 +17,7 @@ limitations under the License.
 */
 package names
 
-/* Component names and other constants */
+/* Component names and other constants. */
 const (
 	NetworkPluginSyncerComponent = "submariner-networkplugin-syncer"
 	RouteAgentComponent          = "submariner-route-agent"
@@ -29,7 +29,7 @@ const (
 	ServiceDiscoveryCrName       = "service-discovery"
 )
 
-/* These values are used by downstream distributions to override the component default image name */
+/* These values are used by downstream distributions to override the component default image name. */
 var (
 	NetworkPluginSyncerImage = "submariner-networkplugin-syncer"
 	RouteAgentImage          = "submariner-route-agent"
@@ -40,7 +40,7 @@ var (
 	OperatorImage            = "submariner-operator"
 )
 
-/* Deprecated: These values are used by downstream distributions to patch the image names by adding a prefix/suffix */
+/* Deprecated: These values are used by downstream distributions to patch the image names by adding a prefix/suffix. */
 var (
 	ImagePrefix  = ""
 	ImagePostfix = ""

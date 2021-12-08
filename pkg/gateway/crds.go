@@ -28,8 +28,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-// Ensure ensures that the required resources are deployed on the target system
-// The resources handled here are the gateway CRDs: Cluster and Endpoint
+// Ensure ensures that the required resources are deployed on the target system.
+// The resources handled here are the gateway CRDs: Cluster and Endpoint.
 func Ensure(crdUpdater crdutils.CRDUpdater) error {
 	_, err := utils.CreateOrUpdateEmbeddedCRD(
 		context.TODO(), crdUpdater, embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml)

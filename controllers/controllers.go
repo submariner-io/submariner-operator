@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// AddToManager adds all Controllers to the Manager
+// AddToManager adds all Controllers to the Manager.
 func AddToManager(mgr manager.Manager) error {
 	if err := (submariner.NewReconciler(mgr)).SetupWithManager(mgr); err != nil {
 		return err

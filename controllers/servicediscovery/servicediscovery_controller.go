@@ -71,7 +71,7 @@ const (
 	coreDNSDefaultPort            = "53"
 )
 
-// NewReconciler returns a new ServiceDiscoveryReconciler
+// NewReconciler returns a new ServiceDiscoveryReconciler.
 func NewReconciler(mgr manager.Manager) *ServiceDiscoveryReconciler {
 	k8sClient, _ := clientset.NewForConfig(mgr.GetConfig())
 	operatorClient, _ := operatorclient.NewClient(mgr.GetConfig())
@@ -84,10 +84,10 @@ func NewReconciler(mgr manager.Manager) *ServiceDiscoveryReconciler {
 		operatorClientSet: operatorClient}
 }
 
-// blank assignment to verify that ServiceDiscoveryReconciler implements reconcile.Reconciler
+// blank assignment to verify that ServiceDiscoveryReconciler implements reconcile.Reconciler.
 var _ reconcile.Reconciler = &ServiceDiscoveryReconciler{}
 
-// ServiceDiscoveryReconciler reconciles a ServiceDiscovery object
+// ServiceDiscoveryReconciler reconciles a ServiceDiscovery object.
 type ServiceDiscoveryReconciler struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver

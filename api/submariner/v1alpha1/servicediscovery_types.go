@@ -66,7 +66,7 @@ type ServiceDiscoveryStatus struct {
 
 // +kubebuilder:object:root=true
 
-// ServiceDiscovery is the Schema for the servicediscoveries API
+// ServiceDiscovery is the Schema for the servicediscoveries API.
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=servicediscoveries,scope=Namespaced
@@ -81,7 +81,7 @@ type ServiceDiscovery struct {
 
 // +kubebuilder:object:root=true
 
-// ServiceDiscoveryList contains a list of ServiceDiscovery
+// ServiceDiscoveryList contains a list of ServiceDiscovery.
 type ServiceDiscoveryList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

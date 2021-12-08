@@ -11,6 +11,9 @@ linters-settings:
       - unnamedResult
   gocyclo:
     min-complexity: 15
+  godot:
+    exclude:
+      - ^\s*\+
   govet:
     enable:
       - fieldalignment
@@ -33,6 +36,7 @@ linters:
     - goconst
     - gocritic
     - gocyclo
+    - godot
     - gofmt
     - goimports
     - gosec

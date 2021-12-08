@@ -147,7 +147,7 @@ func Clients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, erro
 
 func ClusterNameFromContext(rawConfig *api.Config, overridesContext string) *string {
 	if overridesContext == "" {
-		// No context provided, use the current context
+		// No context provided, use the current context.
 		overridesContext = rawConfig.CurrentContext
 	}
 	configContext, ok := rawConfig.Contexts[overridesContext]
@@ -161,7 +161,7 @@ func ForCluster(kubeConfigPath, kubeContext string) (*rest.Config, error) {
 	return ClientConfig(kubeConfigPath, kubeContext).ClientConfig()
 }
 
-// ClientConfig returns a clientcmd.ClientConfig to use when communicating with K8s
+// ClientConfig returns a clientcmd.ClientConfig to use when communicating with K8s.
 func ClientConfig(kubeConfigPath, kubeContext string) clientcmd.ClientConfig {
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
 	rules.ExplicitPath = kubeConfigPath

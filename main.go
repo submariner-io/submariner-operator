@@ -26,7 +26,7 @@ import (
 	"runtime"
 	"syscall"
 
-	// TODO: in operator-sdk v1 the below utilities were moved to internal
+	// TODO: in operator-sdk v1 the below utilities were moved to internal.
 	"github.com/operator-framework/operator-lib/leader"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"

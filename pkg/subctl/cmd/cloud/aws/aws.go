@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// This package provides common functionality to run cloud prepare/cleanup on AWS
+// This package provides common functionality to run cloud prepare/cleanup on AWS.
 package aws
 
 import (
@@ -54,7 +54,7 @@ var (
 	ocpMetadataFile string
 )
 
-// AddAWSFlags adds basic flags needed by AWS
+// AddAWSFlags adds basic flags needed by AWS.
 func AddAWSFlags(command *cobra.Command) {
 	command.Flags().StringVar(&infraID, infraIDFlag, "", "AWS infra ID")
 	command.Flags().StringVar(&region, regionFlag, "", "AWS region")
