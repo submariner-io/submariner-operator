@@ -23,6 +23,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	autil "github.com/submariner-io/admiral/pkg/util"
@@ -49,6 +51,7 @@ var (
 		Run:     exportService,
 	}
 	serviceNamespace string
+	rawWeightsString string
 )
 
 func init() {
@@ -60,6 +63,7 @@ func init() {
 
 func addServiceExportFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&serviceNamespace, "namespace", "n", "", "namespace of the service to be exported")
+	cmd.Flags().StringVarP(&rawWeightsString, "clustersWeight", "cw", "", "weights for each source cluster, supports integr weights only. Formatted as <cluster:weight,cluster:weight> for example cluster1:10,cluster2:90")
 }
 
 func exportService(cmd *cobra.Command, args []string) {
@@ -90,10 +94,14 @@ func exportService(cmd *cobra.Command, args []string) {
 	_, err = clientSet.CoreV1().Services(serviceNamespace).Get(context.TODO(), svcName, metav1.GetOptions{})
 	utils.ExitOnError(fmt.Sprintf("Unable to find the Service %q in namespace %q", svcName, serviceNamespace), err)
 
+	annotations, err := weightAnnotationsFrom(rawWeightsString)
+	utils.ExitOnError(fmt.Sprintf("weights format is melformed %q", rawWeightsString), err)
+
 	mcsServiceExport := &mcsv1a1.ServiceExport{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      svcName,
-			Namespace: serviceNamespace,
+			Name:        svcName,
+			Namespace:   serviceNamespace,
+			Annotations: annotations,
 		},
 	}
 	resourceServiceExport, gvr, err := autil.ToUnstructuredResource(mcsServiceExport, restMapper)
@@ -113,4 +121,29 @@ func validateArguments(args []string) error {
 		return errors.New("name of the Service to be exported must be specified")
 	}
 	return nil
+}
+
+func weightAnnotationsFrom(rawWeights string) (map[string]string, error) {
+	weightClusterTuples := strings.Split(rawWeights, ",")
+	annotations := make(map[string]string, len(weightClusterTuples))
+	var err error
+
+	for _, weightClusterString := range weightClusterTuples {
+		weightClusterTuple := strings.Split(weightClusterString, ":")
+		if len(weightClusterTuple) != 2 {
+			err = fmt.Errorf("cluster weight tuple melformed %q", weightClusterString)
+			break
+		}
+		clusterID := weightClusterTuple[0]
+		weightStr := weightClusterTuple[1]
+		// Validating integer support only
+		if _, err := strconv.ParseInt(weightStr, 0, 64); err != nil {
+			err = fmt.Errorf("Error: %v parsing the weight %q for cluster %q, it is probably not of intenger format for the tuple %q ", err, clusterID, weightStr, weightClusterString)
+			break
+		}
+
+		annotations["lighthouse-load-balancer.submariner.io/weight"+"/"+clusterID] = weightStr
+	}
+
+	return annotations, err
 }
