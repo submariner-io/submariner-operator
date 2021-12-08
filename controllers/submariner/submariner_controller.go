@@ -152,7 +152,7 @@ func (r *SubmarinerReconciler) Reconcile(ctx context.Context, request reconcile.
 		}
 	}
 
-	if _, err := r.reconcileNetworkPluginSyncerDeployment(instance, clusterNetwork, reqLogger); err != nil {
+	if err := r.reconcileNetworkPluginSyncerDeployment(instance, clusterNetwork, reqLogger); err != nil {
 		return reconcile.Result{}, err
 	}
 

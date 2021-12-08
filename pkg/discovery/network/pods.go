@@ -52,6 +52,7 @@ func findPodCommandParameter(clientSet kubernetes.Interface, labelSelector, para
 	return "", nil
 }
 
+// nolint:nilnil // Intentional as the purpose is to find.
 func findPod(clientSet kubernetes.Interface, labelSelector string) (*v1.Pod, error) {
 	pods, err := clientSet.CoreV1().Pods("").List(context.TODO(), v1meta.ListOptions{
 		LabelSelector: labelSelector,

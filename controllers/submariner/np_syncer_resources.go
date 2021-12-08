@@ -33,13 +33,15 @@ import (
 )
 
 func (r *SubmarinerReconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.Submariner,
-	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger) (*appsv1.Deployment, error) {
+	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger) error {
 	// Only OVNKubernetes needs networkplugin-syncer so far
 	if instance.Status.NetworkPlugin == constants.NetworkPluginOVNKubernetes {
-		return helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,
+		_, err := helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,
 			clusterNetwork), reqLogger, r.client, r.scheme)
+		return err
 	}
-	return nil, nil
+
+	return nil
 }
 
 func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork) *appsv1.Deployment {

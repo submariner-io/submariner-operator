@@ -36,6 +36,7 @@ var openshift4clusterNetworkGVR = schema.GroupVersionResource{
 	Resource: "networks",
 }
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, error) {
 	if dynClient == nil {
 		return nil, nil

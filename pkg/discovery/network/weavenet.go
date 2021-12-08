@@ -23,6 +23,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	weaveNetPod, err := findPod(clientSet, "name=weave-net")
 

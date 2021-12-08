@@ -56,7 +56,8 @@ func GetOverrides(imageOverrideArr []string) (map[string]string, error) {
 		}
 		return imageOverrides, nil
 	}
-	return nil, nil
+
+	return map[string]string{}, nil
 }
 
 func invalidImageName(key string) bool {

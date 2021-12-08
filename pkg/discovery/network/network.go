@@ -102,6 +102,7 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submC
 	return discoverGenericNetwork(clientSet)
 }
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	osClusterNet, err := discoverOpenShift4Network(dynClient)
 	if err != nil || osClusterNet != nil {
