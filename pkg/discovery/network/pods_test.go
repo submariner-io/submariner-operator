@@ -33,7 +33,6 @@ const (
 )
 
 var _ = Describe("findPod", func() {
-
 	var clientSet *fake.Clientset
 
 	BeforeEach(func() {
@@ -76,7 +75,6 @@ const (
 )
 
 var _ = Describe("findPodCommandParameter", func() {
-
 	var clientSet *fake.Clientset
 
 	BeforeEach(func() {
@@ -110,7 +108,6 @@ var _ = Describe("findPodCommandParameter", func() {
 			param, err := findPodCommandParameter(clientSet, componentLabel(testComponent2), testParameter1)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(param).To(Equal(testValue1))
-
 		})
 	})
 

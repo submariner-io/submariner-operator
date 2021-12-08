@@ -152,12 +152,13 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 	for i := range workerNodes.Items {
 		allNodeNames = append(allNodeNames, workerNodes.Items[i].GetName())
 	}
-	var qs = []*survey.Question{
+	qs := []*survey.Question{
 		{
 			Name: "node",
 			Prompt: &survey.Select{
 				Message: "Which node should be used as the gateway?",
-				Options: allNodeNames},
+				Options: allNodeNames,
+			},
 		},
 	}
 	answers := struct {
@@ -173,7 +174,7 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 // this function was sourced from:
 // https://github.com/kubernetes/kubernetes/blob/a3ccea9d8743f2ff82e41b6c2af6dc2c41dc7b10/test/utils/density_utils.go#L36
 func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[string]string) error {
-	var tokens = make([]string, 0, len(labelsToAdd))
+	tokens := make([]string, 0, len(labelsToAdd))
 	for k, v := range labelsToAdd {
 		tokens = append(tokens, fmt.Sprintf("%q:%q", k, v))
 	}

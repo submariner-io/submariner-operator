@@ -27,8 +27,10 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 )
 
-const ipsecPSKSecretName = "submariner-ipsec-psk"
-const ipsecSecretLength = 48
+const (
+	ipsecPSKSecretName = "submariner-ipsec-psk"
+	ipsecSecretLength  = 48
+)
 
 // generateRandomPSK returns securely generated n-byte array.
 func generateRandomPSK(n int) ([]byte, error) {

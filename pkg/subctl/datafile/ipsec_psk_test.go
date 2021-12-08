@@ -41,5 +41,4 @@ var _ = Describe("ipsec_psk handling", func() {
 			Expect(secret.Data["psk"]).To(HaveLen(ipsecSecretLength))
 		})
 	})
-
 })

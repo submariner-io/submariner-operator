@@ -113,7 +113,6 @@ The following verifications are deemed disruptive:
 				Message: fmt.Sprintf("You have specified disruptive verifications (%s). Are you sure you want to run them?",
 					strings.Join(disruptive, ",")),
 			}, &disruptiveTests)
-
 			if err != nil {
 				if isNonInteractive(err) {
 					fmt.Printf(`
@@ -267,7 +266,7 @@ const (
 )
 
 func disruptiveVerificationNames() []string {
-	var names = make([]string, 0, len(verifyE2EDisruptivePatterns))
+	names := make([]string, 0, len(verifyE2EDisruptivePatterns))
 	for n := range verifyE2EDisruptivePatterns {
 		names = append(names, n)
 	}

@@ -31,13 +31,11 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
-var (
-	openshiftSCCGVR = schema.GroupVersionResource{
-		Group:    "security.openshift.io",
-		Version:  "v1",
-		Resource: "securitycontextconstraints",
-	}
-)
+var openshiftSCCGVR = schema.GroupVersionResource{
+	Group:    "security.openshift.io",
+	Version:  "v1",
+	Resource: "securitycontextconstraints",
+}
 
 func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 	dynClient, err := dynamic.NewForConfig(restConfig)

@@ -168,7 +168,7 @@ var status = cli.NewStatus()
 
 func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, subctlData *datafile.SubctlData) {
 	// Missing information
-	var qs = []*survey.Question{}
+	qs := []*survey.Question{}
 
 	determineClusterID(config, contextName)
 
@@ -239,13 +239,15 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	utils.ExitOnError("Error retrieving broker admin connection", err)
 	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
 
-	netconfig := globalnet.Config{ClusterID: clusterID,
+	netconfig := globalnet.Config{
+		ClusterID:               clusterID,
 		GlobalnetCIDR:           globalnetCIDR,
 		ServiceCIDR:             serviceCIDR,
 		ServiceCIDRAutoDetected: serviceCIDRautoDetected,
 		ClusterCIDR:             clusterCIDR,
 		ClusterCIDRAutoDetected: clusterCIDRautoDetected,
-		GlobalnetClusterSize:    globalnetClusterSize}
+		GlobalnetClusterSize:    globalnetClusterSize,
+	}
 
 	if globalnetEnabled {
 		err = AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace, &netconfig)
@@ -402,7 +404,7 @@ func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (cidrType st
 }
 
 func askForCIDR(name string) (string, error) {
-	var qs = []*survey.Question{{
+	qs := []*survey.Question{{
 		Name:     "cidr",
 		Prompt:   &survey.Input{Message: fmt.Sprintf("What's the %s CIDR for your cluster?", name)},
 		Validate: survey.Required,

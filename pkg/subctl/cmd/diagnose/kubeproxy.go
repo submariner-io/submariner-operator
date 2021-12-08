@@ -57,7 +57,6 @@ func checkKubeProxyMode(cluster *cmd.Cluster) bool {
 		Namespace:  podNamespace,
 		Command:    kubeProxyIPVSIfaceCommand,
 	})
-
 	if err != nil {
 		status.EndWithFailure("Error spawning the network pod: %v", err)
 		return false

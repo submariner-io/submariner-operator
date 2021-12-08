@@ -35,7 +35,6 @@ var _ = Describe("discoverWeaveNetwork", func() {
 	})
 
 	When("There are weave pods but no kube api", func() {
-
 		var clusterNet *ClusterNetwork
 
 		BeforeEach(func() {
@@ -55,7 +54,6 @@ var _ = Describe("discoverWeaveNetwork", func() {
 	})
 
 	When("There are weave and kube api pods", func() {
-
 		var clusterNet *ClusterNetwork
 
 		BeforeEach(func() {

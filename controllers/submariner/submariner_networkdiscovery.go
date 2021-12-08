@@ -63,7 +63,7 @@ func (r *SubmarinerReconciler) discoverNetwork(submariner *submopv1a1.Submariner
 
 	submariner.Status.NetworkPlugin = clusterNetwork.NetworkPlugin
 
-	//TODO: globalCIDR allocation if no global CIDR is assigned and enabled.
+	// TODO: globalCIDR allocation if no global CIDR is assigned and enabled.
 	//      currently the clusterNetwork discovers any existing operator setting,
 	//      but that's not really helpful here
 	return clusterNetwork, err

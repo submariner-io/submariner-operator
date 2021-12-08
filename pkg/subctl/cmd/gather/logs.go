@@ -38,7 +38,6 @@ func gatherPodLogs(podLabelSelector string, info *Info) {
 func gatherPodLogsByContainer(podLabelSelector, container string, info *Info) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
-
 		if err != nil {
 			return err
 		}
@@ -53,7 +52,6 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info *Info) {
 		}
 		return nil
 	}()
-
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather logs for pods matching label selector %q: %s",
 			podLabelSelector, err))
@@ -118,7 +116,6 @@ func writeLogToFile(data, podName string, info *Info, fileExtension string) (str
 
 func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.PodList, error) {
 	pods, err := clientSet.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: byLabelSelector})
-
 	if err != nil {
 		return nil, errors.WithMessage(err, "error listing pods")
 	}
@@ -168,7 +165,6 @@ func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, in
 func logPodInfo(info *Info, what, podLabelSelector string, process func(info *Info, pod *corev1.Pod)) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
-
 		if err != nil {
 			return err
 		}

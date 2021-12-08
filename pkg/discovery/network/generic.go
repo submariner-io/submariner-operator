@@ -178,7 +178,6 @@ func findPodIPRangeKubeProxy(clientSet kubernetes.Interface) (string, error) {
 
 func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) {
 	nodes, err := clientSet.CoreV1().Nodes().List(context.TODO(), v1meta.ListOptions{})
-
 	if err != nil {
 		return "", errors.WithMessagef(err, "error listing nodes")
 	}

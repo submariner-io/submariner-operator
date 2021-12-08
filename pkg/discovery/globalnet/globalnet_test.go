@@ -87,7 +87,6 @@ var _ = Describe("IsOverlappingCidr", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
-
 })
 
 var _ = Describe("AllocateGlobalCIDR: Success", func() {

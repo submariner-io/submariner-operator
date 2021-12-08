@@ -53,8 +53,10 @@ var (
 	brokerNamespace             string
 )
 
-var defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
-var validComponents = []string{components.ServiceDiscovery, components.Connectivity}
+var (
+	defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
+	validComponents   = []string{components.ServiceDiscovery, components.Connectivity}
+)
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
@@ -90,7 +92,6 @@ var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "Set the broker up",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		componentSet := stringset.New(componentArr...)
 
 		if err := isValidComponents(componentSet); err != nil {
@@ -175,7 +176,6 @@ var deployBroker = &cobra.Command{
 		err = subctlData.WriteToFile(brokerDetailsFilename)
 		status.End(cli.CheckForError(err))
 		utils.ExitOnError("Error writing the broker information", err)
-
 	},
 }
 

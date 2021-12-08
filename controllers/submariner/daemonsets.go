@@ -57,8 +57,8 @@ func checkDaemonSetContainers(clnt client.Reader, ctx context.Context, daemonSet
 		return false, nil, err
 	}
 	var containerImageManifest *string = nil
-	var mismatchedContainerImages = false
-	var nonReadyContainerStates = []corev1.ContainerState{}
+	mismatchedContainerImages := false
+	nonReadyContainerStates := []corev1.ContainerState{}
 	for i := range *containerStatuses {
 		containerStatus := (*containerStatuses)[i]
 		if containerImageManifest == nil {

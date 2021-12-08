@@ -62,7 +62,6 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 			// Set the owner and controller.
 			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
-
 		if err != nil {
 			if IsImmutableError(err) {
 				reqLogger.Info("Re-creating a DaemonSet because it has immutable fields", "DaemonSet.Namespace",
@@ -122,7 +121,6 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 			// Set the owner and controller
 			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
-
 		if err != nil {
 			return err
 		}
@@ -168,7 +166,6 @@ func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLog
 			// Set the owner and controller
 			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
-
 		if err != nil {
 			return err
 		}
@@ -224,7 +221,6 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 			// Set the owner and controller
 			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
-
 		if err != nil {
 			return err
 		}

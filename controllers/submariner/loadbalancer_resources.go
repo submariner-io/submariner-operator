@@ -67,12 +67,14 @@ func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {
 				gatewayStatusLabel: string(submv1.HAStatusActive),
 			},
 			Ports: []corev1.ServicePort{
-				{Name: encapsPortName,
+				{
+					Name:       encapsPortName,
 					Port:       int32(instance.Spec.CeIPSecNATTPort),
 					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(instance.Spec.CeIPSecNATTPort)},
 					Protocol:   corev1.ProtocolUDP,
 				},
-				{Name: nattDiscoveryPortName,
+				{
+					Name:       nattDiscoveryPortName,
 					Port:       int32(nattPort),
 					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(nattPort)},
 					Protocol:   corev1.ProtocolUDP,
