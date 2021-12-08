@@ -128,6 +128,7 @@ func (r *ServiceDiscoveryReconciler) Reconcile(ctx context.Context, request reco
 			err := r.client.DeleteAllOf(ctx, deployment, opts...)
 			return reconcile.Result{}, err
 		}
+
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
@@ -190,12 +191,9 @@ func (r *ServiceDiscoveryReconciler) Reconcile(ctx context.Context, request reco
 	if errors.IsNotFound(err) {
 		// Try to update Openshift-DNS
 		return reconcile.Result{}, r.updateOpenshiftClusterDNSOperator(ctx, instance, reqLogger)
-	} else if err != nil {
-		reqLogger.Error(err, "Error updating the 'coredns' ConfigMap")
-		return reconcile.Result{}, err
 	}
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{}, err
 }
 
 func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {

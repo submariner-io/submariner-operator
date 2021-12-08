@@ -35,6 +35,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/rest"
 )
 
 type BrokerOptions struct {
@@ -63,10 +64,8 @@ func Broker(options *BrokerOptions, kubeConfig, kubeContext string) error {
 		componentSet.Add(components.Globalnet)
 	}
 
-	if valid, err := isValidGlobalnetConfig(options); !valid {
-		if err != nil {
-			return errors.Wrap(err, "invalid GlobalCIDR configuration")
-		}
+	if err := checkGlobalnetConfig(options); err != nil {
+		return errors.Wrap(err, "invalid GlobalCIDR configuration")
 	}
 
 	config, err := restconfig.ForCluster(kubeConfig, kubeContext)
@@ -74,33 +73,9 @@ func Broker(options *BrokerOptions, kubeConfig, kubeContext string) error {
 		return errors.Wrap(err, "the provided kubeconfig is invalid")
 	}
 
-	status.Start("Setting up broker RBAC")
-	err = broker.Ensure(config, options.BrokerSpec.Components, false, options.BrokerNamespace)
-	status.End(cli.CheckForError(err))
+	err = deploy(options, status, config)
 	if err != nil {
-		return errors.Wrap(err, "error setting up broker RBAC")
-	}
-
-	status.Start("Deploying the Submariner operator")
-	operatorImage, err := image.ForOperator(options.ImageVersion, options.Repository, nil)
-	if err != nil {
-		return errors.Wrap(err, "error getting Operator image")
-	}
-	err = submarinerop.Ensure(status, config, constants.OperatorNamespace, operatorImage, options.OperatorDebug)
-	status.End(cli.CheckForError(err))
-	if err != nil {
-		return errors.Wrap(err, "error deploying the operator")
-	}
-
-	status.Start("Deploying the broker")
-	err = brokercr.Ensure(config, options.BrokerNamespace, options.BrokerSpec)
-	if err == nil {
-		status.QueueSuccessMessage("The broker has been deployed")
-		status.End(cli.Success)
-	} else {
-		status.QueueFailureMessage("Broker deployment failed")
-		status.End(cli.Failure)
-		return errors.Wrap(err, "error deploying the broker")
+		return err
 	}
 
 	status.Start(fmt.Sprintf("Creating %s file", brokerDetailsFilename))
@@ -149,10 +124,43 @@ func Broker(options *BrokerOptions, kubeConfig, kubeContext string) error {
 
 	err = subctlData.WriteToFile(brokerDetailsFilename)
 	status.End(cli.CheckForError(err))
+
+	return errors.Wrap(err, "error writing the broker information")
+}
+
+func deploy(options *BrokerOptions, status *cli.Status, config *rest.Config) error {
+	status.Start("Setting up broker RBAC")
+	err := broker.Ensure(config, options.BrokerSpec.Components, false, options.BrokerNamespace)
+	status.End(cli.CheckForError(err))
 	if err != nil {
-		return errors.Wrap(err, "error writing the broker information")
+		return errors.Wrap(err, "error setting up broker RBAC")
 	}
-	return nil
+
+	status.Start("Deploying the Submariner operator")
+	operatorImage, err := image.ForOperator(options.ImageVersion, options.Repository, nil)
+	if err != nil {
+		return errors.Wrap(err, "error getting Operator image")
+	}
+
+	err = submarinerop.Ensure(status, config, constants.OperatorNamespace, operatorImage, options.OperatorDebug)
+	status.End(cli.CheckForError(err))
+	if err != nil {
+		return errors.Wrap(err, "error deploying the operator")
+	}
+
+	status.Start("Deploying the broker")
+	err = brokercr.Ensure(config, options.BrokerNamespace, options.BrokerSpec)
+	if err == nil {
+		status.QueueSuccessMessage("The broker has been deployed")
+		status.End(cli.Success)
+
+		return nil
+	}
+
+	status.QueueFailureMessage("Broker deployment failed")
+	status.End(cli.Failure)
+
+	return errors.Wrap(err, "error deploying the broker")
 }
 
 func isValidComponents(componentSet stringset.Interface) error {
@@ -171,17 +179,16 @@ func isValidComponents(componentSet stringset.Interface) error {
 	return nil
 }
 
-func isValidGlobalnetConfig(options *BrokerOptions) (bool, error) {
+func checkGlobalnetConfig(options *BrokerOptions) error {
 	var err error
 	if !options.BrokerSpec.GlobalnetEnabled {
-		return true, nil
+		return nil
 	}
 	options.BrokerSpec.DefaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(options.BrokerSpec.GlobalnetCIDRRange,
 		options.BrokerSpec.DefaultGlobalnetClusterSize)
-	if err != nil || options.BrokerSpec.DefaultGlobalnetClusterSize == 0 {
-		return false, err
+	if err != nil {
+		return err
 	}
 
-	err = globalnet.IsValidCIDR(options.BrokerSpec.GlobalnetCIDRRange)
-	return err == nil, err
+	return globalnet.IsValidCIDR(options.BrokerSpec.GlobalnetCIDRRange)
 }

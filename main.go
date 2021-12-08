@@ -163,6 +163,29 @@ func main() {
 		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int,
 			IntVal: operatorMetricsPort}},
 	}
+
+	createServiceMonitors(ctx, cfg, servicePorts, namespace)
+
+	if err = (&submariner.BrokerReconciler{
+		Client: mgr.GetClient(),
+		Config: mgr.GetConfig(),
+		Log:    logf.Log.WithName("controllers").WithName("Broker"),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		log.Error(err, "unable to create controller", "controller", "Broker")
+		os.Exit(1)
+	}
+	// +kubebuilder:scaffold:builder
+
+	// Start the Cmd
+	log.Info("Starting the Cmd.")
+	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
+		log.Error(err, "Manager exited non-zero")
+		os.Exit(1)
+	}
+}
+
+func createServiceMonitors(ctx context.Context, cfg *rest.Config, servicePorts []v1.ServicePort, namespace string) {
 	// Create Service object to expose the metrics port(s).
 	service, err := metrics.CreateMetricsService(ctx, cfg, servicePorts)
 	if err != nil {
@@ -182,23 +205,6 @@ func main() {
 		}
 	} else {
 		log.Info("Created service monitors", "service monitors", serviceMonitors)
-	}
-	if err = (&submariner.BrokerReconciler{
-		Client: mgr.GetClient(),
-		Config: mgr.GetConfig(),
-		Log:    logf.Log.WithName("controllers").WithName("Broker"),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		log.Error(err, "unable to create controller", "controller", "Broker")
-		os.Exit(1)
-	}
-	// +kubebuilder:scaffold:builder
-
-	// Start the Cmd
-	log.Info("Starting the Cmd.")
-	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		log.Error(err, "Manager exited non-zero")
-		os.Exit(1)
 	}
 }
 

@@ -79,25 +79,11 @@ func validateTunnelConfig(command *cobra.Command, args []string) {
 }
 
 func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
-	localCluster, errMsg := cmd.NewCluster(localCfg, "")
-	if localCluster == nil {
-		utils.ExitWithErrorMsg(errMsg)
-	}
-
-	if localCluster.Submariner == nil {
-		utils.ExitWithErrorMsg(cmd.SubmMissingMessage)
-	}
+	localCluster := newCluster(localCfg)
 
 	localCluster.Name = localCluster.Submariner.Spec.ClusterID
 
-	remoteCluster, errMsg := cmd.NewCluster(remoteCfg, "")
-	if remoteCluster == nil {
-		utils.ExitWithErrorMsg(errMsg)
-	}
-
-	if remoteCluster.Submariner == nil {
-		utils.ExitWithErrorMsg(cmd.SubmMissingMessage)
-	}
+	remoteCluster := newCluster(remoteCfg)
 
 	remoteCluster.Name = remoteCluster.Submariner.Spec.ClusterID
 
@@ -180,6 +166,18 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	status.EndWithSuccess("Tunnels can be established on the gateway node")
 
 	return true
+}
+
+func newCluster(cfg *rest.Config) *cmd.Cluster {
+	cluster, errMsg := cmd.NewCluster(cfg, "")
+	if cluster == nil {
+		utils.ExitWithErrorMsg(errMsg)
+	}
+
+	if cluster.Submariner == nil {
+		utils.ExitWithErrorMsg(cmd.SubmMissingMessage)
+	}
+	return cluster
 }
 
 func getTunnelPort(submariner *v1alpha1.Submariner, endpoint *subv1.Endpoint, status *cli.Status) (int32, bool) {
