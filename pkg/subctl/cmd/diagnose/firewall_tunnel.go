@@ -226,9 +226,9 @@ func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Statu
 
 				if conn.Endpoint.NATEnabled {
 					return conn.Endpoint.PublicIP
-				} else {
-					return conn.Endpoint.PrivateIP
 				}
+
+				return conn.Endpoint.PrivateIP
 			}
 		}
 	}

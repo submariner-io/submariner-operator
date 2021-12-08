@@ -115,9 +115,9 @@ func remoteIPAndNATForConnection(connection *submv1.Connection) (string, string)
 
 	if connection.Endpoint.NATEnabled {
 		return connection.Endpoint.PublicIP, "yes"
-	} else {
-		return connection.Endpoint.PrivateIP, "no"
 	}
+
+	return connection.Endpoint.PrivateIP, "no"
 }
 
 func showConnections(cluster *cmd.Cluster) bool {

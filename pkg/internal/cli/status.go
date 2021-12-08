@@ -189,7 +189,7 @@ func (s *Status) ResultFromMessages() Result {
 func CheckForError(err error) Result {
 	if err == nil {
 		return Success
-	} else {
-		return Failure
 	}
+
+	return Failure
 }

@@ -37,7 +37,7 @@ const (
 	nattDiscoveryPortName = "natt-discovery"
 )
 
-func (r *SubmarinerReconciler) reconcileLoadBalancer(
+func (r *Reconciler) reconcileLoadBalancer(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*corev1.Service, error) {
 	service, err := helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.client, r.scheme)
 	if err != nil {

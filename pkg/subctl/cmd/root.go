@@ -18,6 +18,7 @@ limitations under the License.
 
 package cmd
 
+// nolint:revive // Blank import below for 'client/auth' is intentional to init plugins.
 import (
 	"context"
 	"errors"
@@ -193,9 +194,9 @@ func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[st
 				return false, lastErr
 			}
 			return false, nil
-		} else {
-			return true, nil
 		}
+
+		return true, nil
 	})
 
 	if errors.Is(err, wait.ErrWaitTimeout) {

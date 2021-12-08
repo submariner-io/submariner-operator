@@ -230,7 +230,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 	return podTemplate
 }
 
-func (r *SubmarinerReconciler) reconcileGatewayDaemonSet(
+func (r *Reconciler) reconcileGatewayDaemonSet(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
 	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance), reqLogger, r.client, r.scheme)
 	if err != nil {
@@ -269,7 +269,7 @@ func buildGatewayStatusAndUpdateMetrics(gateways []submarinerv1.Gateway) []subma
 	return gatewayStatuses
 }
 
-func (r *SubmarinerReconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
+func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
 	namespace string) ([]submarinerv1.Gateway, error) {
 	foundGateways := &submarinerv1.GatewayList{}
 	err := r.client.List(ctx, foundGateways, client.InNamespace(namespace))

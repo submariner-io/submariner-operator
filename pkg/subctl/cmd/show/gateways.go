@@ -68,7 +68,7 @@ func getGatewaysStatus(cluster *cmd.Cluster) bool {
 		countConnected := 0
 		for i := range gateway.Status.Connections {
 			if gateway.Status.Connections[i].Status == submv1.Connected {
-				countConnected += 1
+				countConnected++
 			}
 		}
 

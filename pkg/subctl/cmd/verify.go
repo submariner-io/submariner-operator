@@ -18,6 +18,7 @@ limitations under the License.
 
 package cmd
 
+// nolint:revive // Blank imports below are intentional.
 import (
 	"context"
 	"errors"
@@ -164,7 +165,7 @@ func configureTestingFramework(args []string) error {
 	// This is shared by verify and benchmark
 	if len(args) > 0 {
 		_, err1 := os.Stat(args[0])
-		var err2 error = nil
+		var err2 error
 		if len(args) > 1 {
 			_, err2 = os.Stat(args[1])
 		}

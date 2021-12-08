@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func updateDaemonSetStatus(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,
+func updateDaemonSetStatus(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,
 	namespace string) error {
 	if daemonSet != nil {
 		if status == nil {
@@ -38,7 +38,7 @@ func updateDaemonSetStatus(clnt client.Reader, ctx context.Context, daemonSet *a
 		if status.LastResourceVersion != daemonSet.ObjectMeta.ResourceVersion {
 			// The daemonset has changed, check its containers
 			mismatchedContainerImages, nonReadyContainerStates, err :=
-				checkDaemonSetContainers(clnt, ctx, daemonSet, namespace)
+				checkDaemonSetContainers(ctx, clnt, daemonSet, namespace)
 			if err != nil {
 				return err
 			}
@@ -50,13 +50,14 @@ func updateDaemonSetStatus(clnt client.Reader, ctx context.Context, daemonSet *a
 	return nil
 }
 
-func checkDaemonSetContainers(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet,
+func checkDaemonSetContainers(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet,
 	namespace string) (bool, *[]corev1.ContainerState, error) {
-	containerStatuses, err := retrieveDaemonSetContainerStatuses(clnt, ctx, daemonSet, namespace)
+	containerStatuses, err := retrieveDaemonSetContainerStatuses(ctx, clnt, daemonSet, namespace)
 	if err != nil {
 		return false, nil, err
 	}
-	var containerImageManifest *string = nil
+
+	var containerImageManifest *string
 	mismatchedContainerImages := false
 	nonReadyContainerStates := []corev1.ContainerState{}
 	for i := range *containerStatuses {
@@ -75,7 +76,7 @@ func checkDaemonSetContainers(clnt client.Reader, ctx context.Context, daemonSet
 	return mismatchedContainerImages, &nonReadyContainerStates, nil
 }
 
-func retrieveDaemonSetContainerStatuses(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet,
+func retrieveDaemonSetContainerStatuses(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet,
 	namespace string) (*[]corev1.ContainerStatus, error) {
 	pods := &corev1.PodList{}
 	selector, err := metav1.LabelSelectorAsSelector(daemonSet.Spec.Selector)
