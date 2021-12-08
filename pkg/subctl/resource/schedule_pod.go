@@ -211,7 +211,6 @@ func (np *NetworkPod) AwaitPodCompletion() error {
 				return false, fmt.Sprintf("Pod status is %v", np.Pod.Status.Phase), nil
 			}
 		})
-
 	if err != nil {
 		return errors.Wrapf(err, errorMsg)
 	}

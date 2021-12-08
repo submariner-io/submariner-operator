@@ -99,11 +99,12 @@ var _ = Describe("Submariner controller tests", func() {
 	Context("Reconciliation", testReconciliation)
 })
 
-const testDetectedServiceCIDR = "100.94.0.0/16"
-const testDetectedClusterCIDR = "10.244.0.0/16"
-
-const testConfiguredServiceCIDR = "192.168.66.0/24"
-const testConfiguredClusterCIDR = "192.168.67.0/24"
+const (
+	testDetectedServiceCIDR   = "100.94.0.0/16"
+	testDetectedClusterCIDR   = "10.244.0.0/16"
+	testConfiguredServiceCIDR = "192.168.66.0/24"
+	testConfiguredClusterCIDR = "192.168.67.0/24"
+)
 
 func testReconciliation() {
 	var (

@@ -31,9 +31,11 @@ import (
 	"k8s.io/client-go/testing"
 )
 
-const testPodCIDR = "1.2.3.4/16"
-const testServiceCIDR = "4.5.6.7/16"
-const testServiceCIDRFromService = "7.8.9.10/16"
+const (
+	testPodCIDR                = "1.2.3.4/16"
+	testServiceCIDR            = "4.5.6.7/16"
+	testServiceCIDRFromService = "7.8.9.10/16"
+)
 
 var _ = Describe("discoverGenericNetwork", func() {
 	When("There is a kube-proxy with no expected parameters", func() {

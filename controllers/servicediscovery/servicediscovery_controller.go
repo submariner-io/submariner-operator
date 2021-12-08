@@ -81,7 +81,8 @@ func NewReconciler(mgr manager.Manager) *ServiceDiscoveryReconciler {
 		log:               ctrl.Log.WithName("controllers").WithName("ServiceDiscovery"),
 		scheme:            mgr.GetScheme(),
 		k8sClientSet:      k8sClient,
-		operatorClientSet: operatorClient}
+		operatorClientSet: operatorClient,
+	}
 }
 
 // blank assignment to verify that ServiceDiscoveryReconciler implements reconcile.Reconciler.
@@ -384,8 +385,10 @@ func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 				Name:     "udp",
 				Protocol: "UDP",
 				Port:     53,
-				TargetPort: intstr.IntOrString{Type: intstr.Int,
-					IntVal: 53},
+				TargetPort: intstr.IntOrString{
+					Type:   intstr.Int,
+					IntVal: 53,
+				},
 			}},
 			Type: corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{

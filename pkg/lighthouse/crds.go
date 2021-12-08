@@ -54,7 +54,6 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 
 	installedMCSSI, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
-
 	if err != nil {
 		return installedMCSSI, errors.Wrap(err, "error creating the MCS ServiceImport CRD")
 	}
@@ -66,7 +65,6 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 
 	installedMCSSE, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
-
 	if err != nil {
 		return installedMCSSI || installedMCSSE, errors.Wrap(err, "error creating the MCS ServiceExport CRD")
 	}

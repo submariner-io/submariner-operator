@@ -71,7 +71,6 @@ var _ = Describe("datafile", func() {
 	})
 
 	When("Getting data from cluster", func() {
-
 		var clientSet *fake.Clientset
 		BeforeEach(func() {
 			pskSecret, _ := newIPSECPSKSecret()
@@ -88,7 +87,8 @@ var _ = Describe("datafile", func() {
 			saSecret.Namespace = SubmarinerBrokerNamespace
 			saSecret.Data = map[string][]byte{
 				"ca.crt": []byte("i-am-a-cert"),
-				"token":  []byte(testToken)}
+				"token":  []byte(testToken),
+			}
 			clientSet = fake.NewSimpleClientset(pskSecret, sa, saSecret)
 		})
 

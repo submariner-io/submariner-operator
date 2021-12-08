@@ -30,13 +30,11 @@ import (
 	"k8s.io/client-go/dynamic"
 )
 
-var (
-	openshift4clusterNetworkGVR = schema.GroupVersionResource{
-		Group:    "config.openshift.io",
-		Version:  "v1",
-		Resource: "networks",
-	}
-)
+var openshift4clusterNetworkGVR = schema.GroupVersionResource{
+	Group:    "config.openshift.io",
+	Version:  "v1",
+	Resource: "networks",
+}
 
 func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, error) {
 	if dynClient == nil {

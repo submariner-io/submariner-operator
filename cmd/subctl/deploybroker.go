@@ -28,8 +28,10 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 )
 
-var deployflags deploy.BrokerOptions
-var defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
+var (
+	deployflags       deploy.BrokerOptions
+	defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
+)
 
 // deployBroker represents the deployBroker command.
 var deployBroker = &cobra.Command{

@@ -83,7 +83,6 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 		}
 		return nil
 	}()
-
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather %s: %s", ofType.Resource, err))
 	}

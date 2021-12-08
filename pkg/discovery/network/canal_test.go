@@ -39,7 +39,6 @@ var _ = Describe("discoverCanalFlannelNetwork", func() {
 	})
 
 	When("There is a kube-api pod", func() {
-
 		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			clusterNet := testDiscoverWith(
 				&canalFlannelCfgMap,
@@ -50,7 +49,6 @@ var _ = Describe("discoverCanalFlannelNetwork", func() {
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testCannalFlannelPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})
-
 	})
 })
 

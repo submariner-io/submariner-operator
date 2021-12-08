@@ -49,7 +49,6 @@ func getGatewaysStatus(cluster *cmd.Cluster) bool {
 	status.Start("Showing Gateways")
 
 	gateways, err := cluster.GetGateways()
-
 	if err != nil {
 		status.EndWithFailure("Error retrieving gateways: %v", err)
 		return false
@@ -60,7 +59,7 @@ func getGatewaysStatus(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	var gwStatus = make([]gatewayStatus, 0, len(gateways))
+	gwStatus := make([]gatewayStatus, 0, len(gateways))
 	for i := range gateways {
 		gateway := &gateways[i]
 		haStatus := gateway.Status.HAStatus

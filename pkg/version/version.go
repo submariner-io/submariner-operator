@@ -28,9 +28,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-var (
-	Version = "devel"
-)
+var Version = "devel"
 
 const (
 	minK8sMajor = 1 // We need K8s 1.17 for endpoint slices

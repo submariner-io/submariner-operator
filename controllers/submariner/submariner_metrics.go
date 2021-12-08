@@ -48,7 +48,8 @@ var (
 		},
 		[]string{
 			connectionsLocalClusterLabel,
-			connectionsLocalHostnameLabel},
+			connectionsLocalHostnameLabel,
+		},
 	)
 	connectionsGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -60,7 +61,8 @@ var (
 			connectionsLocalHostnameLabel,
 			connectionsRemoteClusterLabel,
 			connectionsRemoteHostnameLabel,
-			connectionsStatusLabel},
+			connectionsStatusLabel,
+		},
 	)
 )
 

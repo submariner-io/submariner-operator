@@ -55,7 +55,6 @@ func getConnectionsStatus(cluster *cmd.Cluster) bool {
 	status.Start("Showing Connections")
 
 	gateways, err := cluster.GetGateways()
-
 	if err != nil {
 		status.EndWithFailure("Error retrieving gateways: %v", err)
 		return false
@@ -135,14 +134,20 @@ func showConnections(cluster *cmd.Cluster) bool {
 
 var connectionPrinter = table.Printer{
 	Headers: []table.Header{
-		{Name: "GATEWAY", MaxLength: 31}, {Name: "CLUSTER", MaxLength: 23}, {Name: "REMOTE IP", MaxLength: 15},
-		{Name: "NAT", MaxLength: 3}, {Name: "CABLE DRIVER", MaxLength: 19}, {Name: "SUBNETS", MaxLength: 39},
-		{Name: "STATUS", MaxLength: 15}, {Name: "RTT avg.", MaxLength: 12},
+		{Name: "GATEWAY", MaxLength: 31},
+		{Name: "CLUSTER", MaxLength: 23},
+		{Name: "REMOTE IP", MaxLength: 15},
+		{Name: "NAT", MaxLength: 3},
+		{Name: "CABLE DRIVER", MaxLength: 19},
+		{Name: "SUBNETS", MaxLength: 39},
+		{Name: "STATUS", MaxLength: 15},
+		{Name: "RTT avg.", MaxLength: 12},
 	},
 	RowConverterFunc: func(obj interface{}) []string {
 		item := obj.(connectionStatus)
 		return []string{
 			item.gateway, item.cluster, item.remoteIP, item.usingNAT, item.cableDriver,
-			item.subnets, string(item.status), item.rtt}
+			item.subnets, string(item.status), item.rtt,
+		}
 	},
 }

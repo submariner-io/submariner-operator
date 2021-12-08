@@ -46,5 +46,7 @@ var (
 	ImagePostfix = ""
 )
 
-var ValidImageNames = []string{NetworkPluginSyncerImage, RouteAgentImage, GatewayImage, GlobalnetImage,
-	ServiceDiscoveryImage, LighthouseCoreDNSImage, OperatorImage}
+var ValidImageNames = []string{
+	NetworkPluginSyncerImage, RouteAgentImage, GatewayImage, GlobalnetImage,
+	ServiceDiscoveryImage, LighthouseCoreDNSImage, OperatorImage,
+}

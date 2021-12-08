@@ -69,8 +69,10 @@ type Config struct {
 	ServiceCIDRAutoDetected bool
 }
 
-var globalCidr = GlobalCIDR{allocatedCount: 0}
-var status = cli.NewStatus()
+var (
+	globalCidr = GlobalCIDR{allocatedCount: 0}
+	status     = cli.NewStatus()
+)
 
 func isOverlappingCIDR(cidrList []string, cidr string) (bool, error) {
 	_, newNet, err := net.ParseCIDR(cidr)
@@ -214,7 +216,7 @@ func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
 	return clusterSize, nil
 }
 
-//Refer: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+// Refer: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
 func nextPowerOf2(n uint32) uint {
 	n--
 	n |= n >> 1
@@ -318,7 +320,7 @@ func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace strin
 		return nil, nil, errors.Wrap(err, "error reading globalnet clusterInfo")
 	}
 
-	var globalNetworks = make(map[string]*GlobalNetwork)
+	globalNetworks := make(map[string]*GlobalNetwork)
 	for _, cluster := range clusterInfo {
 		globalNetwork := GlobalNetwork{
 			GlobalCIDRs: cluster.GlobalCidr,
@@ -371,7 +373,6 @@ func AssignGlobalnetIPs(globalnetInfo *GlobalnetInfo, netconfig Config) (string,
 
 func IsValidCIDR(cidr string) error {
 	ip, _, err := net.ParseCIDR(cidr)
-
 	if err != nil {
 		return err
 	}

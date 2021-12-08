@@ -33,16 +33,16 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-var supportedNetworkPlugins = []string{constants.NetworkPluginGeneric, constants.NetworkPluginCanalFlannel, constants.NetworkPluginWeaveNet,
-	constants.NetworkPluginOpenShiftSDN, constants.NetworkPluginOVNKubernetes, constants.NetworkPluginCalico}
+var supportedNetworkPlugins = []string{
+	constants.NetworkPluginGeneric, constants.NetworkPluginCanalFlannel, constants.NetworkPluginWeaveNet,
+	constants.NetworkPluginOpenShiftSDN, constants.NetworkPluginOVNKubernetes, constants.NetworkPluginCalico,
+}
 
-var (
-	calicoGVR = schema.GroupVersionResource{
-		Group:    "crd.projectcalico.org",
-		Version:  "v1",
-		Resource: "ippools",
-	}
-)
+var calicoGVR = schema.GroupVersionResource{
+	Group:    "crd.projectcalico.org",
+	Version:  "v1",
+	Resource: "ippools",
+}
 
 func init() {
 	diagnoseCmd.AddCommand(&cobra.Command{
@@ -54,6 +54,7 @@ func init() {
 		},
 	})
 }
+
 func checkCNIConfig(cluster *cmd.Cluster) bool {
 	status := cli.NewStatus()
 

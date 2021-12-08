@@ -53,8 +53,10 @@ func spawnSnifferPodOnGatewayNode(client kubernetes.Interface, namespace, podCom
 }
 
 func spawnSnifferPodOnNode(client kubernetes.Interface, nodeName, namespace, podCommand string) (*resource.NetworkPod, error) {
-	scheduling := resource.PodScheduling{ScheduleOn: resource.CustomNode, NodeName: nodeName,
-		Networking: resource.HostNetworking}
+	scheduling := resource.PodScheduling{
+		ScheduleOn: resource.CustomNode, NodeName: nodeName,
+		Networking: resource.HostNetworking,
+	}
 	return spawnPod(client, scheduling, "validate-sniffer", namespace, podCommand)
 }
 
@@ -72,7 +74,6 @@ func spawnPod(client kubernetes.Interface, scheduling resource.PodScheduling, po
 		Namespace:  namespace,
 		Command:    podCommand,
 	})
-
 	if err != nil {
 		return nil, err
 	}

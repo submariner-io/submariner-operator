@@ -32,8 +32,10 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-const deploymentCheckInterval = 5 * time.Second
-const deploymentWaitTime = 10 * time.Minute
+const (
+	deploymentCheckInterval = 5 * time.Second
+	deploymentWaitTime      = 10 * time.Minute
+)
 
 // Ensure the operator is deployed, and running.
 func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debug bool) (bool, error) {

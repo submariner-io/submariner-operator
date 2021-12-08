@@ -54,7 +54,6 @@ var _ = Describe("discoverOpenShift4Network", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
-
 })
 
 func unstructuredParse(json []byte) *unstructured.Unstructured {
