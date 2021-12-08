@@ -177,7 +177,7 @@ func getNodeConfig(info *Info) ([]nodeConfig, error) {
 			config.ExternalIPs = "<none>"
 		}
 
-		nodeConfigs = append(nodeConfigs, config)
+		nodeConfigs[i] = config
 	}
 	return nodeConfigs, nil
 }
