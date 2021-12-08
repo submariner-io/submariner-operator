@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/submariner-io/submariner-operator/internal/image"
+
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/stringset"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
@@ -115,7 +117,9 @@ var deployBroker = &cobra.Command{
 		utils.ExitOnError("Error setting up broker RBAC", err)
 
 		status.Start("Deploying the Submariner operator")
-		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage(), operatorDebug)
+		operatorImage, err := image.ForOperator(imageVersion, repository, nil)
+		utils.ExitOnError("Error overriding Operator Image", err)
+		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage, operatorDebug)
 		status.End(cli.CheckForError(err))
 		utils.ExitOnError("Error deploying the operator", err)
 

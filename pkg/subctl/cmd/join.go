@@ -25,13 +25,15 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/submariner-io/submariner-operator/internal/image"
+	"github.com/submariner-io/submariner-operator/pkg/version"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
-	cmdVersion "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/version"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -39,14 +41,12 @@ import (
 
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	"k8s.io/client-go/rest"
 
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/servicediscoverycr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
@@ -228,7 +228,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 	clientConfig, err := config.ClientConfig()
 	utils.ExitOnError("Error connecting to the target cluster", err)
 
-	_, failedRequirements, err := cmdVersion.CheckRequirements(clientConfig)
+	_, failedRequirements, err := version.CheckRequirements(clientConfig)
 	// We display failed requirements even if an error occurred
 	if len(failedRequirements) > 0 {
 		fmt.Println("The target cluster fails to meet Submariner's requirements:")
@@ -279,7 +279,9 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 
 	status.Start("Deploying the Submariner operator")
 
-	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage(), operatorDebug)
+	operatorImage, err := image.ForOperator(imageVersion, repository, imageOverrideArr)
+	utils.ExitOnError("Error overriding Operator Image", err)
+	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage, operatorDebug)
 	status.End(cli.CheckForError(err))
 	utils.ExitOnError("Error deploying the operator", err)
 
@@ -453,6 +455,9 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		customDomains = *subctlData.CustomDomains
 	}
 
+	imageOverrides, err := image.GetOverrides(imageOverrideArr)
+	utils.ExitOnError("Error overriding Operator image", err)
+
 	submarinerSpec := submariner.SubmarinerSpec{
 		Repository:               getImageRepo(),
 		Version:                  getImageVersion(),
@@ -476,7 +481,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
-		ImageOverrides:           getImageOverrides(),
+		ImageOverrides:           imageOverrides,
 		LoadBalancerEnabled:      loadBalancerEnabled,
 		ConnectionHealthCheck: &submariner.HealthCheckSpec{
 			Enabled:            healthCheckEnable,
@@ -501,13 +506,10 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 }
 
 func getImageVersion() string {
-	version := imageVersion
-
 	if imageVersion == "" {
-		version = submariner.DefaultSubmarinerOperatorVersion
+		return submariner.DefaultSubmarinerOperatorVersion
 	}
-
-	return version
+	return imageVersion
 }
 
 func getImageRepo() string {
@@ -536,6 +538,9 @@ func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.S
 		customDomains = *subctlData.CustomDomains
 	}
 
+	imageOverrides, err := image.GetOverrides(imageOverrideArr)
+	utils.ExitOnError("Error overriding Operator image", err)
+
 	serviceDiscoverySpec := submariner.ServiceDiscoverySpec{
 		Repository:               repository,
 		Version:                  imageVersion,
@@ -546,7 +551,7 @@ func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.S
 		Debug:                    submarinerDebug,
 		ClusterID:                clusterID,
 		Namespace:                SubmarinerNamespace,
-		ImageOverrides:           getImageOverrides(),
+		ImageOverrides:           imageOverrides,
 	}
 
 	if corednsCustomConfigMap != "" {
@@ -561,46 +566,6 @@ func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.S
 		serviceDiscoverySpec.CustomDomains = customDomains
 	}
 	return &serviceDiscoverySpec
-}
-
-func operatorImage() string {
-	version := imageVersion
-	repo := repository
-
-	if imageVersion == "" {
-		version = submariner.DefaultSubmarinerOperatorVersion
-	}
-
-	if repository == "" {
-		repo = submariner.DefaultRepo
-	}
-
-	return images.GetImagePath(repo, version, names.OperatorImage, names.OperatorComponent, getImageOverrides())
-}
-
-func getImageOverrides() map[string]string {
-	if len(imageOverrideArr) > 0 {
-		imageOverrides := make(map[string]string)
-		for _, s := range imageOverrideArr {
-			key := strings.Split(s, "=")[0]
-			if invalidImageName(key) {
-				utils.ExitWithErrorMsg(fmt.Sprintf("Invalid image name %s provided. Please choose from %q", key, names.ValidImageNames))
-			}
-			value := strings.Split(s, "=")[1]
-			imageOverrides[key] = value
-		}
-		return imageOverrides
-	}
-	return nil
-}
-
-func invalidImageName(key string) bool {
-	for _, name := range names.ValidImageNames {
-		if key == name {
-			return false
-		}
-	}
-	return true
 }
 
 func isValidCustomCoreDNSConfig() error {
