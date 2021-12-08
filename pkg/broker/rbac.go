@@ -48,7 +48,7 @@ func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
 	return sa
 }
 
-// Create a role to bind to Broker SA
+// Create a role to bind to Broker SA.
 func NewBrokerAdminRole() *rbacv1.Role {
 	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
@@ -84,7 +84,7 @@ func NewBrokerAdminRole() *rbacv1.Role {
 	}
 }
 
-// Create a role for each Cluster SAs to bind to
+// Create a role for each Cluster SAs to bind to.
 func NewBrokerClusterRole() *rbacv1.Role {
 	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
@@ -110,7 +110,7 @@ func NewBrokerClusterRole() *rbacv1.Role {
 	}
 }
 
-// Create a role for to bind the cluster admin (subctl) SA
+// Create a role for to bind the cluster admin (subctl) SA.
 func NewBrokerRoleBinding(serviceAccount, role, namespace string) *rbacv1.RoleBinding {
 	binding := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
@@ -134,7 +134,7 @@ func NewBrokerRoleBinding(serviceAccount, role, namespace string) *rbacv1.RoleBi
 }
 
 // MaxGeneratedNameLength is the maximum generated length for a token, excluding the random suffix
-// See k8s.io/apiserver/pkg/storage/names
+// See k8s.io/apiserver/pkg/storage/names.
 const MaxGeneratedNameLength = 63 - 5
 
 func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submarinerBrokerSA string) (*v1.Secret, error) {

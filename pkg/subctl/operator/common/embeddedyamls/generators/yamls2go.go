@@ -78,8 +78,7 @@ var files = []string{
 	"config/openshift/rbac/submariner-metrics-reader/role_binding.yaml",
 }
 
-// Reads all .yaml files in the crdDirectory
-// and encodes them as constants in yamls.go
+// Reads all .yaml files in the crdDirectory and encodes them as constants in yamls.go.
 func main() {
 	if len(os.Args) < 3 {
 		fmt.Println("yamls2go needs two arguments, the base directory containing the YAML files, and the target directory")

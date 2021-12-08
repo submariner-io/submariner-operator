@@ -35,7 +35,7 @@ import (
 const deploymentCheckInterval = 5 * time.Second
 const deploymentWaitTime = 10 * time.Minute
 
-// Ensure the operator is deployed, and running
+// Ensure the operator is deployed, and running.
 func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debug bool) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
@@ -44,7 +44,7 @@ func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debu
 
 	replicas := int32(1)
 	imagePullPolicy := v1.PullAlways
-	// If we are running with a local development image, don't try to pull from registry
+	// If we are running with a local development image, don't try to pull from registry.
 	if strings.HasSuffix(image, ":local") {
 		imagePullPolicy = v1.PullIfNotPresent
 	}

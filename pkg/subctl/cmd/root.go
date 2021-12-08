@@ -74,13 +74,13 @@ func AddKubeConfigFlag(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
 }
 
-// AddKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once
+// AddKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once.
 func AddKubeContextFlag(cmd *cobra.Command) {
 	AddKubeConfigFlag(cmd)
 	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
 }
 
-// AddKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated)
+// AddKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated).
 func AddKubeContextMultiFlag(cmd *cobra.Command, usage string) {
 	AddKubeConfigFlag(cmd)
 	if usage == "" {

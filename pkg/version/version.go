@@ -37,7 +37,7 @@ const (
 	minK8sMinor = 17
 )
 
-// PrintSubctlVersion will print the version subctl was compiled under
+// PrintSubctlVersion will print the version subctl was compiled under.
 func PrintSubctlVersion(w io.Writer) {
 	fmt.Fprintf(w, "subctl version: %s\n", Version)
 }

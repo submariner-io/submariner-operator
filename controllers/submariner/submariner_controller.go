@@ -55,7 +55,7 @@ const (
 
 var log = logf.Log.WithName("controller_submariner")
 
-// NewReconciler returns a new SubmarinerReconciler
+// NewReconciler returns a new SubmarinerReconciler.
 func NewReconciler(mgr manager.Manager) *SubmarinerReconciler {
 	reconciler := &SubmarinerReconciler{
 		client:         mgr.GetClient(),
@@ -71,10 +71,10 @@ func NewReconciler(mgr manager.Manager) *SubmarinerReconciler {
 	return reconciler
 }
 
-// blank assignment to verify that SubmarinerReconciler implements reconcile.Reconciler
+// blank assignment to verify that SubmarinerReconciler implements reconcile.Reconciler.
 var _ reconcile.Reconciler = &SubmarinerReconciler{}
 
-// SubmarinerReconciler reconciles a Submariner object
+// SubmarinerReconciler reconciles a Submariner object.
 type SubmarinerReconciler struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver

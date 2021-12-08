@@ -25,7 +25,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/version"
 )
 
-// PanicOnError will print the subctl version and then panic in case of an actual error
+// PanicOnError will print the subctl version and then panic in case of an actual error.
 func PanicOnError(err error) {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "")
@@ -35,14 +35,14 @@ func PanicOnError(err error) {
 	}
 }
 
-// ExitOnError will print your error nicely and exit in case of error
+// ExitOnError will print your error nicely and exit in case of error.
 func ExitOnError(message string, err error) {
 	if err != nil {
 		ExitWithErrorMsg(fmt.Sprintf("%s: %s", message, err))
 	}
 }
 
-// ExitWithErrorMsg will print the message and quit the program with an error code
+// ExitWithErrorMsg will print the message and quit the program with an error code.
 func ExitWithErrorMsg(message string) {
 	fmt.Fprintln(os.Stderr, message)
 	fmt.Fprintln(os.Stderr, "")
@@ -51,7 +51,7 @@ func ExitWithErrorMsg(message string) {
 	os.Exit(1)
 }
 
-// ExpectFlag exits with an error if the flag value is empty
+// ExpectFlag exits with an error if the flag value is empty.
 func ExpectFlag(flag, value string) {
 	if value == "" {
 		ExitWithErrorMsg(fmt.Sprintf("You must specify the %v flag", flag))

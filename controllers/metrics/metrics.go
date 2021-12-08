@@ -62,9 +62,9 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 	return nil
 }
 
-// newMetricsService populates a Service providing access to metrics for the given application
-// It is assumed that the application's resources are labeled with "app=" the given app name
-// The Service is named after the application name, suffixed with "-metrics"
+// newMetricsService populates a Service providing access to metrics for the given application.
+// It is assumed that the application's resources are labeled with "app=" the given app name.
+// The Service is named after the application name, suffixed with "-metrics".
 func newMetricsService(namespace, app string, port int32) *corev1.Service {
 	labels := map[string]string{
 		"app": app,

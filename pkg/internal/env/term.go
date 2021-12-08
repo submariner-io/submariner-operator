@@ -24,7 +24,7 @@ import (
 	isatty "github.com/mattn/go-isatty"
 )
 
-// IsTerminal returns true if the writer w is a terminal
+// IsTerminal returns true if the writer w is a terminal.
 func IsTerminal(w io.Writer) bool {
 	if v, ok := (w).(*os.File); ok {
 		return isatty.IsTerminal(v.Fd())
@@ -38,7 +38,7 @@ func IsSmartTerminal(w io.Writer) bool {
 	if !IsTerminal(w) {
 		return false
 	}
-	// explicitly dumb terminals are not smart
+	// explicitly dumb terminals are not smart.
 	if os.Getenv("TERM") == "dumb" {
 		return false
 	}

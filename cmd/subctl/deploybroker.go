@@ -31,7 +31,7 @@ import (
 var deployflags deploy.BrokerOptions
 var defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
 
-// deployBroker represents the deployBroker command
+// deployBroker represents the deployBroker command.
 var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "Deploys the broker",

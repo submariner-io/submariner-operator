@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// BrokerReconciler reconciles a Broker object
+// BrokerReconciler reconciles a Broker object.
 type BrokerReconciler struct {
 	Client client.Client
 	Config *rest.Config

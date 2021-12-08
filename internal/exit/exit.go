@@ -24,14 +24,14 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/version"
 )
 
-// OnError will print your error nicely and exit in case of error
+// OnError will print your error nicely and exit in case of error.
 func OnError(message string, err error) {
 	if err != nil {
 		WithErrorMsg(fmt.Sprintf("%s: %s", message, err))
 	}
 }
 
-// WithErrorMsg will print the message and quit the program with an error code
+// WithErrorMsg will print the message and quit the program with an error code.
 func WithErrorMsg(message string) {
 	fmt.Fprintln(os.Stderr, message)
 	fmt.Fprintln(os.Stderr, "")

@@ -27,14 +27,14 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// Ensure functions updates or installs the operator CRDs in the cluster
+// Ensure functions updates or installs the operator CRDs in the cluster.
 func Ensure(restConfig *rest.Config) (bool, error) {
 	crdUpdater, err := crdutils.NewFromRestConfig(restConfig)
 	if err != nil {
 		return false, err
 	}
 
-	// Attempt to update or create the CRD definitions
+	// Attempt to update or create the CRD definitions.
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
 	submarinerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,

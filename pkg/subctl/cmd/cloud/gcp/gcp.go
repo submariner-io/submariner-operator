@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// This package provides common functionality to run cloud prepare/cleanup on GCP Clusters
+// This package provides common functionality to run cloud prepare/cleanup on GCP Clusters.
 package gcp
 
 import (
@@ -57,7 +57,7 @@ var (
 	ocpMetadataFile string
 )
 
-// AddGCPFlags adds basic flags needed by GCP
+// AddGCPFlags adds basic flags needed by GCP.
 func AddGCPFlags(command *cobra.Command) {
 	command.Flags().StringVar(&infraID, infraIDFlag, "", "GCP infra ID")
 	command.Flags().StringVar(&region, regionFlag, "", "GCP region")

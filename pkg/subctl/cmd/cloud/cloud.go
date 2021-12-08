@@ -24,7 +24,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/prepare"
 )
 
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
+// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func NewCommand(origKubeConfig, origKubeContext *string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cloud",

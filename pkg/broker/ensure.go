@@ -113,7 +113,7 @@ func createBrokerClusterRoleAndDefaultSA(clientset *kubernetes.Clientset, namesp
 	return nil
 }
 
-// CreateSAForCluster creates a new SA, and binds it to the submariner cluster role
+// CreateSAForCluster creates a new SA, and binds it to the submariner cluster role.
 func CreateSAForCluster(clientset *kubernetes.Clientset, clusterID, namespace string) (*v1.Secret, error) {
 	saName := fmt.Sprintf(submarinerBrokerClusterSAFmt, clusterID)
 	_, err := CreateNewBrokerSA(clientset, saName, namespace)
@@ -134,7 +134,7 @@ func CreateSAForCluster(clientset *kubernetes.Clientset, clusterID, namespace st
 }
 
 func createBrokerAdministratorRoleAndSA(clientset *kubernetes.Clientset, namespace string) error {
-	// Create the SA we need for the managing the broker (from subctl, etc..)
+	// Create the SA we need for the managing the broker (from subctl, etc..).
 	_, err := CreateNewBrokerSA(clientset, SubmarinerBrokerAdminSA, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error creating the broker admin service account")

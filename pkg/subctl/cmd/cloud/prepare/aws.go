@@ -25,7 +25,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
+// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newAWSPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aws",
@@ -46,7 +46,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		{Port: nattPort, Protocol: "udp"},
 		{Port: natDiscoveryPort, Protocol: "udp"},
 
-		// ESP & AH protocols are used for private-ip to private-ip gateway communications
+		// ESP & AH protocols are used for private-ip to private-ip gateway communications.
 		{Port: 0, Protocol: "50"},
 		{Port: 0, Protocol: "51"},
 	}
