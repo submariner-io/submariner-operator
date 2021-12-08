@@ -50,6 +50,7 @@ linters:
     - misspell
     - nakedret
     - nilerr
+    - nilnil
     - prealloc
     - staticcheck
     - structcheck

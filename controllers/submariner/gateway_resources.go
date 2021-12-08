@@ -240,15 +240,16 @@ func (r *SubmarinerReconciler) reconcileGatewayDaemonSet(
 	return daemonSet, err
 }
 
-func buildGatewayStatusAndUpdateMetrics(gateways *[]submarinerv1.Gateway) []submarinerv1.GatewayStatus {
+func buildGatewayStatusAndUpdateMetrics(gateways []submarinerv1.Gateway) []submarinerv1.GatewayStatus {
 	gatewayStatuses := []submarinerv1.GatewayStatus{}
 
-	if gateways != nil {
-		recordGateways(len(*gateways))
+	nGateways := len(gateways)
+	if nGateways > 0 {
+		recordGateways(nGateways)
 		// Clear the connections so we don’t remember stale status information
 		recordNoConnections()
-		for i := range *gateways {
-			gateway := &(*gateways)[i]
+		for i := range gateways {
+			gateway := &gateways[i]
 			gatewayStatuses = append(gatewayStatuses, gateway.Status)
 			recordGatewayCreationTime(&gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
 
@@ -269,20 +270,22 @@ func buildGatewayStatusAndUpdateMetrics(gateways *[]submarinerv1.Gateway) []subm
 }
 
 func (r *SubmarinerReconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
-	namespace string) (*[]submarinerv1.Gateway, error) {
+	namespace string) ([]submarinerv1.Gateway, error) {
 	foundGateways := &submarinerv1.GatewayList{}
 	err := r.client.List(ctx, foundGateways, client.InNamespace(namespace))
 	if err != nil && errors.IsNotFound(err) {
-		return nil, nil
+		return []submarinerv1.Gateway{}, nil
 	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	// Ensure we’ll get updates
 	for i := range foundGateways.Items {
 		if err := controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.scheme); err != nil {
 			return nil, err
 		}
 	}
-	return &foundGateways.Items, nil
+	return foundGateways.Items, nil
 }

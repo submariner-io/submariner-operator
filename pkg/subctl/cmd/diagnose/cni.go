@@ -26,7 +26,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -85,31 +84,32 @@ func checkCNIConfig(cluster *cmd.Cluster) bool {
 	return checkCalicoIPPoolsIfCalicoCNI(cluster)
 }
 
-func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) {
+func detectCalicoConfigMap(clientSet kubernetes.Interface) (bool, error) {
 	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
 	for i := range cmList.Items {
 		if cmList.Items[i].Name == "calico-config" {
-			return &cmList.Items[i], nil
+			return true, nil
 		}
 	}
-	return nil, nil
+
+	return false, nil
 }
 
 func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 	status := cli.NewStatus()
 
-	calicoConfig, err := findCalicoConfigMap(info.KubeClient)
+	found, err := detectCalicoConfigMap(info.KubeClient)
 	if err != nil {
 		status.Start(fmt.Sprintf("Error trying to detect the Calico ConfigMap: %s", err))
 		status.End(cli.Failure)
 		return false
 	}
 
-	if calicoConfig == nil {
+	if !found {
 		return true
 	}
 

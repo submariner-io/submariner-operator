@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverCalicoNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {

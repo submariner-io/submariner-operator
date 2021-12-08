@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	clusterNetwork, err := discoverNetwork(clientSet)
 	if err != nil {
@@ -46,6 +47,7 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 	return nil, nil
 }
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	clusterNetwork := &ClusterNetwork{}
 

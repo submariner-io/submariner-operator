@@ -191,9 +191,14 @@ func main() {
 
 func createServiceMonitors(ctx context.Context, cfg *rest.Config, servicePorts []v1.ServicePort, namespace string) {
 	// Create Service object to expose the metrics port(s).
-	service, err := metrics.CreateMetricsService(ctx, cfg, servicePorts)
+	service, ok, err := metrics.CreateMetricsService(ctx, cfg, servicePorts)
 	if err != nil {
 		log.Info("Could not create metrics Service", "error", err.Error())
+		return
+	}
+
+	if !ok {
+		return
 	}
 
 	// CreateServiceMonitors will automatically create the prometheus-operator ServiceMonitor resources
