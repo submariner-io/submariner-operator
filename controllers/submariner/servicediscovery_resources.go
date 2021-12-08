@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func (r *SubmarinerReconciler) serviceDiscoveryReconciler(ctx context.Context, submariner *v1alpha1.Submariner, reqLogger logr.Logger,
+func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner *v1alpha1.Submariner, reqLogger logr.Logger,
 	isEnabled bool) error {
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if isEnabled {
@@ -68,16 +68,17 @@ func (r *SubmarinerReconciler) serviceDiscoveryReconciler(ctx context.Context, s
 				reqLogger.Info("Updated Service Discovery CR", "Namespace", sd.Namespace, "Name", sd.Name)
 			}
 			return err
-		} else {
-			sdExisting := newServiceDiscoveryCR(submariner.Namespace)
-			err := r.client.Delete(ctx, sdExisting)
-			if apierrors.IsNotFound(err) {
-				return nil
-			} else if err == nil {
-				reqLogger.Info("Deleted Service Discovery CR", "Namespace", submariner.Namespace)
-			}
-			return err
 		}
+
+		sdExisting := newServiceDiscoveryCR(submariner.Namespace)
+		err := r.client.Delete(ctx, sdExisting)
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else if err == nil {
+			reqLogger.Info("Deleted Service Discovery CR", "Namespace", submariner.Namespace)
+		}
+
+		return err
 	})
 
 	return errors.WithMessagef(err, "error reconciling the Service Discovery CR")

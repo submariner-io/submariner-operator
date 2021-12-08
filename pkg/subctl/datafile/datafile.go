@@ -134,10 +134,10 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 		}
 		subctlData.IPSecPSK = datafile.IPSecPSK
 		return subctlData, err
-	} else {
-		subctlData.IPSecPSK, err = newIPSECPSKSecret()
-		return subctlData, err
 	}
+
+	subctlData.IPSecPSK, err = newIPSECPSKSecret()
+	return subctlData, err
 }
 
 func (data *SubctlData) GetBrokerAdministratorConfig() (*rest.Config, error) {

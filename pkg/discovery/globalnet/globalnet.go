@@ -34,11 +34,11 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-type GlobalnetInfo struct {
-	GlobalnetEnabled     bool
-	GlobalnetCidrRange   string
-	GlobalnetClusterSize uint
-	GlobalCidrInfo       map[string]*GlobalNetwork
+type Info struct {
+	Enabled     bool
+	CidrRange   string
+	ClusterSize uint
+	CidrInfo    map[string]*GlobalNetwork
 }
 
 type GlobalNetwork struct {
@@ -167,14 +167,14 @@ func allocateByClusterSize(numSize uint) (string, error) {
 	return cidr, nil
 }
 
-func AllocateGlobalCIDR(globalnetInfo *GlobalnetInfo) (string, error) {
-	globalCidr = GlobalCIDR{allocatedCount: 0, cidr: globalnetInfo.GlobalnetCidrRange}
+func AllocateGlobalCIDR(globalnetInfo *Info) (string, error) {
+	globalCidr = GlobalCIDR{allocatedCount: 0, cidr: globalnetInfo.CidrRange}
 	_, network, err := net.ParseCIDR(globalCidr.cidr)
 	if err != nil {
 		return "", fmt.Errorf("invalid GlobalCIDR %s configured", globalCidr.cidr)
 	}
 	globalCidr.net = network
-	for _, globalNetwork := range globalnetInfo.GlobalCidrInfo {
+	for _, globalNetwork := range globalnetInfo.CidrInfo {
 		for _, otherCluster := range globalNetwork.GlobalCIDRs {
 			otherClusterCIDR, err := NewCIDR(otherCluster)
 			if err != nil {
@@ -184,7 +184,7 @@ func AllocateGlobalCIDR(globalnetInfo *GlobalnetInfo) (string, error) {
 			globalCidr.allocatedCount++
 		}
 	}
-	return allocateByClusterSize(globalnetInfo.GlobalnetClusterSize)
+	return allocateByClusterSize(globalnetInfo.ClusterSize)
 }
 
 func ipToUint(ip net.IP) uint {
@@ -228,10 +228,10 @@ func nextPowerOf2(n uint32) uint {
 	return uint(n)
 }
 
-func CheckOverlappingCidrs(globalnetInfo *GlobalnetInfo, netconfig Config) error {
+func CheckOverlappingCidrs(globalnetInfo *Info, netconfig Config) error {
 	var cidrlist []string
 	var cidr string
-	for k, v := range globalnetInfo.GlobalCidrInfo {
+	for k, v := range globalnetInfo.CidrInfo {
 		cidrlist = v.GlobalCIDRs
 		cidr = netconfig.GlobalnetCIDR
 		overlap, err := isOverlappingCIDR(cidrlist, cidr)
@@ -254,16 +254,16 @@ func isCIDRPreConfigured(clusterID string, globalNetworks map[string]*GlobalNetw
 	return true
 }
 
-func ValidateGlobalnetConfiguration(globalnetInfo *GlobalnetInfo, netconfig Config) (string, error) {
+func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config) (string, error) {
 	status.Start("Validating Globalnet configurations")
 	globalnetClusterSize := netconfig.GlobalnetClusterSize
 	globalnetCIDR := netconfig.GlobalnetCIDR
-	if globalnetInfo.GlobalnetEnabled && globalnetClusterSize != 0 && globalnetClusterSize != globalnetInfo.GlobalnetClusterSize {
-		clusterSize, err := GetValidClusterSize(globalnetInfo.GlobalnetCidrRange, globalnetClusterSize)
+	if globalnetInfo.Enabled && globalnetClusterSize != 0 && globalnetClusterSize != globalnetInfo.ClusterSize {
+		clusterSize, err := GetValidClusterSize(globalnetInfo.CidrRange, globalnetClusterSize)
 		if err != nil || clusterSize == 0 {
 			return "", errors.Wrap(err, "invalid globalnet-cluster-size")
 		}
-		globalnetInfo.GlobalnetClusterSize = clusterSize
+		globalnetInfo.ClusterSize = clusterSize
 	}
 
 	if globalnetCIDR != "" && globalnetClusterSize != 0 {
@@ -277,38 +277,38 @@ func ValidateGlobalnetConfiguration(globalnetInfo *GlobalnetInfo, netconfig Conf
 		}
 	}
 
-	if !globalnetInfo.GlobalnetEnabled {
+	if !globalnetInfo.Enabled {
 		if globalnetCIDR != "" {
 			status.QueueWarningMessage("Globalnet is not enabled on Broker. Ignoring specified globalnet-cidr")
 			globalnetCIDR = ""
 		} else if globalnetClusterSize != 0 {
 			status.QueueWarningMessage("Globalnet is not enabled on Broker. Ignoring specified globalnet-cluster-size")
-			globalnetInfo.GlobalnetClusterSize = 0
+			globalnetInfo.ClusterSize = 0
 		}
 	}
 	status.End(cli.Success)
 	return globalnetCIDR, nil
 }
 
-func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace string) (*GlobalnetInfo, *v1.ConfigMap, error) {
+func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace string) (*Info, *v1.ConfigMap, error) {
 	configMap, err := broker.GetGlobalnetConfigMap(k8sClientset, brokerNamespace)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	globalnetInfo := GlobalnetInfo{}
-	err = json.Unmarshal([]byte(configMap.Data[broker.GlobalnetStatusKey]), &globalnetInfo.GlobalnetEnabled)
+	globalnetInfo := Info{}
+	err = json.Unmarshal([]byte(configMap.Data[broker.GlobalnetStatusKey]), &globalnetInfo.Enabled)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error reading globalnetEnabled status")
 	}
 
-	if globalnetInfo.GlobalnetEnabled {
-		err = json.Unmarshal([]byte(configMap.Data[broker.GlobalnetClusterSize]), &globalnetInfo.GlobalnetClusterSize)
+	if globalnetInfo.Enabled {
+		err = json.Unmarshal([]byte(configMap.Data[broker.GlobalnetClusterSize]), &globalnetInfo.ClusterSize)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "error reading GlobalnetClusterSize")
 		}
 
-		err = json.Unmarshal([]byte(configMap.Data[broker.GlobalnetCidrRange]), &globalnetInfo.GlobalnetCidrRange)
+		err = json.Unmarshal([]byte(configMap.Data[broker.GlobalnetCidrRange]), &globalnetInfo.CidrRange)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "error reading GlobalnetCidrRange")
 		}
@@ -329,20 +329,20 @@ func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace strin
 		globalNetworks[cluster.ClusterID] = &globalNetwork
 	}
 
-	globalnetInfo.GlobalCidrInfo = globalNetworks
+	globalnetInfo.CidrInfo = globalNetworks
 	return &globalnetInfo, configMap, nil
 }
 
-func AssignGlobalnetIPs(globalnetInfo *GlobalnetInfo, netconfig Config) (string, error) {
+func AssignGlobalnetIPs(globalnetInfo *Info, netconfig Config) (string, error) {
 	status.Start("Assigning Globalnet IPs")
 	globalnetCIDR := netconfig.GlobalnetCIDR
 	clusterID := netconfig.ClusterID
 	var err error
 	if globalnetCIDR == "" {
 		// Globalnet enabled, GlobalCIDR not specified by the user
-		if isCIDRPreConfigured(clusterID, globalnetInfo.GlobalCidrInfo) {
+		if isCIDRPreConfigured(clusterID, globalnetInfo.CidrInfo) {
 			// globalCidr already configured on this cluster
-			globalnetCIDR = globalnetInfo.GlobalCidrInfo[clusterID].GlobalCIDRs[0]
+			globalnetCIDR = globalnetInfo.CidrInfo[clusterID].GlobalCIDRs[0]
 			status.QueueWarningMessage(fmt.Sprintf("Cluster already has GlobalCIDR allocated: %s", globalnetCIDR))
 		} else {
 			// no globalCidr configured on this cluster
@@ -354,9 +354,9 @@ func AssignGlobalnetIPs(globalnetInfo *GlobalnetInfo, netconfig Config) (string,
 		}
 	} else {
 		// Globalnet enabled, globalnetCIDR specified by user
-		if isCIDRPreConfigured(clusterID, globalnetInfo.GlobalCidrInfo) {
+		if isCIDRPreConfigured(clusterID, globalnetInfo.CidrInfo) {
 			// globalCidr pre-configured on this cluster
-			globalnetCIDR = globalnetInfo.GlobalCidrInfo[clusterID].GlobalCIDRs[0]
+			globalnetCIDR = globalnetInfo.CidrInfo[clusterID].GlobalCIDRs[0]
 			status.QueueWarningMessage(fmt.Sprintf("Pre-configured GlobalCIDR %s detected. Not changing it.", globalnetCIDR))
 		} else {
 			// globalCidr as specified by the user
@@ -406,8 +406,8 @@ func ValidateExistingGlobalNetworks(config *rest.Config, namespace string) error
 		return errors.Wrap(err, "error getting existing globalnet configmap")
 	}
 
-	if globalnetInfo != nil && globalnetInfo.GlobalnetEnabled {
-		if err = IsValidCIDR(globalnetInfo.GlobalnetCidrRange); err != nil {
+	if globalnetInfo != nil && globalnetInfo.Enabled {
+		if err = IsValidCIDR(globalnetInfo.CidrRange); err != nil {
 			return errors.Wrap(err, "invalid GlobalnetCidrRange")
 		}
 	}

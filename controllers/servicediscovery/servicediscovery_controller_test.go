@@ -153,7 +153,7 @@ func testReconciliation() {
 		fakeClient       controllerClient.Client
 		fakeK8sClient    clientset.Interface
 		serviceDiscovery *submariner_v1.ServiceDiscovery
-		controller       *ServiceDiscoveryReconciler
+		controller       *Reconciler
 		reconcileErr     error
 		reconcileResult  reconcile.Result
 	)
@@ -172,7 +172,7 @@ func testReconciliation() {
 		if fakeClient == nil {
 			fakeClient = newClient()
 		}
-		controller = &ServiceDiscoveryReconciler{
+		controller = &Reconciler{
 			client:            fakeClient,
 			scheme:            scheme.Scheme,
 			k8sClientSet:      fakeK8sClient,

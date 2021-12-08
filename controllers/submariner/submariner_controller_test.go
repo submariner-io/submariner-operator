@@ -111,7 +111,7 @@ func testReconciliation() {
 		initClientObjs  []controllerClient.Object
 		fakeClient      controllerClient.Client
 		submariner      *submariner_v1.Submariner
-		controller      *SubmarinerReconciler
+		controller      *Reconciler
 		reconcileErr    error
 		reconcileResult reconcile.Result
 		clusterNetwork  *network.ClusterNetwork
@@ -141,7 +141,7 @@ func testReconciliation() {
 			fakeClient = newClient()
 		}
 
-		controller = &SubmarinerReconciler{
+		controller = &Reconciler{
 			client:         fakeClient,
 			scheme:         scheme.Scheme,
 			clusterNetwork: clusterNetwork,
@@ -452,17 +452,17 @@ func withNetworkDiscovery(submariner *submariner_v1.Submariner, clusterNetwork *
 func getClusterCIDR(submariner *submariner_v1.Submariner, clusterNetwork *network.ClusterNetwork) string {
 	if submariner.Spec.ClusterCIDR != "" {
 		return submariner.Spec.ClusterCIDR
-	} else {
-		return clusterNetwork.PodCIDRs[0]
 	}
+
+	return clusterNetwork.PodCIDRs[0]
 }
 
 func getServiceCIDR(submariner *submariner_v1.Submariner, clusterNetwork *network.ClusterNetwork) string {
 	if submariner.Spec.ServiceCIDR != "" {
 		return submariner.Spec.ServiceCIDR
-	} else {
-		return clusterNetwork.ServiceCIDRs[0]
 	}
+
+	return clusterNetwork.ServiceCIDRs[0]
 }
 
 func getDaemonSet(ctx context.Context, name string, client controllerClient.Client) (*appsv1.DaemonSet, error) {

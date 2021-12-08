@@ -71,11 +71,11 @@ const (
 	coreDNSDefaultPort            = "53"
 )
 
-// NewReconciler returns a new ServiceDiscoveryReconciler.
-func NewReconciler(mgr manager.Manager) *ServiceDiscoveryReconciler {
+// NewReconciler returns a new Reconciler.
+func NewReconciler(mgr manager.Manager) *Reconciler {
 	k8sClient, _ := clientset.NewForConfig(mgr.GetConfig())
 	operatorClient, _ := operatorclient.NewClient(mgr.GetConfig())
-	return &ServiceDiscoveryReconciler{
+	return &Reconciler{
 		client:            mgr.GetClient(),
 		config:            mgr.GetConfig(),
 		log:               ctrl.Log.WithName("controllers").WithName("ServiceDiscovery"),
@@ -85,11 +85,11 @@ func NewReconciler(mgr manager.Manager) *ServiceDiscoveryReconciler {
 	}
 }
 
-// blank assignment to verify that ServiceDiscoveryReconciler implements reconcile.Reconciler.
-var _ reconcile.Reconciler = &ServiceDiscoveryReconciler{}
+// blank assignment to verify that Reconciler implements reconcile.Reconciler.
+var _ reconcile.Reconciler = &Reconciler{}
 
-// ServiceDiscoveryReconciler reconciles a ServiceDiscovery object.
-type ServiceDiscoveryReconciler struct {
+// Reconciler reconciles a ServiceDiscovery object.
+type Reconciler struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client            controllerClient.Client
@@ -108,7 +108,7 @@ type ServiceDiscoveryReconciler struct {
 
 // +kubebuilder:rbac:groups=submariner.io,resources=servicediscoveries,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=servicediscoveries/status,verbs=get;update;patch
-func (r *ServiceDiscoveryReconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling ServiceDiscovery")
 
@@ -398,7 +398,7 @@ func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 	}
 }
 
-func (r *ServiceDiscoveryReconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
+func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger) error {
 	var configFunc func(context.Context, *corev1.ConfigMap) (*corev1.ConfigMap, error)
 	customCoreDNSName := cr.Spec.CoreDNSCustomConfig.ConfigMapName
@@ -452,7 +452,7 @@ func (r *ServiceDiscoveryReconciler) updateDNSCustomConfigMap(ctx context.Contex
 	return retryErr
 }
 
-func (r *ServiceDiscoveryReconciler) updateDNSConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
+func (r *Reconciler) updateDNSConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger, coreDNSNamespace, configMapName string) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := r.k8sClientSet.CoreV1().ConfigMaps(coreDNSNamespace).Get(ctx, configMapName, metav1.GetOptions{})
@@ -519,7 +519,7 @@ func findCoreDNSListeningPort(coreFile string) string {
 	return coreDNSPort
 }
 
-func (r *ServiceDiscoveryReconciler) updateOpenshiftClusterDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
+func (r *Reconciler) updateOpenshiftClusterDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		dnsOperator := &operatorv1.DNS{}
@@ -529,9 +529,9 @@ func (r *ServiceDiscoveryReconciler) updateOpenshiftClusterDNSOperator(ctx conte
 				err = r.updateDNSConfigMap(ctx, instance, reqLogger, microshiftDNSNamespace, microshiftDNSConfigMap)
 				return errorsPkg.Wrapf(err, "error trying to update microshift coredns configmap %q in namespace %q",
 					microshiftDNSNamespace, microshiftDNSNamespace)
-			} else {
-				return err
 			}
+
+			return err
 		}
 
 		lighthouseDNSService := &corev1.Service{}
@@ -624,7 +624,7 @@ func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, imageName, co
 		submariner.Spec.ImageOverrides)
 }
 
-func (r *ServiceDiscoveryReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// These are required so that we can manipulate DNS ConfigMap
 	if err := operatorv1.Install(mgr.GetScheme()); err != nil {
 		return err

@@ -52,6 +52,7 @@ linters:
     - nilerr
     - nilnil
     - prealloc
+    - revive
     - staticcheck
     - structcheck
     - stylecheck
@@ -72,8 +73,9 @@ issues:
     # BrokerK8sApiServer parameter is used by other projects, like ACM,
     # so not changing it to BrokerK8sAPIServer as suggested by stylecheck
     - linters:
+        - revive
         - stylecheck
-      text: "ST1003: struct field BrokerK8sApiServer"
+      text: "struct field BrokerK8sApiServer"
     - path: .
       text: "ST1003: struct field NatEnabled"
     # Temporary, until https://github.com/submariner-io/submariner-operator/issues/1236

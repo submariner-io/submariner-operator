@@ -336,14 +336,14 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 			return errors.Wrap(err, "error validating Globalnet configuration")
 		}
 
-		if globalnetInfo.GlobalnetEnabled {
+		if globalnetInfo.Enabled {
 			netconfig.GlobalnetCIDR, err = globalnet.AssignGlobalnetIPs(globalnetInfo, *netconfig)
 			if err != nil {
 				return errors.Wrap(err, "error assigning Globalnet IPs")
 			}
 
-			if globalnetInfo.GlobalCidrInfo[clusterID] == nil ||
-				globalnetInfo.GlobalCidrInfo[clusterID].GlobalCIDRs[0] != netconfig.GlobalnetCIDR {
+			if globalnetInfo.CidrInfo[clusterID] == nil ||
+				globalnetInfo.CidrInfo[clusterID].GlobalCIDRs[0] != netconfig.GlobalnetCIDR {
 				var newClusterInfo broker.ClusterInfo
 				newClusterInfo.ClusterID = clusterID
 				newClusterInfo.GlobalCidr = []string{netconfig.GlobalnetCIDR}
@@ -417,9 +417,9 @@ func askForCIDR(name string) (string, error) {
 	err := survey.Ask(qs, &answers)
 	if err != nil {
 		return "", err
-	} else {
-		return strings.TrimSpace(answers.Cidr), nil
 	}
+
+	return strings.TrimSpace(answers.Cidr), nil
 }
 
 func isValidClusterID(clusterID string) (bool, error) {

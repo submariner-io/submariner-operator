@@ -49,9 +49,9 @@ func GetImagePath(repo, version, image, component string, imageOverrides map[str
 func GetPullPolicy(version string) v1.PullPolicy {
 	if version == "devel" || version == "local" || strings.HasPrefix(version, "release-") {
 		return v1.PullAlways
-	} else {
-		return v1.PullIfNotPresent
 	}
+
+	return v1.PullIfNotPresent
 }
 
 func ParseOperatorImage(operatorImage string) (string, string) {
