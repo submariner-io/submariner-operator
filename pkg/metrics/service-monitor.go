@@ -66,7 +66,7 @@ func CreateServiceMonitors(config *rest.Config, ns string, services []*v1.Servic
 	serviceMonitors := make([]*monitoringv1.ServiceMonitor, len(services))
 	mclient := monclientv1.NewForConfigOrDie(config)
 
-	for _, s := range services {
+	for i, s := range services {
 		if s == nil {
 			continue
 		}
@@ -74,9 +74,10 @@ func CreateServiceMonitors(config *rest.Config, ns string, services []*v1.Servic
 
 		smc, err := mclient.ServiceMonitors(ns).Create(context.TODO(), sm, metav1.CreateOptions{})
 		if err != nil {
-			return serviceMonitors, err
+			return nil, err
 		}
-		serviceMonitors = append(serviceMonitors, smc)
+
+		serviceMonitors[i] = smc
 	}
 
 	return serviceMonitors, nil
@@ -131,9 +132,10 @@ func GenerateServiceMonitor(ns string, s *v1.Service) *monitoringv1.ServiceMonit
 
 func populateEndpointsFromServicePorts(s *v1.Service) []monitoringv1.Endpoint {
 	endpoints := make([]monitoringv1.Endpoint, len(s.Spec.Ports))
-	for _, port := range s.Spec.Ports {
-		endpoints = append(endpoints, monitoringv1.Endpoint{Port: port.Name})
+	for i := range s.Spec.Ports {
+		endpoints[i] = monitoringv1.Endpoint{Port: s.Spec.Ports[i].Name}
 	}
+
 	return endpoints
 }
 
