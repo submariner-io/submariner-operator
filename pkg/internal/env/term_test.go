@@ -14,22 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package env
+package env_test
 
 import (
 	"bytes"
 	"io/ioutil"
 	"testing"
+
+	"github.com/submariner-io/submariner-operator/pkg/internal/env"
 )
 
 func TestIsTerminal(t *testing.T) {
 	// test trivial nil case
-	if IsTerminal(nil) {
+	if env.IsTerminal(nil) {
 		t.Fatalf("IsTerminal should be false for nil Writer")
 	}
 	// test something that isn't even a file
 	var buff bytes.Buffer
-	if IsTerminal(&buff) {
+	if env.IsTerminal(&buff) {
 		t.Fatalf("IsTerminal should be false for bytes.Buffer")
 	}
 	// test a file
@@ -37,7 +39,7 @@ func TestIsTerminal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create tempfile %v", err)
 	}
-	if IsTerminal(f) {
+	if env.IsTerminal(f) {
 		t.Fatalf("IsTerminal should be false for nil Writer")
 	}
 	// TODO: testing an actual PTY would be somewhat tricky to do cleanly

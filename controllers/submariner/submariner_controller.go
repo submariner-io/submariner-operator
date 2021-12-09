@@ -43,7 +43,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -55,37 +54,32 @@ const (
 
 var log = logf.Log.WithName("controller_submariner")
 
-// NewReconciler returns a new Reconciler.
-func NewReconciler(mgr manager.Manager) *Reconciler {
-	reconciler := &Reconciler{
-		client:         mgr.GetClient(),
-		config:         mgr.GetConfig(),
-		log:            ctrl.Log.WithName("controllers").WithName("Submariner"),
-		scheme:         mgr.GetScheme(),
-		clientSet:      kubernetes.NewForConfigOrDie(mgr.GetConfig()),
-		dynClient:      dynamic.NewForConfigOrDie(mgr.GetConfig()),
-		submClient:     submarinerclientset.NewForConfigOrDie(mgr.GetConfig()),
-		clusterNetwork: nil,
-	}
+type Config struct {
+	// This client is a split client that reads objects from the cache and writes to the apiserver
+	Client         client.Client
+	RestConfig     *rest.Config
+	Scheme         *runtime.Scheme
+	KubeClient     kubernetes.Interface
+	SubmClient     submarinerclientset.Interface
+	DynClient      dynamic.Interface
+	ClusterNetwork *network.ClusterNetwork
+}
 
-	return reconciler
+// Reconciler reconciles a Submariner object.
+type Reconciler struct {
+	config Config
+	log    logr.Logger
 }
 
 // blank assignment to verify that Reconciler implements reconcile.Reconciler.
 var _ reconcile.Reconciler = &Reconciler{}
 
-// Reconciler reconciles a Submariner object.
-type Reconciler struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
-	client         client.Client
-	config         *rest.Config
-	log            logr.Logger
-	scheme         *runtime.Scheme
-	clientSet      kubernetes.Interface
-	submClient     submarinerclientset.Interface
-	dynClient      dynamic.Interface
-	clusterNetwork *network.ClusterNetwork
+// NewReconciler returns a new Reconciler.
+func NewReconciler(config *Config) *Reconciler {
+	return &Reconciler{
+		config: *config,
+		log:    ctrl.Log.WithName("controllers").WithName("Submariner"),
+	}
 }
 
 // Reconcile reads that state of the cluster for a Submariner object and makes changes based on the state read
@@ -103,7 +97,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	// Fetch the Submariner instance
 	instance := &submopv1a1.Submariner{}
-	err := r.client.Get(ctx, request.NamespacedName, instance)
+	err := r.config.Client.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -175,17 +169,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
 	instance.Status.Gateways = &gatewayStatuses
 
-	err = updateDaemonSetStatus(ctx, r.client, gatewayDaemonSet, &instance.Status.GatewayDaemonSetStatus, request.Namespace)
+	err = updateDaemonSetStatus(ctx, r.config.Client, gatewayDaemonSet, &instance.Status.GatewayDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check gateway daemonset containers")
 		return reconcile.Result{}, err
 	}
-	err = updateDaemonSetStatus(ctx, r.client, routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
+	err = updateDaemonSetStatus(ctx, r.config.Client, routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check route agent daemonset containers")
 		return reconcile.Result{}, err
 	}
-	err = updateDaemonSetStatus(ctx, r.client, globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
+	err = updateDaemonSetStatus(ctx, r.config.Client, globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check gateway daemonset containers")
 		return reconcile.Result{}, err
@@ -198,7 +192,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if !reflect.DeepEqual(instance.Status, initialStatus) {
-		err := r.client.Status().Update(ctx, instance)
+		err := r.config.Client.Status().Update(ctx, instance)
 		if err != nil {
 			reqLogger.Error(err, "failed to update the Submariner status")
 			// Log the error, but indicate success, to avoid reconciliation storms

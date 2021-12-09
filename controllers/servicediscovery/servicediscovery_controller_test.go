@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package servicediscovery
+package servicediscovery_test
 
 import (
 	"context"
@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -49,8 +50,8 @@ const (
 )
 
 var _ = BeforeSuite(func() {
-	err := submariner_v1.AddToScheme(scheme.Scheme)
-	Expect(err).To(Succeed())
+	Expect(submariner_v1.AddToScheme(scheme.Scheme)).To(Succeed())
+	Expect(operatorv1.Install(scheme.Scheme)).To(Succeed())
 })
 
 var _ = Describe("", func() {
@@ -58,102 +59,13 @@ var _ = Describe("", func() {
 	klog.InitFlags(nil)
 })
 
-var _ = Describe("ServiceDiscovery controller tests", func() {
-	Context("Reconciliation", testReconciliation)
-	Context("coreDNS configmap parsing", func() {
-		When("no port is found", func() {
-			It("should return the default port", func() {
-				Expect(findCoreDNSListeningPort("")).To(Equal(coreDNSDefaultPort))
-			})
-		})
-
-		When("non-standard port is found and the coreconfig was already modified", func() {
-			It("should return the port", func() {
-				coreFileContents := `
-#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT
-clusterset.local:123 {
-    forward . 10.43.188.46
-}
-#lighthouse-end
-.:456 {
-    errors
-    health
-    kubernetes cluster.local in-addr.arpa ip6.arpa {
-        pods insecure
-        upstream
-        fallthrough in-addr.arpa ip6.arpa
-    }
-    prometheus :9153
-    forward . /etc/resolv.conf {
-        policy sequential
-    }
-    cache 30
-    reload
-}
-`
-				Expect(findCoreDNSListeningPort(coreFileContents)).To(Equal("456"))
-			})
-
-			When("non-standard port is found and Coreconfig was not modified (OCP coreconfig)", func() {
-				coreFileContents := `.:5353 {
-    bufsize 1232
-    errors
-    health {
-        lameduck 20s
-    }
-    ready
-    kubernetes cluster.local in-addr.arpa ip6.arpa {
-        pods insecure
-        upstream
-        fallthrough in-addr.arpa ip6.arpa
-    }
-    prometheus 127.0.0.1:9153
-    forward . /etc/resolv.conf {
-        policy sequential
-    }
-    cache 900 {
-        denial 9984 30
-    }
-    reload
-}`
-				Expect(findCoreDNSListeningPort(coreFileContents)).To(Equal("5353"))
-			})
-
-			When("standard port is found and Coreconfig was not modified (kind Coreconfig)", func() {
-				coreFileContents := `.:53 {
-    errors
-    health {
-       lameduck 5s
-    }
-    ready
-    kubernetes cluster1.local in-addr.arpa ip6.arpa {
-       pods insecure
-       fallthrough in-addr.arpa ip6.arpa
-       ttl 30
-    }
-    prometheus :9153
-    forward . /etc/resolv.conf {
-       max_concurrent 1000
-    }
-    cache 30
-    loop
-    reload
-    loadbalance
-}
-`
-				Expect(findCoreDNSListeningPort(coreFileContents)).To(Equal("53"))
-			})
-		})
-	})
-})
-
-func testReconciliation() {
+var _ = Describe("Reconciliation", func() {
 	var (
 		initClientObjs   []controllerClient.Object
 		fakeClient       controllerClient.Client
 		fakeK8sClient    clientset.Interface
 		serviceDiscovery *submariner_v1.ServiceDiscovery
-		controller       *Reconciler
+		controller       *servicediscovery.Reconciler
 		reconcileErr     error
 		reconcileResult  reconcile.Result
 	)
@@ -172,12 +84,13 @@ func testReconciliation() {
 		if fakeClient == nil {
 			fakeClient = newClient()
 		}
-		controller = &Reconciler{
-			client:            fakeClient,
-			scheme:            scheme.Scheme,
-			k8sClientSet:      fakeK8sClient,
-			operatorClientSet: fakeClient,
-		}
+
+		controller = servicediscovery.NewReconciler(&servicediscovery.Config{
+			Client:         fakeClient,
+			Scheme:         scheme.Scheme,
+			KubeClient:     fakeK8sClient,
+			OperatorClient: fakeClient,
+		})
 
 		reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
 			Namespace: submarinerNamespace,
@@ -185,7 +98,7 @@ func testReconciliation() {
 		}})
 	})
 
-	When("ClusterDNS operator should be updated when the lighthouseDNS service IP is updated", func() {
+	When("the lighthouse DNS service IP is updated", func() {
 		var dnsconfig *operatorv1.DNS
 		var lighthouseDNSService *corev1.Service
 		oldClusterIP := IP
@@ -197,7 +110,7 @@ func testReconciliation() {
 			fakeK8sClient = fakeKubeClient.NewSimpleClientset()
 		})
 
-		It("ClusterDNS operator  not be updated when the lighthouseDNS service IP is not updated", func() {
+		It("should update the the DNS config", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
 
@@ -210,11 +123,11 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDNSConfigUpdated(defaultOpenShiftDNSController, fakeClient).Spec).To(Equal(newDNSConfig(updatedClusterIP).Spec))
+			Expect(expectDNSConfigUpdated("default", fakeClient).Spec).To(Equal(newDNSConfig(updatedClusterIP).Spec))
 		})
 	})
 
-	When("ClusterDNS operator should not be updated when the lighthouseDNS service IP is not updated", func() {
+	When("the lighthouse DNS service IP is not updated", func() {
 		var dnsconfig *operatorv1.DNS
 		var lighthouseDNSService *corev1.Service
 		clusterIP := IP
@@ -225,7 +138,7 @@ func testReconciliation() {
 			fakeK8sClient = fakeKubeClient.NewSimpleClientset()
 		})
 
-		It("the DNS config should not be updated", func() {
+		It("should not update the the DNS config", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
 
@@ -238,11 +151,11 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDNSConfigUpdated(defaultOpenShiftDNSController, fakeClient).Spec).To(Equal(newDNSConfig(clusterIP).Spec))
+			Expect(expectDNSConfigUpdated("default", fakeClient).Spec).To(Equal(newDNSConfig(clusterIP).Spec))
 		})
 	})
 
-	When("The coreDNS configmap should be updated if the lighthouse clusterIP is not configured", func() {
+	When("the lighthouse clusterIP is not configured", func() {
 		var lighthouseDNSService *corev1.Service
 		clusterIP := IP
 		BeforeEach(func() {
@@ -252,7 +165,7 @@ func testReconciliation() {
 			fakeK8sClient = fakeKubeClient.NewSimpleClientset(configMap)
 		})
 
-		It("the coreDNS config map should be updated", func() {
+		It("should update the coreDNS config map", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
 
@@ -269,7 +182,8 @@ func testReconciliation() {
 			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + clusterIP + "\n}"))
 		})
 	})
-	When("The coreDNS configmap should be updated if the lighthouse clusterIP is already configured", func() {
+
+	When("the lighthouse clusterIP is already configured", func() {
 		var lighthouseDNSService *corev1.Service
 		clusterIP := IP
 		updatedClusterIP := "10.10.10.11"
@@ -281,7 +195,7 @@ func testReconciliation() {
 			fakeK8sClient = fakeKubeClient.NewSimpleClientset(configMap)
 		})
 
-		It("the coreDNS config map should be updated", func() {
+		It("should update the coreDNS config map", func() {
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
 
@@ -298,7 +212,7 @@ func testReconciliation() {
 			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + updatedClusterIP))
 		})
 	})
-}
+})
 
 func newServiceDiscovery() *submariner_v1.ServiceDiscovery {
 	return &submariner_v1.ServiceDiscovery{
@@ -343,8 +257,8 @@ func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
 	}`
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      coreDNSName,
-			Namespace: defaultCoreDNSNamespace,
+			Name:      "coredns",
+			Namespace: "kube-system",
 		},
 		Data: map[string]string{
 			"Corefile": corefile,
@@ -356,7 +270,7 @@ func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
 func newDNSConfig(clusterIP string) *operatorv1.DNS {
 	return &operatorv1.DNS{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: defaultOpenShiftDNSController,
+			Name: "default",
 		},
 		Spec: operatorv1.DNSSpec{
 			Servers: []operatorv1.Server{
@@ -382,7 +296,7 @@ func newDNSConfig(clusterIP string) *operatorv1.DNS {
 func newDNSService(clusterIP string) *corev1.Service {
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      lighthouseCoreDNSName,
+			Name:      "submariner-lighthouse-coredns",
 			Namespace: submarinerNamespace,
 		},
 		Spec: corev1.ServiceSpec{
@@ -404,7 +318,7 @@ func expectDNSConfigUpdated(name string, client controllerClient.Client) *operat
 }
 
 func expectCoreMapUpdated(client clientset.Interface) *corev1.ConfigMap {
-	foundCoreMap, err := client.CoreV1().ConfigMaps(defaultCoreDNSNamespace).Get(context.TODO(), coreDNSName, metav1.GetOptions{})
+	foundCoreMap, err := client.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "coredns", metav1.GetOptions{})
 	Expect(err).To(Succeed())
 	return foundCoreMap
 }

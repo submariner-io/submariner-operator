@@ -33,7 +33,7 @@ import (
 
 func (r *Reconciler) reconcileRouteagentDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error) {
-	return helpers.ReconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger, r.client, r.scheme)
+	return helpers.ReconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger, r.config.Client, r.config.Scheme)
 }
 
 func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
