@@ -56,7 +56,7 @@ linters:
     - staticcheck
     - structcheck
     - stylecheck
-    # - testpackage
+    - testpackage
     - typecheck
     - unconvert
     - unparam

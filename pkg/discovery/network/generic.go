@@ -91,7 +91,7 @@ func findClusterIPRange(clientSet kubernetes.Interface) (string, error) {
 }
 
 func findClusterIPRangeFromApiserver(clientSet kubernetes.Interface) (string, error) {
-	return findPodCommandParameter(clientSet, "component=kube-apiserver", "--service-cluster-ip-range")
+	return FindPodCommandParameter(clientSet, "component=kube-apiserver", "--service-cluster-ip-range")
 }
 
 func findClusterIPRangeFromServiceCreation(clientSet kubernetes.Interface) (string, error) {
@@ -171,11 +171,11 @@ func findPodIPRange(clientSet kubernetes.Interface) (string, error) {
 }
 
 func findPodIPRangeKubeController(clientSet kubernetes.Interface) (string, error) {
-	return findPodCommandParameter(clientSet, "component=kube-controller-manager", "--cluster-cidr")
+	return FindPodCommandParameter(clientSet, "component=kube-controller-manager", "--cluster-cidr")
 }
 
 func findPodIPRangeKubeProxy(clientSet kubernetes.Interface) (string, error) {
-	return findPodCommandParameter(clientSet, "component=kube-proxy", "--cluster-cidr")
+	return FindPodCommandParameter(clientSet, "component=kube-proxy", "--cluster-cidr")
 }
 
 func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) {

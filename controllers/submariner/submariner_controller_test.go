@@ -16,8 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// nolint:dupl // Some test cases are similar but not duplicated.
-package submariner
+package submariner_test
 
 import (
 	"context"
@@ -29,6 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -111,7 +111,7 @@ func testReconciliation() {
 		initClientObjs  []controllerClient.Object
 		fakeClient      controllerClient.Client
 		submariner      *submariner_v1.Submariner
-		controller      *Reconciler
+		controller      *submarinerController.Reconciler
 		reconcileErr    error
 		reconcileResult reconcile.Result
 		clusterNetwork  *network.ClusterNetwork
@@ -141,11 +141,11 @@ func testReconciliation() {
 			fakeClient = newClient()
 		}
 
-		controller = &Reconciler{
-			client:         fakeClient,
-			scheme:         scheme.Scheme,
-			clusterNetwork: clusterNetwork,
-		}
+		controller = submarinerController.NewReconciler(&submarinerController.Config{
+			Client:         fakeClient,
+			Scheme:         scheme.Scheme,
+			ClusterNetwork: clusterNetwork,
+		})
 
 		reconcileResult, reconcileErr = controller.Reconcile(ctx, reconcile.Request{NamespacedName: types.NamespacedName{
 			Namespace: submarinerNamespace,
@@ -200,11 +200,13 @@ func testReconciliation() {
 	})
 
 	When("the submariner gateway DaemonSet already exists", func() {
-		var existingDaemonSet *appsv1.DaemonSet
-
 		BeforeEach(func() {
-			existingDaemonSet = newGatewayDaemonSet(submariner)
-			initClientObjs = append(initClientObjs, existingDaemonSet)
+			initClientObjs = append(initClientObjs, &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: submariner.Namespace,
+					Name:      gatewayDaemonSetName,
+				},
+			})
 		})
 
 		It("should update it", func() {
@@ -225,8 +227,9 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(ctx, gatewayDaemonSetName, fakeClient).Spec).To(
-				Equal(newGatewayDaemonSet(withNetworkDiscovery(initial, clusterNetwork)).Spec))
+
+			updatedDaemonSet := expectDaemonSet(ctx, gatewayDaemonSetName, fakeClient)
+			Expect(envMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", initial.Spec.ServiceCIDR))
 		})
 	})
 
@@ -239,11 +242,13 @@ func testReconciliation() {
 	})
 
 	When("the submariner route-agent DaemonSet already exists", func() {
-		var existingDaemonSet *appsv1.DaemonSet
-
 		BeforeEach(func() {
-			existingDaemonSet = newRouteAgentDaemonSet(withNetworkDiscovery(submariner, clusterNetwork))
-			initClientObjs = append(initClientObjs, existingDaemonSet)
+			initClientObjs = append(initClientObjs, &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: submariner.Namespace,
+					Name:      routeAgentDaemonSetName,
+				},
+			})
 		})
 
 		It("should update it", func() {
@@ -264,17 +269,18 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(ctx, routeAgentDaemonSetName, fakeClient).Spec).To(Equal(newRouteAgentDaemonSet(
-				withNetworkDiscovery(initial, clusterNetwork)).Spec))
+
+			updatedDaemonSet := expectDaemonSet(ctx, routeAgentDaemonSetName, fakeClient)
+			Expect(envMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", initial.Spec.ClusterCIDR))
 		})
 
 		When("a selected pod has a nil Started field", func() {
 			BeforeEach(func() {
 				initClientObjs = append(initClientObjs, &corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						Namespace: existingDaemonSet.ObjectMeta.Namespace,
-						Name:      "submariner-routeagent-pod",
-						Labels:    existingDaemonSet.ObjectMeta.Labels,
+						Namespace: submariner.Namespace,
+						Name:      routeAgentDaemonSetName + "-pod",
+						Labels:    map[string]string{"app": "submariner-routeagent"},
 					},
 					Spec: corev1.PodSpec{},
 					Status: corev1.PodStatus{
@@ -288,6 +294,7 @@ func testReconciliation() {
 					},
 				})
 			})
+
 			It("should not crash", func() {
 				Expect(reconcileErr).To(Succeed())
 			})
@@ -390,10 +397,7 @@ func verifyGatewayDaemonSet(ctx context.Context, submariner *submariner_v1.Subma
 	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
 		Equal(submariner.Spec.Repository + "/submariner-gateway:" + submariner.Spec.Version))
 
-	envMap := map[string]string{}
-	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
-		envMap[envVar.Name] = envVar.Value
-	}
+	envMap := envMapFrom(daemonSet)
 
 	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_PSK", submariner.Spec.CeIPSecPSK))
 	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_IKEPORT", strconv.Itoa(submariner.Spec.CeIPSecIKEPort)))
@@ -411,6 +415,15 @@ func verifyGatewayDaemonSet(ctx context.Context, submariner *submariner_v1.Subma
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_GLOBALCIDR", submariner.Spec.GlobalCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
+}
+
+func envMapFrom(daemonSet *appsv1.DaemonSet) map[string]string {
+	envMap := map[string]string{}
+	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
+		envMap[envVar.Name] = envVar.Value
+	}
+
+	return envMap
 }
 
 func newSubmariner() *submariner_v1.Submariner {

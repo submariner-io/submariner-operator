@@ -27,5 +27,5 @@ import (
 
 func TestSubmariner(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ServiceDiscoveryTest Suite")
+	RunSpecs(t, "ServiceDiscovery Test Suite")
 }

@@ -16,33 +16,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package network
+package network_test
 
 import (
 	"fmt"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 const ovnKubeNamespace = "ovn-kubernetes"
 
-var _ = Describe("discoverOvnKubernetesNetwork", func() {
-	When("ovn-kubernetes can't be found", func() {
-		It("Should return nil cluster network", func() {
-			clusterNet, err := testOvnKubernetesDiscoveryWith()
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(clusterNet).To(BeNil())
-		})
-	})
-
+var _ = Describe("OvnKubernetes Network", func() {
 	const ovnKubeSvcTest = "ovnkube-db"
+
 	When("ovn-kubernetes database is found, but no database service", func() {
 		It("Should return error", func() {
 			clusterNet, err := testOvnKubernetesDiscoveryWith(
@@ -55,7 +47,7 @@ var _ = Describe("discoverOvnKubernetesNetwork", func() {
 	})
 
 	When("ovn-kubernetes database and service found, no configmap", func() {
-		It("Should return cluster network with empty CIDRs", func() {
+		It("Should return cluster network with default CIDRs", func() {
 			clusterNet, err := testOvnKubernetesDiscoveryWith(
 				fakePodWithNamespace(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest, []string{}, []v1.EnvVar{}),
 				fakeService(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest),
@@ -68,12 +60,12 @@ var _ = Describe("discoverOvnKubernetesNetwork", func() {
 			Expect(clusterNet.PluginSettings["OVN_NBDB"]).To(Equal(connectionStr + ":6641"))
 			Expect(clusterNet.PluginSettings["OVN_SBDB"]).To(Equal(connectionStr + ":6642"))
 			Expect(clusterNet.PodCIDRs).To(HaveLen(0))
-			Expect(clusterNet.ServiceCIDRs).To(HaveLen(0))
+			Expect(clusterNet.ServiceCIDRs).To(HaveLen(1))
 		})
 	})
 
 	When("ovn-kubernetes database, configmap and service found", func() {
-		It("Should return cluster network with empty CIDRs", func() {
+		It("Should return cluster network with correct CIDRs", func() {
 			clusterNet, err := testOvnKubernetesDiscoveryWith(
 				fakePodWithNamespace(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest, []string{}, []v1.EnvVar{}),
 				fakeService(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest),
@@ -88,9 +80,9 @@ var _ = Describe("discoverOvnKubernetesNetwork", func() {
 	})
 })
 
-func testOvnKubernetesDiscoveryWith(objects ...runtime.Object) (*ClusterNetwork, error) {
-	clientSet := fake.NewSimpleClientset(objects...)
-	return discoverOvnKubernetesNetwork(clientSet)
+func testOvnKubernetesDiscoveryWith(objects ...runtime.Object) (*network.ClusterNetwork, error) {
+	clientSet := newTestClient(objects...)
+	return network.Discover(nil, clientSet, nil, "")
 }
 
 func ovnFakeConfigMap(namespace, name string) *v1.ConfigMap {

@@ -16,18 +16,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package network
+package network_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var _ = Describe("discoverCanalFlannelNetwork", func() {
+var _ = Describe("Canal Flannel Network", func() {
 	When("There are no generic k8s pods to look at", func() {
 		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			clusterNet := testDiscoverCanalFlannelWith(&canalFlannelCfgMap)
@@ -52,16 +53,16 @@ var _ = Describe("discoverCanalFlannelNetwork", func() {
 	})
 })
 
-func testDiscoverCanalFlannelWith(objects ...runtime.Object) *ClusterNetwork {
+func testDiscoverCanalFlannelWith(objects ...runtime.Object) *network.ClusterNetwork {
 	clientSet := newTestClient(objects...)
-	clusterNet, err := discoverCanalFlannelNetwork(clientSet)
+	clusterNet, err := network.Discover(nil, clientSet, nil, "")
 	Expect(err).NotTo(HaveOccurred())
 	return clusterNet
 }
 
-func testDiscoverWith(objects ...runtime.Object) *ClusterNetwork {
+func testDiscoverWith(objects ...runtime.Object) *network.ClusterNetwork {
 	clientSet := newTestClient(objects...)
-	clusterNet, err := Discover(nil, clientSet, nil, "")
+	clusterNet, err := network.Discover(nil, clientSet, nil, "")
 	Expect(err).NotTo(HaveOccurred())
 	return clusterNet
 }

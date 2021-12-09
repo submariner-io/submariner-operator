@@ -232,11 +232,12 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 
 func (r *Reconciler) reconcileGatewayDaemonSet(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance), reqLogger, r.client, r.scheme)
+	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance), reqLogger, r.config.Client, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
-	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.client, r.config, r.scheme, reqLogger)
+	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.config.Client,
+		r.config.RestConfig, r.config.Scheme, reqLogger)
 	return daemonSet, err
 }
 
@@ -272,7 +273,7 @@ func buildGatewayStatusAndUpdateMetrics(gateways []submarinerv1.Gateway) []subma
 func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
 	namespace string) ([]submarinerv1.Gateway, error) {
 	foundGateways := &submarinerv1.GatewayList{}
-	err := r.client.List(ctx, foundGateways, client.InNamespace(namespace))
+	err := r.config.Client.List(ctx, foundGateways, client.InNamespace(namespace))
 	if err != nil && errors.IsNotFound(err) {
 		return []submarinerv1.Gateway{}, nil
 	}
@@ -283,7 +284,7 @@ func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
 
 	// Ensure we’ll get updates
 	for i := range foundGateways.Items {
-		if err := controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.scheme); err != nil {
+		if err := controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.config.Scheme); err != nil {
 			return nil, err
 		}
 	}

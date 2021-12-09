@@ -19,12 +19,10 @@ limitations under the License.
 package datafile
 
 import (
-	"context"
 	"crypto/rand"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -56,8 +54,4 @@ func newIPSECPSKSecret() (*v1.Secret, error) {
 	}
 
 	return pskSecret, nil
-}
-
-func GetIPSECPSKSecret(clientSet clientset.Interface, namespace string) (*v1.Secret, error) {
-	return clientSet.CoreV1().Secrets(namespace).Get(context.TODO(), ipsecPSKSecretName, metav1.GetOptions{})
 }

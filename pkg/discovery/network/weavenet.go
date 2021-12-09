@@ -25,7 +25,7 @@ import (
 
 // nolint:nilnil // Intentional as the purpose is to discover.
 func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	weaveNetPod, err := findPod(clientSet, "name=weave-net")
+	weaveNetPod, err := FindPod(clientSet, "name=weave-net")
 
 	if err != nil || weaveNetPod == nil {
 		return nil, err

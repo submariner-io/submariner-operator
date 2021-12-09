@@ -28,25 +28,25 @@ func (r *Reconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*netw
 	const UnknownPlugin = "unknown"
 
 	// If a previously cached discovery exists, use that
-	if r.clusterNetwork != nil && r.clusterNetwork.NetworkPlugin != UnknownPlugin {
-		return r.clusterNetwork, nil
+	if r.config.ClusterNetwork != nil && r.config.ClusterNetwork.NetworkPlugin != UnknownPlugin {
+		return r.config.ClusterNetwork, nil
 	}
 
-	clusterNetwork, err := network.Discover(r.dynClient, r.clientSet, r.submClient, submariner.Namespace)
+	clusterNetwork, err := network.Discover(r.config.DynClient, r.config.KubeClient, r.config.SubmClient, submariner.Namespace)
 	if err != nil {
 		log.Error(err, "Error trying to discover network")
 	}
 
 	if clusterNetwork != nil {
-		r.clusterNetwork = clusterNetwork
+		r.config.ClusterNetwork = clusterNetwork
 		log.Info("Cluster network discovered")
 		clusterNetwork.Log(log)
 	} else {
-		r.clusterNetwork = &network.ClusterNetwork{NetworkPlugin: UnknownPlugin}
+		r.config.ClusterNetwork = &network.ClusterNetwork{NetworkPlugin: UnknownPlugin}
 		log.Info("No cluster network discovered")
 	}
 
-	return r.clusterNetwork, err
+	return r.config.ClusterNetwork, err
 }
 
 func (r *Reconciler) discoverNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {

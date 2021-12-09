@@ -28,8 +28,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func findPodCommandParameter(clientSet kubernetes.Interface, labelSelector, parameter string) (string, error) {
-	pod, err := findPod(clientSet, labelSelector)
+func FindPodCommandParameter(clientSet kubernetes.Interface, labelSelector, parameter string) (string, error) {
+	pod, err := FindPod(clientSet, labelSelector)
 
 	if err != nil || pod == nil {
 		return "", err
@@ -53,7 +53,7 @@ func findPodCommandParameter(clientSet kubernetes.Interface, labelSelector, para
 }
 
 // nolint:nilnil // Intentional as the purpose is to find.
-func findPod(clientSet kubernetes.Interface, labelSelector string) (*v1.Pod, error) {
+func FindPod(clientSet kubernetes.Interface, labelSelector string) (*v1.Pod, error) {
 	pods, err := clientSet.CoreV1().Pods("").List(context.TODO(), v1meta.ListOptions{
 		LabelSelector: labelSelector,
 		Limit:         1,

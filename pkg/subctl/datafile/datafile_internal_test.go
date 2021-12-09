@@ -96,6 +96,8 @@ var _ = Describe("datafile", func() {
 			subCtlData, err := newFromCluster(clientSet, SubmarinerBrokerNamespace, "")
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(subCtlData.IPSecPSK.Name).To(Equal("submariner-ipsec-psk"))
+			Expect(subCtlData.IPSecPSK.Data).To(HaveKey("psk"))
+			Expect(subCtlData.IPSecPSK.Data["psk"]).To(HaveLen(ipsecSecretLength))
 			Expect(subCtlData.ClientToken.Name).To(Equal(testSASecret))
 		})
 	})

@@ -19,18 +19,36 @@ limitations under the License.
 package controllers
 
 import (
+	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 // AddToManager adds all Controllers to the Manager.
 func AddToManager(mgr manager.Manager) error {
-	if err := (submariner.NewReconciler(mgr)).SetupWithManager(mgr); err != nil {
+	kubeClient := kubernetes.NewForConfigOrDie(mgr.GetConfig())
+	operatorClient, _ := operatorclient.NewClient(mgr.GetConfig())
+
+	if err := submariner.NewReconciler(&submariner.Config{
+		Client:     mgr.GetClient(),
+		RestConfig: mgr.GetConfig(),
+		Scheme:     mgr.GetScheme(),
+		KubeClient: kubeClient,
+		SubmClient: submarinerclientset.NewForConfigOrDie(mgr.GetConfig()),
+		DynClient:  dynamic.NewForConfigOrDie(mgr.GetConfig()),
+	}).SetupWithManager(mgr); err != nil {
 		return err
 	}
-	if err := (servicediscovery.NewReconciler(mgr)).SetupWithManager(mgr); err != nil {
-		return err
-	}
-	return nil
+
+	return servicediscovery.NewReconciler(&servicediscovery.Config{
+		Client:         mgr.GetClient(),
+		RestConfig:     mgr.GetConfig(),
+		Scheme:         mgr.GetScheme(),
+		KubeClient:     kubeClient,
+		OperatorClient: operatorClient,
+	}).SetupWithManager(mgr)
 }

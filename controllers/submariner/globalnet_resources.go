@@ -31,12 +31,12 @@ import (
 
 func (r *Reconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger, r.client, r.scheme)
+	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger, r.config.Client, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
 	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), globalnetMetricsServerPort,
-		r.client, r.config, r.scheme, reqLogger)
+		r.config.Client, r.config.RestConfig, r.config.Scheme, reqLogger)
 	return daemonSet, err
 }
 
