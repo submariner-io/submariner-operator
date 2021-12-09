@@ -5,9 +5,9 @@ go 1.16
 require (
 	github.com/AlecAivazis/survey/v2 v2.2.13
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.10.1
-	github.com/aws/aws-sdk-go-v2/credentials v1.6.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.22.0
+	github.com/aws/aws-sdk-go-v2/config v1.11.0
+	github.com/aws/aws-sdk-go-v2/credentials v1.6.4
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.25.0
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/go-errors/errors v1.2.0 // indirect
@@ -36,18 +36,18 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/submariner-io/admiral v0.12.0-m1
-	github.com/submariner-io/cloud-prepare v0.12.0-m0.0.20211118031125-9aa77f607ab3
-	github.com/submariner-io/lighthouse v0.12.0-m0
+	github.com/submariner-io/cloud-prepare v0.12.0-m1
+	github.com/submariner-io/lighthouse v0.12.0-m1
 	github.com/submariner-io/shipyard v0.12.0-m1
-	github.com/submariner-io/submariner v0.12.0-m0
+	github.com/submariner-io/submariner v0.12.0-m1
 	github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.4
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
-	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
-	google.golang.org/api v0.60.0
+	google.golang.org/api v0.61.0
 	gopkg.in/ini.v1 v1.62.0
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.1
