@@ -186,6 +186,7 @@ func logLibreswanCmds(info *Info, pod *v1.Pod) {
 	}
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func execCmdInBash(info *Info, pod *v1.Pod, cmd string) (string, string, error) {
 	execOptions := resource.ExecOptionsFromPod(pod)
 	execConfig := resource.ExecConfig{

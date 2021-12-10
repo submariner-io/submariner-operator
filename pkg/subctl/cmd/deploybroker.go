@@ -202,11 +202,11 @@ func isValidGlobalnetConfig() (bool, error) {
 	}
 	defaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(globalnetCIDRRange, defaultGlobalnetClusterSize)
 	if err != nil || defaultGlobalnetClusterSize == 0 {
-		return false, err
+		return false, err // nolint:wrapcheck // No need to wrap here
 	}
 
 	err = globalnet.IsValidCIDR(globalnetCIDRRange)
-	return err == nil, err
+	return err == nil, err // nolint:wrapcheck // No need to wrap here
 }
 
 func populateBrokerSpec() submarinerv1a1.BrokerSpec {

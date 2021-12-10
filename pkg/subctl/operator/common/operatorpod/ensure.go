@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/deployments"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	appsv1 "k8s.io/api/apps/v1"
@@ -41,7 +42,7 @@ const (
 func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debug bool) (bool, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error creating client")
 	}
 
 	replicas := int32(1)
@@ -104,10 +105,10 @@ func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debu
 
 	created, err := utils.CreateOrUpdateDeployment(context.TODO(), clientSet, namespace, deployment)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error creating/updating Deployment")
 	}
 
 	err = deployments.WaitForReady(clientSet, namespace, deployment.Name, deploymentCheckInterval, deploymentWaitTime)
 
-	return created, err
+	return created, errors.Wrap(err, "error awaiting Deployment ready")
 }

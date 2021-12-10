@@ -27,6 +27,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	subctlversion "github.com/submariner-io/submariner-operator/pkg/version"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -194,7 +195,7 @@ func getFormattedIP(ipAddrList, ipaddr string) string {
 func listNodes(info *Info, listOptions metav1.ListOptions) (*v1.NodeList, error) {
 	nodes, err := info.ClientSet.CoreV1().Nodes().List(context.TODO(), listOptions)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error listing Nodes")
 	}
 	return nodes, nil
 }

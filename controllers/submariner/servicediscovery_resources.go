@@ -33,6 +33,7 @@ import (
 
 func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner *v1alpha1.Submariner, reqLogger logr.Logger,
 	isEnabled bool) error {
+	// nolint:wrapcheck // No need to wrap errors here
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if isEnabled {
 			sd := newServiceDiscoveryCR(submariner.Namespace)
@@ -62,12 +63,14 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 			if err != nil {
 				return err
 			}
+
 			if result == controllerutil.OperationResultCreated {
 				reqLogger.Info("Created Service Discovery CR", "Namespace", sd.Namespace, "Name", sd.Name)
 			} else if result == controllerutil.OperationResultUpdated {
 				reqLogger.Info("Updated Service Discovery CR", "Namespace", sd.Namespace, "Name", sd.Name)
 			}
-			return err
+
+			return nil
 		}
 
 		sdExisting := newServiceDiscoveryCR(submariner.Namespace)
@@ -81,7 +84,7 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 		return err
 	})
 
-	return errors.WithMessagef(err, "error reconciling the Service Discovery CR")
+	return errors.Wrapf(err, "error reconciling the Service Discovery CR")
 }
 
 func newServiceDiscoveryCR(namespace string) *v1alpha1.ServiceDiscovery {

@@ -40,7 +40,7 @@ var openshiftSCCGVR = schema.GroupVersionResource{
 func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 	dynClient, err := dynamic.NewForConfig(restConfig)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error creating client")
 	}
 
 	sccClient := dynClient.Resource(openshiftSCCGVR)
@@ -52,11 +52,11 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 			if apierrors.IsNotFound(err) {
 				return nil
 			}
-			return err
+			return errors.Wrap(err, "error retrieving SCC resource")
 		}
 		users, found, err := unstructured.NestedSlice(cr.Object, "users")
 		if !found || err != nil {
-			return err
+			return errors.Wrap(err, "error retrieving users field")
 		}
 
 		submarinerUser := fmt.Sprintf("system:serviceaccount:%s:%s", namespace, name)
@@ -69,7 +69,7 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 		}
 
 		if err := unstructured.SetNestedSlice(cr.Object, append(users, submarinerUser), "users"); err != nil {
-			return err
+			return errors.Wrap(err, "error setting users field")
 		}
 
 		if _, err = sccClient.Update(context.TODO(), cr, metav1.UpdateOptions{}); err != nil {
@@ -78,5 +78,6 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 		created = true
 		return nil
 	})
-	return created, retryErr
+
+	return created, retryErr // nolint:wrapcheck // No need to wrap here
 }

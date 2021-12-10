@@ -22,6 +22,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
@@ -34,13 +35,13 @@ import (
 func getSubmarinerResourceWithError(config *rest.Config) (*v1alpha1.Submariner, error) {
 	submarinerClient, err := subOperatorClientset.NewForConfig(config)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating client")
 	}
 
 	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
 		Get(context.TODO(), submarinercr.SubmarinerName, v1opts.GetOptions{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error retrieving Submariner resource")
 	}
 
 	return submariner, nil
@@ -61,11 +62,11 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 func CompareFiles(file1, file2 string) (bool, error) {
 	first, err := os.ReadFile(file1)
 	if err != nil {
-		return false, err
+		return false, errors.Wrapf(err, "error reading file %q", file1)
 	}
 	second, err := os.ReadFile(file2)
 	if err != nil {
-		return false, err
+		return false, errors.Wrapf(err, "error reading file %q", file2)
 	}
 	return bytes.Equal(first, second), nil
 }

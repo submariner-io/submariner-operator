@@ -158,11 +158,11 @@ func (s *Spinner) Write(p []byte) (n int, err error) {
 	defer s.mu.Unlock()
 	// it the spinner is not running, just write directly.
 	if !s.running {
-		return s.writer.Write(p)
+		return s.writer.Write(p) // nolint:wrapcheck // No need to wrap here
 	}
 	// otherwise: we will rewrite the line first.
 	if _, err := s.writer.Write([]byte("\r")); err != nil {
-		return 0, err
+		return 0, err // nolint:wrapcheck // No need to wrap here
 	}
-	return s.writer.Write(p)
+	return s.writer.Write(p) // nolint:wrapcheck // No need to wrap here
 }

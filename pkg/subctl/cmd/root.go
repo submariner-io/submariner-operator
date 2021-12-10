@@ -21,13 +21,14 @@ package cmd
 // nolint:revive // Blank import below for 'client/auth' is intentional to init plugins.
 import (
 	"context"
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/coreos/go-semver/semver"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
@@ -57,7 +58,7 @@ var (
 const SubmMissingMessage = "Submariner is not installed"
 
 func Execute() error {
-	return rootCmd.Execute()
+	return rootCmd.Execute() // nolint:wrapcheck // No need to wrap here
 }
 
 func init() {
@@ -105,7 +106,7 @@ func handleNodeLabels(config *rest.Config) error {
 	selector := labels.SelectorFromSet(map[string]string{submarinerGatewayLabel: trueLabel})
 	labeledNodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error listing Nodes")
 	}
 	if len(labeledNodes.Items) > 0 {
 		fmt.Printf("* There are %d labeled nodes in the cluster:\n", len(labeledNodes.Items))
@@ -132,14 +133,14 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 	workerNodes, err := clientset.CoreV1().Nodes().List(
 		context.TODO(), metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker"})
 	if err != nil {
-		return struct{ Node string }{}, err
+		return struct{ Node string }{}, errors.Wrap(err, "error listing Nodes")
 	}
 	if len(workerNodes.Items) == 0 {
 		// In some deployments (like KIND), worker nodes are not explicitly labelled. So list non-master nodes.
 		workerNodes, err = clientset.CoreV1().Nodes().List(
 			context.TODO(), metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
 		if err != nil {
-			return struct{ Node string }{}, err
+			return struct{ Node string }{}, errors.Wrap(err, "error listing Nodes")
 		}
 		if len(workerNodes.Items) == 0 {
 			return struct{ Node string }{}, nil
@@ -167,7 +168,7 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 	}{}
 	err = survey.Ask(qs, &answers)
 	if err != nil {
-		return struct{ Node string }{}, err
+		return struct{ Node string }{}, err // nolint:wrapcheck // No need to wrap here
 	}
 	return answers, nil
 }
@@ -191,7 +192,7 @@ func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[st
 		_, lastErr = c.CoreV1().Nodes().Patch(context.TODO(), nodeName, types.MergePatchType, []byte(patch), metav1.PatchOptions{})
 		if lastErr != nil {
 			if !k8serrors.IsConflict(lastErr) {
-				return false, lastErr
+				return false, lastErr // nolint:wrapcheck // No need to wrap here
 			}
 			return false, nil
 		}
@@ -199,11 +200,11 @@ func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[st
 		return true, nil
 	})
 
-	if errors.Is(err, wait.ErrWaitTimeout) {
-		return lastErr
+	if goerrors.Is(err, wait.ErrWaitTimeout) {
+		return lastErr // nolint:wrapcheck // No need to wrap here
 	}
 
-	return err
+	return err // nolint:wrapcheck // No need to wrap here
 }
 
 var nodeLabelBackoff wait.Backoff = wait.Backoff{

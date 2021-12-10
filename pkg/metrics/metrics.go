@@ -19,10 +19,11 @@ package metrics
 
 import (
 	"context"
-	"errors"
+	goerrors "errors"
 	"fmt"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	v1 "k8s.io/api/core/v1"
@@ -61,7 +62,7 @@ func CreateMetricsService(ctx context.Context, cfg *rest.Config, servicePorts []
 	}
 	s, err := initOperatorService(ctx, client, servicePorts)
 	if err != nil {
-		if errors.Is(err, k8sutil.ErrNoNamespace) || errors.Is(err, k8sutil.ErrRunLocal) {
+		if goerrors.Is(err, k8sutil.ErrNoNamespace) || goerrors.Is(err, k8sutil.ErrRunLocal) {
 			log.Info("Skipping metrics Service creation; not running in a cluster.")
 			return nil, false, nil
 		}
@@ -76,23 +77,25 @@ func CreateMetricsService(ctx context.Context, cfg *rest.Config, servicePorts []
 			return s, nil
 		})
 	if err != nil {
-		return nil, false, err
+		return nil, false, errors.Wrapf(err, "error creating or updating Service %s/%s", s.Namespace, s.Name)
 	}
 
 	s, err = clientSet.CoreV1().Services(s.Namespace).Get(ctx, s.Name, metav1.GetOptions{})
-	return s, true, err
+	return s, true, errors.Wrapf(err, "error retrieving Service %s/%s", s.Namespace, s.Name)
 }
 
 // initOperatorService returns the static service which exposes specified port(s).
 func initOperatorService(ctx context.Context, client crclient.Client, sp []v1.ServicePort) (*v1.Service, error) {
 	operatorName, err := k8sutil.GetOperatorName()
 	if err != nil {
-		return nil, err
+		return nil, err // nolint:wrapcheck // No need to wrap here
 	}
+
 	namespace, err := k8sutil.GetOperatorNamespace()
 	if err != nil {
-		return nil, err
+		return nil, err // nolint:wrapcheck // No need to wrap here
 	}
+
 	label := map[string]string{"name": operatorName}
 
 	service := &v1.Service{
@@ -120,7 +123,7 @@ func getPodOwnerRef(ctx context.Context, client crclient.Client, ns string) (*me
 	// Get current Pod the operator is running in
 	pod, err := k8sutil.GetPod(ctx, client, ns)
 	if err != nil {
-		return nil, err
+		return nil, err // nolint:wrapcheck // No need to wrap here
 	}
 	podOwnerRefs := metav1.NewControllerRef(pod, pod.GroupVersionKind())
 	// Get Owner that the Pod belongs to
@@ -150,7 +153,7 @@ func findFinalOwnerRef(ctx context.Context, client crclient.Client, ns string,
 	obj.SetKind(ownerRef.Kind)
 	err := client.Get(ctx, types.NamespacedName{Namespace: ns, Name: ownerRef.Name}, obj)
 	if err != nil {
-		return nil, false, err
+		return nil, false, errors.Wrapf(err, "error retrieving owner reference %s/%s", ns, ownerRef.Name)
 	}
 
 	newOwnerRef := metav1.GetControllerOf(obj)

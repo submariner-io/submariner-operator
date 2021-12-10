@@ -27,13 +27,13 @@ import (
 
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string) (bool, error) {
 	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
-		return created, err
+		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {
 		status.QueueSuccessMessage("Created lighthouse service account and role")
 	}
 
 	if created, err := scc.Ensure(config, operatorNamespace); err != nil {
-		return created, err
+		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {
 		status.QueueSuccessMessage("Updated the privileged SCC")
 	}

@@ -20,7 +20,7 @@ package main
 
 import (
 	"context"
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -31,6 +31,7 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers"
@@ -209,7 +210,7 @@ func createServiceMonitors(ctx context.Context, cfg *rest.Config, servicePorts [
 		log.Info("Could not create ServiceMonitor object", "error", err.Error())
 		// If this operator is deployed to a cluster without the prometheus-operator running, it will return
 		// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
-		if errors.Is(err, metrics.ErrServiceMonitorNotPresent) {
+		if goerrors.Is(err, metrics.ErrServiceMonitorNotPresent) {
 			log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
 		}
 	} else {
@@ -224,20 +225,21 @@ func serveCRMetrics(cfg *rest.Config) error {
 	// For more control override the below GVK list with your own custom logic.
 	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(api.AddToScheme)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error getting GVKs")
 	}
 	// Get the namespace the operator is currently deployed in.
 	operatorNs, err := k8sutil.GetOperatorNamespace()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error getting operator namespace")
 	}
 	// To generate metrics in other namespaces, add the values below.
 	ns := []string{operatorNs}
 	// Generate and serve custom resource specific metrics.
 	err = kubemetrics.GenerateAndServeCRMetrics(cfg, ns, filteredGVK, metricsHost, operatorMetricsPort)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error initializing metrics")
 	}
+
 	return nil
 }
 

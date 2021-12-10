@@ -63,6 +63,7 @@ linters:
     - unused
     - varcheck
     - whitespace
+    - wrapcheck
 issues:
   exclude-rules:
     # Ignore long line and variable name non-compliance warnings in auto-generated file

@@ -21,6 +21,7 @@ package crds
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
@@ -31,7 +32,7 @@ import (
 func Ensure(restConfig *rest.Config) (bool, error) {
 	crdUpdater, err := crdutils.NewFromRestConfig(restConfig)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error creating CRDUpdater")
 	}
 
 	// Attempt to update or create the CRD definitions.
@@ -40,14 +41,17 @@ func Ensure(restConfig *rest.Config) (bool, error) {
 	submarinerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
 		embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error provisioning Submariner CRD")
 	}
+
 	serviceDiscoveryCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
 		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error provisioning ServiceDiscovery CRD")
 	}
+
 	brokerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
 		embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
-	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, err
+
+	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, errors.Wrap(err, "error provisioning Broker CRD")
 }

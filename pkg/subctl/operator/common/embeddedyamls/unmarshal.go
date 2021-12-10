@@ -19,6 +19,7 @@ limitations under the License.
 package embeddedyamls
 
 import (
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 )
@@ -31,7 +32,7 @@ func GetObject(yamlStr string, obj interface{}) error {
 	doc := []byte(yamlStr)
 
 	if err := yaml.Unmarshal(doc, obj); err != nil {
-		return err
+		return errors.Wrapf(err, "error unmarshalling object")
 	}
 
 	return nil
@@ -43,8 +44,8 @@ func GetObjectName(yamlStr string) (string, error) {
 
 	err := yaml.Unmarshal(doc, &obj)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "error unmarshalling object")
 	}
 
-	return obj.Name, err
+	return obj.Name, nil
 }

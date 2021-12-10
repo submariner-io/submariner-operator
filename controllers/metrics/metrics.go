@@ -42,7 +42,7 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 	}
 	metricsService, err := helpers.ReconcileService(owner, newMetricsService(namespace, app, port), reqLogger, client, scheme)
 	if err != nil {
-		return err
+		return err // nolint:wrapcheck // No need to wrap here
 	}
 
 	if config != nil {
@@ -54,7 +54,7 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 			if errors.Is(err, metrics.ErrServiceMonitorNotPresent) {
 				reqLogger.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
 			} else if !k8serrors.IsAlreadyExists(err) {
-				return err
+				return err // nolint:wrapcheck // No need to wrap here
 			}
 		}
 	}

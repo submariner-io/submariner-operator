@@ -20,6 +20,7 @@ package submariner
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 )
@@ -46,7 +47,7 @@ func (r *Reconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*netw
 		log.Info("No cluster network discovered")
 	}
 
-	return r.config.ClusterNetwork, err
+	return r.config.ClusterNetwork, errors.Wrap(err, "error discovering cluster network")
 }
 
 func (r *Reconciler) discoverNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {

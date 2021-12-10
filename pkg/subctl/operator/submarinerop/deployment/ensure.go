@@ -26,5 +26,5 @@ import (
 
 // Ensure the operator is deployed, and running.
 func Ensure(restConfig *rest.Config, namespace, image string, debug bool) (bool, error) {
-	return operatorpod.Ensure(restConfig, namespace, names.OperatorComponent, image, debug)
+	return operatorpod.Ensure(restConfig, namespace, names.OperatorComponent, image, debug) // nolint:wrapcheck // No need to wrap here
 }

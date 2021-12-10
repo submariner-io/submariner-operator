@@ -59,6 +59,7 @@ func prepareGCP(cmd *cobra.Command, args []string) {
 		},
 	}
 
+	// nolint:wrapcheck // No need to wrap errors here.
 	err := gcp.RunOnGCP(gcpGWInstanceType, *kubeConfig, *kubeContext, dedicatedGateway,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {

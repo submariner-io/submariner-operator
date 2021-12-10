@@ -93,6 +93,7 @@ func ExecWithOptions(config ExecConfig, options *ExecOptions) (string, string, e
 	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func execute(method string, link *url.URL, config *rest.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool) error {
 	exec, err := remotecommand.NewSPDYExecutor(config, method, link)
 	if err != nil {

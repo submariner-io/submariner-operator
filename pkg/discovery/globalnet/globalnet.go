@@ -77,12 +77,13 @@ var (
 func isOverlappingCIDR(cidrList []string, cidr string) (bool, error) {
 	_, newNet, err := net.ParseCIDR(cidr)
 	if err != nil {
-		return false, err
+		return false, err // nolint:wrapcheck // No need to wrap here
 	}
+
 	for _, v := range cidrList {
 		_, baseNet, err := net.ParseCIDR(v)
 		if err != nil {
-			return false, err
+			return false, err // nolint:wrapcheck // No need to wrap here
 		}
 		if baseNet.Contains(newNet.IP) || newNet.Contains(baseNet.IP) {
 			return true, nil
@@ -204,7 +205,7 @@ func uintToIP(ip uint) net.IP {
 func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
 	_, network, err := net.ParseCIDR(cidrRange)
 	if err != nil {
-		return 0, err
+		return 0, err // nolint:wrapcheck // No need to wrap here
 	}
 	ones, totalbits := network.Mask.Size()
 	availableSize := 1 << uint(totalbits-ones)
@@ -293,7 +294,7 @@ func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config) (stri
 func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace string) (*Info, *v1.ConfigMap, error) {
 	configMap, err := broker.GetGlobalnetConfigMap(k8sClientset, brokerNamespace)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "error retrieving globalnet ConfigMap")
 	}
 
 	globalnetInfo := Info{}
@@ -374,7 +375,7 @@ func AssignGlobalnetIPs(globalnetInfo *Info, netconfig Config) (string, error) {
 func IsValidCIDR(cidr string) error {
 	ip, _, err := net.ParseCIDR(cidr)
 	if err != nil {
-		return err
+		return err // nolint:wrapcheck // No need to wrap here
 	}
 	if ip.IsUnspecified() {
 		return fmt.Errorf("%s can't be unspecified", cidr)

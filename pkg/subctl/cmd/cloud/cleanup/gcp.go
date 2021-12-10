@@ -41,6 +41,7 @@ func newGCPCleanupCommand() *cobra.Command {
 
 func cleanupGCP(cmd *cobra.Command, args []string) {
 	err := gcp.RunOnGCP("", *kubeConfig, *kubeContext, false,
+		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			err := gwDeployer.Cleanup(reporter)
 			if err != nil {

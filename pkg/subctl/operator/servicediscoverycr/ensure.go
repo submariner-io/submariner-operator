@@ -21,6 +21,7 @@ package servicediscoverycr
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
@@ -42,7 +43,7 @@ func init() {
 func Ensure(config *rest.Config, namespace string, serviceDiscoverySpec *submariner.ServiceDiscoverySpec) error {
 	client, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating client")
 	}
 
 	sd := &submariner.ServiceDiscovery{
@@ -53,6 +54,7 @@ func Ensure(config *rest.Config, namespace string, serviceDiscoverySpec *submari
 		Spec: *serviceDiscoverySpec,
 	}
 
+	// nolint:wrapcheck // No need to wrap errors here.
 	_, err = utils.CreateOrUpdate(context.TODO(), &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
 			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Get(ctx, name, options)
@@ -65,5 +67,5 @@ func Ensure(config *rest.Config, namespace string, serviceDiscoverySpec *submari
 		},
 	}, sd)
 
-	return err
+	return errors.Wrap(err, "error creating/updating ServiceDiscovery resource")
 }

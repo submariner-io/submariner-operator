@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
@@ -79,7 +80,7 @@ func diagnoseAll(cluster *cmd.Cluster) bool {
 func getNumNodesOfCluster(cluster *cmd.Cluster) (int, error) {
 	nodes, err := cluster.KubeClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return 0, err
+		return 0, errors.Wrap(err, "error listing Nodes")
 	}
 
 	return len(nodes.Items), nil

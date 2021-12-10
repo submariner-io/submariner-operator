@@ -34,6 +34,7 @@ import (
 func WaitForReady(clientSet *clientset.Clientset, namespace, deployment string, interval, timeout time.Duration) error {
 	deployments := clientSet.AppsV1().Deployments(namespace)
 
+	// nolint:wrapcheck // No need to wrap here
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {
 		dp, err := deployments.Get(context.TODO(), deployment, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {

@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
@@ -87,7 +88,7 @@ func checkCNIConfig(cluster *cmd.Cluster) bool {
 func detectCalicoConfigMap(clientSet kubernetes.Interface) (bool, error) {
 	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error listing ConfigMaps")
 	}
 
 	for i := range cmList.Items {
@@ -200,7 +201,7 @@ func checkGatewaySubnets(gateways []submv1.Gateway, ippools map[string]unstructu
 func getSpecBool(pool unstructured.Unstructured, key string) (bool, error) {
 	isDisabled, found, err := unstructured.NestedBool(pool.Object, "spec", key)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error getting spec field")
 	}
 
 	if !found {

@@ -31,6 +31,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// nolint:wrapcheck // No need to wrap errors here.
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace, operatorImage string, debug bool) error {
 	if created, err := crds.Ensure(config); err != nil {
 		return err

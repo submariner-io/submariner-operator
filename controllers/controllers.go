@@ -29,6 +29,7 @@ import (
 )
 
 // AddToManager adds all Controllers to the Manager.
+// nolint:wrapcheck // No need to wrap errors here.
 func AddToManager(mgr manager.Manager) error {
 	kubeClient := kubernetes.NewForConfigOrDie(mgr.GetConfig())
 	operatorClient, _ := operatorclient.NewClient(mgr.GetConfig())

@@ -70,7 +70,7 @@ func (data *SubctlData) IsServiceDiscoveryEnabled() bool {
 func (data *SubctlData) ToString() (string, error) {
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error marshalling data")
 	}
 	return base64.URLEncoding.EncodeToString(jsonBytes), nil
 }
@@ -79,9 +79,9 @@ func NewFromString(str string) (*SubctlData, error) {
 	data := &SubctlData{}
 	bytes, err := base64.URLEncoding.DecodeString(str)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error decoding %q", str)
 	}
-	return data, json.Unmarshal(bytes, data)
+	return data, errors.Wrap(json.Unmarshal(bytes, data), "error unmarshalling data")
 }
 
 func (data *SubctlData) WriteToFile(filename string) error {
@@ -91,7 +91,7 @@ func (data *SubctlData) WriteToFile(filename string) error {
 	}
 
 	if err := os.WriteFile(filename, []byte(dataStr), 0o600); err != nil {
-		return err
+		return errors.Wrapf(err, "error writing to file %q", filename)
 	}
 
 	return nil
@@ -100,7 +100,7 @@ func (data *SubctlData) WriteToFile(filename string) error {
 func NewFromFile(filename string) (*SubctlData, error) {
 	dat, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error reading file %q", filename)
 	}
 	return NewFromString(string(dat))
 }
@@ -108,7 +108,7 @@ func NewFromFile(filename string) (*SubctlData, error) {
 func NewFromCluster(restConfig *rest.Config, brokerNamespace, ipsecSubmFile string) (*SubctlData, error) {
 	clientSet, err := clientset.NewForConfig(restConfig)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating client")
 	}
 	subCtlData, err := newFromCluster(clientSet, brokerNamespace, ipsecSubmFile)
 	if err != nil {
@@ -124,7 +124,7 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 
 	subctlData.ClientToken, err = broker.GetClientTokenSecret(clientSet, brokerNamespace, broker.SubmarinerBrokerAdminSA)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error getting broker client secret")
 	}
 
 	if ipsecSubmFile != "" {
@@ -155,7 +155,7 @@ func (data *SubctlData) getAndCheckBrokerAdministratorConfig(private bool) (*res
 	config := data.getBrokerAdministratorConfig(private)
 	submClientset, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
-		return config, err
+		return config, errors.Wrap(err, "error creating client")
 	}
 	// This attempts to determine whether we can connect, by trying to access a Submariner object
 	// Successful connections result in either the object, or a “not found” error; anything else
