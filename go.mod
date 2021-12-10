@@ -49,31 +49,27 @@ require (
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	google.golang.org/api v0.60.0
 	gopkg.in/ini.v1 v1.62.0
-	k8s.io/api v0.21.0
-	k8s.io/apiextensions-apiserver v0.20.1
-	k8s.io/apimachinery v0.21.0
+	k8s.io/api v0.22.4
+	k8s.io/apiextensions-apiserver v0.22.4
+	k8s.io/apimachinery v0.22.4
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog v1.0.0
-	k8s.io/klog/v2 v2.8.0 // indirect
 	sigs.k8s.io/controller-runtime v0.8.3
 	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/kustomize/cmd/config v0.9.11 // indirect
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
 	sigs.k8s.io/kustomize/kyaml v0.10.19 // indirect
 	sigs.k8s.io/mcs-api v0.1.0
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.1 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
 
 // When changing pins, check the dependabot configuration too
 // in .github/dependabot.yml
 
-// Pinned to kubernetes-1.19.10
 replace (
-	k8s.io/api => k8s.io/api v0.19.10
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.10
-	k8s.io/apimachinery => k8s.io/apimachinery v0.19.10
-	k8s.io/client-go => k8s.io/client-go v0.19.10
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.19.10
+	k8s.io/api => k8s.io/api v0.22.4
+	k8s.io/apimachinery => k8s.io/apimachinery v0.22.4
+	k8s.io/client-go => k8s.io/client-go v0.22.4
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.22.4
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.7.0
 )
