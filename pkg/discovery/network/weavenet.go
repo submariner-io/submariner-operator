@@ -40,6 +40,7 @@ func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, erro
 					PodCIDRs:      []string{envVar.Value},
 					NetworkPlugin: constants.NetworkPluginWeaveNet,
 				}
+
 				break
 			}
 		}

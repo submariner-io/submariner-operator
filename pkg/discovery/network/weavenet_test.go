@@ -73,5 +73,6 @@ func testDiscoverWeaveWith(objects ...runtime.Object) *network.ClusterNetwork {
 	clientSet := newTestClient(objects...)
 	clusterNet, err := network.Discover(nil, clientSet, nil, "")
 	Expect(err).NotTo(HaveOccurred())
+
 	return clusterNet
 }

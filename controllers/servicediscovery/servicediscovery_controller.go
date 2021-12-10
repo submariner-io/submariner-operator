@@ -122,6 +122,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 				controllerClient.MatchingLabels{"app": deploymentName},
 			}
 			err := r.config.Client.DeleteAllOf(ctx, deployment, opts...)
+
 			return reconcile.Result{}, errors.Wrap(err, "error deleting resource")
 		}
 
@@ -161,6 +162,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	lighthouseCoreDNSService := &corev1.Service{}
+
 	err = r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
 		lighthouseCoreDNSService)
 	if apierrors.IsNotFound(err) {
@@ -168,14 +170,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		if _, err = helpers.ReconcileService(instance, lighthouseCoreDNSService, reqLogger,
 			r.config.Client, r.config.Scheme); err != nil {
 			log.Error(err, "Error creating the lighthouseCoreDNS service")
+
 			return reconcile.Result{}, errors.Wrap(err, "error reconciling coredns Service")
 		}
 	}
+
 	err = metrics.Setup(instance.Namespace, instance, lighthouseCoreDNSDeployment.GetLabels(), 9153, r.config.Client, r.config.RestConfig,
 		r.config.Scheme, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, errors.Wrap(err, "error setting up coredns metrics")
 	}
+
 	if instance.Spec.CoreDNSCustomConfig != nil && instance.Spec.CoreDNSCustomConfig.ConfigMapName != "" {
 		err = r.updateDNSCustomConfigMap(ctx, instance, reqLogger)
 		if err != nil {
@@ -263,6 +268,7 @@ ready
 prometheus :9153
 }`
 	expectedCorefile := ""
+
 	for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
 		expectedCorefile = fmt.Sprintf("%s%s:53 %s\n", expectedCorefile, domain, config)
 	}
@@ -284,6 +290,7 @@ func newCoreDNSCustomConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.
 	if cr.Spec.CoreDNSCustomConfig.Namespace != "" {
 		namespace = cr.Spec.CoreDNSCustomConfig.Namespace
 	}
+
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Spec.CoreDNSCustomConfig.ConfigMapName,
@@ -371,6 +378,7 @@ func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 		"app":       lighthouseCoreDNSName,
 		"component": componentName,
 	}
+
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
@@ -398,8 +406,10 @@ func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger) error {
 	var configFunc func(context.Context, *corev1.ConfigMap) (*corev1.ConfigMap, error)
+
 	customCoreDNSName := cr.Spec.CoreDNSCustomConfig.ConfigMapName
 	coreDNSNamespace := defaultCoreDNSNamespace
+
 	if cr.Spec.CoreDNSCustomConfig.Namespace != "" {
 		coreDNSNamespace = cr.Spec.CoreDNSCustomConfig.Namespace
 	}
@@ -517,6 +527,7 @@ func findCoreDNSListeningPort(coreFile string) string {
 	if len(matches) == 2 {
 		coreDNSPort = matches[1]
 	}
+
 	return coreDNSPort
 }
 
@@ -577,17 +588,22 @@ func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dns
 	updatedForwardServers := make([]operatorv1.Server, 0)
 	changed := false
 	containsLighthouse := false
-	lighthouseDomains := append([]string{"clusterset.local"}, instance.Spec.CustomDomains...)
 	existingDomains := make([]string, 0)
+
+	lighthouseDomains := append([]string{"clusterset.local"}, instance.Spec.CustomDomains...)
+
 	for _, forwardServer := range dnsOperator.Spec.Servers {
 		if forwardServer.Name == lighthouseForwardPluginName {
 			containsLighthouse = true
+
 			existingDomains = append(existingDomains, forwardServer.Zones...)
+
 			for _, upstreams := range forwardServer.ForwardPlugin.Upstreams {
 				if upstreams != lighthouseDNSService.Spec.ClusterIP {
 					changed = true
 				}
 			}
+
 			if changed {
 				continue
 			}
@@ -598,14 +614,18 @@ func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dns
 
 	sort.Strings(lighthouseDomains)
 	sort.Strings(existingDomains)
+
 	if !reflect.DeepEqual(lighthouseDomains, existingDomains) {
 		changed = true
+
 		reqLogger.Info(fmt.Sprintf("Configured lighthouse zones changed from %v to %v", existingDomains, lighthouseDomains))
 	}
+
 	if containsLighthouse && !changed {
 		reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
 		return nil
 	}
+
 	reqLogger.Info("Lighthouse DNS configuration changed, hence updating Cluster DNS Operator CR")
 
 	for _, domain := range lighthouseDomains {

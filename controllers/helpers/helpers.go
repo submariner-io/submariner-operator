@@ -247,6 +247,7 @@ func GetPullPolicy(version, override string) corev1.PullPolicy {
 		tag := strings.Split(override, ":")[1]
 		return images.GetPullPolicy(tag)
 	}
+
 	return images.GetPullPolicy(version)
 }
 

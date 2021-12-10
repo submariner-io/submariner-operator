@@ -152,6 +152,7 @@ func ensureClusterRoleBindings(clientSet *clientset.Clientset, namespace string)
 
 	createdNPSyncerCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
 		embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_binding_yaml)
+
 	return createdOperatorCRB || createdSubmarinerCRB || createdRouteAgentCRB || createdGlobalnetCRB || createdNPSyncerCRB,
 		errors.Wrap(err, "error provisioning networkplugin syncer ClusterRoleBinding resource")
 }

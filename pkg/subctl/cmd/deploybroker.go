@@ -197,15 +197,18 @@ func isValidComponents(componentSet stringset.Interface) error {
 
 func isValidGlobalnetConfig() (bool, error) {
 	var err error
+
 	if !globalnetEnable {
 		return true, nil
 	}
+
 	defaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(globalnetCIDRRange, defaultGlobalnetClusterSize)
 	if err != nil || defaultGlobalnetClusterSize == 0 {
 		return false, err // nolint:wrapcheck // No need to wrap here
 	}
 
 	err = globalnet.IsValidCIDR(globalnetCIDRRange)
+
 	return err == nil, err // nolint:wrapcheck // No need to wrap here
 }
 
@@ -217,5 +220,6 @@ func populateBrokerSpec() submarinerv1a1.BrokerSpec {
 		Components:                  componentArr,
 		DefaultCustomDomains:        defaultCustomDomains,
 	}
+
 	return brokerSpec
 }

@@ -43,10 +43,12 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 	if err != nil && !apierrors.IsNotFound(err) {
 		return false, errors.Wrap(err, "error deleting the obsolete ServiceImport CRD")
 	}
+
 	err = crdUpdater.Delete(context.TODO(), "serviceexports.lighthouse.submariner.io", metav1.DeleteOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return false, errors.Wrap(err, "error deleting the obsolete ServiceExport CRD")
 	}
+
 	err = crdUpdater.Delete(context.TODO(), "multiclusterservices.lighthouse.submariner.io", metav1.DeleteOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return false, errors.Wrap(err, "error deleting the obsolete MultiClusterServices CRD")

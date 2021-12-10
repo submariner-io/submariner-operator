@@ -39,8 +39,9 @@ func (r *Reconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*netw
 	}
 
 	if clusterNetwork != nil {
-		r.config.ClusterNetwork = clusterNetwork
 		log.Info("Cluster network discovered")
+
+		r.config.ClusterNetwork = clusterNetwork
 		clusterNetwork.Log(log)
 	} else {
 		r.config.ClusterNetwork = &network.ClusterNetwork{NetworkPlugin: UnknownPlugin}
@@ -79,6 +80,7 @@ func getCIDR(cidrType, currentCIDR string, detectedCIDRs []string) string {
 		} else {
 			log.Info("No detected CIDR", "type", cidrType)
 		}
+
 		return detected
 	}
 
@@ -88,6 +90,7 @@ func getCIDR(cidrType, currentCIDR string, detectedCIDRs []string) string {
 			"The configured CIDR will take precedence",
 			"type", cidrType, "configured", currentCIDR, "detected", detected)
 	}
+
 	return currentCIDR
 }
 
@@ -98,8 +101,10 @@ func getFirstCIDR(detectedCIDRs []string) string {
 		log.Error(fmt.Errorf("detected > 1 CIDRs"),
 			"we currently support only one", "detectedCIDRs", detectedCIDRs)
 	}
+
 	if CIDRlen > 0 {
 		return detectedCIDRs[0]
 	}
+
 	return ""
 }

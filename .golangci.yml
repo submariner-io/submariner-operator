@@ -64,6 +64,7 @@ linters:
     - varcheck
     - whitespace
     - wrapcheck
+    - wsl
 issues:
   exclude-rules:
     # Ignore long line and variable name non-compliance warnings in auto-generated file

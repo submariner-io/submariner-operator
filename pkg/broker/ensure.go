@@ -88,7 +88,9 @@ func Ensure(config *rest.Config, componentArr []string, crds bool, namespace str
 	if err := createBrokerClusterRoleAndDefaultSA(clientset, namespace); err != nil {
 		return err
 	}
+
 	_, err = WaitForClientToken(clientset, SubmarinerBrokerAdminSA, namespace)
+
 	return err
 }
 
@@ -110,12 +112,14 @@ func createBrokerClusterRoleAndDefaultSA(clientset *kubernetes.Clientset, namesp
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error creating the broker rolebinding")
 	}
+
 	return nil
 }
 
 // CreateSAForCluster creates a new SA, and binds it to the submariner cluster role.
 func CreateSAForCluster(clientset *kubernetes.Clientset, clusterID, namespace string) (*v1.Secret, error) {
 	saName := fmt.Sprintf(submarinerBrokerClusterSAFmt, clusterID)
+
 	_, err := CreateNewBrokerSA(clientset, saName, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, errors.Wrap(err, "error creating cluster sa")
@@ -130,6 +134,7 @@ func CreateSAForCluster(clientset *kubernetes.Clientset, clusterID, namespace st
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, errors.Wrap(err, "error getting cluster sa token")
 	}
+
 	return clientToken, nil
 }
 
@@ -159,7 +164,6 @@ func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, nam
 	// wait for the client token to be ready, while implementing
 	// exponential backoff pattern, it will wait a total of:
 	// sum(n=0..9, 1.2^n * 5) seconds, = 130 seconds
-
 	backoff := wait.Backoff{
 		Steps:    10,
 		Duration: 5 * time.Second,

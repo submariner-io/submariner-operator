@@ -43,6 +43,7 @@ func GetImagePath(repo, version, image, component string, imageOverrides map[str
 	}
 
 	path = fmt.Sprintf("%s:%s", path, version)
+
 	return path
 }
 
@@ -70,6 +71,7 @@ func ParseOperatorImage(operatorImage string) (string, string) {
 
 	imageName := strings.Replace(operatorImage, repository, "", 1)
 	i := strings.LastIndex(imageName, ":")
+
 	if i == -1 {
 		version = apis.DefaultSubmarinerOperatorVersion
 	} else {

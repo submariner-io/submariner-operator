@@ -41,34 +41,43 @@ func init() {
 
 func diagnoseAll(cluster *cmd.Cluster) bool {
 	success := checkK8sVersion(cluster)
+
 	fmt.Println()
 
 	status := cli.NewStatus()
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return success
 	}
 
 	success = checkCNIConfig(cluster) && success
+
 	fmt.Println()
 
 	success = checkConnections(cluster) && success
+
 	fmt.Println()
 
 	success = checkPods(cluster) && success
+
 	fmt.Println()
 
 	success = checkOverlappingCIDRs(cluster) && success
+
 	fmt.Println()
 
 	success = checkKubeProxyMode(cluster) && success
+
 	fmt.Println()
 
 	success = checkFirewallMetricsConfig(cluster) && success
+
 	fmt.Println()
 
 	success = checkVxLANConfig(cluster) && success
+
 	fmt.Println()
 
 	fmt.Printf("Skipping inter-cluster firewall check as it requires two kubeconfigs." +

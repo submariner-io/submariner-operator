@@ -80,6 +80,7 @@ func SchedulePodAwaitCompletion(config *PodConfig) (string, error) {
 	}
 
 	defer np.DeletePod()
+
 	if err := np.AwaitPodCompletion(); err != nil {
 		return "", err
 	}
@@ -149,7 +150,9 @@ func (np *NetworkPod) schedulePod() error {
 	}
 
 	pc := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
+
 	var err error
+
 	np.Pod, err = pc.Create(context.TODO(), &networkPod, metav1.CreateOptions{})
 	if err != nil {
 		return errors.Wrap(err, "error creating Pod")
@@ -159,6 +162,7 @@ func (np *NetworkPod) schedulePod() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -191,6 +195,7 @@ func (np *NetworkPod) awaitUntilPodScheduled() error {
 	}
 
 	np.Pod = pod.(*v1.Pod)
+
 	return nil
 }
 
@@ -221,5 +226,6 @@ func (np *NetworkPod) AwaitPodCompletion() error {
 	if finished {
 		np.PodOutput = np.Pod.Status.ContainerStatuses[0].State.Terminated.Message
 	}
+
 	return nil
 }

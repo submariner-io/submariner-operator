@@ -43,6 +43,7 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, errors.WithMessage(err, "error obtaining the \"canal-config\" ConfigMap")
 	}
 
@@ -79,8 +80,10 @@ func extractPodCIDRFromNetConfigJSON(cm *v1.ConfigMap) *string {
 		Network string `json:"Network"`
 		// All the other fields are ignored by Unmarshal
 	}
+
 	if err := json.Unmarshal([]byte(netConfJSON), &netConf); err == nil {
 		return &netConf.Network
 	}
+
 	return nil
 }

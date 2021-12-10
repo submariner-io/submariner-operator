@@ -255,6 +255,7 @@ func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
 		reload
 		loadbalance
 	}`
+
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "coredns",
@@ -308,17 +309,20 @@ func newDNSService(clusterIP string) *corev1.Service {
 func getDNSConfig(name string, client controllerClient.Client) (*operatorv1.DNS, error) {
 	foundDNSConfig := &operatorv1.DNS{}
 	err := client.Get(context.TODO(), types.NamespacedName{Name: name}, foundDNSConfig)
+
 	return foundDNSConfig, err
 }
 
 func expectDNSConfigUpdated(name string, client controllerClient.Client) *operatorv1.DNS {
 	foundDNSConfig, err := getDNSConfig(name, client)
 	Expect(err).To(Succeed())
+
 	return foundDNSConfig
 }
 
 func expectCoreMapUpdated(client clientset.Interface) *corev1.ConfigMap {
 	foundCoreMap, err := client.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "coredns", metav1.GetOptions{})
 	Expect(err).To(Succeed())
+
 	return foundCoreMap
 }

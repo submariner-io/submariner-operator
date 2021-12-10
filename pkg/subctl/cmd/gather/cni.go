@@ -193,7 +193,9 @@ func execCmdInBash(info *Info, pod *v1.Pod, cmd string) (string, string, error) 
 		RestConfig: info.RestConfig,
 		ClientSet:  info.ClientSet,
 	}
+
 	execOptions.Command = []string{"/bin/bash", "-c", cmd}
+
 	return resource.ExecWithOptions(execConfig, &execOptions)
 }
 
@@ -201,22 +203,25 @@ func logCmdOutput(info *Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool
 	stdOut, _, err := execCmdInBash(info, pod, cmd)
 	if err != nil && !ignoreError {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error running %q on pod %q: %v", cmd, pod.Name, err))
+
 		return
 	}
+
 	if stdOut != "" {
 		// the first line contains the executed command
 		stdOut = cmd + "\n" + stdOut
+
 		fileName, err := writeLogToFile(stdOut, pod.Spec.NodeName+"_"+cmdName, info, ".log")
 		if err != nil {
 			info.Status.QueueFailureMessage(fmt.Sprintf("Error writing output from command %q on pod %q: %v", cmd, pod.Name, err))
 		}
+
 		info.Summary.Resources = append(info.Summary.Resources, ResourceInfo{
 			Namespace: pod.Namespace,
 			Name:      pod.Spec.NodeName,
 			FileName:  fileName,
 			Type:      cmdName,
 		})
-		return
 	}
 }
 

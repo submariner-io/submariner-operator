@@ -54,6 +54,7 @@ func NewStatus() *Status {
 	if env.IsSmartTerminal(writer) {
 		writer = NewSpinner(writer)
 	}
+
 	return StatusForLogger(NewLogger(writer, 0))
 }
 
@@ -81,6 +82,7 @@ func StatusForLogger(l log.Logger) *Status {
 			s.warningFormat = " \x1b[33m⚠\x1b[0m %s\n"
 		}
 	}
+
 	return s
 }
 
@@ -89,6 +91,7 @@ func StatusForLogger(l log.Logger) *Status {
 func (s *Status) Start(status string) {
 	s.End(Success)
 	s.status = status
+
 	if s.spinner != nil {
 		s.spinner.SetSuffix(fmt.Sprintf(" %s ", s.status))
 		s.spinner.Start()
@@ -108,6 +111,7 @@ func (s *Status) End(output Result) {
 		s.spinner.Stop()
 		fmt.Fprint(s.spinner.writer, "\r")
 	}
+
 	switch output {
 	case Success:
 		s.logger.V(0).Infof(s.successFormat, s.status)
@@ -120,9 +124,11 @@ func (s *Status) End(output Result) {
 	for _, message := range s.successQueue {
 		s.logger.V(0).Infof(s.successFormat, message)
 	}
+
 	for _, message := range s.failureQueue {
 		s.logger.V(0).Infof(s.failureFormat, message)
 	}
+
 	for _, message := range s.warningQueue {
 		s.logger.V(0).Infof(s.warningFormat, message)
 	}

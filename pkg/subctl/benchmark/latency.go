@@ -56,6 +56,7 @@ func StartLatencyTests(intraCluster bool) {
 		if framework.TestContext.GlobalnetEnabled {
 			fmt.Println("Latency test is not supported with Globalnet enabled, skipping the test...")
 			cleanupFramework(f)
+
 			return
 		}
 
@@ -72,6 +73,7 @@ func StartLatencyTests(intraCluster bool) {
 
 		latencyTestParams.ServerPodScheduling = framework.NonGatewayNode
 		latencyTestParams.ClientPodScheduling = framework.NonGatewayNode
+
 		fmt.Printf("Performing latency tests from Non-Gateway pod on cluster %q to Non-Gateway pod on cluster %q\n",
 			clusterAName, clusterBName)
 		runLatencyTest(f, latencyTestParams)
@@ -96,6 +98,7 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 	var connectionAttempts uint = 1
 
 	By(fmt.Sprintf("Creating a Nettest Server Pod on %q", clusterBName))
+
 	nettestServerPod := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.LatencyServerPod,
 		Cluster:            testParams.ServerCluster,
@@ -129,6 +132,7 @@ func runLatencyTest(f *framework.Framework, testParams benchmarkTestParams) {
 	headers := strings.Split(latencyHeaders, ",")
 	latencyValues := strings.Split(nettestClientPod.TerminationMessage, "\n")[2]
 	values := strings.Split(latencyValues, ",")
+
 	for i, v := range headers {
 		fmt.Printf("%s:\t%s\n", v, values[i])
 	}

@@ -118,6 +118,7 @@ func gatherData(cluster *cmd.Cluster) bool {
 	gatherDataByCluster(cluster, directory)
 
 	fmt.Printf("Files are stored under directory %q\n", directory)
+
 	return true
 }
 
@@ -148,6 +149,7 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 		Get(context.TODO(), submarinercr.SubmarinerName, metav1.GetOptions{})
 	if err != nil {
 		info.Submariner = nil
+
 		if !apierrors.IsNotFound(err) {
 			fmt.Printf("Error getting Submariner resource: %s\n", err)
 			return
@@ -158,6 +160,7 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 		Get(context.TODO(), names.ServiceDiscoveryCrName, metav1.GetOptions{})
 	if err != nil {
 		info.ServiceDiscovery = nil
+
 		if !apierrors.IsNotFound(err) {
 			fmt.Printf("Error getting ServiceDiscovery resource: %s\n", err)
 			return
@@ -178,6 +181,7 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 			}
 		}
 	}
+
 	gatherClusterSummary(&info)
 }
 
@@ -247,6 +251,7 @@ func gatherBroker(dataType string, info Info) bool {
 
 		if brokerRestConfig != nil {
 			info.RestConfig = brokerRestConfig
+
 			info.DynClient, info.ClientSet, err = restconfig.Clients(brokerRestConfig)
 			if err != nil {
 				info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker client: %s", err))
@@ -315,6 +320,7 @@ func checkGatherArguments() error {
 		if _, found := gatherTypeFlags[arg]; !found {
 			return fmt.Errorf("%s is not a supported type", arg)
 		}
+
 		gatherTypeFlags[arg] = true
 	}
 
@@ -323,6 +329,7 @@ func checkGatherArguments() error {
 		if _, found := gatherModuleFlags[arg]; !found {
 			return fmt.Errorf("%s is not a supported module", arg)
 		}
+
 		gatherModuleFlags[arg] = true
 	}
 
@@ -345,5 +352,6 @@ func getAllModuleKeys() []string {
 	for k := range gatherModuleFlags {
 		keys = append(keys, k)
 	}
+
 	return keys
 }

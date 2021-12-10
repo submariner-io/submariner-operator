@@ -53,6 +53,7 @@ func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
 		if apierrors.IsNotFound(err) {
 			return nil
 		}
+
 		utils.ExitOnError("Error obtaining the Submariner resource", err)
 	}
 
@@ -64,9 +65,11 @@ func CompareFiles(file1, file2 string) (bool, error) {
 	if err != nil {
 		return false, errors.Wrapf(err, "error reading file %q", file1)
 	}
+
 	second, err := os.ReadFile(file2)
 	if err != nil {
 		return false, errors.Wrapf(err, "error reading file %q", file2)
 	}
+
 	return bytes.Equal(first, second), nil
 }

@@ -41,6 +41,7 @@ func (r *cliReporter) Succeeded(message string, args ...interface{}) {
 	if message != "" {
 		r.status.QueueSuccessMessage(fmt.Sprintf(message, args...))
 	}
+
 	r.status.End(cli.Success)
 }
 
@@ -48,5 +49,6 @@ func (r *cliReporter) Failed(err ...error) {
 	if len(err) > 0 {
 		r.status.QueueFailureMessage(err[0].Error())
 	}
+
 	r.status.End(cli.Failure)
 }

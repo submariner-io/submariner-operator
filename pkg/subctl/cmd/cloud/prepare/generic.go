@@ -35,6 +35,7 @@ func newGenericPrepareCommand() *cobra.Command {
 
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of gateways to deploy")
+
 	return cmd
 }
 

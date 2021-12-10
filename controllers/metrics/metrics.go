@@ -40,6 +40,7 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 	if !ok {
 		return fmt.Errorf("no app label in the provided labels, %v", labels)
 	}
+
 	metricsService, err := helpers.ReconcileService(owner, newMetricsService(namespace, app, port), reqLogger, client, scheme)
 	if err != nil {
 		return err // nolint:wrapcheck // No need to wrap here
@@ -47,6 +48,7 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 
 	if config != nil {
 		services := []*corev1.Service{metricsService}
+
 		_, err = metrics.CreateServiceMonitors(config, namespace, services)
 		if err != nil {
 			// If this operator is deployed to a cluster without the prometheus-operator running, it will return

@@ -49,6 +49,7 @@ func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, er
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, errors.WithMessage(err, "error obtaining the default 'cluster' OpenShift4 Network config resource")
 	}
 
@@ -74,8 +75,10 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 		} else if !found {
 			return nil, fmt.Errorf("field cidr expected, but not found in clusterNetwork: %v", clusterNetworkMap)
 		}
+
 		result.PodCIDRs = append(result.PodCIDRs, cidr)
 	}
+
 	serviceNetworks, found, err := unstructured.NestedSlice(cr.Object, "spec", "serviceNetwork")
 	if err != nil {
 		return nil, errors.Wrap(err, "error retrieving spec.serviceNetwork field")

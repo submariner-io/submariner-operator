@@ -130,13 +130,16 @@ func Broker(options *BrokerOptions, kubeConfig, kubeContext string) error {
 
 func deploy(options *BrokerOptions, status *cli.Status, config *rest.Config) error {
 	status.Start("Setting up broker RBAC")
+
 	err := broker.Ensure(config, options.BrokerSpec.Components, false, options.BrokerNamespace)
 	status.End(cli.CheckForError(err))
+
 	if err != nil {
 		return errors.Wrap(err, "error setting up broker RBAC")
 	}
 
 	status.Start("Deploying the Submariner operator")
+
 	operatorImage, err := image.ForOperator(options.ImageVersion, options.Repository, nil)
 	if err != nil {
 		return errors.Wrap(err, "error getting Operator image")
@@ -144,11 +147,13 @@ func deploy(options *BrokerOptions, status *cli.Status, config *rest.Config) err
 
 	err = submarinerop.Ensure(status, config, constants.OperatorNamespace, operatorImage, options.OperatorDebug)
 	status.End(cli.CheckForError(err))
+
 	if err != nil {
 		return errors.Wrap(err, "error deploying the operator")
 	}
 
 	status.Start("Deploying the broker")
+
 	err = brokercr.Ensure(config, options.BrokerNamespace, options.BrokerSpec)
 	if err == nil {
 		status.QueueSuccessMessage("The broker has been deployed")
@@ -182,9 +187,11 @@ func isValidComponents(componentSet stringset.Interface) error {
 // nolint:wrapcheck // No need to wrap errors here.
 func checkGlobalnetConfig(options *BrokerOptions) error {
 	var err error
+
 	if !options.BrokerSpec.GlobalnetEnabled {
 		return nil
 	}
+
 	options.BrokerSpec.DefaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(options.BrokerSpec.GlobalnetCIDRRange,
 		options.BrokerSpec.DefaultGlobalnetClusterSize)
 	if err != nil {

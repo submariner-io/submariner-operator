@@ -93,6 +93,7 @@ func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface,
 
 	versions = append(versions, newVersionInfoFrom(lighthouseAgentConfig.Spec.Repository, names.ServiceDiscoveryCrName,
 		lighthouseAgentConfig.Spec.Version))
+
 	return versions, nil
 }
 
@@ -114,6 +115,7 @@ func getVersions(cluster *cmd.Cluster) bool {
 
 	printVersions(versions)
 	status.End(cli.Success)
+
 	return true
 }
 
@@ -123,6 +125,7 @@ func showVersions(cluster *cmd.Cluster) bool {
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 
@@ -132,6 +135,7 @@ func showVersions(cluster *cmd.Cluster) bool {
 func printVersions(versions []versionImageInfo) {
 	template := "%-32.31s%-54.53s%-16.15s\n"
 	fmt.Printf(template, "COMPONENT", "REPOSITORY", "VERSION")
+
 	for _, item := range versions {
 		fmt.Printf(
 			template,

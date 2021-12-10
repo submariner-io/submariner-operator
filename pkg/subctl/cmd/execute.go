@@ -96,12 +96,15 @@ func ExecuteMultiCluster(run func(*Cluster) bool) {
 		cluster, errMsg := NewCluster(config.Config, config.ClusterName)
 		if cluster == nil {
 			success = false
+
 			fmt.Println(errMsg)
 			fmt.Println()
+
 			continue
 		}
 
 		success = run(cluster) && success
+
 		fmt.Println()
 	}
 

@@ -58,6 +58,7 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 
 			name := escapeFileName(info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+"_"+item.GetName()) + ".yaml"
 			path := filepath.Join(info.DirName, name)
+
 			file, err := os.Create(path)
 			if err != nil {
 				return errors.WithMessagef(err, "error opening file %s", path)
@@ -69,11 +70,14 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 			if err != nil {
 				return errors.WithMessage(err, "error marshaling to YAML")
 			}
+
 			scrubbedData := scrubSensitiveData(info, string(data))
+
 			_, err = file.Write([]byte(scrubbedData))
 			if err != nil {
 				return errors.WithMessagef(err, "error writing to file %s", path)
 			}
+
 			info.Summary.Resources = append(info.Summary.Resources, ResourceInfo{
 				Name:      item.GetName(),
 				Namespace: item.GetNamespace(),
@@ -81,6 +85,7 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 				FileName:  name,
 			})
 		}
+
 		return nil
 	}()
 	if err != nil {

@@ -46,6 +46,7 @@ func NewFromRestConfig(config *rest.Config) (CRDUpdater, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating the api extensions client")
 	}
+
 	return NewFromClientSet(apiext), nil
 }
 
@@ -81,6 +82,7 @@ func (c *controllerClientCreator) Get(ctx context.Context, name string,
 	if err != nil {
 		return nil, err
 	}
+
 	return crd, nil
 }
 
@@ -90,9 +92,11 @@ func (c *controllerClientCreator) Delete(ctx context.Context, name string,
 	if err != nil {
 		return err
 	}
+
 	if crd == nil {
 		return nil
 	}
+
 	// TODO skitt handle options
 	return c.client.Delete(ctx, crd)
 }

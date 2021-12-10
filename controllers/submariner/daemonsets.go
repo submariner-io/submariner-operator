@@ -35,6 +35,7 @@ func updateDaemonSetStatus(ctx context.Context, clnt client.Reader, daemonSet *a
 		if status == nil {
 			status = &v1alpha1.DaemonSetStatus{}
 		}
+
 		status.Status = &daemonSet.Status
 		if status.LastResourceVersion != daemonSet.ObjectMeta.ResourceVersion {
 			// The daemonset has changed, check its containers
@@ -43,11 +44,13 @@ func updateDaemonSetStatus(ctx context.Context, clnt client.Reader, daemonSet *a
 			if err != nil {
 				return err
 			}
+
 			status.MismatchedContainerImages = mismatchedContainerImages
 			status.NonReadyContainerStates = nonReadyContainerStates
 			status.LastResourceVersion = daemonSet.ObjectMeta.ResourceVersion
 		}
 	}
+
 	return nil
 }
 
@@ -59,8 +62,10 @@ func checkDaemonSetContainers(ctx context.Context, clnt client.Reader, daemonSet
 	}
 
 	var containerImageManifest *string
+
 	mismatchedContainerImages := false
 	nonReadyContainerStates := []corev1.ContainerState{}
+
 	for i := range *containerStatuses {
 		containerStatus := (*containerStatuses)[i]
 		if containerImageManifest == nil {
@@ -69,28 +74,34 @@ func checkDaemonSetContainers(ctx context.Context, clnt client.Reader, daemonSet
 			// Container mismatch
 			mismatchedContainerImages = true
 		}
+
 		if containerStatus.Started == nil || !*containerStatus.Started {
 			// Not (yet) ready
 			nonReadyContainerStates = append(nonReadyContainerStates, containerStatus.State)
 		}
 	}
+
 	return mismatchedContainerImages, &nonReadyContainerStates, nil
 }
 
 func retrieveDaemonSetContainerStatuses(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet,
 	namespace string) (*[]corev1.ContainerStatus, error) {
 	pods := &corev1.PodList{}
+
 	selector, err := metav1.LabelSelectorAsSelector(daemonSet.Spec.Selector)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating label selector")
 	}
+
 	err = clnt.List(ctx, pods, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, errors.Wrap(err, "error listing DaemonSet pods")
 	}
+
 	containerStatuses := []corev1.ContainerStatus{}
 	for i := range pods.Items {
 		containerStatuses = append(containerStatuses, pods.Items[i].Status.ContainerStatuses...)
 	}
+
 	return &containerStatuses, nil
 }

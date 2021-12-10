@@ -72,15 +72,18 @@ func (data *SubctlData) ToString() (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "error marshalling data")
 	}
+
 	return base64.URLEncoding.EncodeToString(jsonBytes), nil
 }
 
 func NewFromString(str string) (*SubctlData, error) {
 	data := &SubctlData{}
+
 	bytes, err := base64.URLEncoding.DecodeString(str)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error decoding %q", str)
 	}
+
 	return data, errors.Wrap(json.Unmarshal(bytes, data), "error unmarshalling data")
 }
 
@@ -102,6 +105,7 @@ func NewFromFile(filename string) (*SubctlData, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "error reading file %q", filename)
 	}
+
 	return NewFromString(string(dat))
 }
 
@@ -110,11 +114,14 @@ func NewFromCluster(restConfig *rest.Config, brokerNamespace, ipsecSubmFile stri
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating client")
 	}
+
 	subCtlData, err := newFromCluster(clientSet, brokerNamespace, ipsecSubmFile)
 	if err != nil {
 		return nil, err
 	}
+
 	subCtlData.BrokerURL = restConfig.Host + restConfig.APIPath
+
 	return subCtlData, err
 }
 
@@ -132,11 +139,14 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 		if err != nil {
 			return nil, errors.Wrapf(err, "error happened trying to import IPsec PSK from subm file: %s", ipsecSubmFile)
 		}
+
 		subctlData.IPSecPSK = datafile.IPSecPSK
+
 		return subctlData, err
 	}
 
 	subctlData.IPSecPSK, err = newIPSECPSKSecret()
+
 	return subctlData, err
 }
 
@@ -153,10 +163,12 @@ func (data *SubctlData) GetBrokerAdministratorConfig() (*rest.Config, error) {
 
 func (data *SubctlData) getAndCheckBrokerAdministratorConfig(private bool) (*rest.Config, error) {
 	config := data.getBrokerAdministratorConfig(private)
+
 	submClientset, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
 		return config, errors.Wrap(err, "error creating client")
 	}
+
 	// This attempts to determine whether we can connect, by trying to access a Submariner object
 	// Successful connections result in either the object, or a “not found” error; anything else
 	// likely means we couldn’t connect
@@ -165,6 +177,7 @@ func (data *SubctlData) getAndCheckBrokerAdministratorConfig(private bool) (*res
 	if apierrors.IsNotFound(err) {
 		err = nil
 	}
+
 	return config, err
 }
 
@@ -173,11 +186,13 @@ func (data *SubctlData) getBrokerAdministratorConfig(private bool) *rest.Config 
 	if private {
 		tlsClientConfig.CAData = data.ClientToken.Data["ca.crt"]
 	}
+
 	bearerToken := data.ClientToken.Data["token"]
 	restConfig := rest.Config{
 		Host:            data.BrokerURL,
 		TLSClientConfig: tlsClientConfig,
 		BearerToken:     string(bearerToken),
 	}
+
 	return &restConfig
 }
