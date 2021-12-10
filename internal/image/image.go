@@ -19,10 +19,10 @@ package image
 
 import (
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 	"strings"
 
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 )
 
@@ -39,7 +39,7 @@ func ForOperator(imageVersion, repo string, imageOverrideArr []string) (string, 
 	if err != nil {
 		return "", fmt.Errorf("error overriding Operator image %q", err)
 	}
-	return images.GetImagePath(repo, imageVersion, names.OperatorImage, names.OperatorComponent, imageOverrides), nil
+	return GetPath(repo, imageVersion, names.OperatorImage, names.OperatorComponent, imageOverrides), nil
 }
 
 func GetOverrides(imageOverrideArr []string) (map[string]string, error) {
@@ -65,4 +65,57 @@ func invalidImageName(key string) bool {
 		}
 	}
 	return true
+}
+
+func GetPath(repo, version, image, component string, imageOverrides map[string]string) string {
+	var path string
+
+	if override, ok := imageOverrides[component]; ok {
+		return override
+	}
+
+	// If the repository is "local" we don't append it on the front of the image,
+	// a local repository is used for development, testing and CI when we inject
+	// images in the cluster, for example submariner-gateway:local, or submariner-route-agent:local
+	if repo == "local" {
+		path = image
+	} else {
+		path = fmt.Sprintf("%s/%s%s%s", repo, names.ImagePrefix, image, names.ImagePostfix)
+	}
+
+	path = fmt.Sprintf("%s:%s", path, version)
+	return path
+}
+
+func GetPullPolicy(version string) v1.PullPolicy {
+	if version == "devel" || version == "local" || strings.HasPrefix(version, "release-") {
+		return v1.PullAlways
+	} else {
+		return v1.PullIfNotPresent
+	}
+}
+
+func ParseForOperator(operatorImage string) (string, string) {
+	var repository string
+	var version string
+
+	pathParts := strings.SplitN(operatorImage, "/", 3)
+	if len(pathParts) == 1 {
+		repository = ""
+	} else if len(pathParts) < 3 || (!strings.Contains(pathParts[0], ".") &&
+		!strings.Contains(pathParts[0], ":") && pathParts[0] != "localhost") {
+		repository = pathParts[0]
+	} else {
+		repository = pathParts[0] + "/" + pathParts[1]
+	}
+
+	imageName := strings.Replace(operatorImage, repository, "", 1)
+	i := strings.LastIndex(imageName, ":")
+	if i == -1 {
+		version = submariner.DefaultSubmarinerOperatorVersion
+	} else {
+		version = imageName[i+1:]
+	}
+
+	return version, repository
 }

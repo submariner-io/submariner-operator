@@ -21,6 +21,7 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
+	"github.com/submariner-io/submariner-operator/internal/image"
 	"reflect"
 	"regexp"
 	"sort"
@@ -34,7 +35,6 @@ import (
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -608,7 +608,7 @@ func (r *ServiceDiscoveryReconciler) updateOpenshiftClusterDNSOperator(ctx conte
 }
 
 func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, imageName, componentName string) string {
-	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, imageName, componentName,
+	return image.GetPath(submariner.Spec.Repository, submariner.Spec.Version, imageName, componentName,
 		submariner.Spec.ImageOverrides)
 }
 

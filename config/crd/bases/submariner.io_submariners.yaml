@@ -44,6 +44,8 @@ spec:
                 type: string
               brokerK8sCA:
                 type: string
+              brokerK8sInsecure:
+                type: boolean
               brokerK8sRemoteNamespace:
                 type: string
               cableDriver:
@@ -333,6 +335,8 @@ spec:
                               cable_name:
                                 type: string
                               cluster_id:
+                                maxLength: 63
+                                minLength: 1
                                 type: string
                               healthCheckIP:
                                 type: string
@@ -401,6 +405,8 @@ spec:
                         cable_name:
                           type: string
                         cluster_id:
+                          maxLength: 63
+                          minLength: 1
                           type: string
                         healthCheckIP:
                           type: string

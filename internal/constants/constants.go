@@ -20,4 +20,5 @@ package constants
 const (
 	OperatorNamespace      = "submariner-operator"
 	DefaultBrokerNamespace = "submariner-k8s-broker"
+	SubmarinerNamespace = "submariner-operator"
 )

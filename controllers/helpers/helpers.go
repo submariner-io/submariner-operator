@@ -19,6 +19,7 @@ package helpers
 
 import (
 	"context"
+	"github.com/submariner-io/submariner-operator/internal/image"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -28,7 +29,6 @@ import (
 
 	"github.com/go-logr/logr"
 	errorutil "github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -247,9 +247,9 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 func GetPullPolicy(version, override string) corev1.PullPolicy {
 	if len(override) > 0 {
 		tag := strings.Split(override, ":")[1]
-		return images.GetPullPolicy(tag)
+		return image.GetPullPolicy(tag)
 	}
-	return images.GetPullPolicy(version)
+	return image.GetPullPolicy(version)
 }
 
 func IsImmutableError(err error) bool {

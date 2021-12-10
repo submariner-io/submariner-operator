@@ -150,7 +150,6 @@ var joinCmd = &cobra.Command{
 		err := checkArgumentPassed(args)
 		utils.ExitOnError("Argument missing", err)
 		subctlData, err := datafile.NewFromFile(args[0])
-		utils.ExitOnError("Argument missing", err)
 		utils.ExitOnError("Error loading the broker information from the given file", err)
 		fmt.Printf("* %s says broker is at: %s\n", args[0], subctlData.BrokerURL)
 		utils.ExitOnError("Error connecting to broker cluster", err)

@@ -20,6 +20,7 @@ package show
 import (
 	"context"
 	"fmt"
+	"github.com/submariner-io/submariner-operator/internal/image"
 
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
@@ -28,7 +29,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -74,7 +74,7 @@ func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageI
 	}
 
 	operatorFullImageStr := operatorConfig.Spec.Template.Spec.Containers[0].Image
-	version, repository := images.ParseOperatorImage(operatorFullImageStr)
+	version, repository := image.ParseForOperator(operatorFullImageStr)
 	versions = append(versions, newVersionInfoFrom(repository, names.OperatorComponent, version))
 	return versions, nil
 }

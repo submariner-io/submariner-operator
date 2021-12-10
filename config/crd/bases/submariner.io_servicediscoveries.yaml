@@ -42,6 +42,8 @@ spec:
                 type: string
               brokerK8sCA:
                 type: string
+              brokerK8sInsecure:
+                type: boolean
               brokerK8sRemoteNamespace:
                 type: string
               clusterID:

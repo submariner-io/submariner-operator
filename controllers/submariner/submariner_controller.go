@@ -20,6 +20,7 @@ package submariner
 
 import (
 	"context"
+	"github.com/submariner-io/submariner-operator/internal/image"
 	"reflect"
 
 	"github.com/go-logr/logr"
@@ -27,7 +28,6 @@ import (
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -211,7 +211,7 @@ func (r *SubmarinerReconciler) Reconcile(ctx context.Context, request reconcile.
 }
 
 func getImagePath(submariner *submopv1a1.Submariner, imageName, componentName string) string {
-	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, imageName, componentName,
+	return image.GetPath(submariner.Spec.Repository, submariner.Spec.Version, imageName, componentName,
 		submariner.Spec.ImageOverrides)
 }
 
