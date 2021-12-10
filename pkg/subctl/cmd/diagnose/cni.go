@@ -61,12 +61,14 @@ func checkCNIConfig(cluster *cmd.Cluster) bool {
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 
 	status.Start("Checking Submariner support for the CNI network plugin")
 
 	isSupportedPlugin := false
+
 	for _, np := range supportedNetworkPlugins {
 		if cluster.Submariner.Status.NetworkPlugin == np {
 			isSupportedPlugin = true
@@ -107,6 +109,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 	if err != nil {
 		status.Start(fmt.Sprintf("Error trying to detect the Calico ConfigMap: %s", err))
 		status.End(cli.Failure)
+
 		return false
 	}
 
@@ -141,6 +144,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 	}
 
 	ippools := make(map[string]unstructured.Unstructured)
+
 	for _, pool := range ippoolList.Items {
 		cidr, found, err := unstructured.NestedString(pool.Object, "spec", "cidr")
 		if err != nil {
@@ -152,6 +156,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 			status.QueueFailureMessage(fmt.Sprintf("No CIDR found in IPPool %q", pool.GetName()))
 			continue
 		}
+
 		ippools[cidr] = pool
 	}
 
@@ -208,5 +213,6 @@ func getSpecBool(pool unstructured.Unstructured, key string) (bool, error) {
 		message := fmt.Sprintf("%s status not found for IPPool %q", key, pool.GetName())
 		return false, fmt.Errorf(message)
 	}
+
 	return isDisabled, nil
 }

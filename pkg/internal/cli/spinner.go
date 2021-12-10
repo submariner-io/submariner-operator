@@ -72,6 +72,7 @@ func NewSpinner(w io.Writer) *Spinner {
 	if runtime.GOOS == "windows" {
 		frameFormat = "\r%s%s%s"
 	}
+
 	return &Spinner{
 		stop:        make(chan struct{}, 1),
 		stopped:     make(chan struct{}),
@@ -122,6 +123,7 @@ func (s *Spinner) Start() {
 						s.running = false       // mark as stopped (it's fine to start now)
 						s.stopped <- struct{}{} // tell Stop() that we're done
 					}()
+
 					return // ... and stop
 				// otherwise continue and write one frame.
 				case <-s.ticker.C:
@@ -164,5 +166,6 @@ func (s *Spinner) Write(p []byte) (n int, err error) {
 	if _, err := s.writer.Write([]byte("\r")); err != nil {
 		return 0, err // nolint:wrapcheck // No need to wrap here
 	}
+
 	return s.writer.Write(p) // nolint:wrapcheck // No need to wrap here
 }

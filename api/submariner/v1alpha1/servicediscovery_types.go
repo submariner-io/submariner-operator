@@ -94,6 +94,7 @@ func init() {
 
 func (sd *ServiceDiscovery) UnmarshalJSON(data []byte) error {
 	type serviceDiscoveryAlias ServiceDiscovery
+
 	serviceDiscovery := &serviceDiscoveryAlias{
 		Spec: ServiceDiscoverySpec{
 			Version:    DefaultLighthouseVersion,
@@ -104,5 +105,6 @@ func (sd *ServiceDiscovery) UnmarshalJSON(data []byte) error {
 	_ = json.Unmarshal(data, serviceDiscovery)
 
 	*sd = ServiceDiscovery(*serviceDiscovery)
+
 	return nil
 }

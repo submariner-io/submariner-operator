@@ -40,6 +40,7 @@ func newGCPPrepareCommand() *cobra.Command {
 		"Number of gateways to deploy")
 	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", false,
 		"Whether a dedicated gateway node has to be deployed (default false)")
+
 	return cmd
 }
 

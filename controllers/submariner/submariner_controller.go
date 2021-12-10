@@ -98,6 +98,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	// Fetch the Submariner instance
 	instance := &submopv1a1.Submariner{}
+
 	err := r.config.Client.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -141,6 +142,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	var globalnetDaemonSet *appsv1.DaemonSet
+
 	if instance.Spec.GlobalCIDR != "" {
 		if globalnetDaemonSet, err = r.reconcileGlobalnetDaemonSet(instance, reqLogger); err != nil {
 			return reconcile.Result{}, err
@@ -173,16 +175,21 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	err = updateDaemonSetStatus(ctx, r.config.Client, gatewayDaemonSet, &instance.Status.GatewayDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check gateway daemonset containers")
+
 		return reconcile.Result{}, err
 	}
+
 	err = updateDaemonSetStatus(ctx, r.config.Client, routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check route agent daemonset containers")
+
 		return reconcile.Result{}, err
 	}
+
 	err = updateDaemonSetStatus(ctx, r.config.Client, globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check gateway daemonset containers")
+
 		return reconcile.Result{}, err
 	}
 
@@ -195,11 +202,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	if !reflect.DeepEqual(instance.Status, initialStatus) {
 		err := r.config.Client.Status().Update(ctx, instance)
 		if err != nil {
-			reqLogger.Error(err, "failed to update the Submariner status")
 			// Log the error, but indicate success, to avoid reconciliation storms
 			// TODO skitt determine what we should really be doing for concurrent updates to the Submariner CR
 			// Updates fail here because the instance is updated between the .Update() at the start of the function
 			// and the status update here
+			reqLogger.Error(err, "failed to update the Submariner status")
 		}
 	}
 
@@ -217,6 +224,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err != nil {
 		return errors.Wrap(err, "error creating CRDUpdater")
 	}
+
 	if err := gateway.Ensure(crdUpdater); err != nil {
 		return err // nolint:wrapcheck // Errors are already wrapped
 	}
@@ -225,6 +233,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
 		return errors.Wrap(err, "error adding to the scheme")
 	}
+
 	// These are required so that we can manipulate CRDs
 	if err := apiextensions.AddToScheme(mgr.GetScheme()); err != nil {
 		return errors.Wrap(err, "error adding to the scheme")

@@ -58,6 +58,7 @@ func spawnSnifferPodOnNode(client kubernetes.Interface, nodeName, namespace, pod
 		ScheduleOn: resource.CustomNode, NodeName: nodeName,
 		Networking: resource.HostNetworking,
 	}
+
 	return spawnPod(client, scheduling, "validate-sniffer", namespace, podCommand)
 }
 
@@ -120,6 +121,7 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 
 	status.EndWithFailure("Could not find the active Gateway node %q in local cluster in cluster %q",
 		hostname, cluster.Name)
+
 	return ""
 }
 
@@ -137,6 +139,7 @@ func getLocalEndpointResource(cluster *cmd.Cluster, status *cli.Status) *subv1.E
 	}
 
 	status.EndWithFailure("Could not find the local Endpoint in cluster %q", cluster.Name)
+
 	return nil
 }
 
@@ -154,5 +157,6 @@ func getAnyRemoteEndpointResource(cluster *cmd.Cluster, status *cli.Status) *sub
 	}
 
 	status.EndWithFailure("Could not find any remote Endpoint in cluster %q", cluster.Name)
+
 	return nil
 }

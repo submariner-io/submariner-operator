@@ -212,6 +212,7 @@ func init() {
 
 func (s *Submariner) UnmarshalJSON(data []byte) error {
 	type submarinerAlias Submariner
+
 	subm := &submarinerAlias{
 		Spec: SubmarinerSpec{
 			Repository: DefaultRepo,
@@ -223,5 +224,6 @@ func (s *Submariner) UnmarshalJSON(data []byte) error {
 	_ = json.Unmarshal(data, subm)
 
 	*s = Submariner(*subm)
+
 	return nil
 }

@@ -91,12 +91,15 @@ func getEndpointsStatus(cluster *cmd.Cluster) bool {
 				"remote"))
 		}
 	}
+
 	if len(epStatus) == 0 {
 		status.EndWithFailure("No Endpoints found")
 		return false
 	}
+
 	status.End(cli.Success)
 	printEndpoints(epStatus)
+
 	return true
 }
 
@@ -106,6 +109,7 @@ func showEndpoints(cluster *cmd.Cluster) bool {
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 

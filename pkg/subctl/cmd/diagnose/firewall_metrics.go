@@ -57,6 +57,7 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 	}
 
 	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffMetricsCommand)
+
 	sPod, err := spawnSnifferPodOnGatewayNode(cluster.KubeClient, podNamespace, podCommand)
 	if err != nil {
 		status.EndWithFailure("Error spawning the sniffer pod on the Gateway node: %v", err)
@@ -67,6 +68,7 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 
 	gatewayPodIP := sPod.Pod.Status.HostIP
 	podCommand = fmt.Sprintf("for i in $(seq 10); do timeout 2 nc -p 9898 %s 8080; done", gatewayPodIP)
+
 	cPod, err := spawnClientPodOnNonGatewayNode(cluster.KubeClient, podNamespace, podCommand)
 	if err != nil {
 		status.EndWithFailure("Error spawning the client pod on non-Gateway node: %v", err)
@@ -74,6 +76,7 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 	}
 
 	defer cPod.DeletePod()
+
 	if err = cPod.AwaitPodCompletion(); err != nil {
 		status.EndWithFailure("Error waiting for the client pod to finish its execution: %v", err)
 		return false
@@ -94,6 +97,7 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 		status.EndWithFailure("The tcpdump output from the sniffer pod does not contain the"+
 			" client pod HostIP. Please check that your firewall configuration allows TCP/8080 traffic"+
 			" on the %q node.", sPod.Pod.Spec.NodeName)
+
 		return false
 	}
 

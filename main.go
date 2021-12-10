@@ -76,6 +76,7 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Submariner operator version: %v", version.Version))
 }
 
+// nolint:wsl // block should not end with a whitespace.
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(submarinerv1alpha1.AddToScheme(scheme))
@@ -130,12 +131,15 @@ func main() {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+
 	log.Info("Creating the Lighthouse CRDs")
+
 	updated, err := lighthouse.Ensure(crdUpdater, lighthouse.DataCluster)
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+
 	if updated {
 		log.Info("The Lighthouse CRDs were updated, restarting...")
 		restartOperator()
@@ -184,6 +188,7 @@ func main() {
 
 	// Start the Cmd
 	log.Info("Starting the Cmd.")
+
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 		log.Error(err, "Manager exited non-zero")
 		os.Exit(1)
@@ -205,6 +210,7 @@ func createServiceMonitors(ctx context.Context, cfg *rest.Config, servicePorts [
 	// CreateServiceMonitors will automatically create the prometheus-operator ServiceMonitor resources
 	// necessary to configure Prometheus to scrape metrics from this operator.
 	services := []*v1.Service{service}
+
 	serviceMonitors, err := metrics.CreateServiceMonitors(cfg, namespace, services)
 	if err != nil {
 		log.Info("Could not create ServiceMonitor object", "error", err.Error())
@@ -250,10 +256,12 @@ func restartOperator() {
 		// We'll end up crashing and the orchestrator will restart us
 		os.Exit(1)
 	}
+
 	if err = syscall.Exec(binary, os.Args, os.Environ()); err != nil {
 		log.Error(err, "error restarting the operator")
 		os.Exit(1)
 	}
+
 	// Something went wrong, rely on the orchestrator to restart us
 	os.Exit(1)
 }

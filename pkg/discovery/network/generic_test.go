@@ -314,6 +314,7 @@ func testDiscoverGenericWith(objects ...runtime.Object) *network.ClusterNetwork 
 	clientSet := newTestClient(objects...)
 	clusterNet, err := network.Discover(nil, clientSet, nil, "")
 	Expect(err).NotTo(HaveOccurred())
+
 	return clusterNet
 }
 
@@ -329,5 +330,6 @@ func newTestClient(objects ...runtime.Object) *fake.Clientset {
 					"allocated ip:1.1.1.1 with error:provided IP is not in the valid range. "+
 					"The range of valid IPs is %s", testServiceCIDRFromService)
 		})
+
 	return clientSet
 }

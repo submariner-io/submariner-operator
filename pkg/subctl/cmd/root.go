@@ -63,7 +63,9 @@ func Execute() error {
 
 func init() {
 	rootCmd.AddCommand(cmdversion.VersionCmd)
+
 	cloudCmd := cloud.NewCommand(&kubeConfig, &kubeContext)
+
 	AddKubeContextFlag(cloudCmd)
 	rootCmd.AddCommand(cloudCmd)
 }
@@ -85,6 +87,7 @@ func AddKubeContextFlag(cmd *cobra.Command) {
 // AddKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated).
 func AddKubeContextMultiFlag(cmd *cobra.Command, usage string) {
 	AddKubeConfigFlag(cmd)
+
 	if usage == "" {
 		usage = "comma-separated list of kubeconfig contexts to use, can be specified multiple times.\n" +
 			"If none specified, all contexts referenced by the kubeconfig are used"
@@ -103,13 +106,17 @@ func handleNodeLabels(config *rest.Config) error {
 	// List Submariner-labeled nodes
 	const submarinerGatewayLabel = "submariner.io/gateway"
 	const trueLabel = "true"
+
 	selector := labels.SelectorFromSet(map[string]string{submarinerGatewayLabel: trueLabel})
+
 	labeledNodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
 		return errors.Wrap(err, "error listing Nodes")
 	}
+
 	if len(labeledNodes.Items) > 0 {
 		fmt.Printf("* There are %d labeled nodes in the cluster:\n", len(labeledNodes.Items))
+
 		for i := range labeledNodes.Items {
 			fmt.Printf("  - %s\n", labeledNodes.Items[i].GetName())
 		}
@@ -118,6 +125,7 @@ func handleNodeLabels(config *rest.Config) error {
 		if err != nil {
 			return err
 		}
+
 		if answer.Node == "" {
 			fmt.Printf("* No worker node found to label as the gateway\n")
 		} else {
@@ -125,6 +133,7 @@ func handleNodeLabels(config *rest.Config) error {
 			utils.ExitOnError("Error labeling the gateway node", err)
 		}
 	}
+
 	return nil
 }
 
@@ -135,6 +144,7 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 	if err != nil {
 		return struct{ Node string }{}, errors.Wrap(err, "error listing Nodes")
 	}
+
 	if len(workerNodes.Items) == 0 {
 		// In some deployments (like KIND), worker nodes are not explicitly labelled. So list non-master nodes.
 		workerNodes, err = clientset.CoreV1().Nodes().List(
@@ -142,6 +152,7 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 		if err != nil {
 			return struct{ Node string }{}, errors.Wrap(err, "error listing Nodes")
 		}
+
 		if len(workerNodes.Items) == 0 {
 			return struct{ Node string }{}, nil
 		}
@@ -150,10 +161,12 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 	if len(workerNodes.Items) == 1 {
 		return struct{ Node string }{workerNodes.Items[0].GetName()}, nil
 	}
+
 	allNodeNames := []string{}
 	for i := range workerNodes.Items {
 		allNodeNames = append(allNodeNames, workerNodes.Items[i].GetName())
 	}
+
 	qs := []*survey.Question{
 		{
 			Name: "node",
@@ -163,13 +176,16 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 			},
 		},
 	}
+
 	answers := struct {
 		Node string
 	}{}
+
 	err = survey.Ask(qs, &answers)
 	if err != nil {
 		return struct{ Node string }{}, err // nolint:wrapcheck // No need to wrap here
 	}
+
 	return answers, nil
 }
 

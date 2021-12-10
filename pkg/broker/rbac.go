@@ -142,9 +142,11 @@ func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submar
 	if err != nil {
 		return nil, errors.Wrapf(err, "ServiceAccount %s get failed", submarinerBrokerSA)
 	}
+
 	if len(sa.Secrets) < 1 {
 		return nil, fmt.Errorf("ServiceAccount %s does not have any secret", sa.Name)
 	}
+
 	brokerTokenPrefix := fmt.Sprintf("%s-token-", submarinerBrokerSA)
 	if len(brokerTokenPrefix) > MaxGeneratedNameLength {
 		brokerTokenPrefix = brokerTokenPrefix[:MaxGeneratedNameLength]

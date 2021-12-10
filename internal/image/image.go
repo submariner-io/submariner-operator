@@ -40,20 +40,24 @@ func ForOperator(imageVersion, repo string, imageOverrideArr []string) (string, 
 	if err != nil {
 		return "", errors.Wrap(err, "error overriding Operator image")
 	}
+
 	return images.GetImagePath(repo, imageVersion, names.OperatorImage, names.OperatorComponent, imageOverrides), nil
 }
 
 func GetOverrides(imageOverrideArr []string) (map[string]string, error) {
 	if len(imageOverrideArr) > 0 {
 		imageOverrides := make(map[string]string)
+
 		for _, s := range imageOverrideArr {
 			key := strings.Split(s, "=")[0]
 			if invalidImageName(key) {
 				return nil, fmt.Errorf("invalid image name %s provided. Please choose from %q", key, names.ValidImageNames)
 			}
+
 			value := strings.Split(s, "=")[1]
 			imageOverrides[key] = value
 		}
+
 		return imageOverrides, nil
 	}
 
@@ -66,5 +70,6 @@ func invalidImageName(key string) bool {
 			return false
 		}
 	}
+
 	return true
 }

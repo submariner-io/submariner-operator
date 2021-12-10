@@ -36,8 +36,10 @@ func (r *Reconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, 
 	if err != nil {
 		return nil, err
 	}
+
 	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), globalnetMetricsServerPort,
 		r.config.Client, r.config.RestConfig, r.config.Scheme, reqLogger)
+
 	return daemonSet, err
 }
 

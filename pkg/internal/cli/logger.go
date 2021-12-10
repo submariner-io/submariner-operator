@@ -48,6 +48,7 @@ func NewLogger(writer io.Writer, verbosity log.Level) *Logger {
 		bufferPool: newBufferPool(),
 	}
 	l.SetWriter(writer)
+
 	return l
 }
 
@@ -64,6 +65,7 @@ func (l *Logger) SetWriter(w io.Writer) {
 func (l *Logger) ColorEnabled() bool {
 	l.writerMu.Lock()
 	defer l.writerMu.Unlock()
+
 	return l.isSmartWriter
 }
 
@@ -80,6 +82,7 @@ func (l *Logger) SetVerbosity(verbosity log.Level) {
 func (l *Logger) write(p []byte) (n int, err error) {
 	l.writerMu.Lock()
 	defer l.writerMu.Unlock()
+
 	return l.writer.Write(p) // nolint:wrapcheck // No need to wrap here
 }
 
@@ -89,6 +92,7 @@ func (l *Logger) writeBuffer(buf *bytes.Buffer) {
 	if buf.Len() == 0 || buf.Bytes()[buf.Len()-1] != '\n' {
 		buf.WriteByte('\n')
 	}
+
 	// TODO: should we handle this somehow??
 	// Who logs for the logger? 🤔
 	_, _ = l.write(buf.Bytes())
@@ -122,6 +126,7 @@ func addDebugHeader(buf *bytes.Buffer) {
 			file = path[dirsep+1:]
 		}
 	}
+
 	buf.Grow(len(file) + 11) // we know at least this many bytes are needed.
 	buf.WriteString("DEBUG: ")
 	buf.WriteString(file)
@@ -247,6 +252,7 @@ func (b *bufferPool) Put(x *bytes.Buffer) {
 	if x.Len() > 256 {
 		return
 	}
+
 	x.Reset()
 	b.Pool.Put(x)
 }

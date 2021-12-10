@@ -55,6 +55,7 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 
 	// Fetch the Broker instance
 	instance := &v1alpha1.Broker{}
+
 	err := r.Client.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -74,6 +75,7 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 
 	// Broker CRDs
 	crdUpdater := crdutils.NewFromControllerClient(r.Client)
+
 	err = gateway.Ensure(crdUpdater)
 	if err != nil {
 		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped

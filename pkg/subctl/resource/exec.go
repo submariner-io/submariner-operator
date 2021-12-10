@@ -90,6 +90,7 @@ func ExecWithOptions(config ExecConfig, options *ExecOptions) (string, string, e
 	if options.PreserveWhitespace {
 		return stdout.String(), stderr.String(), err
 	}
+
 	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
@@ -99,6 +100,7 @@ func execute(method string, link *url.URL, config *rest.Config, stdin io.Reader,
 	if err != nil {
 		return err
 	}
+
 	return exec.Stream(remotecommand.StreamOptions{
 		Stdin:  stdin,
 		Stdout: stdout,

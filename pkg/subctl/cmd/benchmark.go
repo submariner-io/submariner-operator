@@ -77,20 +77,24 @@ func checkBenchmarkArguments(args []string, intraCluster bool) error {
 	} else if intraCluster && len(args) != 1 && len(kubeContexts) != 1 {
 		return fmt.Errorf("only one kubecontext should be specified")
 	}
+
 	if len(args) == 2 {
 		if strings.Compare(args[0], args[1]) == 0 {
 			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
 		}
+
 		same, err := CompareFiles(args[0], args[1])
 		if err != nil {
 			return err
 		}
+
 		if same {
 			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> need to have a unique content")
 		}
 	} else if len(kubeContexts) == 2 && strings.Compare(kubeContexts[0], kubeContexts[1]) == 0 {
 		return fmt.Errorf("the two kubecontexts must be different")
 	}
+
 	return nil
 }
 
@@ -98,12 +102,14 @@ func testThroughput(cmd *cobra.Command, args []string) {
 	err := configureTestingFramework(args)
 	if err != nil {
 		fmt.Println(err.Error())
+
 		return
 	}
 
 	if benchmark.Verbose {
 		fmt.Printf("Performing throughput tests\n")
 	}
+
 	benchmark.StartThroughputTests(intraCluster)
 }
 
@@ -111,11 +117,13 @@ func testLatency(cmd *cobra.Command, args []string) {
 	err := configureTestingFramework(args)
 	if err != nil {
 		fmt.Println(err.Error())
+
 		return
 	}
 
 	if benchmark.Verbose {
 		fmt.Printf("Performing latency tests\n")
 	}
+
 	benchmark.StartLatencyTests(intraCluster)
 }

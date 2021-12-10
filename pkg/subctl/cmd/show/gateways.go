@@ -60,12 +60,14 @@ func getGatewaysStatus(cluster *cmd.Cluster) bool {
 	}
 
 	gwStatus := make([]gatewayStatus, 0, len(gateways))
+
 	for i := range gateways {
 		gateway := &gateways[i]
 		haStatus := gateway.Status.HAStatus
 		enpoint := gateway.Status.LocalEndpoint.Hostname
 		totalConnections := len(gateway.Status.Connections)
 		countConnected := 0
+
 		for i := range gateway.Status.Connections {
 			if gateway.Status.Connections[i].Status == submv1.Connected {
 				countConnected++
@@ -82,6 +84,7 @@ func getGatewaysStatus(cluster *cmd.Cluster) bool {
 		} else {
 			summary = fmt.Sprintf("%d connections out of %d are established", countConnected, totalConnections)
 		}
+
 		gwStatus = append(gwStatus,
 			gatewayStatus{
 				node:     enpoint,
@@ -89,12 +92,15 @@ func getGatewaysStatus(cluster *cmd.Cluster) bool {
 				summary:  summary,
 			})
 	}
+
 	if len(gwStatus) == 0 {
 		status.EndWithFailure("No Gateways found")
 		return false
 	}
+
 	status.End(cli.Success)
 	printGateways(gwStatus)
+
 	return true
 }
 
@@ -104,6 +110,7 @@ func showGateways(cluster *cmd.Cluster) bool {
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 

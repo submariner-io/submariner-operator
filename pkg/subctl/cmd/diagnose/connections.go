@@ -43,6 +43,7 @@ func checkConnections(cluster *cmd.Cluster) bool {
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 
@@ -60,6 +61,7 @@ func checkConnections(cluster *cmd.Cluster) bool {
 	}
 
 	foundActive := false
+
 	for i := range gateways {
 		gateway := &gateways[i]
 		if gateway.Status.HAStatus != submv1.HAStatusActive {
@@ -67,6 +69,7 @@ func checkConnections(cluster *cmd.Cluster) bool {
 		}
 
 		foundActive = true
+
 		if len(gateway.Status.Connections) == 0 {
 			status.QueueFailureMessage(fmt.Sprintf("There are no active connections on gateway %q", gateway.Name))
 		}

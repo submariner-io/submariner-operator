@@ -72,6 +72,7 @@ func init() {
 
 func recordGateways(count int) {
 	gatewaysGauge.Set(float64(count))
+
 	if count == 0 {
 		gatewayCreationTimeGauge.Reset()
 	}

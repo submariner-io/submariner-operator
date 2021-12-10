@@ -44,19 +44,24 @@ func showAll(cluster *cmd.Cluster) bool {
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 
 	success := showConnections(cluster)
+
 	fmt.Println()
 
 	success = showEndpoints(cluster) && success
+
 	fmt.Println()
 
 	success = showGateways(cluster) && success
+
 	fmt.Println()
 
 	success = showNetwork(cluster) && success
+
 	fmt.Println()
 
 	success = showVersions(cluster) && success

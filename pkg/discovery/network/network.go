@@ -74,6 +74,7 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submC
 		// TODO: The other branch of this if will not try to find the globalCIDRs
 		globalCIDR, _ := getGlobalCIDRs(submClient, operatorNamespace)
 		discovery.GlobalCIDR = globalCIDR
+
 		if discovery.IsComplete() {
 			return discovery, nil
 		}
@@ -90,6 +91,7 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submC
 				if len(discovery.ServiceCIDRs) == 0 {
 					discovery.ServiceCIDRs = genericNet.ServiceCIDRs
 				}
+
 				if len(discovery.PodCIDRs) == 0 {
 					discovery.PodCIDRs = genericNet.PodCIDRs
 				}
@@ -129,6 +131,7 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 	if err != nil || calicoClusterNet != nil {
 		return calicoClusterNet, err
 	}
+
 	return nil, nil
 }
 
@@ -136,6 +139,7 @@ func getGlobalCIDRs(submClient submarinerclientset.Interface, operatorNamespace 
 	if submClient == nil {
 		return "", nil
 	}
+
 	existingCfg, err := submClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(
 		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
 	if err != nil {
@@ -143,5 +147,6 @@ func getGlobalCIDRs(submClient submarinerclientset.Interface, operatorNamespace 
 	}
 
 	globalCIDR := existingCfg.Spec.GlobalCIDR
+
 	return globalCIDR, nil
 }

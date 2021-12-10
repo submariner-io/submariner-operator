@@ -89,6 +89,7 @@ func main() {
 	goDirectory := os.Args[2]
 
 	fmt.Println("Generating yamls.go")
+
 	out, err := os.Create(filepath.Join(goDirectory, "yamls.go"))
 	panicOnErr(err)
 
@@ -151,6 +152,7 @@ const (
 		_, err = out.WriteString("`\n")
 		panicOnErr(err)
 	}
+
 	_, err = out.WriteString(")\n")
 	panicOnErr(err)
 

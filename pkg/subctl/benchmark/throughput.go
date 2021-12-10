@@ -92,6 +92,7 @@ func initFramework(baseName string) *framework.Framework {
 	framework.ValidateFlags(framework.TestContext)
 	framework.BeforeSuite()
 	f.BeforeEach()
+
 	return f
 }
 
@@ -108,6 +109,7 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	iperf3Port := 5201
 
 	By(fmt.Sprintf("Creating a Nettest Server Pod on %q", serverClusterName))
+
 	nettestServerPod := f.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ThroughputServerPod,
 		Cluster:            testParams.ServerCluster,
@@ -122,11 +124,12 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 	By(fmt.Sprintf("Nettest Server Pod %q was created on node %q", nettestServerPod.Pod.Name, nettestServerPod.Pod.Spec.NodeName))
 
 	remoteIP := p1.Status.PodIP
-
 	var service *v1.Service
+
 	if framework.TestContext.GlobalnetEnabled && testParams.ClientCluster != testParams.ServerCluster {
 		By(fmt.Sprintf("Pointing a ClusterIP service to the nettest server pod in cluster %q and exporting it",
 			framework.TestContext.ClusterIDs[testParams.ServerCluster]))
+
 		service = nettestServerPod.CreateService()
 		f.CreateServiceExport(testParams.ServerCluster, service.Name)
 
@@ -148,7 +151,9 @@ func runThroughputTest(f *framework.Framework, testParams benchmarkTestParams) {
 		nettestClientPod.Pod.Name, clientClusterName, nettestClientPod.Pod.Spec.NodeName, remoteIP))
 
 	By(fmt.Sprintf("Waiting for the client pod %q to exit, returning what client sent", nettestClientPod.Pod.Name))
+
 	nettestClientPod.AwaitFinishVerbose(Verbose)
+
 	if !Verbose {
 		nettestClientPod.CheckSuccessfulFinish()
 		fmt.Println(nettestClientPod.TerminationMessage)

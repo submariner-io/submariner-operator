@@ -459,6 +459,7 @@ func withNetworkDiscovery(submariner *submariner_v1.Submariner, clusterNetwork *
 	submariner.Status.ClusterCIDR = getClusterCIDR(submariner, clusterNetwork)
 	submariner.Status.ServiceCIDR = getServiceCIDR(submariner, clusterNetwork)
 	submariner.Status.NetworkPlugin = clusterNetwork.NetworkPlugin
+
 	return submariner
 }
 
@@ -481,12 +482,14 @@ func getServiceCIDR(submariner *submariner_v1.Submariner, clusterNetwork *networ
 func getDaemonSet(ctx context.Context, name string, client controllerClient.Client) (*appsv1.DaemonSet, error) {
 	foundDaemonSet := &appsv1.DaemonSet{}
 	err := client.Get(ctx, types.NamespacedName{Name: name, Namespace: submarinerNamespace}, foundDaemonSet)
+
 	return foundDaemonSet, err
 }
 
 func expectDaemonSet(ctx context.Context, name string, client controllerClient.Client) *appsv1.DaemonSet {
 	foundDaemonSet, err := getDaemonSet(ctx, name, client)
 	Expect(err).To(Succeed())
+
 	return foundDaemonSet
 }
 

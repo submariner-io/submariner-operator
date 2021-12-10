@@ -97,18 +97,21 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 		},
 		Data: data,
 	}
+
 	return cm, nil
 }
 
 func UpdateGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace string,
 	configMap *v1.ConfigMap, newCluster ClusterInfo) error {
 	var clusterInfo []ClusterInfo
+
 	err := json.Unmarshal([]byte(configMap.Data[ClusterInfoKey]), &clusterInfo)
 	if err != nil {
 		return errors.Wrapf(err, "error unmarshalling ClusterInfo")
 	}
 
 	exists := false
+
 	for k, value := range clusterInfo {
 		if value.ClusterID == newCluster.ClusterID {
 			clusterInfo[k].GlobalCidr = newCluster.GlobalCidr

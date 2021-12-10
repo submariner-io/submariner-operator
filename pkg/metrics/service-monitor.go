@@ -47,6 +47,7 @@ func CreateServiceMonitors(config *rest.Config, ns string, services []*v1.Servic
 	if err != nil {
 		return nil, err
 	}
+
 	if !exists {
 		return nil, ErrServiceMonitorNotPresent
 	}
@@ -72,6 +73,7 @@ func CreateServiceMonitors(config *rest.Config, ns string, services []*v1.Servic
 		if s == nil {
 			continue
 		}
+
 		sm := GenerateServiceMonitor(ns, s)
 
 		smc, err := mclient.ServiceMonitors(ns).Create(context.TODO(), sm, metav1.CreateOptions{})
@@ -92,12 +94,14 @@ func GenerateServiceMonitor(ns string, s *v1.Service) *monitoringv1.ServiceMonit
 	for k, v := range s.ObjectMeta.Labels {
 		labels[k] = v
 	}
+
 	endpoints := populateEndpointsFromServicePorts(s)
 	boolTrue := true
 
 	// Owner references only work inside the same namespace
 	ownerReferences := []metav1.OwnerReference{}
 	namespaceSelector := monitoringv1.NamespaceSelector{}
+
 	if ns == s.ObjectMeta.Namespace {
 		ownerReferences = []metav1.OwnerReference{
 			{

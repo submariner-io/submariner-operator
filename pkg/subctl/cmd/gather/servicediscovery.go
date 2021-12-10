@@ -78,26 +78,34 @@ func gatherEndpointSlices(info *Info, namespace string) {
 func gatherConfigMapCoreDNS(info *Info) {
 	namespace := "kube-system"
 	name := "coredns"
+
 	if isCoreDNSTypeOcp(info) {
 		namespace = "openshift-dns"
 		name = "dns-default"
 	}
+
 	fieldMap := map[string]string{
 		"metadata.name": name,
 	}
+
 	fieldSelector := fields.Set(fieldMap).String()
+
 	gatherConfigMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
 
 	// Gather custom configname for AKS type deployments
 	if info.ServiceDiscovery.Spec.CoreDNSCustomConfig != nil {
 		name = info.ServiceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName
+
 		if info.ServiceDiscovery.Spec.CoreDNSCustomConfig.Namespace != "" {
 			namespace = info.ServiceDiscovery.Spec.CoreDNSCustomConfig.Namespace
 		}
+
 		fieldMap := map[string]string{
 			"metadata.name": name,
 		}
+
 		fieldSelector := fields.Set(fieldMap).String()
+
 		gatherConfigMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
 	}
 }

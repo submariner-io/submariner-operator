@@ -113,6 +113,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	clientMessage := string(uuid.NewUUID())[0:8]
 	podCommand := fmt.Sprintf("timeout %d tcpdump -ln -Q in -A -s 100 -i any udp and dst port %d | grep '%s'",
 		validationTimeout, tunnelPort, clientMessage)
+
 	sPod, err := spawnSnifferPodOnNode(localCluster.KubeClient, gwNodeName, podNamespace, podCommand)
 	if err != nil {
 		status.EndWithFailure("Error spawning the sniffer pod on the Gateway node: %v", err)
@@ -160,6 +161,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 		status.EndWithFailure("The tcpdump output from the sniffer pod does not include the message"+
 			" sent from client pod. Please check that your firewall configuration allows UDP/%d traffic"+
 			" on the %q node.", tunnelPort, localEndpoint.Spec.Hostname)
+
 		return false
 	}
 
@@ -177,6 +179,7 @@ func newCluster(cfg *rest.Config) *cmd.Cluster {
 	if cluster.Submariner == nil {
 		utils.ExitWithErrorMsg(cmd.SubmMissingMessage)
 	}
+
 	return cluster
 }
 
@@ -235,5 +238,6 @@ func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Statu
 
 	status.EndWithFailure("The gateway on cluster %q does not have an active connection to cluster %q",
 		cluster.Name, localClusterID)
+
 	return ""
 }

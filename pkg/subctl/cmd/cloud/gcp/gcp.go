@@ -91,6 +91,7 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 
 	reporter := cloudutils.NewCLIReporter()
 	reporter.Started("Retrieving GCP credentials from your GCP configuration")
+
 	creds, err := getGCPCredentials()
 	utils.ExitOnError("Failed to get GCP credentials", err)
 	reporter.Succeeded("")
@@ -130,6 +131,7 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 	// TODO: Ideally we should be able to specify the image for GWNode, but it was seen that
 	// with certain images, the instance is not coming up. Needs to be investigated further.
 	gwDeployer := gcp.NewOcpGatewayDeployer(gcpCloudInfo, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sClientSet)
+
 	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
 
 	return function(gcpCloud, gwDeployer, reporter)
@@ -166,6 +168,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 	infraID = metadata.InfraID
 	region = metadata.GCP.Region
 	projectID = metadata.GCP.ProjectID
+
 	return nil
 }
 

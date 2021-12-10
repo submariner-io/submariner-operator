@@ -41,6 +41,7 @@ func (p *Printer) Print(objects []interface{}) {
 		for i := range row {
 			rowInterfaces[i] = row[i]
 		}
+
 		fmt.Printf(template, rowInterfaces...)
 	}
 }
@@ -72,6 +73,7 @@ func templateFromLengths(columnLengths []int) string {
 func (p *Printer) findColumnLengths(rowList [][]string) []int {
 	columns := len(rowList[0])
 	columnLengths := make([]int, columns)
+
 	for _, row := range rowList {
 		for index, column := range row {
 			colLength := len(column)

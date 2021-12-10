@@ -63,6 +63,7 @@ func ForClusters(kubeConfigPath string, kubeContexts []string) ([]RestConfig, er
 		if err != nil {
 			return restConfigs, errors.Wrap(err, "error creating kube config")
 		}
+
 		for context := range rawConfig.Contexts {
 			contexts = append(contexts, context)
 		}
@@ -71,6 +72,7 @@ func ForClusters(kubeConfigPath string, kubeContexts []string) ([]RestConfig, er
 	for _, context := range contexts {
 		if context != "" {
 			overrides.CurrentContext = context
+
 			config, err := clientConfigAndClusterName(rules, overrides)
 			if err != nil {
 				return nil, err
@@ -115,6 +117,7 @@ func ForBroker(submariner *v1alpha1.Submariner, serviceDisc *v1alpha1.ServiceDis
 
 func clientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, overrides *clientcmd.ConfigOverrides) (RestConfig, error) {
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
+
 	clientConfig, err := config.ClientConfig()
 	if err != nil {
 		return RestConfig{}, errors.Wrap(err, "error creating client config")
@@ -139,10 +142,12 @@ func Clients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, erro
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error creating client")
 	}
+
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error creating client")
 	}
+
 	return dynClient, clientSet, nil
 }
 
@@ -151,10 +156,12 @@ func ClusterNameFromContext(rawConfig *api.Config, overridesContext string) *str
 		// No context provided, use the current context.
 		overridesContext = rawConfig.CurrentContext
 	}
+
 	configContext, ok := rawConfig.Contexts[overridesContext]
 	if !ok {
 		return nil
 	}
+
 	return &configContext.Cluster
 }
 
@@ -169,6 +176,7 @@ func ClientConfig(kubeConfigPath, kubeContext string) clientcmd.ClientConfig {
 
 	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
 	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
+
 	if kubeContext != "" {
 		overrides.CurrentContext = kubeContext
 	}

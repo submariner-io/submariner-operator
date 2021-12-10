@@ -47,6 +47,7 @@ func showNetwork(cluster *cmd.Cluster) bool {
 
 	var clusterNetwork *network.ClusterNetwork
 	var msg string
+
 	if cluster.Submariner != nil {
 		msg = "    Discovered network details via Submariner:"
 		clusterNetwork = &network.ClusterNetwork{
@@ -64,10 +65,13 @@ func showNetwork(cluster *cmd.Cluster) bool {
 		clusterNetwork, err = network.Discover(cluster.DynClient, cluster.KubeClient, submarinerClient, cmd.OperatorNamespace)
 		utils.ExitOnError("There was an error discovering network details for this cluster", err)
 	}
+
 	if clusterNetwork != nil {
 		fmt.Println(msg)
 	}
+
 	clusterNetwork.Show()
 	status.End(cli.Success)
+
 	return true
 }

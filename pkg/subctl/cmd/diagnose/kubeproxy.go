@@ -50,6 +50,7 @@ func checkKubeProxyMode(cluster *cmd.Cluster) bool {
 	status.Start("Checking Submariner support for the kube-proxy mode")
 
 	scheduling := resource.PodScheduling{ScheduleOn: resource.GatewayNode, Networking: resource.HostNetworking}
+
 	podOutput, err := resource.SchedulePodAwaitCompletion(&resource.PodConfig{
 		Name:       "query-iface-list",
 		ClientSet:  cluster.KubeClient,

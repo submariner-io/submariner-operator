@@ -25,25 +25,28 @@ import (
 )
 
 func TestIsTerminal(t *testing.T) {
+	// TODO: testing an actual PTY would be somewhat tricky to do cleanly
+	// but we should maybe do this in the future.
+	// At least we know this doesn't trigger on things that are obviously not
+	// terminals
 	// test trivial nil case
 	if env.IsTerminal(nil) {
 		t.Fatalf("IsTerminal should be false for nil Writer")
 	}
+
 	// test something that isn't even a file
 	var buff bytes.Buffer
 	if env.IsTerminal(&buff) {
 		t.Fatalf("IsTerminal should be false for bytes.Buffer")
 	}
+
 	// test a file
 	f, err := ioutil.TempFile("", "kind-isterminal")
 	if err != nil {
 		t.Fatalf("Failed to create tempfile %v", err)
 	}
+
 	if env.IsTerminal(f) {
 		t.Fatalf("IsTerminal should be false for nil Writer")
 	}
-	// TODO: testing an actual PTY would be somewhat tricky to do cleanly
-	// but we should maybe do this in the future.
-	// At least we know this doesn't trigger on things that are obviously not
-	// terminals
 }

@@ -86,20 +86,26 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 
 	reporter := cloudutils.NewCLIReporter()
 	reporter.Started("Retrieving AWS credentials from your AWS configuration")
+
 	creds, err := getAWSCredentials()
 	if err != nil {
 		reporter.Failed(err)
 		return err
 	}
+
 	reporter.Succeeded("")
 
 	reporter.Started("Initializing AWS connectivity")
+
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region), config.WithCredentialsProvider(creds))
 	if err != nil {
 		reporter.Failed(err)
+
 		return errors.Wrap(err, "error loading default config")
 	}
+
 	ec2Client := ec2.NewFromConfig(cfg)
+
 	reporter.Succeeded("")
 
 	k8sConfig, err := restconfig.ForCluster(kubeConfig, kubeContext)
@@ -148,6 +154,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	infraID = metadata.InfraID
 	region = metadata.AWS.Region
+
 	return nil
 }
 

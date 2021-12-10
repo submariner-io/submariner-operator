@@ -238,8 +238,10 @@ func (r *Reconciler) reconcileGatewayDaemonSet(
 	if err != nil {
 		return nil, err
 	}
+
 	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.config.Client,
 		r.config.RestConfig, r.config.Scheme, reqLogger)
+
 	return daemonSet, err
 }
 
@@ -251,6 +253,7 @@ func buildGatewayStatusAndUpdateMetrics(gateways []submarinerv1.Gateway) []subma
 		recordGateways(nGateways)
 		// Clear the connections so we don’t remember stale status information
 		recordNoConnections()
+
 		for i := range gateways {
 			gateway := &gateways[i]
 			gatewayStatuses = append(gatewayStatuses, gateway.Status)
@@ -275,6 +278,7 @@ func buildGatewayStatusAndUpdateMetrics(gateways []submarinerv1.Gateway) []subma
 func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
 	namespace string) ([]submarinerv1.Gateway, error) {
 	foundGateways := &submarinerv1.GatewayList{}
+
 	err := r.config.Client.List(ctx, foundGateways, client.InNamespace(namespace))
 	if err != nil && apierrors.IsNotFound(err) {
 		return []submarinerv1.Gateway{}, nil
@@ -290,5 +294,6 @@ func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
 			return nil, errors.Wrap(err, "error setting owner ref for Gateway")
 		}
 	}
+
 	return foundGateways.Items, nil
 }
