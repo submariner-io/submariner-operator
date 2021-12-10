@@ -349,12 +349,14 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 				newClusterInfo.GlobalCidr = []string{netconfig.GlobalnetCIDR}
 
 				err = broker.UpdateGlobalnetConfigMap(brokerAdminClientset, brokerNamespace, globalnetConfigMap, newClusterInfo)
-				return err
+				return errors.Wrap(err, "error updating Globalnet ConfigMap")
 			}
 		}
-		return err
+
+		return nil
 	})
-	return retryErr
+
+	return retryErr // nolint:wrapcheck // No need to wrap here
 }
 
 func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
@@ -416,7 +418,7 @@ func askForCIDR(name string) (string, error) {
 
 	err := survey.Ask(qs, &answers)
 	if err != nil {
-		return "", err
+		return "", err // nolint:wrapcheck // No need to wrap here
 	}
 
 	return strings.TrimSpace(answers.Cidr), nil

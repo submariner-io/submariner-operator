@@ -80,7 +80,7 @@ func (l *Logger) SetVerbosity(verbosity log.Level) {
 func (l *Logger) write(p []byte) (n int, err error) {
 	l.writerMu.Lock()
 	defer l.writerMu.Unlock()
-	return l.writer.Write(p)
+	return l.writer.Write(p) // nolint:wrapcheck // No need to wrap here
 }
 
 // writeBuffer writes buf with write, ensuring there is a trailing newline.

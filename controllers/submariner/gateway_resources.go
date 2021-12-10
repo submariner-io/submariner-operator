@@ -23,6 +23,7 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
@@ -31,7 +32,7 @@ import (
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -230,6 +231,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 	return podTemplate
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileGatewayDaemonSet(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
 	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance), reqLogger, r.config.Client, r.config.Scheme)
@@ -274,18 +276,18 @@ func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
 	namespace string) ([]submarinerv1.Gateway, error) {
 	foundGateways := &submarinerv1.GatewayList{}
 	err := r.config.Client.List(ctx, foundGateways, client.InNamespace(namespace))
-	if err != nil && errors.IsNotFound(err) {
+	if err != nil && apierrors.IsNotFound(err) {
 		return []submarinerv1.Gateway{}, nil
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error listing Gateway resource")
 	}
 
 	// Ensure we’ll get updates
 	for i := range foundGateways.Items {
 		if err := controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.config.Scheme); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error setting owner ref for Gateway")
 		}
 	}
 	return foundGateways.Items, nil

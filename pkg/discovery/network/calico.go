@@ -20,6 +20,7 @@ package network
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -29,7 +30,7 @@ import (
 func discoverCalicoNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error listing ConfigMaps")
 	}
 
 	findCalicoConfigMap := false

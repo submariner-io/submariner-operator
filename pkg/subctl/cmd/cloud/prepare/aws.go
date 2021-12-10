@@ -62,6 +62,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		input.InternalPorts = append(input.InternalPorts, gwPorts...)
 	}
 
+	// nolint:wrapcheck // No need to wrap errors here.
 	err := aws.RunOnAWS(awsGWInstanceType, *kubeConfig, *kubeContext,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {

@@ -183,9 +183,10 @@ func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, nam
 		return nil, lastErr
 	}
 
-	return secret, err
+	return secret, err // nolint:wrapcheck // No need to wrap here
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateNewBrokerNamespace(clientset *kubernetes.Clientset, namespace string) (brokernamespace *v1.Namespace, err error) {
 	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -196,20 +197,24 @@ func CreateNewBrokerNamespace(clientset *kubernetes.Clientset, namespace string)
 	return clientset.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{})
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateOrUpdateClusterBrokerRole(clientset *kubernetes.Clientset, namespace string) (created bool, err error) {
 	return utils.CreateOrUpdateRole(context.TODO(), clientset, namespace, NewBrokerClusterRole())
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateOrUpdateBrokerAdminRole(clientset *kubernetes.Clientset, namespace string) (created bool, err error) {
 	return utils.CreateOrUpdateRole(context.TODO(), clientset, namespace, NewBrokerAdminRole())
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, serviceAccount, role, namespace string) (
 	brokerRoleBinding *rbac.RoleBinding, err error) {
 	return clientset.RbacV1().RoleBindings(namespace).Create(
 		context.TODO(), NewBrokerRoleBinding(serviceAccount, role, namespace), metav1.CreateOptions{})
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateNewBrokerSA(clientset *kubernetes.Clientset, submarinerBrokerSA, namespace string) (brokerSA *v1.ServiceAccount, err error) {
 	return clientset.CoreV1().ServiceAccounts(namespace).Create(
 		context.TODO(), NewBrokerSA(submarinerBrokerSA), metav1.CreateOptions{})

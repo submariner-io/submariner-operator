@@ -21,6 +21,7 @@ package submariner
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -81,11 +82,11 @@ func retrieveDaemonSetContainerStatuses(ctx context.Context, clnt client.Reader,
 	pods := &corev1.PodList{}
 	selector, err := metav1.LabelSelectorAsSelector(daemonSet.Spec.Selector)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating label selector")
 	}
 	err = clnt.List(ctx, pods, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error listing DaemonSet pods")
 	}
 	containerStatuses := []corev1.ContainerStatus{}
 	for i := range pods.Items {

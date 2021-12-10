@@ -152,7 +152,7 @@ func (np *NetworkPod) schedulePod() error {
 	var err error
 	np.Pod, err = pc.Create(context.TODO(), &networkPod, metav1.CreateOptions{})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating Pod")
 	}
 
 	err = np.awaitUntilPodScheduled()
@@ -167,6 +167,7 @@ func (np *NetworkPod) DeletePod() {
 	_ = pc.Delete(context.TODO(), np.Pod.Name, metav1.DeleteOptions{})
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func (np *NetworkPod) awaitUntilPodScheduled() error {
 	pods := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 
@@ -193,6 +194,7 @@ func (np *NetworkPod) awaitUntilPodScheduled() error {
 	return nil
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func (np *NetworkPod) AwaitPodCompletion() error {
 	pods := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 

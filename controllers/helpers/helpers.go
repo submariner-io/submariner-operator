@@ -44,7 +44,7 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 
 	// Set the owner and controller.
 	if err := controllerutil.SetControllerReference(owner, daemonSet, scheme); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error setting owner reference for DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
 	}
 
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -60,7 +60,7 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 				toUpdate.Labels[k] = v
 			}
 			// Set the owner and controller.
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
 		})
 		if err != nil {
 			if IsImmutableError(err) {
@@ -68,16 +68,16 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 					daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
 
 				if err := client.Delete(context.TODO(), toUpdate); err != nil {
-					return err
+					return err // nolint:wrapcheck // No need to wrap here
 				}
 
 				if err := client.Create(context.TODO(), daemonSet); err != nil {
-					return err
+					return err // nolint:wrapcheck // No need to wrap here
 				}
 
 				return nil
 			}
-			return err
+			return err // nolint:wrapcheck // No need to wrap here
 		}
 
 		if result == controllerutil.OperationResultCreated {
@@ -103,7 +103,7 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 
 	// Set the owner and controller
 	if err := controllerutil.SetControllerReference(owner, deployment, scheme); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error setting owner reference for Deployment %s/%s", deployment.Namespace, deployment.Name)
 	}
 
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -119,10 +119,10 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 				toUpdate.Labels[k] = v
 			}
 			// Set the owner and controller
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
 		})
 		if err != nil {
-			return err
+			return err // nolint:wrapcheck // No need to wrap here
 		}
 
 		if result == controllerutil.OperationResultCreated {
@@ -148,7 +148,7 @@ func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLog
 
 	// Set the owner and controller
 	if err := controllerutil.SetControllerReference(owner, configMap, scheme); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error setting owner reference for ConfigMap %s/%s", configMap.Namespace, configMap.Name)
 	}
 
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -164,10 +164,10 @@ func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLog
 				toUpdate.Labels[k] = v
 			}
 			// Set the owner and controller
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
 		})
 		if err != nil {
-			return err
+			return err // nolint:wrapcheck // No need to wrap here
 		}
 
 		if result == controllerutil.OperationResultCreated {
@@ -193,7 +193,7 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 
 	// Set the owner and controller
 	if err := controllerutil.SetControllerReference(owner, service, scheme); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error setting owner reference for Service %s/%s", service.Namespace, service.Name)
 	}
 
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -219,10 +219,10 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 				toUpdate.Annotations[k] = v
 			}
 			// Set the owner and controller
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
 		})
 		if err != nil {
-			return err
+			return err // nolint:wrapcheck // No need to wrap here
 		}
 
 		if result == controllerutil.OperationResultCreated {

@@ -32,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.Submariner,
 	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger) error {
 	// Only OVNKubernetes needs networkplugin-syncer so far

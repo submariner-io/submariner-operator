@@ -152,6 +152,7 @@ func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submar
 
 	for _, secret := range sa.Secrets {
 		if strings.HasPrefix(secret.Name, brokerTokenPrefix) {
+			// nolint:wrapcheck // No need to wrap here
 			return clientSet.CoreV1().Secrets(brokerNamespace).Get(context.TODO(), secret.Name, metav1.GetOptions{})
 		}
 	}

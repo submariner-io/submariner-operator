@@ -29,7 +29,7 @@ import (
 
 	"github.com/go-logr/logr"
 	operatorv1 "github.com/openshift/api/operator/v1"
-	errorsPkg "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
@@ -38,7 +38,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -112,7 +112,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	err := r.config.Client.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -122,11 +122,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 				controllerClient.MatchingLabels{"app": deploymentName},
 			}
 			err := r.config.Client.DeleteAllOf(ctx, deployment, opts...)
-			return reconcile.Result{}, err
+			return reconcile.Result{}, errors.Wrap(err, "error deleting resource")
 		}
 
 		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+		return reconcile.Result{}, errors.Wrap(err, "error retrieving resource")
 	}
 
 	if instance.ObjectMeta.DeletionTimestamp != nil {
@@ -137,44 +137,44 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	lightHouseAgent := newLighthouseAgent(instance)
 	if _, err = helpers.ReconcileDeployment(instance, lightHouseAgent, reqLogger,
 		r.config.Client, r.config.Scheme); err != nil {
-		return reconcile.Result{}, err
+		return reconcile.Result{}, errors.Wrap(err, "error reconciling agent deployment")
 	}
 
 	err = metrics.Setup(instance.Namespace, instance, lightHouseAgent.GetLabels(), 8082, r.config.Client,
 		r.config.RestConfig, r.config.Scheme, reqLogger)
 	if err != nil {
-		return reconcile.Result{}, err
+		return reconcile.Result{}, errors.Wrap(err, "error setting up metrics")
 	}
 
 	lighthouseDNSConfigMap := newLighthouseDNSConfigMap(instance)
 	if _, err = helpers.ReconcileConfigMap(instance, lighthouseDNSConfigMap, reqLogger,
 		r.config.Client, r.config.Scheme); err != nil {
 		log.Error(err, "Error creating the lighthouseCoreDNS configMap")
-		return reconcile.Result{}, err
+		return reconcile.Result{}, errors.Wrap(err, "error reconciling ConfigMap")
 	}
 
 	lighthouseCoreDNSDeployment := newLighthouseCoreDNSDeployment(instance)
 	if _, err = helpers.ReconcileDeployment(instance, lighthouseCoreDNSDeployment, reqLogger,
 		r.config.Client, r.config.Scheme); err != nil {
 		log.Error(err, "Error creating the lighthouseCoreDNS deployment")
-		return reconcile.Result{}, err
+		return reconcile.Result{}, errors.Wrap(err, "error reconciling coredns deployment")
 	}
 
 	lighthouseCoreDNSService := &corev1.Service{}
 	err = r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
 		lighthouseCoreDNSService)
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		lighthouseCoreDNSService = newLighthouseCoreDNSService(instance)
 		if _, err = helpers.ReconcileService(instance, lighthouseCoreDNSService, reqLogger,
 			r.config.Client, r.config.Scheme); err != nil {
 			log.Error(err, "Error creating the lighthouseCoreDNS service")
-			return reconcile.Result{}, err
+			return reconcile.Result{}, errors.Wrap(err, "error reconciling coredns Service")
 		}
 	}
 	err = metrics.Setup(instance.Namespace, instance, lighthouseCoreDNSDeployment.GetLabels(), 9153, r.config.Client, r.config.RestConfig,
 		r.config.Scheme, reqLogger)
 	if err != nil {
-		return reconcile.Result{}, err
+		return reconcile.Result{}, errors.Wrap(err, "error setting up coredns metrics")
 	}
 	if instance.Spec.CoreDNSCustomConfig != nil && instance.Spec.CoreDNSCustomConfig.ConfigMapName != "" {
 		err = r.updateDNSCustomConfigMap(ctx, instance, reqLogger)
@@ -186,7 +186,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		err = r.updateDNSConfigMap(ctx, instance, reqLogger, defaultCoreDNSNamespace, coreDNSName)
 	}
 
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		// Try to update Openshift-DNS
 		return reconcile.Result{}, r.updateOpenshiftClusterDNSOperator(ctx, instance, reqLogger)
 	}
@@ -404,9 +404,10 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 		coreDNSNamespace = cr.Spec.CoreDNSCustomConfig.Namespace
 	}
 
+	// nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := r.config.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Get(ctx, customCoreDNSName, metav1.GetOptions{})
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			configFunc = func(ctx context.Context, cm *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 				return r.config.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Create(ctx, cm, metav1.CreateOptions{})
 			}
@@ -446,11 +447,13 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 		_, err = configFunc(ctx, configMap)
 		return err
 	})
-	return retryErr
+
+	return errors.Wrap(retryErr, "error updating DNS custom ConfigMap")
 }
 
 func (r *Reconciler) updateDNSConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger, coreDNSNamespace, configMapName string) error {
+	// nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := r.config.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Get(ctx, configMapName, metav1.GetOptions{})
 		if err != nil {
@@ -502,7 +505,8 @@ func (r *Reconciler) updateDNSConfigMap(ctx context.Context, cr *submarinerv1alp
 		_, err = r.config.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Update(ctx, configMap, metav1.UpdateOptions{})
 		return err
 	})
-	return retryErr
+
+	return errors.Wrap(retryErr, "error updating DNS ConfigMap")
 }
 
 func findCoreDNSListeningPort(coreFile string) string {
@@ -518,13 +522,14 @@ func findCoreDNSListeningPort(coreFile string) string {
 
 func (r *Reconciler) updateOpenshiftClusterDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger) error {
+	// nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		dnsOperator := &operatorv1.DNS{}
 		if err := r.config.Client.Get(ctx, types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
 			// microshift uses the coredns image, but the DNS operator and CRDs are off
 			if meta.IsNoMatchError(err) {
 				err = r.updateDNSConfigMap(ctx, instance, reqLogger, microshiftDNSNamespace, microshiftDNSConfigMap)
-				return errorsPkg.Wrapf(err, "error trying to update microshift coredns configmap %q in namespace %q",
+				return errors.Wrapf(err, "error trying to update microshift coredns configmap %q in namespace %q",
 					microshiftDNSNamespace, microshiftDNSNamespace)
 			}
 
@@ -563,7 +568,8 @@ func (r *Reconciler) updateOpenshiftClusterDNSOperator(ctx context.Context, inst
 		}
 		return err
 	})
-	return retryErr
+
+	return errors.Wrap(retryErr, "error updating Openshift DNS operator")
 }
 
 func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dnsOperator *operatorv1.DNS,
@@ -621,6 +627,7 @@ func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, imageName, co
 		submariner.Spec.ImageOverrides)
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// These are required so that we can manipulate DNS ConfigMap
 	if err := operatorv1.Install(mgr.GetScheme()); err != nil {

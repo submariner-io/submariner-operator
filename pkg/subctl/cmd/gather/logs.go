@@ -111,7 +111,7 @@ func writeLogToFile(data, podName string, info *Info, fileExtension string) (str
 		return "", errors.WithMessagef(err, "error writing to file %s", filePath)
 	}
 
-	return fileName, err
+	return fileName, nil
 }
 
 func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.PodList, error) {

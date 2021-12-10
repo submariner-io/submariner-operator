@@ -19,6 +19,7 @@ limitations under the License.
 package scc
 
 import (
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
 	"k8s.io/client-go/rest"
@@ -27,53 +28,51 @@ import (
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	operatorSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_operator_service_account_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error parsing the operator ServiceAccount resource")
 	}
 
 	gatewaySaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_gateway_service_account_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error parsing the gateway ServiceAccount resource")
 	}
 
 	routeAgentSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_route_agent_service_account_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error parsing the route agent ServiceAccount resource")
 	}
 
 	globalnetSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_globalnet_service_account_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error parsing the globalnet ServiceAccount resource")
 	}
 
 	npSyncerSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_networkplugin_syncer_service_account_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error parsing the networkplugin syncer ServiceAccount resource")
 	}
 
 	updateOperatorSCC, err := scc.UpdateSCC(restConfig, namespace, operatorSaName)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
 	updateGatewaySCC, err := scc.UpdateSCC(restConfig, namespace, gatewaySaName)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
 	updateRouteAgentSCC, err := scc.UpdateSCC(restConfig, namespace, routeAgentSaName)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
 	updateGlobalnetSCC, err := scc.UpdateSCC(restConfig, namespace, globalnetSaName)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
 	updateNPSyncerSCC, err := scc.UpdateSCC(restConfig, namespace, npSyncerSaName)
-	if err != nil {
-		return false, err
-	}
 
-	return updateOperatorSCC || updateGatewaySCC || updateRouteAgentSCC || updateGlobalnetSCC || updateNPSyncerSCC, err
+	return updateOperatorSCC || updateGatewaySCC || updateRouteAgentSCC || updateGlobalnetSCC || updateNPSyncerSCC,
+		errors.Wrap(err, "error updating the SCC resource")
 }

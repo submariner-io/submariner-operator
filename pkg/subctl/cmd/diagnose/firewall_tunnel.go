@@ -49,7 +49,7 @@ func init() {
 
 			same, err := cmd.CompareFiles(args[0], args[1])
 			if err != nil {
-				return err
+				return err // nolint:wrapcheck // No need to wrap here
 			}
 
 			if same {

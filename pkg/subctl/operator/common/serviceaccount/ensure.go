@@ -29,6 +29,7 @@ import (
 )
 
 // Ensure creates the given service account.
+// nolint:wrapcheck // No need to wrap errors here.
 func Ensure(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
 	sa := &v1.ServiceAccount{}
 	err := embeddedyamls.GetObject(yaml, sa)
@@ -39,6 +40,7 @@ func Ensure(clientSet *clientset.Clientset, namespace, yaml string) (bool, error
 	return utils.CreateOrUpdateServiceAccount(context.TODO(), clientSet, namespace, sa)
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func EnsureRole(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
 	role := &rbacv1.Role{}
 	err := embeddedyamls.GetObject(yaml, role)
@@ -49,6 +51,7 @@ func EnsureRole(clientSet *clientset.Clientset, namespace, yaml string) (bool, e
 	return utils.CreateOrUpdateRole(context.TODO(), clientSet, namespace, role)
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func EnsureRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
 	roleBinding := &rbacv1.RoleBinding{}
 	err := embeddedyamls.GetObject(yaml, roleBinding)
@@ -59,6 +62,7 @@ func EnsureRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (
 	return utils.CreateOrUpdateRoleBinding(context.TODO(), clientSet, namespace, roleBinding)
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func EnsureClusterRole(clientSet *clientset.Clientset, yaml string) (bool, error) {
 	clusterRole := &rbacv1.ClusterRole{}
 	err := embeddedyamls.GetObject(yaml, clusterRole)
@@ -69,6 +73,7 @@ func EnsureClusterRole(clientSet *clientset.Clientset, yaml string) (bool, error
 	return utils.CreateOrUpdateClusterRole(context.TODO(), clientSet, clusterRole)
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func EnsureClusterRoleBinding(clientSet *clientset.Clientset, namespace, yaml string) (bool, error) {
 	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
 	err := embeddedyamls.GetObject(yaml, clusterRoleBinding)

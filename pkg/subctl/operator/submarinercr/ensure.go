@@ -21,6 +21,7 @@ package submarinercr
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
@@ -44,11 +45,12 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec *submariner.Su
 
 	client, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error getting submariner client")
 	}
 
 	propagationPolicy := metav1.DeletePropagationForeground
 
+	// nolint:wrapcheck // No need to wrap these.
 	_, err = util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
 			return client.SubmarinerV1alpha1().Submariners(namespace).Get(ctx, name, options)
@@ -62,5 +64,6 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec *submariner.Su
 	}, submarinerCR, metav1.CreateOptions{}, metav1.DeleteOptions{
 		PropagationPolicy: &propagationPolicy,
 	})
-	return err
+
+	return errors.Wrap(err, "error creating Submariner resource")
 }

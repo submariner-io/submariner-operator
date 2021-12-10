@@ -19,6 +19,7 @@ limitations under the License.
 package scc
 
 import (
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
 	"k8s.io/client-go/rest"
@@ -27,23 +28,20 @@ import (
 func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	agentSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_lighthouse_agent_service_account_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error parsing the agent ServiceAccount resource")
 	}
 
 	coreDNSSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_lighthouse_coredns_service_account_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error parsing the coredns ServiceAccount resource")
 	}
 
 	updateAgentSCC, err := scc.UpdateSCC(restConfig, namespace, agentSaName)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
 	updateCoreDNSSCC, err := scc.UpdateSCC(restConfig, namespace, coreDNSSaName)
-	if err != nil {
-		return false, err
-	}
 
-	return updateAgentSCC || updateCoreDNSSCC, err
+	return updateAgentSCC || updateCoreDNSSCC, errors.Wrap(err, "error updating the SCC resource")
 }

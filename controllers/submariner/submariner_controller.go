@@ -23,6 +23,7 @@ import (
 	"reflect"
 
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -33,7 +34,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
@@ -99,14 +100,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	instance := &submopv1a1.Submariner{}
 	err := r.config.Client.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+		return reconcile.Result{}, errors.Wrap(err, "error retrieving Submariner resource")
 	}
 
 	if instance.ObjectMeta.DeletionTimestamp != nil {
@@ -214,19 +215,19 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Set up the CRDs we need
 	crdUpdater, err := crdutils.NewFromRestConfig(mgr.GetConfig())
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating CRDUpdater")
 	}
 	if err := gateway.Ensure(crdUpdater); err != nil {
-		return err
+		return err // nolint:wrapcheck // Errors are already wrapped
 	}
 
 	// These are required so that we can retrieve Gateway objects using the dynamic client
 	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
-		return err
+		return errors.Wrap(err, "error adding to the scheme")
 	}
 	// These are required so that we can manipulate CRDs
 	if err := apiextensions.AddToScheme(mgr.GetScheme()); err != nil {
-		return err
+		return errors.Wrap(err, "error adding to the scheme")
 	}
 
 	// Watch for changes to the gateway status in the same namespace
@@ -240,6 +241,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}
 		})
 
+	// nolint:wrapcheck // No need to wrap here
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("submariner-controller").
 		// Watch for changes to primary resource Submariner

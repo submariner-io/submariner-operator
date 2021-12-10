@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
@@ -137,7 +138,7 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 func initializeFlagsFromOCPMetadata(metadataFile string) error {
 	fileInfo, err := os.Stat(metadataFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to stat file %q", metadataFile)
 	}
 
 	if fileInfo.IsDir() {
@@ -146,7 +147,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	data, err := os.ReadFile(metadataFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error reading file %q", metadataFile)
 	}
 
 	var metadata struct {
@@ -159,7 +160,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	err = json.Unmarshal(data, &metadata)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error unmarshalling data")
 	}
 
 	infraID = metadata.InfraID
@@ -171,12 +172,12 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 func getGCPCredentials() (*google.Credentials, error) {
 	authJSON, err := os.ReadFile(credentialsFile)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error reading file %q", credentialsFile)
 	}
 
 	creds, err := google.CredentialsFromJSON(context.TODO(), authJSON, dns.CloudPlatformScope)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error parsing credentials file")
 	}
 
 	return creds, nil

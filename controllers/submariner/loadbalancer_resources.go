@@ -37,13 +37,10 @@ const (
 	nattDiscoveryPortName = "natt-discovery"
 )
 
+// nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileLoadBalancer(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*corev1.Service, error) {
-	service, err := helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.config.Client, r.config.Scheme)
-	if err != nil {
-		return nil, err
-	}
-	return service, err
+	return helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.config.Client, r.config.Scheme)
 }
 
 func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {

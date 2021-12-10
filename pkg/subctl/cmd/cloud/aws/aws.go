@@ -29,6 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
@@ -96,7 +97,7 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region), config.WithCredentialsProvider(creds))
 	if err != nil {
 		reporter.Failed(err)
-		return err
+		return errors.Wrap(err, "error loading default config")
 	}
 	ec2Client := ec2.NewFromConfig(cfg)
 	reporter.Succeeded("")
@@ -121,7 +122,7 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 func initializeFlagsFromOCPMetadata(metadataFile string) error {
 	fileInfo, err := os.Stat(metadataFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to stat file %q", metadataFile)
 	}
 
 	if fileInfo.IsDir() {
@@ -130,7 +131,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	data, err := os.ReadFile(metadataFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error reading file %q", metadataFile)
 	}
 
 	var metadata struct {
@@ -142,7 +143,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	err = json.Unmarshal(data, &metadata)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error unmarshalling data")
 	}
 
 	infraID = metadata.InfraID
