@@ -1343,8 +1343,8 @@ github.com/submariner-io/lighthouse v0.12.0-m1 h1:EdCZtoiEfXSTIUMDAQTaTCmYohZaGF
 github.com/submariner-io/lighthouse v0.12.0-m1/go.mod h1:l42MzM2vgcoGOlAOhNLEy8ThOrUxqIW07py9Xoc4FW0=
 github.com/submariner-io/shipyard v0.12.0-m1 h1:dPEz7CeOfLsmmwhuCshrIo0dK0x03wpd5tnHCzMRg5I=
 github.com/submariner-io/shipyard v0.12.0-m1/go.mod h1:BYUZPAJEbQ0W56xvNEs63KghH2ptYnGPG3/424y4o/g=
-github.com/submariner-io/submariner v0.12.0-m1 h1:LjNUDCG0CGynPASc7kFlyVyRJ4WWF/pOUFzlPPsxRlY=
-github.com/submariner-io/submariner v0.12.0-m1/go.mod h1:0N9xv4zPHGAW2G6gD+bXr4G6u2ufO/bfrPgwHkwgrfM=
+github.com/submariner-io/submariner v0.12.0-m1.0.20211209200628-a54b86b4ad1d h1:/KhBtQh+pzDHFJ3KZI8VDN/xsGv6Wo3PY+mT6jR2ssg=
+github.com/submariner-io/submariner v0.12.0-m1.0.20211209200628-a54b86b4ad1d/go.mod h1:0N9xv4zPHGAW2G6gD+bXr4G6u2ufO/bfrPgwHkwgrfM=
 github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816112556-6e4bb78fab88/go.mod h1:VfjgFyeFkEzNCmZnTFdxWYuEvLyvH4429fwdue6gq1o=
 github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930 h1:6J41oeHHXCyP4Y/RNa8jfAiTuNEtnoc3gc6Sxj4S800=
 github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930/go.mod h1:VfjgFyeFkEzNCmZnTFdxWYuEvLyvH4429fwdue6gq1o=
@@ -1384,9 +1384,7 @@ github.com/valyala/fasthttp v1.2.0/go.mod h1:4vX61m6KN+xDduDNwXrhIAVZaZaZiQ1luJk
 github.com/valyala/quicktemplate v1.2.0/go.mod h1:EH+4AkTd43SvgIbQHYu59/cJyxDoOVRUAfrukLPuGJ4=
 github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a/go.mod h1:v3UYOV9WzVtRmSR+PDvWpU/qWl4Wa5LApYYX4ZtKbio=
 github.com/vektah/gqlparser v1.1.2/go.mod h1:1ycwN7Ij5njmMkPPAOaRFY4rET2Enx7IkVv3vaXspKw=
-github.com/vishvananda/netlink v1.1.0 h1:1iyaYNBLmP6L0220aDnYQpo1QEV4t4hJ+xEEhhJH8j0=
 github.com/vishvananda/netlink v1.1.0/go.mod h1:cTgwzPIzzgDAYoQrMm0EdrjRUBkTqKYppBueQtXaqoE=
-github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df h1:OviZH7qLw/7ZovXvuNyL3XQl8UFofeikI1NW1Gypu7k=
 github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df/go.mod h1:JP3t17pCcGlemwknint6hfoeCVQrEMVwxRLRjXpq+BU=
 github.com/vultr/govultr v0.1.4/go.mod h1:9H008Uxr/C4vFNGLqKx232C206GL0PBHzOP0809bGNA=
 github.com/xanzy/go-gitlab v0.15.0/go.mod h1:8zdQa/ri1dfn8eS3Ir1SyfvOKlw7WBJ8DVThkpGiXrs=
