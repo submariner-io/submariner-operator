@@ -20,24 +20,26 @@ package submariner
 
 import (
 	"github.com/go-logr/logr"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r *SubmarinerReconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
+// nolint:wrapcheck // No need to wrap errors here.
+func (r *Reconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger, r.client, r.scheme)
+	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger, r.config.Client, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
+
 	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), globalnetMetricsServerPort,
-		r.client, r.config, r.scheme, reqLogger)
+		r.config.Client, r.config.RestConfig, r.config.Scheme, reqLogger)
+
 	return daemonSet, err
 }
 

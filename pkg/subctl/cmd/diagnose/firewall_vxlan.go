@@ -22,9 +22,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
 const (
@@ -52,6 +51,7 @@ func checkVxLANConfig(cluster *cmd.Cluster) bool {
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 
@@ -96,6 +96,7 @@ func checkFWConfig(cluster *cmd.Cluster, status *cli.Status) {
 	}
 
 	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffVxLANCommand)
+
 	sPod, err := spawnSnifferPodOnNode(cluster.KubeClient, gwNodeName, podNamespace, podCommand)
 	if err != nil {
 		status.EndWithFailure("Error spawning the sniffer pod on the Gateway node: %v", err)
@@ -106,6 +107,7 @@ func checkFWConfig(cluster *cmd.Cluster, status *cli.Status) {
 
 	remoteClusterIP := strings.Split(remoteEndpoint.Spec.Subnets[0], "/")[0]
 	podCommand = fmt.Sprintf("nc -w %d %s 8080", validationTimeout/2, remoteClusterIP)
+
 	cPod, err := spawnClientPodOnNonGatewayNode(cluster.KubeClient, podNamespace, podCommand)
 	if err != nil {
 		status.QueueFailureMessage(fmt.Sprintf("Error spawning the client pod on non-Gateway node: %v", err))

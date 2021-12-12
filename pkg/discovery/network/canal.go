@@ -30,6 +30,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	// TODO: this must be smarter, looking for the canal daemonset, with labels k8s-app=canal
 	//  and then the reference on the container volumes:
@@ -42,6 +43,7 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, errors.WithMessage(err, "error obtaining the \"canal-config\" ConfigMap")
 	}
 
@@ -78,8 +80,10 @@ func extractPodCIDRFromNetConfigJSON(cm *v1.ConfigMap) *string {
 		Network string `json:"Network"`
 		// All the other fields are ignored by Unmarshal
 	}
+
 	if err := json.Unmarshal([]byte(netConfJSON), &netConf); err == nil {
 		return &netConf.Network
 	}
+
 	return nil
 }

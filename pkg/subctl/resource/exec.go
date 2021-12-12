@@ -66,7 +66,7 @@ type ExecOptions struct {
 // ExecWithOptions executes a command in the specified container,
 // returning stdout, stderr and error. `options` allowed for
 // additional parameters to be passed.
-func ExecWithOptions(config ExecConfig, options ExecOptions) (string, string, error) {
+func ExecWithOptions(config ExecConfig, options *ExecOptions) (string, string, error) {
 	const tty = false
 
 	req := config.ClientSet.CoreV1().RESTClient().Post().
@@ -90,14 +90,17 @@ func ExecWithOptions(config ExecConfig, options ExecOptions) (string, string, er
 	if options.PreserveWhitespace {
 		return stdout.String(), stderr.String(), err
 	}
+
 	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func execute(method string, link *url.URL, config *rest.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool) error {
 	exec, err := remotecommand.NewSPDYExecutor(config, method, link)
 	if err != nil {
 		return err
 	}
+
 	return exec.Stream(remotecommand.StreamOptions{
 		Stdin:  stdin,
 		Stdout: stdout,

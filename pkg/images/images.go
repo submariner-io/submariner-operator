@@ -23,7 +23,6 @@ import (
 
 	apis "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -44,15 +43,16 @@ func GetImagePath(repo, version, image, component string, imageOverrides map[str
 	}
 
 	path = fmt.Sprintf("%s:%s", path, version)
+
 	return path
 }
 
 func GetPullPolicy(version string) v1.PullPolicy {
 	if version == "devel" || version == "local" || strings.HasPrefix(version, "release-") {
 		return v1.PullAlways
-	} else {
-		return v1.PullIfNotPresent
 	}
+
+	return v1.PullIfNotPresent
 }
 
 func ParseOperatorImage(operatorImage string) (string, string) {
@@ -71,6 +71,7 @@ func ParseOperatorImage(operatorImage string) (string, string) {
 
 	imageName := strings.Replace(operatorImage, repository, "", 1)
 	i := strings.LastIndex(imageName, ":")
+
 	if i == -1 {
 		version = apis.DefaultSubmarinerOperatorVersion
 	} else {

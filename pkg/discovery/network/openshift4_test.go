@@ -16,21 +16,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package network
+package network_test
 
 import (
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic/fake"
 )
 
-var _ = Describe("discoverOpenShift4Network", func() {
+var _ = Describe("OpenShift4 Network", func() {
 	When("JSON contains a pod network", func() {
 		It("Should parse properly pod and service networks", func() {
-			cr := unstructuredParse(getNetworkJSON())
-			cn, err := parseOS4Network(cr)
+			cn, err := testOS4DiscoveryWith(getNetworkJSON())
 			Expect(err).NotTo(HaveOccurred())
 			Expect(cn.PodCIDRs).To(HaveLen(2))
 			Expect(cn.ServiceCIDRs).To(HaveLen(1))
@@ -42,27 +43,28 @@ var _ = Describe("discoverOpenShift4Network", func() {
 
 	When("JSON is missing the clusterNetworks list", func() {
 		It("Should return error", func() {
-			cr := unstructuredParse(getNetworkJSONMissingCN())
-			_, err := parseOS4Network(cr)
+			_, err := testOS4DiscoveryWith(getNetworkJSONMissingCN())
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
 	When("JSON is missing the serviceNetwork field", func() {
 		It("Should return error", func() {
-			cr := unstructuredParse(getNetworkJSONMissingSN())
-			_, err := parseOS4Network(cr)
+			_, err := testOS4DiscoveryWith(getNetworkJSONMissingSN())
 			Expect(err).To(HaveOccurred())
 		})
 	})
-
 })
 
-func unstructuredParse(json []byte) *unstructured.Unstructured {
-	crd := &unstructured.Unstructured{}
-	err := crd.UnmarshalJSON(json)
+func testOS4DiscoveryWith(json []byte) (*network.ClusterNetwork, error) {
+	obj := &unstructured.Unstructured{}
+	err := obj.UnmarshalJSON(json)
 	Expect(err).NotTo(HaveOccurred())
-	return crd
+
+	scheme := runtime.NewScheme()
+	dynClient := fake.NewSimpleDynamicClient(scheme, obj)
+
+	return network.Discover(dynClient, nil, nil, "")
 }
 
 func getNetworkJSON() []byte {

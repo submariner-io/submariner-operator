@@ -16,27 +16,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package network
+package network_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var _ = Describe("discoverWeaveNetwork", func() {
-	When("There are no weave pods", func() {
-		It("Should return nil cluster network", func() {
-			clusterNet := testDiscoverWeaveWith()
-			Expect(clusterNet).To(BeNil())
-		})
-	})
-
+var _ = Describe("Weave Network", func() {
 	When("There are weave pods but no kube api", func() {
-
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverWeaveWith(
@@ -55,8 +48,7 @@ var _ = Describe("discoverWeaveNetwork", func() {
 	})
 
 	When("There are weave and kube api pods", func() {
-
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverWeaveWith(
@@ -77,9 +69,10 @@ var _ = Describe("discoverWeaveNetwork", func() {
 	})
 })
 
-func testDiscoverWeaveWith(objects ...runtime.Object) *ClusterNetwork {
+func testDiscoverWeaveWith(objects ...runtime.Object) *network.ClusterNetwork {
 	clientSet := newTestClient(objects...)
-	clusterNet, err := discoverWeaveNetwork(clientSet)
+	clusterNet, err := network.Discover(nil, clientSet, nil, "")
 	Expect(err).NotTo(HaveOccurred())
+
 	return clusterNet
 }

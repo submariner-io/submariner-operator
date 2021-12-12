@@ -20,36 +20,38 @@ package submariner
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 )
 
-func (r *SubmarinerReconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
+func (r *Reconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
 	const UnknownPlugin = "unknown"
 
 	// If a previously cached discovery exists, use that
-	if r.clusterNetwork != nil && r.clusterNetwork.NetworkPlugin != UnknownPlugin {
-		return r.clusterNetwork, nil
+	if r.config.ClusterNetwork != nil && r.config.ClusterNetwork.NetworkPlugin != UnknownPlugin {
+		return r.config.ClusterNetwork, nil
 	}
 
-	clusterNetwork, err := network.Discover(r.dynClient, r.clientSet, r.submClient, submariner.Namespace)
+	clusterNetwork, err := network.Discover(r.config.DynClient, r.config.KubeClient, r.config.SubmClient, submariner.Namespace)
 	if err != nil {
 		log.Error(err, "Error trying to discover network")
 	}
 
 	if clusterNetwork != nil {
-		r.clusterNetwork = clusterNetwork
 		log.Info("Cluster network discovered")
+
+		r.config.ClusterNetwork = clusterNetwork
 		clusterNetwork.Log(log)
 	} else {
-		r.clusterNetwork = &network.ClusterNetwork{NetworkPlugin: UnknownPlugin}
+		r.config.ClusterNetwork = &network.ClusterNetwork{NetworkPlugin: UnknownPlugin}
 		log.Info("No cluster network discovered")
 	}
 
-	return r.clusterNetwork, err
+	return r.config.ClusterNetwork, errors.Wrap(err, "error discovering cluster network")
 }
 
-func (r *SubmarinerReconciler) discoverNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
+func (r *Reconciler) discoverNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
 	clusterNetwork, err := r.getClusterNetwork(submariner)
 	submariner.Status.ClusterCIDR = getCIDR(
 		"Cluster",
@@ -63,7 +65,7 @@ func (r *SubmarinerReconciler) discoverNetwork(submariner *submopv1a1.Submariner
 
 	submariner.Status.NetworkPlugin = clusterNetwork.NetworkPlugin
 
-	//TODO: globalCIDR allocation if no global CIDR is assigned and enabled.
+	// TODO: globalCIDR allocation if no global CIDR is assigned and enabled.
 	//      currently the clusterNetwork discovers any existing operator setting,
 	//      but that's not really helpful here
 	return clusterNetwork, err
@@ -78,6 +80,7 @@ func getCIDR(cidrType, currentCIDR string, detectedCIDRs []string) string {
 		} else {
 			log.Info("No detected CIDR", "type", cidrType)
 		}
+
 		return detected
 	}
 
@@ -87,6 +90,7 @@ func getCIDR(cidrType, currentCIDR string, detectedCIDRs []string) string {
 			"The configured CIDR will take precedence",
 			"type", cidrType, "configured", currentCIDR, "detected", detected)
 	}
+
 	return currentCIDR
 }
 
@@ -97,8 +101,10 @@ func getFirstCIDR(detectedCIDRs []string) string {
 		log.Error(fmt.Errorf("detected > 1 CIDRs"),
 			"we currently support only one", "detectedCIDRs", detectedCIDRs)
 	}
+
 	if CIDRlen > 0 {
 		return detectedCIDRs[0]
 	}
+
 	return ""
 }

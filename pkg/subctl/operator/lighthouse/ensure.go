@@ -19,22 +19,21 @@ limitations under the License.
 package lighthouseop
 
 import (
-	"k8s.io/client-go/rest"
-
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/serviceaccount"
+	"k8s.io/client-go/rest"
 )
 
 func Ensure(status *cli.Status, config *rest.Config, operatorNamespace string) (bool, error) {
 	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
-		return created, err
+		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {
 		status.QueueSuccessMessage("Created lighthouse service account and role")
 	}
 
 	if created, err := scc.Ensure(config, operatorNamespace); err != nil {
-		return created, err
+		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {
 		status.QueueSuccessMessage("Updated the privileged SCC")
 	}

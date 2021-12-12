@@ -37,13 +37,10 @@ const (
 	nattDiscoveryPortName = "natt-discovery"
 )
 
-func (r *SubmarinerReconciler) reconcileLoadBalancer(
+// nolint:wrapcheck // No need to wrap errors here.
+func (r *Reconciler) reconcileLoadBalancer(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*corev1.Service, error) {
-	service, err := helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.client, r.scheme)
-	if err != nil {
-		return nil, err
-	}
-	return service, err
+	return helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.config.Client, r.config.Scheme)
 }
 
 func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {
@@ -67,12 +64,14 @@ func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {
 				gatewayStatusLabel: string(submv1.HAStatusActive),
 			},
 			Ports: []corev1.ServicePort{
-				{Name: encapsPortName,
+				{
+					Name:       encapsPortName,
 					Port:       int32(instance.Spec.CeIPSecNATTPort),
 					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(instance.Spec.CeIPSecNATTPort)},
 					Protocol:   corev1.ProtocolUDP,
 				},
-				{Name: nattDiscoveryPortName,
+				{
+					Name:       nattDiscoveryPortName,
 					Port:       int32(nattPort),
 					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(nattPort)},
 					Protocol:   corev1.ProtocolUDP,

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
@@ -80,7 +81,7 @@ func (c *Cluster) GetGateways() ([]submarinerv1.Gateway, error) {
 			return nil, nil
 		}
 
-		return nil, err
+		return nil, errors.Wrap(err, "error listing Gateways")
 	}
 
 	return gateways.Items, nil
@@ -95,12 +96,15 @@ func ExecuteMultiCluster(run func(*Cluster) bool) {
 		cluster, errMsg := NewCluster(config.Config, config.ClusterName)
 		if cluster == nil {
 			success = false
+
 			fmt.Println(errMsg)
 			fmt.Println()
+
 			continue
 		}
 
 		success = run(cluster) && success
+
 		fmt.Println()
 	}
 

@@ -29,7 +29,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/internal/log"
 )
 
-// Logger is the kind cli's log.Logger implementation
+// Logger is the kind cli's log.Logger implementation.
 type Logger struct {
 	writer     io.Writer
 	bufferPool *bufferPool
@@ -41,17 +41,18 @@ type Logger struct {
 
 var _ log.Logger = &Logger{}
 
-// NewLogger returns a new Logger with the given verbosity
+// NewLogger returns a new Logger with the given verbosity.
 func NewLogger(writer io.Writer, verbosity log.Level) *Logger {
 	l := &Logger{
 		verbosity:  verbosity,
 		bufferPool: newBufferPool(),
 	}
 	l.SetWriter(writer)
+
 	return l
 }
 
-// SetWriter sets the output writer
+// SetWriter sets the output writer.
 func (l *Logger) SetWriter(w io.Writer) {
 	l.writerMu.Lock()
 	defer l.writerMu.Unlock()
@@ -60,10 +61,11 @@ func (l *Logger) SetWriter(w io.Writer) {
 	l.isSmartWriter = isSpinner || env.IsSmartTerminal(w)
 }
 
-// ColorEnabled returns true if the caller is OK to write colored output
+// ColorEnabled returns true if the caller is OK to write colored output.
 func (l *Logger) ColorEnabled() bool {
 	l.writerMu.Lock()
 	defer l.writerMu.Unlock()
+
 	return l.isSmartWriter
 }
 
@@ -71,36 +73,38 @@ func (l *Logger) getVerbosity() log.Level {
 	return log.Level(atomic.LoadInt32((*int32)(&l.verbosity)))
 }
 
-// SetVerbosity sets the loggers verbosity
+// SetVerbosity sets the loggers verbosity.
 func (l *Logger) SetVerbosity(verbosity log.Level) {
 	atomic.StoreInt32((*int32)(&l.verbosity), int32(verbosity))
 }
 
-// synchronized write to the inner writer
+// synchronized write to the inner writer.
 func (l *Logger) write(p []byte) (n int, err error) {
 	l.writerMu.Lock()
 	defer l.writerMu.Unlock()
-	return l.writer.Write(p)
+
+	return l.writer.Write(p) // nolint:wrapcheck // No need to wrap here
 }
 
-// writeBuffer writes buf with write, ensuring there is a trailing newline
+// writeBuffer writes buf with write, ensuring there is a trailing newline.
 func (l *Logger) writeBuffer(buf *bytes.Buffer) {
 	// ensure trailing newline
 	if buf.Len() == 0 || buf.Bytes()[buf.Len()-1] != '\n' {
 		buf.WriteByte('\n')
 	}
+
 	// TODO: should we handle this somehow??
 	// Who logs for the logger? 🤔
 	_, _ = l.write(buf.Bytes())
 }
 
-// print writes a simple string to the log writer
+// print writes a simple string to the log writer.
 func (l *Logger) print(message string) {
 	buf := bytes.NewBufferString(message)
 	l.writeBuffer(buf)
 }
 
-// printf is roughly fmt.Fprintf against the log writer
+// printf is roughly fmt.Fprintf against the log writer.
 func (l *Logger) printf(format string, args ...interface{}) {
 	buf := l.bufferPool.Get()
 	fmt.Fprintf(buf, format, args...)
@@ -108,7 +112,7 @@ func (l *Logger) printf(format string, args ...interface{}) {
 	l.bufferPool.Put(buf)
 }
 
-// addDebugHeader inserts the debug line header to buf
+// addDebugHeader inserts the debug line header to buf.
 func addDebugHeader(buf *bytes.Buffer) {
 	_, file, line, ok := runtime.Caller(3)
 	// lifted from klog
@@ -122,7 +126,8 @@ func addDebugHeader(buf *bytes.Buffer) {
 			file = path[dirsep+1:]
 		}
 	}
-	buf.Grow(len(file) + 11) // we know at least this many bytes are needed
+
+	buf.Grow(len(file) + 11) // we know at least this many bytes are needed.
 	buf.WriteString("DEBUG: ")
 	buf.WriteString(file)
 	buf.WriteByte(':')
@@ -131,7 +136,7 @@ func addDebugHeader(buf *bytes.Buffer) {
 	buf.WriteByte(' ')
 }
 
-// debug is like print but with a debug log header
+// debug is like print but with a debug log header.
 func (l *Logger) debug(message string) {
 	buf := l.bufferPool.Get()
 	addDebugHeader(buf)
@@ -140,7 +145,7 @@ func (l *Logger) debug(message string) {
 	l.bufferPool.Put(buf)
 }
 
-// debugf is like printf but with a debug log header
+// debugf is like printf but with a debug log header.
 func (l *Logger) debugf(format string, args ...interface{}) {
 	buf := l.bufferPool.Get()
 	addDebugHeader(buf)
@@ -149,27 +154,27 @@ func (l *Logger) debugf(format string, args ...interface{}) {
 	l.bufferPool.Put(buf)
 }
 
-// Warn is part of the log.Logger interface
+// Warn is part of the log.Logger interface.
 func (l *Logger) Warn(message string) {
 	l.print(message)
 }
 
-// Warnf is part of the log.Logger interface
+// Warnf is part of the log.Logger interface.
 func (l *Logger) Warnf(format string, args ...interface{}) {
 	l.printf(format, args...)
 }
 
-// Error is part of the log.Logger interface
+// Error is part of the log.Logger interface.
 func (l *Logger) Error(message string) {
 	l.print(message)
 }
 
-// Errorf is part of the log.Logger interface
+// Errorf is part of the log.Logger interface.
 func (l *Logger) Errorf(format string, args ...interface{}) {
 	l.printf(format, args...)
 }
 
-// V is part of the log.Logger interface
+// V is part of the log.Logger interface.
 func (l *Logger) V(level log.Level) log.InfoLogger {
 	return infoLogger{
 		logger:  l,
@@ -178,19 +183,19 @@ func (l *Logger) V(level log.Level) log.InfoLogger {
 	}
 }
 
-// infoLogger implements log.InfoLogger for Logger
+// infoLogger implements log.InfoLogger for Logger.
 type infoLogger struct {
 	logger  *Logger
 	level   log.Level
 	enabled bool
 }
 
-// Enabled is part of the log.InfoLogger interface
+// Enabled is part of the log.InfoLogger interface.
 func (i infoLogger) Enabled() bool {
 	return i.enabled
 }
 
-// Info is part of the log.InfoLogger interface
+// Info is part of the log.InfoLogger interface.
 func (i infoLogger) Info(message string) {
 	if !i.enabled {
 		return
@@ -203,7 +208,7 @@ func (i infoLogger) Info(message string) {
 	}
 }
 
-// Infof is part of the log.InfoLogger interface
+// Infof is part of the log.InfoLogger interface.
 func (i infoLogger) Infof(format string, args ...interface{}) {
 	if !i.enabled {
 		return
@@ -216,12 +221,12 @@ func (i infoLogger) Infof(format string, args ...interface{}) {
 	}
 }
 
-// bufferPool is a type safe sync.Pool of *byte.Buffer, guaranteed to be Reset
+// bufferPool is a type safe sync.Pool of *byte.Buffer, guaranteed to be Reset.
 type bufferPool struct {
 	sync.Pool
 }
 
-// newBufferPool returns a new bufferPool
+// newBufferPool returns a new bufferPool.
 func newBufferPool() *bufferPool {
 	return &bufferPool{
 		sync.Pool{
@@ -235,18 +240,19 @@ func newBufferPool() *bufferPool {
 	}
 }
 
-// Get obtains a buffer from the pool
+// Get obtains a buffer from the pool.
 func (b *bufferPool) Get() *bytes.Buffer {
 	return b.Pool.Get().(*bytes.Buffer)
 }
 
-// Put returns a buffer to the pool, resetting it first
+// Put returns a buffer to the pool, resetting it first.
 func (b *bufferPool) Put(x *bytes.Buffer) {
 	// only store small buffers to avoid pointless allocation
 	// avoid keeping arbitrarily large buffers
 	if x.Len() > 256 {
 		return
 	}
+
 	x.Reset()
 	b.Pool.Put(x)
 }

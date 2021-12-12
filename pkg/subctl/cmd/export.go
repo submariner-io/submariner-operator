@@ -76,6 +76,7 @@ func exportService(cmd *cobra.Command, args []string) {
 	restMapper, err := autil.BuildRestMapper(restConfig)
 
 	utils.ExitOnError("Error creating RestMapper for ServiceExport", err)
+
 	if serviceNamespace == "" {
 		if serviceNamespace, _, err = clientConfig.Namespace(); err != nil {
 			serviceNamespace = "default"
@@ -104,6 +105,7 @@ func exportService(cmd *cobra.Command, args []string) {
 		fmt.Fprintln(os.Stdout, "Service already exported")
 		return
 	}
+
 	utils.ExitOnError("Failed to export Service", err)
 	fmt.Fprintln(os.Stdout, "Service exported successfully")
 }
@@ -112,5 +114,6 @@ func validateArguments(args []string) error {
 	if len(args) == 0 || args[0] == "" {
 		return errors.New("name of the Service to be exported must be specified")
 	}
+
 	return nil
 }

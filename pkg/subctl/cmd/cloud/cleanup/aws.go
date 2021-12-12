@@ -21,12 +21,11 @@ package cleanup
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
+// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newAWSCleanupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aws",
@@ -43,6 +42,7 @@ func newAWSCleanupCommand() *cobra.Command {
 
 func cleanupAws(cmd *cobra.Command, args []string) {
 	err := aws.RunOnAWS("", *kubeConfig, *kubeContext,
+		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			err := gwDeployer.Cleanup(reporter)
 			if err != nil {

@@ -19,14 +19,13 @@ package metrics
 
 import (
 	"context"
-	"errors"
+	goerrors "errors"
 	"fmt"
 
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
-
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -49,26 +48,31 @@ const (
 
 // CreateMetricsService creates a Kubernetes Service to expose the passed metrics
 // port(s) with the given name(s).
-func CreateMetricsService(ctx context.Context, cfg *rest.Config, servicePorts []v1.ServicePort) (*v1.Service, error) {
+func CreateMetricsService(ctx context.Context, cfg *rest.Config, servicePorts []v1.ServicePort) (*v1.Service, bool, error) {
 	if len(servicePorts) < 1 {
-		return nil, fmt.Errorf("failed to create metrics Serice; service ports were empty")
+		return nil, false, fmt.Errorf("failed to create metrics Serice; service ports were empty")
 	}
+
 	client, err := crclient.New(cfg, crclient.Options{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new client: %w", err)
+		return nil, false, fmt.Errorf("failed to create new client: %w", err)
 	}
+
 	clientSet, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create clientset: %w", err)
+		return nil, false, fmt.Errorf("failed to create clientset: %w", err)
 	}
+
 	s, err := initOperatorService(ctx, client, servicePorts)
 	if err != nil {
-		if errors.Is(err, k8sutil.ErrNoNamespace) || errors.Is(err, k8sutil.ErrRunLocal) {
+		if goerrors.Is(err, k8sutil.ErrNoNamespace) || goerrors.Is(err, k8sutil.ErrRunLocal) {
 			log.Info("Skipping metrics Service creation; not running in a cluster.")
-			return nil, nil
+			return nil, false, nil
 		}
-		return nil, fmt.Errorf("failed to initialize service object for metrics: %w", err)
+
+		return nil, false, fmt.Errorf("failed to initialize service object for metrics: %w", err)
 	}
+
 	_, err = util.CreateOrUpdate(ctx, resource.ForService(clientSet, s.Namespace),
 		s, func(existing runtime.Object) (runtime.Object, error) {
 			existingService := existing.(*v1.Service)
@@ -77,23 +81,28 @@ func CreateMetricsService(ctx context.Context, cfg *rest.Config, servicePorts []
 			}
 			return s, nil
 		})
+
 	if err != nil {
-		return nil, err
+		return nil, false, errors.Wrapf(err, "error creating or updating Service %s/%s", s.Namespace, s.Name)
 	}
 
-	return clientSet.CoreV1().Services(s.Namespace).Get(ctx, s.Name, metav1.GetOptions{})
+	s, err = clientSet.CoreV1().Services(s.Namespace).Get(ctx, s.Name, metav1.GetOptions{})
+
+	return s, true, errors.Wrapf(err, "error retrieving Service %s/%s", s.Namespace, s.Name)
 }
 
 // initOperatorService returns the static service which exposes specified port(s).
 func initOperatorService(ctx context.Context, client crclient.Client, sp []v1.ServicePort) (*v1.Service, error) {
 	operatorName, err := k8sutil.GetOperatorName()
 	if err != nil {
-		return nil, err
+		return nil, err // nolint:wrapcheck // No need to wrap here
 	}
+
 	namespace, err := k8sutil.GetOperatorNamespace()
 	if err != nil {
-		return nil, err
+		return nil, err // nolint:wrapcheck // No need to wrap here
 	}
+
 	label := map[string]string{"name": operatorName}
 
 	service := &v1.Service{
@@ -112,6 +121,7 @@ func initOperatorService(ctx context.Context, client crclient.Client, sp []v1.Se
 	if err != nil {
 		return nil, err
 	}
+
 	service.SetOwnerReferences([]metav1.OwnerReference{*ownRef})
 
 	return service, nil
@@ -121,16 +131,20 @@ func getPodOwnerRef(ctx context.Context, client crclient.Client, ns string) (*me
 	// Get current Pod the operator is running in
 	pod, err := k8sutil.GetPod(ctx, client, ns)
 	if err != nil {
-		return nil, err
+		return nil, err // nolint:wrapcheck // No need to wrap here
 	}
+
 	podOwnerRefs := metav1.NewControllerRef(pod, pod.GroupVersionKind())
+
 	// Get Owner that the Pod belongs to
 	ownerRef := metav1.GetControllerOf(pod)
-	finalOwnerRef, err := findFinalOwnerRef(ctx, client, ns, ownerRef)
+
+	finalOwnerRef, found, err := findFinalOwnerRef(ctx, client, ns, ownerRef)
 	if err != nil {
 		return nil, err
 	}
-	if finalOwnerRef != nil {
+
+	if found {
 		return finalOwnerRef, nil
 	}
 
@@ -140,18 +154,20 @@ func getPodOwnerRef(ctx context.Context, client crclient.Client, ns string) (*me
 
 // findFinalOwnerRef tries to locate the final controller/owner based on the owner reference provided.
 func findFinalOwnerRef(ctx context.Context, client crclient.Client, ns string,
-	ownerRef *metav1.OwnerReference) (*metav1.OwnerReference, error) {
+	ownerRef *metav1.OwnerReference) (*metav1.OwnerReference, bool, error) {
 	if ownerRef == nil {
-		return nil, nil
+		return nil, false, nil
 	}
 
 	obj := &unstructured.Unstructured{}
 	obj.SetAPIVersion(ownerRef.APIVersion)
 	obj.SetKind(ownerRef.Kind)
+
 	err := client.Get(ctx, types.NamespacedName{Namespace: ns, Name: ownerRef.Name}, obj)
 	if err != nil {
-		return nil, err
+		return nil, false, errors.Wrapf(err, "error retrieving owner reference %s/%s", ns, ownerRef.Name)
 	}
+
 	newOwnerRef := metav1.GetControllerOf(obj)
 	if newOwnerRef != nil {
 		return findFinalOwnerRef(ctx, client, ns, newOwnerRef)
@@ -159,5 +175,6 @@ func findFinalOwnerRef(ctx context.Context, client crclient.Client, ns string,
 
 	log.V(1).Info("Pods owner found", "Kind", ownerRef.Kind, "Name",
 		ownerRef.Name, "Namespace", ns)
-	return ownerRef, nil
+
+	return ownerRef, true, nil
 }

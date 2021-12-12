@@ -15,15 +15,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package images
+package images_test
 
 import (
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	apis "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 )
 
 var imageTests = []struct {
@@ -43,11 +43,11 @@ var imageTests = []struct {
 var _ = Describe("image parsing", func() {
 	When("Parsing image", func() {
 		It("Should parse version and repository", func() {
-			_, rep := ParseOperatorImage("localhost:5000/submariner-operator:local")
+			_, rep := images.ParseOperatorImage("localhost:5000/submariner-operator:local")
 			Expect(rep).To(Equal("localhost:5000"))
 
 			for _, tt := range imageTests {
-				version, repository := ParseOperatorImage(tt.image)
+				version, repository := images.ParseOperatorImage(tt.image)
 				Expect(repository).To(Equal(tt.repository))
 				Expect(version).To(Equal(tt.version))
 			}

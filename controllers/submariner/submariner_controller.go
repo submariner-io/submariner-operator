@@ -23,6 +23,7 @@ import (
 	"reflect"
 
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -33,7 +34,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
@@ -43,7 +44,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -55,37 +55,32 @@ const (
 
 var log = logf.Log.WithName("controller_submariner")
 
-// NewReconciler returns a new SubmarinerReconciler
-func NewReconciler(mgr manager.Manager) *SubmarinerReconciler {
-	reconciler := &SubmarinerReconciler{
-		client:         mgr.GetClient(),
-		config:         mgr.GetConfig(),
-		log:            ctrl.Log.WithName("controllers").WithName("Submariner"),
-		scheme:         mgr.GetScheme(),
-		clientSet:      kubernetes.NewForConfigOrDie(mgr.GetConfig()),
-		dynClient:      dynamic.NewForConfigOrDie(mgr.GetConfig()),
-		submClient:     submarinerclientset.NewForConfigOrDie(mgr.GetConfig()),
-		clusterNetwork: nil,
-	}
-
-	return reconciler
+type Config struct {
+	// This client is a split client that reads objects from the cache and writes to the apiserver
+	Client         client.Client
+	RestConfig     *rest.Config
+	Scheme         *runtime.Scheme
+	KubeClient     kubernetes.Interface
+	SubmClient     submarinerclientset.Interface
+	DynClient      dynamic.Interface
+	ClusterNetwork *network.ClusterNetwork
 }
 
-// blank assignment to verify that SubmarinerReconciler implements reconcile.Reconciler
-var _ reconcile.Reconciler = &SubmarinerReconciler{}
+// Reconciler reconciles a Submariner object.
+type Reconciler struct {
+	config Config
+	log    logr.Logger
+}
 
-// SubmarinerReconciler reconciles a Submariner object
-type SubmarinerReconciler struct {
-	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
-	client         client.Client
-	config         *rest.Config
-	log            logr.Logger
-	scheme         *runtime.Scheme
-	clientSet      kubernetes.Interface
-	submClient     submarinerclientset.Interface
-	dynClient      dynamic.Interface
-	clusterNetwork *network.ClusterNetwork
+// blank assignment to verify that Reconciler implements reconcile.Reconciler.
+var _ reconcile.Reconciler = &Reconciler{}
+
+// NewReconciler returns a new Reconciler.
+func NewReconciler(config *Config) *Reconciler {
+	return &Reconciler{
+		config: *config,
+		log:    ctrl.Log.WithName("controllers").WithName("Submariner"),
+	}
 }
 
 // Reconcile reads that state of the cluster for a Submariner object and makes changes based on the state read
@@ -96,22 +91,24 @@ type SubmarinerReconciler struct {
 
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners/status,verbs=get;update;patch
-func (r *SubmarinerReconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+// nolint:gocyclo // Refactoring would yield functions with a lot of params which isn't ideal either.
+func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Submariner")
 
 	// Fetch the Submariner instance
 	instance := &submopv1a1.Submariner{}
-	err := r.client.Get(ctx, request.NamespacedName, instance)
+
+	err := r.config.Client.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+		return reconcile.Result{}, errors.Wrap(err, "error retrieving Submariner resource")
 	}
 
 	if instance.ObjectMeta.DeletionTimestamp != nil {
@@ -145,13 +142,14 @@ func (r *SubmarinerReconciler) Reconcile(ctx context.Context, request reconcile.
 	}
 
 	var globalnetDaemonSet *appsv1.DaemonSet
+
 	if instance.Spec.GlobalCIDR != "" {
 		if globalnetDaemonSet, err = r.reconcileGlobalnetDaemonSet(instance, reqLogger); err != nil {
 			return reconcile.Result{}, err
 		}
 	}
 
-	if _, err := r.reconcileNetworkPluginSyncerDeployment(instance, clusterNetwork, reqLogger); err != nil {
+	if err := r.reconcileNetworkPluginSyncerDeployment(instance, clusterNetwork, reqLogger); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -174,19 +172,24 @@ func (r *SubmarinerReconciler) Reconcile(ctx context.Context, request reconcile.
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
 	instance.Status.Gateways = &gatewayStatuses
 
-	err = updateDaemonSetStatus(r.client, ctx, gatewayDaemonSet, &instance.Status.GatewayDaemonSetStatus, request.Namespace)
+	err = updateDaemonSetStatus(ctx, r.config.Client, gatewayDaemonSet, &instance.Status.GatewayDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check gateway daemonset containers")
+
 		return reconcile.Result{}, err
 	}
-	err = updateDaemonSetStatus(r.client, ctx, routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
+
+	err = updateDaemonSetStatus(ctx, r.config.Client, routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check route agent daemonset containers")
+
 		return reconcile.Result{}, err
 	}
-	err = updateDaemonSetStatus(r.client, ctx, globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
+
+	err = updateDaemonSetStatus(ctx, r.config.Client, globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check gateway daemonset containers")
+
 		return reconcile.Result{}, err
 	}
 
@@ -197,13 +200,13 @@ func (r *SubmarinerReconciler) Reconcile(ctx context.Context, request reconcile.
 	}
 
 	if !reflect.DeepEqual(instance.Status, initialStatus) {
-		err := r.client.Status().Update(ctx, instance)
+		err := r.config.Client.Status().Update(ctx, instance)
 		if err != nil {
-			reqLogger.Error(err, "failed to update the Submariner status")
 			// Log the error, but indicate success, to avoid reconciliation storms
 			// TODO skitt determine what we should really be doing for concurrent updates to the Submariner CR
 			// Updates fail here because the instance is updated between the .Update() at the start of the function
 			// and the status update here
+			reqLogger.Error(err, "failed to update the Submariner status")
 		}
 	}
 
@@ -215,23 +218,25 @@ func getImagePath(submariner *submopv1a1.Submariner, imageName, componentName st
 		submariner.Spec.ImageOverrides)
 }
 
-func (r *SubmarinerReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Set up the CRDs we need
 	crdUpdater, err := crdutils.NewFromRestConfig(mgr.GetConfig())
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating CRDUpdater")
 	}
+
 	if err := gateway.Ensure(crdUpdater); err != nil {
-		return err
+		return err // nolint:wrapcheck // Errors are already wrapped
 	}
 
 	// These are required so that we can retrieve Gateway objects using the dynamic client
 	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
-		return err
+		return errors.Wrap(err, "error adding to the scheme")
 	}
+
 	// These are required so that we can manipulate CRDs
 	if err := apiextensions.AddToScheme(mgr.GetScheme()); err != nil {
-		return err
+		return errors.Wrap(err, "error adding to the scheme")
 	}
 
 	// Watch for changes to the gateway status in the same namespace
@@ -245,6 +250,7 @@ func (r *SubmarinerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}
 		})
 
+	// nolint:wrapcheck // No need to wrap here
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("submariner-controller").
 		// Watch for changes to primary resource Submariner

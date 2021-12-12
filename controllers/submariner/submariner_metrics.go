@@ -22,9 +22,8 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"sigs.k8s.io/controller-runtime/pkg/metrics"
-
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
 const (
@@ -49,7 +48,8 @@ var (
 		},
 		[]string{
 			connectionsLocalClusterLabel,
-			connectionsLocalHostnameLabel},
+			connectionsLocalHostnameLabel,
+		},
 	)
 	connectionsGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -61,7 +61,8 @@ var (
 			connectionsLocalHostnameLabel,
 			connectionsRemoteClusterLabel,
 			connectionsRemoteHostnameLabel,
-			connectionsStatusLabel},
+			connectionsStatusLabel,
+		},
 	)
 )
 
@@ -71,12 +72,13 @@ func init() {
 
 func recordGateways(count int) {
 	gatewaysGauge.Set(float64(count))
+
 	if count == 0 {
 		gatewayCreationTimeGauge.Reset()
 	}
 }
 
-func recordGatewayCreationTime(localEndpoint submv1.EndpointSpec, upTime time.Time) {
+func recordGatewayCreationTime(localEndpoint *submv1.EndpointSpec, upTime time.Time) {
 	gatewayCreationTimeGauge.With(prometheus.Labels{
 		connectionsLocalClusterLabel:  localEndpoint.ClusterID,
 		connectionsLocalHostnameLabel: localEndpoint.Hostname,
@@ -87,7 +89,7 @@ func recordNoConnections() {
 	connectionsGauge.Reset()
 }
 
-func recordConnection(localEndpoint, remoteEndpoint submv1.EndpointSpec, status string) {
+func recordConnection(localEndpoint, remoteEndpoint *submv1.EndpointSpec, status string) {
 	connectionsGauge.With(prometheus.Labels{
 		connectionsLocalClusterLabel:   localEndpoint.ClusterID,
 		connectionsLocalHostnameLabel:  localEndpoint.Hostname,

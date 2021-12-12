@@ -20,17 +20,18 @@ package main
 
 import (
 	"context"
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"os"
 	"runtime"
 	"syscall"
 
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/rest"
-
+	// TODO: in operator-sdk v1 the below utilities were moved to internal.
+	"github.com/operator-framework/operator-lib/leader"
+	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
+	sdkVersion "github.com/operator-framework/operator-sdk/version"
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers"
@@ -39,19 +40,14 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/metrics"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	"github.com/submariner-io/submariner-operator/pkg/version"
-
-	// TODO: in opeartor-sdk v1 the below utilities were moved to internal
-	// TODO: update to operator-sdk v1 or find an alternate way and then change the code accordingly
-	"github.com/operator-framework/operator-lib/leader"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
-	sdkVersion "github.com/operator-framework/operator-sdk/version"
-
 	v1 "k8s.io/api/core/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 	"k8s.io/klog/klogr"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -59,7 +55,6 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
-	// +kubebuilder:scaffold:imports
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -81,6 +76,7 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Submariner operator version: %v", version.Version))
 }
 
+// nolint:wsl // block should not end with a whitespace.
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(submarinerv1alpha1.AddToScheme(scheme))
@@ -135,12 +131,15 @@ func main() {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+
 	log.Info("Creating the Lighthouse CRDs")
+
 	updated, err := lighthouse.Ensure(crdUpdater, lighthouse.DataCluster)
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+
 	if updated {
 		log.Info("The Lighthouse CRDs were updated, restarting...")
 		restartOperator()
@@ -164,31 +163,18 @@ func main() {
 
 	// Add to the below struct any other metrics ports you want to expose.
 	servicePorts := []v1.ServicePort{
-		{Port: metricsPort, Name: metrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int,
-			IntVal: metricsPort}},
-		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int,
-			IntVal: operatorMetricsPort}},
-	}
-	// Create Service object to expose the metrics port(s).
-	service, err := metrics.CreateMetricsService(ctx, cfg, servicePorts)
-	if err != nil {
-		log.Info("Could not create metrics Service", "error", err.Error())
+		{Port: metricsPort, Name: metrics.OperatorPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{
+			Type:   intstr.Int,
+			IntVal: metricsPort,
+		}},
+		{Port: operatorMetricsPort, Name: metrics.CRPortName, Protocol: v1.ProtocolTCP, TargetPort: intstr.IntOrString{
+			Type:   intstr.Int,
+			IntVal: operatorMetricsPort,
+		}},
 	}
 
-	// CreateServiceMonitors will automatically create the prometheus-operator ServiceMonitor resources
-	// necessary to configure Prometheus to scrape metrics from this operator.
-	services := []*v1.Service{service}
-	serviceMonitors, err := metrics.CreateServiceMonitors(cfg, namespace, services)
-	if err != nil {
-		log.Info("Could not create ServiceMonitor object", "error", err.Error())
-		// If this operator is deployed to a cluster without the prometheus-operator running, it will return
-		// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
-		if errors.Is(err, metrics.ErrServiceMonitorNotPresent) {
-			log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
-		}
-	} else {
-		log.Info("Created service monitors", "service monitors", serviceMonitors)
-	}
+	createServiceMonitors(ctx, cfg, servicePorts, namespace)
+
 	if err = (&submariner.BrokerReconciler{
 		Client: mgr.GetClient(),
 		Config: mgr.GetConfig(),
@@ -202,9 +188,39 @@ func main() {
 
 	// Start the Cmd
 	log.Info("Starting the Cmd.")
+
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
 		log.Error(err, "Manager exited non-zero")
 		os.Exit(1)
+	}
+}
+
+func createServiceMonitors(ctx context.Context, cfg *rest.Config, servicePorts []v1.ServicePort, namespace string) {
+	// Create Service object to expose the metrics port(s).
+	service, ok, err := metrics.CreateMetricsService(ctx, cfg, servicePorts)
+	if err != nil {
+		log.Info("Could not create metrics Service", "error", err.Error())
+		return
+	}
+
+	if !ok {
+		return
+	}
+
+	// CreateServiceMonitors will automatically create the prometheus-operator ServiceMonitor resources
+	// necessary to configure Prometheus to scrape metrics from this operator.
+	services := []*v1.Service{service}
+
+	serviceMonitors, err := metrics.CreateServiceMonitors(cfg, namespace, services)
+	if err != nil {
+		log.Info("Could not create ServiceMonitor object", "error", err.Error())
+		// If this operator is deployed to a cluster without the prometheus-operator running, it will return
+		// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
+		if goerrors.Is(err, metrics.ErrServiceMonitorNotPresent) {
+			log.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
+		}
+	} else {
+		log.Info("Created service monitors", "service monitors", serviceMonitors)
 	}
 }
 
@@ -215,20 +231,21 @@ func serveCRMetrics(cfg *rest.Config) error {
 	// For more control override the below GVK list with your own custom logic.
 	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(api.AddToScheme)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error getting GVKs")
 	}
 	// Get the namespace the operator is currently deployed in.
 	operatorNs, err := k8sutil.GetOperatorNamespace()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error getting operator namespace")
 	}
 	// To generate metrics in other namespaces, add the values below.
 	ns := []string{operatorNs}
 	// Generate and serve custom resource specific metrics.
 	err = kubemetrics.GenerateAndServeCRMetrics(cfg, ns, filteredGVK, metricsHost, operatorMetricsPort)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error initializing metrics")
 	}
+
 	return nil
 }
 
@@ -239,10 +256,12 @@ func restartOperator() {
 		// We'll end up crashing and the orchestrator will restart us
 		os.Exit(1)
 	}
+
 	if err = syscall.Exec(binary, os.Args, os.Environ()); err != nil {
 		log.Error(err, "error restarting the operator")
 		os.Exit(1)
 	}
+
 	// Something went wrong, rely on the orchestrator to restart us
 	os.Exit(1)
 }

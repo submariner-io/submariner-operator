@@ -34,11 +34,11 @@ const (
 	ocpCoreDNSPodLabel        = "dns.operator.openshift.io/daemonset-dns=default"
 )
 
-func gatherServiceDiscoveryPodLogs(info Info) {
+func gatherServiceDiscoveryPodLogs(info *Info) {
 	gatherPodLogs(lighthouseComponentsLabel, info)
 }
 
-func gatherCoreDNSPodLogs(info Info) {
+func gatherCoreDNSPodLogs(info *Info) {
 	if isCoreDNSTypeOcp(info) {
 		gatherPodLogsByContainer(ocpCoreDNSPodLabel, "dns", info)
 	} else {
@@ -46,7 +46,7 @@ func gatherCoreDNSPodLogs(info Info) {
 	}
 }
 
-func gatherServiceExports(info Info, namespace string) {
+func gatherServiceExports(info *Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    mcsv1a1.GroupName,
 		Version:  mcsv1a1.GroupVersion.Version,
@@ -54,7 +54,7 @@ func gatherServiceExports(info Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
-func gatherServiceImports(info Info, namespace string) {
+func gatherServiceImports(info *Info, namespace string) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    mcsv1a1.GroupName,
 		Version:  mcsv1a1.GroupVersion.Version,
@@ -62,7 +62,7 @@ func gatherServiceImports(info Info, namespace string) {
 	}, namespace, metav1.ListOptions{})
 }
 
-func gatherEndpointSlices(info Info, namespace string) {
+func gatherEndpointSlices(info *Info, namespace string) {
 	labelMap := map[string]string{
 		discoveryv1beta1.LabelManagedBy: lhconstants.LabelValueManagedBy,
 	}
@@ -75,38 +75,46 @@ func gatherEndpointSlices(info Info, namespace string) {
 	}, namespace, metav1.ListOptions{LabelSelector: labelSelector})
 }
 
-func gatherConfigMapCoreDNS(info Info) {
+func gatherConfigMapCoreDNS(info *Info) {
 	namespace := "kube-system"
 	name := "coredns"
+
 	if isCoreDNSTypeOcp(info) {
 		namespace = "openshift-dns"
 		name = "dns-default"
 	}
+
 	fieldMap := map[string]string{
 		"metadata.name": name,
 	}
+
 	fieldSelector := fields.Set(fieldMap).String()
+
 	gatherConfigMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
 
 	// Gather custom configname for AKS type deployments
 	if info.ServiceDiscovery.Spec.CoreDNSCustomConfig != nil {
 		name = info.ServiceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName
+
 		if info.ServiceDiscovery.Spec.CoreDNSCustomConfig.Namespace != "" {
 			namespace = info.ServiceDiscovery.Spec.CoreDNSCustomConfig.Namespace
 		}
+
 		fieldMap := map[string]string{
 			"metadata.name": name,
 		}
+
 		fieldSelector := fields.Set(fieldMap).String()
+
 		gatherConfigMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
 	}
 }
 
-func gatherConfigMapLighthouseDNS(info Info, namespace string) {
+func gatherConfigMapLighthouseDNS(info *Info, namespace string) {
 	gatherConfigMaps(info, namespace, metav1.ListOptions{LabelSelector: lighthouseComponentsLabel})
 }
 
-func isCoreDNSTypeOcp(info Info) bool {
+func isCoreDNSTypeOcp(info *Info) bool {
 	pods, err := findPods(info.ClientSet, ocpCoreDNSPodLabel)
 	return err == nil && len(pods.Items) > 0
 }

@@ -60,7 +60,6 @@ func getEndpointsStatus(cluster *cmd.Cluster) bool {
 	status.Start("Showing Endpoints")
 
 	gateways, err := cluster.GetGateways()
-
 	if err != nil {
 		status.EndWithFailure("Error retrieving gateways: %v", err)
 		return false
@@ -71,9 +70,10 @@ func getEndpointsStatus(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	var epStatus = make([]endpointStatus, 0, len(gateways))
+	epStatus := make([]endpointStatus, 0, len(gateways))
 
-	for _, gateway := range gateways {
+	for i := range gateways {
+		gateway := &gateways[i]
 		epStatus = append(epStatus, newEndpointsStatusFrom(
 			gateway.Status.LocalEndpoint.ClusterID,
 			gateway.Status.LocalEndpoint.PrivateIP,
@@ -81,7 +81,8 @@ func getEndpointsStatus(cluster *cmd.Cluster) bool {
 			gateway.Status.LocalEndpoint.Backend,
 			"local"))
 
-		for _, connection := range gateway.Status.Connections {
+		for i := range gateway.Status.Connections {
+			connection := &gateway.Status.Connections[i]
 			epStatus = append(epStatus, newEndpointsStatusFrom(
 				connection.Endpoint.ClusterID,
 				connection.Endpoint.PrivateIP,
@@ -90,12 +91,15 @@ func getEndpointsStatus(cluster *cmd.Cluster) bool {
 				"remote"))
 		}
 	}
+
 	if len(epStatus) == 0 {
 		status.EndWithFailure("No Endpoints found")
 		return false
 	}
+
 	status.End(cli.Success)
 	printEndpoints(epStatus)
+
 	return true
 }
 
@@ -105,6 +109,7 @@ func showEndpoints(cluster *cmd.Cluster) bool {
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 

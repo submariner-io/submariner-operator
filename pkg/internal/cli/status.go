@@ -34,12 +34,12 @@ const (
 )
 
 // Status is used to track ongoing status in a CLI, with a nice loading spinner
-// when attached to a terminal
+// when attached to a terminal.
 type Status struct {
 	spinner *Spinner
 	status  string
 	logger  log.Logger
-	// for controlling coloring etc
+	// for controlling coloring etc.
 	successFormat string
 	failureFormat string
 	warningFormat string
@@ -54,12 +54,13 @@ func NewStatus() *Status {
 	if env.IsSmartTerminal(writer) {
 		writer = NewSpinner(writer)
 	}
+
 	return StatusForLogger(NewLogger(writer, 0))
 }
 
 // StatusForLogger returns a new status object for the logger l,
 // if l is the kind cli logger and the writer is a Spinner, that spinner
-// will be used for the status
+// will be used for the status.
 func StatusForLogger(l log.Logger) *Status {
 	s := &Status{
 		logger:        l,
@@ -71,25 +72,26 @@ func StatusForLogger(l log.Logger) *Status {
 		warningQueue:  []string{},
 	}
 	// if we're using the CLI logger, check for if it has a spinner setup
-	// and wire the status to that
+	// and wire the status to that.
 	if v, ok := l.(*Logger); ok {
 		if v2, ok := v.writer.(*Spinner); ok {
 			s.spinner = v2
-			// use colored success / failure / warning messages
+			// use colored success / failure / warning messages.
 			s.successFormat = " \x1b[32m✓\x1b[0m %s\n"
 			s.failureFormat = " \x1b[31m✗\x1b[0m %s\n"
 			s.warningFormat = " \x1b[33m⚠\x1b[0m %s\n"
 		}
 	}
+
 	return s
 }
 
 // Start starts a new phase of the status, if attached to a terminal
-// there will be a loading spinner with this status
+// there will be a loading spinner with this status.
 func (s *Status) Start(status string) {
 	s.End(Success)
-	// set new status
 	s.status = status
+
 	if s.spinner != nil {
 		s.spinner.SetSuffix(fmt.Sprintf(" %s ", s.status))
 		s.spinner.Start()
@@ -99,7 +101,7 @@ func (s *Status) Start(status string) {
 }
 
 // End completes the current status, ending any previous spinning and
-// marking the status as success or failure
+// marking the status as success or failure.
 func (s *Status) End(output Result) {
 	if s.status == "" {
 		return
@@ -109,6 +111,7 @@ func (s *Status) End(output Result) {
 		s.spinner.Stop()
 		fmt.Fprint(s.spinner.writer, "\r")
 	}
+
 	switch output {
 	case Success:
 		s.logger.V(0).Infof(s.successFormat, s.status)
@@ -121,9 +124,11 @@ func (s *Status) End(output Result) {
 	for _, message := range s.successQueue {
 		s.logger.V(0).Infof(s.successFormat, message)
 	}
+
 	for _, message := range s.failureQueue {
 		s.logger.V(0).Infof(s.failureFormat, message)
 	}
+
 	for _, message := range s.warningQueue {
 		s.logger.V(0).Infof(s.warningFormat, message)
 	}
@@ -150,19 +155,19 @@ func (s *Status) EndWithWarning(message string, a ...interface{}) {
 }
 
 // QueueSuccessMessage queues up a message, which will be displayed once
-// the status ends (using the success format)
+// the status ends (using the success format).
 func (s *Status) QueueSuccessMessage(message string) {
 	s.successQueue = append(s.successQueue, message)
 }
 
 // QueueFailureMessage queues up a message, which will be displayed once
-// the status ends (using the failure format)
+// the status ends (using the failure format).
 func (s *Status) QueueFailureMessage(message string) {
 	s.failureQueue = append(s.failureQueue, message)
 }
 
 // QueuewarningMessage queues up a message, which will be displayed once
-// the status ends (using the warning format)
+// the status ends (using the warning format).
 func (s *Status) QueueWarningMessage(message string) {
 	s.warningQueue = append(s.warningQueue, message)
 }
@@ -190,7 +195,7 @@ func (s *Status) ResultFromMessages() Result {
 func CheckForError(err error) Result {
 	if err == nil {
 		return Success
-	} else {
-		return Failure
 	}
+
+	return Failure
 }

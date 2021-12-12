@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,7 +48,7 @@ func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
 	return sa
 }
 
-// Create a role to bind to Broker SA
+// Create a role to bind to Broker SA.
 func NewBrokerAdminRole() *rbacv1.Role {
 	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
@@ -83,7 +84,7 @@ func NewBrokerAdminRole() *rbacv1.Role {
 	}
 }
 
-// Create a role for each Cluster SAs to bind to
+// Create a role for each Cluster SAs to bind to.
 func NewBrokerClusterRole() *rbacv1.Role {
 	return &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
@@ -109,7 +110,7 @@ func NewBrokerClusterRole() *rbacv1.Role {
 	}
 }
 
-// Create a role for to bind the cluster admin (subctl) SA
+// Create a role for to bind the cluster admin (subctl) SA.
 func NewBrokerRoleBinding(serviceAccount, role, namespace string) *rbacv1.RoleBinding {
 	binding := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
@@ -133,17 +134,19 @@ func NewBrokerRoleBinding(serviceAccount, role, namespace string) *rbacv1.RoleBi
 }
 
 // MaxGeneratedNameLength is the maximum generated length for a token, excluding the random suffix
-// See k8s.io/apiserver/pkg/storage/names
+// See k8s.io/apiserver/pkg/storage/names.
 const MaxGeneratedNameLength = 63 - 5
 
 func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submarinerBrokerSA string) (*v1.Secret, error) {
 	sa, err := clientSet.CoreV1().ServiceAccounts(brokerNamespace).Get(context.TODO(), submarinerBrokerSA, metav1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("ServiceAccount %s get failed: %s", submarinerBrokerSA, err)
+		return nil, errors.Wrapf(err, "ServiceAccount %s get failed", submarinerBrokerSA)
 	}
+
 	if len(sa.Secrets) < 1 {
 		return nil, fmt.Errorf("ServiceAccount %s does not have any secret", sa.Name)
 	}
+
 	brokerTokenPrefix := fmt.Sprintf("%s-token-", submarinerBrokerSA)
 	if len(brokerTokenPrefix) > MaxGeneratedNameLength {
 		brokerTokenPrefix = brokerTokenPrefix[:MaxGeneratedNameLength]
@@ -151,6 +154,7 @@ func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submar
 
 	for _, secret := range sa.Secrets {
 		if strings.HasPrefix(secret.Name, brokerTokenPrefix) {
+			// nolint:wrapcheck // No need to wrap here
 			return clientSet.CoreV1().Secrets(brokerNamespace).Get(context.TODO(), secret.Name, metav1.GetOptions{})
 		}
 	}

@@ -15,7 +15,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package submariner
+
+package submariner_test
 
 import (
 	"context"
@@ -27,6 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -97,18 +99,19 @@ var _ = Describe("Submariner controller tests", func() {
 	Context("Reconciliation", testReconciliation)
 })
 
-const testDetectedServiceCIDR = "100.94.0.0/16"
-const testDetectedClusterCIDR = "10.244.0.0/16"
-
-const testConfiguredServiceCIDR = "192.168.66.0/24"
-const testConfiguredClusterCIDR = "192.168.67.0/24"
+const (
+	testDetectedServiceCIDR   = "100.94.0.0/16"
+	testDetectedClusterCIDR   = "10.244.0.0/16"
+	testConfiguredServiceCIDR = "192.168.66.0/24"
+	testConfiguredClusterCIDR = "192.168.67.0/24"
+)
 
 func testReconciliation() {
 	var (
 		initClientObjs  []controllerClient.Object
 		fakeClient      controllerClient.Client
 		submariner      *submariner_v1.Submariner
-		controller      *SubmarinerReconciler
+		controller      *submarinerController.Reconciler
 		reconcileErr    error
 		reconcileResult reconcile.Result
 		clusterNetwork  *network.ClusterNetwork
@@ -138,11 +141,11 @@ func testReconciliation() {
 			fakeClient = newClient()
 		}
 
-		controller = &SubmarinerReconciler{
-			client:         fakeClient,
-			scheme:         scheme.Scheme,
-			clusterNetwork: clusterNetwork,
-		}
+		controller = submarinerController.NewReconciler(&submarinerController.Config{
+			Client:         fakeClient,
+			Scheme:         scheme.Scheme,
+			ClusterNetwork: clusterNetwork,
+		})
 
 		reconcileResult, reconcileErr = controller.Reconcile(ctx, reconcile.Request{NamespacedName: types.NamespacedName{
 			Namespace: submarinerNamespace,
@@ -197,11 +200,13 @@ func testReconciliation() {
 	})
 
 	When("the submariner gateway DaemonSet already exists", func() {
-		var existingDaemonSet *appsv1.DaemonSet
-
 		BeforeEach(func() {
-			existingDaemonSet = newGatewayDaemonSet(submariner)
-			initClientObjs = append(initClientObjs, existingDaemonSet)
+			initClientObjs = append(initClientObjs, &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: submariner.Namespace,
+					Name:      gatewayDaemonSetName,
+				},
+			})
 		})
 
 		It("should update it", func() {
@@ -222,8 +227,9 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(ctx, gatewayDaemonSetName, fakeClient).Spec).To(
-				Equal(newGatewayDaemonSet(withNetworkDiscovery(initial, clusterNetwork)).Spec))
+
+			updatedDaemonSet := expectDaemonSet(ctx, gatewayDaemonSetName, fakeClient)
+			Expect(envMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", initial.Spec.ServiceCIDR))
 		})
 	})
 
@@ -236,11 +242,13 @@ func testReconciliation() {
 	})
 
 	When("the submariner route-agent DaemonSet already exists", func() {
-		var existingDaemonSet *appsv1.DaemonSet
-
 		BeforeEach(func() {
-			existingDaemonSet = newRouteAgentDaemonSet(withNetworkDiscovery(submariner, clusterNetwork))
-			initClientObjs = append(initClientObjs, existingDaemonSet)
+			initClientObjs = append(initClientObjs, &appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: submariner.Namespace,
+					Name:      routeAgentDaemonSetName,
+				},
+			})
 		})
 
 		It("should update it", func() {
@@ -261,17 +269,18 @@ func testReconciliation() {
 
 			Expect(reconcileErr).To(Succeed())
 			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDaemonSet(ctx, routeAgentDaemonSetName, fakeClient).Spec).To(Equal(newRouteAgentDaemonSet(
-				withNetworkDiscovery(initial, clusterNetwork)).Spec))
+
+			updatedDaemonSet := expectDaemonSet(ctx, routeAgentDaemonSetName, fakeClient)
+			Expect(envMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", initial.Spec.ClusterCIDR))
 		})
 
 		When("a selected pod has a nil Started field", func() {
 			BeforeEach(func() {
 				initClientObjs = append(initClientObjs, &corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
-						Namespace: existingDaemonSet.ObjectMeta.Namespace,
-						Name:      "submariner-routeagent-pod",
-						Labels:    existingDaemonSet.ObjectMeta.Labels,
+						Namespace: submariner.Namespace,
+						Name:      routeAgentDaemonSetName + "-pod",
+						Labels:    map[string]string{"app": "submariner-routeagent"},
 					},
 					Spec: corev1.PodSpec{},
 					Status: corev1.PodStatus{
@@ -285,6 +294,7 @@ func testReconciliation() {
 					},
 				})
 			})
+
 			It("should not crash", func() {
 				Expect(reconcileErr).To(Succeed())
 			})
@@ -387,10 +397,7 @@ func verifyGatewayDaemonSet(ctx context.Context, submariner *submariner_v1.Subma
 	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
 		Equal(submariner.Spec.Repository + "/submariner-gateway:" + submariner.Spec.Version))
 
-	envMap := map[string]string{}
-	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
-		envMap[envVar.Name] = envVar.Value
-	}
+	envMap := envMapFrom(daemonSet)
 
 	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_PSK", submariner.Spec.CeIPSecPSK))
 	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_IKEPORT", strconv.Itoa(submariner.Spec.CeIPSecIKEPort)))
@@ -408,6 +415,15 @@ func verifyGatewayDaemonSet(ctx context.Context, submariner *submariner_v1.Subma
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_GLOBALCIDR", submariner.Spec.GlobalCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
+}
+
+func envMapFrom(daemonSet *appsv1.DaemonSet) map[string]string {
+	envMap := map[string]string{}
+	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
+		envMap[envVar.Name] = envVar.Value
+	}
+
+	return envMap
 }
 
 func newSubmariner() *submariner_v1.Submariner {
@@ -443,34 +459,37 @@ func withNetworkDiscovery(submariner *submariner_v1.Submariner, clusterNetwork *
 	submariner.Status.ClusterCIDR = getClusterCIDR(submariner, clusterNetwork)
 	submariner.Status.ServiceCIDR = getServiceCIDR(submariner, clusterNetwork)
 	submariner.Status.NetworkPlugin = clusterNetwork.NetworkPlugin
+
 	return submariner
 }
 
 func getClusterCIDR(submariner *submariner_v1.Submariner, clusterNetwork *network.ClusterNetwork) string {
 	if submariner.Spec.ClusterCIDR != "" {
 		return submariner.Spec.ClusterCIDR
-	} else {
-		return clusterNetwork.PodCIDRs[0]
 	}
+
+	return clusterNetwork.PodCIDRs[0]
 }
 
 func getServiceCIDR(submariner *submariner_v1.Submariner, clusterNetwork *network.ClusterNetwork) string {
 	if submariner.Spec.ServiceCIDR != "" {
 		return submariner.Spec.ServiceCIDR
-	} else {
-		return clusterNetwork.ServiceCIDRs[0]
 	}
+
+	return clusterNetwork.ServiceCIDRs[0]
 }
 
 func getDaemonSet(ctx context.Context, name string, client controllerClient.Client) (*appsv1.DaemonSet, error) {
 	foundDaemonSet := &appsv1.DaemonSet{}
 	err := client.Get(ctx, types.NamespacedName{Name: name, Namespace: submarinerNamespace}, foundDaemonSet)
+
 	return foundDaemonSet, err
 }
 
 func expectDaemonSet(ctx context.Context, name string, client controllerClient.Client) *appsv1.DaemonSet {
 	foundDaemonSet, err := getDaemonSet(ctx, name, client)
 	Expect(err).To(Succeed())
+
 	return foundDaemonSet
 }
 

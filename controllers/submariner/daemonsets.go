@@ -21,45 +21,51 @@ package submariner
 import (
 	"context"
 
+	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 )
 
-func updateDaemonSetStatus(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,
+func updateDaemonSetStatus(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,
 	namespace string) error {
 	if daemonSet != nil {
 		if status == nil {
 			status = &v1alpha1.DaemonSetStatus{}
 		}
+
 		status.Status = &daemonSet.Status
 		if status.LastResourceVersion != daemonSet.ObjectMeta.ResourceVersion {
 			// The daemonset has changed, check its containers
 			mismatchedContainerImages, nonReadyContainerStates, err :=
-				checkDaemonSetContainers(clnt, ctx, daemonSet, namespace)
+				checkDaemonSetContainers(ctx, clnt, daemonSet, namespace)
 			if err != nil {
 				return err
 			}
+
 			status.MismatchedContainerImages = mismatchedContainerImages
 			status.NonReadyContainerStates = nonReadyContainerStates
 			status.LastResourceVersion = daemonSet.ObjectMeta.ResourceVersion
 		}
 	}
+
 	return nil
 }
 
-func checkDaemonSetContainers(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet,
+func checkDaemonSetContainers(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet,
 	namespace string) (bool, *[]corev1.ContainerState, error) {
-	containerStatuses, err := retrieveDaemonSetContainerStatuses(clnt, ctx, daemonSet, namespace)
+	containerStatuses, err := retrieveDaemonSetContainerStatuses(ctx, clnt, daemonSet, namespace)
 	if err != nil {
 		return false, nil, err
 	}
-	var containerImageManifest *string = nil
-	var mismatchedContainerImages = false
-	var nonReadyContainerStates = []corev1.ContainerState{}
+
+	var containerImageManifest *string
+
+	mismatchedContainerImages := false
+	nonReadyContainerStates := []corev1.ContainerState{}
+
 	for i := range *containerStatuses {
 		containerStatus := (*containerStatuses)[i]
 		if containerImageManifest == nil {
@@ -68,28 +74,34 @@ func checkDaemonSetContainers(clnt client.Reader, ctx context.Context, daemonSet
 			// Container mismatch
 			mismatchedContainerImages = true
 		}
+
 		if containerStatus.Started == nil || !*containerStatus.Started {
 			// Not (yet) ready
 			nonReadyContainerStates = append(nonReadyContainerStates, containerStatus.State)
 		}
 	}
+
 	return mismatchedContainerImages, &nonReadyContainerStates, nil
 }
 
-func retrieveDaemonSetContainerStatuses(clnt client.Reader, ctx context.Context, daemonSet *appsv1.DaemonSet,
+func retrieveDaemonSetContainerStatuses(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet,
 	namespace string) (*[]corev1.ContainerStatus, error) {
 	pods := &corev1.PodList{}
+
 	selector, err := metav1.LabelSelectorAsSelector(daemonSet.Spec.Selector)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating label selector")
 	}
+
 	err = clnt.List(ctx, pods, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error listing DaemonSet pods")
 	}
+
 	containerStatuses := []corev1.ContainerStatus{}
 	for i := range pods.Items {
 		containerStatuses = append(containerStatuses, pods.Items[i].Status.ContainerStatuses...)
 	}
+
 	return &containerStatuses, nil
 }

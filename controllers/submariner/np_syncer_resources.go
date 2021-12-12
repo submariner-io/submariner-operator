@@ -22,25 +22,27 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (r *SubmarinerReconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.Submariner,
-	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger) (*appsv1.Deployment, error) {
+// nolint:wrapcheck // No need to wrap errors here.
+func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.Submariner,
+	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger) error {
 	// Only OVNKubernetes needs networkplugin-syncer so far
 	if instance.Status.NetworkPlugin == constants.NetworkPluginOVNKubernetes {
-		return helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,
-			clusterNetwork), reqLogger, r.client, r.scheme)
+		_, err := helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,
+			clusterNetwork), reqLogger, r.config.Client, r.config.Scheme)
+		return err
 	}
-	return nil, nil
+
+	return nil
 }
 
 func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork) *appsv1.Deployment {
@@ -107,12 +109,15 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 		if ovndb, ok := clusterNetwork.PluginSettings[network.OvnNBDB]; ok {
 			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env =
 				append(networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name: network.OvnNBDB, Value: ovndb})
+					Name: network.OvnNBDB, Value: ovndb,
+				})
 		}
+
 		if ovnsb, ok := clusterNetwork.PluginSettings[network.OvnSBDB]; ok {
 			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env =
 				append(networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name: network.OvnSBDB, Value: ovnsb})
+					Name: network.OvnSBDB, Value: ovnsb,
+				})
 		}
 	}
 

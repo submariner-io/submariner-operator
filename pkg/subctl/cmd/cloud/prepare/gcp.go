@@ -25,7 +25,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
+// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newGCPPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gcp",
@@ -40,6 +40,7 @@ func newGCPPrepareCommand() *cobra.Command {
 		"Number of gateways to deploy")
 	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", false,
 		"Whether a dedicated gateway node has to be deployed (default false)")
+
 	return cmd
 }
 
@@ -59,6 +60,7 @@ func prepareGCP(cmd *cobra.Command, args []string) {
 		},
 	}
 
+	// nolint:wrapcheck // No need to wrap errors here.
 	err := gcp.RunOnGCP(gcpGWInstanceType, *kubeConfig, *kubeContext, dedicatedGateway,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {

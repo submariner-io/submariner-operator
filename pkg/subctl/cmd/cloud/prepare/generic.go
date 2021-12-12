@@ -35,10 +35,12 @@ func newGenericPrepareCommand() *cobra.Command {
 
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of gateways to deploy")
+
 	return cmd
 }
 
 func prepareGenericCluster(cmd *cobra.Command, args []string) {
+	// nolint:wrapcheck // No need to wrap errors here.
 	err := generic.RunOnK8sCluster(*kubeConfig, *kubeContext,
 		func(gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {

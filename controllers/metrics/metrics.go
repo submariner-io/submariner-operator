@@ -21,10 +21,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/metrics"
-
-	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,13 +40,15 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 	if !ok {
 		return fmt.Errorf("no app label in the provided labels, %v", labels)
 	}
+
 	metricsService, err := helpers.ReconcileService(owner, newMetricsService(namespace, app, port), reqLogger, client, scheme)
 	if err != nil {
-		return err
+		return err // nolint:wrapcheck // No need to wrap here
 	}
 
 	if config != nil {
 		services := []*corev1.Service{metricsService}
+
 		_, err = metrics.CreateServiceMonitors(config, namespace, services)
 		if err != nil {
 			// If this operator is deployed to a cluster without the prometheus-operator running, it will return
@@ -55,7 +56,7 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 			if errors.Is(err, metrics.ErrServiceMonitorNotPresent) {
 				reqLogger.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
 			} else if !k8serrors.IsAlreadyExists(err) {
-				return err
+				return err // nolint:wrapcheck // No need to wrap here
 			}
 		}
 	}
@@ -63,17 +64,19 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 	return nil
 }
 
-// newMetricsService populates a Service providing access to metrics for the given application
-// It is assumed that the application's resources are labeled with "app=" the given app name
-// The Service is named after the application name, suffixed with "-metrics"
+// newMetricsService populates a Service providing access to metrics for the given application.
+// It is assumed that the application's resources are labeled with "app=" the given app name.
+// The Service is named after the application name, suffixed with "-metrics".
 func newMetricsService(namespace, app string, port int32) *corev1.Service {
 	labels := map[string]string{
 		"app": app,
 	}
 
 	servicePorts := []corev1.ServicePort{
-		{Port: port, Name: "metrics", Protocol: corev1.ProtocolTCP, TargetPort: intstr.IntOrString{Type: intstr.Int,
-			IntVal: port}},
+		{Port: port, Name: "metrics", Protocol: corev1.ProtocolTCP, TargetPort: intstr.IntOrString{
+			Type:   intstr.Int,
+			IntVal: port,
+		}},
 	}
 
 	service := &corev1.Service{

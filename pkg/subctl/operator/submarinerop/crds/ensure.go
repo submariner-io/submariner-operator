@@ -21,34 +21,37 @@ package crds
 import (
 	"context"
 
-	"k8s.io/client-go/rest"
-
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	"k8s.io/client-go/rest"
 )
 
-// Ensure functions updates or installs the operator CRDs in the cluster
+// Ensure functions updates or installs the operator CRDs in the cluster.
 func Ensure(restConfig *rest.Config) (bool, error) {
 	crdUpdater, err := crdutils.NewFromRestConfig(restConfig)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error creating CRDUpdater")
 	}
 
-	// Attempt to update or create the CRD definitions
+	// Attempt to update or create the CRD definitions.
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
 	submarinerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
 		embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error provisioning Submariner CRD")
 	}
+
 	serviceDiscoveryCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
 		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error provisioning ServiceDiscovery CRD")
 	}
+
 	brokerCreated, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
 		embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
-	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, err
+
+	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, errors.Wrap(err, "error provisioning Broker CRD")
 }

@@ -22,8 +22,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -46,19 +47,20 @@ func CreateGlobalnetConfigMap(config *rest.Config, globalnetEnabled bool, defaul
 	defaultGlobalClusterSize uint, namespace string) error {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("error creating the core kubernetes clientset: %s", err)
+		return errors.Wrap(err, "error creating the core kubernetes clientset")
 	}
 
 	gnConfigMap, err := NewGlobalnetConfigMap(globalnetEnabled, defaultGlobalCidrRange, defaultGlobalClusterSize, namespace)
 	if err != nil {
-		return fmt.Errorf("error creating config map: %s", err)
+		return errors.Wrap(err, "error creating config map")
 	}
 
 	_, err = clientset.CoreV1().ConfigMaps(namespace).Create(context.TODO(), gnConfigMap, metav1.CreateOptions{})
-	if err == nil || errors.IsAlreadyExists(err) {
+	if err == nil || apierrors.IsAlreadyExists(err) {
 		return nil
 	}
-	return err
+
+	return errors.Wrapf(err, "error creating ConfigMap")
 }
 
 func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
@@ -69,7 +71,7 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 
 	cidrRange, err := json.Marshal(defaultGlobalCidrRange)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error marshalling CIDR range")
 	}
 
 	var data map[string]string
@@ -95,18 +97,21 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 		},
 		Data: data,
 	}
+
 	return cm, nil
 }
 
 func UpdateGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace string,
 	configMap *v1.ConfigMap, newCluster ClusterInfo) error {
 	var clusterInfo []ClusterInfo
+
 	err := json.Unmarshal([]byte(configMap.Data[ClusterInfoKey]), &clusterInfo)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error unmarshalling ClusterInfo")
 	}
 
 	exists := false
+
 	for k, value := range clusterInfo {
 		if value.ClusterID == newCluster.ClusterID {
 			clusterInfo[k].GlobalCidr = newCluster.GlobalCidr
@@ -123,18 +128,16 @@ func UpdateGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace stri
 
 	data, err := json.MarshalIndent(clusterInfo, "", "\t")
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error marshalling ClusterInfo")
 	}
 
 	configMap.Data[ClusterInfoKey] = string(data)
 	_, err = k8sClientset.CoreV1().ConfigMaps(namespace).Update(context.TODO(), configMap, metav1.UpdateOptions{})
-	return err
+
+	return errors.Wrapf(err, "error updating ConfigMap")
 }
 
+// nolint:wrapcheck // No need to wrap here
 func GetGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace string) (*v1.ConfigMap, error) {
-	cm, err := k8sClientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), GlobalCIDRConfigMapName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return cm, nil
+	return k8sClientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), GlobalCIDRConfigMapName, metav1.GetOptions{})
 }

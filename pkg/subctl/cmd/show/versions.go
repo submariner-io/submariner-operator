@@ -21,17 +21,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -70,28 +70,30 @@ func getSubmarinerVersion(submariner *v1alpha1.Submariner, versions []versionIma
 func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
 	operatorConfig, err := clientSet.AppsV1().Deployments(cmd.OperatorNamespace).Get(context.TODO(), names.OperatorComponent, v1.GetOptions{})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error retrieving Deployment")
 	}
 
 	operatorFullImageStr := operatorConfig.Spec.Template.Spec.Containers[0].Image
 	version, repository := images.ParseOperatorImage(operatorFullImageStr)
 	versions = append(versions, newVersionInfoFrom(repository, names.OperatorComponent, version))
+
 	return versions, nil
 }
 
 func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
 	lighthouseAgentConfig, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(cmd.OperatorNamespace).Get(
 		context.TODO(), names.ServiceDiscoveryCrName, v1.GetOptions{})
-
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return versions, nil
 		}
-		return nil, err
+
+		return nil, errors.Wrap(err, "error retrieving Submariner resource")
 	}
 
 	versions = append(versions, newVersionInfoFrom(lighthouseAgentConfig.Spec.Repository, names.ServiceDiscoveryCrName,
 		lighthouseAgentConfig.Spec.Version))
+
 	return versions, nil
 }
 
@@ -113,6 +115,7 @@ func getVersions(cluster *cmd.Cluster) bool {
 
 	printVersions(versions)
 	status.End(cli.Success)
+
 	return true
 }
 
@@ -122,6 +125,7 @@ func showVersions(cluster *cmd.Cluster) bool {
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 
@@ -131,6 +135,7 @@ func showVersions(cluster *cmd.Cluster) bool {
 func printVersions(versions []versionImageInfo) {
 	template := "%-32.31s%-54.53s%-16.15s\n"
 	fmt.Printf(template, "COMPONENT", "REPOSITORY", "VERSION")
+
 	for _, item := range versions {
 		fmt.Printf(
 			template,

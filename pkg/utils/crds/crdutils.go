@@ -16,12 +16,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// nolint:wrapcheck // These functions are basically wrappers for the k8s APIs.
 package crdutils
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/pkg/errors"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,8 +44,9 @@ type controllerClientCreator struct {
 func NewFromRestConfig(config *rest.Config) (CRDUpdater, error) {
 	apiext, err := clientset.NewForConfig(config)
 	if err != nil {
-		return nil, fmt.Errorf("error creating the api extensions client: %s", err)
+		return nil, errors.Wrap(err, "error creating the api extensions client")
 	}
+
 	return NewFromClientSet(apiext), nil
 }
 
@@ -80,17 +82,21 @@ func (c *controllerClientCreator) Get(ctx context.Context, name string,
 	if err != nil {
 		return nil, err
 	}
+
 	return crd, nil
 }
 
-func (c *controllerClientCreator) Delete(ctx context.Context, name string, options v1.DeleteOptions) error {
+func (c *controllerClientCreator) Delete(ctx context.Context, name string,
+	options v1.DeleteOptions) error { // nolint:gocritic // Match K8s API
 	crd, err := c.Get(ctx, name, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
+
 	if crd == nil {
 		return nil
 	}
+
 	// TODO skitt handle options
 	return c.client.Delete(ctx, crd)
 }

@@ -20,10 +20,16 @@ package broker
 
 import (
 	"context"
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/pkg/gateway"
+	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	v1 "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,19 +37,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-
-	"github.com/submariner-io/submariner-operator/pkg/gateway"
-	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 func Ensure(config *rest.Config, componentArr []string, crds bool, namespace string) error {
 	if crds {
 		crdCreator, err := crdutils.NewFromRestConfig(config)
 		if err != nil {
-			return fmt.Errorf("error accessing the target cluster: %s", err)
+			return errors.Wrap(err, "error accessing the target cluster")
 		}
 
 		for i := range componentArr {
@@ -51,18 +51,18 @@ func Ensure(config *rest.Config, componentArr []string, crds bool, namespace str
 			case components.Connectivity:
 				err = gateway.Ensure(crdCreator)
 				if err != nil {
-					return fmt.Errorf("error setting up the connectivity requirements: %s", err)
+					return errors.Wrap(err, "error setting up the connectivity requirements")
 				}
 			case components.ServiceDiscovery:
 				_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
 				if err != nil {
-					return fmt.Errorf("error setting up the service discovery requirements: %s", err)
+					return errors.Wrap(err, "error setting up the service discovery requirements")
 				}
 			case components.Globalnet:
 				// Globalnet needs the Lighthouse CRDs too
 				_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
 				if err != nil {
-					return fmt.Errorf("error setting up the globalnet requirements: %s", err)
+					return errors.Wrap(err, "error setting up the globalnet requirements")
 				}
 			}
 		}
@@ -70,13 +70,13 @@ func Ensure(config *rest.Config, componentArr []string, crds bool, namespace str
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("error creating the core kubernetes clientset: %s", err)
+		return errors.Wrap(err, "error creating the core kubernetes clientset")
 	}
 
 	// Create the namespace
 	_, err = CreateNewBrokerNamespace(clientset, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the broker namespace %s", err)
+		return errors.Wrap(err, "error creating the broker namespace")
 	}
 
 	// Create administrator SA, Role, and bind them
@@ -88,7 +88,9 @@ func Ensure(config *rest.Config, componentArr []string, crds bool, namespace str
 	if err := createBrokerClusterRoleAndDefaultSA(clientset, namespace); err != nil {
 		return err
 	}
+
 	_, err = WaitForClientToken(clientset, SubmarinerBrokerAdminSA, namespace)
+
 	return err
 }
 
@@ -96,70 +98,72 @@ func createBrokerClusterRoleAndDefaultSA(clientset *kubernetes.Clientset, namesp
 	// Create the a default SA for cluster access (backwards compatibility with documentation)
 	_, err := CreateNewBrokerSA(clientset, submarinerBrokerClusterDefaultSA, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the default broker service account: %s", err)
+		return errors.Wrap(err, "error creating the default broker service account")
 	}
 
 	// Create the broker cluster role, which will also be used by any new enrolled cluster
 	_, err = CreateOrUpdateClusterBrokerRole(clientset, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating broker role: %s", err)
+		return errors.Wrap(err, "error creating broker role")
 	}
 
 	// Create the role binding
 	_, err = CreateNewBrokerRoleBinding(clientset, submarinerBrokerClusterDefaultSA, submarinerBrokerClusterRole, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the broker rolebinding: %s", err)
+		return errors.Wrap(err, "error creating the broker rolebinding")
 	}
+
 	return nil
 }
 
-// CreateSAForCluster creates a new SA, and binds it to the submariner cluster role
+// CreateSAForCluster creates a new SA, and binds it to the submariner cluster role.
 func CreateSAForCluster(clientset *kubernetes.Clientset, clusterID, namespace string) (*v1.Secret, error) {
 	saName := fmt.Sprintf(submarinerBrokerClusterSAFmt, clusterID)
+
 	_, err := CreateNewBrokerSA(clientset, saName, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return nil, fmt.Errorf("error creating cluster sa: %s", err)
+		return nil, errors.Wrap(err, "error creating cluster sa")
 	}
 
 	_, err = CreateNewBrokerRoleBinding(clientset, saName, submarinerBrokerClusterRole, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return nil, fmt.Errorf("error binding sa to cluster role: %s", err)
+		return nil, errors.Wrap(err, "error binding sa to cluster role")
 	}
 
 	clientToken, err := WaitForClientToken(clientset, saName, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return nil, fmt.Errorf("error getting cluster sa token: %s", err)
+		return nil, errors.Wrap(err, "error getting cluster sa token")
 	}
+
 	return clientToken, nil
 }
 
 func createBrokerAdministratorRoleAndSA(clientset *kubernetes.Clientset, namespace string) error {
-	// Create the SA we need for the managing the broker (from subctl, etc..)
+	// Create the SA we need for the managing the broker (from subctl, etc..).
 	_, err := CreateNewBrokerSA(clientset, SubmarinerBrokerAdminSA, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the broker admin service account: %s", err)
+		return errors.Wrap(err, "error creating the broker admin service account")
 	}
 
 	// Create the broker admin role
 	_, err = CreateOrUpdateBrokerAdminRole(clientset, namespace)
 	if err != nil {
-		return fmt.Errorf("error creating subctl role: %s", err)
+		return errors.Wrap(err, "error creating subctl role")
 	}
 
 	// Create the role binding
 	_, err = CreateNewBrokerRoleBinding(clientset, SubmarinerBrokerAdminSA, submarinerBrokerAdminRole, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("error creating the broker rolebinding: %s", err)
+		return errors.Wrap(err, "error creating the broker rolebinding")
 	}
 
 	return nil
 }
 
-func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, namespace string) (secret *v1.Secret, err error) {
+func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, namespace string) (*v1.Secret, error) {
 	// wait for the client token to be ready, while implementing
 	// exponential backoff pattern, it will wait a total of:
 	// sum(n=0..9, 1.2^n * 5) seconds, = 130 seconds
-
 	backoff := wait.Backoff{
 		Steps:    10,
 		Duration: 5 * time.Second,
@@ -167,21 +171,26 @@ func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, nam
 		Jitter:   1,
 	}
 
+	var secret *v1.Secret
 	var lastErr error
-	err = wait.ExponentialBackoff(backoff, func() (bool, error) {
+
+	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
 		secret, lastErr = GetClientTokenSecret(clientset, namespace, submarinerBrokerSA)
 		if lastErr != nil {
-			return false, nil
+			return false, nil // nolint:nilerr // Intentional - the error is propagated via the outer-scoped var 'lastErr'
 		}
+
 		return true, nil
 	})
-	if errors.Is(err, wait.ErrWaitTimeout) {
+
+	if goerrors.Is(err, wait.ErrWaitTimeout) {
 		return nil, lastErr
 	}
 
-	return secret, err
+	return secret, err // nolint:wrapcheck // No need to wrap here
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateNewBrokerNamespace(clientset *kubernetes.Clientset, namespace string) (brokernamespace *v1.Namespace, err error) {
 	ns := &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -192,20 +201,24 @@ func CreateNewBrokerNamespace(clientset *kubernetes.Clientset, namespace string)
 	return clientset.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{})
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateOrUpdateClusterBrokerRole(clientset *kubernetes.Clientset, namespace string) (created bool, err error) {
 	return utils.CreateOrUpdateRole(context.TODO(), clientset, namespace, NewBrokerClusterRole())
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateOrUpdateBrokerAdminRole(clientset *kubernetes.Clientset, namespace string) (created bool, err error) {
 	return utils.CreateOrUpdateRole(context.TODO(), clientset, namespace, NewBrokerAdminRole())
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, serviceAccount, role, namespace string) (
 	brokerRoleBinding *rbac.RoleBinding, err error) {
 	return clientset.RbacV1().RoleBindings(namespace).Create(
 		context.TODO(), NewBrokerRoleBinding(serviceAccount, role, namespace), metav1.CreateOptions{})
 }
 
+// nolint:wrapcheck // No need to wrap here
 func CreateNewBrokerSA(clientset *kubernetes.Clientset, submarinerBrokerSA, namespace string) (brokerSA *v1.ServiceAccount, err error) {
 	return clientset.CoreV1().ServiceAccounts(namespace).Create(
 		context.TODO(), NewBrokerSA(submarinerBrokerSA), metav1.CreateOptions{})

@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// This package provides common functionality to run cloud prepare/cleanup on GCP Clusters
+// This package provides common functionality to run cloud prepare/cleanup on GCP Clusters.
 package gcp
 
 import (
@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
@@ -57,7 +58,7 @@ var (
 	ocpMetadataFile string
 )
 
-// AddGCPFlags adds basic flags needed by GCP
+// AddGCPFlags adds basic flags needed by GCP.
 func AddGCPFlags(command *cobra.Command) {
 	command.Flags().StringVar(&infraID, infraIDFlag, "", "GCP infra ID")
 	command.Flags().StringVar(&region, regionFlag, "", "GCP region")
@@ -90,6 +91,7 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 
 	reporter := cloudutils.NewCLIReporter()
 	reporter.Started("Retrieving GCP credentials from your GCP configuration")
+
 	creds, err := getGCPCredentials()
 	utils.ExitOnError("Failed to get GCP credentials", err)
 	reporter.Succeeded("")
@@ -129,6 +131,7 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 	// TODO: Ideally we should be able to specify the image for GWNode, but it was seen that
 	// with certain images, the instance is not coming up. Needs to be investigated further.
 	gwDeployer := gcp.NewOcpGatewayDeployer(gcpCloudInfo, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sClientSet)
+
 	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
 
 	return function(gcpCloud, gwDeployer, reporter)
@@ -137,7 +140,7 @@ func RunOnGCP(gwInstanceType, kubeConfig, kubeContext string, dedicatedGWNodes b
 func initializeFlagsFromOCPMetadata(metadataFile string) error {
 	fileInfo, err := os.Stat(metadataFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to stat file %q", metadataFile)
 	}
 
 	if fileInfo.IsDir() {
@@ -146,7 +149,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	data, err := os.ReadFile(metadataFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error reading file %q", metadataFile)
 	}
 
 	var metadata struct {
@@ -159,24 +162,25 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	err = json.Unmarshal(data, &metadata)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error unmarshalling data")
 	}
 
 	infraID = metadata.InfraID
 	region = metadata.GCP.Region
 	projectID = metadata.GCP.ProjectID
+
 	return nil
 }
 
 func getGCPCredentials() (*google.Credentials, error) {
 	authJSON, err := os.ReadFile(credentialsFile)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error reading file %q", credentialsFile)
 	}
 
 	creds, err := google.CredentialsFromJSON(context.TODO(), authJSON, dns.CloudPlatformScope)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error parsing credentials file")
 	}
 
 	return creds, nil

@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// This package provides common functionality to run cloud prepare/cleanup on AWS
+// This package provides common functionality to run cloud prepare/cleanup on AWS.
 package aws
 
 import (
@@ -29,6 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
@@ -54,7 +55,7 @@ var (
 	ocpMetadataFile string
 )
 
-// AddAWSFlags adds basic flags needed by AWS
+// AddAWSFlags adds basic flags needed by AWS.
 func AddAWSFlags(command *cobra.Command) {
 	command.Flags().StringVar(&infraID, infraIDFlag, "", "AWS infra ID")
 	command.Flags().StringVar(&region, regionFlag, "", "AWS region")
@@ -85,20 +86,26 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 
 	reporter := cloudutils.NewCLIReporter()
 	reporter.Started("Retrieving AWS credentials from your AWS configuration")
+
 	creds, err := getAWSCredentials()
 	if err != nil {
 		reporter.Failed(err)
 		return err
 	}
+
 	reporter.Succeeded("")
 
 	reporter.Started("Initializing AWS connectivity")
+
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region), config.WithCredentialsProvider(creds))
 	if err != nil {
 		reporter.Failed(err)
-		return err
+
+		return errors.Wrap(err, "error loading default config")
 	}
+
 	ec2Client := ec2.NewFromConfig(cfg)
+
 	reporter.Succeeded("")
 
 	k8sConfig, err := restconfig.ForCluster(kubeConfig, kubeContext)
@@ -121,7 +128,7 @@ func RunOnAWS(gwInstanceType, kubeConfig, kubeContext string,
 func initializeFlagsFromOCPMetadata(metadataFile string) error {
 	fileInfo, err := os.Stat(metadataFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to stat file %q", metadataFile)
 	}
 
 	if fileInfo.IsDir() {
@@ -130,7 +137,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	data, err := os.ReadFile(metadataFile)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error reading file %q", metadataFile)
 	}
 
 	var metadata struct {
@@ -142,11 +149,12 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	err = json.Unmarshal(data, &metadata)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error unmarshalling data")
 	}
 
 	infraID = metadata.InfraID
 	region = metadata.AWS.Region
+
 	return nil
 }
 

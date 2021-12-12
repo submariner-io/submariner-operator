@@ -25,7 +25,7 @@ var (
 	kubeContext string
 )
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "subctl",
 	Short: "An installer for Submariner",
@@ -40,12 +40,12 @@ func Execute() {
 	}
 }
 
-// addKubeConfigFlag adds a "kubeconfig" flag
+// addKubeConfigFlag adds a "kubeconfig" flag.
 func addKubeConfigFlag(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
 }
 
-// addKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once
+// addKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once.
 func addKubeContextFlag(cmd *cobra.Command) {
 	addKubeConfigFlag(cmd)
 	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")

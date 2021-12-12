@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
@@ -37,25 +38,30 @@ func ForOperator(imageVersion, repo string, imageOverrideArr []string) (string, 
 
 	imageOverrides, err := GetOverrides(imageOverrideArr)
 	if err != nil {
-		return "", fmt.Errorf("error overriding Operator image %q", err)
+		return "", errors.Wrap(err, "error overriding Operator image")
 	}
+
 	return images.GetImagePath(repo, imageVersion, names.OperatorImage, names.OperatorComponent, imageOverrides), nil
 }
 
 func GetOverrides(imageOverrideArr []string) (map[string]string, error) {
 	if len(imageOverrideArr) > 0 {
 		imageOverrides := make(map[string]string)
+
 		for _, s := range imageOverrideArr {
 			key := strings.Split(s, "=")[0]
 			if invalidImageName(key) {
 				return nil, fmt.Errorf("invalid image name %s provided. Please choose from %q", key, names.ValidImageNames)
 			}
+
 			value := strings.Split(s, "=")[1]
 			imageOverrides[key] = value
 		}
+
 		return imageOverrides, nil
 	}
-	return nil, nil
+
+	return map[string]string{}, nil
 }
 
 func invalidImageName(key string) bool {
@@ -64,5 +70,6 @@ func invalidImageName(key string) bool {
 			return false
 		}
 	}
+
 	return true
 }

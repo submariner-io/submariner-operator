@@ -23,10 +23,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	// +kubebuilder:scaffold:imports
 )
 
 func TestSubmariner(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ServiceDiscoveryTest Suite")
+	RunSpecs(t, "ServiceDiscovery Test Suite")
 }

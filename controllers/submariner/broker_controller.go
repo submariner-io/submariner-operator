@@ -22,22 +22,22 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/submariner-io/submariner-operator/pkg/gateway"
+	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/broker"
-	"github.com/submariner-io/submariner-operator/pkg/gateway"
-	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
-// BrokerReconciler reconciles a Broker object
+// BrokerReconciler reconciles a Broker object.
 type BrokerReconciler struct {
 	Client client.Client
 	Config *rest.Config
@@ -55,16 +55,17 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 
 	// Fetch the Broker instance
 	instance := &v1alpha1.Broker{}
+
 	err := r.Client.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+		return reconcile.Result{}, errors.Wrap(err, "error retrieving Broker resource")
 	}
 
 	if instance.ObjectMeta.DeletionTimestamp != nil {
@@ -74,32 +75,34 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 
 	// Broker CRDs
 	crdUpdater := crdutils.NewFromControllerClient(r.Client)
+
 	err = gateway.Ensure(crdUpdater)
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
 	}
 
 	// Lighthouse CRDs
 	_, err = lighthouse.Ensure(crdUpdater, lighthouse.BrokerCluster)
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
 	}
 
 	// Globalnet
 	err = globalnet.ValidateExistingGlobalNetworks(r.Config, request.Namespace)
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
 	}
 
 	err = broker.CreateGlobalnetConfigMap(r.Config, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
 		instance.Spec.DefaultGlobalnetClusterSize, request.Namespace)
 	if err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
 	}
 
 	return ctrl.Result{}, nil
 }
 
+// nolint:wrapcheck // No need to wrap here.
 func (r *BrokerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Broker{}).

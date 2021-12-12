@@ -21,7 +21,8 @@ import (
 	"context"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,18 +31,16 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
-var (
-	openshiftSCCGVR = schema.GroupVersionResource{
-		Group:    "security.openshift.io",
-		Version:  "v1",
-		Resource: "securitycontextconstraints",
-	}
-)
+var openshiftSCCGVR = schema.GroupVersionResource{
+	Group:    "security.openshift.io",
+	Version:  "v1",
+	Resource: "securitycontextconstraints",
+}
 
 func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 	dynClient, err := dynamic.NewForConfig(restConfig)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error creating client")
 	}
 
 	sccClient := dynClient.Resource(openshiftSCCGVR)
@@ -50,14 +49,14 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		cr, err := sccClient.Get(context.TODO(), "privileged", metav1.GetOptions{})
 		if err != nil {
-			if errors.IsNotFound(err) {
+			if apierrors.IsNotFound(err) {
 				return nil
 			}
-			return err
+			return errors.Wrap(err, "error retrieving SCC resource")
 		}
 		users, found, err := unstructured.NestedSlice(cr.Object, "users")
 		if !found || err != nil {
-			return err
+			return errors.Wrap(err, "error retrieving users field")
 		}
 
 		submarinerUser := fmt.Sprintf("system:serviceaccount:%s:%s", namespace, name)
@@ -70,14 +69,15 @@ func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
 		}
 
 		if err := unstructured.SetNestedSlice(cr.Object, append(users, submarinerUser), "users"); err != nil {
-			return err
+			return errors.Wrap(err, "error setting users field")
 		}
 
 		if _, err = sccClient.Update(context.TODO(), cr, metav1.UpdateOptions{}); err != nil {
-			return fmt.Errorf("error updating OpenShift privileged SCC: %s", err)
+			return errors.Wrap(err, "error updating OpenShift privileged SCC")
 		}
 		created = true
 		return nil
 	})
-	return created, retryErr
+
+	return created, retryErr // nolint:wrapcheck // No need to wrap here
 }

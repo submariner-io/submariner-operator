@@ -19,22 +19,23 @@ limitations under the License.
 package datafile
 
 import (
-	"context"
 	"crypto/rand"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
 )
 
-const ipsecPSKSecretName = "submariner-ipsec-psk"
-const ipsecSecretLength = 48
+const (
+	ipsecPSKSecretName = "submariner-ipsec-psk"
+	ipsecSecretLength  = 48
+)
 
 // generateRandomPSK returns securely generated n-byte array.
 func generateRandomPSK(n int) ([]byte, error) {
 	psk := make([]byte, n)
 	_, err := rand.Read(psk)
-	return psk, err
+
+	return psk, err // nolint:wrapcheck // No need to wrap here
 }
 
 func newIPSECPSKSecret() (*v1.Secret, error) {
@@ -54,8 +55,4 @@ func newIPSECPSKSecret() (*v1.Secret, error) {
 	}
 
 	return pskSecret, nil
-}
-
-func GetIPSECPSKSecret(clientSet clientset.Interface, namespace string) (*v1.Secret, error) {
-	return clientSet.CoreV1().Secrets(namespace).Get(context.TODO(), ipsecPSKSecretName, metav1.GetOptions{})
 }

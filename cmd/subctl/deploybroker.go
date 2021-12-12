@@ -21,26 +21,25 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/constants"
-
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
-
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
-
-	"github.com/spf13/cobra"
 )
 
-var deployflags deploy.DeployOptions
-var defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
+var (
+	deployflags       deploy.BrokerOptions
+	defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
+)
 
-// deployBroker represents the deployBroker command
+// deployBroker represents the deployBroker command.
 var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "Deploys the broker",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("deployBroker called")
-		err := deploy.Broker(deployflags, kubeConfig, kubeContext)
+		err := deploy.Broker(&deployflags, kubeConfig, kubeContext)
 		exit.OnError("Error deploying Broker", err)
 	},
 }

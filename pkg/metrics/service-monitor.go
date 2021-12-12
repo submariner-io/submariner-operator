@@ -24,8 +24,9 @@ import (
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/coreos/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
 	clientset "k8s.io/client-go/kubernetes"
@@ -46,6 +47,7 @@ func CreateServiceMonitors(config *rest.Config, ns string, services []*v1.Servic
 	if err != nil {
 		return nil, err
 	}
+
 	if !exists {
 		return nil, ErrServiceMonitorNotPresent
 	}
@@ -55,28 +57,31 @@ func CreateServiceMonitors(config *rest.Config, ns string, services []*v1.Servic
 	// (so its caching infrastructure isn't available, and reads fail)
 	cs, err := clientset.NewForConfig(config)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error getting kube client")
 	}
+
 	if _, err := cs.CoreV1().Namespaces().Get(context.TODO(), openshiftMonitoringNS, metav1.GetOptions{}); err == nil {
 		ns = openshiftMonitoringNS
-	} else if !errors.IsNotFound(err) {
+	} else if !apierrors.IsNotFound(err) {
 		log.Error(err, "Error checking for the OpenShift monitoring namespace")
 	}
 
 	serviceMonitors := make([]*monitoringv1.ServiceMonitor, len(services))
 	mclient := monclientv1.NewForConfigOrDie(config)
 
-	for _, s := range services {
+	for i, s := range services {
 		if s == nil {
 			continue
 		}
+
 		sm := GenerateServiceMonitor(ns, s)
 
 		smc, err := mclient.ServiceMonitors(ns).Create(context.TODO(), sm, metav1.CreateOptions{})
 		if err != nil {
-			return serviceMonitors, err
+			return nil, errors.Wrap(err, "error creating ServiceMonitor")
 		}
-		serviceMonitors = append(serviceMonitors, smc)
+
+		serviceMonitors[i] = smc
 	}
 
 	return serviceMonitors, nil
@@ -89,12 +94,14 @@ func GenerateServiceMonitor(ns string, s *v1.Service) *monitoringv1.ServiceMonit
 	for k, v := range s.ObjectMeta.Labels {
 		labels[k] = v
 	}
+
 	endpoints := populateEndpointsFromServicePorts(s)
 	boolTrue := true
 
 	// Owner references only work inside the same namespace
 	ownerReferences := []metav1.OwnerReference{}
 	namespaceSelector := monitoringv1.NamespaceSelector{}
+
 	if ns == s.ObjectMeta.Namespace {
 		ownerReferences = []metav1.OwnerReference{
 			{
@@ -131,9 +138,10 @@ func GenerateServiceMonitor(ns string, s *v1.Service) *monitoringv1.ServiceMonit
 
 func populateEndpointsFromServicePorts(s *v1.Service) []monitoringv1.Endpoint {
 	endpoints := make([]monitoringv1.Endpoint, len(s.Spec.Ports))
-	for _, port := range s.Spec.Ports {
-		endpoints = append(endpoints, monitoringv1.Endpoint{Port: port.Name})
+	for i := range s.Spec.Ports {
+		endpoints[i] = monitoringv1.Endpoint{Port: s.Spec.Ports[i].Name}
 	}
+
 	return endpoints
 }
 
@@ -143,5 +151,5 @@ func hasServiceMonitor(config *rest.Config) (bool, error) {
 	apiVersion := "monitoring.coreos.com/v1"
 	kind := "ServiceMonitor"
 
-	return k8sutil.ResourceExists(dc, apiVersion, kind)
+	return k8sutil.ResourceExists(dc, apiVersion, kind) // nolint:wrapcheck // No need to wrap here
 }

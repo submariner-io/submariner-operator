@@ -15,22 +15,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package network
+package network_test
 
 import (
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("discoverCalicoNetwork", func() {
+var _ = Describe("Calico Network", func() {
 	var (
 		initObjs     []runtime.Object
-		clusterNet   *ClusterNetwork
+		clusterNet   *network.ClusterNetwork
 		err          error
 		calicoCfgMap = &v1.ConfigMap{
 			ObjectMeta: v1meta.ObjectMeta{
@@ -47,7 +47,7 @@ var _ = Describe("discoverCalicoNetwork", func() {
 
 	JustBeforeEach(func() {
 		clientSet := newTestClient(initObjs...)
-		clusterNet, err = discoverCalicoNetwork(clientSet)
+		clusterNet, err = network.Discover(nil, clientSet, nil, "")
 	})
 
 	When("no kube pod information is available", func() {
@@ -57,7 +57,7 @@ var _ = Describe("discoverCalicoNetwork", func() {
 			}
 
 			clientSet := newTestClient(initObjs...)
-			clusterNet, err = discoverCalicoNetwork(clientSet)
+			clusterNet, err = network.Discover(nil, clientSet, nil, "")
 		})
 
 		It("should return a ClusterNetwork with only service CIDRs", func() {
@@ -66,13 +66,6 @@ var _ = Describe("discoverCalicoNetwork", func() {
 			Expect(clusterNet.NetworkPlugin).To(Equal(constants.NetworkPluginCalico))
 			Expect(clusterNet.PodCIDRs).To(BeEmpty())
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
-		})
-	})
-
-	When("calico config map is not found", func() {
-		It("should return an empty ClusterNetwork", func() {
-			Expect(err).NotTo(HaveOccurred())
-			Expect(clusterNet).To(BeNil())
 		})
 	})
 
@@ -85,7 +78,7 @@ var _ = Describe("discoverCalicoNetwork", func() {
 			}
 
 			clientSet := newTestClient(initObjs...)
-			clusterNet, err = discoverCalicoNetwork(clientSet)
+			clusterNet, err = network.Discover(nil, clientSet, nil, "")
 		})
 		It("should return a ClusterNetwork with pod and service CIDRs", func() {
 			Expect(err).NotTo(HaveOccurred())

@@ -49,7 +49,7 @@ func init() {
 
 			same, err := cmd.CompareFiles(args[0], args[1])
 			if err != nil {
-				return err
+				return err // nolint:wrapcheck // No need to wrap here
 			}
 
 			if same {
@@ -79,25 +79,11 @@ func validateTunnelConfig(command *cobra.Command, args []string) {
 }
 
 func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
-	localCluster, errMsg := cmd.NewCluster(localCfg, "")
-	if localCluster == nil {
-		utils.ExitWithErrorMsg(errMsg)
-	}
-
-	if localCluster.Submariner == nil {
-		utils.ExitWithErrorMsg(cmd.SubmMissingMessage)
-	}
+	localCluster := newCluster(localCfg)
 
 	localCluster.Name = localCluster.Submariner.Spec.ClusterID
 
-	remoteCluster, errMsg := cmd.NewCluster(remoteCfg, "")
-	if remoteCluster == nil {
-		utils.ExitWithErrorMsg(errMsg)
-	}
-
-	if remoteCluster.Submariner == nil {
-		utils.ExitWithErrorMsg(cmd.SubmMissingMessage)
-	}
+	remoteCluster := newCluster(remoteCfg)
 
 	remoteCluster.Name = remoteCluster.Submariner.Spec.ClusterID
 
@@ -127,6 +113,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 	clientMessage := string(uuid.NewUUID())[0:8]
 	podCommand := fmt.Sprintf("timeout %d tcpdump -ln -Q in -A -s 100 -i any udp and dst port %d | grep '%s'",
 		validationTimeout, tunnelPort, clientMessage)
+
 	sPod, err := spawnSnifferPodOnNode(localCluster.KubeClient, gwNodeName, podNamespace, podCommand)
 	if err != nil {
 		status.EndWithFailure("Error spawning the sniffer pod on the Gateway node: %v", err)
@@ -174,12 +161,26 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 		status.EndWithFailure("The tcpdump output from the sniffer pod does not include the message"+
 			" sent from client pod. Please check that your firewall configuration allows UDP/%d traffic"+
 			" on the %q node.", tunnelPort, localEndpoint.Spec.Hostname)
+
 		return false
 	}
 
 	status.EndWithSuccess("Tunnels can be established on the gateway node")
 
 	return true
+}
+
+func newCluster(cfg *rest.Config) *cmd.Cluster {
+	cluster, errMsg := cmd.NewCluster(cfg, "")
+	if cluster == nil {
+		utils.ExitWithErrorMsg(errMsg)
+	}
+
+	if cluster.Submariner == nil {
+		utils.ExitWithErrorMsg(cmd.SubmMissingMessage)
+	}
+
+	return cluster
 }
 
 func getTunnelPort(submariner *v1alpha1.Submariner, endpoint *subv1.Endpoint, status *cli.Status) (int32, bool) {
@@ -219,7 +220,8 @@ func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Statu
 			continue
 		}
 
-		for _, conn := range gw.Status.Connections {
+		for j := range gw.Status.Connections {
+			conn := &gw.Status.Connections[j]
 			if conn.Endpoint.ClusterID == localClusterID {
 				if conn.UsingIP != "" {
 					return conn.UsingIP
@@ -227,14 +229,15 @@ func getGatewayIP(cluster *cmd.Cluster, localClusterID string, status *cli.Statu
 
 				if conn.Endpoint.NATEnabled {
 					return conn.Endpoint.PublicIP
-				} else {
-					return conn.Endpoint.PrivateIP
 				}
+
+				return conn.Endpoint.PrivateIP
 			}
 		}
 	}
 
 	status.EndWithFailure("The gateway on cluster %q does not have an active connection to cluster %q",
 		cluster.Name, localClusterID)
+
 	return ""
 }

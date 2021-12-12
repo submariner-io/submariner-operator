@@ -16,29 +16,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package network
+package network_test
 
 import (
 	"fmt"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/fake"
 	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
 	"k8s.io/client-go/testing"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
-const testPodCIDR = "1.2.3.4/16"
-const testServiceCIDR = "4.5.6.7/16"
-const testServiceCIDRFromService = "7.8.9.10/16"
+const (
+	testPodCIDR                = "1.2.3.4/16"
+	testServiceCIDR            = "4.5.6.7/16"
+	testServiceCIDRFromService = "7.8.9.10/16"
+)
 
-var _ = Describe("discoverGenericNetwork", func() {
+var _ = Describe("Generic Network", func() {
 	When("There is a kube-proxy with no expected parameters", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -61,7 +63,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 
 	When("There is a kube-controller with no expected parameters", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -84,7 +86,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 
 	When("There is a kube-api with no expected parameters", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -107,7 +109,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 
 	When("There is a kube-controller pod with the right parameter", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -130,7 +132,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 
 	When("There is a kube-proxy pod but no kube-controller", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -153,7 +155,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 
 	When("There is a kubeapi pod", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -176,7 +178,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 
 	When("There is a kube-proxy and api pods", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -197,7 +199,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 
 	When("No pod CIDR information exists on any node", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -220,7 +222,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 
 	When("Pod CIDR information exists on a node", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -243,7 +245,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 
 	When("Both pod and service CIDR information exists", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
@@ -265,7 +267,7 @@ var _ = Describe("discoverGenericNetwork", func() {
 	When("No kube-api pod exists and invalid service creation returns no error", func() {
 		It("Should return error and nil cluster network", func() {
 			clientSet := fake.NewSimpleClientset()
-			clusterNet, err := discoverGenericNetwork(clientSet)
+			clusterNet, err := network.Discover(nil, clientSet, nil, "")
 			Expect(err).To(HaveOccurred())
 			Expect(clusterNet).To(BeNil())
 		})
@@ -281,14 +283,14 @@ var _ = Describe("discoverGenericNetwork", func() {
 						nil,
 						fmt.Errorf("%s", testServiceCIDR)
 				})
-			clusterNet, err := discoverGenericNetwork(clientSet)
+			clusterNet, err := network.Discover(nil, clientSet, nil, "")
 			Expect(err).To(HaveOccurred())
 			Expect(clusterNet).To(BeNil())
 		})
 	})
 
 	When("No kube-api pod exists and invalid service creation returns the expected error", func() {
-		var clusterNet *ClusterNetwork
+		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith()
@@ -308,10 +310,11 @@ var _ = Describe("discoverGenericNetwork", func() {
 	})
 })
 
-func testDiscoverGenericWith(objects ...runtime.Object) *ClusterNetwork {
+func testDiscoverGenericWith(objects ...runtime.Object) *network.ClusterNetwork {
 	clientSet := newTestClient(objects...)
-	clusterNet, err := discoverGenericNetwork(clientSet)
+	clusterNet, err := network.Discover(nil, clientSet, nil, "")
 	Expect(err).NotTo(HaveOccurred())
+
 	return clusterNet
 }
 
@@ -327,5 +330,6 @@ func newTestClient(objects ...runtime.Object) *fake.Clientset {
 					"allocated ip:1.1.1.1 with error:provided IP is not in the valid range. "+
 					"The range of valid IPs is %s", testServiceCIDRFromService)
 		})
+
 	return clientSet
 }

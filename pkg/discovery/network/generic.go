@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	clusterNetwork, err := discoverNetwork(clientSet)
 	if err != nil {
@@ -46,6 +47,7 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 	return nil, nil
 }
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	clusterNetwork := &ClusterNetwork{}
 
@@ -89,7 +91,7 @@ func findClusterIPRange(clientSet kubernetes.Interface) (string, error) {
 }
 
 func findClusterIPRangeFromApiserver(clientSet kubernetes.Interface) (string, error) {
-	return findPodCommandParameter(clientSet, "component=kube-apiserver", "--service-cluster-ip-range")
+	return FindPodCommandParameter(clientSet, "component=kube-apiserver", "--service-cluster-ip-range")
 }
 
 func findClusterIPRangeFromServiceCreation(clientSet kubernetes.Interface) (string, error) {
@@ -169,16 +171,15 @@ func findPodIPRange(clientSet kubernetes.Interface) (string, error) {
 }
 
 func findPodIPRangeKubeController(clientSet kubernetes.Interface) (string, error) {
-	return findPodCommandParameter(clientSet, "component=kube-controller-manager", "--cluster-cidr")
+	return FindPodCommandParameter(clientSet, "component=kube-controller-manager", "--cluster-cidr")
 }
 
 func findPodIPRangeKubeProxy(clientSet kubernetes.Interface) (string, error) {
-	return findPodCommandParameter(clientSet, "component=kube-proxy", "--cluster-cidr")
+	return FindPodCommandParameter(clientSet, "component=kube-proxy", "--cluster-cidr")
 }
 
 func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) {
 	nodes, err := clientSet.CoreV1().Nodes().List(context.TODO(), v1meta.ListOptions{})
-
 	if err != nil {
 		return "", errors.WithMessagef(err, "error listing nodes")
 	}
@@ -187,9 +188,9 @@ func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) 
 }
 
 func parseToPodCidr(nodes []v1.Node) (string, error) {
-	for _, node := range nodes {
-		if node.Spec.PodCIDR != "" {
-			return node.Spec.PodCIDR, nil
+	for i := range nodes {
+		if nodes[i].Spec.PodCIDR != "" {
+			return nodes[i].Spec.PodCIDR, nil
 		}
 	}
 

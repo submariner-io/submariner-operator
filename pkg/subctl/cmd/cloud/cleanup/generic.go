@@ -39,7 +39,7 @@ func newGenericCleanupCommand() *cobra.Command {
 func cleanupGenericCluster(cmd *cobra.Command, args []string) {
 	err := generic.RunOnK8sCluster(*kubeConfig, *kubeContext,
 		func(gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
-			return gwDeployer.Cleanup(reporter)
+			return gwDeployer.Cleanup(reporter) // nolint:wrapcheck // No need to wrap here
 		})
 
 	utils.ExitOnError("Failed to cleanup K8s cluster", err)

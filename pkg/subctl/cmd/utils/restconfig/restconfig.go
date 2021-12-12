@@ -21,18 +21,17 @@ package restconfig
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
-
-	"github.com/submariner-io/admiral/pkg/resource"
-	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 type RestConfig struct {
@@ -62,8 +61,9 @@ func ForClusters(kubeConfigPath string, kubeContexts []string) ([]RestConfig, er
 		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
 		rawConfig, err := kubeConfig.RawConfig()
 		if err != nil {
-			return restConfigs, err
+			return restConfigs, errors.Wrap(err, "error creating kube config")
 		}
+
 		for context := range rawConfig.Contexts {
 			contexts = append(contexts, context)
 		}
@@ -72,6 +72,7 @@ func ForClusters(kubeConfigPath string, kubeContexts []string) ([]RestConfig, er
 	for _, context := range contexts {
 		if context != "" {
 			overrides.CurrentContext = context
+
 			config, err := clientConfigAndClusterName(rules, overrides)
 			if err != nil {
 				return nil, err
@@ -95,7 +96,7 @@ func ForBroker(submariner *v1alpha1.Submariner, serviceDisc *v1alpha1.ServiceDis
 				Resource: "clusters",
 			}, submariner.Spec.BrokerK8sRemoteNamespace)
 
-		return restConfig, submariner.Spec.BrokerK8sRemoteNamespace, err
+		return restConfig, submariner.Spec.BrokerK8sRemoteNamespace, errors.Wrap(err, "error getting auth rest config")
 	}
 
 	if serviceDisc != nil {
@@ -108,7 +109,7 @@ func ForBroker(submariner *v1alpha1.Submariner, serviceDisc *v1alpha1.ServiceDis
 				Resource: "serviceimports",
 			}, serviceDisc.Spec.BrokerK8sRemoteNamespace)
 
-		return restConfig, serviceDisc.Spec.BrokerK8sRemoteNamespace, err
+		return restConfig, serviceDisc.Spec.BrokerK8sRemoteNamespace, errors.Wrap(err, "error getting auth rest config")
 	}
 
 	return nil, "", nil
@@ -116,17 +117,18 @@ func ForBroker(submariner *v1alpha1.Submariner, serviceDisc *v1alpha1.ServiceDis
 
 func clientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, overrides *clientcmd.ConfigOverrides) (RestConfig, error) {
 	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
+
 	clientConfig, err := config.ClientConfig()
 	if err != nil {
-		return RestConfig{}, err
+		return RestConfig{}, errors.Wrap(err, "error creating client config")
 	}
 
 	raw, err := config.RawConfig()
 	if err != nil {
-		return RestConfig{}, err
+		return RestConfig{}, errors.Wrap(err, "error creating rest config")
 	}
 
-	clusterName := ClusterNameFromContext(raw, overrides.CurrentContext)
+	clusterName := ClusterNameFromContext(&raw, overrides.CurrentContext)
 
 	if clusterName == nil {
 		return RestConfig{}, fmt.Errorf("could not obtain the cluster name from kube config: %#v", raw)
@@ -138,38 +140,43 @@ func clientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, overr
 func Clients(config *rest.Config) (dynamic.Interface, kubernetes.Interface, error) {
 	dynClient, err := dynamic.NewForConfig(config)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "error creating client")
 	}
+
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, "error creating client")
 	}
+
 	return dynClient, clientSet, nil
 }
 
-func ClusterNameFromContext(rawConfig api.Config, overridesContext string) *string {
+func ClusterNameFromContext(rawConfig *api.Config, overridesContext string) *string {
 	if overridesContext == "" {
-		// No context provided, use the current context
+		// No context provided, use the current context.
 		overridesContext = rawConfig.CurrentContext
 	}
+
 	configContext, ok := rawConfig.Contexts[overridesContext]
 	if !ok {
 		return nil
 	}
+
 	return &configContext.Cluster
 }
 
 func ForCluster(kubeConfigPath, kubeContext string) (*rest.Config, error) {
-	return ClientConfig(kubeConfigPath, kubeContext).ClientConfig()
+	return ClientConfig(kubeConfigPath, kubeContext).ClientConfig() // nolint:wrapcheck // No need to wrap here
 }
 
-// ClientConfig returns a clientcmd.ClientConfig to use when communicating with K8s
+// ClientConfig returns a clientcmd.ClientConfig to use when communicating with K8s.
 func ClientConfig(kubeConfigPath, kubeContext string) clientcmd.ClientConfig {
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
 	rules.ExplicitPath = kubeConfigPath
 
 	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
 	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
+
 	if kubeContext != "" {
 		overrides.CurrentContext = kubeContext
 	}

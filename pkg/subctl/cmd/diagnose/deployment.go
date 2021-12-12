@@ -66,8 +66,13 @@ func checkOverlappingCIDRs(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	for i, source := range endpointList.Items {
-		for _, dest := range endpointList.Items[i+1:] {
+	for i := range endpointList.Items {
+		source := &endpointList.Items[i]
+
+		destEndpoints := endpointList.Items[i+1:]
+		for j := range destEndpoints {
+			dest := &destEndpoints[j]
+
 			// Currently we dont support multiple endpoints in a cluster, hence return an error.
 			// When the corresponding support is added, this check needs to be updated.
 			if source.Spec.ClusterID == dest.Spec.ClusterID {
@@ -176,13 +181,15 @@ func checkPodsStatus(k8sClient kubernetes.Interface, namespace string, status *c
 		return
 	}
 
-	for _, pod := range pods.Items {
+	for i := range pods.Items {
+		pod := &pods.Items[i]
 		if pod.Status.Phase != v1.PodRunning {
 			status.QueueFailureMessage(fmt.Sprintf("Pod %q is not running. (current state is %v)", pod.Name, pod.Status.Phase))
 			continue
 		}
 
-		for _, c := range pod.Status.ContainerStatuses {
+		for j := range pod.Status.ContainerStatuses {
+			c := &pod.Status.ContainerStatuses[j]
 			if c.RestartCount >= 5 {
 				status.QueueWarningMessage(fmt.Sprintf("Pod %q has restarted %d times", pod.Name, c.RestartCount))
 			}

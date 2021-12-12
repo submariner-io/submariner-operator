@@ -22,22 +22,20 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/submariner-io/submariner-operator/internal/image"
-
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/stringset"
+	submarinerv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/internal/image"
+	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
+	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
-	v1 "k8s.io/api/core/v1"
-
-	submarinerv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/broker"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
+	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -55,8 +53,10 @@ var (
 	brokerNamespace             string
 )
 
-var defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
-var validComponents = []string{components.ServiceDiscovery, components.Connectivity}
+var (
+	defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
+	validComponents   = []string{components.ServiceDiscovery, components.Connectivity}
+)
 
 func init() {
 	deployBroker.PersistentFlags().BoolVar(&globalnetEnable, "globalnet", false,
@@ -92,7 +92,6 @@ var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "Set the broker up",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		componentSet := stringset.New(componentArr...)
 
 		if err := isValidComponents(componentSet); err != nil {
@@ -177,7 +176,6 @@ var deployBroker = &cobra.Command{
 		err = subctlData.WriteToFile(brokerDetailsFilename)
 		status.End(cli.CheckForError(err))
 		utils.ExitOnError("Error writing the broker information", err)
-
 	},
 }
 
@@ -199,16 +197,19 @@ func isValidComponents(componentSet stringset.Interface) error {
 
 func isValidGlobalnetConfig() (bool, error) {
 	var err error
+
 	if !globalnetEnable {
 		return true, nil
 	}
+
 	defaultGlobalnetClusterSize, err = globalnet.GetValidClusterSize(globalnetCIDRRange, defaultGlobalnetClusterSize)
 	if err != nil || defaultGlobalnetClusterSize == 0 {
-		return false, err
+		return false, err // nolint:wrapcheck // No need to wrap here
 	}
 
 	err = globalnet.IsValidCIDR(globalnetCIDRRange)
-	return err == nil, err
+
+	return err == nil, err // nolint:wrapcheck // No need to wrap here
 }
 
 func populateBrokerSpec() submarinerv1a1.BrokerSpec {
@@ -219,5 +220,6 @@ func populateBrokerSpec() submarinerv1a1.BrokerSpec {
 		Components:                  componentArr,
 		DefaultCustomDomains:        defaultCustomDomains,
 	}
+
 	return brokerSpec
 }

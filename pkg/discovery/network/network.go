@@ -23,12 +23,12 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
-
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 )
 
 type ClusterNetwork struct {
@@ -74,6 +74,7 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submC
 		// TODO: The other branch of this if will not try to find the globalCIDRs
 		globalCIDR, _ := getGlobalCIDRs(submClient, operatorNamespace)
 		discovery.GlobalCIDR = globalCIDR
+
 		if discovery.IsComplete() {
 			return discovery, nil
 		}
@@ -90,6 +91,7 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submC
 				if len(discovery.ServiceCIDRs) == 0 {
 					discovery.ServiceCIDRs = genericNet.ServiceCIDRs
 				}
+
 				if len(discovery.PodCIDRs) == 0 {
 					discovery.PodCIDRs = genericNet.PodCIDRs
 				}
@@ -103,6 +105,7 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submC
 	return discoverGenericNetwork(clientSet)
 }
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	osClusterNet, err := discoverOpenShift4Network(dynClient)
 	if err != nil || osClusterNet != nil {
@@ -128,6 +131,7 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 	if err != nil || calicoClusterNet != nil {
 		return calicoClusterNet, err
 	}
+
 	return nil, nil
 }
 
@@ -135,12 +139,14 @@ func getGlobalCIDRs(submClient submarinerclientset.Interface, operatorNamespace 
 	if submClient == nil {
 		return "", nil
 	}
+
 	existingCfg, err := submClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(
 		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "error retrieving Submariner resource")
 	}
 
 	globalCIDR := existingCfg.Spec.GlobalCIDR
+
 	return globalCIDR, nil
 }

@@ -31,14 +31,13 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func gatherPodLogs(podLabelSelector string, info Info) {
+func gatherPodLogs(podLabelSelector string, info *Info) {
 	gatherPodLogsByContainer(podLabelSelector, "", info)
 }
 
-func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
+func gatherPodLogsByContainer(podLabelSelector, container string, info *Info) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
-
 		if err != nil {
 			return err
 		}
@@ -51,20 +50,22 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info Info) {
 		for i := range pods.Items {
 			info.Summary.PodLogs = append(info.Summary.PodLogs, outputPodLogs(&pods.Items[i], podLogOptions, info))
 		}
+
 		return nil
 	}()
-
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather logs for pods matching label selector %q: %s",
 			podLabelSelector, err))
 	}
 }
 
-func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info) (podLogInfo LogInfo) {
+// nolint:gocritic // hugeParam: podLogOptions - purposely passed by value.
+func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info *Info) (podLogInfo LogInfo) {
 	podLogInfo.Namespace = pod.Namespace
 	podLogInfo.PodState = pod.Status.Phase
 	podLogInfo.PodName = pod.Name
 	podLogInfo.NodeName = pod.Spec.NodeName
+
 	err := outputPreviousPodLog(pod, podLogOptions, info, &podLogInfo)
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Error outputting previous log for pod %q: %v", pod.Name, err))
@@ -78,18 +79,20 @@ func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Inf
 	return podLogInfo
 }
 
-func writePodLogToFile(logStream io.ReadCloser, info Info, podName, fileExtension string) (string, error) {
+func writePodLogToFile(logStream io.ReadCloser, info *Info, podName, fileExtension string) (string, error) {
 	logs, err := getLogFromStream(logStream)
 	if err != nil {
 		return "", err
 	}
 
 	logs = scrubSensitiveData(info, logs)
+
 	return writeLogToFile(logs, podName, info, fileExtension)
 }
 
 func getLogFromStream(logStream io.ReadCloser) (string, error) {
 	logs := new(bytes.Buffer)
+
 	_, err := io.Copy(logs, logStream)
 	if err != nil {
 		return "", errors.WithMessage(err, "error copying the log stream")
@@ -98,9 +101,10 @@ func getLogFromStream(logStream io.ReadCloser) (string, error) {
 	return logs.String(), nil
 }
 
-func writeLogToFile(data, podName string, info Info, fileExtension string) (string, error) {
+func writeLogToFile(data, podName string, info *Info, fileExtension string) (string, error) {
 	fileName := escapeFileName(info.ClusterName+"_"+podName) + fileExtension
 	filePath := filepath.Join(info.DirName, fileName)
+
 	f, err := os.Create(filePath)
 	if err != nil {
 		return "", errors.WithMessagef(err, "error opening file %s", filePath)
@@ -112,12 +116,11 @@ func writeLogToFile(data, podName string, info Info, fileExtension string) (stri
 		return "", errors.WithMessagef(err, "error writing to file %s", filePath)
 	}
 
-	return fileName, err
+	return fileName, nil
 }
 
 func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.PodList, error) {
 	pods, err := clientSet.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: byLabelSelector})
-
 	if err != nil {
 		return nil, errors.WithMessage(err, "error listing pods")
 	}
@@ -125,7 +128,8 @@ func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.P
 	return pods, nil
 }
 
-func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info, podLogInfo *LogInfo) error {
+// nolint:gocritic // hugeParam: podLogOptions - purposely passed by value.
+func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info *Info, podLogInfo *LogInfo) error {
 	podLogOptions.Previous = true
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
 	logStream, _ := logRequest.Stream(context.TODO())
@@ -135,25 +139,33 @@ func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, i
 	// if no previous pods found, logstream == nil, ignore it
 	if logStream != nil {
 		info.Status.QueueWarningMessage(fmt.Sprintf("Found logs for previous instances of pod %s", pod.Name))
+
 		fileName, err := writePodLogToFile(logStream, info, pod.Name, ".log.prev")
 		if err != nil {
 			return err
 		}
+
 		podLogInfo.LogFileName = append(podLogInfo.LogFileName, fileName)
+
 		defer logStream.Close()
 	}
+
 	podLogInfo.RestartCount = pod.Status.ContainerStatuses[0].RestartCount
+
 	return nil
 }
 
-func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info Info, podLogInfo *LogInfo) error {
+// nolint:gocritic // hugeParam: podLogOptions - purposely passed by value.
+func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info *Info, podLogInfo *LogInfo) error {
 	// Running with Previous = false on the same pod
 	podLogOptions.Previous = false
 	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
+
 	logStream, err := logRequest.Stream(context.TODO())
 	if err != nil {
 		return errors.WithMessage(err, "error opening log stream")
 	}
+
 	defer logStream.Close()
 
 	fileName, err := writePodLogToFile(logStream, info, pod.Name, ".log")
@@ -162,10 +174,9 @@ func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, in
 	return err
 }
 
-func logPodInfo(info Info, what, podLabelSelector string, process func(info Info, pod *corev1.Pod)) {
+func logPodInfo(info *Info, what, podLabelSelector string, process func(info *Info, pod *corev1.Pod)) {
 	err := func() error {
 		pods, err := findPods(info.ClientSet, podLabelSelector)
-
 		if err != nil {
 			return err
 		}
@@ -176,6 +187,7 @@ func logPodInfo(info Info, what, podLabelSelector string, process func(info Info
 		for i := range pods.Items {
 			process(info, &pods.Items[i])
 		}
+
 		return nil
 	}()
 	if err != nil {

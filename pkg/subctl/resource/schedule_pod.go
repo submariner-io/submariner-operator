@@ -80,6 +80,7 @@ func SchedulePodAwaitCompletion(config *PodConfig) (string, error) {
 	}
 
 	defer np.DeletePod()
+
 	if err := np.AwaitPodCompletion(); err != nil {
 		return "", err
 	}
@@ -149,16 +150,19 @@ func (np *NetworkPod) schedulePod() error {
 	}
 
 	pc := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
+
 	var err error
+
 	np.Pod, err = pc.Create(context.TODO(), &networkPod, metav1.CreateOptions{})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating Pod")
 	}
 
 	err = np.awaitUntilPodScheduled()
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -167,6 +171,7 @@ func (np *NetworkPod) DeletePod() {
 	_ = pc.Delete(context.TODO(), np.Pod.Name, metav1.DeleteOptions{})
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func (np *NetworkPod) awaitUntilPodScheduled() error {
 	pods := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 
@@ -190,9 +195,11 @@ func (np *NetworkPod) awaitUntilPodScheduled() error {
 	}
 
 	np.Pod = pod.(*v1.Pod)
+
 	return nil
 }
 
+// nolint:wrapcheck // No need to wrap errors here.
 func (np *NetworkPod) AwaitPodCompletion() error {
 	pods := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 
@@ -202,7 +209,7 @@ func (np *NetworkPod) AwaitPodCompletion() error {
 		}, func(result interface{}) (bool, string, error) {
 			np.Pod = result.(*v1.Pod)
 
-			switch np.Pod.Status.Phase {
+			switch np.Pod.Status.Phase { // nolint:exhaustive // 'missing cases in switch' - OK
 			case v1.PodSucceeded:
 				return true, "", nil
 			case v1.PodFailed:
@@ -211,7 +218,6 @@ func (np *NetworkPod) AwaitPodCompletion() error {
 				return false, fmt.Sprintf("Pod status is %v", np.Pod.Status.Phase), nil
 			}
 		})
-
 	if err != nil {
 		return errors.Wrapf(err, errorMsg)
 	}
@@ -220,5 +226,6 @@ func (np *NetworkPod) AwaitPodCompletion() error {
 	if finished {
 		np.PodOutput = np.Pod.Status.ContainerStatuses[0].State.Terminated.Message
 	}
+
 	return nil
 }

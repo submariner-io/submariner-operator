@@ -30,14 +30,13 @@ import (
 	"k8s.io/client-go/dynamic"
 )
 
-var (
-	openshift4clusterNetworkGVR = schema.GroupVersionResource{
-		Group:    "config.openshift.io",
-		Version:  "v1",
-		Resource: "networks",
-	}
-)
+var openshift4clusterNetworkGVR = schema.GroupVersionResource{
+	Group:    "config.openshift.io",
+	Version:  "v1",
+	Resource: "networks",
+}
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, error) {
 	if dynClient == nil {
 		return nil, nil
@@ -50,6 +49,7 @@ func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, er
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
+
 		return nil, errors.WithMessage(err, "error obtaining the default 'cluster' OpenShift4 Network config resource")
 	}
 
@@ -61,7 +61,7 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 
 	clusterNetworks, found, err := unstructured.NestedSlice(cr.Object, "spec", "clusterNetwork")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error retrieving spec.clusterNetwork field")
 	} else if !found {
 		return nil, fmt.Errorf("field .spec.clusterNetwork expected, but not found in Network resource: %v", cr.Object)
 	}
@@ -71,15 +71,17 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 		cidr, found, err := unstructured.NestedString(clusterNetworkMap, "cidr")
 
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error retrieving cidr field")
 		} else if !found {
 			return nil, fmt.Errorf("field cidr expected, but not found in clusterNetwork: %v", clusterNetworkMap)
 		}
+
 		result.PodCIDRs = append(result.PodCIDRs, cidr)
 	}
+
 	serviceNetworks, found, err := unstructured.NestedSlice(cr.Object, "spec", "serviceNetwork")
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error retrieving spec.serviceNetwork field")
 	} else if !found {
 		return nil, fmt.Errorf("field .spec.serviceNetwork expected, but not found in Network resource: %v", cr.Object)
 	}
@@ -91,7 +93,7 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 	result.NetworkPlugin, found, err = unstructured.NestedString(cr.Object, "spec", "networkType")
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error retrieving spec.networkType field")
 	} else if !found {
 		return nil, fmt.Errorf("field .spec.networkType expected, but not found in Network resource: %v", cr.Object)
 	}

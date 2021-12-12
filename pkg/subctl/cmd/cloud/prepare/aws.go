@@ -25,7 +25,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure
+// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newAWSPrepareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aws",
@@ -38,6 +38,7 @@ func newAWSPrepareCommand() *cobra.Command {
 	cmd.Flags().StringVar(&awsGWInstanceType, "gateway-instance", "c5d.large", "Type of gateways instance machine")
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of dedicated gateways to deploy (Set to `0` when using --load-balancer mode)")
+
 	return cmd
 }
 
@@ -46,7 +47,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		{Port: nattPort, Protocol: "udp"},
 		{Port: natDiscoveryPort, Protocol: "udp"},
 
-		// ESP & AH protocols are used for private-ip to private-ip gateway communications
+		// ESP & AH protocols are used for private-ip to private-ip gateway communications.
 		{Port: 0, Protocol: "50"},
 		{Port: 0, Protocol: "51"},
 	}
@@ -62,6 +63,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 		input.InternalPorts = append(input.InternalPorts, gwPorts...)
 	}
 
+	// nolint:wrapcheck // No need to wrap errors here.
 	err := aws.RunOnAWS(awsGWInstanceType, *kubeConfig, *kubeContext,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {

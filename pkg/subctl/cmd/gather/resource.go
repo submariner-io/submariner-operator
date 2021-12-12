@@ -35,7 +35,8 @@ import (
 
 var fileNameRegexp = regexp.MustCompile(`[<>:"/\|?*]`)
 
-func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
+// nolint:gocritic // hugeParam: listOptions - match K8s API.
+func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
 		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(context.TODO(), listOptions)
 		if err != nil {
@@ -57,6 +58,7 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 
 			name := escapeFileName(info.ClusterName+"_"+ofType.Resource+"_"+item.GetNamespace()+"_"+item.GetName()) + ".yaml"
 			path := filepath.Join(info.DirName, name)
+
 			file, err := os.Create(path)
 			if err != nil {
 				return errors.WithMessagef(err, "error opening file %s", path)
@@ -68,11 +70,14 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 			if err != nil {
 				return errors.WithMessage(err, "error marshaling to YAML")
 			}
+
 			scrubbedData := scrubSensitiveData(info, string(data))
+
 			_, err = file.Write([]byte(scrubbedData))
 			if err != nil {
 				return errors.WithMessagef(err, "error writing to file %s", path)
 			}
+
 			info.Summary.Resources = append(info.Summary.Resources, ResourceInfo{
 				Name:      item.GetName(),
 				Namespace: item.GetNamespace(),
@@ -80,15 +85,16 @@ func ResourcesToYAMLFile(info Info, ofType schema.GroupVersionResource, namespac
 				FileName:  name,
 			})
 		}
+
 		return nil
 	}()
-
 	if err != nil {
 		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather %s: %s", ofType.Resource, err))
 	}
 }
 
-func gatherDaemonSet(info Info, namespace string, listOptions metav1.ListOptions) {
+// nolint:gocritic // hugeParam: listOptions - match K8s API.
+func gatherDaemonSet(info *Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
@@ -96,7 +102,8 @@ func gatherDaemonSet(info Info, namespace string, listOptions metav1.ListOptions
 	}, namespace, listOptions)
 }
 
-func gatherDeployment(info Info, namespace string, listOptions metav1.ListOptions) {
+// nolint:gocritic // hugeParam: listOptions - match K8s API.
+func gatherDeployment(info *Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    appsv1.SchemeGroupVersion.Group,
 		Version:  appsv1.SchemeGroupVersion.Version,
@@ -104,7 +111,8 @@ func gatherDeployment(info Info, namespace string, listOptions metav1.ListOption
 	}, namespace, listOptions)
 }
 
-func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOptions) {
+// nolint:gocritic // hugeParam: listOptions - match K8s API.
+func gatherConfigMaps(info *Info, namespace string, listOptions metav1.ListOptions) {
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
 		Group:    corev1.SchemeGroupVersion.Group,
 		Version:  corev1.SchemeGroupVersion.Version,
@@ -112,7 +120,7 @@ func gatherConfigMaps(info Info, namespace string, listOptions metav1.ListOption
 	}, namespace, listOptions)
 }
 
-func scrubSensitiveData(info Info, dataString string) string {
+func scrubSensitiveData(info *Info, dataString string) string {
 	if info.IncludeSensitiveData {
 		return dataString
 	}

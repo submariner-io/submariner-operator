@@ -16,7 +16,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+// nolint:dupl // The test cases are similar but not duplicated.
+package utils_test
 
 import (
 	"context"
@@ -24,16 +25,15 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/utils"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	extendedfakeclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 var _ = Describe("CreateOrUpdateClusterRole", func() {
@@ -54,7 +54,7 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 
 	When("called", func() {
 		It("Should add the ClusterRole properly", func() {
-			created, err := CreateOrUpdateClusterRole(ctx, client, clusterRole)
+			created, err := utils.CreateOrUpdateClusterRole(ctx, client, clusterRole)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
@@ -66,10 +66,10 @@ var _ = Describe("CreateOrUpdateClusterRole", func() {
 
 	When("called twice", func() {
 		It("Should add the ClusterRole properly, and return false on second call", func() {
-			created, err := CreateOrUpdateClusterRole(ctx, client, clusterRole)
+			created, err := utils.CreateOrUpdateClusterRole(ctx, client, clusterRole)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateClusterRole(ctx, client, clusterRole)
+			created, err = utils.CreateOrUpdateClusterRole(ctx, client, clusterRole)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -94,7 +94,7 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 
 	When("called", func() {
 		It("Should add the ClusterRoleBinding properly", func() {
-			created, err := CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
+			created, err := utils.CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
@@ -106,10 +106,10 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 
 	When("called twice", func() {
 		It("Should add the ClusterRoleBinding properly, and return false on second call", func() {
-			created, err := CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
+			created, err := utils.CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
+			created, err = utils.CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -133,7 +133,7 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 
 	When("called", func() {
 		It("Should add the CRD properly", func() {
-			created, err := CreateOrUpdateCRD(ctx, crdutils.NewFromClientSet(client), crd)
+			created, err := utils.CreateOrUpdateCRD(ctx, crdutils.NewFromClientSet(client), crd)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
@@ -146,10 +146,10 @@ var _ = Describe("CreateOrUpdateCRD", func() {
 	When("called twice", func() {
 		It("Should add the CRD properly, and return false on second call", func() {
 			crdUpdater := crdutils.NewFromClientSet(client)
-			created, err := CreateOrUpdateCRD(ctx, crdUpdater, crd)
+			created, err := utils.CreateOrUpdateCRD(ctx, crdUpdater, crd)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateCRD(ctx, crdUpdater, crd)
+			created, err = utils.CreateOrUpdateCRD(ctx, crdUpdater, crd)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -183,7 +183,7 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 
 	When("called", func() {
 		It("Should add the Deployment properly", func() {
-			created, err := CreateOrUpdateDeployment(ctx, client, namespace, deployment)
+			created, err := utils.CreateOrUpdateDeployment(ctx, client, namespace, deployment)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
@@ -195,10 +195,10 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 
 	When("called twice", func() {
 		It("Should add the Deployment properly, and return false on second call", func() {
-			created, err := CreateOrUpdateDeployment(ctx, client, namespace, deployment)
+			created, err := utils.CreateOrUpdateDeployment(ctx, client, namespace, deployment)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateDeployment(ctx, client, namespace, deployment)
+			created, err = utils.CreateOrUpdateDeployment(ctx, client, namespace, deployment)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -224,7 +224,7 @@ var _ = Describe("CreateOrUpdateRole", func() {
 
 	When("called", func() {
 		It("Should add the Role properly", func() {
-			created, err := CreateOrUpdateRole(ctx, client, namespace, role)
+			created, err := utils.CreateOrUpdateRole(ctx, client, namespace, role)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
@@ -236,10 +236,10 @@ var _ = Describe("CreateOrUpdateRole", func() {
 
 	When("called twice", func() {
 		It("Should add the Role properly, and return false on second call", func() {
-			created, err := CreateOrUpdateRole(ctx, client, namespace, role)
+			created, err := utils.CreateOrUpdateRole(ctx, client, namespace, role)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateRole(ctx, client, namespace, role)
+			created, err = utils.CreateOrUpdateRole(ctx, client, namespace, role)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -265,7 +265,7 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 
 	When("called", func() {
 		It("Should add the RoleBinding properly", func() {
-			created, err := CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
+			created, err := utils.CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 
@@ -277,10 +277,10 @@ var _ = Describe("CreateOrUpdateRoleBinding", func() {
 
 	When("called twice", func() {
 		It("Should add the RoleBinding properly, and return false on second call", func() {
-			created, err := CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
+			created, err := utils.CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
-			created, err = CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
+			created, err = utils.CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})

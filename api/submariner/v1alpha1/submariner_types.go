@@ -21,11 +21,10 @@ package v1alpha1
 import (
 	"encoding/json"
 
+	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -117,8 +116,10 @@ type HealthCheckSpec struct {
 	MaxPacketLossCount uint64 `json:"maxPacketLossCount,omitempty"`
 }
 
-type KubernetesType string
-type CloudProvider string
+type (
+	KubernetesType string
+	CloudProvider  string
+)
 
 const (
 	DefaultColorCode                     = "blue"
@@ -153,14 +154,14 @@ type Submariner struct {
 
 // +kubebuilder:object:root=true
 
-// SubmarinerList contains a list of Submariner
+// SubmarinerList contains a list of Submariner.
 type SubmarinerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Submariner `json:"items"`
 }
 
-// BrokerSpec defines the desired state of Broker
+// BrokerSpec defines the desired state of Broker.
 // +k8s:openapi-gen=true
 type BrokerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -175,8 +176,7 @@ type BrokerSpec struct {
 
 // BrokerStatus defines the observed state of Broker
 // +k8s:openapi-gen=true
-type BrokerStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+type BrokerStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
@@ -198,7 +198,7 @@ type Broker struct { //nolint:govet // we want to keep the traditional order
 
 // +kubebuilder:object:root=true
 
-// BrokerList contains a list of Broker
+// BrokerList contains a list of Broker.
 type BrokerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -212,6 +212,7 @@ func init() {
 
 func (s *Submariner) UnmarshalJSON(data []byte) error {
 	type submarinerAlias Submariner
+
 	subm := &submarinerAlias{
 		Spec: SubmarinerSpec{
 			Repository: DefaultRepo,
@@ -223,5 +224,6 @@ func (s *Submariner) UnmarshalJSON(data []byte) error {
 	_ = json.Unmarshal(data, subm)
 
 	*s = Submariner(*subm)
+
 	return nil
 }

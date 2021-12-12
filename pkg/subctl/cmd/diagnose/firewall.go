@@ -20,14 +20,14 @@ package diagnose
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-
-	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 )
 
 var diagnoseFirewallConfigCmd = &cobra.Command{
@@ -54,8 +54,11 @@ func spawnSnifferPodOnGatewayNode(client kubernetes.Interface, namespace, podCom
 }
 
 func spawnSnifferPodOnNode(client kubernetes.Interface, nodeName, namespace, podCommand string) (*resource.NetworkPod, error) {
-	scheduling := resource.PodScheduling{ScheduleOn: resource.CustomNode, NodeName: nodeName,
-		Networking: resource.HostNetworking}
+	scheduling := resource.PodScheduling{
+		ScheduleOn: resource.CustomNode, NodeName: nodeName,
+		Networking: resource.HostNetworking,
+	}
+
 	return spawnPod(client, scheduling, "validate-sniffer", namespace, podCommand)
 }
 
@@ -73,9 +76,8 @@ func spawnPod(client kubernetes.Interface, scheduling resource.PodScheduling, po
 		Namespace:  namespace,
 		Command:    podCommand,
 	})
-
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error scheduling pod")
 	}
 
 	return pod, nil
@@ -90,7 +92,8 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 		return ""
 	}
 
-	for _, node := range nodes.Items {
+	for i := range nodes.Items {
+		node := &nodes.Items[i]
 		if node.Name == hostname {
 			return hostname
 		}
@@ -118,6 +121,7 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 
 	status.EndWithFailure("Could not find the active Gateway node %q in local cluster in cluster %q",
 		hostname, cluster.Name)
+
 	return ""
 }
 
@@ -128,13 +132,14 @@ func getLocalEndpointResource(cluster *cmd.Cluster, status *cli.Status) *subv1.E
 		return nil
 	}
 
-	for _, endpoint := range endpoints.Items {
-		if endpoint.Spec.ClusterID == cluster.Submariner.Spec.ClusterID {
-			return &endpoint
+	for i := range endpoints.Items {
+		if endpoints.Items[i].Spec.ClusterID == cluster.Submariner.Spec.ClusterID {
+			return &endpoints.Items[i]
 		}
 	}
 
 	status.EndWithFailure("Could not find the local Endpoint in cluster %q", cluster.Name)
+
 	return nil
 }
 
@@ -145,12 +150,13 @@ func getAnyRemoteEndpointResource(cluster *cmd.Cluster, status *cli.Status) *sub
 		return nil
 	}
 
-	for _, endpoint := range endpoints.Items {
-		if endpoint.Spec.ClusterID != cluster.Submariner.Spec.ClusterID {
-			return &endpoint
+	for i := range endpoints.Items {
+		if endpoints.Items[i].Spec.ClusterID != cluster.Submariner.Spec.ClusterID {
+			return &endpoints.Items[i]
 		}
 	}
 
 	status.EndWithFailure("Could not find any remote Endpoint in cluster %q", cluster.Name)
+
 	return nil
 }

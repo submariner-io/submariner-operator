@@ -21,14 +21,14 @@ package brokercr
 import (
 	"context"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
-
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -46,9 +46,10 @@ func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerS
 
 	client, err := submarinerClientset.NewForConfig(config)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error creating client")
 	}
 
+	// nolint:wrapcheck // No need to wrap errors here
 	_, err = util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
 			return client.SubmarinerV1alpha1().Brokers(namespace).Get(ctx, name, options)
@@ -60,5 +61,6 @@ func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerS
 			return client.SubmarinerV1alpha1().Brokers(namespace).Delete(ctx, name, options)
 		},
 	}, brokerCR, metav1.CreateOptions{}, metav1.DeleteOptions{})
-	return err
+
+	return errors.Wrap(err, "error creating Broker resource")
 }

@@ -18,6 +18,7 @@ limitations under the License.
 
 package cmd
 
+// nolint:revive // Blank imports below are intentional.
 import (
 	"context"
 	"errors"
@@ -35,16 +36,15 @@ import (
 	_ "github.com/submariner-io/lighthouse/test/e2e/framework"
 	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 )
 
 var (
@@ -114,7 +114,6 @@ The following verifications are deemed disruptive:
 				Message: fmt.Sprintf("You have specified disruptive verifications (%s). Are you sure you want to run them?",
 					strings.Join(disruptive, ",")),
 			}, &disruptiveTests)
-
 			if err != nil {
 				if isNonInteractive(err) {
 					fmt.Printf(`
@@ -143,12 +142,14 @@ prompt for confirmation therefore you must specify --enable-disruptive to run th
 }
 
 func isNonInteractive(err error) bool {
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return true
 	}
 
-	if pathError, ok := err.(*os.PathError); ok {
-		if syserr, ok := pathError.Err.(syscall.Errno); ok {
+	var pathError *os.PathError
+	if errors.As(err, &pathError) {
+		var syserr syscall.Errno
+		if errors.As(pathError, &syserr) {
 			if pathError.Path == "/dev/stdin" && (errors.Is(syserr, syscall.EBADF) || errors.Is(syserr, syscall.EINVAL)) {
 				return true
 			}
@@ -164,10 +165,12 @@ func configureTestingFramework(args []string) error {
 	// This is shared by verify and benchmark
 	if len(args) > 0 {
 		_, err1 := os.Stat(args[0])
-		var err2 error = nil
+		var err2 error
+
 		if len(args) > 1 {
 			_, err2 = os.Stat(args[1])
 		}
+
 		if err1 != nil || err2 != nil {
 			// Something happened (possibly IsNotExist, but we don’t care about specifics)
 			return fmt.Errorf("the provided arguments (%v) aren't accessible files", args)
@@ -187,6 +190,7 @@ func configureTestingFramework(args []string) error {
 			framework.TestContext.KubeConfig = kubeConfig
 		}
 	}
+
 	framework.TestContext.OperationTimeout = operationTimeout
 	framework.TestContext.ConnectionTimeout = connectionTimeout
 	framework.TestContext.ConnectionAttempts = connectionAttempts
@@ -202,8 +206,10 @@ func configureTestingFramework(args []string) error {
 
 func clusterNameFromConfig(kubeConfigPath, kubeContext string) string {
 	rawConfig, err := restconfig.ClientConfig(kubeConfigPath, "").RawConfig()
+
 	utils.ExitOnError(fmt.Sprintf("Error obtaining the kube config for path %q", kubeConfigPath), err)
-	cluster := restconfig.ClusterNameFromContext(rawConfig, kubeContext)
+
+	cluster := restconfig.ClusterNameFromContext(&rawConfig, kubeContext)
 
 	if cluster == nil {
 		utils.ExitWithErrorMsg(fmt.Sprintf("Could not obtain the cluster name from kube config: %#v", rawConfig))
@@ -216,14 +222,17 @@ func checkValidateArguments(args []string) error {
 	if len(args) != 2 && len(kubeContexts) != 2 {
 		return fmt.Errorf("two kubecontexts must be specified")
 	}
+
 	if len(args) == 2 {
 		if strings.Compare(args[0], args[1]) == 0 {
 			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
 		}
+
 		same, err := CompareFiles(args[0], args[1])
 		if err != nil {
 			return err
 		}
+
 		if same {
 			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> need to have a unique content")
 		}
@@ -238,6 +247,7 @@ func checkValidateArguments(args []string) error {
 	if connectionTimeout < 20 {
 		return fmt.Errorf("--connection-timeout must be >=20")
 	}
+
 	return nil
 }
 
@@ -245,6 +255,7 @@ func checkVerifyArguments() error {
 	if _, _, err := getVerifyPatterns(verifyOnly, true); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -266,7 +277,7 @@ const (
 )
 
 func disruptiveVerificationNames() []string {
-	var names = make([]string, 0, len(verifyE2EDisruptivePatterns))
+	names := make([]string, 0, len(verifyE2EDisruptivePatterns))
 	for n := range verifyE2EDisruptivePatterns {
 		names = append(names, n)
 	}
@@ -276,6 +287,7 @@ func disruptiveVerificationNames() []string {
 
 func extractDisruptiveVerifications(csv string) []string {
 	var disruptive []string
+
 	verifications := strings.Split(csv, ",")
 	for _, verification := range verifications {
 		verification = strings.Trim(strings.ToLower(verification), " ")
@@ -283,6 +295,7 @@ func extractDisruptiveVerifications(csv string) []string {
 			disruptive = append(disruptive, verification)
 		}
 	}
+
 	return disruptive
 }
 
@@ -292,9 +305,11 @@ func getAllVerifyKeys() []string {
 	for k := range verifyE2EPatterns {
 		keys = append(keys, k)
 	}
+
 	for k := range verifyE2EDisruptivePatterns {
 		keys = append(keys, k)
 	}
+
 	return keys
 }
 
@@ -302,9 +317,11 @@ func getVerifyPattern(key string) (verificationType, string) {
 	if pattern, ok := verifyE2EPatterns[key]; ok {
 		return normalVerification, pattern
 	}
+
 	if pattern, ok := verifyE2EDisruptivePatterns[key]; ok {
 		return disruptiveVerification, pattern
 	}
+
 	return unknownVerification, ""
 }
 
@@ -315,6 +332,7 @@ func getVerifyPatterns(csv string, includeDisruptive bool) ([]string, []string, 
 	verifications := strings.Split(csv, ",")
 	for _, verification := range verifications {
 		verification = strings.Trim(strings.ToLower(verification), " ")
+
 		vtype, pattern := getVerifyPattern(verification)
 		switch vtype {
 		case unknownVerification:
@@ -333,6 +351,7 @@ func getVerifyPatterns(csv string, includeDisruptive bool) ([]string, []string, 
 	if len(outputPatterns) == 0 {
 		return nil, nil, fmt.Errorf("please specify at least one verification to be performed")
 	}
+
 	return outputPatterns, outputVerifications, nil
 }
 

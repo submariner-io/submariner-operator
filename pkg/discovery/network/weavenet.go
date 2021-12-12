@@ -23,8 +23,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// nolint:nilnil // Intentional as the purpose is to discover.
 func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	weaveNetPod, err := findPod(clientSet, "name=weave-net")
+	weaveNetPod, err := FindPod(clientSet, "name=weave-net")
 
 	if err != nil || weaveNetPod == nil {
 		return nil, err
@@ -32,13 +33,14 @@ func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, erro
 
 	var clusterNetwork *ClusterNetwork
 
-	for _, container := range weaveNetPod.Spec.Containers {
-		for _, envVar := range container.Env {
+	for i := range weaveNetPod.Spec.Containers {
+		for _, envVar := range weaveNetPod.Spec.Containers[i].Env {
 			if envVar.Name == "IPALLOC_RANGE" {
 				clusterNetwork = &ClusterNetwork{
 					PodCIDRs:      []string{envVar.Value},
 					NetworkPlugin: constants.NetworkPluginWeaveNet,
 				}
+
 				break
 			}
 		}

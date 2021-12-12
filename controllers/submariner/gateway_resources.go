@@ -23,20 +23,20 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
-	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func newGatewayDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
@@ -71,10 +71,12 @@ func newGatewayDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 	return deployment
 }
 
-const appLabel = "app"
-const appGatewayLabel = "submariner-gateway"
+const (
+	appLabel        = "app"
+	appGatewayLabel = "submariner-gateway"
+)
 
-// newGatewayPodTemplate returns a submariner pod with the same fields as the cr
+// newGatewayPodTemplate returns a submariner pod with the same fields as the cr.
 func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 	labels := map[string]string{
 		appLabel: appGatewayLabel,
@@ -139,12 +141,14 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 						RunAsNonRoot:             &runAsNonRoot,
 					},
 					Ports: []corev1.ContainerPort{
-						{Name: encapsPortName,
+						{
+							Name:          encapsPortName,
 							HostPort:      int32(cr.Spec.CeIPSecNATTPort),
 							ContainerPort: int32(cr.Spec.CeIPSecNATTPort),
 							Protocol:      corev1.ProtocolUDP,
 						},
-						{Name: nattDiscoveryPortName,
+						{
+							Name:          nattDiscoveryPortName,
 							HostPort:      int32(nattPort),
 							ContainerPort: int32(nattPort),
 							Protocol:      corev1.ProtocolUDP,
@@ -216,9 +220,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 
 	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
 		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer ||
-			cr.Spec.LoadBalancerEnabled)})
-
-	podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+			cr.Spec.LoadBalancerEnabled)},
 		corev1.EnvVar{Name: "CE_IPSEC_FORCEENCAPS", Value: strconv.FormatBool(cr.Spec.CeIPSecForceUDPEncaps)})
 
 	if cr.Spec.LoadBalancerEnabled {
@@ -229,31 +231,38 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 	return podTemplate
 }
 
-func (r *SubmarinerReconciler) reconcileGatewayDaemonSet(
+// nolint:wrapcheck // No need to wrap errors here.
+func (r *Reconciler) reconcileGatewayDaemonSet(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance), reqLogger, r.client, r.scheme)
+	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance), reqLogger, r.config.Client, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
-	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.client, r.config, r.scheme, reqLogger)
+
+	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.config.Client,
+		r.config.RestConfig, r.config.Scheme, reqLogger)
+
 	return daemonSet, err
 }
 
-func buildGatewayStatusAndUpdateMetrics(gateways *[]submarinerv1.Gateway) []submarinerv1.GatewayStatus {
-	var gatewayStatuses = []submarinerv1.GatewayStatus{}
+func buildGatewayStatusAndUpdateMetrics(gateways []submarinerv1.Gateway) []submarinerv1.GatewayStatus {
+	gatewayStatuses := []submarinerv1.GatewayStatus{}
 
-	if gateways != nil {
-		recordGateways(len(*gateways))
+	nGateways := len(gateways)
+	if nGateways > 0 {
+		recordGateways(nGateways)
 		// Clear the connections so we don’t remember stale status information
 		recordNoConnections()
-		for _, gateway := range *gateways {
+
+		for i := range gateways {
+			gateway := &gateways[i]
 			gatewayStatuses = append(gatewayStatuses, gateway.Status)
-			recordGatewayCreationTime(gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
+			recordGatewayCreationTime(&gateway.Status.LocalEndpoint, gateway.CreationTimestamp.Time)
 
 			for j := range gateway.Status.Connections {
 				recordConnection(
-					gateway.Status.LocalEndpoint,
-					gateway.Status.Connections[j].Endpoint,
+					&gateway.Status.LocalEndpoint,
+					&gateway.Status.Connections[j].Endpoint,
 					string(gateway.Status.Connections[j].Status),
 				)
 			}
@@ -266,21 +275,25 @@ func buildGatewayStatusAndUpdateMetrics(gateways *[]submarinerv1.Gateway) []subm
 	return gatewayStatuses
 }
 
-func (r *SubmarinerReconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
-	namespace string) (*[]submarinerv1.Gateway, error) {
+func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
+	namespace string) ([]submarinerv1.Gateway, error) {
 	foundGateways := &submarinerv1.GatewayList{}
-	err := r.client.List(ctx, foundGateways, client.InNamespace(namespace))
-	if err != nil && errors.IsNotFound(err) {
-		return nil, nil
+
+	err := r.config.Client.List(ctx, foundGateways, client.InNamespace(namespace))
+	if err != nil && apierrors.IsNotFound(err) {
+		return []submarinerv1.Gateway{}, nil
 	}
+
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error listing Gateway resource")
 	}
+
 	// Ensure we’ll get updates
 	for i := range foundGateways.Items {
-		if err := controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.scheme); err != nil {
-			return nil, err
+		if err := controllerutil.SetControllerReference(owner, &foundGateways.Items[i], r.config.Scheme); err != nil {
+			return nil, errors.Wrap(err, "error setting owner ref for Gateway")
 		}
 	}
-	return &foundGateways.Items, nil
+
+	return foundGateways.Items, nil
 }

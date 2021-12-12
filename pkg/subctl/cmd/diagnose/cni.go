@@ -21,28 +21,28 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 )
 
-var supportedNetworkPlugins = []string{constants.NetworkPluginGeneric, constants.NetworkPluginCanalFlannel, constants.NetworkPluginWeaveNet,
-	constants.NetworkPluginOpenShiftSDN, constants.NetworkPluginOVNKubernetes, constants.NetworkPluginCalico}
+var supportedNetworkPlugins = []string{
+	constants.NetworkPluginGeneric, constants.NetworkPluginCanalFlannel, constants.NetworkPluginWeaveNet,
+	constants.NetworkPluginOpenShiftSDN, constants.NetworkPluginOVNKubernetes, constants.NetworkPluginCalico,
+}
 
-var (
-	calicoGVR = schema.GroupVersionResource{
-		Group:    "crd.projectcalico.org",
-		Version:  "v1",
-		Resource: "ippools",
-	}
-)
+var calicoGVR = schema.GroupVersionResource{
+	Group:    "crd.projectcalico.org",
+	Version:  "v1",
+	Resource: "ippools",
+}
 
 func init() {
 	diagnoseCmd.AddCommand(&cobra.Command{
@@ -54,18 +54,21 @@ func init() {
 		},
 	})
 }
+
 func checkCNIConfig(cluster *cmd.Cluster) bool {
 	status := cli.NewStatus()
 
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
 		status.End(cli.Warning)
+
 		return true
 	}
 
 	status.Start("Checking Submariner support for the CNI network plugin")
 
 	isSupportedPlugin := false
+
 	for _, np := range supportedNetworkPlugins {
 		if cluster.Submariner.Status.NetworkPlugin == np {
 			isSupportedPlugin = true
@@ -84,31 +87,33 @@ func checkCNIConfig(cluster *cmd.Cluster) bool {
 	return checkCalicoIPPoolsIfCalicoCNI(cluster)
 }
 
-func findCalicoConfigMap(clientSet kubernetes.Interface) (*v1.ConfigMap, error) {
+func detectCalicoConfigMap(clientSet kubernetes.Interface) (bool, error) {
 	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return nil, err
+		return false, errors.Wrap(err, "error listing ConfigMaps")
 	}
 
-	for _, cm := range cmList.Items {
-		if cm.Name == "calico-config" {
-			return &cm, nil
+	for i := range cmList.Items {
+		if cmList.Items[i].Name == "calico-config" {
+			return true, nil
 		}
 	}
-	return nil, nil
+
+	return false, nil
 }
 
 func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 	status := cli.NewStatus()
 
-	calicoConfig, err := findCalicoConfigMap(info.KubeClient)
+	found, err := detectCalicoConfigMap(info.KubeClient)
 	if err != nil {
 		status.Start(fmt.Sprintf("Error trying to detect the Calico ConfigMap: %s", err))
 		status.End(cli.Failure)
+
 		return false
 	}
 
-	if calicoConfig == nil {
+	if !found {
 		return true
 	}
 
@@ -139,6 +144,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 	}
 
 	ippools := make(map[string]unstructured.Unstructured)
+
 	for _, pool := range ippoolList.Items {
 		cidr, found, err := unstructured.NestedString(pool.Object, "spec", "cidr")
 		if err != nil {
@@ -150,15 +156,27 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 			status.QueueFailureMessage(fmt.Sprintf("No CIDR found in IPPool %q", pool.GetName()))
 			continue
 		}
+
 		ippools[cidr] = pool
 	}
 
-	for _, gateway := range gateways {
+	checkGatewaySubnets(gateways, ippools, status)
+
+	result := status.ResultFromMessages()
+	status.End(result)
+
+	return result != cli.Failure
+}
+
+func checkGatewaySubnets(gateways []submv1.Gateway, ippools map[string]unstructured.Unstructured, status *cli.Status) {
+	for i := range gateways {
+		gateway := &gateways[i]
 		if gateway.Status.HAStatus != submv1.HAStatusActive {
 			continue
 		}
 
-		for _, connection := range gateway.Status.Connections {
+		for j := range gateway.Status.Connections {
+			connection := &gateway.Status.Connections[j]
 			for _, subnet := range connection.Endpoint.Subnets {
 				ipPool, found := ippools[subnet]
 				if found {
@@ -183,22 +201,18 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 			}
 		}
 	}
-
-	result := status.ResultFromMessages()
-	status.End(result)
-
-	return result != cli.Failure
 }
 
 func getSpecBool(pool unstructured.Unstructured, key string) (bool, error) {
 	isDisabled, found, err := unstructured.NestedBool(pool.Object, "spec", key)
 	if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "error getting spec field")
 	}
 
 	if !found {
 		message := fmt.Sprintf("%s status not found for IPPool %q", key, pool.GetName())
 		return false, fmt.Errorf(message)
 	}
+
 	return isDisabled, nil
 }

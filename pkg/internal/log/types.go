@@ -16,24 +16,24 @@ limitations under the License.
 
 package log
 
-// Level is a verbosity logging level for Info logs
-// See also https://github.com/kubernetes/klog
+// Level is a verbosity logging level for Info logs.
+// See also https://github.com/kubernetes/klog.
 type Level int32
 
-// Logger defines the logging interface kind uses
-// It is roughly a subset of github.com/kubernetes/klog
+// Logger defines the logging interface kind uses.
+// It is roughly a subset of github.com/kubernetes/klog.
 type Logger interface {
-	// Warn should be used to write user facing warnings
+	// Warn should be used to write user facing warnings.
 	Warn(message string)
-	// Warnf should be used to write Printf style user facing warnings
+	// Warnf should be used to write Printf style user facing warnings.
 	Warnf(format string, args ...interface{})
-	// Error may be used to write an error message when it occurs
-	// Prefer returning an error instead in most cases
+	// Error may be used to write an error message when it occurs.
+	// Prefer returning an error instead in most cases.
 	Error(message string)
-	// Errorf may be used to write a Printf style error message when it occurs
-	// Prefer returning an error instead in most cases
+	// Errorf may be used to write a Printf style error message when it occurs.
+	// Prefer returning an error instead in most cases.
 	Errorf(format string, args ...interface{})
-	// V() returns an InfoLogger for a given verbosity Level
+	// V() returns an InfoLogger for a given verbosity Level.
 	//
 	// Normal verbosity levels:
 	// V(0): normal user facing messages go to V(0)
@@ -45,20 +45,20 @@ type Logger interface {
 	// command line flag)
 	//
 	// It is expected that the returned InfoLogger will be extremely cheap
-	// to interact with for a Level greater than the enabled level
+	// to interact with for a Level greater than the enabled level.
 	V(Level) InfoLogger
 }
 
-// InfoLogger defines the info logging interface kind uses
-// It is roughly a subset of Verbose from github.com/kubernetes/klog
+// InfoLogger defines the info logging interface kind uses.
+// It is roughly a subset of Verbose from github.com/kubernetes/klog.
 type InfoLogger interface {
-	// Info is used to write a user facing status message
+	// Info is used to write a user facing status message.
 	//
 	// See: Logger.V
 	Info(message string)
-	// Infof is used to write a Printf style user facing status message
+	// Infof is used to write a Printf style user facing status message.
 	Infof(format string, args ...interface{})
-	// Enabled should return true if this verbosity level is enabled
+	// Enabled should return true if this verbosity level is enabled.
 	// on the Logger
 	//
 	// See: Logger.V

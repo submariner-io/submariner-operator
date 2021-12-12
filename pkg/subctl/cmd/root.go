@@ -18,18 +18,19 @@ limitations under the License.
 
 package cmd
 
+// nolint:revive // Blank import below for 'client/auth' is intentional to init plugins.
 import (
 	"context"
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"strings"
 	"time"
 
-	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/coreos/go-semver/semver"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	cmdversion "github.com/submariner-io/submariner-operator/cmd/subctl"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
@@ -57,12 +58,14 @@ var (
 const SubmMissingMessage = "Submariner is not installed"
 
 func Execute() error {
-	return rootCmd.Execute()
+	return rootCmd.Execute() // nolint:wrapcheck // No need to wrap here
 }
 
 func init() {
 	rootCmd.AddCommand(cmdversion.VersionCmd)
+
 	cloudCmd := cloud.NewCommand(&kubeConfig, &kubeContext)
+
 	AddKubeContextFlag(cloudCmd)
 	rootCmd.AddCommand(cloudCmd)
 }
@@ -75,15 +78,16 @@ func AddKubeConfigFlag(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(&kubeConfig, "kubeconfig", "", "absolute path(s) to the kubeconfig file(s)")
 }
 
-// AddKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once
+// AddKubeContextFlag adds a "kubeconfig" flag and a single "kubecontext" flag that can be used once and only once.
 func AddKubeContextFlag(cmd *cobra.Command) {
 	AddKubeConfigFlag(cmd)
 	cmd.PersistentFlags().StringVar(&kubeContext, "kubecontext", "", "kubeconfig context to use")
 }
 
-// AddKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated)
+// AddKubeContextMultiFlag adds a "kubeconfig" flag and a "kubecontext" flag that can be specified multiple times (or comma separated).
 func AddKubeContextMultiFlag(cmd *cobra.Command, usage string) {
 	AddKubeConfigFlag(cmd)
+
 	if usage == "" {
 		usage = "comma-separated list of kubeconfig contexts to use, can be specified multiple times.\n" +
 			"If none specified, all contexts referenced by the kubeconfig are used"
@@ -102,21 +106,26 @@ func handleNodeLabels(config *rest.Config) error {
 	// List Submariner-labeled nodes
 	const submarinerGatewayLabel = "submariner.io/gateway"
 	const trueLabel = "true"
+
 	selector := labels.SelectorFromSet(map[string]string{submarinerGatewayLabel: trueLabel})
+
 	labeledNodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error listing Nodes")
 	}
+
 	if len(labeledNodes.Items) > 0 {
 		fmt.Printf("* There are %d labeled nodes in the cluster:\n", len(labeledNodes.Items))
-		for _, node := range labeledNodes.Items {
-			fmt.Printf("  - %s\n", node.GetName())
+
+		for i := range labeledNodes.Items {
+			fmt.Printf("  - %s\n", labeledNodes.Items[i].GetName())
 		}
 	} else {
 		answer, err := askForGatewayNode(clientset)
 		if err != nil {
 			return err
 		}
+
 		if answer.Node == "" {
 			fmt.Printf("* No worker node found to label as the gateway\n")
 		} else {
@@ -124,6 +133,7 @@ func handleNodeLabels(config *rest.Config) error {
 			utils.ExitOnError("Error labeling the gateway node", err)
 		}
 	}
+
 	return nil
 }
 
@@ -132,15 +142,17 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 	workerNodes, err := clientset.CoreV1().Nodes().List(
 		context.TODO(), metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker"})
 	if err != nil {
-		return struct{ Node string }{}, err
+		return struct{ Node string }{}, errors.Wrap(err, "error listing Nodes")
 	}
+
 	if len(workerNodes.Items) == 0 {
 		// In some deployments (like KIND), worker nodes are not explicitly labelled. So list non-master nodes.
 		workerNodes, err = clientset.CoreV1().Nodes().List(
 			context.TODO(), metav1.ListOptions{LabelSelector: "!node-role.kubernetes.io/master"})
 		if err != nil {
-			return struct{ Node string }{}, err
+			return struct{ Node string }{}, errors.Wrap(err, "error listing Nodes")
 		}
+
 		if len(workerNodes.Items) == 0 {
 			return struct{ Node string }{}, nil
 		}
@@ -149,32 +161,38 @@ func askForGatewayNode(clientset kubernetes.Interface) (struct{ Node string }, e
 	if len(workerNodes.Items) == 1 {
 		return struct{ Node string }{workerNodes.Items[0].GetName()}, nil
 	}
+
 	allNodeNames := []string{}
-	for _, node := range workerNodes.Items {
-		allNodeNames = append(allNodeNames, node.GetName())
+	for i := range workerNodes.Items {
+		allNodeNames = append(allNodeNames, workerNodes.Items[i].GetName())
 	}
-	var qs = []*survey.Question{
+
+	qs := []*survey.Question{
 		{
 			Name: "node",
 			Prompt: &survey.Select{
 				Message: "Which node should be used as the gateway?",
-				Options: allNodeNames},
+				Options: allNodeNames,
+			},
 		},
 	}
+
 	answers := struct {
 		Node string
 	}{}
+
 	err = survey.Ask(qs, &answers)
 	if err != nil {
-		return struct{ Node string }{}, err
+		return struct{ Node string }{}, err // nolint:wrapcheck // No need to wrap here
 	}
+
 	return answers, nil
 }
 
 // this function was sourced from:
 // https://github.com/kubernetes/kubernetes/blob/a3ccea9d8743f2ff82e41b6c2af6dc2c41dc7b10/test/utils/density_utils.go#L36
 func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[string]string) error {
-	var tokens = make([]string, 0, len(labelsToAdd))
+	tokens := make([]string, 0, len(labelsToAdd))
 	for k, v := range labelsToAdd {
 		tokens = append(tokens, fmt.Sprintf("%q:%q", k, v))
 	}
@@ -190,19 +208,19 @@ func addLabelsToNode(c kubernetes.Interface, nodeName string, labelsToAdd map[st
 		_, lastErr = c.CoreV1().Nodes().Patch(context.TODO(), nodeName, types.MergePatchType, []byte(patch), metav1.PatchOptions{})
 		if lastErr != nil {
 			if !k8serrors.IsConflict(lastErr) {
-				return false, lastErr
+				return false, lastErr // nolint:wrapcheck // No need to wrap here
 			}
 			return false, nil
-		} else {
-			return true, nil
 		}
+
+		return true, nil
 	})
 
-	if errors.Is(err, wait.ErrWaitTimeout) {
-		return lastErr
+	if goerrors.Is(err, wait.ErrWaitTimeout) {
+		return lastErr // nolint:wrapcheck // No need to wrap here
 	}
 
-	return err
+	return err // nolint:wrapcheck // No need to wrap here
 }
 
 var nodeLabelBackoff wait.Backoff = wait.Backoff{
