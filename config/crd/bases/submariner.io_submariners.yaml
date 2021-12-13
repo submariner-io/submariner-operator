@@ -44,7 +44,11 @@ spec:
                 type: string
               brokerK8sCA:
                 type: string
+              brokerK8sInsecure:
+                type: boolean
               brokerK8sRemoteNamespace:
+                type: string
+              brokerK8sSecret:
                 type: string
               cableDriver:
                 type: string
@@ -117,8 +121,6 @@ spec:
             required:
             - broker
             - brokerK8sApiServer
-            - brokerK8sApiServerToken
-            - brokerK8sCA
             - brokerK8sRemoteNamespace
             - ceIPSecDebug
             - ceIPSecPSK
@@ -333,6 +335,8 @@ spec:
                               cable_name:
                                 type: string
                               cluster_id:
+                                maxLength: 63
+                                minLength: 1
                                 type: string
                               healthCheckIP:
                                 type: string
@@ -401,6 +405,8 @@ spec:
                         cable_name:
                           type: string
                         cluster_id:
+                          maxLength: 63
+                          minLength: 1
                           type: string
                         healthCheckIP:
                           type: string

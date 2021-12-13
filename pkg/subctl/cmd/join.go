@@ -38,11 +38,13 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokersecret"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/servicediscoverycr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -70,7 +72,6 @@ var (
 	labelGateway                  bool
 	loadBalancerEnabled           bool
 	cableDriver                   string
-	clienttoken                   *v1.Secret
 	globalnetClusterSize          uint
 	customDomains                 []string
 	imageOverrideArr              []string
@@ -271,14 +272,18 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 
 	status.Start("Creating SA for cluster")
 
-	clienttoken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID, brokerNamespace)
+	subctlData.ClientToken, err = broker.CreateSAForCluster(brokerAdminClientset, clusterID, brokerNamespace)
 	status.End(cli.CheckForError(err))
 	utils.ExitOnError("Error creating SA for cluster", err)
+
+	// We need to connect to the broker in all cases
+	brokerSecret, err := brokersecret.Ensure(clientConfig, OperatorNamespace, populateBrokerSecret(subctlData))
+	utils.ExitOnError("Error creating broker secret for cluster", err)
 
 	if subctlData.IsConnectivityEnabled() {
 		status.Start("Deploying Submariner")
 
-		err = submarinercr.Ensure(clientConfig, OperatorNamespace, populateSubmarinerSpec(subctlData, netconfig))
+		err = submarinercr.Ensure(clientConfig, OperatorNamespace, populateSubmarinerSpec(subctlData, brokerSecret, netconfig))
 		if err == nil {
 			status.QueueSuccessMessage("Submariner is up and running")
 			status.End(cli.Success)
@@ -290,7 +295,7 @@ func joinSubmarinerCluster(config clientcmd.ClientConfig, contextName string, su
 		utils.ExitOnError("Error deploying Submariner", err)
 	} else if subctlData.IsServiceDiscoveryEnabled() {
 		status.Start("Deploying service discovery only")
-		err = servicediscoverycr.Ensure(clientConfig, OperatorNamespace, populateServiceDiscoverySpec(subctlData))
+		err = servicediscoverycr.Ensure(clientConfig, OperatorNamespace, populateServiceDiscoverySpec(subctlData, brokerSecret))
 		if err == nil {
 			status.QueueSuccessMessage("Service discovery is up and running")
 			status.End(cli.Success)
@@ -456,7 +461,19 @@ func isValidClusterID(clusterID string) (bool, error) {
 	return true, nil
 }
 
-func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet.Config) *submariner.SubmarinerSpec {
+func populateBrokerSecret(subctlData *datafile.SubctlData) *v1.Secret {
+	// We need to copy the broker token secret as an opaque secret to store it in the connecting cluster
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "broker-secret-",
+		},
+		Type: v1.SecretTypeOpaque,
+		Data: subctlData.ClientToken.Data,
+	}
+}
+
+func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret *v1.Secret,
+	netconfig globalnet.Config) *submariner.SubmarinerSpec {
 	brokerURL := subctlData.BrokerURL
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
@@ -482,6 +499,8 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 	imageOverrides, err := image.GetOverrides(imageOverrideArr)
 	utils.ExitOnError("Error overriding Operator image", err)
 
+	// For backwards compatibility, the connection information is populated through the secret and individual components
+	// TODO skitt This will be removed in the release following 0.12
 	submarinerSpec := &submariner.SubmarinerSpec{
 		Repository:               getImageRepo(),
 		Version:                  getImageVersion(),
@@ -491,10 +510,11 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, netconfig globalnet
 		CeIPSecForceUDPEncaps:    forceUDPEncaps,
 		CeIPSecPreferredServer:   preferredServer,
 		CeIPSecPSK:               base64.StdEncoding.EncodeToString(subctlData.IPSecPSK.Data["psk"]),
-		BrokerK8sCA:              base64.StdEncoding.EncodeToString(subctlData.ClientToken.Data["ca.crt"]),
-		BrokerK8sRemoteNamespace: string(subctlData.ClientToken.Data["namespace"]),
-		BrokerK8sApiServerToken:  string(clienttoken.Data["token"]),
+		BrokerK8sCA:              base64.StdEncoding.EncodeToString(brokerSecret.Data["ca.crt"]),
+		BrokerK8sRemoteNamespace: string(brokerSecret.Data["namespace"]),
+		BrokerK8sApiServerToken:  string(brokerSecret.Data["token"]),
 		BrokerK8sApiServer:       brokerURL,
+		BrokerK8sSecret:          brokerSecret.ObjectMeta.Name,
 		Broker:                   "k8s",
 		NatEnabled:               natTraversal,
 		Debug:                    submarinerDebug,
@@ -559,7 +579,7 @@ func removeSchemaPrefix(brokerURL string) string {
 	return brokerURL
 }
 
-func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.ServiceDiscoverySpec {
+func populateServiceDiscoverySpec(subctlData *datafile.SubctlData, brokerSecret *v1.Secret) *submariner.ServiceDiscoverySpec {
 	brokerURL := removeSchemaPrefix(subctlData.BrokerURL)
 
 	if customDomains == nil && subctlData.CustomDomains != nil {
@@ -572,10 +592,11 @@ func populateServiceDiscoverySpec(subctlData *datafile.SubctlData) *submariner.S
 	serviceDiscoverySpec := submariner.ServiceDiscoverySpec{
 		Repository:               repository,
 		Version:                  imageVersion,
-		BrokerK8sCA:              base64.StdEncoding.EncodeToString(subctlData.ClientToken.Data["ca.crt"]),
-		BrokerK8sRemoteNamespace: string(subctlData.ClientToken.Data["namespace"]),
-		BrokerK8sApiServerToken:  string(clienttoken.Data["token"]),
+		BrokerK8sCA:              base64.StdEncoding.EncodeToString(brokerSecret.Data["ca.crt"]),
+		BrokerK8sRemoteNamespace: string(brokerSecret.Data["namespace"]),
+		BrokerK8sApiServerToken:  string(brokerSecret.Data["token"]),
 		BrokerK8sApiServer:       brokerURL,
+		BrokerK8sSecret:          brokerSecret.ObjectMeta.Name,
 		Debug:                    submarinerDebug,
 		ClusterID:                clusterID,
 		Namespace:                SubmarinerNamespace,
