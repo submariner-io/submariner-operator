@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 )
 
 type cliReporter struct {

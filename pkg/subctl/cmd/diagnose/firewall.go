@@ -22,7 +22,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"

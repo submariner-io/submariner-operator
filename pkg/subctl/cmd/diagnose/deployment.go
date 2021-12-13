@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner/pkg/cidr"
 	v1 "k8s.io/api/core/v1"

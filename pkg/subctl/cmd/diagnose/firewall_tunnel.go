@@ -24,8 +24,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"

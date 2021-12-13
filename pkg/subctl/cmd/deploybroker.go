@@ -25,10 +25,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/stringset"
 	submarinerv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
@@ -111,24 +111,24 @@ var deployBroker = &cobra.Command{
 
 		status.Start("Setting up broker RBAC")
 		err = broker.Ensure(config, componentArr, false, brokerNamespace)
-		status.End(cli.CheckForError(err))
+		status.EndWith(cli.CheckForError(err))
 		utils.ExitOnError("Error setting up broker RBAC", err)
 
 		status.Start("Deploying the Submariner operator")
 		operatorImage, err := image.ForOperator(imageVersion, repository, nil)
 		utils.ExitOnError("Error overriding Operator Image", err)
 		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage, operatorDebug)
-		status.End(cli.CheckForError(err))
+		status.EndWith(cli.CheckForError(err))
 		utils.ExitOnError("Error deploying the operator", err)
 
 		status.Start("Deploying the broker")
 		err = brokercr.Ensure(config, brokerNamespace, populateBrokerSpec())
 		if err == nil {
 			status.QueueSuccessMessage("The broker has been deployed")
-			status.End(cli.Success)
+			status.EndWith(cli.Success)
 		} else {
 			status.QueueFailureMessage("Broker deployment failed")
-			status.End(cli.Failure)
+			status.EndWith(cli.Failure)
 		}
 		utils.ExitOnError("Error deploying the broker", err)
 
@@ -173,7 +173,7 @@ var deployBroker = &cobra.Command{
 		utils.ExitOnError("Error creating globalCIDR configmap on Broker", err)
 
 		err = subctlData.WriteToFile(brokerDetailsFilename)
-		status.End(cli.CheckForError(err))
+		status.EndWith(cli.CheckForError(err))
 		utils.ExitOnError("Error writing the broker information", err)
 	},
 }

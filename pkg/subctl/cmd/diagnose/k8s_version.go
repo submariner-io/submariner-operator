@@ -19,7 +19,7 @@ package diagnose
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 )

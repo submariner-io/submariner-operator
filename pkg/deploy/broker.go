@@ -29,7 +29,7 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
@@ -52,8 +52,7 @@ var ValidComponents = []string{components.ServiceDiscovery, components.Connectiv
 
 const brokerDetailsFilename = "broker-info.subm"
 
-func Broker(options *BrokerOptions, restConfigProducer restconfig.Producer) error {
-	status := cli.NewStatus()
+func Broker(options *BrokerOptions, restConfigProducer restconfig.Producer, reporter reporter.Interface) error {
 	componentSet := stringset.New(options.BrokerSpec.Components...)
 
 	if err := isValidComponents(componentSet); err != nil {
@@ -73,35 +72,34 @@ func Broker(options *BrokerOptions, restConfigProducer restconfig.Producer) erro
 		return errors.Wrap(err, "the provided kubeconfig is invalid")
 	}
 
-	err = deploy(options, status, config)
-	if err != nil {
+	if err := deploy(options, reporter, config); err != nil {
 		return err
 	}
 
-	status.Start(fmt.Sprintf("Creating %s file", brokerDetailsFilename))
+	reporter.Start("Creating %s file", brokerDetailsFilename)
 
 	// If deploy-broker is retried we will attempt to re-use the existing IPsec PSK secret
 	if options.IpsecSubmFile == "" {
 		if _, err := datafile.NewFromFile(brokerDetailsFilename); err == nil {
 			options.IpsecSubmFile = brokerDetailsFilename
-			status.QueueWarningMessage(fmt.Sprintf("Reusing IPsec PSK from existing %s", brokerDetailsFilename))
+			reporter.Warning("Reusing IPsec PSK from existing %s", brokerDetailsFilename)
 		} else {
-			status.QueueSuccessMessage(fmt.Sprintf("A new IPsec PSK will be generated for %s", brokerDetailsFilename))
+			reporter.Success("A new IPsec PSK will be generated for %s", brokerDetailsFilename)
 		}
 	}
 
 	subctlData, err := datafile.NewFromCluster(config, options.BrokerNamespace, options.IpsecSubmFile)
 	if err != nil {
-		return errors.Wrap(err, "error retrieving preparing the subm data file")
+		return reporter.Error(err, "error retrieving preparing the subm data file")
 	}
 
 	newFilename, err := datafile.BackupIfExists(brokerDetailsFilename)
 	if err != nil {
-		return errors.Wrap(err, "error backing up the brokerfile")
+		return reporter.Error(err, "error backing up the brokerfile")
 	}
 
 	if newFilename != "" {
-		status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
+		reporter.Success("Backed up previous %s to %s", brokerDetailsFilename, newFilename)
 	}
 
 	subctlData.ServiceDiscovery = componentSet.Contains(components.ServiceDiscovery)
@@ -123,49 +121,45 @@ func Broker(options *BrokerOptions, restConfigProducer restconfig.Producer) erro
 	}
 
 	err = subctlData.WriteToFile(brokerDetailsFilename)
-	status.End(cli.CheckForError(err))
+	if err != nil {
+		return reporter.Error(err, "error writing the broker information")
+	}
+	reporter.End()
 
-	return errors.Wrap(err, "error writing the broker information")
+	return nil
 }
 
-func deploy(options *BrokerOptions, status *cli.Status, config *rest.Config) error {
-	status.Start("Setting up broker RBAC")
+func deploy(options *BrokerOptions, reporter reporter.Interface, config *rest.Config) error {
+	reporter.Start("Setting up broker RBAC")
 
 	err := broker.Ensure(config, options.BrokerSpec.Components, false, options.BrokerNamespace)
-	status.End(cli.CheckForError(err))
-
 	if err != nil {
-		return errors.Wrap(err, "error setting up broker RBAC")
+		return reporter.Error(err, "error setting up broker RBAC")
 	}
+	reporter.End()
 
-	status.Start("Deploying the Submariner operator")
+	reporter.Start("Deploying the Submariner operator")
 
 	operatorImage, err := image.ForOperator(options.ImageVersion, options.Repository, nil)
 	if err != nil {
-		return errors.Wrap(err, "error getting Operator image")
+		return reporter.Error(err, "error getting Operator image")
 	}
 
-	err = submarinerop.Ensure(status, config, constants.OperatorNamespace, operatorImage, options.OperatorDebug)
-	status.End(cli.CheckForError(err))
-
+	err = submarinerop.Ensure(reporter, config, constants.OperatorNamespace, operatorImage, options.OperatorDebug)
 	if err != nil {
-		return errors.Wrap(err, "error deploying the operator")
+		return reporter.Error(err, "error deploying Submariner operator")
 	}
+	reporter.End()
 
-	status.Start("Deploying the broker")
+	reporter.Start("Deploying the broker")
 
 	err = brokercr.Ensure(config, options.BrokerNamespace, options.BrokerSpec)
-	if err == nil {
-		status.QueueSuccessMessage("The broker has been deployed")
-		status.End(cli.Success)
-
-		return nil
+	if err != nil {
+		return reporter.Error(err, "Broker deployment failed")
 	}
-
-	status.QueueFailureMessage("Broker deployment failed")
-	status.End(cli.Failure)
-
-	return errors.Wrap(err, "error deploying the broker")
+	reporter.Success("The broker has been deployed")
+	reporter.End()
+	return nil
 }
 
 func isValidComponents(componentSet stringset.Interface) error {

@@ -29,13 +29,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokersecret"
@@ -266,6 +266,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	utils.ExitOnError("Error overriding Operator Image", err)
 	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage, operatorDebug)
 	status.End(cli.CheckForError(err))
+	status.End(err)
 	utils.ExitOnError("Error deploying the operator", err)
 
 	status.Start("Creating SA for cluster")

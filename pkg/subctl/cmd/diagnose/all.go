@@ -23,7 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

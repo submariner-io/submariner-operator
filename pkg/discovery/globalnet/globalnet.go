@@ -26,8 +26,8 @@ import (
 	"net"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"

@@ -25,8 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/submariner-io/submariner-operator/pkg/internal/env"
-	"github.com/submariner-io/submariner-operator/pkg/internal/log"
+	"github.com/submariner-io/submariner-operator/internal/env"
+	"github.com/submariner-io/submariner-operator/internal/log"
 )
 
 // Logger is the kind cli's log.Logger implementation.

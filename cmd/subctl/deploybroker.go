@@ -19,6 +19,7 @@ package subctl
 
 import (
 	"fmt"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -38,8 +39,7 @@ var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "Deploys the broker",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("deployBroker called")
-		err := deploy.Broker(&deployflags, restConfigProducer)
+		err := deploy.Broker(&deployflags, restConfigProducer, cli.NewReporter())
 		exit.OnError("Error deploying Broker", err)
 	},
 }
