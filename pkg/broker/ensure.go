@@ -25,13 +25,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/internal/rbac"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	v1 "k8s.io/api/core/v1"
-	rbac "k8s.io/api/rbac/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -175,7 +176,7 @@ func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, nam
 	var lastErr error
 
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
-		secret, lastErr = GetClientTokenSecret(clientset, namespace, submarinerBrokerSA)
+		secret, lastErr = rbac.GetClientTokenSecret(clientset, namespace, submarinerBrokerSA)
 		if lastErr != nil {
 			return false, nil // nolint:nilerr // Intentional - the error is propagated via the outer-scoped var 'lastErr'
 		}
@@ -184,7 +185,7 @@ func WaitForClientToken(clientset *kubernetes.Clientset, submarinerBrokerSA, nam
 	})
 
 	if goerrors.Is(err, wait.ErrWaitTimeout) {
-		return nil, lastErr
+		return nil, lastErr // nolint:wrapcheck // No need to wrap here
 	}
 
 	return secret, err // nolint:wrapcheck // No need to wrap here
@@ -213,7 +214,7 @@ func CreateOrUpdateBrokerAdminRole(clientset *kubernetes.Clientset, namespace st
 
 // nolint:wrapcheck // No need to wrap here
 func CreateNewBrokerRoleBinding(clientset *kubernetes.Clientset, serviceAccount, role, namespace string) (
-	brokerRoleBinding *rbac.RoleBinding, err error) {
+	brokerRoleBinding *rbacv1.RoleBinding, err error) {
 	return clientset.RbacV1().RoleBindings(namespace).Create(
 		context.TODO(), NewBrokerRoleBinding(serviceAccount, role, namespace), metav1.CreateOptions{})
 }

@@ -19,15 +19,11 @@ limitations under the License.
 package broker
 
 import (
-	"context"
 	"fmt"
-	"strings"
 
-	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -131,33 +127,4 @@ func NewBrokerRoleBinding(serviceAccount, role, namespace string) *rbacv1.RoleBi
 	}
 
 	return binding
-}
-
-// MaxGeneratedNameLength is the maximum generated length for a token, excluding the random suffix
-// See k8s.io/apiserver/pkg/storage/names.
-const MaxGeneratedNameLength = 63 - 5
-
-func GetClientTokenSecret(clientSet clientset.Interface, brokerNamespace, submarinerBrokerSA string) (*v1.Secret, error) {
-	sa, err := clientSet.CoreV1().ServiceAccounts(brokerNamespace).Get(context.TODO(), submarinerBrokerSA, metav1.GetOptions{})
-	if err != nil {
-		return nil, errors.Wrapf(err, "ServiceAccount %s get failed", submarinerBrokerSA)
-	}
-
-	if len(sa.Secrets) < 1 {
-		return nil, fmt.Errorf("ServiceAccount %s does not have any secret", sa.Name)
-	}
-
-	brokerTokenPrefix := fmt.Sprintf("%s-token-", submarinerBrokerSA)
-	if len(brokerTokenPrefix) > MaxGeneratedNameLength {
-		brokerTokenPrefix = brokerTokenPrefix[:MaxGeneratedNameLength]
-	}
-
-	for _, secret := range sa.Secrets {
-		if strings.HasPrefix(secret.Name, brokerTokenPrefix) {
-			// nolint:wrapcheck // No need to wrap here
-			return clientSet.CoreV1().Secrets(brokerNamespace).Get(context.TODO(), secret.Name, metav1.GetOptions{})
-		}
-	}
-
-	return nil, fmt.Errorf("ServiceAccount %s does not have a secret of type token", submarinerBrokerSA)
 }

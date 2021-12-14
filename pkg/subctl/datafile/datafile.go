@@ -27,7 +27,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/stringset"
-	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/internal/rbac"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	submarinerClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	v1 "k8s.io/api/core/v1"
@@ -129,7 +129,7 @@ func newFromCluster(clientSet clientset.Interface, brokerNamespace, ipsecSubmFil
 	subctlData := &SubctlData{}
 	var err error
 
-	subctlData.ClientToken, err = broker.GetClientTokenSecret(clientSet, brokerNamespace, broker.SubmarinerBrokerAdminSA)
+	subctlData.ClientToken, err = rbac.GetClientTokenSecret(clientSet, brokerNamespace, broker.SubmarinerBrokerAdminSA)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting broker client secret")
 	}
