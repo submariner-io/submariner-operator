@@ -26,12 +26,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
@@ -45,6 +45,7 @@ var (
 	gatherModule         string
 	directory            string
 	includeSensitiveData bool
+	restConfigProducer   = restconfig.NewProducer()
 )
 
 const (
@@ -72,7 +73,7 @@ var gatherFuncs = map[string]func(string, Info) bool{
 }
 
 func init() {
-	cmd.AddKubeContextMultiFlag(gatherCmd, "")
+	restConfigProducer.AddKubeContextMultiFlag(gatherCmd, "")
 	addGatherFlags(gatherCmd)
 	cmd.AddToRootCommand(gatherCmd)
 }

@@ -19,46 +19,10 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	"os"
 
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	v1opts "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
 )
-
-func getSubmarinerResourceWithError(config *rest.Config) (*v1alpha1.Submariner, error) {
-	submarinerClient, err := subOperatorClientset.NewForConfig(config)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating client")
-	}
-
-	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).
-		Get(context.TODO(), submarinercr.SubmarinerName, v1opts.GetOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, "error retrieving Submariner resource")
-	}
-
-	return submariner, nil
-}
-
-func getSubmarinerResource(config *rest.Config) *v1alpha1.Submariner {
-	submariner, err := getSubmarinerResourceWithError(config)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-
-		utils.ExitOnError("Error obtaining the Submariner resource", err)
-	}
-
-	return submariner
-}
 
 func CompareFiles(file1, file2 string) (bool, error) {
 	first, err := os.ReadFile(file1)

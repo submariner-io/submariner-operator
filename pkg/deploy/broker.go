@@ -26,10 +26,10 @@ import (
 	submarinerv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/image"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
@@ -52,7 +52,7 @@ var ValidComponents = []string{components.ServiceDiscovery, components.Connectiv
 
 const brokerDetailsFilename = "broker-info.subm"
 
-func Broker(options *BrokerOptions, kubeConfig, kubeContext string) error {
+func Broker(options *BrokerOptions, restConfigProducer restconfig.Producer) error {
 	status := cli.NewStatus()
 	componentSet := stringset.New(options.BrokerSpec.Components...)
 
@@ -68,7 +68,7 @@ func Broker(options *BrokerOptions, kubeConfig, kubeContext string) error {
 		return errors.Wrap(err, "invalid GlobalCIDR configuration")
 	}
 
-	config, err := restconfig.ForCluster(kubeConfig, kubeContext)
+	config, err := restConfigProducer.ForCluster()
 	if err != nil {
 		return errors.Wrap(err, "the provided kubeconfig is invalid")
 	}

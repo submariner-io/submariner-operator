@@ -39,14 +39,14 @@ var deployBroker = &cobra.Command{
 	Short: "Deploys the broker",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("deployBroker called")
-		err := deploy.Broker(&deployflags, kubeConfig, kubeContext)
+		err := deploy.Broker(&deployflags, restConfigProducer)
 		exit.OnError("Error deploying Broker", err)
 	},
 }
 
 func init() {
 	addDeployBrokerFlags()
-	addKubeContextFlag(deployBroker)
+	restConfigProducer.AddKubeContextFlag(deployBroker)
 	rootCmd.AddCommand(deployBroker)
 }
 

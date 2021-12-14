@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	_ "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud"
 	_ "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/diagnose"
 	_ "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/gather"
 	_ "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/show"

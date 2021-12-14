@@ -37,7 +37,8 @@ func newGenericCleanupCommand() *cobra.Command {
 }
 
 func cleanupGenericCluster(cmd *cobra.Command, args []string) {
-	err := generic.RunOnK8sCluster(*kubeConfig, *kubeContext,
+	err := generic.RunOnK8sCluster(
+		*parentRestConfigProducer,
 		func(gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			return gwDeployer.Cleanup(reporter) // nolint:wrapcheck // No need to wrap here
 		})
