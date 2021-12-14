@@ -23,15 +23,15 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 )
 
 var (
 	deployflags       deploy.BrokerOptions
-	defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
+	defaultComponents = []string{component.ServiceDiscovery, component.Connectivity}
 )
 
 // deployBroker represents the deployBroker command.

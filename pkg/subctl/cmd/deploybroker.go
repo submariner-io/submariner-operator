@@ -26,11 +26,11 @@ import (
 	"github.com/submariner-io/admiral/pkg/stringset"
 	submarinerv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
@@ -53,8 +53,8 @@ var (
 )
 
 var (
-	defaultComponents = []string{components.ServiceDiscovery, components.Connectivity}
-	validComponents   = []string{components.ServiceDiscovery, components.Connectivity}
+	defaultComponents = []string{component.ServiceDiscovery, component.Connectivity}
+	validComponents   = []string{component.ServiceDiscovery, component.Connectivity}
 )
 
 func init() {
@@ -98,7 +98,7 @@ var deployBroker = &cobra.Command{
 		}
 
 		if globalnetEnable {
-			componentSet.Add(components.Globalnet)
+			componentSet.Add(component.Globalnet)
 		}
 
 		if valid, err := isValidGlobalnetConfig(); !valid {
@@ -154,7 +154,7 @@ var deployBroker = &cobra.Command{
 			status.QueueSuccessMessage(fmt.Sprintf("Backed up previous %s to %s", brokerDetailsFilename, newFilename))
 		}
 
-		subctlData.ServiceDiscovery = componentSet.Contains(components.ServiceDiscovery)
+		subctlData.ServiceDiscovery = componentSet.Contains(component.ServiceDiscovery)
 		subctlData.SetComponents(componentSet)
 
 		if len(defaultCustomDomains) > 0 {

@@ -27,12 +27,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	corev1 "k8s.io/api/core/v1"
@@ -54,10 +54,10 @@ const (
 )
 
 var gatherModuleFlags = map[string]bool{
-	components.Connectivity:     false,
-	components.ServiceDiscovery: false,
-	components.Broker:           false,
-	components.Operator:         false,
+	component.Connectivity:     false,
+	component.ServiceDiscovery: false,
+	component.Broker:           false,
+	component.Operator:         false,
 }
 
 var gatherTypeFlags = map[string]bool{
@@ -66,10 +66,10 @@ var gatherTypeFlags = map[string]bool{
 }
 
 var gatherFuncs = map[string]func(string, Info) bool{
-	components.Connectivity:     gatherConnectivity,
-	components.ServiceDiscovery: gatherDiscovery,
-	components.Broker:           gatherBroker,
-	components.Operator:         gatherOperator,
+	component.Connectivity:     gatherConnectivity,
+	component.ServiceDiscovery: gatherDiscovery,
+	component.Broker:           gatherBroker,
+	component.Operator:         gatherOperator,
 }
 
 func init() {
