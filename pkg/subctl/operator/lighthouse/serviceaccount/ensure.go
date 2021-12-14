@@ -22,28 +22,22 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/serviceaccount"
-	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster.
-func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
-	clientSet, err := clientset.NewForConfig(restConfig)
-	if err != nil {
-		return false, errors.Wrap(err, "error creating client")
-	}
-
-	createdSA, err := ensureServiceAccounts(clientSet, namespace)
+func Ensure(kubeClient kubernetes.Interface, namespace string) (bool, error) {
+	createdSA, err := ensureServiceAccounts(kubeClient, namespace)
 	if err != nil {
 		return false, err
 	}
 
-	createdCR, err := ensureClusterRoles(clientSet)
+	createdCR, err := ensureClusterRoles(kubeClient)
 	if err != nil {
 		return false, err
 	}
 
-	createdCRB, err := ensureClusterRoleBindings(clientSet, namespace)
+	createdCRB, err := ensureClusterRoleBindings(kubeClient, namespace)
 	if err != nil {
 		return false, err
 	}
@@ -51,40 +45,40 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 	return createdSA || createdCR || createdCRB, nil
 }
 
-func ensureServiceAccounts(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	createdAgentSA, err := serviceaccount.Ensure(clientSet, namespace,
+func ensureServiceAccounts(kubeClient kubernetes.Interface, namespace string) (bool, error) {
+	createdAgentSA, err := serviceaccount.Ensure(kubeClient, namespace,
 		embeddedyamls.Config_rbac_lighthouse_agent_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning the agent ServiceAccount resource")
 	}
 
-	createdCoreDNSSA, err := serviceaccount.Ensure(clientSet, namespace,
+	createdCoreDNSSA, err := serviceaccount.Ensure(kubeClient, namespace,
 		embeddedyamls.Config_rbac_lighthouse_coredns_service_account_yaml)
 
 	return createdAgentSA || createdCoreDNSSA, errors.Wrap(err, "error provisioning the coredns ServiceAccount resource")
 }
 
-func ensureClusterRoles(clientSet *clientset.Clientset) (bool, error) {
-	createdAgentCR, err := serviceaccount.EnsureClusterRole(clientSet,
+func ensureClusterRoles(kubeClient kubernetes.Interface) (bool, error) {
+	createdAgentCR, err := serviceaccount.EnsureClusterRole(kubeClient,
 		embeddedyamls.Config_rbac_lighthouse_agent_cluster_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning the agent ClusterRole resource")
 	}
 
-	createdCoreDNSCR, err := serviceaccount.EnsureClusterRole(clientSet,
+	createdCoreDNSCR, err := serviceaccount.EnsureClusterRole(kubeClient,
 		embeddedyamls.Config_rbac_lighthouse_coredns_cluster_role_yaml)
 
 	return createdAgentCR || createdCoreDNSCR, errors.Wrap(err, "error provisioning the coredns ClusterRole resource")
 }
 
-func ensureClusterRoleBindings(clientSet *clientset.Clientset, namespace string) (bool, error) {
-	createdAgentCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
+func ensureClusterRoleBindings(kubeClient kubernetes.Interface, namespace string) (bool, error) {
+	createdAgentCRB, err := serviceaccount.EnsureClusterRoleBinding(kubeClient, namespace,
 		embeddedyamls.Config_rbac_lighthouse_agent_cluster_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning the agent ClusterRoleBinding resource")
 	}
 
-	createdCoreDNSCRB, err := serviceaccount.EnsureClusterRoleBinding(clientSet, namespace,
+	createdCoreDNSCRB, err := serviceaccount.EnsureClusterRoleBinding(kubeClient, namespace,
 		embeddedyamls.Config_rbac_lighthouse_coredns_cluster_role_binding_yaml)
 
 	return createdAgentCRB || createdCoreDNSCRB, errors.Wrap(err, "error provisioning the coredns ClusterRoleBinding resource")

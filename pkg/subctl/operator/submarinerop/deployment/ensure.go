@@ -21,10 +21,10 @@ package deployment
 import (
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/operatorpod"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Ensure the operator is deployed, and running.
-func Ensure(restConfig *rest.Config, namespace, image string, debug bool) (bool, error) {
-	return operatorpod.Ensure(restConfig, namespace, names.OperatorComponent, image, debug) // nolint:wrapcheck // No need to wrap here
+func Ensure(kubeClient kubernetes.Interface, namespace, image string, debug bool) (bool, error) {
+	return operatorpod.Ensure(kubeClient, namespace, names.OperatorComponent, image, debug) // nolint:wrapcheck // No need to wrap here
 }

@@ -22,10 +22,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/dynamic"
 )
 
-func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
+func Ensure(dynClient dynamic.Interface, namespace string) (bool, error) {
 	operatorSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_operator_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error parsing the operator ServiceAccount resource")
@@ -51,27 +51,27 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, errors.Wrap(err, "error parsing the networkplugin syncer ServiceAccount resource")
 	}
 
-	updateOperatorSCC, err := scc.UpdateSCC(restConfig, namespace, operatorSaName)
+	updateOperatorSCC, err := scc.UpdateSCC(dynClient, namespace, operatorSaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateGatewaySCC, err := scc.UpdateSCC(restConfig, namespace, gatewaySaName)
+	updateGatewaySCC, err := scc.UpdateSCC(dynClient, namespace, gatewaySaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateRouteAgentSCC, err := scc.UpdateSCC(restConfig, namespace, routeAgentSaName)
+	updateRouteAgentSCC, err := scc.UpdateSCC(dynClient, namespace, routeAgentSaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateGlobalnetSCC, err := scc.UpdateSCC(restConfig, namespace, globalnetSaName)
+	updateGlobalnetSCC, err := scc.UpdateSCC(dynClient, namespace, globalnetSaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateNPSyncerSCC, err := scc.UpdateSCC(restConfig, namespace, npSyncerSaName)
+	updateNPSyncerSCC, err := scc.UpdateSCC(dynClient, namespace, npSyncerSaName)
 
 	return updateOperatorSCC || updateGatewaySCC || updateRouteAgentSCC || updateGlobalnetSCC || updateNPSyncerSCC,
 		errors.Wrap(err, "error updating the SCC resource")

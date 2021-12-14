@@ -25,16 +25,10 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
-	"k8s.io/client-go/rest"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster.
-func Ensure(restConfig *rest.Config) (bool, error) {
-	crdUpdater, err := crdutils.NewFromRestConfig(restConfig)
-	if err != nil {
-		return false, errors.Wrap(err, "error creating CRDUpdater")
-	}
-
+func Ensure(crdUpdater crdutils.CRDUpdater) (bool, error) {
 	// Attempt to update or create the CRD definitions.
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions

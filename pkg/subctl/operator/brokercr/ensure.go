@@ -28,14 +28,13 @@ import (
 	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
 )
 
 const (
 	BrokerName = "submariner-broker"
 )
 
-func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerSpec) error {
+func Ensure(client submarinerClientset.Interface, namespace string, brokerSpec submariner.BrokerSpec) error {
 	brokerCR := &submariner.Broker{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      BrokerName,
@@ -44,13 +43,8 @@ func Ensure(config *rest.Config, namespace string, brokerSpec submariner.BrokerS
 		Spec: brokerSpec,
 	}
 
-	client, err := submarinerClientset.NewForConfig(config)
-	if err != nil {
-		return errors.Wrap(err, "error creating client")
-	}
-
 	// nolint:wrapcheck // No need to wrap errors here
-	_, err = util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
+	_, err := util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
 			return client.SubmarinerV1alpha1().Brokers(namespace).Get(ctx, name, options)
 		},

@@ -22,17 +22,19 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/serviceaccount"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 )
 
-func Ensure(status reporter.Interface, config *rest.Config, operatorNamespace string) (bool, error) {
-	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
+func Ensure(status reporter.Interface, kubeClient kubernetes.Interface, dynClient dynamic.Interface,
+	operatorNamespace string) (bool, error) {
+	if created, err := serviceaccount.Ensure(kubeClient, operatorNamespace); err != nil {
 		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {
 		status.Success("Created lighthouse service account and role")
 	}
 
-	if created, err := scc.Ensure(config, operatorNamespace); err != nil {
+	if created, err := scc.Ensure(dynClient, operatorNamespace); err != nil {
 		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {
 		status.Success("Updated the privileged SCC")

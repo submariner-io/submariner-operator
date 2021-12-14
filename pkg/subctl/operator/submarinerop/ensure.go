@@ -26,42 +26,45 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/serviceaccount"
-	"k8s.io/client-go/rest"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 )
 
 // nolint:wrapcheck // No need to wrap errors here.
-func Ensure(status reporter.Interface, config *rest.Config, operatorNamespace, operatorImage string, debug bool) error {
-	if created, err := crds.Ensure(config); err != nil {
+func Ensure(status reporter.Interface, crdUpdater crdutils.CRDUpdater, kubeClient kubernetes.Interface, dynClient dynamic.Interface,
+	operatorNamespace, operatorImage string, debug bool) error {
+	if created, err := crds.Ensure(crdUpdater); err != nil {
 		return err
 	} else if created {
 		status.Success("Created operator CRDs")
 	}
 
-	if created, err := namespace.Ensure(config, operatorNamespace); err != nil {
+	if created, err := namespace.Ensure(kubeClient, operatorNamespace); err != nil {
 		return err
 	} else if created {
 		status.Success("Created operator namespace: %s", operatorNamespace)
 	}
 
-	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
+	if created, err := serviceaccount.Ensure(kubeClient, operatorNamespace); err != nil {
 		return err
 	} else if created {
 		status.Success("Created operator service account and role")
 	}
 
-	if created, err := scc.Ensure(config, operatorNamespace); err != nil {
+	if created, err := scc.Ensure(dynClient, operatorNamespace); err != nil {
 		return err
 	} else if created {
 		status.Success("Updated the privileged SCC")
 	}
 
-	if created, err := lighthouseop.Ensure(status, config, operatorNamespace); err != nil {
+	if created, err := lighthouseop.Ensure(status, kubeClient, dynClient, operatorNamespace); err != nil {
 		return err
 	} else if created {
 		status.Success("Created Lighthouse service accounts and roles")
 	}
 
-	if created, err := deployment.Ensure(config, operatorNamespace, operatorImage, debug); err != nil {
+	if created, err := deployment.Ensure(kubeClient, operatorNamespace, operatorImage, debug); err != nil {
 		return err
 	} else if created {
 		status.Success("Deployed the operator successfully")

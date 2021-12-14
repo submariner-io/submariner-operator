@@ -31,6 +31,7 @@ import (
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -73,6 +74,11 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 		return reconcile.Result{}, nil
 	}
 
+	kubeClient, err := kubernetes.NewForConfig(r.Config)
+	if err != nil {
+		return ctrl.Result{}, errors.Wrap(err, "error creating kube client")
+	}
+
 	// Broker CRDs
 	crdUpdater := crdutils.NewFromControllerClient(r.Client)
 
@@ -88,12 +94,12 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 	}
 
 	// Globalnet
-	err = globalnet.ValidateExistingGlobalNetworks(r.Config, request.Namespace)
+	err = globalnet.ValidateExistingGlobalNetworks(kubeClient, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
 	}
 
-	err = broker.CreateGlobalnetConfigMap(r.Config, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
+	err = broker.CreateGlobalnetConfigMap(kubeClient, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
 		instance.Spec.DefaultGlobalnetClusterSize, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
