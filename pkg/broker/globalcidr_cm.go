@@ -27,7 +27,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 const (
@@ -43,19 +42,14 @@ type ClusterInfo struct {
 	GlobalCidr []string `json:"global_cidr"`
 }
 
-func CreateGlobalnetConfigMap(config *rest.Config, globalnetEnabled bool, defaultGlobalCidrRange string,
+func CreateGlobalnetConfigMap(kubeClient kubernetes.Interface, globalnetEnabled bool, defaultGlobalCidrRange string,
 	defaultGlobalClusterSize uint, namespace string) error {
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return errors.Wrap(err, "error creating the core kubernetes clientset")
-	}
-
 	gnConfigMap, err := NewGlobalnetConfigMap(globalnetEnabled, defaultGlobalCidrRange, defaultGlobalClusterSize, namespace)
 	if err != nil {
 		return errors.Wrap(err, "error creating config map")
 	}
 
-	_, err = clientset.CoreV1().ConfigMaps(namespace).Create(context.TODO(), gnConfigMap, metav1.CreateOptions{})
+	_, err = kubeClient.CoreV1().ConfigMaps(namespace).Create(context.TODO(), gnConfigMap, metav1.CreateOptions{})
 	if err == nil || apierrors.IsAlreadyExists(err) {
 		return nil
 	}
@@ -138,6 +132,6 @@ func UpdateGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace stri
 }
 
 // nolint:wrapcheck // No need to wrap here
-func GetGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace string) (*v1.ConfigMap, error) {
-	return k8sClientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), GlobalCIDRConfigMapName, metav1.GetOptions{})
+func GetGlobalnetConfigMap(kubeClient kubernetes.Interface, namespace string) (*v1.ConfigMap, error) {
+	return kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), GlobalCIDRConfigMapName, metav1.GetOptions{})
 }

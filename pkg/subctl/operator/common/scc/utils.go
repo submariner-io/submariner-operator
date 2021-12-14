@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 )
 
@@ -37,12 +36,7 @@ var openshiftSCCGVR = schema.GroupVersionResource{
 	Resource: "securitycontextconstraints",
 }
 
-func UpdateSCC(restConfig *rest.Config, namespace, name string) (bool, error) {
-	dynClient, err := dynamic.NewForConfig(restConfig)
-	if err != nil {
-		return false, errors.Wrap(err, "error creating client")
-	}
-
+func UpdateSCC(dynClient dynamic.Interface, namespace, name string) (bool, error) {
 	sccClient := dynClient.Resource(openshiftSCCGVR)
 
 	created := false

@@ -29,8 +29,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -39,12 +38,7 @@ const (
 )
 
 // Ensure the operator is deployed, and running.
-func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debug bool) (bool, error) {
-	clientSet, err := clientset.NewForConfig(restConfig)
-	if err != nil {
-		return false, errors.Wrap(err, "error creating client")
-	}
-
+func Ensure(kubeClient kubernetes.Interface, namespace, operatorName, image string, debug bool) (bool, error) {
 	replicas := int32(1)
 	imagePullPolicy := v1.PullAlways
 	// If we are running with a local development image, don't try to pull from registry.
@@ -103,12 +97,12 @@ func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debu
 		},
 	}
 
-	created, err := utils.CreateOrUpdateDeployment(context.TODO(), clientSet, namespace, deployment)
+	created, err := utils.CreateOrUpdateDeployment(context.TODO(), kubeClient, namespace, deployment)
 	if err != nil {
 		return false, errors.Wrap(err, "error creating/updating Deployment")
 	}
 
-	err = deployments.WaitForReady(clientSet, namespace, deployment.Name, deploymentCheckInterval, deploymentWaitTime)
+	err = deployments.WaitForReady(kubeClient, namespace, deployment.Name, deploymentCheckInterval, deploymentWaitTime)
 
 	return created, errors.Wrap(err, "error awaiting Deployment ready")
 }

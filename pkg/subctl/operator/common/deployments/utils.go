@@ -28,11 +28,11 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes"
 )
 
-func WaitForReady(clientSet *clientset.Clientset, namespace, deployment string, interval, timeout time.Duration) error {
-	deployments := clientSet.AppsV1().Deployments(namespace)
+func WaitForReady(kubeClient kubernetes.Interface, namespace, deployment string, interval, timeout time.Duration) error {
+	deployments := kubeClient.AppsV1().Deployments(namespace)
 
 	// nolint:wrapcheck // No need to wrap here
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {

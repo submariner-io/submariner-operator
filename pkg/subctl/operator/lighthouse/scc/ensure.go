@@ -22,10 +22,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/dynamic"
 )
 
-func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
+func Ensure(dynClient dynamic.Interface, namespace string) (bool, error) {
 	agentSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_lighthouse_agent_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error parsing the agent ServiceAccount resource")
@@ -36,12 +36,12 @@ func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
 		return false, errors.Wrap(err, "error parsing the coredns ServiceAccount resource")
 	}
 
-	updateAgentSCC, err := scc.UpdateSCC(restConfig, namespace, agentSaName)
+	updateAgentSCC, err := scc.UpdateSCC(dynClient, namespace, agentSaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateCoreDNSSCC, err := scc.UpdateSCC(restConfig, namespace, coreDNSSaName)
+	updateCoreDNSSCC, err := scc.UpdateSCC(dynClient, namespace, coreDNSSaName)
 
 	return updateAgentSCC || updateCoreDNSSCC, errors.Wrap(err, "error updating the SCC resource")
 }

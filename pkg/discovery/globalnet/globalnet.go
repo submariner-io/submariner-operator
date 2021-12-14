@@ -31,7 +31,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 type Info struct {
@@ -327,8 +326,8 @@ func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config) (stri
 	return globalnetCIDR, nil
 }
 
-func GetGlobalNetworks(k8sClientset *kubernetes.Clientset, brokerNamespace string) (*Info, *v1.ConfigMap, error) {
-	configMap, err := broker.GetGlobalnetConfigMap(k8sClientset, brokerNamespace)
+func GetGlobalNetworks(kubeClient kubernetes.Interface, brokerNamespace string) (*Info, *v1.ConfigMap, error) {
+	configMap, err := broker.GetGlobalnetConfigMap(kubeClient, brokerNamespace)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error retrieving globalnet ConfigMap")
 	}
@@ -443,13 +442,8 @@ func IsValidCIDR(cidr string) error {
 	return nil
 }
 
-func ValidateExistingGlobalNetworks(config *rest.Config, namespace string) error {
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return errors.Wrap(err, "error creating the kubernetes clientset")
-	}
-
-	globalnetInfo, _, err := GetGlobalNetworks(clientset, namespace)
+func ValidateExistingGlobalNetworks(kubeClient kubernetes.Interface, namespace string) error {
+	globalnetInfo, _, err := GetGlobalNetworks(kubeClient, namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil

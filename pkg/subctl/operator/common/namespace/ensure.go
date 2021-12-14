@@ -25,20 +25,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster.
-func Ensure(restConfig *rest.Config, namespace string) (bool, error) {
-	clientSet, err := clientset.NewForConfig(restConfig)
-	if err != nil {
-		return false, errors.Wrap(err, "error creating client")
-	}
-
+func Ensure(kubeClient kubernetes.Interface, namespace string) (bool, error) {
 	ns := &v1.Namespace{ObjectMeta: v1meta.ObjectMeta{Name: namespace}}
 
-	_, err = clientSet.CoreV1().Namespaces().Create(context.TODO(), ns, v1meta.CreateOptions{})
+	_, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), ns, v1meta.CreateOptions{})
 
 	if err == nil {
 		return true, nil
