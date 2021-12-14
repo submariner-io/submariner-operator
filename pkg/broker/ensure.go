@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/rbac"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
@@ -90,7 +91,7 @@ func Ensure(config *rest.Config, componentArr []string, crds bool, namespace str
 		return err
 	}
 
-	_, err = WaitForClientToken(clientset, SubmarinerBrokerAdminSA, namespace)
+	_, err = WaitForClientToken(clientset, constants.SubmarinerBrokerAdminSA, namespace)
 
 	return err
 }
@@ -141,7 +142,7 @@ func CreateSAForCluster(clientset *kubernetes.Clientset, clusterID, namespace st
 
 func createBrokerAdministratorRoleAndSA(clientset *kubernetes.Clientset, namespace string) error {
 	// Create the SA we need for the managing the broker (from subctl, etc..).
-	_, err := CreateNewBrokerSA(clientset, SubmarinerBrokerAdminSA, namespace)
+	_, err := CreateNewBrokerSA(clientset, constants.SubmarinerBrokerAdminSA, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error creating the broker admin service account")
 	}
@@ -153,7 +154,7 @@ func createBrokerAdministratorRoleAndSA(clientset *kubernetes.Clientset, namespa
 	}
 
 	// Create the role binding
-	_, err = CreateNewBrokerRoleBinding(clientset, SubmarinerBrokerAdminSA, submarinerBrokerAdminRole, namespace)
+	_, err = CreateNewBrokerRoleBinding(clientset, constants.SubmarinerBrokerAdminSA, submarinerBrokerAdminRole, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error creating the broker rolebinding")
 	}
