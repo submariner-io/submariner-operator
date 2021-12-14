@@ -24,13 +24,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/stringset"
 	submarinerv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
@@ -48,7 +48,7 @@ type BrokerOptions struct {
 	BrokerSpec          submarinerv1a1.BrokerSpec
 }
 
-var ValidComponents = []string{components.ServiceDiscovery, components.Connectivity}
+var ValidComponents = []string{component.ServiceDiscovery, component.Connectivity}
 
 const brokerDetailsFilename = "broker-info.subm"
 
@@ -63,7 +63,7 @@ func Broker(options *BrokerOptions, restConfigProducer restconfig.Producer, stat
 	}
 
 	if options.BrokerSpec.GlobalnetEnabled {
-		componentSet.Add(components.Globalnet)
+		componentSet.Add(component.Globalnet)
 	}
 
 	if err := checkGlobalnetConfig(options); err != nil {
@@ -105,7 +105,7 @@ func Broker(options *BrokerOptions, restConfigProducer restconfig.Producer, stat
 		status.Success("Backed up previous %s to %s", brokerDetailsFilename, newFilename)
 	}
 
-	subctlData.ServiceDiscovery = componentSet.Contains(components.ServiceDiscovery)
+	subctlData.ServiceDiscovery = componentSet.Contains(component.ServiceDiscovery)
 	subctlData.SetComponents(componentSet)
 
 	if len(options.BrokerSpec.DefaultCustomDomains) > 0 {

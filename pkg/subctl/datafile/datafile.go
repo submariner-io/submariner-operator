@@ -27,9 +27,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/stringset"
+	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/rbac"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	submarinerClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -61,11 +61,11 @@ func (data *SubctlData) GetComponents() stringset.Interface {
 }
 
 func (data *SubctlData) IsConnectivityEnabled() bool {
-	return data.GetComponents().Contains(components.Connectivity)
+	return data.GetComponents().Contains(component.Connectivity)
 }
 
 func (data *SubctlData) IsServiceDiscoveryEnabled() bool {
-	return data.GetComponents().Contains(components.ServiceDiscovery) || data.ServiceDiscovery
+	return data.GetComponents().Contains(component.ServiceDiscovery) || data.ServiceDiscovery
 }
 
 func (data *SubctlData) ToString() (string, error) {

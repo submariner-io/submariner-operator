@@ -25,11 +25,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/rbac"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/components"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	v1 "k8s.io/api/core/v1"
@@ -50,17 +50,17 @@ func Ensure(config *rest.Config, componentArr []string, crds bool, namespace str
 
 		for i := range componentArr {
 			switch componentArr[i] {
-			case components.Connectivity:
-				err = gateway.Ensure(crdCreator)
+			case component.Connectivity:
+				err := gateway.Ensure(crdCreator)
 				if err != nil {
 					return errors.Wrap(err, "error setting up the connectivity requirements")
 				}
-			case components.ServiceDiscovery:
+			case component.ServiceDiscovery:
 				_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
 				if err != nil {
 					return errors.Wrap(err, "error setting up the service discovery requirements")
 				}
-			case components.Globalnet:
+			case component.Globalnet:
 				// Globalnet needs the Lighthouse CRDs too
 				_, err = lighthouse.Ensure(crdCreator, lighthouse.BrokerCluster)
 				if err != nil {
