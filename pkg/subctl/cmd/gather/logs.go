@@ -142,7 +142,11 @@ func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, i
 		podLogInfo.LogFileName = append(podLogInfo.LogFileName, fileName)
 		defer logStream.Close()
 	}
-	podLogInfo.RestartCount = pod.Status.ContainerStatuses[0].RestartCount
+
+	if len(pod.Status.ContainerStatuses) > 0 {
+		podLogInfo.RestartCount = pod.Status.ContainerStatuses[0].RestartCount
+	}
+
 	return nil
 }
 
