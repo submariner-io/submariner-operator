@@ -20,7 +20,7 @@ ifneq (,$(DAPPER_HOST_ARCH))
 OPERATOR_SDK_VERSION := 1.0.1
 OPERATOR_SDK := $(CURDIR)/bin/operator-sdk
 
-KUSTOMIZE_VERSION := 3.10.0
+KUSTOMIZE_VERSION := 4.4.1
 KUSTOMIZE := $(CURDIR)/bin/kustomize
 
 CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
