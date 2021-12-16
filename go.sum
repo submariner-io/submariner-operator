@@ -1094,7 +1094,6 @@ github.com/onsi/gomega v1.8.1/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoT
 github.com/onsi/gomega v1.9.0/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoTdcA=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.10.2/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
-github.com/onsi/gomega v1.15.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
 github.com/onsi/gomega v1.17.0 h1:9Luw4uT5HTjHTN8+aNcSThgH1vdXnmdJ8xIfZ4wyTRE=
 github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
@@ -1343,11 +1342,8 @@ github.com/submariner-io/lighthouse v0.12.0-m1 h1:EdCZtoiEfXSTIUMDAQTaTCmYohZaGF
 github.com/submariner-io/lighthouse v0.12.0-m1/go.mod h1:l42MzM2vgcoGOlAOhNLEy8ThOrUxqIW07py9Xoc4FW0=
 github.com/submariner-io/shipyard v0.12.0-m1 h1:dPEz7CeOfLsmmwhuCshrIo0dK0x03wpd5tnHCzMRg5I=
 github.com/submariner-io/shipyard v0.12.0-m1/go.mod h1:BYUZPAJEbQ0W56xvNEs63KghH2ptYnGPG3/424y4o/g=
-github.com/submariner-io/submariner v0.12.0-m1.0.20211209200628-a54b86b4ad1d h1:/KhBtQh+pzDHFJ3KZI8VDN/xsGv6Wo3PY+mT6jR2ssg=
-github.com/submariner-io/submariner v0.12.0-m1.0.20211209200628-a54b86b4ad1d/go.mod h1:0N9xv4zPHGAW2G6gD+bXr4G6u2ufO/bfrPgwHkwgrfM=
-github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816112556-6e4bb78fab88/go.mod h1:VfjgFyeFkEzNCmZnTFdxWYuEvLyvH4429fwdue6gq1o=
-github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930 h1:6J41oeHHXCyP4Y/RNa8jfAiTuNEtnoc3gc6Sxj4S800=
-github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930/go.mod h1:VfjgFyeFkEzNCmZnTFdxWYuEvLyvH4429fwdue6gq1o=
+github.com/submariner-io/submariner v0.12.0-m1.0.20211216152540-1820e48396c5 h1:PIC/f+3yc25zlBN9zJEoygf9UcKo5YoUJ/yTfX4MR5A=
+github.com/submariner-io/submariner v0.12.0-m1.0.20211216152540-1820e48396c5/go.mod h1:4I9Dmu/TLOlcGsxuJdpjHCLcJ4EZ1J10IM4PK8JJdaQ=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
 github.com/thanos-io/thanos v0.11.0/go.mod h1:N/Yes7J68KqvmY+xM6J5CJqEvWIvKSR5sqGtmuD6wDc=
