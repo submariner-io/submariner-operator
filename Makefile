@@ -4,6 +4,17 @@ DEFAULT_IMAGE_VERSION ?= $(BASE_BRANCH)
 export BASE_BRANCH
 export DEFAULT_IMAGE_VERSION
 
+# Define LOCAL_BUILD to build directly on the host and not inside a Dapper container
+ifdef LOCAL_BUILD
+DAPPER_HOST_ARCH ?= $(shell go env GOHOSTARCH)
+SHIPYARD_DIR ?= ../shipyard
+SCRIPTS_DIR ?= $(SHIPYARD_DIR)/scripts/shared
+
+export DAPPER_HOST_ARCH
+export SHIPYARD_DIR
+export SCRIPTS_DIR
+endif
+
 ifneq (,$(DAPPER_HOST_ARCH))
 
 OPERATOR_SDK_VERSION := 1.0.1
