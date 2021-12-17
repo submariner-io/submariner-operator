@@ -31,7 +31,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 	v1 "k8s.io/api/core/v1"
@@ -40,7 +39,6 @@ import (
 
 type BrokerOptions struct {
 	OperatorDebug       bool
-	IpsecSubmFile       string
 	GlobalCIDRConfigMap *v1.ConfigMap
 	Repository          string
 	ImageVersion        string
@@ -49,8 +47,6 @@ type BrokerOptions struct {
 }
 
 var ValidComponents = []string{component.ServiceDiscovery, component.Connectivity}
-
-const brokerDetailsFilename = "broker-info.subm"
 
 // Ignoring th cyclic complexity of Broker function because it is being refactored in
 // https://github.com/submariner-io/submariner-operator/pull/1717.
@@ -79,39 +75,6 @@ func Broker(options *BrokerOptions, restConfigProducer restconfig.Producer, stat
 		return err
 	}
 
-	status.Start("Creating %s file", brokerDetailsFilename)
-
-	// If deploy-broker is retried we will attempt to re-use the existing IPsec PSK secret
-	if options.IpsecSubmFile == "" {
-		if _, err := datafile.NewFromFile(brokerDetailsFilename); err == nil {
-			options.IpsecSubmFile = brokerDetailsFilename
-			status.Warning("Reusing IPsec PSK from existing %s", brokerDetailsFilename)
-		} else {
-			status.Success("A new IPsec PSK will be generated for %s", brokerDetailsFilename)
-		}
-	}
-
-	subctlData, err := datafile.NewFromCluster(config, options.BrokerNamespace, options.IpsecSubmFile)
-	if err != nil {
-		return status.Error(err, "error retrieving preparing the subm data file")
-	}
-
-	newFilename, err := datafile.BackupIfExists(brokerDetailsFilename)
-	if err != nil {
-		return status.Error(err, "error backing up the brokerfile")
-	}
-
-	if newFilename != "" {
-		status.Success("Backed up previous %s to %s", brokerDetailsFilename, newFilename)
-	}
-
-	subctlData.ServiceDiscovery = componentSet.Contains(component.ServiceDiscovery)
-	subctlData.SetComponents(componentSet)
-
-	if len(options.BrokerSpec.DefaultCustomDomains) > 0 {
-		subctlData.CustomDomains = &options.BrokerSpec.DefaultCustomDomains
-	}
-
 	if options.BrokerSpec.GlobalnetEnabled {
 		if err = globalnet.ValidateExistingGlobalNetworks(config, options.BrokerNamespace); err != nil {
 			return errors.Wrap(err, "error validating existing globalCIDR configmap")
@@ -121,11 +84,6 @@ func Broker(options *BrokerOptions, restConfigProducer restconfig.Producer, stat
 	if err = broker.CreateGlobalnetConfigMap(config, options.BrokerSpec.GlobalnetEnabled, options.BrokerSpec.GlobalnetCIDRRange,
 		options.BrokerSpec.DefaultGlobalnetClusterSize, options.BrokerNamespace); err != nil {
 		return errors.Wrap(err, "error creating globalCIDR configmap on Broker")
-	}
-
-	err = subctlData.WriteToFile(brokerDetailsFilename)
-	if err != nil {
-		return status.Error(err, "error writing the broker information")
 	}
 
 	status.End()

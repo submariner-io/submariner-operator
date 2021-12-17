@@ -22,15 +22,18 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/stringset"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
 )
 
 var (
 	deployflags       deploy.BrokerOptions
+	ipsecSubmFile     string
 	defaultComponents = []string{component.ServiceDiscovery, component.Connectivity}
 )
 
@@ -39,7 +42,14 @@ var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "Deploys the broker",
 	Run: func(cmd *cobra.Command, args []string) {
-		err := deploy.Broker(&deployflags, restConfigProducer, cli.NewReporter())
+		status := cli.NewReporter()
+		err := deploy.Broker(&deployflags, restConfigProducer, status)
+		if err == nil {
+			c, _ := restConfigProducer.ForCluster()
+			err = broker.WriteInfoToFile(c, deployflags.BrokerNamespace, ipsecSubmFile,
+				stringset.New(deployflags.BrokerSpec.Components...), deployflags.BrokerSpec.DefaultCustomDomains, status)
+		}
+
 		exit.OnError("Error deploying Broker", err)
 	},
 }
@@ -58,7 +68,7 @@ func addDeployBrokerFlags() {
 	deployBroker.PersistentFlags().UintVar(&deployflags.BrokerSpec.DefaultGlobalnetClusterSize, "globalnet-cluster-size", 65536,
 		"default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
 
-	deployBroker.PersistentFlags().StringVar(&deployflags.IpsecSubmFile, "ipsec-psk-from", "",
+	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
 		"import IPsec PSK from existing submariner broker file, like broker-info.subm")
 
 	deployBroker.PersistentFlags().StringSliceVar(&deployflags.BrokerSpec.DefaultCustomDomains, "custom-domains", nil,
