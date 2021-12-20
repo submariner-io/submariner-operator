@@ -29,11 +29,13 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
+	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -104,25 +106,30 @@ var deployBroker = &cobra.Command{
 		if valid, err := isValidGlobalnetConfig(); !valid {
 			utils.ExitOnError("Invalid GlobalCIDR configuration", err)
 		}
+
 		config, err := restConfigProducer.ForCluster()
 		utils.ExitOnError("The provided kubeconfig is invalid", err)
+
+		clientProducer, err := client.NewProducerFromRestConfig(config)
+		utils.ExitOnError("Error creating client producer", err)
 
 		status := cli.NewStatus()
 
 		status.Start("Setting up broker RBAC")
-		err = broker.Ensure(config, componentArr, false, brokerNamespace)
+		err = broker.Ensure(crdutils.NewFromClientSet(clientProducer.ForCRD()), clientProducer.ForKubernetes(), componentArr,
+			false, brokerNamespace)
 		status.EndWith(cli.CheckForError(err))
 		utils.ExitOnError("Error setting up broker RBAC", err)
 
 		status.Start("Deploying the Submariner operator")
 		operatorImage, err := image.ForOperator(imageVersion, repository, nil)
 		utils.ExitOnError("Error overriding Operator Image", err)
-		err = submarinerop.Ensure(status, config, OperatorNamespace, operatorImage, operatorDebug)
+		err = submarinerop.Ensure(status, clientProducer, OperatorNamespace, operatorImage, operatorDebug)
 		status.EndWith(cli.CheckForError(err))
 		utils.ExitOnError("Error deploying the operator", err)
 
 		status.Start("Deploying the broker")
-		err = brokercr.Ensure(config, brokerNamespace, populateBrokerSpec())
+		err = brokercr.Ensure(clientProducer.ForSubmariner(), brokerNamespace, populateBrokerSpec())
 		if err == nil {
 			status.QueueSuccessMessage("The broker has been deployed")
 			status.EndWith(cli.Success)
@@ -164,11 +171,11 @@ var deployBroker = &cobra.Command{
 		utils.ExitOnError("Error setting up service discovery information", err)
 
 		if globalnetEnable {
-			err = globalnet.ValidateExistingGlobalNetworks(config, brokerNamespace)
+			err = globalnet.ValidateExistingGlobalNetworks(clientProducer.ForKubernetes(), brokerNamespace)
 			utils.ExitOnError("Error validating existing globalCIDR configmap", err)
 		}
 
-		err = broker.CreateGlobalnetConfigMap(config, globalnetEnable, globalnetCIDRRange,
+		err = broker.CreateGlobalnetConfigMap(clientProducer.ForKubernetes(), globalnetEnable, globalnetCIDRRange,
 			defaultGlobalnetClusterSize, brokerNamespace)
 		utils.ExitOnError("Error creating globalCIDR configmap on Broker", err)
 

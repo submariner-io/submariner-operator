@@ -33,6 +33,7 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/pkg/client"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -221,6 +222,9 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 
 	checkRequirements(clientConfig)
 
+	clientProducer, err := client.NewProducerFromRestConfig(clientConfig)
+	utils.ExitOnError("Error creating client producer", err)
+
 	if subctlData.IsConnectivityEnabled() && labelGateway {
 		err := handleNodeLabels(clientConfig)
 		utils.ExitOnError("Unable to set the gateway node up", err)
@@ -264,7 +268,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 
 	operatorImage, err := image.ForOperator(imageVersion, repository, imageOverrideArr)
 	utils.ExitOnError("Error overriding Operator Image", err)
-	err = submarinerop.Ensure(status, clientConfig, OperatorNamespace, operatorImage, operatorDebug)
+	err = submarinerop.Ensure(status, clientProducer, OperatorNamespace, operatorImage, operatorDebug)
 	status.EndWith(cli.CheckForError(err))
 	utils.ExitOnError("Error deploying the operator", err)
 

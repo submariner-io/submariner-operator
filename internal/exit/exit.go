@@ -27,7 +27,12 @@ import (
 // OnError will print your error nicely and exit in case of error.
 func OnError(message string, err error) {
 	if err != nil {
-		WithErrorMsg(fmt.Sprintf("%s: %s", message, err))
+		msg := ""
+		if message != "" {
+			msg = fmt.Sprintf("%s: %s", message, err)
+		}
+
+		WithErrorMsg(msg)
 	}
 }
 
