@@ -19,6 +19,7 @@ package images
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	apis "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
@@ -31,6 +32,10 @@ func GetImagePath(repo, version, image, component string, imageOverrides map[str
 
 	if override, ok := imageOverrides[component]; ok {
 		return override
+	}
+
+	if relatedImage, present := os.LookupEnv("RELATED_IMAGE_" + image); present {
+		return relatedImage
 	}
 
 	// If the repository is "local" we don't append it on the front of the image,
