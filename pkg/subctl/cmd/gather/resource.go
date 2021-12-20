@@ -126,14 +126,14 @@ func scrubSensitiveData(info *Info, dataString string) string {
 	}
 
 	if info.Submariner != nil {
-		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sApiServer, "##redacted-api-server##")
-		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sApiServerToken, "##redacted-token##")
-		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.BrokerK8sCA, "##redacted-ca##")
-		dataString = strings.ReplaceAll(dataString, info.Submariner.Spec.CeIPSecPSK, "##redacted-ipsec-psk##")
+		dataString = replaceIfNotEmpty(dataString, info.Submariner.Spec.BrokerK8sApiServer, "##redacted-api-server##")
+		dataString = replaceIfNotEmpty(dataString, info.Submariner.Spec.BrokerK8sApiServerToken, "##redacted-token##")
+		dataString = replaceIfNotEmpty(dataString, info.Submariner.Spec.BrokerK8sCA, "##redacted-ca##")
+		dataString = replaceIfNotEmpty(dataString, info.Submariner.Spec.CeIPSecPSK, "##redacted-ipsec-psk##")
 	} else if info.ServiceDiscovery != nil {
-		dataString = strings.ReplaceAll(dataString, info.ServiceDiscovery.Spec.BrokerK8sApiServer, "##redacted-api-server##")
-		dataString = strings.ReplaceAll(dataString, info.ServiceDiscovery.Spec.BrokerK8sApiServerToken, "##redacted-token##")
-		dataString = strings.ReplaceAll(dataString, info.ServiceDiscovery.Spec.BrokerK8sCA, "##redacted-ca##")
+		dataString = replaceIfNotEmpty(dataString, info.ServiceDiscovery.Spec.BrokerK8sApiServer, "##redacted-api-server##")
+		dataString = replaceIfNotEmpty(dataString, info.ServiceDiscovery.Spec.BrokerK8sApiServerToken, "##redacted-token##")
+		dataString = replaceIfNotEmpty(dataString, info.ServiceDiscovery.Spec.BrokerK8sCA, "##redacted-ca##")
 	}
 
 	return dataString
@@ -141,4 +141,12 @@ func scrubSensitiveData(info *Info, dataString string) string {
 
 func escapeFileName(s string) string {
 	return fileNameRegexp.ReplaceAllString(s, "_")
+}
+
+func replaceIfNotEmpty(s, old, replacement string) string {
+	if old == "" {
+		return s
+	}
+
+	return strings.ReplaceAll(s, old, replacement)
 }
