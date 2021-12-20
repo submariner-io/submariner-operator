@@ -268,6 +268,7 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml && cd ../../) && \
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
 	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml && \
+	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml && \
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 # Generate package manifests
@@ -277,6 +278,7 @@ packagemanifests: $(OPERATOR_SDK) $(KUSTOMIZE) kustomization
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
 	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
+	sed -i -e 's/$$(VERSION)/$(VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
 	mv packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(BUNDLE_VERSION)/submariner.v$(BUNDLE_VERSION).clusterserviceversion.yaml
 
 # Statically validate the operator bundle using Scorecard.
