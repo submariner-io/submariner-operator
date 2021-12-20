@@ -28,6 +28,7 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
 )
 
@@ -42,15 +43,20 @@ var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "Deploys the broker",
 	Run: func(cmd *cobra.Command, args []string) {
+		config, err := restConfigProducer.ForCluster()
+		exit.OnError("Error creating REST config", err)
+
+		clientProducer, err := client.NewProducerFromRestConfig(config)
+		exit.OnError("Error creating client producer", err)
+
 		status := cli.NewReporter()
-		err := deploy.Broker(&deployflags, restConfigProducer, status)
+		err = deploy.Broker(&deployflags, clientProducer, status)
 		if err == nil {
-			c, _ := restConfigProducer.ForCluster()
-			err = broker.WriteInfoToFile(c, deployflags.BrokerNamespace, ipsecSubmFile,
+			err = broker.WriteInfoToFile(config, deployflags.BrokerNamespace, ipsecSubmFile,
 				stringset.New(deployflags.BrokerSpec.Components...), deployflags.BrokerSpec.DefaultCustomDomains, status)
 		}
 
-		exit.OnError("Error deploying Broker", err)
+		exit.OnError("", err)
 	},
 }
 
