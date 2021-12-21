@@ -19,8 +19,6 @@ limitations under the License.
 package submarinerop
 
 import (
-	"fmt"
-
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/namespace"
 	lighthouseop "github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse"
@@ -42,7 +40,7 @@ func Ensure(reporter reporter.Interface, config *rest.Config, operatorNamespace,
 	if created, err := namespace.Ensure(config, operatorNamespace); err != nil {
 		return err
 	} else if created {
-		reporter.Success(fmt.Sprintf("Created operator namespace: %s", operatorNamespace))
+		reporter.Success("Created operator namespace: %s", operatorNamespace)
 	}
 
 	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {

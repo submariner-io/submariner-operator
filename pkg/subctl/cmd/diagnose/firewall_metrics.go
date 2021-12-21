@@ -102,7 +102,7 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 	}
 
 	if status.HasFailureMessages() {
-		status.End(cli.Failure)
+		status.EndWith(cli.Failure)
 		return false
 	}
 

@@ -176,7 +176,7 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 					info.Status.Start(fmt.Sprintf("Gathering %s %s", module, dataType))
 
 					if gatherFuncs[module](dataType, info) {
-						info.Status.End(info.Status.ResultFromMessages())
+						info.Status.EndWith(info.Status.ResultFromMessages())
 					}
 				}
 			}

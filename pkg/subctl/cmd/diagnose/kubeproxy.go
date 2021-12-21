@@ -70,7 +70,7 @@ func checkKubeProxyMode(cluster *cmd.Cluster) bool {
 	}
 
 	result := status.ResultFromMessages()
-	status.End(result)
+	status.EndWith(result)
 
 	return result != cli.Failure
 }

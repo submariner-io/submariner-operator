@@ -322,7 +322,7 @@ func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config) (stri
 		}
 	}
 
-	status.End(cli.Success)
+	status.EndWith(cli.Success)
 
 	return globalnetCIDR, nil
 }
@@ -413,7 +413,7 @@ func AssignGlobalnetIPs(globalnetInfo *Info, netconfig Config) (string, error) {
 		}
 	}
 
-	status.End(cli.Success)
+	status.EndWith(cli.Success)
 
 	return globalnetCIDR, nil
 }

@@ -43,7 +43,7 @@ func showAll(cluster *cmd.Cluster) bool {
 
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
-		status.End(cli.Warning)
+		status.EndWith(cli.Warning)
 
 		return true
 	}

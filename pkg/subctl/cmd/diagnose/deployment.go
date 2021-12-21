@@ -40,7 +40,7 @@ func init() {
 				if cluster.Submariner == nil {
 					status := cli.NewStatus()
 					status.Start(cmd.SubmMissingMessage)
-					status.End(cli.Warning)
+					status.EndWith(cli.Warning)
 					return true
 				}
 
@@ -98,7 +98,7 @@ func checkOverlappingCIDRs(cluster *cmd.Cluster) bool {
 	}
 
 	if status.HasFailureMessages() {
-		status.End(cli.Failure)
+		status.EndWith(cli.Failure)
 		return false
 	}
 
@@ -132,7 +132,7 @@ func checkPods(cluster *cmd.Cluster) bool {
 	checkPodsStatus(cluster.KubeClient, cmd.OperatorNamespace, status)
 
 	if status.HasFailureMessages() {
-		status.End(cli.Failure)
+		status.EndWith(cli.Failure)
 		return false
 	}
 

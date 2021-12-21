@@ -42,7 +42,7 @@ func (r *cliReporter) Succeeded(message string, args ...interface{}) {
 		r.status.QueueSuccessMessage(fmt.Sprintf(message, args...))
 	}
 
-	r.status.End(cli.Success)
+	r.status.EndWith(cli.Success)
 }
 
 func (r *cliReporter) Failed(err ...error) {
@@ -50,5 +50,5 @@ func (r *cliReporter) Failed(err ...error) {
 		r.status.QueueFailureMessage(err[0].Error())
 	}
 
-	r.status.End(cli.Failure)
+	r.status.EndWith(cli.Failure)
 }

@@ -47,7 +47,7 @@ func diagnoseAll(cluster *cmd.Cluster) bool {
 	status := cli.NewStatus()
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
-		status.End(cli.Warning)
+		status.EndWith(cli.Warning)
 
 		return success
 	}

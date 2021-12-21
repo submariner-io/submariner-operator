@@ -71,7 +71,7 @@ func showNetwork(cluster *cmd.Cluster) bool {
 	}
 
 	clusterNetwork.Show()
-	status.End(cli.Success)
+	status.EndWith(cli.Success)
 
 	return true
 }
