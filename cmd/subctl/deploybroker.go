@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
@@ -38,8 +39,7 @@ var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "Deploys the broker",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("deployBroker called")
-		err := deploy.Broker(&deployflags, restConfigProducer)
+		err := deploy.Broker(&deployflags, restConfigProducer, cli.NewReporter())
 		exit.OnError("Error deploying Broker", err)
 	},
 }

@@ -55,7 +55,7 @@ override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG)
 export DEPLOY_ARGS
-override UNIT_TEST_ARGS += cmd pkg/internal
+override UNIT_TEST_ARGS += cmd internal/cli internal/env internal/log
 override VALIDATE_ARGS += --skip-dirs pkg/client
 
 # Process extra flags from the `using=a,b,c` optional flag

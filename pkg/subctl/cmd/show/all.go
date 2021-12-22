@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
@@ -43,7 +43,7 @@ func showAll(cluster *cmd.Cluster) bool {
 
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
-		status.End(cli.Warning)
+		status.EndWith(cli.Warning)
 
 		return true
 	}

@@ -26,9 +26,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
@@ -176,7 +176,7 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 					info.Status.Start(fmt.Sprintf("Gathering %s %s", module, dataType))
 
 					if gatherFuncs[module](dataType, info) {
-						info.Status.End(info.Status.ResultFromMessages())
+						info.Status.EndWith(info.Status.ResultFromMessages())
 					}
 				}
 			}

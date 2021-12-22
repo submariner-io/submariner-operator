@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
@@ -102,7 +102,7 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 	}
 
 	if status.HasFailureMessages() {
-		status.End(cli.Failure)
+		status.EndWith(cli.Failure)
 		return false
 	}
 

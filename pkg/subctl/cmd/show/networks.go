@@ -21,9 +21,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
@@ -71,7 +71,7 @@ func showNetwork(cluster *cmd.Cluster) bool {
 	}
 
 	clusterNetwork.Show()
-	status.End(cli.Success)
+	status.EndWith(cli.Success)
 
 	return true
 }

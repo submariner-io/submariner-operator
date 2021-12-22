@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
@@ -98,7 +98,7 @@ func getGatewaysStatus(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	status.End(cli.Success)
+	status.EndWith(cli.Success)
 	printGateways(gwStatus)
 
 	return true
@@ -109,7 +109,7 @@ func showGateways(cluster *cmd.Cluster) bool {
 
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
-		status.End(cli.Warning)
+		status.EndWith(cli.Warning)
 
 		return true
 	}

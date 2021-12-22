@@ -24,9 +24,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
@@ -114,7 +114,7 @@ func getVersions(cluster *cmd.Cluster) bool {
 	utils.ExitOnError("Unable to get the Service-Discovery version", err)
 
 	printVersions(versions)
-	status.End(cli.Success)
+	status.EndWith(cli.Success)
 
 	return true
 }
@@ -124,7 +124,7 @@ func showVersions(cluster *cmd.Cluster) bool {
 
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
-		status.End(cli.Warning)
+		status.EndWith(cli.Warning)
 
 		return true
 	}

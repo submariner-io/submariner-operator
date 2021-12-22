@@ -23,7 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
@@ -60,7 +60,7 @@ func checkCNIConfig(cluster *cmd.Cluster) bool {
 
 	if cluster.Submariner == nil {
 		status.Start(cmd.SubmMissingMessage)
-		status.End(cli.Warning)
+		status.EndWith(cli.Warning)
 
 		return true
 	}
@@ -108,7 +108,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 	found, err := detectCalicoConfigMap(info.KubeClient)
 	if err != nil {
 		status.Start(fmt.Sprintf("Error trying to detect the Calico ConfigMap: %s", err))
-		status.End(cli.Failure)
+		status.EndWith(cli.Failure)
 
 		return false
 	}
@@ -163,7 +163,7 @@ func checkCalicoIPPoolsIfCalicoCNI(info *cmd.Cluster) bool {
 	checkGatewaySubnets(gateways, ippools, status)
 
 	result := status.ResultFromMessages()
-	status.End(result)
+	status.EndWith(result)
 
 	return result != cli.Failure
 }

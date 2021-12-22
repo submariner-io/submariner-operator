@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/submariner-io/submariner-operator/pkg/internal/env"
+	"github.com/submariner-io/submariner-operator/internal/env"
 )
 
 func TestIsTerminal(t *testing.T) {

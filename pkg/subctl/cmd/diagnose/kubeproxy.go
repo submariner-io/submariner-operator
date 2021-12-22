@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 )
@@ -70,7 +70,7 @@ func checkKubeProxyMode(cluster *cmd.Cluster) bool {
 	}
 
 	result := status.ResultFromMessages()
-	status.End(result)
+	status.EndWith(result)
 
 	return result != cli.Failure
 }

@@ -19,6 +19,17 @@ linters-settings:
       - fieldalignment
   lll:
     line-length: 140
+  wrapcheck:
+    ignoreSigs:
+      - .Error(
+      - .Errorf(
+      - errors.New(
+      - errors.Unwrap(
+      - .Wrap(
+      - .Wrapf(
+      - .WithMessage(
+      - .WithMessagef(
+      - .WithStack(
   wsl:
     # Separating explicit var declarations by blank lines seems excessive.
     allow-cuddle-declarations: true
