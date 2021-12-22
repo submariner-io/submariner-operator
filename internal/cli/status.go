@@ -210,24 +210,42 @@ func CheckForError(err error) Result {
 // Failure queues up a message, which will be displayed once
 // the status ends (using the failure format).
 func (s *Status) Failure(message string, a ...interface{}) {
-	if message != "" {
+	if message == "" {
+		return
+	}
+
+	if s.status != "" {
 		s.failureQueue = append(s.failureQueue, fmt.Sprintf(message, a...))
+	} else {
+		s.logger.V(0).Infof(s.failureFormat, message)
 	}
 }
 
 // Success queues up a message, which will be displayed once
 // the status ends (using the warning format).
 func (s *Status) Success(message string, a ...interface{}) {
-	if message != "" {
+	if message == "" {
+		return
+	}
+
+	if s.status != "" {
 		s.successQueue = append(s.successQueue, fmt.Sprintf(message, a...))
+	} else {
+		s.logger.V(0).Infof(s.successFormat, message)
 	}
 }
 
 // Warning queues up a message, which will be displayed once
 // the status ends (using the warning format).
 func (s *Status) Warning(message string, a ...interface{}) {
-	if message != "" {
+	if message == "" {
+		return
+	}
+
+	if s.status != "" {
 		s.warningQueue = append(s.warningQueue, fmt.Sprintf(message, a...))
+	} else {
+		s.logger.V(0).Infof(s.warningFormat, message)
 	}
 }
 
