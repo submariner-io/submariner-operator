@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package brokersecret
+package secret
 
 import (
 	"context"
@@ -31,7 +31,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func Ensure(config *rest.Config, namespace string, brokerSecret *v1.Secret) (*v1.Secret, error) {
+func Ensure(config *rest.Config, namespace string, secret *v1.Secret) (*v1.Secret, error) {
 	client, err := clientset.NewForConfig(config)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating client")
@@ -48,7 +48,7 @@ func Ensure(config *rest.Config, namespace string, brokerSecret *v1.Secret) (*v1
 		DeleteFunc: func(ctx context.Context, name string, options metav1.DeleteOptions) error {
 			return client.CoreV1().Secrets(namespace).Delete(ctx, name, options)
 		},
-	}, brokerSecret, metav1.CreateOptions{}, metav1.DeleteOptions{})
+	}, secret, metav1.CreateOptions{}, metav1.DeleteOptions{})
 
-	return object.(*v1.Secret), errors.Wrap(err, "error creating Broker secret")
+	return object.(*v1.Secret), errors.Wrap(err, "error creating secret")
 }
