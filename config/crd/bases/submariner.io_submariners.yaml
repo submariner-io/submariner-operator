@@ -62,6 +62,8 @@ spec:
                 type: integer
               ceIPSecPSK:
                 type: string
+              ceIPSecPSKSecret:
+                type: string
               ceIPSecPreferredServer:
                 type: boolean
               clusterCIDR:
@@ -124,6 +126,7 @@ spec:
             - brokerK8sRemoteNamespace
             - ceIPSecDebug
             - ceIPSecPSK
+            - ceIPSecPSKSecret
             - clusterCIDR
             - clusterID
             - debug
