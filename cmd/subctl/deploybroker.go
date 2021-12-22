@@ -19,10 +19,10 @@ package subctl
 
 import (
 	"fmt"
-	"github.com/submariner-io/submariner-operator/internal/cli"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"

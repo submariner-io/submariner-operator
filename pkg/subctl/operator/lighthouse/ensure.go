@@ -25,17 +25,17 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-func Ensure(reporter reporter.Interface, config *rest.Config, operatorNamespace string) (bool, error) {
+func Ensure(status reporter.Interface, config *rest.Config, operatorNamespace string) (bool, error) {
 	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
 		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {
-		reporter.Success("Created lighthouse service account and role")
+		status.Success("Created lighthouse service account and role")
 	}
 
 	if created, err := scc.Ensure(config, operatorNamespace); err != nil {
 		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {
-		reporter.Success("Updated the privileged SCC")
+		status.Success("Updated the privileged SCC")
 	}
 
 	return true, nil

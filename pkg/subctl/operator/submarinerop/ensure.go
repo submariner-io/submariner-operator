@@ -30,41 +30,41 @@ import (
 )
 
 // nolint:wrapcheck // No need to wrap errors here.
-func Ensure(reporter reporter.Interface, config *rest.Config, operatorNamespace, operatorImage string, debug bool) error {
+func Ensure(status reporter.Interface, config *rest.Config, operatorNamespace, operatorImage string, debug bool) error {
 	if created, err := crds.Ensure(config); err != nil {
 		return err
 	} else if created {
-		reporter.Success("Created operator CRDs")
+		status.Success("Created operator CRDs")
 	}
 
 	if created, err := namespace.Ensure(config, operatorNamespace); err != nil {
 		return err
 	} else if created {
-		reporter.Success("Created operator namespace: %s", operatorNamespace)
+		status.Success("Created operator namespace: %s", operatorNamespace)
 	}
 
 	if created, err := serviceaccount.Ensure(config, operatorNamespace); err != nil {
 		return err
 	} else if created {
-		reporter.Success("Created operator service account and role")
+		status.Success("Created operator service account and role")
 	}
 
 	if created, err := scc.Ensure(config, operatorNamespace); err != nil {
 		return err
 	} else if created {
-		reporter.Success("Updated the privileged SCC")
+		status.Success("Updated the privileged SCC")
 	}
 
-	if created, err := lighthouseop.Ensure(reporter, config, operatorNamespace); err != nil {
+	if created, err := lighthouseop.Ensure(status, config, operatorNamespace); err != nil {
 		return err
 	} else if created {
-		reporter.Success("Created Lighthouse service accounts and roles")
+		status.Success("Created Lighthouse service accounts and roles")
 	}
 
 	if created, err := deployment.Ensure(config, operatorNamespace, operatorImage, debug); err != nil {
 		return err
 	} else if created {
-		reporter.Success("Deployed the operator successfully")
+		status.Success("Deployed the operator successfully")
 	}
 
 	return nil

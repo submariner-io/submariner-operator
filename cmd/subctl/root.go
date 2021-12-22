@@ -26,9 +26,7 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 )
 
-var (
-	restConfigProducer = restconfig.NewProducer()
-)
+var restConfigProducer = restconfig.NewProducer()
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{

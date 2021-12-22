@@ -18,14 +18,14 @@ package cli
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"io"
 	"os"
 	"unicode"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/internal/env"
 	"github.com/submariner-io/submariner-operator/internal/log"
+	"github.com/submariner-io/submariner-operator/pkg/reporter"
 )
 
 type Result int
@@ -89,7 +89,7 @@ func StatusForLogger(l log.Logger) *Status {
 	return s
 }
 
-func NewReporter() reporter.Interface{
+func NewReporter() reporter.Interface {
 	return NewStatus()
 }
 
