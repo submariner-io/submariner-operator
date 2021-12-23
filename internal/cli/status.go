@@ -251,6 +251,9 @@ func (s *Status) Warning(message string, a ...interface{}) {
 
 func (s *Status) Error(err error, message string, args ...interface{}) error {
 	err = errors.Wrapf(err, message, args...)
+	if err == nil {
+		return nil
+	}
 
 	capitalizeFirst := func(str string) string {
 		for i, v := range str {

@@ -47,9 +47,6 @@ type BrokerOptions struct {
 
 var ValidComponents = []string{component.ServiceDiscovery, component.Connectivity}
 
-// Ignoring th cyclic complexity of Broker function because it is being refactored in
-// https://github.com/submariner-io/submariner-operator/pull/1717.
-//gocyclo:ignore
 func Broker(options *BrokerOptions, clientProducer client.Producer, status reporter.Interface) error {
 	componentSet := stringset.New(options.BrokerSpec.Components...)
 
