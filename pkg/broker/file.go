@@ -43,8 +43,7 @@ func WriteInfoToFile(restConfig *rest.Config, brokerNamespace, ipsecFile string,
 
 	kubeClient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
-		// TODO return reporter.Error(err, "error creating Kubernetes client")
-		return errors.Wrap(err, "error creating Kubernetes client")
+		return status.Error(err, "error creating Kubernetes client")
 	}
 
 	data, err := newDataFrom(kubeClient, brokerNamespace, ipsecFile)
@@ -57,8 +56,7 @@ func WriteInfoToFile(restConfig *rest.Config, brokerNamespace, ipsecFile string,
 
 	newFilename, err := backupIfExists(InfoFileName)
 	if err != nil {
-		// TODO return reporter.Error(err, "error backing up the broker file")
-		return errors.Wrap(err, "error backing up the broker file")
+		return status.Error(err, "error backing up the broker file")
 	}
 
 	if newFilename != "" {

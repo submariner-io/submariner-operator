@@ -43,20 +43,20 @@ var deployBroker = &cobra.Command{
 	Use:   "deploy-broker",
 	Short: "Deploys the broker",
 	Run: func(cmd *cobra.Command, args []string) {
+		status := cli.NewReporter()
+
 		config, err := restConfigProducer.ForCluster()
-		exit.OnError("Error creating REST config", err)
+		exit.OnError(status.Error(err, "Error creating REST config"))
 
 		clientProducer, err := client.NewProducerFromRestConfig(config)
-		exit.OnError("Error creating client producer", err)
+		exit.OnError(status.Error(err, "Error creating client producer"))
 
-		status := cli.NewReporter()
 		err = deploy.Broker(&deployflags, clientProducer, status)
-		if err == nil {
-			err = broker.WriteInfoToFile(config, deployflags.BrokerNamespace, ipsecSubmFile,
-				stringset.New(deployflags.BrokerSpec.Components...), deployflags.BrokerSpec.DefaultCustomDomains, status)
-		}
+		exit.OnError(err)
 
-		exit.OnError("", err)
+		err = broker.WriteInfoToFile(config, deployflags.BrokerNamespace, ipsecSubmFile,
+			stringset.New(deployflags.BrokerSpec.Components...), deployflags.BrokerSpec.DefaultCustomDomains, status)
+		exit.OnError(err)
 	},
 }
 
