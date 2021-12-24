@@ -27,16 +27,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	clientset "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/kubernetes"
 )
 
-func Ensure(config *rest.Config, namespace string, secret *v1.Secret) (*v1.Secret, error) {
-	client, err := clientset.NewForConfig(config)
-	if err != nil {
-		return nil, errors.Wrap(err, "error creating client")
-	}
-
+func Ensure(client kubernetes.Interface, namespace string, secret *v1.Secret) (*v1.Secret, error) {
 	// nolint:wrapcheck // No need to wrap errors here
 	object, err := util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {

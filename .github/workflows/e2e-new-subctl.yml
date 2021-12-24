@@ -25,6 +25,7 @@ jobs:
         run: |
           cmd/bin/subctl help
           cmd/bin/subctl deploy-broker --help
+          cmd/bin/subctl join --help
 
       - name: Deploy clusters
         run: |
@@ -33,3 +34,15 @@ jobs:
       - name: Deploy broker
         run: |
           cmd/bin/subctl deploy-broker --kubeconfig output/kubeconfigs/kind-config-cluster1 --broker-namespace newnamespace
+
+      - name: Label gateway nodes
+        run: |
+          kubectl --kubeconfig output/kubeconfigs/kind-config-cluster1 label node cluster1-worker submariner.io/gateway=true --overwrite
+          kubectl --kubeconfig output/kubeconfigs/kind-config-cluster2 label node cluster2-worker submariner.io/gateway=true --overwrite
+
+      - name: Join clusters
+        run: |
+          cmd/bin/subctl join --kubeconfig output/kubeconfigs/kind-config-cluster1 broker-info.subm --clusterid cluster1 --natt=false \
+            --servicecidr 100.1.0.0/16 --clustercidr 10.1.0.0/16
+          cmd/bin/subctl join --kubeconfig output/kubeconfigs/kind-config-cluster2 broker-info.subm --clusterid cluster2 --natt=false \
+            --servicecidr 100.2.0.0/16 --clustercidr 10.2.0.0/16

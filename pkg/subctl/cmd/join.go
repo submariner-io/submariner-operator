@@ -220,10 +220,10 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	clientConfig, err := restConfigProducer.ClientConfig().ClientConfig()
 	utils.ExitOnError("Error connecting to the target cluster", err)
 
-	checkRequirements(clientConfig)
-
 	clientProducer, err := client.NewProducerFromRestConfig(clientConfig)
 	utils.ExitOnError("Error creating client producer", err)
+
+	checkRequirements(clientProducer.ForKubernetes())
 
 	if subctlData.IsConnectivityEnabled() && labelGateway {
 		err := handleNodeLabels(clientConfig)
@@ -279,16 +279,19 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	utils.ExitOnError("Error creating SA for cluster", err)
 
 	// We need to connect to the broker in all cases
-	brokerSecret, err := secret.Ensure(clientConfig, OperatorNamespace, populateBrokerSecret(subctlData))
+	brokerSecret, err := secret.Ensure(clientProducer.ForKubernetes(), OperatorNamespace, populateBrokerSecret(subctlData))
+
 	utils.ExitOnError("Error creating broker secret for cluster", err)
 
 	if subctlData.IsConnectivityEnabled() {
 		status.Start("Deploying Submariner")
 
-		pskSecret, err := secret.Ensure(clientConfig, OperatorNamespace, populatePSKSecret(subctlData))
+		pskSecret, err := secret.Ensure(clientProducer.ForKubernetes(), OperatorNamespace, populatePSKSecret(subctlData))
+
 		utils.ExitOnError("Error creating PSK secret for cluster", err)
 
-		err = submarinercr.Ensure(clientConfig, OperatorNamespace, populateSubmarinerSpec(subctlData, brokerSecret, pskSecret, netconfig))
+		err = submarinercr.Ensure(clientProducer.ForOperator(), OperatorNamespace, populateSubmarinerSpec(subctlData,
+			brokerSecret, pskSecret, netconfig))
 		if err == nil {
 			status.QueueSuccessMessage("Submariner is up and running")
 			status.EndWith(cli.Success)
@@ -300,7 +303,7 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 		utils.ExitOnError("Error deploying Submariner", err)
 	} else if subctlData.IsServiceDiscoveryEnabled() {
 		status.Start("Deploying service discovery only")
-		err = servicediscoverycr.Ensure(clientConfig, OperatorNamespace, populateServiceDiscoverySpec(subctlData, brokerSecret))
+		err = servicediscoverycr.Ensure(clientProducer.ForOperator(), OperatorNamespace, populateServiceDiscoverySpec(subctlData, brokerSecret))
 		if err == nil {
 			status.QueueSuccessMessage("Service discovery is up and running")
 			status.EndWith(cli.Success)
@@ -312,8 +315,8 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	}
 }
 
-func checkRequirements(clientConfig *rest.Config) {
-	_, failedRequirements, err := version.CheckRequirements(clientConfig)
+func checkRequirements(k8sclient kubernetes.Interface) {
+	_, failedRequirements, err := version.CheckRequirements(k8sclient)
 	// We display failed requirements even if an error occurred
 	if len(failedRequirements) > 0 {
 		fmt.Println("The target cluster fails to meet Submariner's requirements:")

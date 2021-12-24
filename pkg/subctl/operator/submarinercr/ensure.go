@@ -25,17 +25,16 @@ import (
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	operatorclient "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
 )
 
 const (
 	SubmarinerName = "submariner"
 )
 
-func Ensure(config *rest.Config, namespace string, submarinerSpec *submariner.SubmarinerSpec) error {
+func Ensure(client operatorclient.Interface, namespace string, submarinerSpec *submariner.SubmarinerSpec) error {
 	submarinerCR := &submariner.Submariner{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: SubmarinerName,
@@ -43,15 +42,10 @@ func Ensure(config *rest.Config, namespace string, submarinerSpec *submariner.Su
 		Spec: *submarinerSpec,
 	}
 
-	client, err := submarinerClientset.NewForConfig(config)
-	if err != nil {
-		return errors.Wrap(err, "error getting submariner client")
-	}
-
 	propagationPolicy := metav1.DeletePropagationForeground
 
 	// nolint:wrapcheck // No need to wrap these.
-	_, err = util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
+	_, err := util.CreateAnew(context.TODO(), &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
 			return client.SubmarinerV1alpha1().Submariners(namespace).Get(ctx, name, options)
 		},

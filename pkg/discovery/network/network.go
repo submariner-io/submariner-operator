@@ -24,7 +24,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	operatorclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
@@ -63,7 +63,7 @@ func (cn *ClusterNetwork) IsComplete() bool {
 	return cn != nil && len(cn.ServiceCIDRs) > 0 && len(cn.PodCIDRs) > 0
 }
 
-func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submClient submarinerclientset.Interface,
+func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, operatorClient operatorclientset.Interface,
 	operatorNamespace string) (*ClusterNetwork, error) {
 	discovery, err := networkPluginsDiscovery(dynClient, clientSet)
 	if err != nil {
@@ -72,7 +72,7 @@ func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, submC
 
 	if discovery != nil {
 		// TODO: The other branch of this if will not try to find the globalCIDRs
-		globalCIDR, _ := getGlobalCIDRs(submClient, operatorNamespace)
+		globalCIDR, _ := getGlobalCIDRs(operatorClient, operatorNamespace)
 		discovery.GlobalCIDR = globalCIDR
 
 		if discovery.IsComplete() {
@@ -135,12 +135,12 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 	return nil, nil
 }
 
-func getGlobalCIDRs(submClient submarinerclientset.Interface, operatorNamespace string) (string, error) {
-	if submClient == nil {
+func getGlobalCIDRs(operatorClient operatorclientset.Interface, operatorNamespace string) (string, error) {
+	if operatorClient == nil {
 		return "", nil
 	}
 
-	existingCfg, err := submClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(
+	existingCfg, err := operatorClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(
 		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
 	if err != nil {
 		return "", errors.Wrap(err, "error retrieving Submariner resource")

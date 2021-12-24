@@ -31,6 +31,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/util/retry"
 )
 
 type Info struct {
@@ -459,4 +460,40 @@ func ValidateExistingGlobalNetworks(kubeClient kubernetes.Interface, namespace s
 	}
 
 	return nil
+}
+
+func AllocateAndUpdateGlobalCIDRConfigMap(clusterID string, brokerAdminClientset *kubernetes.Clientset, brokerNamespace string,
+	netconfig *Config) error {
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		globalnetInfo, globalnetConfigMap, err := GetGlobalNetworks(brokerAdminClientset, brokerNamespace)
+		if err != nil {
+			return errors.Wrap(err, "error reading Global network details on Broker")
+		}
+
+		netconfig.GlobalnetCIDR, err = ValidateGlobalnetConfiguration(globalnetInfo, *netconfig)
+		if err != nil {
+			return errors.Wrap(err, "error validating Globalnet configuration")
+		}
+
+		if globalnetInfo.Enabled {
+			netconfig.GlobalnetCIDR, err = AssignGlobalnetIPs(globalnetInfo, *netconfig)
+			if err != nil {
+				return errors.Wrap(err, "error assigning Globalnet IPs")
+			}
+
+			if globalnetInfo.CidrInfo[clusterID] == nil ||
+				globalnetInfo.CidrInfo[clusterID].GlobalCIDRs[0] != netconfig.GlobalnetCIDR {
+				var newClusterInfo broker.ClusterInfo
+				newClusterInfo.ClusterID = clusterID
+				newClusterInfo.GlobalCidr = []string{netconfig.GlobalnetCIDR}
+
+				err = broker.UpdateGlobalnetConfigMap(brokerAdminClientset, brokerNamespace, globalnetConfigMap, newClusterInfo)
+				return errors.Wrap(err, "error updating Globalnet ConfigMap")
+			}
+		}
+
+		return nil
+	})
+
+	return retryErr // nolint:wrapcheck // No need to wrap here
 }
