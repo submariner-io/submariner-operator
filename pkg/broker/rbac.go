@@ -33,6 +33,10 @@ const (
 	submarinerBrokerClusterDefaultSA = "submariner-k8s-broker-client" // for backwards compatibility with documentation
 )
 
+func ClusterSAName(clusterID string) string {
+	return fmt.Sprintf(submarinerBrokerClusterSAFmt, clusterID)
+}
+
 func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
 	sa := &v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
@@ -100,6 +104,11 @@ func NewBrokerClusterRole() *rbacv1.Role {
 				Verbs:     []string{"create", "get", "list", "watch", "patch", "update", "delete"},
 				APIGroups: []string{"discovery.k8s.io"},
 				Resources: []string{"endpointslices", "endpointslices/restricted"},
+			},
+			{
+				Verbs:     []string{"get", "list"},
+				APIGroups: []string{""},
+				Resources: []string{"secrets"},
 			},
 		},
 	}

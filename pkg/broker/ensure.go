@@ -21,7 +21,6 @@ package broker
 import (
 	"context"
 	goerrors "errors"
-	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -109,7 +108,7 @@ func createBrokerClusterRoleAndDefaultSA(kubeClient kubernetes.Interface, namesp
 
 // CreateSAForCluster creates a new SA, and binds it to the submariner cluster role.
 func CreateSAForCluster(kubeClient kubernetes.Interface, clusterID, namespace string) (*v1.Secret, error) {
-	saName := fmt.Sprintf(submarinerBrokerClusterSAFmt, clusterID)
+	saName := ClusterSAName(clusterID)
 
 	_, err := CreateNewBrokerSA(kubeClient, saName, namespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
