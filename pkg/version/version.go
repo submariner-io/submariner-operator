@@ -25,7 +25,6 @@ import (
 
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 var Version = "devel"
@@ -40,15 +39,10 @@ func PrintSubctlVersion(w io.Writer) {
 	fmt.Fprintf(w, "subctl version: %s\n", Version)
 }
 
-func CheckRequirements(config *rest.Config) (string, []string, error) {
+func CheckRequirements(k8sclient kubernetes.Interface) (string, []string, error) {
 	failedRequirements := []string{}
 
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return "", failedRequirements, errors.WithMessage(err, "error creating API server client")
-	}
-
-	serverVersion, err := clientset.Discovery().ServerVersion()
+	serverVersion, err := k8sclient.Discovery().ServerVersion()
 	if err != nil {
 		return "", failedRequirements, errors.WithMessage(err, "error obtaining API server version")
 	}
