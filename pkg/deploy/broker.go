@@ -108,7 +108,7 @@ func deploy(options *BrokerOptions, status reporter.Interface, clientProducer cl
 
 	status.Start("Deploying the broker")
 
-	err = brokercr.Ensure(clientProducer.ForSubmariner(), options.BrokerNamespace, options.BrokerSpec)
+	err = brokercr.Ensure(clientProducer.ForOperator(), options.BrokerNamespace, options.BrokerSpec)
 	if err != nil {
 		return status.Error(err, "Broker deployment failed")
 	}
