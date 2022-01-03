@@ -20,7 +20,8 @@ package client
 
 import (
 	"github.com/pkg/errors"
-	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	operatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	submarinerClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	apiextClient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -39,6 +40,11 @@ func NewProducerFromRestConfig(config *rest.Config) (Producer, error) {
 	p.DynamicClient, err = dynamic.NewForConfig(config)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating dynamic client")
+	}
+
+	p.OperatorClient, err = operatorClientset.NewForConfig(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "error creating operator client")
 	}
 
 	p.SubmarinerClient, err = submarinerClientset.NewForConfig(config)

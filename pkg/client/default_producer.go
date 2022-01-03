@@ -19,7 +19,8 @@ limitations under the License.
 package client
 
 import (
-	submarinerclient "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	operatorclient "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	submarinerclient "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	apiextclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -29,6 +30,7 @@ type DefaultProducer struct {
 	CRDClient        apiextclient.Interface
 	KubeClient       kubernetes.Interface
 	DynamicClient    dynamic.Interface
+	OperatorClient   operatorclient.Interface
 	SubmarinerClient submarinerclient.Interface
 }
 
@@ -46,4 +48,8 @@ func (p *DefaultProducer) ForDynamic() dynamic.Interface {
 
 func (p *DefaultProducer) ForSubmariner() submarinerclient.Interface {
 	return p.SubmarinerClient
+}
+
+func (p *DefaultProducer) ForOperator() operatorclient.Interface {
+	return p.OperatorClient
 }

@@ -129,7 +129,7 @@ var deployBroker = &cobra.Command{
 		utils.ExitOnError("Error deploying the operator", err)
 
 		status.Start("Deploying the broker")
-		err = brokercr.Ensure(clientProducer.ForSubmariner(), brokerNamespace, populateBrokerSpec())
+		err = brokercr.Ensure(clientProducer.ForOperator(), brokerNamespace, populateBrokerSpec())
 		if err == nil {
 			status.QueueSuccessMessage("The broker has been deployed")
 			status.EndWith(cli.Success)
