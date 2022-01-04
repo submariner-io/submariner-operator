@@ -40,7 +40,8 @@ type SubmarinerSpec struct {
 	BrokerK8sSecret          string               `json:"brokerK8sSecret,omitempty"`
 	BrokerK8sRemoteNamespace string               `json:"brokerK8sRemoteNamespace"`
 	CableDriver              string               `json:"cableDriver,omitempty"`
-	CeIPSecPSK               string               `json:"ceIPSecPSK"`
+	CeIPSecPSK               string               `json:"ceIPSecPSK,omitempty"`
+	CeIPSecPSKSecret         string               `json:"ceIPSecPSKSecret,omitempty"`
 	ClusterCIDR              string               `json:"clusterCIDR"`
 	ClusterID                string               `json:"clusterID"`
 	ColorCodes               string               `json:"colorCodes,omitempty"`
