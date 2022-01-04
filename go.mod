@@ -35,7 +35,7 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.2.1
-	github.com/submariner-io/admiral v0.12.0-m1.0.20211209141450-f39009d93c9d
+	github.com/submariner-io/admiral v0.12.0-m1.0.20211216212848-d630c38c2fd2
 	github.com/submariner-io/cloud-prepare v0.12.0-m1
 	github.com/submariner-io/lighthouse v0.12.0-m1
 	github.com/submariner-io/shipyard v0.12.0-m1
