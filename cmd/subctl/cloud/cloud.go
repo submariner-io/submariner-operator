@@ -16,27 +16,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cleanup
+package cloud
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/cmd/subctl"
+	"github.com/submariner-io/submariner-operator/cmd/subctl/cloud/cleanup"
+	"github.com/submariner-io/submariner-operator/cmd/subctl/cloud/prepare"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 )
 
-var parentRestConfigProducer *restconfig.Producer
-
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "cleanup",
-		Short: "Clean up the cloud",
-		Long:  `This command cleans up the cloud after Submariner uninstallation.`,
+var (
+	cloudCmd = &cobra.Command{
+		Use:   "cloud",
+		Short: "Cloud operations",
+		Long:  `This command contains cloud operations related to Submariner installation.`,
 	}
-	parentRestConfigProducer = restConfigProducer
+	restConfigProducer restconfig.Producer
+)
 
-	cmd.AddCommand(newAWSCleanupCommand())
-	cmd.AddCommand(newGCPCleanupCommand())
-	cmd.AddCommand(newGenericCleanupCommand())
-
-	return cmd
+func init() {
+	cloudCmd.AddCommand(prepare.NewCommand(&restConfigProducer))
+	cloudCmd.AddCommand(cleanup.NewCommand(&restConfigProducer))
+	restConfigProducer.AddKubeContextFlag(cloudCmd)
+	subctl.AddToRootCommand(cloudCmd)
 }

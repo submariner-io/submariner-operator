@@ -25,21 +25,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-func newGenericPrepareCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "generic",
-		Short: "Prepares a generic cluster for Submariner",
-		Long:  "This command labels the required number of gateway nodes for Submariner installation.",
-		Run:   prepareGenericCluster,
-	}
-
-	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
-		"Number of gateways to deploy")
-
-	return cmd
-}
-
-func prepareGenericCluster(cmd *cobra.Command, args []string) {
+func GenericCluster(cmd *cobra.Command, args []string) {
 	// nolint:wrapcheck // No need to wrap errors here.
 	err := generic.RunOnK8sCluster(
 		*parentRestConfigProducer,

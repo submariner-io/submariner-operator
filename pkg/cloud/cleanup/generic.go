@@ -21,24 +21,14 @@ package cleanup
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/cmd/subctl/cloud/cleanup"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/generic"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-func newGenericCleanupCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "generic",
-		Short: "Cleans up a cluster after Submariner uninstallation",
-		Long:  "This command removes the labels from gateway nodes after Submariner uninstallation.",
-		Run:   cleanupGenericCluster,
-	}
-
-	return cmd
-}
-
-func cleanupGenericCluster(cmd *cobra.Command, args []string) {
+func GenericCluster(cmd *cobra.Command, args []string) {
 	err := generic.RunOnK8sCluster(
-		*parentRestConfigProducer,
+		*cleanup.parentRestConfigProducer,
 		func(gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			return gwDeployer.Cleanup(reporter) // nolint:wrapcheck // No need to wrap here
 		})

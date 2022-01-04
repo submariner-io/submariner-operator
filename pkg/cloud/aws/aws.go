@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// This package provides common functionality to run cloud prepare/cleanup on AWS.
+// Package aws provides common functionality to run cloud prepare/cleanup on AWS.
 package aws
 
 import (
@@ -30,7 +30,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	cloudprepareaws "github.com/submariner-io/cloud-prepare/pkg/aws"
@@ -54,23 +53,6 @@ var (
 	credentialsFile string
 	ocpMetadataFile string
 )
-
-// AddAWSFlags adds basic flags needed by AWS.
-func AddAWSFlags(command *cobra.Command) {
-	command.Flags().StringVar(&infraID, infraIDFlag, "", "AWS infra ID")
-	command.Flags().StringVar(&region, regionFlag, "", "AWS region")
-	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
-		"OCP metadata.json file (or directory containing it) to read AWS infra ID and region from (Takes precedence over the flags)")
-	command.Flags().StringVar(&profile, "profile", "default", "AWS profile to use for credentials")
-
-	dirname, err := os.UserHomeDir()
-	if err != nil {
-		utils.ExitOnError("failed to find home directory", err)
-	}
-
-	defaultCredentials := filepath.FromSlash(fmt.Sprintf("%s/.aws/credentials", dirname))
-	command.Flags().StringVar(&credentialsFile, "credentials", defaultCredentials, "AWS credentials configuration file")
-}
 
 // RunOnAWS runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.

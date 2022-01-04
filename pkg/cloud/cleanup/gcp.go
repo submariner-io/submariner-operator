@@ -21,26 +21,13 @@ package cleanup
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/cmd/subctl/cloud/cleanup"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/gcp"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-// newGCPCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func newGCPCleanupCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "gcp",
-		Short: "Clean up a GCP cloud",
-		Long:  "This command cleans up an installer-provisioned infrastructure (IPI) on GCP-based cloud after Submariner uninstallation.",
-		Run:   cleanupGCP,
-	}
-
-	gcp.AddGCPFlags(cmd)
-
-	return cmd
-}
-
-func cleanupGCP(cmd *cobra.Command, args []string) {
-	err := gcp.RunOnGCP(*parentRestConfigProducer, "", false,
+func GCP(cmd *cobra.Command, args []string) {
+	err := gcp.RunOnGCP(*cleanup.parentRestConfigProducer, "", false,
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			err := gwDeployer.Cleanup(reporter)

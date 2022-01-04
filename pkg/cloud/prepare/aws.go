@@ -25,24 +25,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func newAWSPrepareCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "aws",
-		Short: "Prepare an OpenShift AWS cloud",
-		Long:  "This command prepares an OpenShift installer-provisioned infrastructure (IPI) on AWS cloud for Submariner installation.",
-		Run:   prepareAws,
-	}
-
-	aws.AddAWSFlags(cmd)
-	cmd.Flags().StringVar(&awsGWInstanceType, "gateway-instance", "c5d.large", "Type of gateways instance machine")
-	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
-		"Number of dedicated gateways to deploy (Set to `0` when using --load-balancer mode)")
-
-	return cmd
-}
-
-func prepareAws(cmd *cobra.Command, args []string) {
+func Aws(cmd *cobra.Command, args []string) {
 	gwPorts := []api.PortSpec{
 		{Port: nattPort, Protocol: "udp"},
 		{Port: natDiscoveryPort, Protocol: "udp"},
