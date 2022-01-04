@@ -37,9 +37,9 @@ import (
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/secret"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokersecret"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/servicediscoverycr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
@@ -279,13 +279,16 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	utils.ExitOnError("Error creating SA for cluster", err)
 
 	// We need to connect to the broker in all cases
-	brokerSecret, err := brokersecret.Ensure(clientConfig, OperatorNamespace, populateBrokerSecret(subctlData))
+	brokerSecret, err := secret.Ensure(clientConfig, OperatorNamespace, populateBrokerSecret(subctlData))
 	utils.ExitOnError("Error creating broker secret for cluster", err)
 
 	if subctlData.IsConnectivityEnabled() {
 		status.Start("Deploying Submariner")
 
-		err = submarinercr.Ensure(clientConfig, OperatorNamespace, populateSubmarinerSpec(subctlData, brokerSecret, netconfig))
+		pskSecret, err := secret.Ensure(clientConfig, OperatorNamespace, populatePSKSecret(subctlData))
+		utils.ExitOnError("Error creating PSK secret for cluster", err)
+
+		err = submarinercr.Ensure(clientConfig, OperatorNamespace, populateSubmarinerSpec(subctlData, brokerSecret, pskSecret, netconfig))
 		if err == nil {
 			status.QueueSuccessMessage("Submariner is up and running")
 			status.EndWith(cli.Success)
@@ -472,7 +475,11 @@ func populateBrokerSecret(subctlData *datafile.SubctlData) *v1.Secret {
 	}
 }
 
-func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret *v1.Secret,
+func populatePSKSecret(subctlData *datafile.SubctlData) *v1.Secret {
+	return subctlData.IPSecPSK
+}
+
+func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSecret *v1.Secret,
 	netconfig globalnet.Config) *submariner.SubmarinerSpec {
 	brokerURL := subctlData.BrokerURL
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
@@ -510,6 +517,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret *v1.Se
 		CeIPSecForceUDPEncaps:    forceUDPEncaps,
 		CeIPSecPreferredServer:   preferredServer,
 		CeIPSecPSK:               base64.StdEncoding.EncodeToString(subctlData.IPSecPSK.Data["psk"]),
+		CeIPSecPSKSecret:         pskSecret.ObjectMeta.Name,
 		BrokerK8sCA:              base64.StdEncoding.EncodeToString(brokerSecret.Data["ca.crt"]),
 		BrokerK8sRemoteNamespace: string(brokerSecret.Data["namespace"]),
 		BrokerK8sApiServerToken:  string(brokerSecret.Data["token"]),

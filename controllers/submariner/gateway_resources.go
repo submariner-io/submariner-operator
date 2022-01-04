@@ -20,6 +20,7 @@ package submariner
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -133,6 +134,20 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 		})
 	}
 
+	if cr.Spec.CeIPSecPSKSecret != "" {
+		// We've got a PSK secret, mount it where the gateway expects it
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      "psksecret",
+			MountPath: fmt.Sprintf("/var/run/secrets/submariner.io/%s", cr.Spec.CeIPSecPSKSecret),
+			ReadOnly:  true,
+		})
+
+		volumes = append(volumes, corev1.Volume{
+			Name:         "psksecret",
+			VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: cr.Spec.CeIPSecPSKSecret}},
+		})
+	}
+
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,
@@ -197,6 +212,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 						{Name: broker.EnvironmentVariable("Insecure"), Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
 						{Name: broker.EnvironmentVariable("Secret"), Value: cr.Spec.BrokerK8sSecret},
 						{Name: "CE_IPSEC_PSK", Value: cr.Spec.CeIPSecPSK},
+						{Name: "CE_IPSEC_PSKSECRET", Value: cr.Spec.CeIPSecPSKSecret},
 						{Name: "CE_IPSEC_DEBUG", Value: strconv.FormatBool(cr.Spec.CeIPSecDebug)},
 						{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
 						{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
