@@ -31,13 +31,13 @@ import (
 )
 
 const (
-	BrokerName = "submariner-broker"
+	Name = "submariner-broker"
 )
 
 func Ensure(client submarinerClientset.Interface, namespace string, brokerSpec submariner.BrokerSpec) error {
 	brokerCR := &submariner.Broker{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      BrokerName,
+			Name:      Name,
 			Namespace: namespace,
 		},
 		Spec: brokerSpec,
