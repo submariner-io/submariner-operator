@@ -52,7 +52,7 @@ func Ensure(restConfig *rest.Config, namespace, operatorName, image string, debu
 		imagePullPolicy = v1.PullIfNotPresent
 	}
 
-	command := []string{operatorName, "-alsologtostderr"}
+	command := []string{operatorName}
 	if debug {
 		command = append(command, "-v=3")
 	} else {

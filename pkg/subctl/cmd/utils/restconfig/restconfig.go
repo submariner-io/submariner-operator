@@ -89,7 +89,8 @@ func ForBroker(submariner *v1alpha1.Submariner, serviceDisc *v1alpha1.ServiceDis
 	if submariner != nil {
 		// Try to authorize against the submariner Cluster resource as we know the CRD should exist and the credentials
 		// should allow read access.
-		restConfig, _, err := resource.GetAuthorizedRestConfig(submariner.Spec.BrokerK8sApiServer, submariner.Spec.BrokerK8sApiServerToken,
+		restConfig, _, err := resource.GetAuthorizedRestConfigFromData(
+			submariner.Spec.BrokerK8sApiServer, submariner.Spec.BrokerK8sApiServerToken,
 			submariner.Spec.BrokerK8sCA, &rest.TLSClientConfig{}, schema.GroupVersionResource{
 				Group:    subv1.SchemeGroupVersion.Group,
 				Version:  subv1.SchemeGroupVersion.Version,
@@ -102,7 +103,8 @@ func ForBroker(submariner *v1alpha1.Submariner, serviceDisc *v1alpha1.ServiceDis
 	if serviceDisc != nil {
 		// Try to authorize against the ServiceImport resource as we know the CRD should exist and the credentials
 		// should allow read access.
-		restConfig, _, err := resource.GetAuthorizedRestConfig(serviceDisc.Spec.BrokerK8sApiServer, serviceDisc.Spec.BrokerK8sApiServerToken,
+		restConfig, _, err := resource.GetAuthorizedRestConfigFromData(
+			serviceDisc.Spec.BrokerK8sApiServer, serviceDisc.Spec.BrokerK8sApiServerToken,
 			serviceDisc.Spec.BrokerK8sCA, &rest.TLSClientConfig{}, schema.GroupVersionResource{
 				Group:    "multicluster.x-k8s.io",
 				Version:  "v1alpha1",

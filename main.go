@@ -21,6 +21,7 @@ package main
 import (
 	"context"
 	goerrors "errors"
+	"flag"
 	"fmt"
 	"os"
 	"runtime"
@@ -32,6 +33,7 @@ import (
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/submariner-operator/api"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers"
@@ -48,8 +50,6 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog"
-	"k8s.io/klog/klogr"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -67,6 +67,7 @@ var (
 var (
 	scheme = apiruntime.NewScheme()
 	log    = logf.Log.WithName("cmd")
+	help   = false
 )
 
 func printVersion() {
@@ -84,9 +85,21 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
+func init() {
+	flag.BoolVar(&help, "help", help, "Print usage options")
+}
+
 func main() {
-	klog.InitFlags(nil)
-	logf.SetLogger(klogr.New())
+	kzerolog.AddFlags(nil)
+	flag.Parse()
+
+	if help {
+		flag.PrintDefaults()
+		return
+	}
+
+	kzerolog.InitK8sLogging()
+	log.Info("Starting submariner-operator")
 
 	printVersion()
 
