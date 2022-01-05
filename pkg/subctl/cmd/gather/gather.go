@@ -29,11 +29,11 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/brokercr"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -266,7 +266,7 @@ func gatherBroker(dataType string, info Info) bool {
 			}
 
 			_, err = submarinerClient.SubmarinerV1alpha1().Brokers(cmd.OperatorNamespace).Get(
-				context.TODO(), brokercr.BrokerName, metav1.GetOptions{})
+				context.TODO(), brokercr.Name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return false
 			}
