@@ -46,7 +46,7 @@ func Ensure(kubeClient kubernetes.Interface, namespace, operatorName, image stri
 		imagePullPolicy = v1.PullIfNotPresent
 	}
 
-	command := []string{operatorName, "-alsologtostderr"}
+	command := []string{operatorName}
 	if debug {
 		command = append(command, "-v=3")
 	} else {
