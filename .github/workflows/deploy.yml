@@ -1,0 +1,57 @@
+---
+name: Deploy
+
+on:
+  pull_request:
+
+jobs:
+  deploy:
+    name: Deploy
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        globalnet: ['', 'globalnet']
+        deploytool: ['operator', 'bundle', 'ocm']
+        lighthouse: ['']
+        ovn: ['']
+        include:
+          - ovn: ovn
+          - deploytool: operator
+            lighthouse: lighthouse
+          - deploytool: bundle
+            lighthouse: lighthouse
+        exclude:
+          # OCM does not support globalnet at this moment
+          - deploytool: ocm
+            globalnet: globalnet
+    steps:
+      - name: Set up kernel, increase the inotify settings
+        if: ${{ matrix.deploytool == 'bundle' || matrix.deploytool == 'ocm' }}
+        run: sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
+
+      - name: Reclaim space on GHA host (if the job needs it)
+        if: ${{ matrix.ovn != '' }}
+        run: rm -rf /usr/share/dotnet
+
+      - name: Check out the repository
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        with:
+          submodules: true
+
+      - name: Fetch all git tags
+        run: git fetch origin +refs/tags/*:refs/tags/*
+
+      - name: Deploy clusters and Submariner
+        env:
+          CLUSTERS_ARGS: --timeout 1m
+          DEPLOY_ARGS: --timeout 2m
+        run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.lighthouse }} ${{ matrix.ovn }}"
+
+      - name: Post mortem
+        if: failure()
+        uses: ./gh-actions/post-mortem
+
+      - name: Clean up deployment
+        run: make clean-clusters
