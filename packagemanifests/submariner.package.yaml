@@ -5,5 +5,7 @@ channels:
   name: alpha-0.10
 - currentCSV: submariner.v0.11.0
   name: alpha-0.11
-defaultChannel: alpha-0.11
+- currentCSV: submariner.v0.12.0
+  name: alpha-0.12
+defaultChannel: alpha-0.12
 packageName: submariner
