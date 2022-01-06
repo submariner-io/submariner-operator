@@ -25,10 +25,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -80,7 +80,7 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 	}
 
 	// Broker CRDs
-	crdUpdater := crdutils.NewFromControllerClient(r.Client)
+	crdUpdater := crd.UpdaterFromControllerClient(r.Client)
 
 	err = gateway.Ensure(crdUpdater)
 	if err != nil {

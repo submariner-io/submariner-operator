@@ -22,16 +22,11 @@ package utils
 import (
 	"context"
 
-	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientset "k8s.io/client-go/kubernetes"
 )
@@ -48,30 +43,6 @@ func CreateOrUpdateClusterRole(ctx context.Context, clientSet clientset.Interfac
 func CreateOrUpdateClusterRoleBinding(
 	ctx context.Context, clientSet clientset.Interface, clusterRoleBinding *rbacv1.ClusterRoleBinding) (bool, error) {
 	return CreateOrUpdate(ctx, resource.ForClusterRoleBinding(clientSet), clusterRoleBinding)
-}
-
-func CreateOrUpdateCRD(ctx context.Context, updater crdutils.CRDUpdater, crd *apiextensions.CustomResourceDefinition) (bool, error) {
-	return CreateOrUpdate(ctx, &resource.InterfaceFuncs{
-		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
-			return updater.Get(ctx, name, options)
-		},
-		CreateFunc: func(ctx context.Context, obj runtime.Object, options metav1.CreateOptions) (runtime.Object, error) {
-			return updater.Create(ctx, obj.(*apiextensions.CustomResourceDefinition), options)
-		},
-		UpdateFunc: func(ctx context.Context, obj runtime.Object, options metav1.UpdateOptions) (runtime.Object, error) {
-			return updater.Update(ctx, obj.(*apiextensions.CustomResourceDefinition), options)
-		},
-	}, crd)
-}
-
-func CreateOrUpdateEmbeddedCRD(ctx context.Context, updater crdutils.CRDUpdater, crdYaml string) (bool, error) {
-	crd := &apiextensions.CustomResourceDefinition{}
-
-	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
-		return false, errors.Wrap(err, "error extracting embedded CRD")
-	}
-
-	return CreateOrUpdateCRD(ctx, updater, crd)
 }
 
 func CreateOrUpdateDeployment(

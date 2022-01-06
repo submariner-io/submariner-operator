@@ -33,10 +33,10 @@ import (
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -253,7 +253,7 @@ func getImagePath(submariner *submopv1a1.Submariner, imageName, componentName st
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Set up the CRDs we need
-	crdUpdater, err := crdutils.NewFromRestConfig(mgr.GetConfig())
+	crdUpdater, err := crd.UpdaterFromRestConfig(mgr.GetConfig())
 	if err != nil {
 		return errors.Wrap(err, "error creating CRDUpdater")
 	}

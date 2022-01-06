@@ -38,9 +38,9 @@ import (
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/metrics"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 	v1 "k8s.io/api/core/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -139,7 +139,7 @@ func main() {
 	log.Info("Registering Components.")
 
 	// Set up the CRDs we need
-	crdUpdater, err := crdutils.NewFromRestConfig(cfg)
+	crdUpdater, err := crd.UpdaterFromRestConfig(cfg)
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)

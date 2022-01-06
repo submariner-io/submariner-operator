@@ -29,10 +29,10 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/client"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -84,7 +84,7 @@ func Broker(options *BrokerOptions, clientProducer client.Producer, status repor
 func deploy(options *BrokerOptions, status reporter.Interface, clientProducer client.Producer) error {
 	status.Start("Setting up broker RBAC")
 
-	err := broker.Ensure(crdutils.NewFromClientSet(clientProducer.ForCRD()), clientProducer.ForKubernetes(),
+	err := broker.Ensure(crd.UpdaterFromClientSet(clientProducer.ForCRD()), clientProducer.ForKubernetes(),
 		options.BrokerSpec.Components, false, options.BrokerNamespace)
 	if err != nil {
 		return status.Error(err, "error setting up broker RBAC")
