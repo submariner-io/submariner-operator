@@ -27,11 +27,8 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	extendedfakeclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 )
@@ -110,46 +107,6 @@ var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 			Expect(created).To(BeTrue())
 			Expect(err).ToNot(HaveOccurred())
 			created, err = utils.CreateOrUpdateClusterRoleBinding(ctx, client, clusterRoleBinding)
-			Expect(created).To(BeFalse())
-			Expect(err).ToNot(HaveOccurred())
-		})
-	})
-})
-
-var _ = Describe("CreateOrUpdateCRD", func() {
-	var (
-		crd    *apiextensions.CustomResourceDefinition
-		client *extendedfakeclientset.Clientset
-		ctx    context.Context
-	)
-
-	BeforeEach(func() {
-		crd = &apiextensions.CustomResourceDefinition{}
-		err := embeddedyamls.GetObject(embeddedyamls.Deploy_crds_submariner_io_submariners_yaml, crd)
-		Expect(err).ShouldNot(HaveOccurred())
-		client = extendedfakeclientset.NewSimpleClientset()
-		ctx = context.TODO()
-	})
-
-	When("called", func() {
-		It("Should add the CRD properly", func() {
-			created, err := utils.CreateOrUpdateCRD(ctx, crdutils.NewFromClientSet(client), crd)
-			Expect(created).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-
-			createdCrd, err := client.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(createdCrd.Spec.Names.Kind).Should(Equal("Submariner"))
-		})
-	})
-
-	When("called twice", func() {
-		It("Should add the CRD properly, and return false on second call", func() {
-			crdUpdater := crdutils.NewFromClientSet(client)
-			created, err := utils.CreateOrUpdateCRD(ctx, crdUpdater, crd)
-			Expect(created).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-			created, err = utils.CreateOrUpdateCRD(ctx, crdUpdater, crd)
 			Expect(created).To(BeFalse())
 			Expect(err).ToNot(HaveOccurred())
 		})

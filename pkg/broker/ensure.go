@@ -27,10 +27,10 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/rbac"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -39,8 +39,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func Ensure(crdUpdater crdutils.CRDUpdater, kubeClient kubernetes.Interface, componentArr []string, crds bool, namespace string) error {
-	if crds {
+func Ensure(crdUpdater crd.Updater, kubeClient kubernetes.Interface, componentArr []string, createCRDs bool, namespace string) error {
+	if createCRDs {
 		for i := range componentArr {
 			switch componentArr[i] {
 			case component.Connectivity:

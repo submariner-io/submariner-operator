@@ -21,9 +21,8 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -37,7 +36,7 @@ const (
 // The resources handled here are the lighthouse CRDs: MultiClusterService,
 // ServiceImport, ServiceExport and ServiceDiscovery
 // nolint:gocyclo // This really isn't complex and just trips the threshold.
-func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
+func Ensure(crdUpdater crd.Updater, isBroker bool) (bool, error) {
 	// Delete obsolete CRDs if they are still present
 	err := crdUpdater.Delete(context.TODO(), "serviceimports.lighthouse.submariner.io", metav1.DeleteOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
@@ -54,7 +53,7 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 		return false, errors.Wrap(err, "error deleting the obsolete MultiClusterServices CRD")
 	}
 
-	installedMCSSI, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
+	installedMCSSI, err := crdUpdater.CreateOrUpdate(context.TODO(),
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
 	if err != nil {
 		return installedMCSSI, errors.Wrap(err, "error creating the MCS ServiceImport CRD")
@@ -65,13 +64,13 @@ func Ensure(crdUpdater crdutils.CRDUpdater, isBroker bool) (bool, error) {
 		return installedMCSSI, nil
 	}
 
-	installedMCSSE, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
+	installedMCSSE, err := crdUpdater.CreateOrUpdate(context.TODO(),
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
 	if err != nil {
 		return installedMCSSI || installedMCSSE, errors.Wrap(err, "error creating the MCS ServiceExport CRD")
 	}
 
-	installedSD, err := utils.CreateOrUpdateEmbeddedCRD(context.TODO(), crdUpdater,
+	installedSD, err := crdUpdater.CreateOrUpdate(context.TODO(),
 		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
 		return installedMCSSI || installedMCSSE || installedSD, errors.Wrap(err, "error creating the ServiceDiscovery CRD")
