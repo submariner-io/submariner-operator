@@ -3,7 +3,7 @@ name: End to End Default
 
 on:
   pull_request:
-    types: [ready_for_review, opened, edited, reopened, synchronize, converted_to_draft, labeled]
+    types: [ready_for_review, opened, reopened, synchronize, converted_to_draft, labeled]
 
 jobs:
   e2e:
