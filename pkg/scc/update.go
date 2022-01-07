@@ -36,7 +36,7 @@ var openshiftSCCGVR = schema.GroupVersionResource{
 	Resource: "securitycontextconstraints",
 }
 
-func UpdateSCC(dynClient dynamic.Interface, namespace, name string) (bool, error) {
+func Update(dynClient dynamic.Interface, namespace, name string) (bool, error) {
 	sccClient := dynClient.Resource(openshiftSCCGVR)
 
 	created := false
