@@ -25,7 +25,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"

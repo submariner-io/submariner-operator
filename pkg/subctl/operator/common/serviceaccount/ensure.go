@@ -21,7 +21,7 @@ package serviceaccount
 import (
 	"context"
 
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"

@@ -20,7 +20,7 @@ package scc
 
 import (
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
 	"k8s.io/client-go/dynamic"
 )

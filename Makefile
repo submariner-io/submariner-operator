@@ -167,9 +167,9 @@ $(CONTROLLER_DEEPCOPY): $(VENDOR_MODULES) | $(CONTROLLER_GEN)
 	cd api && $(CONTROLLER_GEN) object:headerFile="$(CURDIR)/hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
 
 # Generate embedded YAMLs
-EMBEDDED_YAMLS := pkg/subctl/operator/common/embeddedyamls/yamls.go
-$(EMBEDDED_YAMLS): pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(VENDOR_MODULES) $(CONTROLLER_DEEPCOPY)
-	$(GO) generate pkg/subctl/operator/common/embeddedyamls/generate.go
+EMBEDDED_YAMLS := pkg/embeddedyamls/yamls.go
+$(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(VENDOR_MODULES) $(CONTROLLER_DEEPCOPY)
+	$(GO) generate pkg/embeddedyamls/generate.go
 
 bin/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
 	${SCRIPTS_DIR}/compile.sh \
