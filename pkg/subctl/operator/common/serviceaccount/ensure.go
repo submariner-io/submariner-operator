@@ -42,18 +42,6 @@ func Ensure(kubeClient kubernetes.Interface, namespace, yaml string) (bool, erro
 }
 
 // nolint:wrapcheck // No need to wrap errors here.
-func EnsureRole(kubeClient kubernetes.Interface, namespace, yaml string) (bool, error) {
-	role := &rbacv1.Role{}
-
-	err := embeddedyamls.GetObject(yaml, role)
-	if err != nil {
-		return false, err
-	}
-
-	return utils.CreateOrUpdateRole(context.TODO(), kubeClient, namespace, role)
-}
-
-// nolint:wrapcheck // No need to wrap errors here.
 func EnsureRoleBinding(kubeClient kubernetes.Interface, namespace, yaml string) (bool, error) {
 	roleBinding := &rbacv1.RoleBinding{}
 

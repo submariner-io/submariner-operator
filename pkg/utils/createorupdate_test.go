@@ -162,47 +162,6 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 	})
 })
 
-var _ = Describe("CreateOrUpdateRole", func() {
-	var (
-		namespace = "test-namespace"
-		role      *rbacv1.Role
-		client    *fakeclientset.Clientset
-		ctx       context.Context
-	)
-
-	BeforeEach(func() {
-		role = &rbacv1.Role{}
-		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_operator_role_yaml, role)
-		Expect(err).ShouldNot(HaveOccurred())
-		client = fakeclientset.NewSimpleClientset()
-		ctx = context.TODO()
-	})
-
-	When("called", func() {
-		It("Should add the Role properly", func() {
-			created, err := utils.CreateOrUpdateRole(ctx, client, namespace, role)
-			Expect(created).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-
-			createdRole, err := client.RbacV1().Roles(namespace).Get(ctx, role.Name, metav1.GetOptions{})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(createdRole.ObjectMeta.Name).Should(Equal("submariner-operator"))
-		})
-	})
-
-	When("called twice", func() {
-		It("Should add the Role properly, and return false on second call", func() {
-			created, err := utils.CreateOrUpdateRole(ctx, client, namespace, role)
-			Expect(created).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-			created, err = utils.CreateOrUpdateRole(ctx, client, namespace, role)
-			Expect(created).To(BeFalse())
-			Expect(err).ToNot(HaveOccurred())
-		})
-	})
-})
-
 var _ = Describe("CreateOrUpdateRoleBinding", func() {
 	var (
 		namespace   = "test-namespace"

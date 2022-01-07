@@ -31,7 +31,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/namespace"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
+	"github.com/submariner-io/submariner-operator/pkg/role"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -182,20 +182,20 @@ func WaitForClientToken(kubeClient kubernetes.Interface, submarinerBrokerSA, inN
 }
 
 // nolint:wrapcheck // No need to wrap here
-func CreateOrUpdateClusterBrokerRole(kubeClient kubernetes.Interface, inNamespace string) (created bool, err error) {
-	return utils.CreateOrUpdateRole(context.TODO(), kubeClient, inNamespace, NewBrokerClusterRole())
+func CreateOrUpdateClusterBrokerRole(kubeClient kubernetes.Interface, inNamespace string) (bool, error) {
+	return role.Ensure(kubeClient, inNamespace, NewBrokerClusterRole())
 }
 
 // nolint:wrapcheck // No need to wrap here
 func CreateOrUpdateBrokerAdminRole(clientset kubernetes.Interface, inNamespace string) (created bool, err error) {
-	return utils.CreateOrUpdateRole(context.TODO(), clientset, inNamespace, NewBrokerAdminRole())
+	return role.Ensure(clientset, inNamespace, NewBrokerAdminRole())
 }
 
 // nolint:wrapcheck // No need to wrap here
-func CreateNewBrokerRoleBinding(kubeClient kubernetes.Interface, serviceAccount, role, inNamespace string) (
+func CreateNewBrokerRoleBinding(kubeClient kubernetes.Interface, serviceAccount, roleName, inNamespace string) (
 	brokerRoleBinding *rbacv1.RoleBinding, err error) {
 	return kubeClient.RbacV1().RoleBindings(inNamespace).Create(
-		context.TODO(), NewBrokerRoleBinding(serviceAccount, role, inNamespace), metav1.CreateOptions{})
+		context.TODO(), NewBrokerRoleBinding(serviceAccount, roleName, inNamespace), metav1.CreateOptions{})
 }
 
 // nolint:wrapcheck // No need to wrap here
