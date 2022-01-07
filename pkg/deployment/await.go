@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package deployments
+package deployment
 
 import (
 	"context"
@@ -31,7 +31,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func WaitForReady(kubeClient kubernetes.Interface, namespace, deployment string, interval, timeout time.Duration) error {
+func AwaitReady(kubeClient kubernetes.Interface, namespace, deployment string, interval, timeout time.Duration) error {
 	deployments := kubeClient.AppsV1().Deployments(namespace)
 
 	// nolint:wrapcheck // No need to wrap here
