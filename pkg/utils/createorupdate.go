@@ -50,11 +50,6 @@ func CreateOrUpdateDeployment(
 	return CreateOrUpdate(ctx, resource.ForDeployment(clientSet, namespace), deployment)
 }
 
-func CreateOrUpdateRole(
-	ctx context.Context, clientSet clientset.Interface, namespace string, role *rbacv1.Role) (bool, error) {
-	return CreateOrUpdate(ctx, resource.ForRole(clientSet, namespace), role)
-}
-
 func CreateOrUpdateRoleBinding(
 	ctx context.Context, clientSet clientset.Interface, namespace string, roleBinding *rbacv1.RoleBinding) (bool, error) {
 	return CreateOrUpdate(ctx, resource.ForRoleBinding(clientSet, namespace), roleBinding)
