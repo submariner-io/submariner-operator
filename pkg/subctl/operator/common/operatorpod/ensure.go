@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/deployments"
+	"github.com/submariner-io/submariner-operator/pkg/deployment"
 	"github.com/submariner-io/submariner-operator/pkg/utils"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -53,7 +53,7 @@ func Ensure(kubeClient kubernetes.Interface, namespace, operatorName, image stri
 		command = append(command, "-v=1")
 	}
 
-	deployment := &appsv1.Deployment{
+	opDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
 			Name:      operatorName,
@@ -97,12 +97,12 @@ func Ensure(kubeClient kubernetes.Interface, namespace, operatorName, image stri
 		},
 	}
 
-	created, err := utils.CreateOrUpdateDeployment(context.TODO(), kubeClient, namespace, deployment)
+	created, err := utils.CreateOrUpdateDeployment(context.TODO(), kubeClient, namespace, opDeployment)
 	if err != nil {
 		return false, errors.Wrap(err, "error creating/updating Deployment")
 	}
 
-	err = deployments.WaitForReady(kubeClient, namespace, deployment.Name, deploymentCheckInterval, deploymentWaitTime)
+	err = deployment.AwaitReady(kubeClient, namespace, opDeployment.Name, deploymentCheckInterval, deploymentWaitTime)
 
 	return created, errors.Wrap(err, "error awaiting Deployment ready")
 }
