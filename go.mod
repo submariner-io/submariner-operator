@@ -3,7 +3,7 @@ module github.com/submariner-io/submariner-operator
 go 1.16
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.2.13
+	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.11.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.6.4
