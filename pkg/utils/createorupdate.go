@@ -26,7 +26,6 @@ import (
 	"github.com/submariner-io/admiral/pkg/util"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientset "k8s.io/client-go/kubernetes"
 )
@@ -34,11 +33,6 @@ import (
 func CreateOrUpdate(ctx context.Context, client resource.Interface, obj runtime.Object) (bool, error) {
 	result, err := util.CreateOrUpdate(ctx, client, obj, util.Replace(obj))
 	return result == util.OperationResultCreated, err
-}
-
-func CreateOrUpdateClusterRoleBinding(
-	ctx context.Context, clientSet clientset.Interface, clusterRoleBinding *rbacv1.ClusterRoleBinding) (bool, error) {
-	return CreateOrUpdate(ctx, resource.ForClusterRoleBinding(clientSet), clusterRoleBinding)
 }
 
 func CreateOrUpdateDeployment(

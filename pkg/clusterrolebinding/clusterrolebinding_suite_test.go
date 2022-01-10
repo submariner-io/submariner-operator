@@ -16,26 +16,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package serviceaccount
+package clusterrolebinding_test
 
 import (
-	"context"
+	"testing"
 
-	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-// Ensure creates the given service account.
-// nolint:wrapcheck // No need to wrap errors here.
-func Ensure(kubeClient kubernetes.Interface, namespace, yaml string) (bool, error) {
-	sa := &v1.ServiceAccount{}
-
-	err := embeddedyamls.GetObject(yaml, sa)
-	if err != nil {
-		return false, err
-	}
-
-	return utils.CreateOrUpdateServiceAccount(context.TODO(), kubeClient, namespace, sa)
+func TestClusterRoleBinding(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "ClusterRoleBinding Suite")
 }
