@@ -32,7 +32,7 @@ PATTERN := ^([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$
 # Test if VERSION matches the semantic versioning rule
 IS_SEMANTIC_VERSION = $(shell [[ $(or $(BUNDLE_VERSION),$(VERSION),'undefined') =~ $(PATTERN) ]] && echo true || echo false)
 
-IMAGES = submariner-operator submariner-operator-index
+IMAGES = submariner-operator submariner-operator-index submariner-diagnose
 PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-globalnet submariner-route-agent lighthouse-agent lighthouse-coredns
 undefine SKIP
 undefine FOCUS
@@ -158,6 +158,8 @@ bin/lichen: $(VENDOR_MODULES)
 package/Dockerfile.submariner-operator: bin/submariner-operator
 
 package/Dockerfile.submariner-operator-index: packagemanifests
+
+package/Dockerfile.submariner-diagnose: bin/subctl
 
 # Generate deep-copy code
 CONTROLLER_DEEPCOPY := api/submariner/v1alpha1/zz_generated.deepcopy.go

@@ -20,6 +20,11 @@ resources:
   - submariner-globalnet/role_binding.yaml
   - submariner-globalnet/cluster_role.yaml
   - submariner-globalnet/cluster_role_binding.yaml
+  - submariner-diagnose/service_account.yaml
+  - submariner-diagnose/role.yaml
+  - submariner-diagnose/role_binding.yaml
+  - submariner-diagnose/cluster_role.yaml
+  - submariner-diagnose/cluster_role_binding.yaml
   - lighthouse-agent/service_account.yaml
   - lighthouse-agent/cluster_role.yaml
   - lighthouse-agent/cluster_role_binding.yaml

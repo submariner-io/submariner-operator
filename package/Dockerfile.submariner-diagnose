@@ -1,0 +1,8 @@
+FROM scratch
+
+ENV USER_UID=1001 PATH=/
+
+# install subctl binary
+COPY bin/subctl /subctl
+
+USER ${USER_UID}

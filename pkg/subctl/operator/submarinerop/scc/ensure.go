@@ -51,28 +51,24 @@ func Ensure(dynClient dynamic.Interface, namespace string) (bool, error) {
 		return false, errors.Wrap(err, "error parsing the networkplugin syncer ServiceAccount resource")
 	}
 
-	updateOperatorSCC, err := scc.Update(dynClient, namespace, operatorSaName)
+	diagnoseSaName, err := embeddedyamls.GetObjectName(embeddedyamls.Config_rbac_submariner_diagnose_service_account_yaml)
 	if err != nil {
-		return false, errors.Wrap(err, "error updating the SCC resource")
+		return false, errors.Wrap(err, "error parsing the diagnose ServiceAccount resource")
 	}
 
-	updateGatewaySCC, err := scc.Update(dynClient, namespace, gatewaySaName)
-	if err != nil {
-		return false, errors.Wrap(err, "error updating the SCC resource")
+	saNames := []string{
+		operatorSaName, gatewaySaName, routeAgentSaName, globalnetSaName, npSyncerSaName, diagnoseSaName,
+	}
+	updateScc := false
+
+	for _, saName := range saNames {
+		result, err := scc.Update(dynClient, namespace, saName)
+		if err != nil {
+			return false, errors.Wrap(err, "error updating the SCC resource")
+		}
+
+		updateScc = updateScc || result
 	}
 
-	updateRouteAgentSCC, err := scc.Update(dynClient, namespace, routeAgentSaName)
-	if err != nil {
-		return false, errors.Wrap(err, "error updating the SCC resource")
-	}
-
-	updateGlobalnetSCC, err := scc.Update(dynClient, namespace, globalnetSaName)
-	if err != nil {
-		return false, errors.Wrap(err, "error updating the SCC resource")
-	}
-
-	updateNPSyncerSCC, err := scc.Update(dynClient, namespace, npSyncerSaName)
-
-	return updateOperatorSCC || updateGatewaySCC || updateRouteAgentSCC || updateGlobalnetSCC || updateNPSyncerSCC,
-		errors.Wrap(err, "error updating the SCC resource")
+	return updateScc, errors.Wrap(err, "error updating the SCC resource")
 }
