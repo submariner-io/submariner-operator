@@ -20,6 +20,7 @@ package serviceaccount
 
 import (
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/pkg/clusterrole"
 	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/role"
 	"github.com/submariner-io/submariner-operator/pkg/rolebinding"
@@ -90,32 +91,27 @@ func ensureServiceAccounts(kubeClient kubernetes.Interface, namespace string) (b
 }
 
 func ensureClusterRoles(kubeClient kubernetes.Interface) (bool, error) {
-	createdOperatorCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_submariner_operator_cluster_role_yaml)
+	createdOperatorCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_submariner_operator_cluster_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning operator ClusterRole resource")
 	}
 
-	createdSubmarinerCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_submariner_gateway_cluster_role_yaml)
+	createdSubmarinerCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_submariner_gateway_cluster_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning gateway ClusterRole resource")
 	}
 
-	createdRouteAgentCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_submariner_route_agent_cluster_role_yaml)
+	createdRouteAgentCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_submariner_route_agent_cluster_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning route agent ClusterRole resource")
 	}
 
-	createdGlobalnetCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_yaml)
+	createdGlobalnetCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning globalnet ClusterRole resource")
 	}
 
-	createdNPSyncerCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_yaml)
+	createdNPSyncerCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_yaml)
 
 	return createdOperatorCR || createdSubmarinerCR || createdRouteAgentCR || createdGlobalnetCR || createdNPSyncerCR,
 		errors.Wrap(err, "error provisioning networkplugin syncer ClusterRole resource")

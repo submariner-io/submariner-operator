@@ -16,7 +16,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// nolint:dupl // The test cases are similar but not duplicated.
 package utils_test
 
 import (
@@ -32,46 +31,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 )
-
-var _ = Describe("CreateOrUpdateClusterRole", func() {
-	var (
-		clusterRole *rbacv1.ClusterRole
-		client      *fakeclientset.Clientset
-		ctx         context.Context
-	)
-
-	BeforeEach(func() {
-		clusterRole = &rbacv1.ClusterRole{}
-		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_yaml, clusterRole)
-		Expect(err).ShouldNot(HaveOccurred())
-		client = fakeclientset.NewSimpleClientset()
-		ctx = context.TODO()
-	})
-
-	When("called", func() {
-		It("Should add the ClusterRole properly", func() {
-			created, err := utils.CreateOrUpdateClusterRole(ctx, client, clusterRole)
-			Expect(created).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-
-			createdClusterRole, err := client.RbacV1().ClusterRoles().Get(ctx, clusterRole.Name, metav1.GetOptions{})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(createdClusterRole.ObjectMeta.Name).Should(Equal("submariner-globalnet"))
-		})
-	})
-
-	When("called twice", func() {
-		It("Should add the ClusterRole properly, and return false on second call", func() {
-			created, err := utils.CreateOrUpdateClusterRole(ctx, client, clusterRole)
-			Expect(created).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-			created, err = utils.CreateOrUpdateClusterRole(ctx, client, clusterRole)
-			Expect(created).To(BeFalse())
-			Expect(err).ToNot(HaveOccurred())
-		})
-	})
-})
 
 var _ = Describe("CreateOrUpdateClusterRoleBinding", func() {
 	var (
