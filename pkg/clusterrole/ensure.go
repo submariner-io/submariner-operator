@@ -16,41 +16,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package serviceaccount
+package clusterrole
 
 import (
 	"context"
 
+	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
-	v1 "k8s.io/api/core/v1"
+	resourceutil "github.com/submariner-io/submariner-operator/pkg/resource"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// Ensure creates the given service account.
 // nolint:wrapcheck // No need to wrap errors here.
-func Ensure(kubeClient kubernetes.Interface, namespace, yaml string) (bool, error) {
-	sa := &v1.ServiceAccount{}
+func EnsureFromYAML(kubeClient kubernetes.Interface, yaml string) (bool, error) {
+	role := &rbacv1.ClusterRole{}
 
-	err := embeddedyamls.GetObject(yaml, sa)
+	err := embeddedyamls.GetObject(yaml, role)
 	if err != nil {
 		return false, err
 	}
 
-	return utils.CreateOrUpdateServiceAccount(context.TODO(), kubeClient, namespace, sa)
+	return Ensure(kubeClient, role)
 }
 
 // nolint:wrapcheck // No need to wrap errors here.
-func EnsureClusterRoleBinding(kubeClient kubernetes.Interface, namespace, yaml string) (bool, error) {
-	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
-
-	err := embeddedyamls.GetObject(yaml, clusterRoleBinding)
-	if err != nil {
-		return false, err
-	}
-
-	clusterRoleBinding.Subjects[0].Namespace = namespace
-
-	return utils.CreateOrUpdateClusterRoleBinding(context.TODO(), kubeClient, clusterRoleBinding)
+func Ensure(kubeClient kubernetes.Interface, role *rbacv1.ClusterRole) (bool, error) {
+	return resourceutil.CreateOrUpdate(context.TODO(), resource.ForClusterRole(kubeClient), role)
 }

@@ -36,10 +36,6 @@ func CreateOrUpdate(ctx context.Context, client resource.Interface, obj runtime.
 	return result == util.OperationResultCreated, err
 }
 
-func CreateOrUpdateClusterRole(ctx context.Context, clientSet clientset.Interface, clusterRole *rbacv1.ClusterRole) (bool, error) {
-	return CreateOrUpdate(ctx, resource.ForClusterRole(clientSet), clusterRole)
-}
-
 func CreateOrUpdateClusterRoleBinding(
 	ctx context.Context, clientSet clientset.Interface, clusterRoleBinding *rbacv1.ClusterRoleBinding) (bool, error) {
 	return CreateOrUpdate(ctx, resource.ForClusterRoleBinding(clientSet), clusterRoleBinding)
