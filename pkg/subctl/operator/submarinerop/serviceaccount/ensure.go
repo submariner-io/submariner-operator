@@ -25,7 +25,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/role"
 	"github.com/submariner-io/submariner-operator/pkg/rolebinding"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/serviceaccount"
+	"github.com/submariner-io/submariner-operator/pkg/serviceaccount"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -60,31 +60,31 @@ func Ensure(kubeClient kubernetes.Interface, namespace string) (bool, error) {
 }
 
 func ensureServiceAccounts(kubeClient kubernetes.Interface, namespace string) (bool, error) {
-	createdOperatorSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdOperatorSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_operator_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning operator ServiceAccount resource")
 	}
 
-	createdSubmarinerSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdSubmarinerSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_gateway_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning gateway ServiceAccount resource")
 	}
 
-	createdRouteAgentSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdRouteAgentSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_route_agent_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning route agent ServiceAccount resource")
 	}
 
-	createdGlobalnetSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdGlobalnetSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_globalnet_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning globalnet ServiceAccount resource")
 	}
 
-	createdNPSyncerSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdNPSyncerSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_networkplugin_syncer_service_account_yaml)
 
 	return createdOperatorSA || createdSubmarinerSA || createdRouteAgentSA || createdGlobalnetSA || createdNPSyncerSA,

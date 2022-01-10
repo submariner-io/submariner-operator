@@ -23,7 +23,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/clusterrole"
 	"github.com/submariner-io/submariner-operator/pkg/clusterrolebinding"
 	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/serviceaccount"
+	"github.com/submariner-io/submariner-operator/pkg/serviceaccount"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -48,13 +48,13 @@ func Ensure(kubeClient kubernetes.Interface, namespace string) (bool, error) {
 }
 
 func ensureServiceAccounts(kubeClient kubernetes.Interface, namespace string) (bool, error) {
-	createdAgentSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdAgentSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_lighthouse_agent_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning the agent ServiceAccount resource")
 	}
 
-	createdCoreDNSSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdCoreDNSSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_lighthouse_coredns_service_account_yaml)
 
 	return createdAgentSA || createdCoreDNSSA, errors.Wrap(err, "error provisioning the coredns ServiceAccount resource")
