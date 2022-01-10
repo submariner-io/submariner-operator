@@ -31,11 +31,16 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func AwaitReady(kubeClient kubernetes.Interface, namespace, deployment string, interval, timeout time.Duration) error {
+const (
+	checkInterval = 5 * time.Second
+	waitTime      = 10 * time.Minute
+)
+
+func AwaitReady(kubeClient kubernetes.Interface, namespace, deployment string) error {
 	deployments := kubeClient.AppsV1().Deployments(namespace)
 
 	// nolint:wrapcheck // No need to wrap here
-	return wait.PollImmediate(interval, timeout, func() (bool, error) {
+	return wait.PollImmediate(checkInterval, waitTime, func() (bool, error) {
 		dp, err := deployments.Get(context.TODO(), deployment, metav1.GetOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			return false, errors.Wrap(err, "error waiting for controller deployment to come up")
