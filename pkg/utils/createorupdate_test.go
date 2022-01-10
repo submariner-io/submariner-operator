@@ -162,47 +162,6 @@ var _ = Describe("CreateOrUpdateDeployment", func() {
 	})
 })
 
-var _ = Describe("CreateOrUpdateRoleBinding", func() {
-	var (
-		namespace   = "test-namespace"
-		roleBinding *rbacv1.RoleBinding
-		client      *fakeclientset.Clientset
-		ctx         context.Context
-	)
-
-	BeforeEach(func() {
-		roleBinding = &rbacv1.RoleBinding{}
-		// TODO skitt add our own object
-		err := embeddedyamls.GetObject(embeddedyamls.Config_rbac_submariner_operator_role_binding_yaml, roleBinding)
-		Expect(err).ShouldNot(HaveOccurred())
-		client = fakeclientset.NewSimpleClientset()
-		ctx = context.TODO()
-	})
-
-	When("called", func() {
-		It("Should add the RoleBinding properly", func() {
-			created, err := utils.CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
-			Expect(created).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-
-			createdRoleBinding, err := client.RbacV1().RoleBindings(namespace).Get(ctx, roleBinding.Name, metav1.GetOptions{})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(createdRoleBinding.ObjectMeta.Name).Should(Equal("submariner-operator"))
-		})
-	})
-
-	When("called twice", func() {
-		It("Should add the RoleBinding properly, and return false on second call", func() {
-			created, err := utils.CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
-			Expect(created).To(BeTrue())
-			Expect(err).ToNot(HaveOccurred())
-			created, err = utils.CreateOrUpdateRoleBinding(ctx, client, namespace, roleBinding)
-			Expect(created).To(BeFalse())
-			Expect(err).ToNot(HaveOccurred())
-		})
-	})
-})
-
 func TestCreateOrUpdate(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Create or update handling")
