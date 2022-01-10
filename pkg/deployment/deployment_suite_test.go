@@ -16,18 +16,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// nolint:wrapcheck // These functions are basically wrappers for the k8s APIs.
-package utils
+package deployment_test
 
 import (
-	"context"
+	"testing"
 
-	"github.com/submariner-io/admiral/pkg/resource"
-	"github.com/submariner-io/admiral/pkg/util"
-	"k8s.io/apimachinery/pkg/runtime"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func CreateOrUpdate(ctx context.Context, client resource.Interface, obj runtime.Object) (bool, error) {
-	result, err := util.CreateOrUpdate(ctx, client, obj, util.Replace(obj))
-	return result == util.OperationResultCreated, err
+func TestDeployment(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Deployment Suite")
 }

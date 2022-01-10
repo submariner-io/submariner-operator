@@ -19,13 +19,11 @@ limitations under the License.
 package deployment
 
 import (
-	"context"
 	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/deployment"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -94,7 +92,7 @@ func Ensure(kubeClient kubernetes.Interface, namespace, image string, debug bool
 		},
 	}
 
-	created, err := utils.CreateOrUpdateDeployment(context.TODO(), kubeClient, namespace, opDeployment)
+	created, err := deployment.Ensure(kubeClient, namespace, opDeployment)
 	if err != nil {
 		return false, errors.Wrap(err, "error creating/updating Deployment")
 	}
