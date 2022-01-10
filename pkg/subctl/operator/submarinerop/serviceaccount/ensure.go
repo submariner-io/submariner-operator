@@ -22,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
 	"github.com/submariner-io/submariner-operator/pkg/role"
+	"github.com/submariner-io/submariner-operator/pkg/rolebinding"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/serviceaccount"
 	"k8s.io/client-go/kubernetes"
 )
@@ -185,31 +186,31 @@ func ensureRoles(kubeClient kubernetes.Interface, namespace string) (bool, error
 }
 
 func ensureRoleBindings(kubeClient kubernetes.Interface, namespace string) (bool, error) {
-	createdOperatorRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdOperatorRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_operator_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning operator RoleBinding resource")
 	}
 
-	createdSubmarinerRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdSubmarinerRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_gateway_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning gateway RoleBinding resource")
 	}
 
-	createdRouteAgentRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdRouteAgentRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_route_agent_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning route agent RoleBinding resource")
 	}
 
-	createdGlobalnetRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdGlobalnetRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_globalnet_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning globalnet RoleBinding resource")
 	}
 
-	createdMetricsReaderRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdMetricsReaderRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_openshift_rbac_submariner_metrics_reader_role_binding_yaml)
 
 	return createdOperatorRB || createdSubmarinerRB || createdRouteAgentRB || createdGlobalnetRB || createdMetricsReaderRB,

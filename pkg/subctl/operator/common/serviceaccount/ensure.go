@@ -42,18 +42,6 @@ func Ensure(kubeClient kubernetes.Interface, namespace, yaml string) (bool, erro
 }
 
 // nolint:wrapcheck // No need to wrap errors here.
-func EnsureRoleBinding(kubeClient kubernetes.Interface, namespace, yaml string) (bool, error) {
-	roleBinding := &rbacv1.RoleBinding{}
-
-	err := embeddedyamls.GetObject(yaml, roleBinding)
-	if err != nil {
-		return false, err
-	}
-
-	return utils.CreateOrUpdateRoleBinding(context.TODO(), kubeClient, namespace, roleBinding)
-}
-
-// nolint:wrapcheck // No need to wrap errors here.
 func EnsureClusterRole(kubeClient kubernetes.Interface, yaml string) (bool, error) {
 	clusterRole := &rbacv1.ClusterRole{}
 
