@@ -25,7 +25,6 @@ import (
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientset "k8s.io/client-go/kubernetes"
 )
@@ -38,9 +37,4 @@ func CreateOrUpdate(ctx context.Context, client resource.Interface, obj runtime.
 func CreateOrUpdateDeployment(
 	ctx context.Context, clientSet clientset.Interface, namespace string, deployment *appsv1.Deployment) (bool, error) {
 	return CreateOrUpdate(ctx, resource.ForDeployment(clientSet, namespace), deployment)
-}
-
-func CreateOrUpdateServiceAccount(
-	ctx context.Context, clientSet clientset.Interface, namespace string, sa *corev1.ServiceAccount) (bool, error) {
-	return CreateOrUpdate(ctx, resource.ForServiceAccount(clientSet, namespace), sa)
 }
