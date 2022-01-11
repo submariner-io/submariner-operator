@@ -19,10 +19,8 @@ require (
 	github.com/hashicorp/go-version v1.3.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.14
-	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
-	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
@@ -31,12 +29,11 @@ require (
 	github.com/operator-framework/operator-sdk v0.19.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
-	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/cobra v1.3.0
 	github.com/submariner-io/admiral v0.12.0-m1.0.20220104021352-37fe90fe4f86
 	github.com/submariner-io/cloud-prepare v0.12.0-m1.0.20220110150100-92d678e9ae98
 	github.com/submariner-io/lighthouse v0.12.0-m1
-	github.com/submariner-io/shipyard v0.12.0-m1
+	github.com/submariner-io/shipyard v0.12.0-m3
 	github.com/submariner-io/submariner v0.12.0-m1.0.20211216152540-1820e48396c5
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.4
