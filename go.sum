@@ -986,8 +986,9 @@ github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzp
 github.com/mattn/go-runewidth v0.0.6/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
 github.com/mattn/go-runewidth v0.0.7/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
 github.com/mattn/go-runewidth v0.0.9/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
-github.com/mattn/go-runewidth v0.0.12 h1:Y41i/hVW3Pgwr8gV+J23B9YEY0zxjptBuCWEaxmAOow=
-github.com/mattn/go-runewidth v0.0.12/go.mod h1:RAqKPSqVFrSLVXbA8x7dzmKdmGzieGRCM46jaSJTDAk=
+github.com/mattn/go-runewidth v0.0.10/go.mod h1:RAqKPSqVFrSLVXbA8x7dzmKdmGzieGRCM46jaSJTDAk=
+github.com/mattn/go-runewidth v0.0.13 h1:lTGmDsbAYt5DmK6OnoV7EuIF1wEIFAcxld6ypU4OSgU=
+github.com/mattn/go-runewidth v0.0.13/go.mod h1:Jdepj2loyihRzMpdS35Xk/zdY8IAYHsh153qUoGf23w=
 github.com/mattn/go-shellwords v1.0.10/go.mod h1:EZzvwXDESEeg03EKmM+RmDnNOPKG4lLtQsUlTZDWQ8Y=
 github.com/mattn/go-sqlite3 v1.9.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/mattn/go-sqlite3 v1.10.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
@@ -1261,6 +1262,7 @@ github.com/prometheus/prometheus v0.0.0-20180315085919-58e2a31db8de/go.mod h1:oA
 github.com/prometheus/prometheus v1.8.2-0.20200110114423-1e64d757f711/go.mod h1:7U90zPoLkWjEIQcy/rweQla82OCTUzxVHE51G3OhJbI=
 github.com/prometheus/prometheus v2.3.2+incompatible/go.mod h1:oAIUtOny2rjMX0OWN5vPR5/q/twIROJvdqnQKDdil/s=
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
+github.com/psampaz/go-mod-outdated v0.8.0/go.mod h1:o/o7wRSQWiSjKw8afZ7hq58J7IucGcSMbLWMG3veaQs=
 github.com/qri-io/starlib v0.4.2-0.20200213133954-ff2e8cd5ef8d/go.mod h1:7DPO4domFU579Ga6E61sB9VFNaniPVwJP5C4bBCu3wA=
 github.com/quasilyte/go-consistent v0.0.0-20190521200055-c6f3937de18c/go.mod h1:5STLWrekHfjyYwxBRVRXNOSewLJ3PWfDJd1VyTS21fI=
 github.com/rainycape/memcache v0.0.0-20150622160815-1031fa0ce2f2/go.mod h1:7tZKcyumwBO6qip7RNQ5r77yrssm9bfCowcLEBcU5IA=
@@ -1382,8 +1384,9 @@ github.com/submariner-io/cloud-prepare v0.12.0-m1.0.20220110150100-92d678e9ae98 
 github.com/submariner-io/cloud-prepare v0.12.0-m1.0.20220110150100-92d678e9ae98/go.mod h1:P17VG9oaGvpYb/9DlO8VlPI670Rb7NeOa+vgEDx8b48=
 github.com/submariner-io/lighthouse v0.12.0-m1 h1:EdCZtoiEfXSTIUMDAQTaTCmYohZaGF7ZFDOJ7qF58oI=
 github.com/submariner-io/lighthouse v0.12.0-m1/go.mod h1:l42MzM2vgcoGOlAOhNLEy8ThOrUxqIW07py9Xoc4FW0=
-github.com/submariner-io/shipyard v0.12.0-m1 h1:dPEz7CeOfLsmmwhuCshrIo0dK0x03wpd5tnHCzMRg5I=
 github.com/submariner-io/shipyard v0.12.0-m1/go.mod h1:BYUZPAJEbQ0W56xvNEs63KghH2ptYnGPG3/424y4o/g=
+github.com/submariner-io/shipyard v0.12.0-m3 h1:kMVYrEPLEH9KyAHp49bmVEVsukfrIWWIqgsqgNII4nc=
+github.com/submariner-io/shipyard v0.12.0-m3/go.mod h1:el/lH6ed/1BN1FvEXlptiib7qT2cTwEQ4AMceH3js9g=
 github.com/submariner-io/submariner v0.12.0-m1.0.20211216152540-1820e48396c5 h1:PIC/f+3yc25zlBN9zJEoygf9UcKo5YoUJ/yTfX4MR5A=
 github.com/submariner-io/submariner v0.12.0-m1.0.20211216152540-1820e48396c5/go.mod h1:4I9Dmu/TLOlcGsxuJdpjHCLcJ4EZ1J10IM4PK8JJdaQ=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
