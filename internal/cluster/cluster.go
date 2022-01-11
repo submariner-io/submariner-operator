@@ -21,22 +21,7 @@ package cluster
 import (
 	"fmt"
 	"regexp"
-
-	"github.com/submariner-io/submariner-operator/internal/restconfig"
 )
-
-func DetermineID(restConfigProducer restconfig.Producer) (string, error) {
-	clusterName, err := restConfigProducer.ClusterNameFromContext()
-	if err != nil {
-		return "", err // nolint:wrapcheck // No need to wrap
-	}
-
-	if clusterName != nil {
-		return *clusterName, nil
-	}
-
-	return "", nil
-}
 
 func IsValidID(clusterID string) (bool, error) {
 	// Make sure the clusterid is a valid DNS-1123 string
