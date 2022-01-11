@@ -48,7 +48,7 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, rest
 	if jo.ClusterID == "" {
 		var err error
 
-		jo.ClusterID, err = cluster.DetermineID(restConfigProducer)
+		jo.ClusterID, err = restConfigProducer.GetClusterID()
 		if err != nil {
 			return status.Error(err, "Error determining cluster ID of the target cluster")
 		}
