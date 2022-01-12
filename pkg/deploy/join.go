@@ -23,7 +23,6 @@ type WithJoinOptions struct {
 	IpsecDebug                    bool
 	SubmarinerDebug               bool
 	OperatorDebug                 bool
-	LabelGateway                  bool
 	LoadBalancerEnabled           bool
 	HealthCheckEnable             bool
 	NattPort                      int

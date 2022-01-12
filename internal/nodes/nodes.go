@@ -36,22 +36,23 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// labels the specified worker node as a gateway node.
-func LabelGateways(clientset kubernetes.Interface, gatewayNode struct{ Node string }) error {
-	if gatewayNode.Node == "" {
-		fmt.Printf("no gateway nodes specified, selecting one of the worker node as gateway node")
+// LabelAsGateway labels the specified  node as a gateway.
+func LabelAsGateway(clientset kubernetes.Interface, nodeName string) error {
+	return addLabels(clientset, nodeName, map[string]string{constants.SubmarinerGatewayLabel: constants.TrueLabel})
+}
 
-		workerNodes, err := GetAllWorkerNames(clientset)
-		if err != nil {
-			return err
-		}
-
-		gatewayNode.Node = workerNodes[0]
+// LabelAnyAsGateway labels any worker node as a gateway.
+func LabelAnyAsGateway(clientset kubernetes.Interface) (bool, error) {
+	workerNodes, err := GetAllWorkerNames(clientset)
+	if err != nil {
+		return false, err
 	}
 
-	err := addLabels(clientset, gatewayNode.Node, map[string]string{constants.SubmarinerGatewayLabel: constants.TrueLabel})
+	if len(workerNodes) == 0 {
+		return false, nil
+	}
 
-	return errors.Wrap(err, fmt.Sprintf("error labeling node %q as a gateway", gatewayNode.Node))
+	return true, LabelAsGateway(clientset, workerNodes[0])
 }
 
 // GetAllWorkerNames returns all worker nodes.

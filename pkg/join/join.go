@@ -25,7 +25,6 @@ import (
 
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/image"
-	"github.com/submariner-io/submariner-operator/internal/nodes"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
@@ -38,9 +37,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// nolint:gocyclo // FIXME
 func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clientProducer client.Producer,
-	status reporter.Interface, gatewayNode struct{ Node string }) error {
+	status reporter.Interface) error {
 	err := checkRequirements(clientProducer.ForKubernetes(), jo.IgnoreRequirements, status)
 	if err != nil {
 		return err
@@ -49,13 +47,6 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 	err = isValidCustomCoreDNSConfig(jo.CorednsCustomConfigMap)
 	if err != nil {
 		return status.Error(err, "error validating custom CoreDNS config")
-	}
-
-	if brokerInfo.IsConnectivityEnabled() && jo.LabelGateway {
-		err := nodes.LabelGateways(clientProducer.ForKubernetes(), gatewayNode)
-		if err != nil {
-			return status.Error(err, "Unable to set the gateway node up")
-		}
 	}
 
 	status.Start("Gathering relevant information from Broker")
