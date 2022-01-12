@@ -84,7 +84,7 @@ func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string,
 		utils.ExpectFlag(regionFlag, region)
 	}
 
-	reporter := cloudutils.NewCLIReporter()
+	reporter := cloudutils.NewStatusReporter()
 	reporter.Started("Retrieving AWS credentials from your AWS configuration")
 
 	creds, err := getAWSCredentials()

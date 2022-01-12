@@ -40,7 +40,7 @@ func RunOnK8sCluster(restConfigProducer restconfig.Producer,
 
 	gwDeployer := generic.NewGatewayDeployer(k8sClientSet)
 
-	reporter := cloudutils.NewCLIReporter()
+	reporter := cloudutils.NewStatusReporter()
 
 	return function(gwDeployer, reporter)
 }

@@ -89,7 +89,7 @@ func RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, ded
 		utils.ExpectFlag(projectIDFlag, region)
 	}
 
-	reporter := cloudutils.NewCLIReporter()
+	reporter := cloudutils.NewStatusReporter()
 	reporter.Started("Retrieving GCP credentials from your GCP configuration")
 
 	creds, err := getGCPCredentials()
