@@ -73,6 +73,10 @@ var joinCmd = &cobra.Command{
 			possiblyLabelGateway(clientProducer.ForKubernetes(), status)
 		}
 
+		if joinFlags.CustomDomains == nil && brokerInfo.CustomDomains != nil {
+			joinFlags.CustomDomains = *brokerInfo.CustomDomains
+		}
+
 		err = join.SubmarinerCluster(brokerInfo, &joinFlags, clientProducer, status)
 		exit.OnError(err)
 	},
@@ -91,9 +95,9 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&joinFlags.Repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&joinFlags.ImageVersion, "version", "", "image version")
 	cmd.Flags().StringVar(&joinFlags.ColorCodes, "colorcodes", submariner.DefaultColorCode, "color codes")
-	cmd.Flags().IntVar(&joinFlags.NattPort, "nattport", 4500, "IPsec NATT port")
-	cmd.Flags().IntVar(&joinFlags.IkePort, "ikeport", 500, "IPsec IKE port")
-	cmd.Flags().BoolVar(&joinFlags.NatTraversal, "natt", true, "enable NAT traversal for IPsec")
+	cmd.Flags().IntVar(&joinFlags.NATTPort, "nattport", 4500, "IPsec NATT port")
+	cmd.Flags().IntVar(&joinFlags.IKEPort, "ikeport", 500, "IPsec IKE port")
+	cmd.Flags().BoolVar(&joinFlags.NATTraversal, "natt", true, "enable NAT traversal for IPsec")
 
 	cmd.Flags().BoolVar(&joinFlags.PreferredServer, "preferred-server", false,
 		"enable this cluster as a preferred server for dataplane connections")
@@ -103,7 +107,7 @@ func addJoinFlags(cmd *cobra.Command) {
 
 	cmd.Flags().BoolVar(&joinFlags.ForceUDPEncaps, "force-udp-encaps", false, "force UDP encapsulation for IPSec")
 
-	cmd.Flags().BoolVar(&joinFlags.IpsecDebug, "ipsec-debug", false, "enable IPsec debugging (verbose logging)")
+	cmd.Flags().BoolVar(&joinFlags.IPSecDebug, "ipsec-debug", false, "enable IPsec debugging (verbose logging)")
 	cmd.Flags().BoolVar(&joinFlags.SubmarinerDebug, "pod-debug", false,
 		"enable Submariner pod debugging (verbose logging in the deployed pods)")
 	cmd.Flags().BoolVar(&joinFlags.OperatorDebug, "operator-debug", false, "enable operator debugging (verbose logging)")
@@ -117,7 +121,7 @@ func addJoinFlags(cmd *cobra.Command) {
 		"list of domains to use for multicluster service discovery")
 	cmd.Flags().StringSliceVar(&joinFlags.ImageOverrideArr, "image-override", nil,
 		"override component image")
-	cmd.Flags().BoolVar(&joinFlags.HealthCheckEnable, "health-check", true,
+	cmd.Flags().BoolVar(&joinFlags.HealthCheckEnabled, "health-check", true,
 		"enable Gateway health check")
 	cmd.Flags().Uint64Var(&joinFlags.HealthCheckInterval, "health-check-interval", 1,
 		"interval in seconds between health check packets")
@@ -125,7 +129,7 @@ func addJoinFlags(cmd *cobra.Command) {
 		"maximum number of packets lost before the connection is marked as down")
 	cmd.Flags().BoolVar(&joinFlags.GlobalnetEnabled, "globalnet", true,
 		"enable/disable Globalnet for this cluster")
-	cmd.Flags().StringVar(&joinFlags.CorednsCustomConfigMap, "coredns-custom-configmap", "",
+	cmd.Flags().StringVar(&joinFlags.CoreDNSCustomConfigMap, "coredns-custom-configmap", "",
 		"Name of the custom CoreDNS configmap to configure forwarding to lighthouse. It should be in "+
 			"<namespace>/<name> format where <namespace> is optional and defaults to kube-system")
 	cmd.Flags().BoolVar(&joinFlags.IgnoreRequirements, "ignore-requirements", false, "ignore requirement failures (unsupported)")

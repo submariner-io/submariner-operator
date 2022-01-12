@@ -33,14 +33,35 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func Submariner(clientProducer client.Producer, jo *WithJoinOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
+type SubmarinerOptions struct {
+	PreferredServer               bool
+	ForceUDPEncaps                bool
+	NATTraversal                  bool
+	IPSecDebug                    bool
+	SubmarinerDebug               bool
+	LoadBalancerEnabled           bool
+	HealthCheckEnabled            bool
+	NATTPort                      int
+	IKEPort                       int
+	HealthCheckInterval           uint64
+	HealthCheckMaxPacketLossCount uint64
+	ClusterID                     string
+	ColorCodes                    string
+	CableDriver                   string
+	CoreDNSCustomConfigMap        string
+	Repository                    string
+	ImageVersion                  string
+	CustomDomains                 []string
+}
+
+func Submariner(clientProducer client.Producer, options *SubmarinerOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
 	netconfig globalnet.Config, imageOverrides map[string]string, status reporter.Interface) error {
 	pskSecret, err := secret.Ensure(clientProducer.ForKubernetes(), constants.OperatorNamespace, brokerInfo.IPSecPSK)
 	if err != nil {
 		return status.Error(err, "Error creating PSK secret for cluster")
 	}
 
-	submarinerSpec := populateSubmarinerSpec(jo, brokerInfo, brokerSecret, pskSecret, netconfig, imageOverrides)
+	submarinerSpec := populateSubmarinerSpec(options, brokerInfo, brokerSecret, pskSecret, netconfig, imageOverrides)
 
 	err = submarinercr.Ensure(clientProducer.ForOperator(), constants.OperatorNamespace, submarinerSpec)
 	if err != nil {
@@ -50,24 +71,20 @@ func Submariner(clientProducer client.Producer, jo *WithJoinOptions, brokerInfo 
 	return nil
 }
 
-func populateSubmarinerSpec(jo *WithJoinOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret, pskSecret *v1.Secret,
+func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret, pskSecret *v1.Secret,
 	netconfig globalnet.Config, imageOverrides map[string]string) *submariner.SubmarinerSpec {
 	brokerURL := removeSchemaPrefix(brokerInfo.BrokerURL)
-
-	if jo.CustomDomains == nil && brokerInfo.CustomDomains != nil {
-		jo.CustomDomains = *brokerInfo.CustomDomains
-	}
 
 	// For backwards compatibility, the connection information is populated through the secret and individual components
 	// TODO skitt This will be removed in the release following 0.12
 	submarinerSpec := &submariner.SubmarinerSpec{
-		Repository:               getImageRepo(jo.Repository),
-		Version:                  getImageVersion(jo.ImageVersion),
-		CeIPSecNATTPort:          jo.NattPort,
-		CeIPSecIKEPort:           jo.IkePort,
-		CeIPSecDebug:             jo.IpsecDebug,
-		CeIPSecForceUDPEncaps:    jo.ForceUDPEncaps,
-		CeIPSecPreferredServer:   jo.PreferredServer,
+		Repository:               getImageRepo(options.Repository),
+		Version:                  getImageVersion(options.ImageVersion),
+		CeIPSecNATTPort:          options.NATTPort,
+		CeIPSecIKEPort:           options.IKEPort,
+		CeIPSecDebug:             options.IPSecDebug,
+		CeIPSecForceUDPEncaps:    options.ForceUDPEncaps,
+		CeIPSecPreferredServer:   options.PreferredServer,
 		CeIPSecPSK:               base64.StdEncoding.EncodeToString(brokerInfo.IPSecPSK.Data["psk"]),
 		CeIPSecPSKSecret:         pskSecret.ObjectMeta.Name,
 		BrokerK8sCA:              base64.StdEncoding.EncodeToString(brokerSecret.Data["ca.crt"]),
@@ -76,37 +93,37 @@ func populateSubmarinerSpec(jo *WithJoinOptions, brokerInfo *broker.Info, broker
 		BrokerK8sApiServer:       brokerURL,
 		BrokerK8sSecret:          brokerSecret.ObjectMeta.Name,
 		Broker:                   "k8s",
-		NatEnabled:               jo.NatTraversal,
-		Debug:                    jo.SubmarinerDebug,
-		ColorCodes:               jo.ColorCodes,
-		ClusterID:                jo.ClusterID,
+		NatEnabled:               options.NATTraversal,
+		Debug:                    options.SubmarinerDebug,
+		ColorCodes:               options.ColorCodes,
+		ClusterID:                options.ClusterID,
 		ServiceCIDR:              netconfig.ServiceCIDR,
 		ClusterCIDR:              netconfig.ClusterCIDR,
 		Namespace:                constants.SubmarinerNamespace,
-		CableDriver:              jo.CableDriver,
+		CableDriver:              options.CableDriver,
 		ServiceDiscoveryEnabled:  brokerInfo.IsServiceDiscoveryEnabled(),
 		ImageOverrides:           imageOverrides,
-		LoadBalancerEnabled:      jo.LoadBalancerEnabled,
+		LoadBalancerEnabled:      options.LoadBalancerEnabled,
 		ConnectionHealthCheck: &submariner.HealthCheckSpec{
-			Enabled:            jo.HealthCheckEnable,
-			IntervalSeconds:    jo.HealthCheckInterval,
-			MaxPacketLossCount: jo.HealthCheckMaxPacketLossCount,
+			Enabled:            options.HealthCheckEnabled,
+			IntervalSeconds:    options.HealthCheckInterval,
+			MaxPacketLossCount: options.HealthCheckMaxPacketLossCount,
 		},
 	}
 	if netconfig.GlobalnetCIDR != "" {
 		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR
 	}
 
-	if jo.CorednsCustomConfigMap != "" {
-		namespace, name := getCustomCoreDNSParams(jo.CorednsCustomConfigMap)
+	if options.CoreDNSCustomConfigMap != "" {
+		namespace, name := getCustomCoreDNSParams(options.CoreDNSCustomConfigMap)
 		submarinerSpec.CoreDNSCustomConfig = &submariner.CoreDNSCustomConfig{
 			ConfigMapName: name,
 			Namespace:     namespace,
 		}
 	}
 
-	if len(jo.CustomDomains) > 0 {
-		submarinerSpec.CustomDomains = jo.CustomDomains
+	if len(options.CustomDomains) > 0 {
+		submarinerSpec.CustomDomains = options.CustomDomains
 	}
 
 	return submarinerSpec
