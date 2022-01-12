@@ -228,7 +228,7 @@ func (s *Status) Failure(message string, a ...interface{}) {
 	if s.status != "" {
 		s.messageQueue = append(s.messageQueue, failureType(fmt.Sprintf(message, a...)))
 	} else {
-		s.logger.V(0).Infof(s.failureFormat, message)
+		s.logger.V(0).Infof(s.failureFormat, fmt.Sprintf(message, a...))
 	}
 }
 
@@ -242,7 +242,7 @@ func (s *Status) Success(message string, a ...interface{}) {
 	if s.status != "" {
 		s.messageQueue = append(s.messageQueue, successType(fmt.Sprintf(message, a...)))
 	} else {
-		s.logger.V(0).Infof(s.successFormat, message)
+		s.logger.V(0).Infof(s.successFormat, fmt.Sprintf(message, a...))
 	}
 }
 
@@ -256,7 +256,7 @@ func (s *Status) Warning(message string, a ...interface{}) {
 	if s.status != "" {
 		s.messageQueue = append(s.messageQueue, warningType(fmt.Sprintf(message, a...)))
 	} else {
-		s.logger.V(0).Infof(s.warningFormat, message)
+		s.logger.V(0).Infof(s.warningFormat, fmt.Sprintf(message, a...))
 	}
 }
 

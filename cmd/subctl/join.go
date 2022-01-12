@@ -27,11 +27,13 @@ import (
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/cluster"
+	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/nodes"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/join"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
 )
@@ -49,25 +51,19 @@ var joinCmd = &cobra.Command{
 
 		brokerInfo, err := broker.ReadInfoFromFile(args[0])
 		exit.OnError(status.Error(err, "Error loading the broker information from the given file"))
-		fmt.Printf("* %s says broker is at: %s\n", args[0], brokerInfo.BrokerURL)
+		status.Success("%s indicates broker is at %s", args[0], brokerInfo.BrokerURL)
 
 		determineClusterID(status)
-
-		if joinFlags.ServiceCIDR == "" {
-			joinFlags.ServiceCIDR, err = askForCIDR("Service")
-			exit.OnError(status.Error(err, "Error detecting Service CIDR"))
-		}
-
-		if joinFlags.ClusterCIDR == "" {
-			joinFlags.ClusterCIDR, err = askForCIDR("Cluster")
-			exit.OnError(status.Error(err, "Error detecting Cluster CIDR"))
-		}
 
 		clientConfig, err := restConfigProducer.ForCluster()
 		exit.OnError(status.Error(err, "Error creating the REST config"))
 
 		clientProducer, err := client.NewProducerFromRestConfig(clientConfig)
 		exit.OnError(status.Error(err, "Error creating the client producer"))
+
+		networkDetails := getNetworkDetails(clientProducer, status)
+		determinePodCIDR(networkDetails, status)
+		determineServiceCIDR(networkDetails, status)
 
 		gatewayNodesPresent, err := nodes.ListGateways(clientProducer.ForKubernetes())
 		exit.OnError(status.Error(err, "Error retrieving the gateway nodes"))
@@ -200,38 +196,22 @@ func askForClusterID() (string, error) {
 }
 
 func askForCIDR(name string) (string, error) {
-	autodetect := false
-	prompt := &survey.Confirm{
-		Message: fmt.Sprintf("Do you want to autodetect %s CIDR?", name),
-	}
+	qs := []*survey.Question{{
+		Name:     "cidr",
+		Prompt:   &survey.Input{Message: fmt.Sprintf("What's the %s CIDR for your cluster?", name)},
+		Validate: survey.Required,
+	}}
 
-	err := survey.AskOne(prompt, &autodetect)
+	answers := struct {
+		Cidr string
+	}{}
+
+	err := survey.Ask(qs, &answers)
 	if err != nil {
 		return "", err // nolint:wrapcheck // No need to wrap here
 	}
 
-	if !autodetect {
-		qs := []*survey.Question{{
-			Name:     "cidr",
-			Prompt:   &survey.Input{Message: fmt.Sprintf("What's the %s CIDR for your cluster?", name)},
-			Validate: survey.Required,
-		}}
-
-		answers := struct {
-			Cidr string
-		}{}
-
-		err := survey.Ask(qs, &answers)
-		if err != nil {
-			return "", err // nolint:wrapcheck // No need to wrap here
-		}
-
-		return strings.TrimSpace(answers.Cidr), nil
-	}
-
-	fmt.Printf("Autodetecting %s CIDR", name)
-
-	return "", nil
+	return strings.TrimSpace(answers.Cidr), nil
 }
 
 func determineClusterID(status reporter.Interface) {
@@ -253,5 +233,51 @@ func determineClusterID(status reporter.Interface) {
 	if joinFlags.ClusterID == "" {
 		joinFlags.ClusterID, err = askForClusterID()
 		exit.OnError(status.Error(err, "Error collecting cluster ID"))
+	}
+}
+
+func getNetworkDetails(clientProducer client.Producer, status reporter.Interface) *network.ClusterNetwork {
+	status.Start("Discovering network details")
+
+	networkDetails, err := network.Discover(clientProducer.ForDynamic(), clientProducer.ForKubernetes(), clientProducer.ForOperator(),
+		constants.OperatorNamespace)
+	if err != nil {
+		status.Warning("Unable to discover network details: %s", err)
+	} else if networkDetails == nil {
+		status.Warning("No network details discovered")
+	}
+
+	status.End()
+
+	if networkDetails != nil {
+		networkDetails.Show()
+	}
+
+	return networkDetails
+}
+
+func determinePodCIDR(nd *network.ClusterNetwork, status reporter.Interface) {
+	if joinFlags.ClusterCIDR != "" {
+		if nd != nil && len(nd.PodCIDRs) > 0 && nd.PodCIDRs[0] != joinFlags.ClusterCIDR {
+			status.Warning("The provided pod CIDR for the cluster (%s) does not match the discovered CIDR (%s)",
+				joinFlags.ClusterCIDR, nd.PodCIDRs[0])
+		}
+	} else if nd == nil || len(nd.PodCIDRs) == 0 {
+		var err error
+		joinFlags.ClusterCIDR, err = askForCIDR("Pod")
+		exit.OnError(status.Error(err, "Error collecting CIDR"))
+	}
+}
+
+func determineServiceCIDR(nd *network.ClusterNetwork, status reporter.Interface) {
+	if joinFlags.ServiceCIDR != "" {
+		if nd != nil && len(nd.ServiceCIDRs) > 0 && nd.ServiceCIDRs[0] != joinFlags.ServiceCIDR {
+			status.Warning("The provided service CIDR for the cluster (%s) does not match the discovered CIDR (%s)",
+				joinFlags.ServiceCIDR, nd.ServiceCIDRs[0])
+		}
+	} else if nd == nil || len(nd.ServiceCIDRs) == 0 {
+		var err error
+		joinFlags.ServiceCIDR, err = askForCIDR("Service")
+		exit.OnError(status.Error(err, "Error collecting CIDR"))
 	}
 }
