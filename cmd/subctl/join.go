@@ -36,9 +36,13 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/join"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
+	"k8s.io/client-go/kubernetes"
 )
 
-var joinFlags deploy.WithJoinOptions
+var (
+	joinFlags    deploy.WithJoinOptions
+	labelGateway bool
+)
 
 var joinCmd = &cobra.Command{
 	Use:     "join",
@@ -65,25 +69,11 @@ var joinCmd = &cobra.Command{
 		determinePodCIDR(networkDetails, status)
 		determineServiceCIDR(networkDetails, status)
 
-		gatewayNodes, err := nodes.ListGateways(clientProducer.ForKubernetes())
-		exit.OnError(status.Error(err, "Error retrieving the gateway nodes"))
-
-		var gatewayNode struct{ Node string }
-		// If no Gateway nodes present, get all worker nodes and ask user to select one of them as gateway node
-		if len(gatewayNodes) == 0 {
-			allWorkerNodeNames, err := nodes.GetAllWorkerNames(clientProducer.ForKubernetes())
-			exit.OnError(status.Error(err, "Error listing the worker nodes"))
-
-			gatewayNode, err = askForGatewayNode(allWorkerNodeNames)
-			exit.OnError(status.Error(err, "Error getting gateway node"))
-		} else {
-			fmt.Printf("* There are %d labeled nodes in the cluster:\n", len(gatewayNodes))
-			for i := range gatewayNodes {
-				fmt.Printf("  - %s\n", gatewayNodes[i])
-			}
+		if brokerInfo.IsConnectivityEnabled() && labelGateway {
+			possiblyLabelGateway(clientProducer.ForKubernetes(), status)
 		}
 
-		err = join.SubmarinerCluster(brokerInfo, &joinFlags, clientProducer, status, gatewayNode)
+		err = join.SubmarinerCluster(brokerInfo, &joinFlags, clientProducer, status)
 		exit.OnError(err)
 	},
 }
@@ -117,7 +107,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&joinFlags.SubmarinerDebug, "pod-debug", false,
 		"enable Submariner pod debugging (verbose logging in the deployed pods)")
 	cmd.Flags().BoolVar(&joinFlags.OperatorDebug, "operator-debug", false, "enable operator debugging (verbose logging)")
-	cmd.Flags().BoolVar(&joinFlags.LabelGateway, "label-gateway", true, "label gateways if necessary")
+	cmd.Flags().BoolVar(&labelGateway, "label-gateway", true, "label gateways if necessary")
 	cmd.Flags().StringVar(&joinFlags.CableDriver, "cable-driver", "", "cable driver implementation")
 	cmd.Flags().UintVar(&joinFlags.GlobalnetClusterSize, "globalnet-cluster-size", 0,
 		"cluster size for GlobalCIDR allocated to this cluster (amount of global IPs)")
@@ -141,13 +131,60 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&joinFlags.IgnoreRequirements, "ignore-requirements", false, "ignore requirement failures (unsupported)")
 }
 
-func askForGatewayNode(allWorkerNodeNames []string) (struct{ Node string }, error) {
+func possiblyLabelGateway(kubeClient kubernetes.Interface, status reporter.Interface) {
+	status.Start("Retrieving the gateway nodes")
+
+	gatewayNodes, err := nodes.ListGateways(kubeClient)
+	exit.OnError(status.Error(err, "Error retrieving the gateway nodes"))
+
+	status.End()
+
+	if len(gatewayNodes) > 0 {
+		fmt.Printf("   There are %d node(s) labeled as gateways:\n", len(gatewayNodes))
+
+		for i := range gatewayNodes {
+			fmt.Printf("    - %s\n", gatewayNodes[i])
+		}
+
+		return
+	}
+
+	// No Gateway nodes are present, get all worker nodes and ask user to select one of them as gateway node
+	status.Start("Retrieving all worker nodes")
+
+	workerNodes, err := nodes.GetAllWorkerNames(kubeClient)
+	exit.OnError(status.Error(err, "Error listing the worker nodes"))
+
+	status.End()
+
+	if len(workerNodes) == 0 {
+		status.Warning("No worker node available to label as the gateway")
+		return
+	}
+
+	var nodeToLabel string
+	if len(workerNodes) == 1 {
+		nodeToLabel = workerNodes[0]
+	} else {
+		nodeToLabel, err = askForGatewayNode(workerNodes)
+		exit.OnError(status.Error(err, "Error getting gateway node"))
+	}
+
+	status.Start("Labeling node %q as a gateway", nodeToLabel)
+
+	err = nodes.LabelAsGateway(kubeClient, nodeToLabel)
+	exit.OnError(status.Error(err, "Error labeling node %q as a gateway", nodeToLabel))
+
+	status.End()
+}
+
+func askForGatewayNode(workerNodeNames []string) (string, error) {
 	qs := []*survey.Question{
 		{
 			Name: "node",
 			Prompt: &survey.Select{
 				Message: "Which node should be used as the gateway?",
-				Options: allWorkerNodeNames,
+				Options: workerNodeNames,
 			},
 		},
 	}
@@ -158,10 +195,10 @@ func askForGatewayNode(allWorkerNodeNames []string) (struct{ Node string }, erro
 
 	err := survey.Ask(qs, &answers)
 	if err != nil {
-		return struct{ Node string }{}, err // nolint:wrapcheck // No need to wrap here
+		return "", err // nolint:wrapcheck // No need to wrap here
 	}
 
-	return answers, nil
+	return answers.Node, nil
 }
 
 func checkArgumentPassed(args []string) {
