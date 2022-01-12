@@ -54,18 +54,6 @@ func populateSubmarinerSpec(jo *WithJoinOptions, brokerInfo *broker.Info, broker
 	netconfig globalnet.Config, imageOverrides map[string]string) *submariner.SubmarinerSpec {
 	brokerURL := removeSchemaPrefix(brokerInfo.BrokerURL)
 
-	// if our network discovery code was capable of discovering those CIDRs
-	// we don't need to explicitly set it in the operator
-	crServiceCIDR := ""
-	if !netconfig.ServiceCIDRAutoDetected {
-		crServiceCIDR = netconfig.ServiceCIDR
-	}
-
-	crClusterCIDR := ""
-	if !netconfig.ClusterCIDRAutoDetected {
-		crClusterCIDR = netconfig.ClusterCIDR
-	}
-
 	if jo.CustomDomains == nil && brokerInfo.CustomDomains != nil {
 		jo.CustomDomains = *brokerInfo.CustomDomains
 	}
@@ -92,8 +80,8 @@ func populateSubmarinerSpec(jo *WithJoinOptions, brokerInfo *broker.Info, broker
 		Debug:                    jo.SubmarinerDebug,
 		ColorCodes:               jo.ColorCodes,
 		ClusterID:                jo.ClusterID,
-		ServiceCIDR:              crServiceCIDR,
-		ClusterCIDR:              crClusterCIDR,
+		ServiceCIDR:              netconfig.ServiceCIDR,
+		ClusterCIDR:              netconfig.ClusterCIDR,
 		Namespace:                constants.SubmarinerNamespace,
 		CableDriver:              jo.CableDriver,
 		ServiceDiscoveryEnabled:  brokerInfo.IsServiceDiscoveryEnabled(),

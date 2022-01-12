@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/submariner-io/submariner-operator/internal/cluster"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/internal/nodes"
@@ -39,7 +38,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// nolint:gocyclo // Ignore for now.
+// nolint:gocyclo // FIXME
 func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clientProducer client.Producer,
 	status reporter.Interface, gatewayNode struct{ Node string }) error {
 	err := checkRequirements(clientProducer.ForKubernetes(), jo.IgnoreRequirements, status)
@@ -59,25 +58,6 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 		}
 	}
 
-	status.Start("Discovering network details")
-
-	networkDetails, err := cluster.GetNetworkDetails(clientProducer, status)
-	if err != nil {
-		return status.Error(err, "Unable to discover network details")
-	}
-
-	serviceCIDR, serviceCIDRautoDetected, err := cluster.GetServiceCIDR(jo.ServiceCIDR, networkDetails, status)
-	if err != nil {
-		return status.Error(err, "Error determining the service CIDR")
-	}
-
-	clusterCIDR, clusterCIDRautoDetected, err := cluster.GetPodCIDR(jo.ClusterCIDR, networkDetails, status)
-	if err != nil {
-		return status.Error(err, "Error determining the pod CIDR")
-	}
-
-	status.End()
-
 	status.Start("Gathering relevant information from Broker")
 
 	brokerAdminConfig, err := brokerInfo.GetBrokerAdministratorConfig()
@@ -92,13 +72,11 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 
 	brokerNamespace := string(brokerInfo.ClientToken.Data["namespace"])
 	netconfig := globalnet.Config{
-		ClusterID:               jo.ClusterID,
-		GlobalnetCIDR:           jo.GlobalnetCIDR,
-		ServiceCIDR:             serviceCIDR,
-		ServiceCIDRAutoDetected: serviceCIDRautoDetected,
-		ClusterCIDR:             clusterCIDR,
-		ClusterCIDRAutoDetected: clusterCIDRautoDetected,
-		GlobalnetClusterSize:    jo.GlobalnetClusterSize,
+		ClusterID:            jo.ClusterID,
+		GlobalnetCIDR:        jo.GlobalnetCIDR,
+		ServiceCIDR:          jo.ServiceCIDR,
+		ClusterCIDR:          jo.ClusterCIDR,
+		GlobalnetClusterSize: jo.GlobalnetClusterSize,
 	}
 
 	if jo.GlobalnetEnabled {
