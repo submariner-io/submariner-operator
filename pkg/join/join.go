@@ -16,7 +16,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// nolint:gocyclo // Ignore for now.
 package join
 
 import (
@@ -27,7 +26,6 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/internal/nodes"
-	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
@@ -40,37 +38,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// nolint:gocognit // Ignore for now.
-func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, restConfigProducer restconfig.Producer,
+// nolint:gocyclo // Ignore for now.
+func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clientProducer client.Producer,
 	status reporter.Interface, gatewayNode struct{ Node string }) error {
 	status.Start("Trying to join cluster %s", jo.ClusterID)
-
-	if jo.ClusterID == "" {
-		var err error
-
-		jo.ClusterID, err = restConfigProducer.GetClusterID()
-		if err != nil {
-			return status.Error(err, "Error determining cluster ID of the target cluster")
-		}
-	}
-
-	if valid, err := cluster.IsValidID(jo.ClusterID); !valid {
-		fmt.Printf("Error: %s\n", err.Error())
-	}
 
 	err := isValidCustomCoreDNSConfig(jo.CorednsCustomConfigMap)
 	if err != nil {
 		return status.Error(err, "error validating custom CoreDNS config")
-	}
-
-	clientConfig, err := restConfigProducer.ForCluster()
-	if err != nil {
-		return status.Error(err, "Error connecting to the target cluster")
-	}
-
-	clientProducer, err := client.NewProducerFromRestConfig(clientConfig)
-	if err != nil {
-		return status.Error(err, "error creating client producer")
 	}
 
 	if !jo.IgnoreRequirements {

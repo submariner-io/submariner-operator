@@ -33,6 +33,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
 	"github.com/submariner-io/submariner-operator/pkg/join"
+	"github.com/submariner-io/submariner-operator/pkg/reporter"
 )
 
 var joinFlags deploy.WithJoinOptions
@@ -50,10 +51,7 @@ var joinCmd = &cobra.Command{
 		exit.OnError(status.Error(err, "Error loading the broker information from the given file"))
 		fmt.Printf("* %s says broker is at: %s\n", args[0], brokerInfo.BrokerURL)
 
-		if joinFlags.ClusterID == "" {
-			joinFlags.ClusterID, err = askForClusterID()
-			exit.OnError(status.Error(err, "Error collecting cluster ID"))
-		}
+		determineClusterID(status)
 
 		if joinFlags.ServiceCIDR == "" {
 			joinFlags.ServiceCIDR, err = askForCIDR("Service")
@@ -84,7 +82,7 @@ var joinCmd = &cobra.Command{
 			exit.OnError(status.Error(err, "Error getting gateway node"))
 		}
 
-		err = join.SubmarinerCluster(brokerInfo, &joinFlags, restConfigProducer, status, gatewayNode)
+		err = join.SubmarinerCluster(brokerInfo, &joinFlags, clientProducer, status, gatewayNode)
 		exit.OnError(err)
 	},
 }
@@ -184,10 +182,7 @@ func askForClusterID() (string, error) {
 				return nil
 			}
 
-			_, err := cluster.IsValidID(str)
-			fmt.Printf("error is %s", err)
-
-			return err // nolint:wrapcheck // No need to wrap
+			return cluster.IsValidID(str) // nolint:wrapcheck // No need to wrap
 		},
 	})
 
@@ -237,4 +232,26 @@ func askForCIDR(name string) (string, error) {
 	fmt.Printf("Autodetecting %s CIDR", name)
 
 	return "", nil
+}
+
+func determineClusterID(status reporter.Interface) {
+	var err error
+
+	if joinFlags.ClusterID == "" {
+		joinFlags.ClusterID, err = restConfigProducer.GetClusterID()
+		exit.OnError(status.Error(err, "Error determining cluster ID of the target cluster"))
+	}
+
+	if joinFlags.ClusterID != "" {
+		err = cluster.IsValidID(joinFlags.ClusterID)
+		if err != nil {
+			_ = status.Error(err, "Invalid cluster ID")
+			joinFlags.ClusterID = ""
+		}
+	}
+
+	if joinFlags.ClusterID == "" {
+		joinFlags.ClusterID, err = askForClusterID()
+		exit.OnError(status.Error(err, "Error collecting cluster ID"))
+	}
 }
