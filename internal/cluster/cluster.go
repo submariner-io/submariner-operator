@@ -23,18 +23,18 @@ import (
 	"regexp"
 )
 
-func IsValidID(clusterID string) (bool, error) {
+func IsValidID(clusterID string) error {
 	// Make sure the clusterid is a valid DNS-1123 string
 	if match, _ := regexp.MatchString("^[a-z0-9][a-z0-9.-]*[a-z0-9]$", clusterID); !match {
-		return false, fmt.Errorf("cluster IDs must be valid DNS-1123 names, with only lowercase alphanumerics,\n"+
+		return fmt.Errorf("cluster IDs must be valid DNS-1123 names, with only lowercase alphanumerics,\n"+
 			"'.' or '-' (and the first and last characters must be alphanumerics).\n"+
 			"%s doesn't meet these requirements", clusterID)
 	}
 
 	if len(clusterID) > 63 {
-		return false, fmt.Errorf("the cluster ID %q has a length of %d characters which exceeds the maximum"+
+		return fmt.Errorf("the cluster ID %q has a length of %d characters which exceeds the maximum"+
 			" supported length of 63", clusterID, len(clusterID))
 	}
 
-	return true, nil
+	return nil
 }
