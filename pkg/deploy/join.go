@@ -17,16 +17,16 @@ package deploy
 type WithJoinOptions struct {
 	PreferredServer               bool
 	ForceUDPEncaps                bool
-	NatTraversal                  bool
+	NATTraversal                  bool
 	IgnoreRequirements            bool
 	GlobalnetEnabled              bool
-	IpsecDebug                    bool
+	IPSecDebug                    bool
 	SubmarinerDebug               bool
 	OperatorDebug                 bool
 	LoadBalancerEnabled           bool
-	HealthCheckEnable             bool
-	NattPort                      int
-	IkePort                       int
+	HealthCheckEnabled            bool
+	NATTPort                      int
+	IKEPort                       int
 	GlobalnetClusterSize          uint
 	HealthCheckInterval           uint64
 	HealthCheckMaxPacketLossCount uint64
@@ -38,7 +38,7 @@ type WithJoinOptions struct {
 	ImageVersion                  string
 	ColorCodes                    string
 	CableDriver                   string
-	CorednsCustomConfigMap        string
+	CoreDNSCustomConfigMap        string
 	CustomDomains                 []string
 	ImageOverrideArr              []string
 }

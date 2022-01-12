@@ -44,7 +44,7 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 		return err
 	}
 
-	err = isValidCustomCoreDNSConfig(jo.CorednsCustomConfigMap)
+	err = isValidCustomCoreDNSConfig(jo.CoreDNSCustomConfigMap)
 	if err != nil {
 		return status.Error(err, "error validating custom CoreDNS config")
 	}
@@ -117,7 +117,8 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 	if brokerInfo.IsConnectivityEnabled() {
 		status.Start("Deploying submariner")
 
-		err := deploy.Submariner(clientProducer, jo, brokerInfo, brokerSecret, netconfig, imageOverrides, status)
+		err := deploy.Submariner(clientProducer, submarinerOptionsFrom(jo), brokerInfo, brokerSecret, netconfig,
+			imageOverrides, status)
 		if err != nil {
 			return status.Error(err, "Error deploying the Submariner resource")
 		}
@@ -137,6 +138,29 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 	}
 
 	return nil
+}
+
+func submarinerOptionsFrom(joinOptions *deploy.WithJoinOptions) *deploy.SubmarinerOptions {
+	return &deploy.SubmarinerOptions{
+		PreferredServer:               joinOptions.PreferredServer,
+		ForceUDPEncaps:                joinOptions.ForceUDPEncaps,
+		NATTraversal:                  joinOptions.NATTraversal,
+		IPSecDebug:                    joinOptions.IPSecDebug,
+		SubmarinerDebug:               joinOptions.SubmarinerDebug,
+		LoadBalancerEnabled:           joinOptions.LoadBalancerEnabled,
+		HealthCheckEnabled:            joinOptions.HealthCheckEnabled,
+		NATTPort:                      joinOptions.NATTPort,
+		IKEPort:                       joinOptions.IKEPort,
+		HealthCheckInterval:           joinOptions.HealthCheckInterval,
+		HealthCheckMaxPacketLossCount: joinOptions.HealthCheckMaxPacketLossCount,
+		ClusterID:                     joinOptions.ClusterID,
+		ColorCodes:                    joinOptions.ColorCodes,
+		CableDriver:                   joinOptions.CableDriver,
+		CoreDNSCustomConfigMap:        joinOptions.CoreDNSCustomConfigMap,
+		Repository:                    joinOptions.Repository,
+		ImageVersion:                  joinOptions.ImageVersion,
+		CustomDomains:                 joinOptions.CustomDomains,
+	}
 }
 
 func checkRequirements(kubeClient kubernetes.Interface, ignoreRequirements bool, status reporter.Interface) error {

@@ -64,8 +64,8 @@ func populateServiceDiscoverySpec(jo *WithJoinOptions, brokerInfo *broker.Info, 
 		ImageOverrides:           imageOverrides,
 	}
 
-	if jo.CorednsCustomConfigMap != "" {
-		namespace, name := getCustomCoreDNSParams(jo.CorednsCustomConfigMap)
+	if jo.CoreDNSCustomConfigMap != "" {
+		namespace, name := getCustomCoreDNSParams(jo.CoreDNSCustomConfigMap)
 		serviceDiscoverySpec.CoreDNSCustomConfig = &submariner.CoreDNSCustomConfig{
 			ConfigMapName: name,
 			Namespace:     namespace,
