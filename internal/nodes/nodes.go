@@ -27,6 +27,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/internal/constants"
+	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -70,34 +71,28 @@ func GetAllWorkerNames(clientset kubernetes.Interface) ([]string, error) {
 		}
 	}
 
-	allNodeNames := []string{}
-	for i := range workerNodes.Items {
-		allNodeNames = append(allNodeNames, workerNodes.Items[i].GetName())
-	}
-
-	return allNodeNames, nil
+	return getNodeNames(workerNodes), nil
 }
 
-// ListGateways returns all nodes labelled as gateway.
-func ListGateways(clientset kubernetes.Interface) (bool, error) {
+func getNodeNames(nodes *corev1.NodeList) []string {
+	names := []string{}
+	for i := range nodes.Items {
+		names = append(names, nodes.Items[i].GetName())
+	}
+
+	return names
+}
+
+// ListGateways returns the names of all node labeled as a gateway.
+func ListGateways(clientset kubernetes.Interface) ([]string, error) {
 	selector := labels.SelectorFromSet(map[string]string{constants.SubmarinerGatewayLabel: constants.TrueLabel})
 
 	labeledNodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{LabelSelector: selector.String()})
 	if err != nil {
-		return false, errors.Wrap(err, "error listing Nodes")
+		return nil, errors.Wrap(err, "error listing Nodes")
 	}
 
-	if len(labeledNodes.Items) > 0 {
-		fmt.Printf("* There are %d labeled nodes in the cluster:\n", len(labeledNodes.Items))
-
-		for i := range labeledNodes.Items {
-			fmt.Printf("  - %s\n", labeledNodes.Items[i].GetName())
-		}
-
-		return true, nil
-	}
-
-	return false, nil
+	return getNodeNames(labeledNodes), nil
 }
 
 // this function was sourced from:

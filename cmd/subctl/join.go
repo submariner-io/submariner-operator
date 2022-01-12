@@ -65,17 +65,22 @@ var joinCmd = &cobra.Command{
 		determinePodCIDR(networkDetails, status)
 		determineServiceCIDR(networkDetails, status)
 
-		gatewayNodesPresent, err := nodes.ListGateways(clientProducer.ForKubernetes())
+		gatewayNodes, err := nodes.ListGateways(clientProducer.ForKubernetes())
 		exit.OnError(status.Error(err, "Error retrieving the gateway nodes"))
 
 		var gatewayNode struct{ Node string }
-		// If not Gateway nodes present, get all worker nodes and ask user to select one of them as gateway node
-		if !gatewayNodesPresent {
+		// If no Gateway nodes present, get all worker nodes and ask user to select one of them as gateway node
+		if len(gatewayNodes) == 0 {
 			allWorkerNodeNames, err := nodes.GetAllWorkerNames(clientProducer.ForKubernetes())
 			exit.OnError(status.Error(err, "Error listing the worker nodes"))
 
 			gatewayNode, err = askForGatewayNode(allWorkerNodeNames)
 			exit.OnError(status.Error(err, "Error getting gateway node"))
+		} else {
+			fmt.Printf("* There are %d labeled nodes in the cluster:\n", len(gatewayNodes))
+			for i := range gatewayNodes {
+				fmt.Printf("  - %s\n", gatewayNodes[i])
+			}
 		}
 
 		err = join.SubmarinerCluster(brokerInfo, &joinFlags, clientProducer, status, gatewayNode)
