@@ -19,6 +19,7 @@ limitations under the License.
 package join
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -41,18 +42,14 @@ import (
 // nolint:gocyclo // Ignore for now.
 func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clientProducer client.Producer,
 	status reporter.Interface, gatewayNode struct{ Node string }) error {
-	status.Start("Trying to join cluster %s", jo.ClusterID)
-
-	err := isValidCustomCoreDNSConfig(jo.CorednsCustomConfigMap)
+	err := checkRequirements(clientProducer.ForKubernetes(), jo.IgnoreRequirements, status)
 	if err != nil {
-		return status.Error(err, "error validating custom CoreDNS config")
+		return err
 	}
 
-	if !jo.IgnoreRequirements {
-		err = checkRequirements(clientProducer.ForKubernetes())
-		if err != nil {
-			return status.Error(err, "Error checking Submariner requirements")
-		}
+	err = isValidCustomCoreDNSConfig(jo.CorednsCustomConfigMap)
+	if err != nil {
+		return status.Error(err, "error validating custom CoreDNS config")
 	}
 
 	if brokerInfo.IsConnectivityEnabled() && jo.LabelGateway {
@@ -61,8 +58,6 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 			return status.Error(err, "Unable to set the gateway node up")
 		}
 	}
-
-	status.End()
 
 	status.Start("Discovering network details")
 
@@ -175,20 +170,25 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 	return nil
 }
 
-func checkRequirements(kubeClient kubernetes.Interface) error {
+func checkRequirements(kubeClient kubernetes.Interface, ignoreRequirements bool, status reporter.Interface) error {
 	_, failedRequirements, err := version.CheckRequirements(kubeClient)
-	// We display failed requirements even if an error occurred
-	if len(failedRequirements) > 0 {
-		fmt.Println("The target cluster fails to meet Submariner's requirements:")
 
+	if len(failedRequirements) > 0 {
+		msg := "The target cluster fails to meet Submariner's version requirements:\n"
 		for i := range failedRequirements {
-			fmt.Printf("* %s\n", (failedRequirements)[i])
+			msg += fmt.Sprintf("* %s\n", failedRequirements[i])
 		}
 
-		return err // nolint:wrapcheck // No need to wrap
+		if !ignoreRequirements {
+			status.Failure(msg)
+
+			return errors.New("version requirements not met")
+		}
+
+		status.Warning(msg)
 	}
 
-	return err // nolint:wrapcheck // No need to wrap
+	return status.Error(err, "unable to check version requirements")
 }
 
 func populateBrokerSecret(brokerInfo *broker.Info) *v1.Secret {
