@@ -36,7 +36,7 @@ func init() {
 		Short: "Check the Submariner deployment",
 		Long:  "This command checks that the Submariner components are properly deployed and running with no overlapping CIDRs.",
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(func(cluster *cmd.Cluster) bool {
+			cmd.ExecuteMultiCluster(restConfigProducer, func(cluster *cmd.Cluster) bool {
 				if cluster.Submariner == nil {
 					status := cli.NewStatus()
 					status.Start(cmd.SubmMissingMessage)

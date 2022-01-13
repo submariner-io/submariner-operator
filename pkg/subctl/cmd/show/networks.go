@@ -36,7 +36,7 @@ func init() {
 		      and the relevant network details from your cluster.`,
 		PreRunE: restConfigProducer.CheckVersionMismatch,
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(showNetwork)
+			cmd.ExecuteMultiCluster(restConfigProducer, showNetwork)
 		},
 	})
 }
