@@ -97,7 +97,7 @@ var gatherCmd = &cobra.Command{
 		"can be selected by component (%v) and type (%v). Default is to capture all data.",
 		strings.Join(getAllModuleKeys(), ","), strings.Join(getAllTypeKeys(), ",")),
 	Run: func(command *cobra.Command, args []string) {
-		cmd.ExecuteMultiCluster(gatherData)
+		cmd.ExecuteMultiCluster(restConfigProducer, gatherData)
 	},
 }
 

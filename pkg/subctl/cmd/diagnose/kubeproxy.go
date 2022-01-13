@@ -37,7 +37,7 @@ func init() {
 		Short: "Check the kube-proxy mode",
 		Long:  "This command checks if the kube-proxy mode is supported by Submariner.",
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(checkKubeProxyMode)
+			cmd.ExecuteMultiCluster(restConfigProducer, checkKubeProxyMode)
 		},
 	}
 

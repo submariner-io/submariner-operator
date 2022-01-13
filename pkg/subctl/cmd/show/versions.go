@@ -43,7 +43,7 @@ func init() {
 		Long:    `This command shows the versions of the submariner components in the cluster.`,
 		PreRunE: restConfigProducer.CheckVersionMismatch,
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(showVersions)
+			cmd.ExecuteMultiCluster(restConfigProducer, showVersions)
 		},
 	})
 }
