@@ -30,9 +30,18 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func ServiceDiscovery(clientProducer client.Producer, jo *WithJoinOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
+type ServiceDiscoveryOptions struct {
+	SubmarinerDebug        bool
+	ClusterID              string
+	CoreDNSCustomConfigMap string
+	Repository             string
+	ImageVersion           string
+	CustomDomains          []string
+}
+
+func ServiceDiscovery(clientProducer client.Producer, options *ServiceDiscoveryOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
 	imageOverrides map[string]string, status reporter.Interface) error {
-	serviceDiscoverySpec := populateServiceDiscoverySpec(jo, brokerInfo, brokerSecret, imageOverrides)
+	serviceDiscoverySpec := populateServiceDiscoverySpec(options, brokerInfo, brokerSecret, imageOverrides)
 
 	err := servicediscoverycr.Ensure(clientProducer.ForOperator(), constants.OperatorNamespace, serviceDiscoverySpec)
 	if err != nil {
@@ -42,38 +51,34 @@ func ServiceDiscovery(clientProducer client.Producer, jo *WithJoinOptions, broke
 	return nil
 }
 
-func populateServiceDiscoverySpec(jo *WithJoinOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
+func populateServiceDiscoverySpec(options *ServiceDiscoveryOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
 	imageOverrides map[string]string) *submariner.ServiceDiscoverySpec {
 	brokerURL := removeSchemaPrefix(brokerInfo.BrokerURL)
 
-	if jo.CustomDomains == nil && brokerInfo.CustomDomains != nil {
-		jo.CustomDomains = *brokerInfo.CustomDomains
-	}
-
 	serviceDiscoverySpec := submariner.ServiceDiscoverySpec{
-		Repository:               jo.Repository,
-		Version:                  jo.ImageVersion,
+		Repository:               options.Repository,
+		Version:                  options.ImageVersion,
 		BrokerK8sCA:              base64.StdEncoding.EncodeToString(brokerSecret.Data["ca.crt"]),
 		BrokerK8sRemoteNamespace: string(brokerSecret.Data["namespace"]),
 		BrokerK8sApiServerToken:  string(brokerSecret.Data["token"]),
 		BrokerK8sApiServer:       brokerURL,
 		BrokerK8sSecret:          brokerSecret.ObjectMeta.Name,
-		Debug:                    jo.SubmarinerDebug,
-		ClusterID:                jo.ClusterID,
+		Debug:                    options.SubmarinerDebug,
+		ClusterID:                options.ClusterID,
 		Namespace:                constants.SubmarinerNamespace,
 		ImageOverrides:           imageOverrides,
 	}
 
-	if jo.CoreDNSCustomConfigMap != "" {
-		namespace, name := getCustomCoreDNSParams(jo.CoreDNSCustomConfigMap)
+	if options.CoreDNSCustomConfigMap != "" {
+		namespace, name := getCustomCoreDNSParams(options.CoreDNSCustomConfigMap)
 		serviceDiscoverySpec.CoreDNSCustomConfig = &submariner.CoreDNSCustomConfig{
 			ConfigMapName: name,
 			Namespace:     namespace,
 		}
 	}
 
-	if len(jo.CustomDomains) > 0 {
-		serviceDiscoverySpec.CustomDomains = jo.CustomDomains
+	if len(options.CustomDomains) > 0 {
+		serviceDiscoverySpec.CustomDomains = options.CustomDomains
 	}
 
 	return &serviceDiscoverySpec
