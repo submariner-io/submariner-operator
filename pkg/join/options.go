@@ -40,7 +40,6 @@ type Options struct {
 	GlobalnetCIDR                 string
 	Repository                    string
 	ImageVersion                  string
-	ColorCodes                    string
 	CableDriver                   string
 	CoreDNSCustomConfigMap        string
 	CustomDomains                 []string

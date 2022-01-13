@@ -124,7 +124,6 @@ type (
 )
 
 const (
-	DefaultColorCode                     = "blue"
 	K8s                   KubernetesType = "k8s"
 	OCP                                  = "ocp"
 	EKS                                  = "eks"
@@ -219,7 +218,6 @@ func (s *Submariner) UnmarshalJSON(data []byte) error {
 		Spec: SubmarinerSpec{
 			Repository: DefaultRepo,
 			Version:    DefaultSubmarinerVersion,
-			ColorCodes: DefaultColorCode,
 		},
 	}
 

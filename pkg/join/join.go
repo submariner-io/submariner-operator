@@ -155,7 +155,6 @@ func submarinerOptionsFrom(joinOptions *Options) *deploy.SubmarinerOptions {
 		HealthCheckInterval:           joinOptions.HealthCheckInterval,
 		HealthCheckMaxPacketLossCount: joinOptions.HealthCheckMaxPacketLossCount,
 		ClusterID:                     joinOptions.ClusterID,
-		ColorCodes:                    joinOptions.ColorCodes,
 		CableDriver:                   joinOptions.CableDriver,
 		CoreDNSCustomConfigMap:        joinOptions.CoreDNSCustomConfigMap,
 		Repository:                    joinOptions.Repository,

@@ -62,7 +62,7 @@ var (
 	ikePort                       int
 	preferredServer               bool
 	forceUDPEncaps                bool
-	colorCodes                    string
+	ignoredColorCodes             string
 	natTraversal                  bool
 	ignoreRequirements            bool
 	globalnetEnabled              bool
@@ -93,7 +93,8 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
-	cmd.Flags().StringVar(&colorCodes, "colorcodes", submariner.DefaultColorCode, "color codes")
+	cmd.Flags().StringVar(&ignoredColorCodes, "colorcodes", "", "color codes")
+	_ = cmd.Flags().MarkDeprecated("colorcodes", "--colorcodes has no effect and is deprecated")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
 	cmd.Flags().BoolVar(&natTraversal, "natt", true, "enable NAT traversal for IPsec")
@@ -190,18 +191,9 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 		})
 	}
 
-	if colorCodes == "" {
-		qs = append(qs, &survey.Question{
-			Name:     "colorCodes",
-			Prompt:   &survey.Input{Message: "What color codes should be used (e.g. \"blue\")?"},
-			Validate: survey.Required,
-		})
-	}
-
 	if len(qs) > 0 {
 		answers := struct {
-			ClusterID  string
-			ColorCodes string
+			ClusterID string
 		}{}
 
 		err := survey.Ask(qs, &answers)
@@ -210,10 +202,6 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 
 		if len(answers.ClusterID) > 0 {
 			clusterID = answers.ClusterID
-		}
-
-		if len(answers.ColorCodes) > 0 {
-			colorCodes = answers.ColorCodes
 		}
 	}
 
@@ -529,7 +517,6 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 		Broker:                   "k8s",
 		NatEnabled:               natTraversal,
 		Debug:                    submarinerDebug,
-		ColorCodes:               colorCodes,
 		ClusterID:                clusterID,
 		ServiceCIDR:              crServiceCIDR,
 		ClusterCIDR:              crClusterCIDR,
