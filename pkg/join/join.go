@@ -128,7 +128,8 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 	} else if brokerInfo.IsServiceDiscoveryEnabled() {
 		status.Start("Deploying service discovery only")
 
-		err := deploy.ServiceDiscovery(clientProducer, jo, brokerInfo, brokerSecret, imageOverrides, status)
+		err := deploy.ServiceDiscovery(clientProducer, serviceDiscoveryOptionsFrom(jo), brokerInfo, brokerSecret,
+			imageOverrides, status)
 		if err != nil {
 			return status.Error(err, "Error deploying the ServiceDiscovery resource")
 		}
@@ -160,6 +161,17 @@ func submarinerOptionsFrom(joinOptions *deploy.WithJoinOptions) *deploy.Submarin
 		Repository:                    joinOptions.Repository,
 		ImageVersion:                  joinOptions.ImageVersion,
 		CustomDomains:                 joinOptions.CustomDomains,
+	}
+}
+
+func serviceDiscoveryOptionsFrom(joinOptions *deploy.WithJoinOptions) *deploy.ServiceDiscoveryOptions {
+	return &deploy.ServiceDiscoveryOptions{
+		SubmarinerDebug:        joinOptions.SubmarinerDebug,
+		ClusterID:              joinOptions.ClusterID,
+		CoreDNSCustomConfigMap: joinOptions.CoreDNSCustomConfigMap,
+		Repository:             joinOptions.Repository,
+		ImageVersion:           joinOptions.ImageVersion,
+		CustomDomains:          joinOptions.CustomDomains,
 	}
 }
 
