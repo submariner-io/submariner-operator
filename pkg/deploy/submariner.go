@@ -46,7 +46,6 @@ type SubmarinerOptions struct {
 	HealthCheckInterval           uint64
 	HealthCheckMaxPacketLossCount uint64
 	ClusterID                     string
-	ColorCodes                    string
 	CableDriver                   string
 	CoreDNSCustomConfigMap        string
 	Repository                    string
@@ -95,7 +94,6 @@ func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info,
 		Broker:                   "k8s",
 		NatEnabled:               options.NATTraversal,
 		Debug:                    options.SubmarinerDebug,
-		ColorCodes:               options.ColorCodes,
 		ClusterID:                options.ClusterID,
 		ServiceCIDR:              netconfig.ServiceCIDR,
 		ClusterCIDR:              netconfig.ClusterCIDR,
