@@ -32,7 +32,6 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/nodes"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/client"
-	"github.com/submariner-io/submariner-operator/pkg/deploy"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/join"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
@@ -40,7 +39,7 @@ import (
 )
 
 var (
-	joinFlags    deploy.WithJoinOptions
+	joinFlags    join.Options
 	labelGateway bool
 )
 

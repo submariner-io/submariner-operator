@@ -37,14 +37,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clientProducer client.Producer,
+func SubmarinerCluster(brokerInfo *broker.Info, options *Options, clientProducer client.Producer,
 	status reporter.Interface) error {
-	err := checkRequirements(clientProducer.ForKubernetes(), jo.IgnoreRequirements, status)
+	err := checkRequirements(clientProducer.ForKubernetes(), options.IgnoreRequirements, status)
 	if err != nil {
 		return err
 	}
 
-	err = isValidCustomCoreDNSConfig(jo.CoreDNSCustomConfigMap)
+	err = isValidCustomCoreDNSConfig(options.CoreDNSCustomConfigMap)
 	if err != nil {
 		return status.Error(err, "error validating custom CoreDNS config")
 	}
@@ -63,17 +63,17 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 
 	brokerNamespace := string(brokerInfo.ClientToken.Data["namespace"])
 	netconfig := globalnet.Config{
-		ClusterID:            jo.ClusterID,
-		GlobalnetCIDR:        jo.GlobalnetCIDR,
-		ServiceCIDR:          jo.ServiceCIDR,
-		ClusterCIDR:          jo.ClusterCIDR,
-		GlobalnetClusterSize: jo.GlobalnetClusterSize,
+		ClusterID:            options.ClusterID,
+		GlobalnetCIDR:        options.GlobalnetCIDR,
+		ServiceCIDR:          options.ServiceCIDR,
+		ClusterCIDR:          options.ClusterCIDR,
+		GlobalnetClusterSize: options.GlobalnetClusterSize,
 	}
 
-	if jo.GlobalnetEnabled {
+	if options.GlobalnetEnabled {
 		status.Start("Discovering multi cluster details")
 
-		err = globalnet.AllocateAndUpdateGlobalCIDRConfigMap(jo.ClusterID, brokerAdminClientset, brokerNamespace, &netconfig)
+		err = globalnet.AllocateAndUpdateGlobalCIDRConfigMap(options.ClusterID, brokerAdminClientset, brokerNamespace, &netconfig)
 		if err != nil {
 			return status.Error(err, "Error Discovering multi cluster details")
 		}
@@ -83,7 +83,7 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 
 	status.Start("Deploying the Submariner operator")
 
-	err = deploy.Operator(status, jo.ImageVersion, jo.Repository, jo.ImageOverrideArr, jo.OperatorDebug, clientProducer)
+	err = deploy.Operator(status, options.ImageVersion, options.Repository, options.ImageOverrideArr, options.OperatorDebug, clientProducer)
 	if err != nil {
 		return status.Error(err, "Error deploying the operator")
 	}
@@ -92,7 +92,7 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 
 	status.Start("Creating SA for cluster")
 
-	brokerInfo.ClientToken, err = broker.CreateSAForCluster(brokerAdminClientset, jo.ClusterID, brokerNamespace)
+	brokerInfo.ClientToken, err = broker.CreateSAForCluster(brokerAdminClientset, options.ClusterID, brokerNamespace)
 	if err != nil {
 		return status.Error(err, "Error creating SA for cluster")
 	}
@@ -109,7 +109,7 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 
 	status.End()
 
-	imageOverrides, err := image.GetOverrides(jo.ImageOverrideArr)
+	imageOverrides, err := image.GetOverrides(options.ImageOverrideArr)
 	if err != nil {
 		return status.Error(err, "Error overriding Operator image")
 	}
@@ -117,7 +117,7 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 	if brokerInfo.IsConnectivityEnabled() {
 		status.Start("Deploying submariner")
 
-		err := deploy.Submariner(clientProducer, submarinerOptionsFrom(jo), brokerInfo, brokerSecret, netconfig,
+		err := deploy.Submariner(clientProducer, submarinerOptionsFrom(options), brokerInfo, brokerSecret, netconfig,
 			imageOverrides, status)
 		if err != nil {
 			return status.Error(err, "Error deploying the Submariner resource")
@@ -128,7 +128,7 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 	} else if brokerInfo.IsServiceDiscoveryEnabled() {
 		status.Start("Deploying service discovery only")
 
-		err := deploy.ServiceDiscovery(clientProducer, serviceDiscoveryOptionsFrom(jo), brokerInfo, brokerSecret,
+		err := deploy.ServiceDiscovery(clientProducer, serviceDiscoveryOptionsFrom(options), brokerInfo, brokerSecret,
 			imageOverrides, status)
 		if err != nil {
 			return status.Error(err, "Error deploying the ServiceDiscovery resource")
@@ -141,7 +141,7 @@ func SubmarinerCluster(brokerInfo *broker.Info, jo *deploy.WithJoinOptions, clie
 	return nil
 }
 
-func submarinerOptionsFrom(joinOptions *deploy.WithJoinOptions) *deploy.SubmarinerOptions {
+func submarinerOptionsFrom(joinOptions *Options) *deploy.SubmarinerOptions {
 	return &deploy.SubmarinerOptions{
 		PreferredServer:               joinOptions.PreferredServer,
 		ForceUDPEncaps:                joinOptions.ForceUDPEncaps,
@@ -164,7 +164,7 @@ func submarinerOptionsFrom(joinOptions *deploy.WithJoinOptions) *deploy.Submarin
 	}
 }
 
-func serviceDiscoveryOptionsFrom(joinOptions *deploy.WithJoinOptions) *deploy.ServiceDiscoveryOptions {
+func serviceDiscoveryOptionsFrom(joinOptions *Options) *deploy.ServiceDiscoveryOptions {
 	return &deploy.ServiceDiscoveryOptions{
 		SubmarinerDebug:        joinOptions.SubmarinerDebug,
 		ClusterID:              joinOptions.ClusterID,
