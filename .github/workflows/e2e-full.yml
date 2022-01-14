@@ -25,6 +25,11 @@ jobs:
           - ovn: 'ovn'
             globalnet: 'globalnet'
         include:
+          # Oldest Kubernetes version thought to work with SubM.
+          # This should match minK8sMajor.minK8sMinor in submariner-operator/pkg/version/version.go.
+          # If this breaks, we may advance the minimum K8s version instead of fixing it. See:
+          # https://submariner.io/development/building-testing/ci-maintenance/
+          - k8s_version: '1.17'
           # All the versions we support
           - k8s_version: '1.19'
           - k8s_version: '1.20'
