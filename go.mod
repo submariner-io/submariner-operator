@@ -5,8 +5,6 @@ go 1.16
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.12.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.27.0
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
 	github.com/go-errors/errors v1.2.0 // indirect
@@ -30,7 +28,7 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/spf13/cobra v1.3.0
 	github.com/submariner-io/admiral v0.12.0-m3
-	github.com/submariner-io/cloud-prepare v0.12.0-m3
+	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220117145104-8c71f70f26cb
 	github.com/submariner-io/lighthouse v0.12.0-m3
 	github.com/submariner-io/shipyard v0.12.0-m3
 	github.com/submariner-io/submariner v0.12.0-m3
