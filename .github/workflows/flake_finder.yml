@@ -16,7 +16,7 @@ jobs:
       matrix:
         cable_driver: ['libreswan', 'wireguard']
         globalnet: ['', 'globalnet']
-        k8s_version: ['1.19']
+        k8s_version: ['1.23']
         lighthouse: ['', 'lighthouse']
         include:
           - k8s_version: '1.20'
