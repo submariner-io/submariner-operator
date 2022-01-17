@@ -76,7 +76,7 @@ var joinCmd = &cobra.Command{
 			joinFlags.CustomDomains = *brokerInfo.CustomDomains
 		}
 
-		err = join.SubmarinerCluster(brokerInfo, &joinFlags, clientProducer, status)
+		err = join.ClusterToBroker(brokerInfo, &joinFlags, clientProducer, status)
 		exit.OnError(err)
 	},
 }

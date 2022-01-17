@@ -37,7 +37,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func SubmarinerCluster(brokerInfo *broker.Info, options *Options, clientProducer client.Producer,
+func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer client.Producer,
 	status reporter.Interface) error {
 	err := checkRequirements(clientProducer.ForKubernetes(), options.IgnoreRequirements, status)
 	if err != nil {
