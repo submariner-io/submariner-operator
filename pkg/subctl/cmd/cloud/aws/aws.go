@@ -20,18 +20,15 @@ limitations under the License.
 package aws
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	cloudprepareaws "github.com/submariner-io/cloud-prepare/pkg/aws"
+	aws "github.com/submariner-io/cloud-prepare/pkg/aws"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
@@ -58,8 +55,8 @@ func AddAWSFlags(command *cobra.Command) {
 	command.Flags().StringVar(&region, regionFlag, "", "AWS region")
 	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
 		"OCP metadata.json file (or directory containing it) to read AWS infra ID and region from (Takes precedence over the flags)")
-	command.Flags().StringVar(&profile, "profile", "default", "AWS profile to use for credentials")
-	command.Flags().StringVar(&credentialsFile, "credentials", config.DefaultSharedCredentialsFilename(), "AWS credentials configuration file")
+	command.Flags().StringVar(&profile, "profile", aws.DefaultProfile(), "AWS profile to use for credentials")
+	command.Flags().StringVar(&credentialsFile, "credentials", aws.DefaultCredentialsFile(), "AWS credentials configuration file")
 }
 
 // RunOnAWS runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
@@ -78,19 +75,12 @@ func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string,
 
 	reporter.Started("Initializing AWS connectivity")
 
-	options := []func(*config.LoadOptions) error{config.WithRegion(region), config.WithSharedConfigProfile(profile)}
-	if credentialsFile != config.DefaultSharedCredentialsFilename() {
-		options = append(options, config.WithSharedCredentialsFiles([]string{credentialsFile}))
-	}
-
-	cfg, err := config.LoadDefaultConfig(context.TODO(), options...)
+	awsCloud, err := aws.NewCloudFromSettings(credentialsFile, profile, infraID, region)
 	if err != nil {
 		reporter.Failed(err)
 
 		return errors.Wrap(err, "error loading default config")
 	}
-
-	ec2Client := ec2.NewFromConfig(cfg)
 
 	reporter.Succeeded("")
 
@@ -103,9 +93,8 @@ func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string,
 	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
 	utils.ExitOnError("Failed to create dynamic client", err)
 
-	awsCloud := cloudprepareaws.NewCloud(ec2Client, infraID, region)
 	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
-	gwDeployer, err := cloudprepareaws.NewOcpGatewayDeployer(awsCloud, msDeployer, gwInstanceType)
+	gwDeployer, err := aws.NewOcpGatewayDeployer(awsCloud, msDeployer, gwInstanceType)
 	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
 
 	return function(awsCloud, gwDeployer, reporter)
