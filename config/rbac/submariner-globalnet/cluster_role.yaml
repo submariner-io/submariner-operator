@@ -67,3 +67,12 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - network.openshift.io
+    resources:
+      - service/externalips
+    verbs:
+      - create
+      - get
+      - list
+      - delete

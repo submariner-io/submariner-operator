@@ -33,16 +33,14 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
-	v1 "k8s.io/api/core/v1"
 )
 
 type BrokerOptions struct {
-	OperatorDebug       bool
-	GlobalCIDRConfigMap *v1.ConfigMap
-	Repository          string
-	ImageVersion        string
-	BrokerNamespace     string
-	BrokerSpec          submarinerv1a1.BrokerSpec
+	OperatorDebug   bool
+	Repository      string
+	ImageVersion    string
+	BrokerNamespace string
+	BrokerSpec      submarinerv1a1.BrokerSpec
 }
 
 var ValidComponents = []string{component.ServiceDiscovery, component.Connectivity}
