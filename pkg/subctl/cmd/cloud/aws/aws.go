@@ -22,12 +22,10 @@ package aws
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -38,7 +36,6 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"gopkg.in/ini.v1"
 	"k8s.io/client-go/dynamic"
 )
 
@@ -62,14 +59,7 @@ func AddAWSFlags(command *cobra.Command) {
 	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
 		"OCP metadata.json file (or directory containing it) to read AWS infra ID and region from (Takes precedence over the flags)")
 	command.Flags().StringVar(&profile, "profile", "default", "AWS profile to use for credentials")
-
-	dirname, err := os.UserHomeDir()
-	if err != nil {
-		utils.ExitOnError("failed to find home directory", err)
-	}
-
-	defaultCredentials := filepath.FromSlash(fmt.Sprintf("%s/.aws/credentials", dirname))
-	command.Flags().StringVar(&credentialsFile, "credentials", defaultCredentials, "AWS credentials configuration file")
+	command.Flags().StringVar(&credentialsFile, "credentials", config.DefaultSharedCredentialsFilename(), "AWS credentials configuration file")
 }
 
 // RunOnAWS runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
@@ -85,19 +75,15 @@ func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string,
 	}
 
 	reporter := cloudutils.NewStatusReporter()
-	reporter.Started("Retrieving AWS credentials from your AWS configuration")
-
-	creds, err := getAWSCredentials()
-	if err != nil {
-		reporter.Failed(err)
-		return err
-	}
-
-	reporter.Succeeded("")
 
 	reporter.Started("Initializing AWS connectivity")
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region), config.WithCredentialsProvider(creds))
+	options := []func(*config.LoadOptions) error{config.WithRegion(region), config.WithSharedConfigProfile(profile)}
+	if credentialsFile != config.DefaultSharedCredentialsFilename() {
+		options = append(options, config.WithSharedCredentialsFiles([]string{credentialsFile}))
+	}
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(), options...)
 	if err != nil {
 		reporter.Failed(err)
 
@@ -156,33 +142,4 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 	region = metadata.AWS.Region
 
 	return nil
-}
-
-// Retrieve AWS credentials from the AWS credentials file.
-func getAWSCredentials() (credentials.StaticCredentialsProvider, error) {
-	cfg, err := ini.Load(credentialsFile)
-	if err != nil {
-		return credentials.StaticCredentialsProvider{},
-			fmt.Errorf("failed to read AWS credentials from %s: %w", credentialsFile, err)
-	}
-
-	profileSection, err := cfg.GetSection(profile)
-	if err != nil {
-		return credentials.StaticCredentialsProvider{},
-			fmt.Errorf("failed to find profile %s in AWS credentials file %s", profile, credentialsFile)
-	}
-
-	accessKeyID, err := profileSection.GetKey("aws_access_key_id")
-	if err != nil {
-		return credentials.StaticCredentialsProvider{},
-			fmt.Errorf("failed to find access key ID in profile %s in AWS credentials file %s", profile, credentialsFile)
-	}
-
-	secretAccessKey, err := profileSection.GetKey("aws_secret_access_key")
-	if err != nil {
-		return credentials.StaticCredentialsProvider{},
-			fmt.Errorf("failed to find secret access key in profile %s in AWS credentials file %s", profile, credentialsFile)
-	}
-
-	return credentials.NewStaticCredentialsProvider(accessKeyID.String(), secretAccessKey.String(), ""), nil
 }

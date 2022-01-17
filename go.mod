@@ -6,7 +6,6 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.12.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.27.0
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
@@ -42,7 +41,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	google.golang.org/api v0.65.0
-	gopkg.in/ini.v1 v1.66.2
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.1
 	k8s.io/apimachinery v0.21.0
