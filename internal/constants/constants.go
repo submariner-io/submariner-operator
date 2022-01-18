@@ -26,5 +26,6 @@ const (
 	SubmarinerGatewayLabel  = "submariner.io/gateway"
 	SubmarinerName          = "submariner"
 	SubmarinerNamespace     = "submariner-operator"
+	SubmMissingMessage      = "Submariner is not installed"
 	TrueLabel               = "true"
 )
