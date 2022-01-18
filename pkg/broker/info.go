@@ -26,6 +26,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/admiral/pkg/stringset"
+	"github.com/submariner-io/submariner-operator/internal/component"
 	submarinerClientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -109,4 +111,16 @@ func (d *Info) getBrokerAdministratorConfig(private bool) *rest.Config {
 	}
 
 	return &restConfig
+}
+
+func (d *Info) IsConnectivityEnabled() bool {
+	return d.GetComponents().Contains(component.Connectivity)
+}
+
+func (d *Info) GetComponents() stringset.Interface {
+	return stringset.New(d.Components...)
+}
+
+func (d *Info) IsServiceDiscoveryEnabled() bool {
+	return d.GetComponents().Contains(component.ServiceDiscovery) || d.ServiceDiscovery
 }

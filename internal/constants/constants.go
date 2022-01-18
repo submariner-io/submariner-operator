@@ -18,8 +18,10 @@ limitations under the License.
 package constants
 
 const (
-	OperatorNamespace      = "submariner-operator"
-	DefaultBrokerNamespace = "submariner-k8s-broker"
-
+	OperatorNamespace       = "submariner-operator"
+	DefaultBrokerNamespace  = "submariner-k8s-broker"
 	SubmarinerBrokerAdminSA = "submariner-k8s-broker-admin"
+	SubmarinerNamespace     = "submariner-operator"
+	SubmarinerGatewayLabel  = "submariner.io/gateway"
+	TrueLabel               = "true"
 )

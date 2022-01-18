@@ -260,6 +260,19 @@ func clusterNameFromContext(rawConfig *api.Config, overridesContext string) *str
 	return &configContext.Cluster
 }
 
+func (rcp *Producer) GetClusterID() (string, error) {
+	clusterName, err := rcp.ClusterNameFromContext()
+	if err != nil {
+		return "", err
+	}
+
+	if clusterName != nil {
+		return *clusterName, nil
+	}
+
+	return "", nil
+}
+
 func (rcp *Producer) ForCluster() (*rest.Config, error) {
 	config, err := rcp.ClientConfig().ClientConfig()
 	return config, errors.Wrap(err, "error retrieving client configuration")
