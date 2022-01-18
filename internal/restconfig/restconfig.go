@@ -48,6 +48,7 @@ type Producer struct {
 	kubeConfig   string
 	kubeContext  string
 	kubeContexts []string
+	inCluster    bool
 }
 
 func NewProducer() Producer {
@@ -83,6 +84,11 @@ func (rcp *Producer) AddKubeContextMultiFlag(cmd *cobra.Command, usage string) {
 	cmd.PersistentFlags().StringSliceVar(&rcp.kubeContexts, "kubecontexts", nil, usage)
 }
 
+// AddInClusterConfigFlag adds a flag enabling in-cluster configurations for processes running in pods.
+func (rcp *Producer) AddInClusterConfigFlag(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVar(&rcp.inCluster, "in-cluster", false, "use the in-cluster configuration to connect to Kubernetes")
+}
+
 func (rcp *Producer) PopulateTestFramework() {
 	framework.TestContext.KubeContexts = rcp.kubeContexts
 	if rcp.kubeConfig != "" {
@@ -112,6 +118,18 @@ func (rcp *Producer) CountRequestedClusters() int {
 }
 
 func (rcp *Producer) ForClusters() ([]RestConfig, error) {
+	if rcp.inCluster {
+		restConfig, err := rest.InClusterConfig()
+		if err != nil {
+			return []RestConfig{}, errors.Wrap(err, "error retrieving the in-cluster configuration")
+		}
+
+		return []RestConfig{{
+			Config:      restConfig,
+			ClusterName: "in-cluster",
+		}}, nil
+	}
+
 	var restConfigs []RestConfig
 
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()

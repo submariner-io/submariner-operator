@@ -34,7 +34,7 @@ func init() {
 		Short: "Run all diagnostic checks (except those requiring two kubecontexts)",
 		Long:  "This command runs all diagnostic checks (except those requiring two kubecontexts) and reports any issues",
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(diagnoseAll)
+			cmd.ExecuteMultiCluster(restConfigProducer, diagnoseAll)
 		},
 	})
 }

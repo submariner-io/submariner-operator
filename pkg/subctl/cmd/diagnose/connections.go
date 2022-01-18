@@ -32,7 +32,7 @@ func init() {
 		Short: "Check the Gateway connections",
 		Long:  "This command checks that the Gateway connections to other clusters are all established",
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(checkConnections)
+			cmd.ExecuteMultiCluster(restConfigProducer, checkConnections)
 		},
 	})
 }

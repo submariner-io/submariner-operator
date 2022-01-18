@@ -36,6 +36,12 @@ const (
 	Warning
 )
 
+type (
+	successType string
+	warningType string
+	failureType string
+)
+
 // Status is used to track ongoing status in a CLI, with a nice loading spinner
 // when attached to a terminal.
 type Status struct {
@@ -46,10 +52,8 @@ type Status struct {
 	successFormat string
 	failureFormat string
 	warningFormat string
-	// message queues
-	successQueue []string
-	failureQueue []string
-	warningQueue []string
+	// message queue
+	messageQueue []interface{}
 }
 
 func NewStatus() *Status {
@@ -70,9 +74,7 @@ func StatusForLogger(l log.Logger) *Status {
 		successFormat: " ✓ %s\n",
 		failureFormat: " ✗ %s\n",
 		warningFormat: " ⚠ %s\n",
-		successQueue:  []string{},
-		failureQueue:  []string{},
-		warningQueue:  []string{},
+		messageQueue:  []interface{}{},
 	}
 	// if we're using the CLI logger, check for if it has a spinner setup
 	// and wire the status to that.
@@ -128,22 +130,19 @@ func (s *Status) EndWith(output Result) {
 		s.logger.V(0).Infof(s.warningFormat, s.status)
 	}
 
-	for _, message := range s.successQueue {
-		s.logger.V(0).Infof(s.successFormat, message)
-	}
-
-	for _, message := range s.failureQueue {
-		s.logger.V(0).Infof(s.failureFormat, message)
-	}
-
-	for _, message := range s.warningQueue {
-		s.logger.V(0).Infof(s.warningFormat, message)
+	for _, message := range s.messageQueue {
+		switch m := message.(type) {
+		case successType:
+			s.logger.V(0).Infof(s.successFormat, m)
+		case failureType:
+			s.logger.V(0).Infof(s.failureFormat, m)
+		case warningType:
+			s.logger.V(0).Infof(s.warningFormat, m)
+		}
 	}
 
 	s.status = ""
-	s.successQueue = []string{}
-	s.failureQueue = []string{}
-	s.warningQueue = []string{}
+	s.messageQueue = []interface{}{}
 }
 
 func (s *Status) EndWithFailure(message string, a ...interface{}) {
@@ -164,27 +163,39 @@ func (s *Status) EndWithWarning(message string, a ...interface{}) {
 // QueueSuccessMessage queues up a message, which will be displayed once
 // the status ends (using the success format).
 func (s *Status) QueueSuccessMessage(message string) {
-	s.successQueue = append(s.successQueue, message)
+	s.messageQueue = append(s.messageQueue, successType(message))
 }
 
 // QueueFailureMessage queues up a message, which will be displayed once
 // the status ends (using the failure format).
 func (s *Status) QueueFailureMessage(message string) {
-	s.failureQueue = append(s.failureQueue, message)
+	s.messageQueue = append(s.messageQueue, failureType(message))
 }
 
 // QueueWarningMessage queues up a message, which will be displayed once
 // the status ends (using the warning format).
 func (s *Status) QueueWarningMessage(message string) {
-	s.warningQueue = append(s.warningQueue, message)
+	s.messageQueue = append(s.messageQueue, warningType(message))
 }
 
 func (s *Status) HasFailureMessages() bool {
-	return len(s.failureQueue) > 0
+	for _, message := range s.messageQueue {
+		if _, ok := message.(failureType); ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *Status) HasWarningMessages() bool {
-	return len(s.warningQueue) > 0
+	for _, message := range s.messageQueue {
+		if _, ok := message.(warningType); ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *Status) ResultFromMessages() Result {
@@ -215,7 +226,7 @@ func (s *Status) Failure(message string, a ...interface{}) {
 	}
 
 	if s.status != "" {
-		s.failureQueue = append(s.failureQueue, fmt.Sprintf(message, a...))
+		s.messageQueue = append(s.messageQueue, failureType(fmt.Sprintf(message, a...)))
 	} else {
 		s.logger.V(0).Infof(s.failureFormat, fmt.Sprintf(message, a...))
 	}
@@ -229,7 +240,7 @@ func (s *Status) Success(message string, a ...interface{}) {
 	}
 
 	if s.status != "" {
-		s.successQueue = append(s.successQueue, fmt.Sprintf(message, a...))
+		s.messageQueue = append(s.messageQueue, successType(fmt.Sprintf(message, a...)))
 	} else {
 		s.logger.V(0).Infof(s.successFormat, fmt.Sprintf(message, a...))
 	}
@@ -243,7 +254,7 @@ func (s *Status) Warning(message string, a ...interface{}) {
 	}
 
 	if s.status != "" {
-		s.warningQueue = append(s.warningQueue, fmt.Sprintf(message, a...))
+		s.messageQueue = append(s.messageQueue, warningType(fmt.Sprintf(message, a...)))
 	} else {
 		s.logger.V(0).Infof(s.warningFormat, fmt.Sprintf(message, a...))
 	}

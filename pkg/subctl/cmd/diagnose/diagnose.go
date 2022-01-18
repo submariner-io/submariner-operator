@@ -37,6 +37,7 @@ var (
 
 func init() {
 	restConfigProducer.AddKubeConfigFlag(diagnoseCmd)
+	restConfigProducer.AddInClusterConfigFlag(diagnoseCmd)
 	cmd.AddToRootCommand(diagnoseCmd)
 }
 

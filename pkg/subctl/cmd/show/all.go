@@ -33,7 +33,7 @@ func init() {
 		      networks, endpoints, gateways, connections and component versions.`,
 		PreRunE: restConfigProducer.CheckVersionMismatch,
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(showAll)
+			cmd.ExecuteMultiCluster(restConfigProducer, showAll)
 		},
 	})
 }

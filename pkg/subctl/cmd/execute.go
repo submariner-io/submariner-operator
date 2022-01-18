@@ -24,6 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	subClientsetv1 "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
@@ -87,7 +88,7 @@ func (c *Cluster) GetGateways() ([]submarinerv1.Gateway, error) {
 	return gateways.Items, nil
 }
 
-func ExecuteMultiCluster(run func(*Cluster) bool) {
+func ExecuteMultiCluster(restConfigProducer restconfig.Producer, run func(*Cluster) bool) {
 	success := true
 
 	for _, config := range restConfigProducer.MustGetForClusters() {

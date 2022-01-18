@@ -36,7 +36,7 @@ func init() {
 		Short: "Check firewall access for intra-cluster Submariner VxLAN traffic",
 		Long:  "This command checks if the firewall configuration allows traffic over vx-submariner interface.",
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(checkVxLANConfig)
+			cmd.ExecuteMultiCluster(restConfigProducer, checkVxLANConfig)
 		},
 	}
 

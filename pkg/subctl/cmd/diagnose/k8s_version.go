@@ -31,7 +31,7 @@ func init() {
 		Short: "Check the Kubernetes version",
 		Long:  "This command checks if Submariner can be deployed on the Kubernetes version.",
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(checkK8sVersion)
+			cmd.ExecuteMultiCluster(restConfigProducer, checkK8sVersion)
 		},
 	})
 }

@@ -36,7 +36,7 @@ func init() {
 		Short: "Check firewall access to metrics",
 		Long:  "This command checks if the firewall configuration allows metrics to be accessed from the Gateway nodes.",
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(checkFirewallMetricsConfig)
+			cmd.ExecuteMultiCluster(restConfigProducer, checkFirewallMetricsConfig)
 		},
 	}
 
