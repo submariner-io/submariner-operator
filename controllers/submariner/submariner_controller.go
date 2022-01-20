@@ -26,11 +26,13 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/federate"
+	"github.com/submariner-io/admiral/pkg/finalizer"
 	level "github.com/submariner-io/admiral/pkg/log"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/syncer"
 	"github.com/submariner-io/admiral/pkg/util"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	resourceiface "github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
@@ -59,6 +61,7 @@ import (
 const (
 	gatewayMetricsServerPort   = 8080
 	globalnetMetricsServerPort = 8081
+	SubmarinerFinalizer        = "submariner-controller-finalizer"
 )
 
 var log = logf.Log.WithName("controller_submariner")
@@ -124,24 +127,27 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	reqLogger.Info("Reconciling Submariner")
 
 	// Fetch the Submariner instance
-	instance := &submopv1a1.Submariner{}
-
-	err := r.config.Client.Get(ctx, request.NamespacedName, instance)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			return reconcile.Result{}, nil
-		}
-		// Error reading the object - requeue the request.
-		return reconcile.Result{}, errors.Wrap(err, "error retrieving Submariner resource")
+	instance, err := r.getSubmariner(ctx, request.NamespacedName)
+	if apierrors.IsNotFound(err) {
+		// Request object not found, could have been deleted after reconcile request.
+		// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+		return reconcile.Result{}, nil
 	}
 
-	if instance.ObjectMeta.DeletionTimestamp != nil {
-		// Graceful deletion has been requested, ignore the object after cancelling any secret syncer
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	instance, err = r.addFinalizer(ctx, instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if !instance.GetDeletionTimestamp().IsZero() {
+		log.Info("Submariner is being deleted")
 		r.cancelSecretSyncer(instance)
-		return reconcile.Result{}, nil
+
+		return r.runComponentCleanup(ctx, instance)
 	}
 
 	// Ensure we have a secret syncer
@@ -249,6 +255,31 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 func getImagePath(submariner *submopv1a1.Submariner, imageName, componentName string) string {
 	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, imageName, componentName,
 		submariner.Spec.ImageOverrides)
+}
+
+func (r *Reconciler) getSubmariner(ctx context.Context, key types.NamespacedName) (*submopv1a1.Submariner, error) {
+	instance := &submopv1a1.Submariner{}
+
+	err := r.config.Client.Get(ctx, key, instance)
+	if err != nil {
+		return nil, errors.Wrap(err, "error retrieving Submariner resource")
+	}
+
+	return instance, nil
+}
+
+func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Submariner) (*submopv1a1.Submariner, error) {
+	added, err := finalizer.Add(ctx, resourceiface.ForControllerClient(r.config.Client, instance.Namespace, &submopv1a1.Submariner{}),
+		instance, SubmarinerFinalizer)
+	if err != nil {
+		return nil, err // nolint:wrapcheck // No need to wrap
+	}
+
+	if !added {
+		return instance, nil
+	}
+
+	return r.getSubmariner(ctx, types.NamespacedName{Namespace: instance.Namespace, Name: instance.Name})
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {

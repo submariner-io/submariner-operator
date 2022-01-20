@@ -39,6 +39,7 @@ const (
 
 var _ = Describe("Submariner controller tests", func() {
 	Context("Reconciliation", testReconciliation)
+	Context("Deletion", testDeletion)
 })
 
 const (
@@ -50,6 +51,12 @@ const (
 
 func testReconciliation() {
 	t := newTestDriver()
+
+	It("should add a finalizer to the Submariner resource", func() {
+		t.assertReconcileSuccess()
+		test.AwaitFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
+			submarinerName, submarinerController.SubmarinerFinalizer)
+	})
 
 	When("the network details are not provided", func() {
 		It("should use the detected network", func() {
@@ -225,5 +232,25 @@ func testReconciliation() {
 			_, err := t.doReconcile()
 			Expect(err).To(HaveOccurred())
 		})
+	})
+}
+
+func testDeletion() {
+	t := newTestDriver()
+
+	BeforeEach(func() {
+		t.submariner.SetFinalizers([]string{submarinerController.SubmarinerFinalizer})
+
+		now := metav1.Now()
+		t.submariner.SetDeletionTimestamp(&now)
+	})
+
+	JustBeforeEach(func() {
+		t.assertReconcileSuccess()
+	})
+
+	It("should remove the finalizer from the Submariner resource", func() {
+		test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
+			submarinerName, submarinerController.SubmarinerFinalizer)
 	})
 }
