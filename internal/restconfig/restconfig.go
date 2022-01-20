@@ -20,6 +20,7 @@ package restconfig
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/pkg/errors"
@@ -308,6 +309,40 @@ func (rcp *Producer) CheckVersionMismatch(cmd *cobra.Command, args []string) err
 				"the subctl version %q is older than the deployed Submariner version %q. Please upgrade your subctl version",
 				version.Version, submariner.Spec.Version)
 		}
+	}
+
+	return nil
+}
+
+func ConfigureTestFramework(args []string) error {
+	// Legacy handling: if arguments are files, assume they are kubeconfigs;
+	// otherwise, use contexts from --kubecontexts
+	_, err1 := os.Stat(args[0])
+	var err2 error
+
+	if len(args) > 1 {
+		_, err2 = os.Stat(args[1])
+	}
+
+	if err1 != nil || err2 != nil {
+		// Something happened (possibly IsNotExist, but we don’t care about specifics)
+		return fmt.Errorf("the provided arguments (%v) aren't accessible files", args)
+	}
+
+	// The files exist and can be examined without error
+	framework.TestContext.KubeConfig = ""
+	framework.TestContext.KubeConfigs = args
+
+	// Read the cluster names from the given kubeconfigs
+	for _, config := range args {
+		rcp := NewProducerFrom(config, "")
+
+		clusterName, err := rcp.ClusterNameFromContext()
+		if err != nil {
+			return nil // nolint:nilerr // This is intentional.
+		}
+
+		framework.TestContext.ClusterIDs = append(framework.TestContext.ClusterIDs, *clusterName)
 	}
 
 	return nil
