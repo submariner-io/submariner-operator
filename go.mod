@@ -25,7 +25,7 @@ require (
 	github.com/operator-framework/operator-lib v0.4.0
 	github.com/operator-framework/operator-sdk v0.19.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.12.0
 	github.com/spf13/cobra v1.3.0
 	github.com/submariner-io/admiral v0.12.0-m3
 	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220117145104-8c71f70f26cb
