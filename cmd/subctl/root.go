@@ -19,11 +19,20 @@ limitations under the License.
 package subctl
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/shipyard/test/e2e/framework"
+	"github.com/submariner-io/submariner-operator/internal/constants"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/client"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var restConfigProducer = restconfig.NewProducer()
@@ -41,4 +50,37 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func detectGlobalnet() {
+	clientProducer, err := client.NewProducerFromRestConfig(framework.RestConfigs[framework.ClusterA])
+	exit.OnErrorWithMessage(err, "Error creating client producer")
+
+	operatorClient := clientProducer.ForOperator()
+
+	submariner, err := operatorClient.SubmarinerV1alpha1().Submariners(constants.OperatorNamespace).Get(
+		context.TODO(), constants.SubmarinerName, v1.GetOptions{})
+	if k8serrors.IsNotFound(err) {
+		exit.WithMessage("The Submariner resource was not found. Either submariner has not" +
+			"been deployed in this cluster or was deployed using helm. This command only supports submariner deployed" +
+			" using the operator via 'subctl join'.")
+	}
+
+	exit.OnErrorWithMessage(err, "Error obtaining Submariner resource")
+
+	framework.TestContext.GlobalnetEnabled = submariner.Spec.GlobalCIDR != ""
+}
+
+func compareFiles(file1, file2 string) (bool, error) {
+	first, err := os.ReadFile(file1)
+	if err != nil {
+		return false, errors.Wrapf(err, "error reading file %q", file1)
+	}
+
+	second, err := os.ReadFile(file2)
+	if err != nil {
+		return false, errors.Wrapf(err, "error reading file %q", file2)
+	}
+
+	return bytes.Equal(first, second), nil
 }

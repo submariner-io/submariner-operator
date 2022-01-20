@@ -46,3 +46,13 @@ jobs:
             --servicecidr 100.1.0.0/16 --clustercidr 10.1.0.0/16
           cmd/bin/subctl join --kubeconfig output/kubeconfigs/kind-config-cluster2 broker-info.subm --clusterid cluster2 --natt=false \
             --servicecidr 100.2.0.0/16 --clustercidr 10.2.0.0/16
+
+      - name: Test benchmark
+        run: |
+          cmd/bin/subctl benchmark latency --kubeconfig output/kubeconfigs/kind-config-cluster1:output/kubeconfigs/kind-config-cluster2 \
+          	--kubecontexts cluster1,cluster2 --verbose
+          cmd/bin/subctl benchmark latency --kubeconfig output/kubeconfigs/kind-config-cluster1 --kubecontexts cluster1 --intra-cluster
+          cmd/bin/subctl benchmark throughput --kubeconfig output/kubeconfigs/kind-config-cluster1:output/kubeconfigs/kind-config-cluster2 \
+          	--kubecontexts cluster1,cluster2
+          cmd/bin/subctl benchmark throughput --kubeconfig output/kubeconfigs/kind-config-cluster1 --kubecontexts cluster1 \
+            --intra-cluster --verbose
