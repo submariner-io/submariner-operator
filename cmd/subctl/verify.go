@@ -16,11 +16,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package subctl
 
 // nolint:revive // Blank imports below are intentional.
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -37,14 +36,9 @@ import (
 	"github.com/submariner-io/shipyard/test/e2e"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	"github.com/submariner-io/submariner-operator/internal/component"
-	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	_ "github.com/submariner-io/submariner/test/e2e/dataplane"
 	_ "github.com/submariner-io/submariner/test/e2e/redundancy"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -57,25 +51,6 @@ var (
 	verifyOnly                      string
 	disruptiveTests                 bool
 )
-
-func init() {
-	restConfigProducer.AddKubeContextMultiFlag(verifyCmd, "comma-separated list of exactly two kubeconfig contexts to use.")
-	verifyCmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
-	verifyCmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
-	addVerifyFlags(verifyCmd)
-	rootCmd.AddCommand(verifyCmd)
-
-	framework.AddBeforeSuite(detectGlobalnet)
-}
-
-func addVerifyFlags(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&verboseConnectivityVerification, "verbose", false, "produce verbose logs during connectivity verification")
-	cmd.Flags().UintVar(&operationTimeout, "operation-timeout", 240, "operation timeout for K8s API calls")
-	cmd.Flags().UintVar(&connectionTimeout, "connection-timeout", 60, "timeout in seconds per connection attempt")
-	cmd.Flags().UintVar(&connectionAttempts, "connection-attempts", 2, "maximum number of connection attempts")
-	cmd.Flags().StringVar(&reportDirectory, "report-dir", ".", "XML report directory")
-	cmd.Flags().StringVar(&submarinerNamespace, "submariner-namespace", "submariner-operator", "namespace in which submariner is deployed")
-}
 
 var verifyCmd = &cobra.Command{
 	Use:   "verify --kubecontexts <kubeContext1>,<kubeContext2>",
@@ -102,11 +77,8 @@ The following verifications are deemed disruptive:
 		if len(args) > 0 {
 			fmt.Println("subctl verify with kubeconfig arguments is deprecated, please use --kubecontexts instead")
 		}
-		err := configureTestingFramework(args)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+		err := setUpTestFramework(args, restConfigProducer)
+		exit.OnErrorWithMessage(err, "error setting up test framework")
 
 		disruptive := extractDisruptiveVerifications(verifyOnly)
 		if !disruptiveTests && len(disruptive) > 0 {
@@ -120,7 +92,7 @@ The following verifications are deemed disruptive:
 You have specified disruptive verifications (%s) but subctl is running non-interactively and thus cannot
 prompt for confirmation therefore you must specify --enable-disruptive to run them.`, strings.Join(disruptive, ","))
 				} else {
-					utils.ExitWithErrorMsg(fmt.Sprintf("Prompt failure: %#v", err))
+					exit.OnErrorWithMessage(err, "Prompt failure:")
 				}
 			}
 		}
@@ -136,9 +108,28 @@ prompt for confirmation therefore you must specify --enable-disruptive to run th
 		fmt.Printf("Performing the following verifications: %s\n", strings.Join(verifications, ", "))
 
 		if !e2e.RunE2ETests(&testing.T{}) {
-			utils.ExitWithErrorMsg(fmt.Sprintf("[%s] E2E failed", testType))
+			exit.WithMessage(fmt.Sprintf("[%s] E2E failed", testType))
 		}
 	},
+}
+
+func init() {
+	restConfigProducer.AddKubeContextMultiFlag(verifyCmd, "comma-separated list of exactly two kubeconfig contexts to use.")
+	addVerifyFlags(verifyCmd)
+	rootCmd.AddCommand(verifyCmd)
+
+	framework.AddBeforeSuite(detectGlobalnet)
+}
+
+func addVerifyFlags(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&verboseConnectivityVerification, "verbose", false, "produce verbose logs during connectivity verification")
+	cmd.Flags().UintVar(&operationTimeout, "operation-timeout", 240, "operation timeout for K8s API calls")
+	cmd.Flags().UintVar(&connectionTimeout, "connection-timeout", 60, "timeout in seconds per connection attempt")
+	cmd.Flags().UintVar(&connectionAttempts, "connection-attempts", 2, "maximum number of connection attempts")
+	cmd.Flags().StringVar(&reportDirectory, "report-dir", ".", "XML report directory")
+	cmd.Flags().StringVar(&submarinerNamespace, "submariner-namespace", "submariner-operator", "namespace in which submariner is deployed")
+	cmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
+	cmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")
 }
 
 func isNonInteractive(err error) bool {
@@ -159,55 +150,6 @@ func isNonInteractive(err error) bool {
 	return false
 }
 
-func configureTestingFramework(args []string) error {
-	// Legacy handling: if arguments are provided and are files, assume they are kubeconfigs;
-	// otherwise, use contexts from --kubecontexts
-	// This is shared by verify and benchmark
-	if len(args) > 0 {
-		_, err1 := os.Stat(args[0])
-		var err2 error
-
-		if len(args) > 1 {
-			_, err2 = os.Stat(args[1])
-		}
-
-		if err1 != nil || err2 != nil {
-			// Something happened (possibly IsNotExist, but we don’t care about specifics)
-			return fmt.Errorf("the provided arguments (%v) aren't accessible files", args)
-		}
-
-		// The files exist and can be examined without error
-		framework.TestContext.KubeConfig = ""
-		framework.TestContext.KubeConfigs = args
-
-		// Read the cluster names from the given kubeconfigs
-		for _, config := range args {
-			rcp := restconfig.NewProducerFrom(config, "")
-
-			clusterName, err := rcp.ClusterNameFromContext()
-			if err != nil {
-				return nil // nolint:nilerr // This is intentional.
-			}
-
-			framework.TestContext.ClusterIDs = append(framework.TestContext.ClusterIDs, *clusterName)
-		}
-	} else {
-		restConfigProducer.PopulateTestFramework()
-	}
-
-	framework.TestContext.OperationTimeout = operationTimeout
-	framework.TestContext.ConnectionTimeout = connectionTimeout
-	framework.TestContext.ConnectionAttempts = connectionAttempts
-	framework.TestContext.ReportDir = reportDirectory
-	framework.TestContext.ReportPrefix = "subctl"
-	framework.TestContext.SubmarinerNamespace = submarinerNamespace
-
-	config.DefaultReporterConfig.Verbose = verboseConnectivityVerification
-	config.DefaultReporterConfig.SlowSpecThreshold = 60
-
-	return nil
-}
-
 func checkValidateArguments(args []string) error {
 	if len(args) != 2 && restConfigProducer.CountRequestedClusters() != 2 {
 		return fmt.Errorf("two kubecontexts must be specified")
@@ -218,7 +160,7 @@ func checkValidateArguments(args []string) error {
 			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
 		}
 
-		same, err := CompareFiles(args[0], args[1])
+		same, err := compareFiles(args[0], args[1])
 		if err != nil {
 			return err
 		}
@@ -341,23 +283,4 @@ func getVerifyPatterns(csv string, includeDisruptive bool) ([]string, []string, 
 	}
 
 	return outputPatterns, outputVerifications, nil
-}
-
-func detectGlobalnet() {
-	submarinerClient, err := submarinerclientset.NewForConfig(framework.RestConfigs[framework.ClusterA])
-	utils.ExitOnError("Error creating submariner client: %v", err)
-
-	submariner, err := submarinerClient.SubmarinerV1alpha1().Submariners(OperatorNamespace).Get(
-		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
-	if k8serrors.IsNotFound(err) {
-		utils.ExitWithErrorMsg(`
-The Submariner resource was not found. Either submariner has not been deployed in this cluster or was deployed using helm.
-This command only supports submariner deployed using the operator via 'subctl join'.`)
-	}
-
-	if err != nil {
-		utils.ExitOnError("Error obtaining Submariner resource: %v", err)
-	}
-
-	framework.TestContext.GlobalnetEnabled = submariner.Spec.GlobalCIDR != ""
 }
