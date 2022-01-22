@@ -24,7 +24,11 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/admiral/pkg/test"
 	operatorv1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/resource"
+	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,13 +37,12 @@ import (
 const (
 	submarinerName          = "submariner"
 	submarinerNamespace     = "submariner-operator"
-	gatewayDaemonSetName    = "submariner-gateway"
 	routeAgentDaemonSetName = "submariner-routeagent"
 )
 
 var _ = Describe("Submariner controller tests", func() {
 	Context("Reconciliation", testReconciliation)
-	Context("Deletion", testDeletion)
+	When("the Submariner resource is being deleted", testDeletion)
 })
 
 const (
@@ -89,18 +92,13 @@ func testReconciliation() {
 	When("the submariner gateway DaemonSet doesn't exist", func() {
 		It("should create it", func() {
 			t.assertReconcileSuccess()
-			t.assertGatewayDaemonSet(t.withNetworkDiscovery())
+			t.assertGatewayDaemonSet()
 		})
 	})
 
 	When("the submariner gateway DaemonSet already exists", func() {
 		BeforeEach(func() {
-			t.initClientObjs = append(t.initClientObjs, &appsv1.DaemonSet{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: t.submariner.Namespace,
-					Name:      gatewayDaemonSetName,
-				},
-			})
+			t.initClientObjs = append(t.initClientObjs, t.newDaemonSet(names.GatewayComponent))
 		})
 
 		It("should update it", func() {
@@ -112,7 +110,7 @@ func testReconciliation() {
 
 			t.assertReconcileSuccess()
 
-			updatedDaemonSet := t.assertDaemonSet(gatewayDaemonSetName)
+			updatedDaemonSet := t.assertDaemonSet(names.GatewayComponent)
 			Expect(envMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", initial.Spec.ServiceCIDR))
 		})
 	})
@@ -126,12 +124,7 @@ func testReconciliation() {
 
 	When("the submariner route-agent DaemonSet already exists", func() {
 		BeforeEach(func() {
-			t.initClientObjs = append(t.initClientObjs, &appsv1.DaemonSet{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: t.submariner.Namespace,
-					Name:      routeAgentDaemonSetName,
-				},
-			})
+			t.initClientObjs = append(t.initClientObjs, t.newDaemonSet(routeAgentDaemonSetName))
 		})
 
 		It("should update it", func() {
@@ -181,7 +174,7 @@ func testReconciliation() {
 
 		It("should return success without creating any resources", func() {
 			t.assertReconcileSuccess()
-			t.assertNoDaemonSet(gatewayDaemonSetName)
+			t.assertNoDaemonSet(names.GatewayComponent)
 			t.assertNoDaemonSet(routeAgentDaemonSetName)
 		})
 	})
@@ -243,13 +236,39 @@ func testDeletion() {
 
 		now := metav1.Now()
 		t.submariner.SetDeletionTimestamp(&now)
+
+		t.initClientObjs = append(t.initClientObjs,
+			t.newDaemonSet(names.GatewayComponent),
+			t.newPodWithLabel("app", names.GatewayComponent))
 	})
 
-	JustBeforeEach(func() {
+	It("should uninstall the component resources and remove the finalizer", func() {
+		// The first reconcile invocation should delete the regular DaemonSets/Deployments.
+		t.assertReconcileRequeue()
+
+		t.assertNoDaemonSet(names.GatewayComponent)
+
+		// Simulate the DaemonSet controller cleaning up its pods.
+		t.deletePods("app", names.GatewayComponent)
+
+		// Next, the controller should create the corresponding uninstall DaemonSets/Deployments.
+		t.assertReconcileRequeue()
+
+		// For the gateway DaemonSet, we'll only update it to observed but not yet ready at this point.
+		gatewayDS := t.assertUninstallGatewayDaemonSet()
+		t.updateDaemonSetToObserved(gatewayDS)
+
+		// Next, the controller should delete the uninstall DaemonSets/Deployments that are ready.
+		t.assertReconcileRequeue()
+
+		// Now update the gateway DaemonSet to ready.
+		t.updateDaemonSetToReady(gatewayDS)
+
+		// Finally, the controller should delete the remaining gateway DaemonSet and remove the finalizer.
 		t.assertReconcileSuccess()
-	})
 
-	It("should remove the finalizer from the Submariner resource", func() {
+		t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+
 		test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
 			submarinerName, submarinerController.SubmarinerFinalizer)
 	})

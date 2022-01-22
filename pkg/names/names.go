@@ -50,3 +50,7 @@ var ValidImageNames = []string{
 	NetworkPluginSyncerImage, RouteAgentImage, GatewayImage, GlobalnetImage,
 	ServiceDiscoveryImage, LighthouseCoreDNSImage, OperatorImage,
 }
+
+func AppendUninstall(name string) string {
+	return name + "-uninstall"
+}
