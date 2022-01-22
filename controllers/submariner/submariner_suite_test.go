@@ -32,12 +32,16 @@ import (
 	operatorv1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes/scheme"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -143,6 +147,14 @@ func (t *testDriver) assertReconcileSuccess() {
 	r, err := t.doReconcile()
 	Expect(err).To(Succeed())
 	Expect(r.Requeue).To(BeFalse())
+	Expect(r.RequeueAfter).To(BeNumerically("==", 0))
+}
+
+func (t *testDriver) assertReconcileRequeue() {
+	r, err := t.doReconcile()
+	Expect(err).To(Succeed())
+	Expect(r.RequeueAfter).To(BeNumerically(">", 0), "Expected requeue after")
+	Expect(r.Requeue).To(BeFalse())
 }
 
 func (t *testDriver) getSubmariner() *operatorv1.Submariner {
@@ -176,17 +188,33 @@ func (t *testDriver) assertRouteAgentDaemonSet(submariner *operatorv1.Submariner
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
 
-func (t *testDriver) assertGatewayDaemonSet(submariner *operatorv1.Submariner) {
-	daemonSet := t.assertDaemonSet(gatewayDaemonSetName)
+func (t *testDriver) assertGatewayDaemonSet() {
+	daemonSet := t.assertDaemonSet(names.GatewayComponent)
+	assertGatewayNodeSelector(daemonSet)
 
-	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-gateway"))
-	Expect(daemonSet.Spec.Template.ObjectMeta.Labels["app"]).To(Equal("submariner-gateway"))
-	Expect(daemonSet.Spec.Template.Spec.NodeSelector["submariner.io/gateway"]).To(Equal("true"))
 	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
 	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
-		Equal(submariner.Spec.Repository + "/submariner-gateway:" + submariner.Spec.Version))
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GatewayImage, t.submariner.Spec.Version)))
 
-	envMap := envMapFrom(daemonSet)
+	t.assertGatewayDaemonSetEnv(t.withNetworkDiscovery(), daemonSet.Spec.Template.Spec.Containers[0].Env)
+}
+
+func (t *testDriver) assertUninstallGatewayDaemonSet() *appsv1.DaemonSet {
+	daemonSet := t.assertDaemonSet(names.AppendUninstall(names.GatewayComponent))
+	assertGatewayNodeSelector(daemonSet)
+
+	Expect(daemonSet.Spec.Template.Spec.InitContainers).To(HaveLen(1))
+	Expect(daemonSet.Spec.Template.Spec.InitContainers[0].Image).To(
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GatewayImage, t.submariner.Spec.Version)))
+
+	envMap := t.assertGatewayDaemonSetEnv(t.withNetworkDiscovery(), daemonSet.Spec.Template.Spec.InitContainers[0].Env)
+	Expect(envMap).To(HaveKeyWithValue("UNINSTALL", "true"))
+
+	return daemonSet
+}
+
+func (t *testDriver) assertGatewayDaemonSetEnv(submariner *operatorv1.Submariner, env []corev1.EnvVar) map[string]string {
+	envMap := envMapFromVars(env)
 
 	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_PSK", submariner.Spec.CeIPSecPSK))
 	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_IKEPORT", strconv.Itoa(submariner.Spec.CeIPSecIKEPort)))
@@ -198,13 +226,16 @@ func (t *testDriver) assertGatewayDaemonSet(submariner *operatorv1.Submariner) {
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("Insecure"), strconv.FormatBool(submariner.Spec.BrokerK8sInsecure)))
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("Secret"), submariner.Spec.BrokerK8sSecret))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_BROKER", submariner.Spec.Broker))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NATENABLED", strconv.FormatBool(submariner.Spec.NatEnabled)))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NATENABLED", strconv.FormatBool(submariner.Spec.
+		NatEnabled)))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Status.ServiceCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Status.ClusterCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_GLOBALCIDR", submariner.Spec.GlobalCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
+
+	return envMap
 }
 
 func (t *testDriver) getDaemonSet(name string) (*appsv1.DaemonSet, error) {
@@ -215,16 +246,41 @@ func (t *testDriver) getDaemonSet(name string) (*appsv1.DaemonSet, error) {
 }
 
 func (t *testDriver) assertDaemonSet(name string) *appsv1.DaemonSet {
-	foundDaemonSet, err := t.getDaemonSet(name)
+	daemonSet, err := t.getDaemonSet(name)
 	Expect(err).To(Succeed())
 
-	return foundDaemonSet
+	Expect(daemonSet.ObjectMeta.Labels).To(HaveKeyWithValue("app", name))
+	Expect(daemonSet.Spec.Selector.MatchLabels).To(HaveKeyWithValue("app", name))
+
+	for k, v := range daemonSet.Spec.Selector.MatchLabels {
+		Expect(daemonSet.Spec.Template.ObjectMeta.Labels).To(HaveKeyWithValue(k, v))
+	}
+
+	return daemonSet
 }
 
 func (t *testDriver) assertNoDaemonSet(name string) {
 	_, err := t.getDaemonSet(name)
-	Expect(err).To(HaveOccurred())
 	Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
+	Expect(err).To(HaveOccurred())
+}
+
+func assertGatewayNodeSelector(daemonSet *appsv1.DaemonSet) {
+	Expect(daemonSet.Spec.Template.Spec.NodeSelector["submariner.io/gateway"]).To(Equal("true"))
+}
+
+func (t *testDriver) updateDaemonSetToReady(daemonSet *appsv1.DaemonSet) {
+	daemonSet.Status.NumberReady = daemonSet.Status.DesiredNumberScheduled
+
+	Expect(t.fakeClient.Update(context.TODO(), daemonSet)).To(Succeed())
+}
+
+func (t *testDriver) updateDaemonSetToObserved(daemonSet *appsv1.DaemonSet) {
+	daemonSet.Generation = 1
+	daemonSet.Status.ObservedGeneration = 1
+	daemonSet.Status.DesiredNumberScheduled = 1
+
+	Expect(t.fakeClient.Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
 func (t *testDriver) withNetworkDiscovery() *operatorv1.Submariner {
@@ -235,9 +291,40 @@ func (t *testDriver) withNetworkDiscovery() *operatorv1.Submariner {
 	return t.submariner
 }
 
+func (t *testDriver) newDaemonSet(name string) *appsv1.DaemonSet {
+	return &appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.submariner.Namespace,
+			Name:      name,
+		},
+	}
+}
+
+func (t *testDriver) newPodWithLabel(label, value string) *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.submariner.Namespace,
+			Name:      string(uuid.NewUUID()),
+			Labels: map[string]string{
+				label: value,
+			},
+		},
+	}
+}
+
+func (t *testDriver) deletePods(label, value string) {
+	err := t.fakeClient.DeleteAllOf(context.TODO(), &corev1.Pod{}, controllerClient.InNamespace(t.submariner.Namespace),
+		controllerClient.MatchingLabelsSelector{Selector: labels.SelectorFromSet(map[string]string{label: value})})
+	Expect(err).To(Succeed())
+}
+
 func envMapFrom(daemonSet *appsv1.DaemonSet) map[string]string {
+	return envMapFromVars(daemonSet.Spec.Template.Spec.Containers[0].Env)
+}
+
+func envMapFromVars(env []corev1.EnvVar) map[string]string {
 	envMap := map[string]string{}
-	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
+	for _, envVar := range env {
 		envMap[envVar.Name] = envVar.Value
 	}
 

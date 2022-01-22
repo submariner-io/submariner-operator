@@ -24,6 +24,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,7 +61,7 @@ func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {
 			Type:                  corev1.ServiceTypeLoadBalancer,
 			Selector: map[string]string{
 				// Traffic is directed to the active gateway
-				appLabel:           appGatewayLabel,
+				appLabel:           names.GatewayComponent,
 				gatewayStatusLabel: string(submv1.HAStatusActive),
 			},
 			Ports: []corev1.ServicePort{
