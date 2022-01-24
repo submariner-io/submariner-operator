@@ -165,20 +165,31 @@ func (t *testDriver) getSubmariner() *operatorv1.Submariner {
 	return obj
 }
 
-func (t *testDriver) assertRouteAgentDaemonSet(submariner *operatorv1.Submariner) {
-	daemonSet := t.assertDaemonSet(routeAgentDaemonSetName)
+func (t *testDriver) assertRouteAgentDaemonSet() {
+	daemonSet := t.assertDaemonSet(names.RouteAgentComponent)
 
-	Expect(daemonSet.ObjectMeta.Labels["app"]).To(Equal("submariner-routeagent"))
-	Expect(daemonSet.Spec.Selector).To(Equal(&metav1.LabelSelector{MatchLabels: map[string]string{"app": "submariner-routeagent"}}))
-	Expect(daemonSet.Spec.Template.ObjectMeta.Labels["app"]).To(Equal("submariner-routeagent"))
 	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
-	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(Equal(submariner.Spec.Repository + "/submariner-route-agent:" +
-		submariner.Spec.Version))
+	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.RouteAgentImage, t.submariner.Spec.Version)))
 
-	envMap := map[string]string{}
-	for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
-		envMap[envVar.Name] = envVar.Value
-	}
+	t.assertRouteAgentDaemonSetEnv(t.withNetworkDiscovery(), daemonSet.Spec.Template.Spec.Containers[0].Env)
+}
+
+func (t *testDriver) assertUninstallRouteAgentDaemonSet() *appsv1.DaemonSet {
+	daemonSet := t.assertDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+
+	Expect(daemonSet.Spec.Template.Spec.InitContainers).To(HaveLen(1))
+	Expect(daemonSet.Spec.Template.Spec.InitContainers[0].Image).To(
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.RouteAgentImage, t.submariner.Spec.Version)))
+
+	envMap := t.assertRouteAgentDaemonSetEnv(t.withNetworkDiscovery(), daemonSet.Spec.Template.Spec.InitContainers[0].Env)
+	Expect(envMap).To(HaveKeyWithValue("UNINSTALL", "true"))
+
+	return daemonSet
+}
+
+func (t *testDriver) assertRouteAgentDaemonSetEnv(submariner *operatorv1.Submariner, env []corev1.EnvVar) map[string]string {
+	envMap := envMapFromVars(env)
 
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
@@ -186,6 +197,8 @@ func (t *testDriver) assertRouteAgentDaemonSet(submariner *operatorv1.Submariner
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Status.ServiceCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NETWORKPLUGIN", "fake"))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
+
+	return envMap
 }
 
 func (t *testDriver) assertGatewayDaemonSet() {
@@ -281,6 +294,11 @@ func (t *testDriver) updateDaemonSetToObserved(daemonSet *appsv1.DaemonSet) {
 	daemonSet.Status.DesiredNumberScheduled = 1
 
 	Expect(t.fakeClient.Update(context.TODO(), daemonSet)).To(Succeed())
+}
+
+func (t *testDriver) updateDaemonSetToObservedAndReady(daemonSet *appsv1.DaemonSet) {
+	t.updateDaemonSetToObserved(daemonSet)
+	t.updateDaemonSetToReady(daemonSet)
 }
 
 func (t *testDriver) withNetworkDiscovery() *operatorv1.Submariner {

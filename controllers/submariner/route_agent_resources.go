@@ -34,17 +34,18 @@ import (
 // nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileRouteagentDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error) {
-	return helpers.ReconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger, r.config.Client, r.config.Scheme)
+	return helpers.ReconcileDaemonSet(instance, newRouteAgentDaemonSet(instance, names.RouteAgentComponent), reqLogger, r.config.Client,
+		r.config.Scheme)
 }
 
-func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
+func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet {
 	labels := map[string]string{
-		"app":       "submariner-routeagent",
+		"app":       name,
 		"component": "routeagent",
 	}
 
 	matchLabels := map[string]string{
-		"app": "submariner-routeagent",
+		"app": name,
 	}
 
 	allowPrivilegeEscalation := true
@@ -65,7 +66,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 	routeAgentDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
-			Name:      "submariner-routeagent",
+			Name:      name,
 			Labels:    labels,
 		},
 		Spec: appsv1.DaemonSetSpec{
@@ -97,9 +98,9 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 					},
 					Containers: []corev1.Container{
 						{
-							Name:            "submariner-routeagent",
-							Image:           getImagePath(cr, names.RouteAgentImage, names.RouteAgentComponent),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
+							Name:            name,
+							Image:           getImagePath(cr, names.RouteAgentImage, names.RouteAgentImage),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentImage]),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
 							Command:         []string{"submariner-route-agent.sh"},
 							SecurityContext: &securityContextAllCapAllowEscal,
@@ -124,7 +125,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 							},
 						},
 					},
-					ServiceAccountName: "submariner-routeagent",
+					ServiceAccountName: names.RouteAgentComponent,
 					HostNetwork:        true,
 					// The route agent engine on all nodes, regardless of existing taints
 					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
