@@ -22,8 +22,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/pods"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/resource"
 )
 
 const (
@@ -49,9 +49,9 @@ func checkKubeProxyMode(cluster *cmd.Cluster) bool {
 	status := cli.NewStatus()
 	status.Start("Checking Submariner support for the kube-proxy mode")
 
-	scheduling := resource.PodScheduling{ScheduleOn: resource.GatewayNode, Networking: resource.HostNetworking}
+	scheduling := pods.Scheduling{ScheduleOn: pods.GatewayNode, Networking: pods.HostNetworking}
 
-	podOutput, err := resource.SchedulePodAwaitCompletion(&resource.PodConfig{
+	podOutput, err := pods.ScheduleAndAwaitCompletion(&pods.Config{
 		Name:       "query-iface-list",
 		ClientSet:  cluster.KubeClient,
 		Scheduling: scheduling,
