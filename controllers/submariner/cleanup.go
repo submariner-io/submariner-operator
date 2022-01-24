@@ -39,14 +39,21 @@ import (
 var requeueAfter = reconcile.Result{RequeueAfter: time.Millisecond * 100}
 
 func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operatorv1alpha1.Submariner) (reconcile.Result, error) {
+	objsToDelete := []client.Object{
+		newDaemonSet(names.GatewayComponent, instance.Namespace),
+		newDaemonSet(names.RouteAgentComponent, instance.Namespace),
+	}
+
 	// First, delete the regular DaemonSets/Deployments and ensure all their pods are cleaned up.
-	objsToDelete := []client.Object{newDaemonSet(names.GatewayComponent, instance.Namespace)}
 	for _, obj := range objsToDelete {
 		err := r.ensureDeleted(ctx, obj)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+	}
 
+	// Next, delete ensure all their pods are cleaned up.
+	for _, obj := range objsToDelete {
 		pods, err := findPodsBySelector(ctx, r.config.Client, obj.GetNamespace(), &metav1.LabelSelector{
 			MatchLabels: map[string]string{appLabel: obj.GetName()},
 		})
@@ -70,11 +77,20 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 
 	uninstallDaemonSets := []*appsv1.DaemonSet{
 		newGatewayDaemonSet(instance, names.AppendUninstall(names.GatewayComponent)),
+		newRouteAgentDaemonSet(instance, names.AppendUninstall(names.RouteAgentComponent)),
 	}
 
-	// Next, create the corresponding uninstall DaemonSets/Deployments and ensure each completes (ie reports ready).
+	// Next, create the corresponding uninstall DaemonSets.
 	for _, daemonSet := range uninstallDaemonSets {
-		requeue, err := r.ensureUninstallDaemonSetReady(ctx, daemonSet)
+		err := r.createUninstallDaemonSetFrom(ctx, daemonSet)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+	}
+
+	// Next, ensure each DaemonSets completes (ie reports ready).
+	for _, daemonSet := range uninstallDaemonSets {
+		requeue, err := r.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(daemonSet))
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -106,19 +122,25 @@ func (r *Reconciler) ensureDeleted(ctx context.Context, obj client.Object) error
 	return errors.Wrapf(err, "error deleting %#v", obj)
 }
 
-func (r *Reconciler) ensureUninstallDaemonSetReady(ctx context.Context, daemonSet *appsv1.DaemonSet) (bool, error) {
+func (r *Reconciler) createUninstallDaemonSetFrom(ctx context.Context, daemonSet *appsv1.DaemonSet) error {
 	convertPodSpecContainersToUninstall(&daemonSet.Spec.Template.Spec)
 
 	err := r.config.Client.Create(ctx, daemonSet)
 	if err != nil {
 		if !apierrors.IsAlreadyExists(err) {
-			return false, errors.Wrapf(err, "error creating %#v", daemonSet)
+			return errors.Wrapf(err, "error creating %#v", daemonSet)
 		}
 	} else {
 		log.Info("Created DaemonSet:", "name", daemonSet.Name, "namespace", daemonSet.Namespace)
 	}
 
-	err = r.config.Client.Get(ctx, client.ObjectKeyFromObject(daemonSet), daemonSet)
+	return nil
+}
+
+func (r *Reconciler) ensureDaemonSetReady(ctx context.Context, key client.ObjectKey) (bool, error) {
+	daemonSet := &appsv1.DaemonSet{}
+
+	err := r.config.Client.Get(ctx, key, daemonSet)
 	if err != nil {
 		return false, errors.Wrapf(err, "error getting %#v", daemonSet)
 	}

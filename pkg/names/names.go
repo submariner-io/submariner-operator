@@ -20,7 +20,7 @@ package names
 /* Component names and other constants. */
 const (
 	NetworkPluginSyncerComponent = "submariner-networkplugin-syncer"
-	RouteAgentComponent          = "submariner-route-agent"
+	RouteAgentComponent          = "submariner-routeagent"
 	GatewayComponent             = "submariner-gateway"
 	GlobalnetComponent           = "submariner-globalnet"
 	ServiceDiscoveryComponent    = "lighthouse-agent"
