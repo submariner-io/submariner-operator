@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// This package provides common functionality to run cloud prepare/cleanup on AWS.
+// Package aws provides common functionality to run cloud prepare/cleanup on AWS.
 package aws
 
 import (
@@ -30,6 +30,7 @@ import (
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	aws "github.com/submariner-io/cloud-prepare/pkg/aws"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
@@ -65,7 +66,7 @@ func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string,
 	function func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error) error {
 	if ocpMetadataFile != "" {
 		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
-		utils.ExitOnError("Failed to read AWS information from OCP metadata file", err)
+		exit.OnErrorWithMessage(err, "Failed to read AWS information from OCP metadata file")
 	} else {
 		utils.ExpectFlag(infraIDFlag, infraID)
 		utils.ExpectFlag(regionFlag, region)
@@ -85,17 +86,17 @@ func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string,
 	reporter.Succeeded("")
 
 	k8sConfig, err := restConfigProducer.ForCluster()
-	utils.ExitOnError("Failed to initialize a Kubernetes config", err)
+	exit.OnErrorWithMessage(err, "Failed to initialize a Kubernetes config")
 
 	restMapper, err := util.BuildRestMapper(k8sConfig)
-	utils.ExitOnError("Failed to create restmapper", err)
+	exit.OnErrorWithMessage(err, "Failed to create restmapper")
 
 	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
-	utils.ExitOnError("Failed to create dynamic client", err)
+	exit.OnErrorWithMessage(err, "Failed to create dynamic client")
 
 	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
 	gwDeployer, err := aws.NewOcpGatewayDeployer(awsCloud, msDeployer, gwInstanceType)
-	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
+	exit.OnErrorWithMessage(err, "Failed to initialize a GatewayDeployer config")
 
 	return function(awsCloud, gwDeployer, reporter)
 }

@@ -29,6 +29,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/stringset"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
@@ -99,7 +100,7 @@ func (rcp *Producer) PopulateTestFramework() {
 
 func (rcp *Producer) MustGetForClusters() []RestConfig {
 	configs, err := rcp.ForClusters()
-	utils.ExitOnError("Error getting REST Config for cluster", err)
+	exit.OnErrorWithMessage(err, "Error getting REST Config for cluster")
 
 	return configs
 }
@@ -296,7 +297,7 @@ func (rcp *Producer) ClientConfig() clientcmd.ClientConfig {
 
 func (rcp *Producer) CheckVersionMismatch(cmd *cobra.Command, args []string) error {
 	config, err := rcp.ForCluster()
-	utils.ExitOnError("The provided kubeconfig is invalid", err)
+	exit.OnErrorWithMessage(err, "The provided kubeconfig is invalid")
 
 	submariner := utils.GetSubmarinerResource(config)
 
