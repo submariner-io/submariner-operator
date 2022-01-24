@@ -21,8 +21,8 @@ package cleanup
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/generic"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 func newGenericCleanupCommand() *cobra.Command {
@@ -43,5 +43,5 @@ func cleanupGenericCluster(cmd *cobra.Command, args []string) {
 			return gwDeployer.Cleanup(reporter) // nolint:wrapcheck // No need to wrap here
 		})
 
-	utils.ExitOnError("Failed to cleanup K8s cluster", err)
+	exit.OnErrorWithMessage(err, "Failed to cleanup K8s cluster")
 }

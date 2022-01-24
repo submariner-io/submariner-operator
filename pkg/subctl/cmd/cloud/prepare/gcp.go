@@ -21,8 +21,8 @@ package prepare
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/gcp"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
@@ -77,5 +77,5 @@ func prepareGCP(cmd *cobra.Command, args []string) {
 			return cloud.PrepareForSubmariner(input, reporter)
 		})
 
-	utils.ExitOnError("Failed to prepare GCP cloud", err)
+	exit.OnErrorWithMessage(err, "Failed to prepare GCP cloud")
 }

@@ -21,8 +21,8 @@ package cleanup
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/gcp"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 // newGCPCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure.
@@ -51,5 +51,5 @@ func cleanupGCP(cmd *cobra.Command, args []string) {
 			return cloud.CleanupAfterSubmariner(reporter)
 		})
 
-	utils.ExitOnError("Failed to cleanup GCP cloud", err)
+	exit.OnErrorWithMessage(err, "Failed to cleanup GCP cloud")
 }
