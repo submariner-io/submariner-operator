@@ -19,8 +19,6 @@ limitations under the License.
 package gather
 
 import (
-	"fmt"
-
 	"github.com/submariner-io/submariner-operator/internal/pods"
 	v1 "k8s.io/api/core/v1"
 )
@@ -95,7 +93,7 @@ func gatherCNIResources(info *Info, networkPlugin string) {
 		case typeOvn:
 			// no-op. Handled in OVNResources()
 		case typeUnknown:
-			info.Status.QueueFailureMessage("Unsupported CNI Type")
+			info.Status.Failure("Unsupported CNI Type")
 		}
 	})
 
@@ -140,13 +138,13 @@ func gatherOVNResources(info *Info, networkPlugin string) {
 
 	// we check two different labels because OpenShift deploys with a different
 	// label compared to ovn-kubernetes upstream
-	ovnMasterpods, err := findPods(info.ClientSet, ovnMasterPodLabelOCP)
+	ovnMasterpods, err := findPods(info.ClientProducer.ForKubernetes(), ovnMasterPodLabelOCP)
 	if err != nil || ovnMasterpods == nil || len(ovnMasterpods.Items) == 0 {
-		ovnMasterpods, err = findPods(info.ClientSet, ovnMasterPodLabelGeneric)
+		ovnMasterpods, err = findPods(info.ClientProducer.ForKubernetes(), ovnMasterPodLabelGeneric)
 		if err != nil {
-			info.Status.QueueFailureMessage("Failed to gather any OVN master pods: " + err.Error())
+			info.Status.Failure("Failed to gather any OVN master ovnMasterpods: " + err.Error())
 		} else if ovnMasterpods == nil || len(ovnMasterpods.Items) == 0 {
-			info.Status.QueueFailureMessage("Failed to find any OVN master pods")
+			info.Status.Failure("Failed to find any OVN master ovnMasterpods")
 		}
 	}
 
@@ -161,11 +159,11 @@ func gatherOVNResources(info *Info, networkPlugin string) {
 	}
 
 	if ovnMasterPod == nil {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to exec OVN command in all masters: %s", err))
+		info.Status.Failure("Failed to exec OVN command in all masters: %s", err)
 		return
 	}
 
-	info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering OVN data from master pod %q", ovnMasterPod.Name))
+	info.Status.Success("Gathering OVN data from master pod %q", ovnMasterPod.Name)
 
 	for name, command := range ovnCmds {
 		logCmdOutput(info, ovnMasterPod, command, name, false)
@@ -191,7 +189,7 @@ func execCmdInBash(info *Info, pod *v1.Pod, cmd string) (string, string, error) 
 	execOptions := pods.ExecOptionsFromPod(pod)
 	execConfig := pods.ExecConfig{
 		RestConfig: info.RestConfig,
-		ClientSet:  info.ClientSet,
+		ClientSet:  info.ClientProducer.ForKubernetes(),
 	}
 
 	execOptions.Command = []string{"/bin/bash", "-c", cmd}
@@ -202,7 +200,7 @@ func execCmdInBash(info *Info, pod *v1.Pod, cmd string) (string, string, error) 
 func logCmdOutput(info *Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool) {
 	stdOut, _, err := execCmdInBash(info, pod, cmd)
 	if err != nil && !ignoreError {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Error running %q on pod %q: %v", cmd, pod.Name, err))
+		info.Status.Failure("Error running %q on pod %q: %v", cmd, pod.Name, err)
 
 		return
 	}
@@ -213,7 +211,7 @@ func logCmdOutput(info *Info, pod *v1.Pod, cmd, cmdName string, ignoreError bool
 
 		fileName, err := writeLogToFile(stdOut, pod.Spec.NodeName+"_"+cmdName, info, ".log")
 		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Error writing output from command %q on pod %q: %v", cmd, pod.Name, err))
+			info.Status.Failure("Error writing output from command %q on pod %q: %v", cmd, pod.Name, err)
 		}
 
 		info.Summary.Resources = append(info.Summary.Resources, ResourceInfo{
