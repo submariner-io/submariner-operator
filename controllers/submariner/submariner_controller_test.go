@@ -166,6 +166,13 @@ func testReconciliation() {
 		})
 	})
 
+	When("the submariner globalnet DaemonSet doesn't exist", func() {
+		It("should create it", func() {
+			t.assertReconcileSuccess()
+			t.assertGlobalnetDaemonSet()
+		})
+	})
+
 	When("the Submariner resource doesn't exist", func() {
 		BeforeEach(func() {
 			t.initClientObjs = nil
@@ -235,45 +242,75 @@ func testDeletion() {
 
 		now := metav1.Now()
 		t.submariner.SetDeletionTimestamp(&now)
-
-		t.initClientObjs = append(t.initClientObjs,
-			t.newDaemonSet(names.GatewayComponent),
-			t.newPodWithLabel("app", names.GatewayComponent),
-			t.newDaemonSet(names.RouteAgentComponent))
 	})
 
-	FIt("should uninstall the component resources and remove the finalizer", func() {
-		// The first reconcile invocation should delete the regular DaemonSets/Deployments.
-		t.assertReconcileRequeue()
+	Context("", func() {
+		BeforeEach(func() {
+			t.initClientObjs = append(t.initClientObjs,
+				t.newDaemonSet(names.GatewayComponent),
+				t.newPodWithLabel("app", names.GatewayComponent),
+				t.newDaemonSet(names.RouteAgentComponent),
+				t.newDaemonSet(names.GlobalnetComponent))
+		})
 
-		t.assertNoDaemonSet(names.GatewayComponent)
-		t.assertNoDaemonSet(names.RouteAgentComponent)
+		It("should run DaemonSets/Deployments to uninstall components", func() {
+			// The first reconcile invocation should delete the regular DaemonSets/Deployments.
+			t.assertReconcileRequeue()
 
-		// Simulate the DaemonSet controller cleaning up its pods.
-		t.deletePods("app", names.GatewayComponent)
+			t.assertNoDaemonSet(names.GatewayComponent)
+			t.assertNoDaemonSet(names.RouteAgentComponent)
+			t.assertNoDaemonSet(names.GlobalnetComponent)
 
-		// Next, the controller should create the corresponding uninstall DaemonSets/Deployments.
-		t.assertReconcileRequeue()
+			// Simulate the DaemonSet controller cleaning up its pods.
+			t.deletePods("app", names.GatewayComponent)
 
-		// For the gateway DaemonSet, we'll only update it to observed but not yet ready at this point.
-		gatewayDS := t.assertUninstallGatewayDaemonSet()
-		t.updateDaemonSetToObserved(gatewayDS)
+			// Next, the controller should create the corresponding uninstall DaemonSets/Deployments.
+			t.assertReconcileRequeue()
 
-		t.updateDaemonSetToObservedAndReady(t.assertUninstallRouteAgentDaemonSet())
+			// For the gateway DaemonSet, we'll only update it to nodes available but not yet ready at this point.
+			gatewayDS := t.assertUninstallGatewayDaemonSet()
+			t.updateDaemonSetToScheduled(gatewayDS)
 
-		// Next, the controller should delete the uninstall DaemonSets/Deployments that are ready.
-		t.assertReconcileRequeue()
+			// For the globalnet DaemonSet, we'll update it to observed but no nodes available - this will cause it to be deleted.
+			globalnetDS := t.assertUninstallGlobalnetDaemonSet()
+			t.updateDaemonSetToObserved(globalnetDS)
 
-		// Now update the gateway DaemonSet to ready.
-		t.updateDaemonSetToReady(gatewayDS)
+			t.updateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
 
-		// Finally, the controller should delete uninstall DaemonSets/Deployments and remove the finalizer.
-		t.assertReconcileSuccess()
+			// Next, the controller should again requeue b/c the gateway DaemonSet isn't ready yet.
+			t.assertReconcileRequeue()
 
-		t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
-		t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+			// Now update the gateway DaemonSet to ready.
+			t.updateDaemonSetToReady(gatewayDS)
 
-		test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-			submarinerName, submarinerController.SubmarinerFinalizer)
+			// Finally, the controller should delete the uninstall DaemonSets/Deployments and remove the finalizer.
+			t.assertReconcileSuccess()
+
+			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+			t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+			t.assertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
+
+			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
+				submarinerName, submarinerController.SubmarinerFinalizer)
+		})
+	})
+
+	Context("and some components aren't installed", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.GlobalCIDR = ""
+
+			t.initClientObjs = append(t.initClientObjs,
+				t.newDaemonSet(names.GatewayComponent),
+				t.newDaemonSet(names.RouteAgentComponent))
+		})
+
+		It("should only create uninstall DaemonSets/Deployments for installed components", func() {
+			t.assertReconcileRequeue()
+
+			t.assertUninstallGatewayDaemonSet()
+			t.assertUninstallRouteAgentDaemonSet()
+
+			t.assertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
+		})
 	})
 }

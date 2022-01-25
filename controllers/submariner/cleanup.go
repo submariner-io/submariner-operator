@@ -38,75 +38,153 @@ import (
 
 var requeueAfter = reconcile.Result{RequeueAfter: time.Millisecond * 100}
 
+type component struct {
+	resource          client.Object
+	uninstallResource client.Object
+	checkInstalled    func() bool
+}
+
+func (c *component) isInstalled() bool {
+	return c.checkInstalled == nil || c.checkInstalled()
+}
+
 func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operatorv1alpha1.Submariner) (reconcile.Result, error) {
-	objsToDelete := []client.Object{
-		newDaemonSet(names.GatewayComponent, instance.Namespace),
-		newDaemonSet(names.RouteAgentComponent, instance.Namespace),
-	}
-
-	// First, delete the regular DaemonSets/Deployments and ensure all their pods are cleaned up.
-	for _, obj := range objsToDelete {
-		err := r.ensureDeleted(ctx, obj)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-	}
-
-	// Next, delete ensure all their pods are cleaned up.
-	for _, obj := range objsToDelete {
-		pods, err := findPodsBySelector(ctx, r.config.Client, obj.GetNamespace(), &metav1.LabelSelector{
-			MatchLabels: map[string]string{appLabel: obj.GetName()},
-		})
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		numPods := len(pods)
-		if numPods > 0 {
-			log.Info(fmt.Sprintf("%T still has pods - requeueing: ", obj), "name", obj.GetName(), "namespace", obj.GetNamespace(),
-				"numPods", numPods)
-			return requeueAfter, nil
-		}
-	}
-
 	// This has the side effect of setting the CIDRs in the Submariner instance.
 	_, err := r.discoverNetwork(instance)
 	if err != nil {
-		return requeueAfter, err
+		return reconcile.Result{}, err
 	}
 
-	uninstallDaemonSets := []*appsv1.DaemonSet{
-		newGatewayDaemonSet(instance, names.AppendUninstall(names.GatewayComponent)),
-		newRouteAgentDaemonSet(instance, names.AppendUninstall(names.RouteAgentComponent)),
+	components := []*component{
+		{
+			resource:          newDaemonSet(names.GatewayComponent, instance.Namespace),
+			uninstallResource: newGatewayDaemonSet(instance, names.AppendUninstall(names.GatewayComponent)),
+		},
+		{
+			resource:          newDaemonSet(names.RouteAgentComponent, instance.Namespace),
+			uninstallResource: newRouteAgentDaemonSet(instance, names.AppendUninstall(names.RouteAgentComponent)),
+		},
+		{
+			resource:          newDaemonSet(names.GlobalnetComponent, instance.Namespace),
+			uninstallResource: newGlobalnetDaemonSet(instance, names.AppendUninstall(names.GlobalnetComponent)),
+			checkInstalled: func() bool {
+				return instance.Spec.GlobalCIDR != ""
+			},
+		},
 	}
 
-	// Next, create the corresponding uninstall DaemonSets.
-	for _, daemonSet := range uninstallDaemonSets {
-		err := r.createUninstallDaemonSetFrom(ctx, daemonSet)
+	// First, delete the regular DaemonSets/Deployments.
+	for _, c := range components {
+		if !c.isInstalled() {
+			continue
+		}
+
+		err := r.ensureDeleted(ctx, c.resource)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 	}
 
-	// Next, ensure each DaemonSets completes (ie reports ready).
-	for _, daemonSet := range uninstallDaemonSets {
-		requeue, err := r.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(daemonSet))
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		if requeue {
-			// TODO - check the elapased time wrt the Submariner DeletionTimeStamp and abort cleanup if too long
-			return requeueAfter, nil
-		}
+	// Next, ensure all their pods are cleaned up.
+	requeue, err := r.ensurePodsDeleted(ctx, components)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
-	// TODO - ensure all uninstall DS's are deleted
+	if requeue {
+		return requeueAfter, nil
+	}
+
+	err = r.createUninstallResources(ctx, components)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	requeue, err = r.ensureUninstallResourcesComplete(ctx, components)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if requeue {
+		return requeueAfter, nil
+	}
 
 	err = finalizer.Remove(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.Submariner{}),
 		instance, SubmarinerFinalizer)
 
 	return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
+}
+
+func (r *Reconciler) ensurePodsDeleted(ctx context.Context, components []*component) (bool, error) {
+	for _, c := range components {
+		if !c.isInstalled() {
+			continue
+		}
+
+		pods, err := findPodsBySelector(ctx, r.config.Client, c.resource.GetNamespace(), &metav1.LabelSelector{
+			MatchLabels: map[string]string{appLabel: c.resource.GetName()},
+		})
+		if err != nil {
+			return false, err
+		}
+
+		numPods := len(pods)
+		if numPods > 0 {
+			log.Info(fmt.Sprintf("%T still has pods - requeueing: ", c.resource), "name", c.resource.GetName(),
+				"namespace", c.resource.GetNamespace(), "numPods", numPods)
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (r *Reconciler) ensureUninstallResourcesComplete(ctx context.Context, components []*component) (bool, error) {
+	for _, c := range components {
+		if !c.isInstalled() {
+			continue
+		}
+
+		var requeue bool
+		var err error
+
+		switch d := c.uninstallResource.(type) {
+		case *appsv1.DaemonSet:
+			requeue, err = r.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(d))
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if requeue {
+			// TODO - check the elapased time wrt the Submariner DeletionTimeStamp and abort cleanup if too long
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func (r *Reconciler) createUninstallResources(ctx context.Context, components []*component) error {
+	for _, c := range components {
+		if !c.isInstalled() {
+			continue
+		}
+
+		var err error
+
+		switch d := c.uninstallResource.(type) {
+		case *appsv1.DaemonSet:
+			err = r.createUninstallDaemonSetFrom(ctx, d)
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *Reconciler) ensureDeleted(ctx context.Context, obj client.Object) error {
@@ -165,7 +243,7 @@ func (r *Reconciler) ensureDaemonSetReady(ctx context.Context, key client.Object
 }
 
 func convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
-	// We're going to use the PodSpec run a one-time task by using an init container to run the task.
+	// We're going to use the PodSpec to run a one-time task by using an init container to run the task.
 	// See http://blog.itaysk.com/2017/12/26/the-single-use-daemonset-pattern-and-prepulling-images-in-kubernetes
 	// for more details.
 	podSpec.InitContainers = podSpec.Containers

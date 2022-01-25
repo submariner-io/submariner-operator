@@ -251,6 +251,40 @@ func (t *testDriver) assertGatewayDaemonSetEnv(submariner *operatorv1.Submariner
 	return envMap
 }
 
+func (t *testDriver) assertGlobalnetDaemonSet() {
+	daemonSet := t.assertDaemonSet(names.GlobalnetComponent)
+	assertGatewayNodeSelector(daemonSet)
+
+	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
+	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GlobalnetImage, t.submariner.Spec.Version)))
+
+	t.assertGlobalnetDaemonSetEnv(t.withNetworkDiscovery(), daemonSet.Spec.Template.Spec.Containers[0].Env)
+}
+
+func (t *testDriver) assertUninstallGlobalnetDaemonSet() *appsv1.DaemonSet {
+	daemonSet := t.assertDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
+	assertGatewayNodeSelector(daemonSet)
+
+	Expect(daemonSet.Spec.Template.Spec.InitContainers).To(HaveLen(1))
+	Expect(daemonSet.Spec.Template.Spec.InitContainers[0].Image).To(
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GlobalnetImage, t.submariner.Spec.Version)))
+
+	envMap := t.assertGlobalnetDaemonSetEnv(t.withNetworkDiscovery(), daemonSet.Spec.Template.Spec.InitContainers[0].Env)
+	Expect(envMap).To(HaveKeyWithValue("UNINSTALL", "true"))
+
+	return daemonSet
+}
+
+func (t *testDriver) assertGlobalnetDaemonSetEnv(submariner *operatorv1.Submariner, env []corev1.EnvVar) map[string]string {
+	envMap := envMapFromVars(env)
+
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
+
+	return envMap
+}
+
 func (t *testDriver) getDaemonSet(name string) (*appsv1.DaemonSet, error) {
 	foundDaemonSet := &appsv1.DaemonSet{}
 	err := t.fakeClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: submarinerNamespace}, foundDaemonSet)
@@ -283,22 +317,22 @@ func assertGatewayNodeSelector(daemonSet *appsv1.DaemonSet) {
 }
 
 func (t *testDriver) updateDaemonSetToReady(daemonSet *appsv1.DaemonSet) {
+	t.updateDaemonSetToScheduled(daemonSet)
 	daemonSet.Status.NumberReady = daemonSet.Status.DesiredNumberScheduled
-
 	Expect(t.fakeClient.Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
 func (t *testDriver) updateDaemonSetToObserved(daemonSet *appsv1.DaemonSet) {
 	daemonSet.Generation = 1
-	daemonSet.Status.ObservedGeneration = 1
-	daemonSet.Status.DesiredNumberScheduled = 1
-
+	daemonSet.Status.ObservedGeneration = daemonSet.Generation
 	Expect(t.fakeClient.Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
-func (t *testDriver) updateDaemonSetToObservedAndReady(daemonSet *appsv1.DaemonSet) {
-	t.updateDaemonSetToObserved(daemonSet)
-	t.updateDaemonSetToReady(daemonSet)
+func (t *testDriver) updateDaemonSetToScheduled(daemonSet *appsv1.DaemonSet) {
+	daemonSet.Generation = 1
+	daemonSet.Status.ObservedGeneration = daemonSet.Generation
+	daemonSet.Status.DesiredNumberScheduled = 1
+	Expect(t.fakeClient.Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
 func (t *testDriver) withNetworkDiscovery() *operatorv1.Submariner {
