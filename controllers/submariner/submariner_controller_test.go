@@ -21,6 +21,7 @@ package submariner_test
 import (
 	"context"
 	"reflect"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -329,11 +330,44 @@ func testDeletion() {
 		It("should only create uninstall DaemonSets/Deployments for installed components", func() {
 			t.assertReconcileRequeue()
 
-			t.assertUninstallGatewayDaemonSet()
-			t.assertUninstallRouteAgentDaemonSet()
+			t.updateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
+			t.updateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
 
 			t.assertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
 			t.assertNoDaemonSet(names.AppendUninstall(names.NetworkPluginSyncerComponent))
+
+			t.assertReconcileSuccess()
+
+			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+			t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+
+			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
+				submarinerName, submarinerController.SubmarinerFinalizer)
+		})
+	})
+
+	Context("and an uninstall DaemonSet does not complete in time", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.GlobalCIDR = ""
+		})
+
+		It("should delete it", func() {
+			t.assertReconcileRequeue()
+
+			t.updateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
+			t.updateDaemonSetToScheduled(t.assertUninstallRouteAgentDaemonSet())
+
+			ts := metav1.NewTime(time.Now().Add(-(submarinerController.UninstallComponentReadyTimeout + 10)))
+			t.submariner.SetDeletionTimestamp(&ts)
+			Expect(t.fakeClient.Update(context.TODO(), t.submariner)).To(Succeed())
+
+			t.assertReconcileSuccess()
+
+			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+			t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+
+			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
+				submarinerName, submarinerController.SubmarinerFinalizer)
 		})
 	})
 }
