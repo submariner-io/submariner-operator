@@ -50,7 +50,7 @@ func (c *component) isInstalled() bool {
 
 func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operatorv1alpha1.Submariner) (reconcile.Result, error) {
 	// This has the side effect of setting the CIDRs in the Submariner instance.
-	_, err := r.discoverNetwork(instance)
+	clusterNetwork, err := r.discoverNetwork(instance)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -69,6 +69,14 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 			uninstallResource: newGlobalnetDaemonSet(instance, names.AppendUninstall(names.GlobalnetComponent)),
 			checkInstalled: func() bool {
 				return instance.Spec.GlobalCIDR != ""
+			},
+		},
+		{
+			resource: newDeployment(names.NetworkPluginSyncerComponent, instance.Namespace),
+			uninstallResource: newNetworkPluginSyncerDeployment(instance, clusterNetwork,
+				names.AppendUninstall(names.NetworkPluginSyncerComponent)),
+			checkInstalled: func() bool {
+				return needsNetworkPluginSyncer(instance)
 			},
 		},
 	}
@@ -151,6 +159,8 @@ func (r *Reconciler) ensureUninstallResourcesComplete(ctx context.Context, compo
 		switch d := c.uninstallResource.(type) {
 		case *appsv1.DaemonSet:
 			requeue, err = r.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(d))
+		case *appsv1.Deployment:
+			requeue, err = r.ensureDeploymentReady(ctx, client.ObjectKeyFromObject(d))
 		}
 
 		if err != nil {
@@ -177,6 +187,8 @@ func (r *Reconciler) createUninstallResources(ctx context.Context, components []
 		switch d := c.uninstallResource.(type) {
 		case *appsv1.DaemonSet:
 			err = r.createUninstallDaemonSetFrom(ctx, d)
+		case *appsv1.Deployment:
+			err = r.createUninstallDeploymentFrom(ctx, d)
 		}
 
 		if err != nil {
@@ -242,6 +254,45 @@ func (r *Reconciler) ensureDaemonSetReady(ctx context.Context, key client.Object
 	return false, r.ensureDeleted(ctx, daemonSet)
 }
 
+func (r *Reconciler) createUninstallDeploymentFrom(ctx context.Context, deployment *appsv1.Deployment) error {
+	convertPodSpecContainersToUninstall(&deployment.Spec.Template.Spec)
+
+	err := r.config.Client.Create(ctx, deployment)
+	if err != nil {
+		if !apierrors.IsAlreadyExists(err) {
+			return errors.Wrapf(err, "error creating %#v", deployment)
+		}
+	} else {
+		log.Info("Created Deployment:", "name", deployment.Name, "namespace", deployment.Namespace)
+	}
+
+	return nil
+}
+
+func (r *Reconciler) ensureDeploymentReady(ctx context.Context, key client.ObjectKey) (bool, error) {
+	deployment := &appsv1.Deployment{}
+
+	err := r.config.Client.Get(ctx, key, deployment)
+	if err != nil {
+		return false, errors.Wrapf(err, "error getting %#v", deployment)
+	}
+
+	var replicas int32 = 1
+	if deployment.Spec.Replicas != nil {
+		replicas = *deployment.Spec.Replicas
+	}
+
+	if deployment.Status.AvailableReplicas != replicas {
+		log.Info("Deployment not ready yet - requeueing:", "name", deployment.Name, "namespace", deployment.Namespace,
+			"AvailableReplicas", deployment.Status.AvailableReplicas, "DesiredReplicas", replicas)
+		return true, nil
+	}
+
+	log.Info("Deployment is ready:", "name", deployment.Name, "namespace", deployment.Namespace)
+
+	return false, r.ensureDeleted(ctx, deployment)
+}
+
 func convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
 	// We're going to use the PodSpec to run a one-time task by using an init container to run the task.
 	// See http://blog.itaysk.com/2017/12/26/the-single-use-daemonset-pattern-and-prepulling-images-in-kubernetes
@@ -259,6 +310,15 @@ func convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
 
 func newDaemonSet(name, namespace string) *appsv1.DaemonSet {
 	return &appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+}
+
+func newDeployment(name, namespace string) *appsv1.Deployment {
+	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
