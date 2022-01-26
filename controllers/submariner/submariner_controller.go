@@ -279,6 +279,8 @@ func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Subm
 		return instance, nil
 	}
 
+	log.Info("Added finalizer")
+
 	return r.getSubmariner(ctx, types.NamespacedName{Namespace: instance.Namespace, Name: instance.Name})
 }
 

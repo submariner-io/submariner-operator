@@ -36,6 +36,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+const UninstallComponentReadyTimeout = time.Minute * 2
+
 var requeueAfter = reconcile.Result{RequeueAfter: time.Millisecond * 100}
 
 type component struct {
@@ -108,7 +110,9 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 		return reconcile.Result{}, err
 	}
 
-	requeue, err = r.ensureUninstallResourcesComplete(ctx, components)
+	timedOut := time.Since(instance.DeletionTimestamp.Time) >= UninstallComponentReadyTimeout
+
+	requeue, err = r.ensureUninstallResourcesComplete(ctx, components, timedOut)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -147,7 +151,7 @@ func (r *Reconciler) ensurePodsDeleted(ctx context.Context, components []*compon
 	return false, nil
 }
 
-func (r *Reconciler) ensureUninstallResourcesComplete(ctx context.Context, components []*component) (bool, error) {
+func (r *Reconciler) ensureUninstallResourcesComplete(ctx context.Context, components []*component, timedOut bool) (bool, error) {
 	for _, c := range components {
 		if !c.isInstalled() {
 			continue
@@ -158,9 +162,9 @@ func (r *Reconciler) ensureUninstallResourcesComplete(ctx context.Context, compo
 
 		switch d := c.uninstallResource.(type) {
 		case *appsv1.DaemonSet:
-			requeue, err = r.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(d))
+			requeue, err = r.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(d), timedOut)
 		case *appsv1.Deployment:
-			requeue, err = r.ensureDeploymentReady(ctx, client.ObjectKeyFromObject(d))
+			requeue, err = r.ensureDeploymentReady(ctx, client.ObjectKeyFromObject(d), timedOut)
 		}
 
 		if err != nil {
@@ -168,7 +172,6 @@ func (r *Reconciler) ensureUninstallResourcesComplete(ctx context.Context, compo
 		}
 
 		if requeue {
-			// TODO - check the elapased time wrt the Submariner DeletionTimeStamp and abort cleanup if too long
 			return true, nil
 		}
 	}
@@ -221,13 +224,14 @@ func (r *Reconciler) createUninstallDaemonSetFrom(ctx context.Context, daemonSet
 			return errors.Wrapf(err, "error creating %#v", daemonSet)
 		}
 	} else {
-		log.Info("Created DaemonSet:", "name", daemonSet.Name, "namespace", daemonSet.Namespace)
+		log.Info("Created DaemonSet:", "name", daemonSet.Name, "namespace", daemonSet.Namespace,
+			"Image", daemonSet.Spec.Template.Spec.InitContainers[0].Image)
 	}
 
 	return nil
 }
 
-func (r *Reconciler) ensureDaemonSetReady(ctx context.Context, key client.ObjectKey) (bool, error) {
+func (r *Reconciler) ensureDaemonSetReady(ctx context.Context, key client.ObjectKey, timedOut bool) (bool, error) {
 	daemonSet := &appsv1.DaemonSet{}
 
 	err := r.config.Client.Get(ctx, key, daemonSet)
@@ -244,9 +248,14 @@ func (r *Reconciler) ensureDaemonSetReady(ctx context.Context, key client.Object
 	if daemonSet.Status.DesiredNumberScheduled == 0 {
 		log.Info("DaemonSet has no available nodes:", "name", daemonSet.Name, "namespace", daemonSet.Namespace)
 	} else if daemonSet.Status.DesiredNumberScheduled != daemonSet.Status.NumberReady {
-		log.Info("DaemonSet not ready yet - requeueing:", "name", daemonSet.Name, "namespace", daemonSet.Namespace,
+		log.Info("DaemonSet not ready yet:", "name", daemonSet.Name, "namespace", daemonSet.Namespace,
 			"DesiredNumberScheduled", daemonSet.Status.DesiredNumberScheduled, "NumberReady", daemonSet.Status.NumberReady)
-		return true, nil
+
+		if !timedOut {
+			return true, nil
+		}
+
+		log.Info("DaemonSet timed out - deleting:", "name", daemonSet.Name, "namespace", daemonSet.Namespace)
 	} else {
 		log.Info("DaemonSet is ready:", "name", daemonSet.Name, "namespace", daemonSet.Namespace)
 	}
@@ -269,7 +278,7 @@ func (r *Reconciler) createUninstallDeploymentFrom(ctx context.Context, deployme
 	return nil
 }
 
-func (r *Reconciler) ensureDeploymentReady(ctx context.Context, key client.ObjectKey) (bool, error) {
+func (r *Reconciler) ensureDeploymentReady(ctx context.Context, key client.ObjectKey, timedOut bool) (bool, error) {
 	deployment := &appsv1.Deployment{}
 
 	err := r.config.Client.Get(ctx, key, deployment)
@@ -283,9 +292,14 @@ func (r *Reconciler) ensureDeploymentReady(ctx context.Context, key client.Objec
 	}
 
 	if deployment.Status.AvailableReplicas != replicas {
-		log.Info("Deployment not ready yet - requeueing:", "name", deployment.Name, "namespace", deployment.Namespace,
+		log.Info("Deployment not ready yet:", "name", deployment.Name, "namespace", deployment.Namespace,
 			"AvailableReplicas", deployment.Status.AvailableReplicas, "DesiredReplicas", replicas)
-		return true, nil
+
+		if !timedOut {
+			return true, nil
+		}
+
+		log.Info("Deployment timed out - deleting:", "name", deployment.Name, "namespace", deployment.Namespace)
 	}
 
 	log.Info("Deployment is ready:", "name", deployment.Name, "namespace", deployment.Namespace)
