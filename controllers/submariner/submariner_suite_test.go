@@ -195,7 +195,7 @@ func (t *testDriver) assertRouteAgentDaemonSetEnv(submariner *operatorv1.Submari
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Status.ClusterCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Status.ServiceCIDR))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NETWORKPLUGIN", "fake"))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NETWORKPLUGIN", submariner.Status.NetworkPlugin))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 
 	return envMap
@@ -285,6 +285,43 @@ func (t *testDriver) assertGlobalnetDaemonSetEnv(submariner *operatorv1.Submarin
 	return envMap
 }
 
+func (t *testDriver) assertNetworkPluginSyncerDeployment() {
+	deployment := t.assertDeployment(names.NetworkPluginSyncerComponent)
+
+	Expect(deployment.Spec.Template.Spec.Containers).To(HaveLen(1))
+	Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.NetworkPluginSyncerImage, t.submariner.Spec.Version)))
+
+	t.assertNetworkPluginSyncerDeploymentEnv(t.withNetworkDiscovery(), deployment.Spec.Template.Spec.Containers[0].Env)
+}
+
+func (t *testDriver) assertUninstallNetworkPluginSyncerDeployment() *appsv1.Deployment {
+	deployment := t.assertDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
+
+	Expect(deployment.Spec.Template.Spec.InitContainers).To(HaveLen(1))
+	Expect(deployment.Spec.Template.Spec.InitContainers[0].Image).To(
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.NetworkPluginSyncerImage, t.submariner.Spec.Version)))
+
+	envMap := t.assertNetworkPluginSyncerDeploymentEnv(t.withNetworkDiscovery(), deployment.Spec.Template.Spec.InitContainers[0].Env)
+	Expect(envMap).To(HaveKeyWithValue("UNINSTALL", "true"))
+
+	return deployment
+}
+
+func (t *testDriver) assertNetworkPluginSyncerDeploymentEnv(submariner *operatorv1.Submariner, env []corev1.EnvVar) map[string]string {
+	envMap := envMapFromVars(env)
+
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Status.ClusterCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Status.ServiceCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_GLOBALCIDR", submariner.Status.GlobalCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NETWORKPLUGIN", submariner.Status.NetworkPlugin))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
+
+	return envMap
+}
+
 func (t *testDriver) getDaemonSet(name string) (*appsv1.DaemonSet, error) {
 	foundDaemonSet := &appsv1.DaemonSet{}
 	err := t.fakeClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: submarinerNamespace}, foundDaemonSet)
@@ -312,6 +349,31 @@ func (t *testDriver) assertNoDaemonSet(name string) {
 	Expect(err).To(HaveOccurred())
 }
 
+func (t *testDriver) getDeployment(name string) (*appsv1.Deployment, error) {
+	found := &appsv1.Deployment{}
+	err := t.fakeClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: submarinerNamespace}, found)
+
+	return found, err
+}
+
+func (t *testDriver) assertDeployment(name string) *appsv1.Deployment {
+	deployment, err := t.getDeployment(name)
+	Expect(err).To(Succeed())
+
+	Expect(deployment.ObjectMeta.Labels).To(HaveKeyWithValue("app", name))
+	Expect(deployment.Spec.Selector.MatchLabels).To(HaveKeyWithValue("app", name))
+	Expect(deployment.Spec.Replicas).ToNot(BeNil())
+	Expect(int(*deployment.Spec.Replicas)).To(Equal(1))
+
+	return deployment
+}
+
+func (t *testDriver) assertNoDeployment(name string) {
+	_, err := t.getDeployment(name)
+	Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
+	Expect(err).To(HaveOccurred())
+}
+
 func assertGatewayNodeSelector(daemonSet *appsv1.DaemonSet) {
 	Expect(daemonSet.Spec.Template.Spec.NodeSelector["submariner.io/gateway"]).To(Equal("true"))
 }
@@ -335,9 +397,16 @@ func (t *testDriver) updateDaemonSetToScheduled(daemonSet *appsv1.DaemonSet) {
 	Expect(t.fakeClient.Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
+func (t *testDriver) updateDeploymentToReady(deployment *appsv1.Deployment) {
+	deployment.Status.ReadyReplicas = *deployment.Spec.Replicas
+	deployment.Status.AvailableReplicas = *deployment.Spec.Replicas
+	Expect(t.fakeClient.Update(context.TODO(), deployment)).To(Succeed())
+}
+
 func (t *testDriver) withNetworkDiscovery() *operatorv1.Submariner {
 	t.submariner.Status.ClusterCIDR = getClusterCIDR(t.submariner, t.clusterNetwork)
 	t.submariner.Status.ServiceCIDR = getServiceCIDR(t.submariner, t.clusterNetwork)
+	t.submariner.Status.GlobalCIDR = getGlobalCIDR(t.submariner, t.clusterNetwork)
 	t.submariner.Status.NetworkPlugin = t.clusterNetwork.NetworkPlugin
 
 	return t.submariner
@@ -345,6 +414,15 @@ func (t *testDriver) withNetworkDiscovery() *operatorv1.Submariner {
 
 func (t *testDriver) newDaemonSet(name string) *appsv1.DaemonSet {
 	return &appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.submariner.Namespace,
+			Name:      name,
+		},
+	}
+}
+
+func (t *testDriver) newDeployment(name string) *appsv1.Deployment {
+	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: t.submariner.Namespace,
 			Name:      name,
@@ -426,4 +504,12 @@ func getServiceCIDR(submariner *operatorv1.Submariner, clusterNetwork *network.C
 	}
 
 	return clusterNetwork.ServiceCIDRs[0]
+}
+
+func getGlobalCIDR(submariner *operatorv1.Submariner, clusterNetwork *network.ClusterNetwork) string {
+	if submariner.Spec.GlobalCIDR != "" {
+		return submariner.Spec.GlobalCIDR
+	}
+
+	return clusterNetwork.GlobalCIDR
 }

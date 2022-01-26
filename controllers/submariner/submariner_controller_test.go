@@ -29,6 +29,7 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/resource"
 	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/pkg/names"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -173,6 +174,17 @@ func testReconciliation() {
 		})
 	})
 
+	When("the submariner network plugin syncer Deployment doesn't exist", func() {
+		BeforeEach(func() {
+			t.clusterNetwork.NetworkPlugin = constants.NetworkPluginOVNKubernetes
+		})
+
+		It("should create it", func() {
+			t.assertReconcileSuccess()
+			t.assertNetworkPluginSyncerDeployment()
+		})
+	})
+
 	When("the Submariner resource doesn't exist", func() {
 		BeforeEach(func() {
 			t.initClientObjs = nil
@@ -246,11 +258,14 @@ func testDeletion() {
 
 	Context("", func() {
 		BeforeEach(func() {
+			t.clusterNetwork.NetworkPlugin = constants.NetworkPluginOVNKubernetes
+
 			t.initClientObjs = append(t.initClientObjs,
 				t.newDaemonSet(names.GatewayComponent),
 				t.newPodWithLabel("app", names.GatewayComponent),
 				t.newDaemonSet(names.RouteAgentComponent),
-				t.newDaemonSet(names.GlobalnetComponent))
+				t.newDaemonSet(names.GlobalnetComponent),
+				t.newDeployment(names.NetworkPluginSyncerComponent))
 		})
 
 		It("should run DaemonSets/Deployments to uninstall components", func() {
@@ -260,6 +275,7 @@ func testDeletion() {
 			t.assertNoDaemonSet(names.GatewayComponent)
 			t.assertNoDaemonSet(names.RouteAgentComponent)
 			t.assertNoDaemonSet(names.GlobalnetComponent)
+			t.assertNoDeployment(names.NetworkPluginSyncerComponent)
 
 			// Simulate the DaemonSet controller cleaning up its pods.
 			t.deletePods("app", names.GatewayComponent)
@@ -276,6 +292,7 @@ func testDeletion() {
 			t.updateDaemonSetToObserved(globalnetDS)
 
 			t.updateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
+			t.updateDeploymentToReady(t.assertUninstallNetworkPluginSyncerDeployment())
 
 			// Next, the controller should again requeue b/c the gateway DaemonSet isn't ready yet.
 			t.assertReconcileRequeue()
@@ -283,12 +300,17 @@ func testDeletion() {
 			// Now update the gateway DaemonSet to ready.
 			t.updateDaemonSetToReady(gatewayDS)
 
+			// Ensure the finalizer is still present.
+			test.AwaitFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
+				submarinerName, submarinerController.SubmarinerFinalizer)
+
 			// Finally, the controller should delete the uninstall DaemonSets/Deployments and remove the finalizer.
 			t.assertReconcileSuccess()
 
 			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
 			t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
 			t.assertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
+			t.assertNoDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
 				submarinerName, submarinerController.SubmarinerFinalizer)
@@ -311,6 +333,7 @@ func testDeletion() {
 			t.assertUninstallRouteAgentDaemonSet()
 
 			t.assertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
+			t.assertNoDaemonSet(names.AppendUninstall(names.NetworkPluginSyncerComponent))
 		})
 	})
 }
