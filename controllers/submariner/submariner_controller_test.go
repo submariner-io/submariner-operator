@@ -37,8 +37,8 @@ import (
 )
 
 const (
-	submarinerName      = "submariner"
-	submarinerNamespace = "submariner-operator"
+	submarinerName      = "test-submariner"
+	submarinerNamespace = "test-ns"
 )
 
 var _ = Describe("Submariner controller tests", func() {
