@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/coreos/go-semver/semver"
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/finalizer"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
@@ -40,6 +41,8 @@ const UninstallComponentReadyTimeout = time.Minute * 2
 
 var requeueAfter = reconcile.Result{RequeueAfter: time.Millisecond * 100}
 
+var minComponentUninstallVersion = semver.New("0.12.0")
+
 type component struct {
 	resource          client.Object
 	uninstallResource client.Object
@@ -51,6 +54,12 @@ func (c *component) isInstalled() bool {
 }
 
 func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operatorv1alpha1.Submariner) (reconcile.Result, error) {
+	submVersion, _ := semver.NewVersion(instance.Spec.Version)
+	if submVersion != nil && submVersion.LessThan(*minComponentUninstallVersion) {
+		log.Info("Deleting Submariner version does not support uninstall", "version", submVersion)
+		return reconcile.Result{}, r.removeFinalizer(ctx, instance)
+	}
+
 	// This has the side effect of setting the CIDRs in the Submariner instance.
 	clusterNetwork, err := r.discoverNetwork(instance)
 	if err != nil {
@@ -121,10 +130,13 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 		return requeueAfter, nil
 	}
 
-	err = finalizer.Remove(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.Submariner{}),
-		instance, SubmarinerFinalizer)
+	return reconcile.Result{}, r.removeFinalizer(ctx, instance)
+}
 
-	return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
+// nolint:wrapcheck // No need to wrap
+func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.Submariner) error {
+	return finalizer.Remove(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.Submariner{}),
+		instance, SubmarinerFinalizer)
 }
 
 func (r *Reconciler) ensurePodsDeleted(ctx context.Context, components []*component) (bool, error) {
