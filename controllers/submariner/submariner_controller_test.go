@@ -370,4 +370,25 @@ func testDeletion() {
 				submarinerName, submarinerController.SubmarinerFinalizer)
 		})
 	})
+
+	Context("and the version of the deleting Submariner instance does not support uninstall", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.Version = "0.11.1"
+
+			t.initClientObjs = append(t.initClientObjs,
+				t.newDaemonSet(names.GatewayComponent))
+		})
+
+		It("should not perform uninstall", func() {
+			t.assertReconcileSuccess()
+
+			_, err := t.getDaemonSet(names.GatewayComponent)
+			Expect(err).To(Succeed())
+
+			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+
+			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
+				submarinerName, submarinerController.SubmarinerFinalizer)
+		})
+	})
 }

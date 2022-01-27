@@ -469,7 +469,7 @@ func newSubmariner() *operatorv1.Submariner {
 		},
 		Spec: operatorv1.SubmarinerSpec{
 			Repository:               "quay.io/submariner",
-			Version:                  "1.0.0",
+			Version:                  "0.12.0",
 			CeIPSecNATTPort:          4500,
 			CeIPSecIKEPort:           500,
 			CeIPSecPSK:               "DJaA2kVW72w8kjQCEpzkDhwZuniDwgePKFE7FaxVNMWqbpmT2qvp68XW52MO70ho",
