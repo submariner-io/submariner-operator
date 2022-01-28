@@ -87,12 +87,12 @@ func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string, sta
 		return status.Error(err, "error initializing Kubernetes config")
 	}
 
-	restMapper, err := util.BuildRestMapper(k8sConfig)
+	restMapper, err := util.BuildRestMapper(k8sConfig.Config)
 	if err != nil {
 		return status.Error(err, "error creating REST mapper")
 	}
 
-	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig.Config)
 	if err != nil {
 		return status.Error(err, "error creating dynamic client")
 	}
