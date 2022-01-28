@@ -238,9 +238,9 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 
 	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
 	netconfig := globalnet.Config{
-		ClusterID:            clusterID,
-		GlobalnetCIDR:        globalnetCIDR,
-		GlobalnetClusterSize: globalnetClusterSize,
+		ClusterID:   clusterID,
+		GlobalCIDR:  globalnetCIDR,
+		ClusterSize: globalnetClusterSize,
 	}
 
 	if globalnetEnabled {
@@ -339,22 +339,22 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clien
 			return errors.Wrap(err, "error reading Global network details on Broker")
 		}
 
-		netconfig.GlobalnetCIDR, err = globalnet.ValidateGlobalnetConfiguration(globalnetInfo, *netconfig)
+		netconfig.GlobalCIDR, err = globalnet.ValidateGlobalnetConfiguration(globalnetInfo, *netconfig)
 		if err != nil {
 			return errors.Wrap(err, "error validating Globalnet configuration")
 		}
 
 		if globalnetInfo.Enabled {
-			netconfig.GlobalnetCIDR, err = globalnet.AssignGlobalnetIPs(globalnetInfo, *netconfig)
+			netconfig.GlobalCIDR, err = globalnet.AssignGlobalnetIPs(globalnetInfo, *netconfig)
 			if err != nil {
 				return errors.Wrap(err, "error assigning Globalnet IPs")
 			}
 
 			if globalnetInfo.CidrInfo[clusterID] == nil ||
-				globalnetInfo.CidrInfo[clusterID].GlobalCIDRs[0] != netconfig.GlobalnetCIDR {
+				globalnetInfo.CidrInfo[clusterID].GlobalCIDRs[0] != netconfig.GlobalCIDR {
 				var newClusterInfo broker.ClusterInfo
 				newClusterInfo.ClusterID = clusterID
-				newClusterInfo.GlobalCidr = []string{netconfig.GlobalnetCIDR}
+				newClusterInfo.GlobalCidr = []string{netconfig.GlobalCIDR}
 
 				err = broker.UpdateGlobalnetConfigMap(brokerAdminClientset, brokerNamespace, globalnetConfigMap, newClusterInfo)
 				return errors.Wrap(err, "error updating Globalnet ConfigMap")
@@ -515,8 +515,8 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 			MaxPacketLossCount: healthCheckMaxPacketLossCount,
 		},
 	}
-	if netconfig.GlobalnetCIDR != "" {
-		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR
+	if netconfig.GlobalCIDR != "" {
+		submarinerSpec.GlobalCIDR = netconfig.GlobalCIDR
 	}
 
 	if corednsCustomConfigMap != "" {
