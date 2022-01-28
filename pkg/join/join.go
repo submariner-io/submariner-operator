@@ -65,8 +65,6 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 	netconfig := globalnet.Config{
 		ClusterID:            options.ClusterID,
 		GlobalnetCIDR:        options.GlobalnetCIDR,
-		ServiceCIDR:          options.ServiceCIDR,
-		ClusterCIDR:          options.ClusterCIDR,
 		GlobalnetClusterSize: options.GlobalnetClusterSize,
 	}
 
@@ -160,6 +158,8 @@ func submarinerOptionsFrom(joinOptions *Options) *deploy.SubmarinerOptions {
 		Repository:                    joinOptions.Repository,
 		ImageVersion:                  joinOptions.ImageVersion,
 		CustomDomains:                 joinOptions.CustomDomains,
+		ServiceCIDR:                   joinOptions.ServiceCIDR,
+		ClusterCIDR:                   joinOptions.ClusterCIDR,
 	}
 }
 
