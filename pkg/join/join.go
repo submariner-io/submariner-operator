@@ -63,9 +63,9 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 
 	brokerNamespace := string(brokerInfo.ClientToken.Data["namespace"])
 	netconfig := globalnet.Config{
-		ClusterID:            options.ClusterID,
-		GlobalnetCIDR:        options.GlobalnetCIDR,
-		GlobalnetClusterSize: options.GlobalnetClusterSize,
+		ClusterID:   options.ClusterID,
+		GlobalCIDR:  options.GlobalnetCIDR,
+		ClusterSize: options.GlobalnetClusterSize,
 	}
 
 	if options.GlobalnetEnabled {

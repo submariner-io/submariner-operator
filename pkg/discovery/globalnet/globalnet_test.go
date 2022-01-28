@@ -45,8 +45,8 @@ var _ = Describe("CheckOverlappingCidrs", func() {
 				},
 			},
 		}, globalnet.Config{
-			ClusterID:     "west",
-			GlobalnetCIDR: globalnetCIDR,
+			ClusterID:  "west",
+			GlobalCIDR: globalnetCIDR,
 		})
 	})
 

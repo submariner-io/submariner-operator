@@ -110,8 +110,8 @@ func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info,
 			MaxPacketLossCount: options.HealthCheckMaxPacketLossCount,
 		},
 	}
-	if netconfig.GlobalnetCIDR != "" {
-		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR
+	if netconfig.GlobalCIDR != "" {
+		submarinerSpec.GlobalCIDR = netconfig.GlobalCIDR
 	}
 
 	if options.CoreDNSCustomConfigMap != "" {
