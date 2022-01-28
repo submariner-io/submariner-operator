@@ -20,40 +20,41 @@ package execute
 
 import (
 	"fmt"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"os"
 
-	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/cluster"
+	"github.com/submariner-io/submariner-operator/pkg/reporter"
 )
 
 func OnMultiCluster(restConfigProducer restconfig.Producer, run func(*cluster.Info, reporter.Interface) bool) {
 	success := true
-
 	status := cli.NewReporter()
+
 	for _, config := range restConfigProducer.MustGetForClusters() {
-		status.Start("Cluster %q", config.ClusterName)
+		fmt.Printf("Cluster %q\n", config.ClusterName)
 
 		clientProducer, err := client.NewProducerFromRestConfig(config.Config)
 		if err != nil {
-			exit.OnErrorWithMessage(err, "Error creating the client producer")
-		}
-
-		newCluster, errMsg := cluster.New(config.ClusterName, clientProducer)
-		if newCluster == nil {
-			success = false
-
-			status.Failure(errMsg.Error())
+			status.Failure("Error creating the client producer: %v", err)
 			fmt.Println()
 
 			continue
 		}
 
-		success = run(newCluster, status) && success
-		status.End()
+		clusterInfo, err := cluster.NewInfo(config.ClusterName, clientProducer)
+		if err != nil {
+			success = false
+
+			status.Failure("Error initializing the cluster information: %v", err)
+			fmt.Println()
+
+			continue
+		}
+
+		success = run(clusterInfo, status) && success
 
 		fmt.Println()
 	}

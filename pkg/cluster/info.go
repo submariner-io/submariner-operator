@@ -31,37 +31,26 @@ import (
 )
 
 type Info struct {
-	Name            string
-	ClientProducer  client.Producer
-	Submariner      *v1alpha1.Submariner
+	Name           string
+	ClientProducer client.Producer
+	Submariner     *v1alpha1.Submariner
 }
 
-func New(clusterName string, clientProducer client.Producer) (*Info, error) {
-	cluster := &Info{
+func NewInfo(clusterName string, clientProducer client.Producer) (*Info, error) {
+	info := &Info{
 		Name:           clusterName,
 		ClientProducer: clientProducer,
 	}
 
-	var err error
-
-	cluster.Submariner, err = cluster.GetSubmariner()
-	if err != nil {
-		return nil, errors.Wrap(err, "Error retrieving Submariner")
-	}
-
-	return cluster, nil
-}
-
-func (c *Info) GetSubmariner() (*v1alpha1.Submariner, error) {
-	submariner, err := c.ClientProducer.ForOperator().SubmarinerV1alpha1().Submariners(constants.SubmarinerNamespace).
+	submariner, err := info.ClientProducer.ForOperator().SubmarinerV1alpha1().Submariners(constants.SubmarinerNamespace).
 		Get(context.TODO(), constants.SubmarinerName, metav1.GetOptions{})
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, errors.New( "Submariner not found")
-		}
-		return nil, err
+	if err == nil {
+		info.Submariner = submariner
+	} else if !apierrors.IsNotFound(err) {
+		return nil, errors.New("error retrieving Submariner")
 	}
-	return submariner, nil
+
+	return info, nil
 }
 
 func (c *Info) GetGateways() ([]submarinerv1.Gateway, error) {
@@ -69,10 +58,10 @@ func (c *Info) GetGateways() ([]submarinerv1.Gateway, error) {
 		Gateways(constants.OperatorNamespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			return nil, errors.New("No gateways found")
+			return []submarinerv1.Gateway{}, nil
 		}
 
-		return nil, err
+		return nil, err // nolint:wrapcheck // error can't be wrapped.
 	}
 
 	return gateways.Items, nil
