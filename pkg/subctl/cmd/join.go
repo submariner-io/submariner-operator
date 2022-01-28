@@ -224,10 +224,10 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 
 	status.EndWith(cli.Success)
 
-	serviceCIDR, serviceCIDRautoDetected, err := getServiceCIDR(serviceCIDR, networkDetails)
+	serviceCIDR, err := getServiceCIDR(serviceCIDR, networkDetails)
 	utils.ExitOnError("Error determining the service CIDR", err)
 
-	clusterCIDR, clusterCIDRautoDetected, err := getPodCIDR(clusterCIDR, networkDetails)
+	clusterCIDR, err := getPodCIDR(clusterCIDR, networkDetails)
 	utils.ExitOnError("Error determining the pod CIDR", err)
 
 	brokerAdminConfig, err := subctlData.GetBrokerAdministratorConfig()
@@ -238,13 +238,11 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 
 	brokerNamespace := string(subctlData.ClientToken.Data["namespace"])
 	netconfig := globalnet.Config{
-		ClusterID:               clusterID,
-		GlobalnetCIDR:           globalnetCIDR,
-		ServiceCIDR:             serviceCIDR,
-		ServiceCIDRAutoDetected: serviceCIDRautoDetected,
-		ClusterCIDR:             clusterCIDR,
-		ClusterCIDRAutoDetected: clusterCIDRautoDetected,
-		GlobalnetClusterSize:    globalnetClusterSize,
+		ClusterID:            clusterID,
+		GlobalnetCIDR:        globalnetCIDR,
+		ServiceCIDR:          serviceCIDR,
+		ClusterCIDR:          clusterCIDR,
+		GlobalnetClusterSize: globalnetClusterSize,
 	}
 
 	if globalnetEnabled {
@@ -388,36 +386,34 @@ func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 	return networkDetails
 }
 
-func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (cidrType string, autodetected bool, err error) {
+func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (string, error) {
 	if clusterCIDR != "" {
 		if nd != nil && len(nd.PodCIDRs) > 0 && nd.PodCIDRs[0] != clusterCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided cluster CIDR for the pods (%s) does not match discovered (%s)\n",
 				clusterCIDR, nd.PodCIDRs[0]))
 		}
 
-		return clusterCIDR, false, nil
+		return clusterCIDR, nil
 	} else if nd != nil && len(nd.PodCIDRs) > 0 {
-		return nd.PodCIDRs[0], true, nil
-	} else {
-		cidrType, err = askForCIDR("Pod")
-		return cidrType, false, err
+		return "", nil
 	}
+
+	return askForCIDR("Pod")
 }
 
-func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (cidrType string, autodetected bool, err error) {
+func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (string, error) {
 	if serviceCIDR != "" {
 		if nd != nil && len(nd.ServiceCIDRs) > 0 && nd.ServiceCIDRs[0] != serviceCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided service CIDR (%s) does not match discovered (%s)\n",
 				serviceCIDR, nd.ServiceCIDRs[0]))
 		}
 
-		return serviceCIDR, false, nil
+		return serviceCIDR, nil
 	} else if nd != nil && len(nd.ServiceCIDRs) > 0 {
-		return nd.ServiceCIDRs[0], true, nil
-	} else {
-		cidrType, err = askForCIDR("ClusterIP service")
-		return cidrType, false, err
+		return "", nil
 	}
+
+	return askForCIDR("ClusterIP service")
 }
 
 func askForCIDR(name string) (string, error) {
@@ -478,18 +474,6 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 		brokerURL = brokerURL[(idx + 3):]
 	}
 
-	// if our network discovery code was capable of discovering those CIDRs
-	// we don't need to explicitly set it in the operator
-	crServiceCIDR := ""
-	if !netconfig.ServiceCIDRAutoDetected {
-		crServiceCIDR = netconfig.ServiceCIDR
-	}
-
-	crClusterCIDR := ""
-	if !netconfig.ClusterCIDRAutoDetected {
-		crClusterCIDR = netconfig.ClusterCIDR
-	}
-
 	if customDomains == nil && subctlData.CustomDomains != nil {
 		customDomains = *subctlData.CustomDomains
 	}
@@ -518,8 +502,8 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 		NatEnabled:               natTraversal,
 		Debug:                    submarinerDebug,
 		ClusterID:                clusterID,
-		ServiceCIDR:              crServiceCIDR,
-		ClusterCIDR:              crClusterCIDR,
+		ServiceCIDR:              netconfig.ServiceCIDR,
+		ClusterCIDR:              netconfig.ClusterCIDR,
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
