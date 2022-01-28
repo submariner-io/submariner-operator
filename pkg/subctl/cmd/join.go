@@ -30,6 +30,7 @@ import (
 	"github.com/spf13/cobra"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
@@ -48,7 +49,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/util/retry"
 )
 
 var (
@@ -244,8 +244,8 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	}
 
 	if globalnetEnabled {
-		err = AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace, &netconfig)
-		utils.ExitOnError("Error Discovering multi cluster details", err)
+		err = globalnet.AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace, &netconfig, status)
+		exit.OnError(err)
 	}
 
 	status.Start("Deploying the Submariner operator")
@@ -327,44 +327,6 @@ func determineClusterID() {
 			clusterID = *clusterName
 		}
 	}
-}
-
-func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset *kubernetes.Clientset, brokerNamespace string,
-	netconfig *globalnet.Config) error {
-	status.Start("Discovering multi cluster details")
-
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		globalnetInfo, globalnetConfigMap, err := globalnet.GetGlobalNetworks(brokerAdminClientset, brokerNamespace)
-		if err != nil {
-			return errors.Wrap(err, "error reading Global network details on Broker")
-		}
-
-		netconfig.GlobalCIDR, err = globalnet.ValidateGlobalnetConfiguration(globalnetInfo, *netconfig)
-		if err != nil {
-			return errors.Wrap(err, "error validating Globalnet configuration")
-		}
-
-		if globalnetInfo.Enabled {
-			netconfig.GlobalCIDR, err = globalnet.AssignGlobalnetIPs(globalnetInfo, *netconfig)
-			if err != nil {
-				return errors.Wrap(err, "error assigning Globalnet IPs")
-			}
-
-			if globalnetInfo.CidrInfo[clusterID] == nil ||
-				globalnetInfo.CidrInfo[clusterID].GlobalCIDRs[0] != netconfig.GlobalCIDR {
-				var newClusterInfo broker.ClusterInfo
-				newClusterInfo.ClusterID = clusterID
-				newClusterInfo.GlobalCidr = []string{netconfig.GlobalCIDR}
-
-				err = broker.UpdateGlobalnetConfigMap(brokerAdminClientset, brokerNamespace, globalnetConfigMap, newClusterInfo)
-				return errors.Wrap(err, "error updating Globalnet ConfigMap")
-			}
-		}
-
-		return nil
-	})
-
-	return retryErr // nolint:wrapcheck // No need to wrap here
 }
 
 func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
