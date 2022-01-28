@@ -19,10 +19,11 @@ limitations under the License.
 package join
 
 import (
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
@@ -68,16 +69,14 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 		ClusterSize: options.GlobalnetClusterSize,
 	}
 
-	if options.GlobalnetEnabled {
-		status.Start("Discovering multi cluster details")
+	status.End()
 
-		err = globalnet.AllocateAndUpdateGlobalCIDRConfigMap(options.ClusterID, brokerAdminClientset, brokerNamespace, &netconfig)
+	if options.GlobalnetEnabled {
+		err = globalnet.AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace, &netconfig, status)
 		if err != nil {
-			return status.Error(err, "Error Discovering multi cluster details")
+			return errors.Wrap(err, "unable to determine the global CIDR")
 		}
 	}
-
-	status.End()
 
 	status.Start("Deploying the Submariner operator")
 
@@ -186,7 +185,7 @@ func checkRequirements(kubeClient kubernetes.Interface, ignoreRequirements bool,
 		if !ignoreRequirements {
 			status.Failure(msg)
 
-			return errors.New("version requirements not met")
+			return goerrors.New("version requirements not met")
 		}
 
 		status.Warning(msg)
