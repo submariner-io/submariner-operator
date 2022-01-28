@@ -49,13 +49,13 @@ var deployBroker = &cobra.Command{
 		config, err := restConfigProducer.ForCluster()
 		exit.OnError(status.Error(err, "Error creating REST config"))
 
-		clientProducer, err := client.NewProducerFromRestConfig(config)
+		clientProducer, err := client.NewProducerFromRestConfig(config.Config)
 		exit.OnError(status.Error(err, "Error creating client producer"))
 
 		err = deploy.Broker(&deployflags, clientProducer, status)
 		exit.OnError(err)
 
-		err = broker.WriteInfoToFile(config, deployflags.BrokerNamespace, ipsecSubmFile,
+		err = broker.WriteInfoToFile(config.Config, deployflags.BrokerNamespace, ipsecSubmFile,
 			stringset.New(deployflags.BrokerSpec.Components...), deployflags.BrokerSpec.DefaultCustomDomains, status)
 		exit.OnError(err)
 	},

@@ -110,7 +110,7 @@ var deployBroker = &cobra.Command{
 		config, err := restConfigProducer.ForCluster()
 		utils.ExitOnError("The provided kubeconfig is invalid", err)
 
-		clientProducer, err := client.NewProducerFromRestConfig(config)
+		clientProducer, err := client.NewProducerFromRestConfig(config.Config)
 		utils.ExitOnError("Error creating client producer", err)
 
 		status := cli.NewStatus()
@@ -151,7 +151,7 @@ var deployBroker = &cobra.Command{
 			}
 		}
 
-		subctlData, err := datafile.NewFromCluster(config, brokerNamespace, ipsecSubmFile)
+		subctlData, err := datafile.NewFromCluster(config.Config, brokerNamespace, ipsecSubmFile)
 		utils.ExitOnError("Error retrieving preparing the subm data file", err)
 
 		newFilename, err := datafile.BackupIfExists(brokerDetailsFilename)

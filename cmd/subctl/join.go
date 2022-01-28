@@ -63,7 +63,7 @@ var joinCmd = &cobra.Command{
 		clientConfig, err := restConfigProducer.ForCluster()
 		exit.OnError(status.Error(err, "Error creating the REST config"))
 
-		clientProducer, err := client.NewProducerFromRestConfig(clientConfig)
+		clientProducer, err := client.NewProducerFromRestConfig(clientConfig.Config)
 		exit.OnError(status.Error(err, "Error creating the client producer"))
 
 		networkDetails := getNetworkDetails(clientProducer, status)

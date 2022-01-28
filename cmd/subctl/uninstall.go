@@ -43,20 +43,17 @@ var uninstallCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		status := cli.NewReporter()
 
-		clusterName, err := restConfigProducer.GetClusterID()
-		exit.OnError(status.Error(err, "Error getting cluster name"))
-
 		config, err := restConfigProducer.ForCluster()
 		exit.OnError(status.Error(err, "Error creating REST config"))
 
-		clientProducer, err := client.NewProducerFromRestConfig(config)
+		clientProducer, err := client.NewProducerFromRestConfig(config.Config)
 		exit.OnError(status.Error(err, "Error creating client producer"))
 
 		if !uninstallOptions.noPrompt {
 			result := false
 			prompt := &survey.Confirm{
 				Message: fmt.Sprintf("This will completely uninstall Submariner from the cluster %q. Are you sure you want to continue?",
-					clusterName),
+					config.ClusterName),
 			}
 
 			_ = survey.AskOne(prompt, &result)
@@ -66,7 +63,7 @@ var uninstallCmd = &cobra.Command{
 			}
 		}
 
-		exit.OnError(uninstall.All(clientProducer, clusterName, uninstallOptions.namespace, status))
+		exit.OnError(uninstall.All(clientProducer, config.ClusterName, uninstallOptions.namespace, status))
 	},
 }
 

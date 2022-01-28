@@ -35,7 +35,7 @@ func RunOnK8sCluster(restConfigProducer restconfig.Producer, status reporter.Int
 		return status.Error(err, "error initializing Kubernetes config")
 	}
 
-	clientSet, err := kubernetes.NewForConfig(k8sConfig)
+	clientSet, err := kubernetes.NewForConfig(k8sConfig.Config)
 	if err != nil {
 		return status.Error(err, "error creating Kubernetes client")
 	}
