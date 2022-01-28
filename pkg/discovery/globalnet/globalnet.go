@@ -60,13 +60,11 @@ type CIDR struct {
 }
 
 type Config struct {
-	ClusterCIDR             string
-	ClusterID               string
-	GlobalnetCIDR           string
-	ServiceCIDR             string
-	GlobalnetClusterSize    uint
-	ClusterCIDRAutoDetected bool
-	ServiceCIDRAutoDetected bool
+	ClusterCIDR          string
+	ClusterID            string
+	GlobalnetCIDR        string
+	ServiceCIDR          string
+	GlobalnetClusterSize uint
 }
 
 var (
