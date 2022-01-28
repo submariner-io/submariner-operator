@@ -224,10 +224,10 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 
 	status.EndWith(cli.Success)
 
-	serviceCIDR, err := getServiceCIDR(serviceCIDR, networkDetails)
+	err = determineServiceCIDR(networkDetails)
 	utils.ExitOnError("Error determining the service CIDR", err)
 
-	clusterCIDR, err := getPodCIDR(clusterCIDR, networkDetails)
+	err = determinePodCIDR(networkDetails)
 	utils.ExitOnError("Error determining the pod CIDR", err)
 
 	brokerAdminConfig, err := subctlData.GetBrokerAdministratorConfig()
@@ -240,8 +240,6 @@ func joinSubmarinerCluster(subctlData *datafile.SubctlData) {
 	netconfig := globalnet.Config{
 		ClusterID:            clusterID,
 		GlobalnetCIDR:        globalnetCIDR,
-		ServiceCIDR:          serviceCIDR,
-		ClusterCIDR:          clusterCIDR,
 		GlobalnetClusterSize: globalnetClusterSize,
 	}
 
@@ -386,34 +384,36 @@ func getNetworkDetails(config *rest.Config) *network.ClusterNetwork {
 	return networkDetails
 }
 
-func getPodCIDR(clusterCIDR string, nd *network.ClusterNetwork) (string, error) {
+func determinePodCIDR(nd *network.ClusterNetwork) error {
 	if clusterCIDR != "" {
 		if nd != nil && len(nd.PodCIDRs) > 0 && nd.PodCIDRs[0] != clusterCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided cluster CIDR for the pods (%s) does not match discovered (%s)\n",
 				clusterCIDR, nd.PodCIDRs[0]))
 		}
+	} else if nd == nil || len(nd.ServiceCIDRs) == 0 {
+		var err error
+		clusterCIDR, err = askForCIDR("Pod")
 
-		return clusterCIDR, nil
-	} else if nd != nil && len(nd.PodCIDRs) > 0 {
-		return "", nil
+		return err
 	}
 
-	return askForCIDR("Pod")
+	return nil
 }
 
-func getServiceCIDR(serviceCIDR string, nd *network.ClusterNetwork) (string, error) {
+func determineServiceCIDR(nd *network.ClusterNetwork) error {
 	if serviceCIDR != "" {
 		if nd != nil && len(nd.ServiceCIDRs) > 0 && nd.ServiceCIDRs[0] != serviceCIDR {
 			status.QueueWarningMessage(fmt.Sprintf("Your provided service CIDR (%s) does not match discovered (%s)\n",
 				serviceCIDR, nd.ServiceCIDRs[0]))
 		}
+	} else if nd == nil || len(nd.ServiceCIDRs) == 0 {
+		var err error
+		serviceCIDR, err = askForCIDR("Service")
 
-		return serviceCIDR, nil
-	} else if nd != nil && len(nd.ServiceCIDRs) > 0 {
-		return "", nil
+		return err
 	}
 
-	return askForCIDR("ClusterIP service")
+	return nil
 }
 
 func askForCIDR(name string) (string, error) {
@@ -502,8 +502,8 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 		NatEnabled:               natTraversal,
 		Debug:                    submarinerDebug,
 		ClusterID:                clusterID,
-		ServiceCIDR:              netconfig.ServiceCIDR,
-		ClusterCIDR:              netconfig.ClusterCIDR,
+		ServiceCIDR:              serviceCIDR,
+		ClusterCIDR:              clusterCIDR,
 		Namespace:                SubmarinerNamespace,
 		CableDriver:              cableDriver,
 		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
