@@ -76,7 +76,7 @@ func validateTunnelConfig(command *cobra.Command, args []string) {
 	remoteCfg, err := remoteProducer.ForCluster()
 	utils.ExitOnError("The provided remote kubeconfig is invalid", err)
 
-	if !validateTunnelConfigAcrossClusters(localCfg, remoteCfg) {
+	if !validateTunnelConfigAcrossClusters(localCfg.Config, remoteCfg.Config) {
 		os.Exit(1)
 	}
 }

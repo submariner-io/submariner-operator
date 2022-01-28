@@ -58,7 +58,7 @@ var (
 				exit.OnErrorWithMessage(err, "Error getting service Namespace")
 			}
 
-			clientProducer, err := client.NewProducerFromRestConfig(config)
+			clientProducer, err := client.NewProducerFromRestConfig(config.Config)
 			exit.OnError(status.Error(err, "Error creating client producer"))
 
 			err = service.Export(clientProducer, serviceNamespace, args[0], status)
