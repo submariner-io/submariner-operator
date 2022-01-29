@@ -31,14 +31,6 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 )
 
-const (
-	operationTimeout                = 240
-	connectionTimeout               = 60
-	connectionAttempts              = 2
-	reportDirectory                 = "."
-	verboseConnectivityVerification = false
-)
-
 var (
 	intraCluster bool
 	verbose      bool
