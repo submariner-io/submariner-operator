@@ -31,19 +31,19 @@ func Ensure(crdUpdater crd.Updater) (bool, error) {
 	// Attempt to update or create the CRD definitions.
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
-	submarinerCreated, err := crdUpdater.CreateOrUpdate(context.TODO(),
+	submarinerCreated, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
 		embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning Submariner CRD")
 	}
 
-	serviceDiscoveryCreated, err := crdUpdater.CreateOrUpdate(context.TODO(),
+	serviceDiscoveryCreated, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
 		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning ServiceDiscovery CRD")
 	}
 
-	brokerCreated, err := crdUpdater.CreateOrUpdate(context.TODO(),
+	brokerCreated, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
 		embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
 
 	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, errors.Wrap(err, "error provisioning Broker CRD")
