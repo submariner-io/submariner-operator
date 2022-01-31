@@ -53,7 +53,7 @@ func Ensure(crdUpdater crd.Updater, isBroker bool) (bool, error) {
 		return false, errors.Wrap(err, "error deleting the obsolete MultiClusterServices CRD")
 	}
 
-	installedMCSSI, err := crdUpdater.CreateOrUpdate(context.TODO(),
+	installedMCSSI, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
 	if err != nil {
 		return installedMCSSI, errors.Wrap(err, "error creating the MCS ServiceImport CRD")
@@ -64,13 +64,13 @@ func Ensure(crdUpdater crd.Updater, isBroker bool) (bool, error) {
 		return installedMCSSI, nil
 	}
 
-	installedMCSSE, err := crdUpdater.CreateOrUpdate(context.TODO(),
+	installedMCSSE, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
 	if err != nil {
 		return installedMCSSI || installedMCSSE, errors.Wrap(err, "error creating the MCS ServiceExport CRD")
 	}
 
-	installedSD, err := crdUpdater.CreateOrUpdate(context.TODO(),
+	installedSD, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
 		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
 		return installedMCSSI || installedMCSSE || installedSD, errors.Wrap(err, "error creating the ServiceDiscovery CRD")
