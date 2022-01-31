@@ -43,7 +43,7 @@ type baseUpdater interface {
 
 type Updater interface {
 	baseUpdater
-	CreateOrUpdate(context.Context, string) (bool, error)
+	CreateOrUpdateFromEmbedded(context.Context, string) (bool, error)
 }
 
 type updater struct {
@@ -73,7 +73,7 @@ func UpdaterFromControllerClient(controllerClient client.Client) Updater {
 	}}
 }
 
-func (u *updater) CreateOrUpdate(ctx context.Context, crdYaml string) (bool, error) {
+func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string) (bool, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
 
 	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
