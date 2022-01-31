@@ -56,3 +56,10 @@ jobs:
           	--kubecontexts cluster1,cluster2
           cmd/bin/subctl benchmark throughput --kubeconfig output/kubeconfigs/kind-config-cluster1 --kubecontexts cluster1 \
             --intra-cluster --verbose
+
+
+      - name: Test verify
+        run: |
+          cmd/bin/subctl verify --only connectivity --submariner-namespace=submariner-operator --verbose --connection-timeout 20 \
+            --connection-attempts 4 --kubeconfig output/kubeconfigs/kind-config-cluster1:output/kubeconfigs/kind-config-cluster2 \
+            --kubecontexts cluster1,cluster2
