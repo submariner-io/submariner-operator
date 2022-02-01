@@ -78,7 +78,7 @@ var _ = Describe("Updater", func() {
 
 		When("the CRD doesn't exist", func() {
 			It("should create it", func() {
-				created, err := updater.CreateOrUpdate(context.TODO(), crdYAML)
+				created, err := updater.CreateOrUpdateFromEmbedded(context.TODO(), crdYAML)
 				Expect(created).To(BeTrue())
 				Expect(err).To(Succeed())
 				assertCRDExists(crd.Name)
@@ -91,7 +91,7 @@ var _ = Describe("Updater", func() {
 				Expect(err).To(Succeed())
 				assertCRDExists(crd.Name)
 
-				created, err := updater.CreateOrUpdate(context.TODO(), crdYAML)
+				created, err := updater.CreateOrUpdateFromEmbedded(context.TODO(), crdYAML)
 				Expect(created).To(BeFalse())
 				Expect(err).To(Succeed())
 
