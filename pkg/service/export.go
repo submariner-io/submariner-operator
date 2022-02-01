@@ -16,80 +16,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package service
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"os"
 
-	"github.com/spf13/cobra"
-	autil "github.com/submariner-io/admiral/pkg/util"
-	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/submariner-operator/pkg/client"
+	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 )
 
-var (
-	exportCmd = &cobra.Command{
-		Use:   "export",
-		Short: "Exports a resource to other clusters",
-		Long:  "This command exports a resource so it is accessible to other clusters",
+func Export(clientProducer client.Producer, serviceNamespace, svcName string, status reporter.Interface) error {
+	_, err := clientProducer.ForKubernetes().CoreV1().Services(serviceNamespace).Get(context.TODO(), svcName, metav1.GetOptions{})
+	if err != nil {
+		return status.Error(err, "Unable to find the Service %q in namespace %q", svcName, serviceNamespace)
 	}
-	exportServiceCmd = &cobra.Command{
-		Use:   "service <serviceName>",
-		Short: "Exports a Service to other clusters",
-		Long: "This command creates a ServiceExport resource with the given name which causes the Service of the same name to be accessible" +
-			" to other clusters",
-		PreRunE: restConfigProducer.CheckVersionMismatch,
-		Run:     exportService,
-	}
-	serviceNamespace string
-)
-
-func init() {
-	restConfigProducer.AddKubeConfigFlag(exportCmd)
-	addServiceExportFlags(exportServiceCmd)
-	exportCmd.AddCommand(exportServiceCmd)
-	rootCmd.AddCommand(exportCmd)
-}
-
-func addServiceExportFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&serviceNamespace, "namespace", "n", "", "namespace of the service to be exported")
-}
-
-func exportService(cmd *cobra.Command, args []string) {
-	err := validateArguments(args)
-	utils.ExitOnError("Insufficient arguments", err)
-
-	clientConfig := restConfigProducer.ClientConfig()
-	restConfig, err := clientConfig.ClientConfig()
-
-	utils.ExitOnError("Error connecting to the target cluster", err)
-
-	dynClient, clientSet, err := restconfig.Clients(restConfig)
-	utils.ExitOnError("Error connecting to the target cluster", err)
-	restMapper, err := autil.BuildRestMapper(restConfig)
-
-	utils.ExitOnError("Error creating RestMapper for ServiceExport", err)
-
-	if serviceNamespace == "" {
-		if serviceNamespace, _, err = clientConfig.Namespace(); err != nil {
-			serviceNamespace = "default"
-		}
-	}
-
-	err = mcsv1a1.AddToScheme(scheme.Scheme)
-	utils.ExitOnError("Failed to add to scheme", err)
-
-	svcName := args[0]
-
-	_, err = clientSet.CoreV1().Services(serviceNamespace).Get(context.TODO(), svcName, metav1.GetOptions{})
-	utils.ExitOnError(fmt.Sprintf("Unable to find the Service %q in namespace %q", svcName, serviceNamespace), err)
 
 	mcsServiceExport := &mcsv1a1.ServiceExport{
 		ObjectMeta: metav1.ObjectMeta{
@@ -97,23 +42,30 @@ func exportService(cmd *cobra.Command, args []string) {
 			Namespace: serviceNamespace,
 		},
 	}
-	resourceServiceExport, gvr, err := autil.ToUnstructuredResource(mcsServiceExport, restMapper)
-	utils.ExitOnError("Failed to convert to Unstructured", err)
 
-	_, err = dynClient.Resource(*gvr).Namespace(serviceNamespace).Create(context.TODO(), resourceServiceExport, metav1.CreateOptions{})
-	if k8serrors.IsAlreadyExists(err) {
-		fmt.Fprintln(os.Stdout, "Service already exported")
-		return
+	resourceServiceExport, err := resource.ToUnstructured(mcsServiceExport)
+	if err != nil {
+		return status.Error(err, "Failed to convert to Unstructured")
 	}
 
-	utils.ExitOnError("Failed to export Service", err)
-	fmt.Fprintln(os.Stdout, "Service exported successfully")
-}
-
-func validateArguments(args []string) error {
-	if len(args) == 0 || args[0] == "" {
-		return errors.New("name of the Service to be exported must be specified")
+	gvr := &schema.GroupVersionResource{
+		Group:    mcsv1a1.GroupVersion.Group,
+		Version:  mcsv1a1.GroupVersion.Version,
+		Resource: "serviceexports",
 	}
+
+	_, err = clientProducer.ForDynamic().Resource(*gvr).Namespace(serviceNamespace).
+		Create(context.TODO(), resourceServiceExport, metav1.CreateOptions{})
+	if err != nil {
+		if k8serrors.IsAlreadyExists(err) {
+			status.Success("Service already exported")
+			return nil
+		}
+
+		return status.Error(err, "Failed to export Service")
+	}
+
+	status.Success("Service exported successfully")
 
 	return nil
 }
