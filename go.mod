@@ -36,7 +36,7 @@ require (
 	github.com/submariner-io/admiral v0.11.1
 	github.com/submariner-io/cloud-prepare v0.11.1
 	github.com/submariner-io/lighthouse v0.11.1
-	github.com/submariner-io/shipyard v0.11.1
+	github.com/submariner-io/shipyard v0.11.2
 	github.com/submariner-io/submariner v0.11.1
 	github.com/submariner-io/submariner-operator/apis v0.0.0-20210817145008-861856b068a1
 	github.com/submariner-io/submariner/pkg/apis v0.0.0-20210816153739-c8e6654e3930
