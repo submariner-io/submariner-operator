@@ -1309,8 +1309,9 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/submariner-io/admiral v0.11.1 h1:8ptdDkM9Lpdr88ZX8VwpbMCoEhXm2ZkcGMUkg+X7Xus=
 github.com/submariner-io/admiral v0.11.1/go.mod h1:9gjDwn4NwhBmuwn73CdUt4kyJUHA9MVlcYcAIByV6Fg=
+github.com/submariner-io/admiral v0.11.2 h1:XOLsKavDZKDsE058CqAkMCL0C/5OUYOLAkIpGvlxIgo=
+github.com/submariner-io/admiral v0.11.2/go.mod h1:18ERhzaPgzxlU4rq+pXcsS5WIMbvT/y22bcxYFAVMdQ=
 github.com/submariner-io/cloud-prepare v0.11.1 h1:qzcWCdEXZkjfQFb6D4qHU/L9r8BhDgnis/IcJaIyQAc=
 github.com/submariner-io/cloud-prepare v0.11.1/go.mod h1:zHIN1aQj/x6BTUAnypEbFfuwl3F2YqVq+DjQfTw8UjI=
 github.com/submariner-io/lighthouse v0.11.1 h1:EWLzuBck6CqdL+FhBiJVmGWTdfuiZX8kGXaO8K9NtVk=
