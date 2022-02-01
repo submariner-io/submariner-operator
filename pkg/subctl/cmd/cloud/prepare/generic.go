@@ -21,8 +21,8 @@ package prepare
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/generic"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 func newGenericPrepareCommand() *cobra.Command {
@@ -57,5 +57,5 @@ func prepareGenericCluster(cmd *cobra.Command, args []string) {
 			return nil
 		})
 
-	utils.ExitOnError("Failed to prepare generic K8s cluster", err)
+	exit.OnErrorWithMessage(err, "Failed to prepare generic K8s cluster")
 }

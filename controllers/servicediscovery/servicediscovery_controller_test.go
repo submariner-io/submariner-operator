@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	operatorv1 "github.com/openshift/api/operator/v1"
+	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	corev1 "k8s.io/api/core/v1"
@@ -31,11 +32,8 @@ import (
 	clientset "k8s.io/client-go/kubernetes"
 	fakeKubeClient "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/klog"
-	"k8s.io/klog/klogr"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -55,8 +53,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = Describe("", func() {
-	logf.SetLogger(klogr.New())
-	klog.InitFlags(nil)
+	kzerolog.InitK8sLogging()
 })
 
 var _ = Describe("Reconciliation", func() {

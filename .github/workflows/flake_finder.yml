@@ -16,18 +16,12 @@ jobs:
       matrix:
         cable_driver: ['libreswan', 'wireguard']
         globalnet: ['', 'globalnet']
-        k8s_version: ['1.19']
+        k8s_version: ['1.23']
         lighthouse: ['', 'lighthouse']
         include:
           - k8s_version: '1.20'
-          - k8s_version: '1.20'
-            globalnet: 'globalnet'
           - k8s_version: '1.21'
-          - k8s_version: '1.21'
-            globalnet: 'globalnet'
           - k8s_version: '1.22'
-          - k8s_version: '1.22'
-            globalnet: 'globalnet'
     steps:
       - name: Check out the repository
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f

@@ -20,6 +20,7 @@ package restconfig
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/pkg/errors"
@@ -28,6 +29,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/stringset"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 	subv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
@@ -48,6 +50,7 @@ type Producer struct {
 	kubeConfig   string
 	kubeContext  string
 	kubeContexts []string
+	inCluster    bool
 }
 
 func NewProducer() Producer {
@@ -83,6 +86,11 @@ func (rcp *Producer) AddKubeContextMultiFlag(cmd *cobra.Command, usage string) {
 	cmd.PersistentFlags().StringSliceVar(&rcp.kubeContexts, "kubecontexts", nil, usage)
 }
 
+// AddInClusterConfigFlag adds a flag enabling in-cluster configurations for processes running in pods.
+func (rcp *Producer) AddInClusterConfigFlag(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVar(&rcp.inCluster, "in-cluster", false, "use the in-cluster configuration to connect to Kubernetes")
+}
+
 func (rcp *Producer) PopulateTestFramework() {
 	framework.TestContext.KubeContexts = rcp.kubeContexts
 	if rcp.kubeConfig != "" {
@@ -92,7 +100,7 @@ func (rcp *Producer) PopulateTestFramework() {
 
 func (rcp *Producer) MustGetForClusters() []RestConfig {
 	configs, err := rcp.ForClusters()
-	utils.ExitOnError("Error getting REST Config for cluster", err)
+	exit.OnErrorWithMessage(err, "Error getting REST Config for cluster")
 
 	return configs
 }
@@ -112,6 +120,18 @@ func (rcp *Producer) CountRequestedClusters() int {
 }
 
 func (rcp *Producer) ForClusters() ([]RestConfig, error) {
+	if rcp.inCluster {
+		restConfig, err := rest.InClusterConfig()
+		if err != nil {
+			return []RestConfig{}, errors.Wrap(err, "error retrieving the in-cluster configuration")
+		}
+
+		return []RestConfig{{
+			Config:      restConfig,
+			ClusterName: "in-cluster",
+		}}, nil
+	}
+
 	var restConfigs []RestConfig
 
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
@@ -151,33 +171,36 @@ func (rcp *Producer) ForClusters() ([]RestConfig, error) {
 }
 
 func ForBroker(submariner *v1alpha1.Submariner, serviceDisc *v1alpha1.ServiceDiscovery) (*rest.Config, string, error) {
+	var restConfig *rest.Config
+	var namespace string
+	var err error
+
+	// This is used in subctl; the broker secret isn't available mounted, so we use the old strings for now
 	if submariner != nil {
 		// Try to authorize against the submariner Cluster resource as we know the CRD should exist and the credentials
 		// should allow read access.
-		restConfig, _, err := resource.GetAuthorizedRestConfig(submariner.Spec.BrokerK8sApiServer, submariner.Spec.BrokerK8sApiServerToken,
+		restConfig, _, err = resource.GetAuthorizedRestConfigFromData(submariner.Spec.BrokerK8sApiServer,
+			submariner.Spec.BrokerK8sApiServerToken,
 			submariner.Spec.BrokerK8sCA, &rest.TLSClientConfig{}, schema.GroupVersionResource{
 				Group:    subv1.SchemeGroupVersion.Group,
 				Version:  subv1.SchemeGroupVersion.Version,
 				Resource: "clusters",
 			}, submariner.Spec.BrokerK8sRemoteNamespace)
-
-		return restConfig, submariner.Spec.BrokerK8sRemoteNamespace, errors.Wrap(err, "error getting auth rest config")
-	}
-
-	if serviceDisc != nil {
+		namespace = submariner.Spec.BrokerK8sRemoteNamespace
+	} else if serviceDisc != nil {
 		// Try to authorize against the ServiceImport resource as we know the CRD should exist and the credentials
 		// should allow read access.
-		restConfig, _, err := resource.GetAuthorizedRestConfig(serviceDisc.Spec.BrokerK8sApiServer, serviceDisc.Spec.BrokerK8sApiServerToken,
+		restConfig, _, err = resource.GetAuthorizedRestConfigFromData(serviceDisc.Spec.BrokerK8sApiServer,
+			serviceDisc.Spec.BrokerK8sApiServerToken,
 			serviceDisc.Spec.BrokerK8sCA, &rest.TLSClientConfig{}, schema.GroupVersionResource{
 				Group:    "multicluster.x-k8s.io",
 				Version:  "v1alpha1",
 				Resource: "serviceimports",
 			}, serviceDisc.Spec.BrokerK8sRemoteNamespace)
-
-		return restConfig, serviceDisc.Spec.BrokerK8sRemoteNamespace, errors.Wrap(err, "error getting auth rest config")
+		namespace = serviceDisc.Spec.BrokerK8sRemoteNamespace
 	}
 
-	return nil, "", nil
+	return restConfig, namespace, errors.Wrap(err, "error getting auth rest config")
 }
 
 func clientConfigAndClusterName(rules *clientcmd.ClientConfigLoadingRules, overrides *clientcmd.ConfigOverrides) (RestConfig, error) {
@@ -239,6 +262,19 @@ func clusterNameFromContext(rawConfig *api.Config, overridesContext string) *str
 	return &configContext.Cluster
 }
 
+func (rcp *Producer) GetClusterID() (string, error) {
+	clusterName, err := rcp.ClusterNameFromContext()
+	if err != nil {
+		return "", err
+	}
+
+	if clusterName != nil {
+		return *clusterName, nil
+	}
+
+	return "", nil
+}
+
 func (rcp *Producer) ForCluster() (*rest.Config, error) {
 	config, err := rcp.ClientConfig().ClientConfig()
 	return config, errors.Wrap(err, "error retrieving client configuration")
@@ -261,7 +297,7 @@ func (rcp *Producer) ClientConfig() clientcmd.ClientConfig {
 
 func (rcp *Producer) CheckVersionMismatch(cmd *cobra.Command, args []string) error {
 	config, err := rcp.ForCluster()
-	utils.ExitOnError("The provided kubeconfig is invalid", err)
+	exit.OnErrorWithMessage(err, "The provided kubeconfig is invalid")
 
 	submariner := utils.GetSubmarinerResource(config)
 
@@ -274,6 +310,40 @@ func (rcp *Producer) CheckVersionMismatch(cmd *cobra.Command, args []string) err
 				"the subctl version %q is older than the deployed Submariner version %q. Please upgrade your subctl version",
 				version.Version, submariner.Spec.Version)
 		}
+	}
+
+	return nil
+}
+
+func ConfigureTestFramework(args []string) error {
+	// Legacy handling: if arguments are files, assume they are kubeconfigs;
+	// otherwise, use contexts from --kubecontexts
+	_, err1 := os.Stat(args[0])
+	var err2 error
+
+	if len(args) > 1 {
+		_, err2 = os.Stat(args[1])
+	}
+
+	if err1 != nil || err2 != nil {
+		// Something happened (possibly IsNotExist, but we don’t care about specifics)
+		return fmt.Errorf("the provided arguments (%v) aren't accessible files", args)
+	}
+
+	// The files exist and can be examined without error
+	framework.TestContext.KubeConfig = ""
+	framework.TestContext.KubeConfigs = args
+
+	// Read the cluster names from the given kubeconfigs
+	for _, config := range args {
+		rcp := NewProducerFrom(config, "")
+
+		clusterName, err := rcp.ClusterNameFromContext()
+		if err != nil {
+			return nil // nolint:nilerr // This is intentional.
+		}
+
+		framework.TestContext.ClusterIDs = append(framework.TestContext.ClusterIDs, *clusterName)
 	}
 
 	return nil

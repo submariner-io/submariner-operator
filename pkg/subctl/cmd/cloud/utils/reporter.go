@@ -19,36 +19,32 @@ limitations under the License.
 package utils
 
 import (
-	"fmt"
-
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/reporter"
 )
 
-type cliReporter struct {
-	status *cli.Status
+type statusReporter struct {
+	status reporter.Interface
 }
 
-func NewCLIReporter() api.Reporter {
-	return &cliReporter{status: cli.NewStatus()}
+func NewStatusReporter() api.Reporter {
+	return &statusReporter{status: cli.NewReporter()}
 }
 
-func (r *cliReporter) Started(message string, args ...interface{}) {
-	r.status.Start(fmt.Sprintf(message, args...))
+func (s *statusReporter) Started(message string, args ...interface{}) {
+	s.status.Start(message, args...)
 }
 
-func (r *cliReporter) Succeeded(message string, args ...interface{}) {
-	if message != "" {
-		r.status.QueueSuccessMessage(fmt.Sprintf(message, args...))
-	}
-
-	r.status.EndWith(cli.Success)
+func (s *statusReporter) Succeeded(message string, args ...interface{}) {
+	s.status.Success(message, args...)
+	s.status.End()
 }
 
-func (r *cliReporter) Failed(err ...error) {
+func (s *statusReporter) Failed(err ...error) {
 	if len(err) > 0 {
-		r.status.QueueFailureMessage(err[0].Error())
+		s.status.Failure(err[0].Error())
 	}
 
-	r.status.EndWith(cli.Failure)
+	s.status.End()
 }

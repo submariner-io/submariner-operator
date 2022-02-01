@@ -21,20 +21,28 @@ package submariner
 import (
 	"context"
 	"reflect"
+	"sync"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/federate"
+	level "github.com/submariner-io/admiral/pkg/log"
+	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/admiral/pkg/syncer"
+	"github.com/submariner-io/admiral/pkg/util"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/broker"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
@@ -70,6 +78,24 @@ type Config struct {
 type Reconciler struct {
 	config Config
 	log    logr.Logger
+
+	// We need to synchronize changes to the SA used to connect to the broker ("cluster-" + clusterID, see pkg/broker/rbac.go
+	// and broker.ClusterSAName()), of two kinds:
+	// - changes to the token in the secret used by the SA;
+	// - changes to the SA itself.
+	// The secrets are communicated to the pods which need them by mounting them. This ensures that changes to the secret
+	// itself get propagated to any running pods, and picked up by client-go. It implies however that the secret itself
+	// can't be swapped out at runtime; so pods mount a constant secret, whose name is given to them in an environment
+	// variable (see Admiral), and is specified in the Submariner CR.
+	// So we need to:
+	// - watch for changes to the SA, and if the secret name changes (as happens if it's deleted), update the target secret
+	//   using the information from the new secret;
+	// - watch for changes to the secret, and if it changes, update the target secret.
+	// Tokens map back to their SA, so we can do both the above by watching tokens only.
+	// Since the synchronisation ends up being specific to a Submariner CR secret, we track one syncer per Submariner CR secret name.
+	// We don't keep track of the secret syncers themselves, just their cancel functions.
+	secretSyncCancelFuncs map[string]context.CancelFunc
+	syncerMutex           sync.Mutex
 }
 
 // blank assignment to verify that Reconciler implements reconcile.Reconciler.
@@ -78,8 +104,9 @@ var _ reconcile.Reconciler = &Reconciler{}
 // NewReconciler returns a new Reconciler.
 func NewReconciler(config *Config) *Reconciler {
 	return &Reconciler{
-		config: *config,
-		log:    ctrl.Log.WithName("controllers").WithName("Submariner"),
+		config:                *config,
+		log:                   ctrl.Log.WithName("controllers").WithName("Submariner"),
+		secretSyncCancelFuncs: make(map[string]context.CancelFunc),
 	}
 }
 
@@ -112,8 +139,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if instance.ObjectMeta.DeletionTimestamp != nil {
-		// Graceful deletion has been requested, ignore the object
+		// Graceful deletion has been requested, ignore the object after cancelling any secret syncer
+		r.cancelSecretSyncer(instance)
 		return reconcile.Result{}, nil
+	}
+
+	// Ensure we have a secret syncer
+	if err := r.setupSecretSyncer(instance, reqLogger, request.Namespace); err != nil {
+		return reconcile.Result{}, err
 	}
 
 	initialStatus := instance.Status.DeepCopy()
@@ -220,7 +253,7 @@ func getImagePath(submariner *submopv1a1.Submariner, imageName, componentName st
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Set up the CRDs we need
-	crdUpdater, err := crdutils.NewFromRestConfig(mgr.GetConfig())
+	crdUpdater, err := crd.UpdaterFromRestConfig(mgr.GetConfig())
 	if err != nil {
 		return errors.Wrap(err, "error creating CRDUpdater")
 	}
@@ -259,4 +292,89 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.DaemonSet{}).
 		Watches(&source.Kind{Type: &submv1.Gateway{}}, handler.EnqueueRequestsFromMapFunc(mapFn)).
 		Complete(r)
+}
+
+func (r *Reconciler) setupSecretSyncer(instance *submopv1a1.Submariner, logger logr.Logger, namespace string) error {
+	r.syncerMutex.Lock()
+	defer r.syncerMutex.Unlock()
+
+	if instance.Spec.BrokerK8sSecret != "" {
+		if _, ok := r.secretSyncCancelFuncs[instance.Spec.BrokerK8sSecret]; !ok {
+			_, gvr, err := util.ToUnstructuredResource(&corev1.Secret{}, r.config.Client.RESTMapper())
+			if err != nil {
+				return errors.Wrap(err, "error calculating the GVR for the Secret type")
+			}
+			// We can't use files here, we don't have a mounted secret
+			brokerConfig, _, err := resource.GetAuthorizedRestConfigFromData(
+				instance.Spec.BrokerK8sApiServer,
+				instance.Spec.BrokerK8sApiServerToken, // TODO Read the secret
+				instance.Spec.BrokerK8sCA,
+				&rest.TLSClientConfig{Insecure: instance.Spec.BrokerK8sInsecure},
+				*gvr,
+				instance.Spec.BrokerK8sRemoteNamespace)
+			if err != nil {
+				return errors.Wrap(err, "error building an authorized RestConfig for the broker")
+			}
+
+			brokerClient, err := dynamic.NewForConfig(brokerConfig)
+			if err != nil {
+				return errors.Wrap(err, "error building a dynamic client for the broker")
+			}
+
+			secretSyncer, err := syncer.NewResourceSyncer(
+				&syncer.ResourceSyncerConfig{
+					Name:            "Broker secret syncer",
+					ResourceType:    &corev1.Secret{},
+					SourceClient:    brokerClient,
+					SourceNamespace: instance.Spec.BrokerK8sRemoteNamespace,
+					Direction:       syncer.None,
+					RestMapper:      r.config.Client.RESTMapper(),
+					Scheme:          r.config.Scheme,
+					Federator: federate.NewCreateOrUpdateFederator(
+						r.config.DynClient, r.config.Client.RESTMapper(), namespace, ""),
+					Transform: func(from runtime.Object, numRequeues int, op syncer.Operation) (runtime.Object, bool) {
+						secret := from.(*corev1.Secret)
+						logger.V(level.TRACE).Info("Transforming secret", "secret", secret)
+						if saName, ok := secret.ObjectMeta.Annotations["kubernetes.io/service-account.name"]; ok &&
+							saName == broker.ClusterSAName(instance.Spec.ClusterID) {
+							transformedSecret := &corev1.Secret{
+								ObjectMeta: metav1.ObjectMeta{
+									Name: instance.Spec.BrokerK8sSecret,
+								},
+								Type: corev1.SecretTypeOpaque,
+								Data: secret.Data,
+							}
+							logger.V(level.TRACE).Info("Transformed secret", "transformedSecret", transformedSecret)
+							return transformedSecret, false
+						}
+						return nil, false
+					},
+				})
+			if err != nil {
+				return errors.Wrap(err, "error building a resource syncer for secrets")
+			}
+
+			ctx, cancelFunc := context.WithCancel(context.TODO())
+			if err := secretSyncer.Start(ctx.Done()); err != nil {
+				cancelFunc()
+				return errors.Wrap(err, "error starting the secret syncer")
+			}
+
+			r.secretSyncCancelFuncs[instance.Spec.BrokerK8sSecret] = cancelFunc
+		}
+	}
+
+	return nil
+}
+
+func (r *Reconciler) cancelSecretSyncer(instance *submopv1a1.Submariner) {
+	r.syncerMutex.Lock()
+	defer r.syncerMutex.Unlock()
+
+	if instance.Spec.BrokerK8sSecret != "" {
+		if cancelFunc, ok := r.secretSyncCancelFuncs[instance.Spec.BrokerK8sSecret]; ok {
+			cancelFunc()
+			delete(r.secretSyncCancelFuncs, instance.Spec.BrokerK8sSecret)
+		}
+	}
 }

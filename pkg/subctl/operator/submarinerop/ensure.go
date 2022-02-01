@@ -20,19 +20,19 @@ package submarinerop
 
 import (
 	"github.com/submariner-io/submariner-operator/pkg/client"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
+	"github.com/submariner-io/submariner-operator/pkg/namespace"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/namespace"
 	lighthouseop "github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/crds"
+	opcrds "github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/crds"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/serviceaccount"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 )
 
 // nolint:wrapcheck // No need to wrap errors here.
 func Ensure(status reporter.Interface, clientProducer client.Producer, operatorNamespace, operatorImage string, debug bool) error {
-	if created, err := crds.Ensure(crdutils.NewFromClientSet(clientProducer.ForCRD())); err != nil {
+	if created, err := opcrds.Ensure(crd.UpdaterFromClientSet(clientProducer.ForCRD())); err != nil {
 		return err
 	} else if created {
 		status.Success("Created operator CRDs")

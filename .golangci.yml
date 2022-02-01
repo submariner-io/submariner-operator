@@ -142,7 +142,7 @@ issues:
         - lll
         - stylecheck
         - revive
-      path: "pkg/subctl/operator/common/embeddedyamls/yamls.go"
+      path: "pkg/embeddedyamls/yamls.go"
 
     # BrokerK8sApiServer parameter is used by other projects, like ACM,
     # so not changing it to BrokerK8sAPIServer as suggested by stylecheck

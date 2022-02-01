@@ -20,8 +20,8 @@ package scc
 
 import (
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
+	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/scc"
 	"k8s.io/client-go/dynamic"
 )
 
@@ -36,12 +36,12 @@ func Ensure(dynClient dynamic.Interface, namespace string) (bool, error) {
 		return false, errors.Wrap(err, "error parsing the coredns ServiceAccount resource")
 	}
 
-	updateAgentSCC, err := scc.UpdateSCC(dynClient, namespace, agentSaName)
+	updateAgentSCC, err := scc.Update(dynClient, namespace, agentSaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateCoreDNSSCC, err := scc.UpdateSCC(dynClient, namespace, coreDNSSaName)
+	updateCoreDNSSCC, err := scc.Update(dynClient, namespace, coreDNSSaName)
 
 	return updateAgentSCC || updateCoreDNSSCC, errors.Wrap(err, "error updating the SCC resource")
 }

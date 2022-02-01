@@ -24,25 +24,20 @@ import (
 	"github.com/submariner-io/admiral/pkg/stringset"
 	submarinerv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/component"
-	"github.com/submariner-io/submariner-operator/internal/constants"
-	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/pkg/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/client"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
-	v1 "k8s.io/api/core/v1"
 )
 
 type BrokerOptions struct {
-	OperatorDebug       bool
-	GlobalCIDRConfigMap *v1.ConfigMap
-	Repository          string
-	ImageVersion        string
-	BrokerNamespace     string
-	BrokerSpec          submarinerv1a1.BrokerSpec
+	OperatorDebug   bool
+	Repository      string
+	ImageVersion    string
+	BrokerNamespace string
+	BrokerSpec      submarinerv1a1.BrokerSpec
 }
 
 var ValidComponents = []string{component.ServiceDiscovery, component.Connectivity}
@@ -84,7 +79,7 @@ func Broker(options *BrokerOptions, clientProducer client.Producer, status repor
 func deploy(options *BrokerOptions, status reporter.Interface, clientProducer client.Producer) error {
 	status.Start("Setting up broker RBAC")
 
-	err := broker.Ensure(crdutils.NewFromClientSet(clientProducer.ForCRD()), clientProducer.ForKubernetes(),
+	err := broker.Ensure(crd.UpdaterFromClientSet(clientProducer.ForCRD()), clientProducer.ForKubernetes(),
 		options.BrokerSpec.Components, false, options.BrokerNamespace)
 	if err != nil {
 		return status.Error(err, "error setting up broker RBAC")
@@ -94,12 +89,7 @@ func deploy(options *BrokerOptions, status reporter.Interface, clientProducer cl
 
 	status.Start("Deploying the Submariner operator")
 
-	operatorImage, err := image.ForOperator(options.ImageVersion, options.Repository, nil)
-	if err != nil {
-		return status.Error(err, "error getting Operator image")
-	}
-
-	err = submarinerop.Ensure(status, clientProducer, constants.OperatorNamespace, operatorImage, options.OperatorDebug)
+	err = Operator(status, options.ImageVersion, options.Repository, nil, options.OperatorDebug, clientProducer)
 	if err != nil {
 		return status.Error(err, "error deploying Submariner operator")
 	}

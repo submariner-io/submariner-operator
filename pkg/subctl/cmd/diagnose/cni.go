@@ -50,7 +50,7 @@ func init() {
 		Short: "Check the CNI network plugin",
 		Long:  "This command checks if the detected CNI network plugin is supported by Submariner.",
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(checkCNIConfig)
+			cmd.ExecuteMultiCluster(restConfigProducer, checkCNIConfig)
 		},
 	})
 }

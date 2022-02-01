@@ -15,6 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package show
 
 import (
@@ -22,10 +23,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 func init() {
@@ -36,7 +37,7 @@ func init() {
 		      and the relevant network details from your cluster.`,
 		PreRunE: restConfigProducer.CheckVersionMismatch,
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(showNetwork)
+			cmd.ExecuteMultiCluster(restConfigProducer, showNetwork)
 		},
 	})
 }
@@ -60,10 +61,10 @@ func showNetwork(cluster *cmd.Cluster) bool {
 		msg = "    Discovered network details"
 
 		submarinerClient, err := submarinerclientset.NewForConfig(cluster.Config)
-		utils.ExitOnError("Unable to get the Submariner client", err)
+		exit.OnErrorWithMessage(err, "Unable to get the Submariner client")
 
 		clusterNetwork, err = network.Discover(cluster.DynClient, cluster.KubeClient, submarinerClient, cmd.OperatorNamespace)
-		utils.ExitOnError("There was an error discovering network details for this cluster", err)
+		exit.OnErrorWithMessage(err, "There was an error discovering network details for this cluster")
 	}
 
 	if clusterNetwork != nil {

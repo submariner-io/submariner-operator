@@ -9,7 +9,6 @@ rules:
       - ""
     resources:
       - pods
-      - services
       - namespaces
       - nodes
     verbs:
@@ -17,6 +16,17 @@ rules:
       - list
       - watch
       - update
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - delete
   - apiGroups:
       - submariner.io
     resources:
@@ -57,3 +67,12 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - network.openshift.io
+    resources:
+      - service/externalips
+    verbs:
+      - create
+      - get
+      - list
+      - delete

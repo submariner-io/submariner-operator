@@ -25,11 +25,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,7 +43,7 @@ func init() {
 		Long:    `This command shows the versions of the submariner components in the cluster.`,
 		PreRunE: restConfigProducer.CheckVersionMismatch,
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(showVersions)
+			cmd.ExecuteMultiCluster(restConfigProducer, showVersions)
 		},
 	})
 }
@@ -103,15 +103,15 @@ func getVersions(cluster *cmd.Cluster) bool {
 
 	var versions []versionImageInfo
 	submarinerClient, err := submarinerclientset.NewForConfig(cluster.Config)
-	utils.ExitOnError("Unable to get the Submariner client", err)
+	exit.OnErrorWithMessage(err, "Unable to get the Submariner client")
 
 	versions = getSubmarinerVersion(cluster.Submariner, versions)
 
 	versions, err = getOperatorVersion(cluster.KubeClient, versions)
-	utils.ExitOnError("Unable to get the Operator version", err)
+	exit.OnErrorWithMessage(err, "Unable to get the Operator version")
 
 	versions, err = getServiceDiscoveryVersions(submarinerClient, versions)
-	utils.ExitOnError("Unable to get the Service-Discovery version", err)
+	exit.OnErrorWithMessage(err, "Unable to get the Service-Discovery version")
 
 	printVersions(versions)
 	status.EndWith(cli.Success)

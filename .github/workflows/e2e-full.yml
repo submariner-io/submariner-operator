@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         globalnet: ['', 'globalnet']
-        # Default version to test
-        k8s_version: ['1.20']
+        # Run most tests against the latest K8s version
+        k8s_version: ['1.23']
         lighthouse: ['', 'lighthouse']
         ovn: ['', 'ovn']
         exclude:
@@ -25,8 +25,12 @@ jobs:
           - ovn: 'ovn'
             globalnet: 'globalnet'
         include:
-          # All the versions we support
-          - k8s_version: '1.19'
+          # Oldest Kubernetes version thought to work with SubM.
+          # This should match minK8sMajor.minK8sMinor in submariner-operator/pkg/version/version.go.
+          # If this breaks, we may advance the minimum K8s version instead of fixing it. See:
+          # https://submariner.io/development/building-testing/ci-maintenance/
+          - k8s_version: '1.17'
+          # Run default E2E against all supported K8s versions
           - k8s_version: '1.20'
           - k8s_version: '1.21'
           - k8s_version: '1.22'

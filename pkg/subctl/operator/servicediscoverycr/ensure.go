@@ -24,13 +24,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	submarinerClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	operatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
+	resourceutil "github.com/submariner-io/submariner-operator/pkg/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 )
 
 func init() {
@@ -40,12 +39,7 @@ func init() {
 	}
 }
 
-func Ensure(config *rest.Config, namespace string, serviceDiscoverySpec *submariner.ServiceDiscoverySpec) error {
-	client, err := submarinerClientset.NewForConfig(config)
-	if err != nil {
-		return errors.Wrap(err, "error creating client")
-	}
-
+func Ensure(client operatorClientset.Interface, namespace string, serviceDiscoverySpec *submariner.ServiceDiscoverySpec) error {
 	sd := &submariner.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -55,7 +49,7 @@ func Ensure(config *rest.Config, namespace string, serviceDiscoverySpec *submari
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	_, err = utils.CreateOrUpdate(context.TODO(), &resource.InterfaceFuncs{
+	_, err := resourceutil.CreateOrUpdate(context.TODO(), &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
 			return client.SubmarinerV1alpha1().ServiceDiscoveries(namespace).Get(ctx, name, options)
 		},

@@ -20,8 +20,12 @@ package serviceaccount
 
 import (
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/serviceaccount"
+	"github.com/submariner-io/submariner-operator/pkg/clusterrole"
+	"github.com/submariner-io/submariner-operator/pkg/clusterrolebinding"
+	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/role"
+	"github.com/submariner-io/submariner-operator/pkg/rolebinding"
+	"github.com/submariner-io/submariner-operator/pkg/serviceaccount"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -56,31 +60,31 @@ func Ensure(kubeClient kubernetes.Interface, namespace string) (bool, error) {
 }
 
 func ensureServiceAccounts(kubeClient kubernetes.Interface, namespace string) (bool, error) {
-	createdOperatorSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdOperatorSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_operator_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning operator ServiceAccount resource")
 	}
 
-	createdSubmarinerSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdSubmarinerSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_gateway_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning gateway ServiceAccount resource")
 	}
 
-	createdRouteAgentSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdRouteAgentSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_route_agent_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning route agent ServiceAccount resource")
 	}
 
-	createdGlobalnetSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdGlobalnetSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_globalnet_service_account_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning globalnet ServiceAccount resource")
 	}
 
-	createdNPSyncerSA, err := serviceaccount.Ensure(kubeClient, namespace,
+	createdNPSyncerSA, err := serviceaccount.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_networkplugin_syncer_service_account_yaml)
 
 	return createdOperatorSA || createdSubmarinerSA || createdRouteAgentSA || createdGlobalnetSA || createdNPSyncerSA,
@@ -88,63 +92,58 @@ func ensureServiceAccounts(kubeClient kubernetes.Interface, namespace string) (b
 }
 
 func ensureClusterRoles(kubeClient kubernetes.Interface) (bool, error) {
-	createdOperatorCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_submariner_operator_cluster_role_yaml)
+	createdOperatorCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_submariner_operator_cluster_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning operator ClusterRole resource")
 	}
 
-	createdSubmarinerCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_submariner_gateway_cluster_role_yaml)
+	createdSubmarinerCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_submariner_gateway_cluster_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning gateway ClusterRole resource")
 	}
 
-	createdRouteAgentCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_submariner_route_agent_cluster_role_yaml)
+	createdRouteAgentCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_submariner_route_agent_cluster_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning route agent ClusterRole resource")
 	}
 
-	createdGlobalnetCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_yaml)
+	createdGlobalnetCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning globalnet ClusterRole resource")
 	}
 
-	createdNPSyncerCR, err := serviceaccount.EnsureClusterRole(kubeClient,
-		embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_yaml)
+	createdNPSyncerCR, err := clusterrole.EnsureFromYAML(kubeClient, embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_yaml)
 
 	return createdOperatorCR || createdSubmarinerCR || createdRouteAgentCR || createdGlobalnetCR || createdNPSyncerCR,
 		errors.Wrap(err, "error provisioning networkplugin syncer ClusterRole resource")
 }
 
 func ensureClusterRoleBindings(kubeClient kubernetes.Interface, namespace string) (bool, error) {
-	createdOperatorCRB, err := serviceaccount.EnsureClusterRoleBinding(kubeClient, namespace,
+	createdOperatorCRB, err := clusterrolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_operator_cluster_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning operator ClusterRoleBinding resource")
 	}
 
-	createdSubmarinerCRB, err := serviceaccount.EnsureClusterRoleBinding(kubeClient, namespace,
+	createdSubmarinerCRB, err := clusterrolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_gateway_cluster_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning gateway ClusterRoleBinding resource")
 	}
 
-	createdRouteAgentCRB, err := serviceaccount.EnsureClusterRoleBinding(kubeClient, namespace,
+	createdRouteAgentCRB, err := clusterrolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_route_agent_cluster_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning route agent ClusterRoleBinding resource")
 	}
 
-	createdGlobalnetCRB, err := serviceaccount.EnsureClusterRoleBinding(kubeClient, namespace,
+	createdGlobalnetCRB, err := clusterrolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_globalnet_cluster_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning globalnet ClusterRoleBinding resource")
 	}
 
-	createdNPSyncerCRB, err := serviceaccount.EnsureClusterRoleBinding(kubeClient, namespace,
+	createdNPSyncerCRB, err := clusterrolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_networkplugin_syncer_cluster_role_binding_yaml)
 
 	return createdOperatorCRB || createdSubmarinerCRB || createdRouteAgentCRB || createdGlobalnetCRB || createdNPSyncerCRB,
@@ -152,31 +151,31 @@ func ensureClusterRoleBindings(kubeClient kubernetes.Interface, namespace string
 }
 
 func ensureRoles(kubeClient kubernetes.Interface, namespace string) (bool, error) {
-	createdOperatorRole, err := serviceaccount.EnsureRole(kubeClient, namespace,
+	createdOperatorRole, err := role.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_operator_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning operator Role resource")
 	}
 
-	createdSubmarinerRole, err := serviceaccount.EnsureRole(kubeClient, namespace,
+	createdSubmarinerRole, err := role.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_gateway_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning gateway Role resource")
 	}
 
-	createdRouteAgentRole, err := serviceaccount.EnsureRole(kubeClient, namespace,
+	createdRouteAgentRole, err := role.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_route_agent_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning route agent Role resource")
 	}
 
-	createdGlobalnetRole, err := serviceaccount.EnsureRole(kubeClient, namespace,
+	createdGlobalnetRole, err := role.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_globalnet_role_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning globalnet Role resource")
 	}
 
-	createdMetricsReaderRole, err := serviceaccount.EnsureRole(kubeClient, namespace,
+	createdMetricsReaderRole, err := role.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_openshift_rbac_submariner_metrics_reader_role_yaml)
 
 	return createdOperatorRole || createdSubmarinerRole || createdRouteAgentRole || createdGlobalnetRole || createdMetricsReaderRole,
@@ -184,31 +183,31 @@ func ensureRoles(kubeClient kubernetes.Interface, namespace string) (bool, error
 }
 
 func ensureRoleBindings(kubeClient kubernetes.Interface, namespace string) (bool, error) {
-	createdOperatorRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdOperatorRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_operator_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning operator RoleBinding resource")
 	}
 
-	createdSubmarinerRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdSubmarinerRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_gateway_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning gateway RoleBinding resource")
 	}
 
-	createdRouteAgentRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdRouteAgentRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_route_agent_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning route agent RoleBinding resource")
 	}
 
-	createdGlobalnetRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdGlobalnetRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_rbac_submariner_globalnet_role_binding_yaml)
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning globalnet RoleBinding resource")
 	}
 
-	createdMetricsReaderRB, err := serviceaccount.EnsureRoleBinding(kubeClient, namespace,
+	createdMetricsReaderRB, err := rolebinding.EnsureFromYAML(kubeClient, namespace,
 		embeddedyamls.Config_openshift_rbac_submariner_metrics_reader_role_binding_yaml)
 
 	return createdOperatorRB || createdSubmarinerRB || createdRouteAgentRB || createdGlobalnetRB || createdMetricsReaderRB,

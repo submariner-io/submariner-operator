@@ -29,13 +29,13 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
+	"github.com/submariner-io/submariner-operator/pkg/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/client"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/datafile"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -116,7 +116,7 @@ var deployBroker = &cobra.Command{
 		status := cli.NewStatus()
 
 		status.Start("Setting up broker RBAC")
-		err = broker.Ensure(crdutils.NewFromClientSet(clientProducer.ForCRD()), clientProducer.ForKubernetes(), componentArr,
+		err = broker.Ensure(crd.UpdaterFromClientSet(clientProducer.ForCRD()), clientProducer.ForKubernetes(), componentArr,
 			false, brokerNamespace)
 		status.EndWith(cli.CheckForError(err))
 		utils.ExitOnError("Error setting up broker RBAC", err)

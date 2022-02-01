@@ -20,8 +20,8 @@ package scc
 
 import (
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/embeddedyamls"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/common/scc"
+	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/pkg/scc"
 	"k8s.io/client-go/dynamic"
 )
 
@@ -51,27 +51,27 @@ func Ensure(dynClient dynamic.Interface, namespace string) (bool, error) {
 		return false, errors.Wrap(err, "error parsing the networkplugin syncer ServiceAccount resource")
 	}
 
-	updateOperatorSCC, err := scc.UpdateSCC(dynClient, namespace, operatorSaName)
+	updateOperatorSCC, err := scc.Update(dynClient, namespace, operatorSaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateGatewaySCC, err := scc.UpdateSCC(dynClient, namespace, gatewaySaName)
+	updateGatewaySCC, err := scc.Update(dynClient, namespace, gatewaySaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateRouteAgentSCC, err := scc.UpdateSCC(dynClient, namespace, routeAgentSaName)
+	updateRouteAgentSCC, err := scc.Update(dynClient, namespace, routeAgentSaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateGlobalnetSCC, err := scc.UpdateSCC(dynClient, namespace, globalnetSaName)
+	updateGlobalnetSCC, err := scc.Update(dynClient, namespace, globalnetSaName)
 	if err != nil {
 		return false, errors.Wrap(err, "error updating the SCC resource")
 	}
 
-	updateNPSyncerSCC, err := scc.UpdateSCC(dynClient, namespace, npSyncerSaName)
+	updateNPSyncerSCC, err := scc.Update(dynClient, namespace, npSyncerSaName)
 
 	return updateOperatorSCC || updateGatewaySCC || updateRouteAgentSCC || updateGlobalnetSCC || updateNPSyncerSCC,
 		errors.Wrap(err, "error updating the SCC resource")

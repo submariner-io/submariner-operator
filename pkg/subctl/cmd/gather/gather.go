@@ -28,12 +28,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/component"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/brokercr"
 	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/brokercr"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -97,13 +97,13 @@ var gatherCmd = &cobra.Command{
 		"can be selected by component (%v) and type (%v). Default is to capture all data.",
 		strings.Join(getAllModuleKeys(), ","), strings.Join(getAllTypeKeys(), ",")),
 	Run: func(command *cobra.Command, args []string) {
-		cmd.ExecuteMultiCluster(gatherData)
+		cmd.ExecuteMultiCluster(restConfigProducer, gatherData)
 	},
 }
 
 func gatherData(cluster *cmd.Cluster) bool {
 	err := checkGatherArguments()
-	utils.ExitOnError("Invalid arguments", err)
+	exit.OnErrorWithMessage(err, "Invalid arguments")
 
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
@@ -112,7 +112,7 @@ func gatherData(cluster *cmd.Cluster) bool {
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
 		err := os.MkdirAll(directory, 0o700)
 		if err != nil {
-			utils.ExitOnError(fmt.Sprintf("Error creating directory %q", directory), err)
+			exit.OnErrorWithMessage(err, fmt.Sprintf("Error creating directory %q", directory))
 		}
 	}
 
@@ -266,7 +266,7 @@ func gatherBroker(dataType string, info Info) bool {
 			}
 
 			_, err = submarinerClient.SubmarinerV1alpha1().Brokers(cmd.OperatorNamespace).Get(
-				context.TODO(), brokercr.BrokerName, metav1.GetOptions{})
+				context.TODO(), brokercr.Name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return false
 			}

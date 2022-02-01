@@ -15,11 +15,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package constants
 
+// Arranged alphabetically.
 const (
-	OperatorNamespace      = "submariner-operator"
-	DefaultBrokerNamespace = "submariner-k8s-broker"
-
+	DefaultBrokerNamespace  = "submariner-k8s-broker"
+	OperatorNamespace       = "submariner-operator"
 	SubmarinerBrokerAdminSA = "submariner-k8s-broker-admin"
+	SubmarinerGatewayLabel  = "submariner.io/gateway"
+	SubmarinerName          = "submariner"
+	SubmarinerNamespace     = "submariner-operator"
+	TrueLabel               = "true"
 )

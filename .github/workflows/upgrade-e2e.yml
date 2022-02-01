@@ -3,10 +3,12 @@ name: Upgrade
 
 on:
   pull_request:
+    types: [ready_for_review, opened, reopened, synchronize, converted_to_draft, labeled]
 
 jobs:
   upgrade-e2e:
     name: Latest Release to Latest Version
+    if: github.event.pull_request.draft == false || contains(github.event.pull_request.labels.*.name, 'test-draft')
     timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:

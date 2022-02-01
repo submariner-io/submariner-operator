@@ -3,10 +3,12 @@ name: Cross-Build Checks
 
 on:
   pull_request:
+    types: [ready_for_review, opened, reopened, synchronize, converted_to_draft, labeled]
 
 jobs:
   cross:
     name: Cross-Build
+    if: github.event.pull_request.draft == false || contains(github.event.pull_request.labels.*.name, 'test-draft')
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository

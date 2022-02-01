@@ -21,17 +21,17 @@ package broker
 import (
 	"context"
 	goerrors "errors"
-	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/rbac"
+	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	"github.com/submariner-io/submariner-operator/pkg/utils"
-	crdutils "github.com/submariner-io/submariner-operator/pkg/utils/crds"
+	"github.com/submariner-io/submariner-operator/pkg/namespace"
+	"github.com/submariner-io/submariner-operator/pkg/role"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -40,8 +40,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func Ensure(crdUpdater crdutils.CRDUpdater, kubeClient kubernetes.Interface, componentArr []string, crds bool, namespace string) error {
-	if crds {
+func Ensure(crdUpdater crd.Updater, kubeClient kubernetes.Interface, componentArr []string, createCRDs bool, brokerNS string) error {
+	if createCRDs {
 		for i := range componentArr {
 			switch componentArr[i] {
 			case component.Connectivity:
@@ -65,41 +65,41 @@ func Ensure(crdUpdater crdutils.CRDUpdater, kubeClient kubernetes.Interface, com
 	}
 
 	// Create the namespace
-	_, err := CreateNewBrokerNamespace(kubeClient, namespace)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error creating the broker namespace")
+	_, err := namespace.Ensure(kubeClient, brokerNS)
+	if err != nil {
+		return err // nolint:wrapcheck // No need to wrap here
 	}
 
 	// Create administrator SA, Role, and bind them
-	if err := createBrokerAdministratorRoleAndSA(kubeClient, namespace); err != nil {
+	if err := createBrokerAdministratorRoleAndSA(kubeClient, brokerNS); err != nil {
 		return err
 	}
 
 	// Create cluster Role, and a default account for backwards compatibility, also bind it
-	if err := createBrokerClusterRoleAndDefaultSA(kubeClient, namespace); err != nil {
+	if err := createBrokerClusterRoleAndDefaultSA(kubeClient, brokerNS); err != nil {
 		return err
 	}
 
-	_, err = WaitForClientToken(kubeClient, constants.SubmarinerBrokerAdminSA, namespace)
+	_, err = WaitForClientToken(kubeClient, constants.SubmarinerBrokerAdminSA, brokerNS)
 
 	return err
 }
 
-func createBrokerClusterRoleAndDefaultSA(kubeClient kubernetes.Interface, namespace string) error {
+func createBrokerClusterRoleAndDefaultSA(kubeClient kubernetes.Interface, inNamespace string) error {
 	// Create the a default SA for cluster access (backwards compatibility with documentation)
-	_, err := CreateNewBrokerSA(kubeClient, submarinerBrokerClusterDefaultSA, namespace)
+	_, err := CreateNewBrokerSA(kubeClient, submarinerBrokerClusterDefaultSA, inNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error creating the default broker service account")
 	}
 
 	// Create the broker cluster role, which will also be used by any new enrolled cluster
-	_, err = CreateOrUpdateClusterBrokerRole(kubeClient, namespace)
+	_, err = CreateOrUpdateClusterBrokerRole(kubeClient, inNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error creating broker role")
 	}
 
 	// Create the role binding
-	_, err = CreateNewBrokerRoleBinding(kubeClient, submarinerBrokerClusterDefaultSA, submarinerBrokerClusterRole, namespace)
+	_, err = CreateNewBrokerRoleBinding(kubeClient, submarinerBrokerClusterDefaultSA, submarinerBrokerClusterRole, inNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error creating the broker rolebinding")
 	}
@@ -108,20 +108,20 @@ func createBrokerClusterRoleAndDefaultSA(kubeClient kubernetes.Interface, namesp
 }
 
 // CreateSAForCluster creates a new SA, and binds it to the submariner cluster role.
-func CreateSAForCluster(kubeClient kubernetes.Interface, clusterID, namespace string) (*v1.Secret, error) {
-	saName := fmt.Sprintf(submarinerBrokerClusterSAFmt, clusterID)
+func CreateSAForCluster(kubeClient kubernetes.Interface, clusterID, inNamespace string) (*v1.Secret, error) {
+	saName := ClusterSAName(clusterID)
 
-	_, err := CreateNewBrokerSA(kubeClient, saName, namespace)
+	_, err := CreateNewBrokerSA(kubeClient, saName, inNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, errors.Wrap(err, "error creating cluster sa")
 	}
 
-	_, err = CreateNewBrokerRoleBinding(kubeClient, saName, submarinerBrokerClusterRole, namespace)
+	_, err = CreateNewBrokerRoleBinding(kubeClient, saName, submarinerBrokerClusterRole, inNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, errors.Wrap(err, "error binding sa to cluster role")
 	}
 
-	clientToken, err := WaitForClientToken(kubeClient, saName, namespace)
+	clientToken, err := WaitForClientToken(kubeClient, saName, inNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return nil, errors.Wrap(err, "error getting cluster sa token")
 	}
@@ -129,21 +129,21 @@ func CreateSAForCluster(kubeClient kubernetes.Interface, clusterID, namespace st
 	return clientToken, nil
 }
 
-func createBrokerAdministratorRoleAndSA(kubeClient kubernetes.Interface, namespace string) error {
+func createBrokerAdministratorRoleAndSA(kubeClient kubernetes.Interface, inNamespace string) error {
 	// Create the SA we need for the managing the broker (from subctl, etc..).
-	_, err := CreateNewBrokerSA(kubeClient, constants.SubmarinerBrokerAdminSA, namespace)
+	_, err := CreateNewBrokerSA(kubeClient, constants.SubmarinerBrokerAdminSA, inNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error creating the broker admin service account")
 	}
 
 	// Create the broker admin role
-	_, err = CreateOrUpdateBrokerAdminRole(kubeClient, namespace)
+	_, err = CreateOrUpdateBrokerAdminRole(kubeClient, inNamespace)
 	if err != nil {
 		return errors.Wrap(err, "error creating subctl role")
 	}
 
 	// Create the role binding
-	_, err = CreateNewBrokerRoleBinding(kubeClient, constants.SubmarinerBrokerAdminSA, submarinerBrokerAdminRole, namespace)
+	_, err = CreateNewBrokerRoleBinding(kubeClient, constants.SubmarinerBrokerAdminSA, submarinerBrokerAdminRole, inNamespace)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error creating the broker rolebinding")
 	}
@@ -151,7 +151,7 @@ func createBrokerAdministratorRoleAndSA(kubeClient kubernetes.Interface, namespa
 	return nil
 }
 
-func WaitForClientToken(kubeClient kubernetes.Interface, submarinerBrokerSA, namespace string) (*v1.Secret, error) {
+func WaitForClientToken(kubeClient kubernetes.Interface, submarinerBrokerSA, inNamespace string) (*v1.Secret, error) {
 	// wait for the client token to be ready, while implementing
 	// exponential backoff pattern, it will wait a total of:
 	// sum(n=0..9, 1.2^n * 5) seconds, = 130 seconds
@@ -166,7 +166,7 @@ func WaitForClientToken(kubeClient kubernetes.Interface, submarinerBrokerSA, nam
 	var lastErr error
 
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
-		secret, lastErr = rbac.GetClientTokenSecret(kubeClient, namespace, submarinerBrokerSA)
+		secret, lastErr = rbac.GetClientTokenSecret(kubeClient, inNamespace, submarinerBrokerSA)
 		if lastErr != nil {
 			return false, nil // nolint:nilerr // Intentional - the error is propagated via the outer-scoped var 'lastErr'
 		}
@@ -182,35 +182,24 @@ func WaitForClientToken(kubeClient kubernetes.Interface, submarinerBrokerSA, nam
 }
 
 // nolint:wrapcheck // No need to wrap here
-func CreateNewBrokerNamespace(kubeClient kubernetes.Interface, namespace string) (brokernamespace *v1.Namespace, err error) {
-	ns := &v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: namespace,
-		},
-	}
-
-	return kubeClient.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{})
+func CreateOrUpdateClusterBrokerRole(kubeClient kubernetes.Interface, inNamespace string) (bool, error) {
+	return role.Ensure(kubeClient, inNamespace, NewBrokerClusterRole())
 }
 
 // nolint:wrapcheck // No need to wrap here
-func CreateOrUpdateClusterBrokerRole(kubeClient kubernetes.Interface, namespace string) (created bool, err error) {
-	return utils.CreateOrUpdateRole(context.TODO(), kubeClient, namespace, NewBrokerClusterRole())
+func CreateOrUpdateBrokerAdminRole(clientset kubernetes.Interface, inNamespace string) (created bool, err error) {
+	return role.Ensure(clientset, inNamespace, NewBrokerAdminRole())
 }
 
 // nolint:wrapcheck // No need to wrap here
-func CreateOrUpdateBrokerAdminRole(clientset kubernetes.Interface, namespace string) (created bool, err error) {
-	return utils.CreateOrUpdateRole(context.TODO(), clientset, namespace, NewBrokerAdminRole())
-}
-
-// nolint:wrapcheck // No need to wrap here
-func CreateNewBrokerRoleBinding(kubeClient kubernetes.Interface, serviceAccount, role, namespace string) (
+func CreateNewBrokerRoleBinding(kubeClient kubernetes.Interface, serviceAccount, roleName, inNamespace string) (
 	brokerRoleBinding *rbacv1.RoleBinding, err error) {
-	return kubeClient.RbacV1().RoleBindings(namespace).Create(
-		context.TODO(), NewBrokerRoleBinding(serviceAccount, role, namespace), metav1.CreateOptions{})
+	return kubeClient.RbacV1().RoleBindings(inNamespace).Create(
+		context.TODO(), NewBrokerRoleBinding(serviceAccount, roleName, inNamespace), metav1.CreateOptions{})
 }
 
 // nolint:wrapcheck // No need to wrap here
-func CreateNewBrokerSA(kubeClient kubernetes.Interface, submarinerBrokerSA, namespace string) (brokerSA *v1.ServiceAccount, err error) {
-	return kubeClient.CoreV1().ServiceAccounts(namespace).Create(
+func CreateNewBrokerSA(kubeClient kubernetes.Interface, submarinerBrokerSA, inNamespace string) (brokerSA *v1.ServiceAccount, err error) {
+	return kubeClient.CoreV1().ServiceAccounts(inNamespace).Create(
 		context.TODO(), NewBrokerSA(submarinerBrokerSA), metav1.CreateOptions{})
 }

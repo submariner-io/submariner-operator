@@ -20,6 +20,7 @@ package diagnose
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 )
@@ -30,7 +31,7 @@ func init() {
 		Short: "Check the Kubernetes version",
 		Long:  "This command checks if Submariner can be deployed on the Kubernetes version.",
 		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(checkK8sVersion)
+			cmd.ExecuteMultiCluster(restConfigProducer, checkK8sVersion)
 		},
 	})
 }
@@ -40,7 +41,13 @@ func checkK8sVersion(cluster *cmd.Cluster) bool {
 
 	status.Start("Checking Submariner support for the Kubernetes version")
 
-	k8sVersion, failedRequirements, err := version.CheckRequirements(cluster.Config)
+	clientProducer, err := client.NewProducerFromRestConfig(cluster.Config)
+	if err != nil {
+		status.EndWithFailure(err.Error())
+		return false
+	}
+
+	k8sVersion, failedRequirements, err := version.CheckRequirements(clientProducer.ForKubernetes())
 	if err != nil {
 		status.EndWithFailure(err.Error())
 		return false

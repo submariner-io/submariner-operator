@@ -20,6 +20,7 @@ package submariner
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -108,6 +109,45 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 
 	nattPort, _ := strconv.ParseInt(submarinerv1.DefaultNATTDiscoveryPort, 10, 32)
 
+	volumeMounts := []corev1.VolumeMount{
+		{Name: "ipsecd", MountPath: "/etc/ipsec.d", ReadOnly: false},
+		{Name: "ipsecnss", MountPath: "/var/lib/ipsec/nss", ReadOnly: false},
+		{Name: "libmodules", MountPath: "/lib/modules", ReadOnly: true},
+	}
+	volumes := []corev1.Volume{
+		{Name: "ipsecd", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+		{Name: "ipsecnss", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
+		{Name: "libmodules", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/lib/modules"}}},
+	}
+
+	if cr.Spec.BrokerK8sSecret != "" {
+		// We've got a secret, mount it where the syncer expects it
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      "brokersecret",
+			MountPath: broker.SecretPath(cr.Spec.BrokerK8sSecret),
+			ReadOnly:  true,
+		})
+
+		volumes = append(volumes, corev1.Volume{
+			Name:         "brokersecret",
+			VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: cr.Spec.BrokerK8sSecret}},
+		})
+	}
+
+	if cr.Spec.CeIPSecPSKSecret != "" {
+		// We've got a PSK secret, mount it where the gateway expects it
+		volumeMounts = append(volumeMounts, corev1.VolumeMount{
+			Name:      "psksecret",
+			MountPath: fmt.Sprintf("/var/run/secrets/submariner.io/%s", cr.Spec.CeIPSecPSKSecret),
+			ReadOnly:  true,
+		})
+
+		volumes = append(volumes, corev1.Volume{
+			Name:         "psksecret",
+			VolumeSource: corev1.VolumeSource{Secret: &corev1.SecretVolumeSource{SecretName: cr.Spec.CeIPSecPSKSecret}},
+		})
+	}
+
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: labels,
@@ -170,7 +210,9 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 						{Name: broker.EnvironmentVariable("RemoteNamespace"), Value: cr.Spec.BrokerK8sRemoteNamespace},
 						{Name: broker.EnvironmentVariable("CA"), Value: cr.Spec.BrokerK8sCA},
 						{Name: broker.EnvironmentVariable("Insecure"), Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
+						{Name: broker.EnvironmentVariable("Secret"), Value: cr.Spec.BrokerK8sSecret},
 						{Name: "CE_IPSEC_PSK", Value: cr.Spec.CeIPSecPSK},
+						{Name: "CE_IPSEC_PSKSECRET", Value: cr.Spec.CeIPSecPSKSecret},
 						{Name: "CE_IPSEC_DEBUG", Value: strconv.FormatBool(cr.Spec.CeIPSecDebug)},
 						{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
 						{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
@@ -186,11 +228,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 							},
 						}},
 					},
-					VolumeMounts: []corev1.VolumeMount{
-						{Name: "ipsecd", MountPath: "/etc/ipsec.d", ReadOnly: false},
-						{Name: "ipsecnss", MountPath: "/var/lib/ipsec/nss", ReadOnly: false},
-						{Name: "libmodules", MountPath: "/lib/modules", ReadOnly: true},
-					},
+					VolumeMounts: volumeMounts,
 				},
 			},
 			// TODO: Use SA submariner-gateway or submariner?
@@ -201,11 +239,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner) corev1.PodTemplateSpec {
 			DNSPolicy:                     corev1.DNSClusterFirst,
 			// The gateway engine must be able to run on any flagged node, regardless of existing taints
 			Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
-			Volumes: []corev1.Volume{
-				{Name: "ipsecd", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
-				{Name: "ipsecnss", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
-				{Name: "libmodules", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/lib/modules"}}},
-			},
+			Volumes:     volumes,
 		},
 	}
 	if cr.Spec.CeIPSecIKEPort != 0 {
