@@ -122,7 +122,7 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 		return false
 	}
 
-	defer sPod.DeletePod()
+	defer sPod.Delete()
 
 	gatewayPodIP := getGatewayIP(remoteCluster, localCluster.Name, status)
 	if gatewayPodIP == "" {
@@ -142,14 +142,14 @@ func validateTunnelConfigAcrossClusters(localCfg, remoteCfg *rest.Config) bool {
 		return false
 	}
 
-	defer cPod.DeletePod()
+	defer cPod.Delete()
 
-	if err = cPod.AwaitPodCompletion(); err != nil {
+	if err = cPod.AwaitCompletion(); err != nil {
 		status.EndWithFailure("Error waiting for the client pod to finish its execution: %v", err)
 		return false
 	}
 
-	if err = sPod.AwaitPodCompletion(); err != nil {
+	if err = sPod.AwaitCompletion(); err != nil {
 		status.EndWithFailure("Error waiting for the sniffer pod to finish its execution: %v", err)
 		return false
 	}

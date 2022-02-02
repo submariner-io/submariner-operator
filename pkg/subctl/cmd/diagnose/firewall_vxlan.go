@@ -103,7 +103,7 @@ func checkFWConfig(cluster *cmd.Cluster, status *cli.Status) {
 		return
 	}
 
-	defer sPod.DeletePod()
+	defer sPod.Delete()
 
 	remoteClusterIP := strings.Split(remoteEndpoint.Spec.Subnets[0], "/")[0]
 	podCommand = fmt.Sprintf("nc -w %d %s 8080", validationTimeout/2, remoteClusterIP)
@@ -114,14 +114,14 @@ func checkFWConfig(cluster *cmd.Cluster, status *cli.Status) {
 		return
 	}
 
-	defer cPod.DeletePod()
+	defer cPod.Delete()
 
-	if err = cPod.AwaitPodCompletion(); err != nil {
+	if err = cPod.AwaitCompletion(); err != nil {
 		status.QueueFailureMessage(fmt.Sprintf("Error waiting for the client pod to finish its execution: %v", err))
 		return
 	}
 
-	if err = sPod.AwaitPodCompletion(); err != nil {
+	if err = sPod.AwaitCompletion(); err != nil {
 		status.QueueFailureMessage(fmt.Sprintf("Error waiting for the sniffer pod to finish its execution: %v", err))
 		return
 	}

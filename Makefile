@@ -262,40 +262,39 @@ $(KUSTOMIZE):
 
 # Generate kustomization.yaml for bundle
 kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
-	$(OPERATOR_SDK) generate kustomize manifests -q && \
+	$(OPERATOR_SDK) generate kustomize manifests -q
 	(cd config/manifests && $(KUSTOMIZE) edit set image controller=$(IMG) && \
-	 $(KUSTOMIZE) edit set image repo=$(REPO)) && \
+	 $(KUSTOMIZE) edit set image repo=$(REPO))
+	sed -e 's/$${VERSION}/$(BUNDLE_VERSION)/g' config/bundle/kustomization.template.yaml > config/bundle/kustomization.yaml
+	sed -e 's/$${REPLACES_OP}/$(REPLACES_OP)/g' -e 's/$${FROM_VERSION}/$(FROM_VERSION)/g' \
+		config/bundle/patches/submariner.csv.template.yaml > config/bundle/patches/submariner.csv.config.yaml
 	(cd config/bundle && \
-	sed -e 's/$${VERSION}/$(BUNDLE_VERSION)/g' kustomization.template.yaml > kustomization.yaml && \
-	cat ./patches/submariner.csv.template.yaml \
-	 | sed -e 's/$${REPLACES_OP}/$(REPLACES_OP)/g' -e 's/$${FROM_VERSION}/$(FROM_VERSION)/g' \
-	 > ./patches/submariner.csv.config.yaml && \
 	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
 
 # Generate bundle manifests and metadata, then validate generated files
 bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	($(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
-	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS)) && \
-	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml && cd ../../) && \
-	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml && \
-	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml && \
-	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml && \
+	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS))
+	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml)
+	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml
+	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
+	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 # Generate package manifests
 packagemanifests: $(OPERATOR_SDK) $(KUSTOMIZE) kustomization
 	($(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
-	| $(OPERATOR_SDK) generate packagemanifests -q --version $(BUNDLE_VERSION) $(PKG_MAN_OPTS)) && \
-	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && cd ../../) && \
-	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
-	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
-	sed -i -e 's/$$(VERSION)/$(VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml && \
+	| $(OPERATOR_SDK) generate packagemanifests -q --version $(BUNDLE_VERSION) $(PKG_MAN_OPTS))
+	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml)
+	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml
+	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml
+	sed -i -e 's/$$(VERSION)/$(VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml
 	mv packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(BUNDLE_VERSION)/submariner.v$(BUNDLE_VERSION).clusterserviceversion.yaml
 
 # Statically validate the operator bundle using Scorecard.
 scorecard: bundle olm clusters
 	timeout 60 bash -c "until KUBECONFIG=$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 \
-	$(OPERATOR_SDK) olm status > /dev/null; do sleep 10; done" && \
+	$(OPERATOR_SDK) olm status > /dev/null; do sleep 10; done"
 	$(OPERATOR_SDK) scorecard --kubeconfig=$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 -o text ./bundle
 
 # Create the clusters with olm
