@@ -18,26 +18,18 @@ limitations under the License.
 
 package cloud
 
-import (
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/cleanup"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/prepare"
-)
-
-var (
-	cloudCmd = &cobra.Command{
-		Use:   "cloud",
-		Short: "Cloud operations",
-		Long:  `This command contains cloud operations related to Submariner installation.`,
-	}
-	restConfigProducer = restconfig.NewProducer()
-)
-
-func init() {
-	cloudCmd.AddCommand(prepare.NewCommand(&restConfigProducer))
-	cloudCmd.AddCommand(cleanup.NewCommand(&restConfigProducer))
-	restConfigProducer.AddKubeContextFlag(cloudCmd)
-	cmd.AddToRootCommand(cloudCmd)
+type Port struct {
+	Natt         uint16
+	NatDiscovery uint16
+	VxLAN        uint16
+	Metrics      uint16
 }
+
+type Instance struct {
+	GCPGWType string
+	IsDedicatedGateway bool
+}
+
+const (
+
+)

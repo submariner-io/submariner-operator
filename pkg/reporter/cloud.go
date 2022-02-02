@@ -16,19 +16,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package utils
+package reporter
 
 import (
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 )
 
 type statusReporter struct {
-	status reporter.Interface
+	status Interface
 }
 
-func NewStatusReporter() api.Reporter {
+func NewCloudReporter() api.Reporter {
 	return &statusReporter{status: cli.NewReporter()}
 }
 
