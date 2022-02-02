@@ -20,6 +20,8 @@ package servicediscovery_test
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -39,14 +41,20 @@ import (
 )
 
 const (
-	serviceDiscoveryName   = "test-service-discovery"
-	submarinerNamespace    = "test-ns"
-	openShiftDNSConfigName = "default"
-	clusterlocalConfig     = `clusterset.local:53 {
-    forward . `
-	superClusterlocalConfig = `supercluster.local:53 {
-    forward . `
-	clusterIP = "10.10.10.10"
+	serviceDiscoveryName     = "test-service-discovery"
+	submarinerNamespace      = "test-ns"
+	openShiftDNSConfigName   = "default"
+	clusterIP                = "10.10.10.10"
+	lighthouseDNSServiceName = "submariner-lighthouse-coredns"
+
+	lighthouseDNSConfigFormat = `clusterset.local:53 {
+    forward . $IP
+}
+supercluster.local:53 {
+    forward . $IP
+}`
+	coreDNSConfigFormat = "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n" + lighthouseDNSConfigFormat +
+		"\n#lighthouse-end\n"
 )
 
 var _ = BeforeSuite(func() {
@@ -115,6 +123,11 @@ func (t *testDriver) assertReconcileSuccess() {
 	Expect(r.RequeueAfter).To(BeNumerically("==", 0))
 }
 
+func (t *testDriver) assertReconcileError() {
+	_, err := t.doReconcile()
+	Expect(err).ToNot(Succeed())
+}
+
 func (t *testDriver) getDNSConfig() (*operatorv1.DNS, error) {
 	foundDNSConfig := &operatorv1.DNS{}
 	err := t.fakeClient.Get(context.TODO(), types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
@@ -130,7 +143,11 @@ func (t *testDriver) assertDNSConfig() *operatorv1.DNS {
 }
 
 func (t *testDriver) assertCoreDNSConfigMap() *corev1.ConfigMap {
-	foundCoreMap, err := t.kubeClient.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "coredns", metav1.GetOptions{})
+	return t.assertConfigMap("coredns", "kube-system")
+}
+
+func (t *testDriver) assertConfigMap(name, namespace string) *corev1.ConfigMap {
+	foundCoreMap, err := t.kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	Expect(err).To(Succeed())
 
 	return foundCoreMap
@@ -142,29 +159,50 @@ func (t *testDriver) createConfigMap(cm *corev1.ConfigMap) {
 }
 
 func newDNSConfig(clusterIP string) *operatorv1.DNS {
-	return &operatorv1.DNS{
+	dns := &operatorv1.DNS{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: openShiftDNSConfigName,
 		},
 		Spec: operatorv1.DNSSpec{
 			Servers: []operatorv1.Server{
 				{
-					Name:  "lighthouse",
-					Zones: []string{"clusterset.local"},
+					Name:  "other",
+					Zones: []string{"other.local"},
 					ForwardPlugin: operatorv1.ForwardPlugin{
-						Upstreams: []string{clusterIP},
-					},
-				},
-				{
-					Name:  "lighthouse",
-					Zones: []string{"supercluster.local"},
-					ForwardPlugin: operatorv1.ForwardPlugin{
-						Upstreams: []string{clusterIP},
+						Upstreams: []string{"1.2.3.4"},
 					},
 				},
 			},
 		},
 	}
+
+	if clusterIP != "" {
+		dns.Spec.Servers = append(dns.Spec.Servers,
+			operatorv1.Server{
+				Name:  "lighthouse",
+				Zones: []string{"clusterset.local"},
+				ForwardPlugin: operatorv1.ForwardPlugin{
+					Upstreams: []string{clusterIP},
+				},
+			},
+			operatorv1.Server{
+				Name:  "lighthouse",
+				Zones: []string{"supercluster.local"},
+				ForwardPlugin: operatorv1.ForwardPlugin{
+					Upstreams: []string{clusterIP},
+				},
+			})
+	}
+
+	dns.Spec.Servers = append(dns.Spec.Servers, operatorv1.Server{
+		Name:  "another",
+		Zones: []string{"another.local"},
+		ForwardPlugin: operatorv1.ForwardPlugin{
+			Upstreams: []string{"5.6.7.8"},
+		},
+	})
+
+	return dns
 }
 
 func newServiceDiscovery() *submariner_v1.ServiceDiscovery {
@@ -189,8 +227,68 @@ func newServiceDiscovery() *submariner_v1.ServiceDiscovery {
 	}
 }
 
-func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
-	corefile := lighthouseConfig + `.:53 {
+func newDNSService(clusterIP string) *corev1.Service {
+	return &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      lighthouseDNSServiceName,
+			Namespace: submarinerNamespace,
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: clusterIP,
+		},
+	}
+}
+
+func (t *testDriver) assertLighthouseCoreDNSService() *corev1.Service {
+	service := &corev1.Service{}
+	Expect(t.fakeClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseDNSServiceName, Namespace: submarinerNamespace},
+		service)).To(Succeed())
+
+	Expect(service.Labels).To(HaveKeyWithValue("app", lighthouseDNSServiceName))
+	Expect(service.Spec.Ports).To(HaveLen(1))
+	Expect(service.Spec.Ports[0].Protocol).To(Equal(corev1.Protocol("UDP")))
+	Expect(service.Spec.Ports[0].Port).To(Equal(int32(53)))
+	Expect(service.Spec.Ports[0].TargetPort.IntVal).To(Equal(int32(53)))
+
+	return service
+}
+
+func (t *testDriver) setLighthouseCoreDNSServiceIP() {
+	service := t.assertLighthouseCoreDNSService()
+	service.Spec.ClusterIP = clusterIP
+	Expect(t.fakeClient.Update(context.TODO(), service)).To(Succeed())
+}
+
+func assertDNSConfigServers(actual, expected *operatorv1.DNS) {
+	serverKey := func(s *operatorv1.Server) string {
+		return fmt.Sprintf("Name: %s, Zones: %v", s.Name, s.Zones)
+	}
+
+	actualServers := map[string]*operatorv1.Server{}
+	for i := range actual.Spec.Servers {
+		actualServers[serverKey(&actual.Spec.Servers[i])] = &actual.Spec.Servers[i]
+	}
+
+	for i := range expected.Spec.Servers {
+		key := serverKey(&expected.Spec.Servers[i])
+		actualServer := actualServers[key]
+		Expect(actualServer).ToNot(BeNil(), fmt.Sprintf("Missing expected Server %q", key))
+		Expect(actualServer).To(Equal(&expected.Spec.Servers[i]))
+		delete(actualServers, key)
+	}
+
+	for _, s := range actualServers {
+		Fail(fmt.Sprintf("Unexpected Server %#v", s))
+	}
+}
+
+func coreDNSCorefileData(clusterIP string) string {
+	lighthouseConfig := ""
+	if clusterIP != "" {
+		lighthouseConfig = strings.ReplaceAll(coreDNSConfigFormat, "$IP", clusterIP)
+	}
+
+	return lighthouseConfig + `.:53 {
 		errors
 		health {
 		lameduck 5s
@@ -208,7 +306,9 @@ func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
 		reload
 		loadbalance
 	}`
+}
 
+func newCoreDNSConfigMap(corefile string) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "coredns",
@@ -216,19 +316,6 @@ func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
 		},
 		Data: map[string]string{
 			"Corefile": corefile,
-		},
-		BinaryData: nil,
-	}
-}
-
-func newDNSService(clusterIP string) *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "submariner-lighthouse-coredns",
-			Namespace: submarinerNamespace,
-		},
-		Spec: corev1.ServiceSpec{
-			ClusterIP: clusterIP,
 		},
 	}
 }

@@ -18,8 +18,13 @@ limitations under the License.
 package servicediscovery_test
 
 import (
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Service discovery controller", func() {
@@ -29,59 +34,155 @@ var _ = Describe("Service discovery controller", func() {
 func testReconciliation() {
 	t := newTestDriver()
 
-	When("the lighthouse DNS service IP is updated", func() {
-		updatedClusterIP := "10.10.10.11"
+	When("the openshift DNS config exists", func() {
+		Context("and the lighthouse config isn't present", func() {
+			BeforeEach(func() {
+				t.initClientObjs = append(t.initClientObjs, newDNSConfig(""), newDNSService(clusterIP))
+			})
 
-		BeforeEach(func() {
-			t.initClientObjs = append(t.initClientObjs, newDNSConfig(clusterIP), newDNSService(updatedClusterIP))
+			It("should add it", func() {
+				t.assertReconcileSuccess()
+
+				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(clusterIP))
+			})
 		})
 
-		It("should update the the DNS config", func() {
-			t.assertReconcileSuccess()
+		Context("and the lighthouse config is present and the lighthouse DNS service IP is updated", func() {
+			updatedClusterIP := "10.10.10.11"
 
-			Expect(t.assertDNSConfig().Spec).To(Equal(newDNSConfig(updatedClusterIP).Spec))
+			BeforeEach(func() {
+				t.initClientObjs = append(t.initClientObjs, newDNSConfig(clusterIP), newDNSService(updatedClusterIP))
+			})
+
+			It("should update the lighthouse config", func() {
+				t.assertReconcileSuccess()
+
+				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(updatedClusterIP))
+			})
+		})
+
+		Context("and the lighthouse DNS service doesn't exist", func() {
+			BeforeEach(func() {
+				t.initClientObjs = append(t.initClientObjs, newDNSConfig(""))
+			})
+
+			It("should create the service and add the lighthouse config", func() {
+				t.assertReconcileError()
+
+				t.setLighthouseCoreDNSServiceIP()
+
+				t.assertReconcileSuccess()
+
+				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(clusterIP))
+			})
 		})
 	})
 
-	When("the lighthouse DNS service IP is not updated", func() {
-		BeforeEach(func() {
-			t.initClientObjs = append(t.initClientObjs, newDNSConfig(clusterIP), newDNSService(clusterIP))
+	When("the coredns ConfigMap exists", func() {
+		Context("and the lighthouse config isn't present", func() {
+			BeforeEach(func() {
+				t.initClientObjs = append(t.initClientObjs, newDNSService(clusterIP))
+				t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData("")))
+			})
+
+			It("should add it", func() {
+				t.assertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+			})
 		})
 
-		It("should not update the the DNS config", func() {
-			t.assertReconcileSuccess()
+		Context("and the lighthouse config is present and the lighthouse DNS service IP is updated", func() {
+			updatedClusterIP := "10.10.10.11"
 
-			Expect(t.assertDNSConfig().Spec).To(Equal(newDNSConfig(clusterIP).Spec))
+			BeforeEach(func() {
+				t.initClientObjs = append(t.initClientObjs, newDNSService(updatedClusterIP))
+				t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
+			})
+
+			It("should update the lighthouse config", func() {
+				t.assertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(updatedClusterIP)))
+			})
+		})
+
+		Context("and the lighthouse DNS service doesn't exist", func() {
+			BeforeEach(func() {
+				t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData("")))
+			})
+
+			It("should create the service and add the lighthouse config", func() {
+				t.assertReconcileError()
+
+				t.setLighthouseCoreDNSServiceIP()
+
+				t.assertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+			})
 		})
 	})
 
-	When("the lighthouse clusterIP is not configured", func() {
+	When("a custom coredns config is specified", func() {
 		BeforeEach(func() {
-			t.initClientObjs = append(t.initClientObjs, newDNSService(clusterIP))
-			t.createConfigMap(newConfigMap(""))
+			t.serviceDiscovery.Spec.CoreDNSCustomConfig = &submariner_v1.CoreDNSCustomConfig{
+				ConfigMapName: "custom-config",
+				Namespace:     "custom-config-ns",
+			}
 		})
 
-		It("should update the coreDNS config map", func() {
-			t.assertReconcileSuccess()
+		Context("and the custom coredns ConfigMap already exists", func() {
+			BeforeEach(func() {
+				t.createConfigMap(&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+						Namespace: t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace,
+					},
+					Data: map[string]string{
+						"lighthouse.server": strings.ReplaceAll(coreDNSConfigFormat, "$IP", "1.2.3.4"),
+					},
+				})
 
-			Expect(t.assertCoreDNSConfigMap().Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + clusterIP + "\n}"))
-			Expect(t.assertCoreDNSConfigMap().Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + clusterIP + "\n}"))
+				t.initClientObjs = append(t.initClientObjs, newDNSService(clusterIP))
+			})
+
+			It("should update it", func() {
+				t.assertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
+					strings.ReplaceAll(lighthouseDNSConfigFormat, "$IP", clusterIP)))
+			})
 		})
-	})
 
-	When("the lighthouse clusterIP is already configured", func() {
-		updatedClusterIP := "10.10.10.11"
+		Context("and the custom coredns ConfigMap doesn't exist", func() {
+			BeforeEach(func() {
+				t.initClientObjs = append(t.initClientObjs, newDNSService(clusterIP))
+			})
 
-		BeforeEach(func() {
-			t.initClientObjs = append(t.initClientObjs, newDNSService(updatedClusterIP))
-			t.createConfigMap(newConfigMap(clusterlocalConfig + clusterIP + "\n}" + superClusterlocalConfig + clusterIP + "\n}"))
+			It("should create it", func() {
+				t.assertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
+					strings.ReplaceAll(lighthouseDNSConfigFormat, "$IP", clusterIP)))
+			})
 		})
 
-		It("should update the coreDNS config map", func() {
-			t.assertReconcileSuccess()
+		Context("and the lighthouse DNS service doesn't exist", func() {
+			It("should create the service and the custom coredns ConfigMap", func() {
+				t.assertReconcileError()
 
-			Expect(t.assertCoreDNSConfigMap().Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + updatedClusterIP))
-			Expect(t.assertCoreDNSConfigMap().Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + updatedClusterIP))
+				t.setLighthouseCoreDNSServiceIP()
+
+				t.assertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
+					strings.ReplaceAll(lighthouseDNSConfigFormat, "$IP", clusterIP)))
+			})
 		})
 	})
 }
+
