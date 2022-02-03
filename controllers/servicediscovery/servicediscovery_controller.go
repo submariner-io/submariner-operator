@@ -30,10 +30,13 @@ import (
 	"github.com/go-logr/logr"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/finalizer"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
+	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
@@ -103,36 +106,38 @@ func NewReconciler(config *Config) *Reconciler {
 
 // +kubebuilder:rbac:groups=submariner.io,resources=servicediscoveries,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=servicediscoveries/status,verbs=get;update;patch
+// nolint:gocyclo // TODO
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling ServiceDiscovery")
 
-	// Fetch the ServiceDiscovery instance
-	instance := &submarinerv1alpha1.ServiceDiscovery{}
-
-	err := r.config.Client.Get(ctx, request.NamespacedName, instance)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			deployment := &appsv1.Deployment{}
-			opts := []controllerClient.DeleteAllOfOption{
-				controllerClient.InNamespace(request.NamespacedName.Namespace),
-				controllerClient.MatchingLabels{"app": deploymentName},
-			}
-			err := r.config.Client.DeleteAllOf(ctx, deployment, opts...)
-
-			return reconcile.Result{}, errors.Wrap(err, "error deleting resource")
+	instance, err := r.getServiceDiscovery(ctx, request.NamespacedName)
+	if apierrors.IsNotFound(err) {
+		// Request object not found, could have been deleted after reconcile request.
+		// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+		// Return and don't requeue
+		deployment := &appsv1.Deployment{}
+		opts := []controllerClient.DeleteAllOfOption{
+			controllerClient.InNamespace(request.NamespacedName.Namespace),
+			controllerClient.MatchingLabels{"app": deploymentName},
 		}
+		err := r.config.Client.DeleteAllOf(ctx, deployment, opts...)
 
-		// Error reading the object - requeue the request.
-		return reconcile.Result{}, errors.Wrap(err, "error retrieving resource")
+		return reconcile.Result{}, errors.Wrap(err, "error deleting resource")
 	}
 
-	if instance.ObjectMeta.DeletionTimestamp != nil {
-		// Graceful deletion has been requested, ignore the object
-		return reconcile.Result{}, nil
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	instance, err = r.addFinalizer(ctx, instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if !instance.GetDeletionTimestamp().IsZero() {
+		log.Info("ServiceDiscovery is being deleted")
+		return r.doCleanup(ctx, instance)
 	}
 
 	lightHouseAgent := newLighthouseAgent(instance)
@@ -197,6 +202,32 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	return reconcile.Result{}, err
+}
+
+func (r *Reconciler) getServiceDiscovery(ctx context.Context, key types.NamespacedName) (*submarinerv1alpha1.ServiceDiscovery, error) {
+	instance := &submarinerv1alpha1.ServiceDiscovery{}
+
+	err := r.config.Client.Get(ctx, key, instance)
+	if err != nil {
+		return nil, errors.Wrap(err, "error retrieving ServiceDiscovery resource")
+	}
+
+	return instance, nil
+}
+
+func (r *Reconciler) addFinalizer(ctx context.Context,
+	instance *submarinerv1alpha1.ServiceDiscovery) (*submarinerv1alpha1.ServiceDiscovery, error) {
+	added, err := finalizer.Add(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace,
+		&submarinerv1alpha1.ServiceDiscovery{}), instance, constants.CleanupFinalizer)
+	if err != nil {
+		return nil, err // nolint:wrapcheck // No need to wrap
+	}
+
+	if !added {
+		return instance, nil
+	}
+
+	return r.getServiceDiscovery(ctx, types.NamespacedName{Namespace: instance.Namespace, Name: instance.Name})
 }
 
 func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
