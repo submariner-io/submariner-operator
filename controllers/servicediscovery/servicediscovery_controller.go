@@ -106,7 +106,6 @@ func NewReconciler(config *Config) *Reconciler {
 
 // +kubebuilder:rbac:groups=submariner.io,resources=servicediscoveries,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=servicediscoveries/status,verbs=get;update;patch
-// nolint:gocyclo // TODO
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling ServiceDiscovery")
@@ -140,16 +139,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return r.doCleanup(ctx, instance)
 	}
 
-	lightHouseAgent := newLighthouseAgent(instance)
-	if _, err = helpers.ReconcileDeployment(instance, lightHouseAgent, reqLogger,
-		r.config.Client, r.config.Scheme); err != nil {
-		return reconcile.Result{}, errors.Wrap(err, "error reconciling agent deployment")
-	}
-
-	err = metrics.Setup(instance.Namespace, instance, lightHouseAgent.GetLabels(), 8082, r.config.Client,
-		r.config.RestConfig, r.config.Scheme, reqLogger)
+	err = r.ensureLightHouseAgent(instance, reqLogger)
 	if err != nil {
-		return reconcile.Result{}, errors.Wrap(err, "error setting up metrics")
+		return reconcile.Result{}, err
 	}
 
 	lighthouseDNSConfigMap := newLighthouseDNSConfigMap(instance)
@@ -159,31 +151,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, errors.Wrap(err, "error reconciling ConfigMap")
 	}
 
-	lighthouseCoreDNSDeployment := newLighthouseCoreDNSDeployment(instance)
-	if _, err = helpers.ReconcileDeployment(instance, lighthouseCoreDNSDeployment, reqLogger,
-		r.config.Client, r.config.Scheme); err != nil {
-		log.Error(err, "Error creating the lighthouseCoreDNS deployment")
-		return reconcile.Result{}, errors.Wrap(err, "error reconciling coredns deployment")
-	}
-
-	lighthouseCoreDNSService := &corev1.Service{}
-
-	err = r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
-		lighthouseCoreDNSService)
-	if apierrors.IsNotFound(err) {
-		lighthouseCoreDNSService = newLighthouseCoreDNSService(instance)
-		if _, err = helpers.ReconcileService(instance, lighthouseCoreDNSService, reqLogger,
-			r.config.Client, r.config.Scheme); err != nil {
-			log.Error(err, "Error creating the lighthouseCoreDNS service")
-
-			return reconcile.Result{}, errors.Wrap(err, "error reconciling coredns Service")
-		}
-	}
-
-	err = metrics.Setup(instance.Namespace, instance, lighthouseCoreDNSDeployment.GetLabels(), 9153, r.config.Client, r.config.RestConfig,
-		r.config.Scheme, reqLogger)
+	err = r.ensureLighthouseCoreDNSDeployment(instance, reqLogger)
 	if err != nil {
-		return reconcile.Result{}, errors.Wrap(err, "error setting up coredns metrics")
+		return reconcile.Result{}, err
+	}
+
+	err = r.ensureLighthouseCoreDNSService(ctx, instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	if instance.Spec.CoreDNSCustomConfig != nil && instance.Spec.CoreDNSCustomConfig.ConfigMapName != "" {
@@ -712,4 +687,56 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		// Watch for changes to secondary resource Deployment and requeue the owner ServiceDiscovery
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
+}
+
+func (r *Reconciler) ensureLightHouseAgent(instance *submarinerv1alpha1.ServiceDiscovery, reqLogger logr.Logger) error {
+	lightHouseAgent := newLighthouseAgent(instance)
+	if _, err := helpers.ReconcileDeployment(instance, lightHouseAgent, reqLogger,
+		r.config.Client, r.config.Scheme); err != nil {
+		return errors.Wrap(err, "error reconciling agent deployment")
+	}
+
+	err := metrics.Setup(instance.Namespace, instance, lightHouseAgent.GetLabels(), 8082, r.config.Client,
+		r.config.RestConfig, r.config.Scheme, reqLogger)
+	if err != nil {
+		return errors.Wrap(err, "error setting up metrics")
+	}
+
+	return nil
+}
+
+func (r *Reconciler) ensureLighthouseCoreDNSDeployment(instance *submarinerv1alpha1.ServiceDiscovery, reqLogger logr.Logger) error {
+	lighthouseCoreDNSDeployment := newLighthouseCoreDNSDeployment(instance)
+	if _, err := helpers.ReconcileDeployment(instance, lighthouseCoreDNSDeployment, reqLogger,
+		r.config.Client, r.config.Scheme); err != nil {
+		log.Error(err, "Error creating the lighthouseCoreDNS deployment")
+		return errors.Wrap(err, "error reconciling coredns deployment")
+	}
+
+	err := metrics.Setup(instance.Namespace, instance, lighthouseCoreDNSDeployment.GetLabels(), 9153, r.config.Client, r.config.RestConfig,
+		r.config.Scheme, reqLogger)
+	if err != nil {
+		return errors.Wrap(err, "error setting up coredns metrics")
+	}
+
+	return nil
+}
+
+func (r *Reconciler) ensureLighthouseCoreDNSService(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
+	reqLogger logr.Logger) error {
+	lighthouseCoreDNSService := &corev1.Service{}
+
+	err := r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
+		lighthouseCoreDNSService)
+	if apierrors.IsNotFound(err) {
+		lighthouseCoreDNSService = newLighthouseCoreDNSService(instance)
+		if _, err = helpers.ReconcileService(instance, lighthouseCoreDNSService, reqLogger,
+			r.config.Client, r.config.Scheme); err != nil {
+			log.Error(err, "Error creating the lighthouseCoreDNS service")
+
+			return errors.Wrap(err, "error reconciling coredns Service")
+		}
+	}
+
+	return nil
 }
