@@ -19,6 +19,8 @@ limitations under the License.
 package network
 
 import (
+	"fmt"
+
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	"k8s.io/client-go/kubernetes"
 )
@@ -50,9 +52,10 @@ func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, erro
 		return nil, nil
 	}
 
-	clusterIPRange, err := findClusterIPRange(clientSet)
+	clusterIPRange, clusterIPSource, err := findClusterIPRange(clientSet)
 	if err == nil && clusterIPRange != "" {
 		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
+		clusterNetwork.InfoSrc += fmt.Sprintf(" clusterIPSource: %s", clusterIPSource)
 	}
 
 	return clusterNetwork, nil

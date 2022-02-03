@@ -104,5 +104,7 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 		result.NetworkPlugin = ocpNetworkType
 	}
 
+	result.InfoSrc += fmt.Sprintf("OCP NetworkType: %s", ocpNetworkType)
+
 	return result, nil
 }

@@ -51,7 +51,7 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	clusterNetwork := &ClusterNetwork{}
 
-	podIPRange, err := findPodIPRange(clientSet)
+	podIPRange, podIPSource, err := findPodIPRange(clientSet)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 		clusterNetwork.PodCIDRs = []string{podIPRange}
 	}
 
-	clusterIPRange, err := findClusterIPRange(clientSet)
+	clusterIPRange, clusterIPSource, err := findClusterIPRange(clientSet)
 	if err != nil {
 		return nil, err
 	}
@@ -70,24 +70,25 @@ func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	}
 
 	if len(clusterNetwork.PodCIDRs) > 0 || len(clusterNetwork.ServiceCIDRs) > 0 {
+		clusterNetwork.InfoSrc += fmt.Sprintf(" podIPSource: %s, clusterIPSource: %s", podIPSource, clusterIPSource)
 		return clusterNetwork, nil
 	}
 
 	return nil, nil
 }
 
-func findClusterIPRange(clientSet kubernetes.Interface) (string, error) {
+func findClusterIPRange(clientSet kubernetes.Interface) (string, string, error) {
 	clusterIPRange, err := findClusterIPRangeFromApiserver(clientSet)
 	if err != nil || clusterIPRange != "" {
-		return clusterIPRange, err
+		return clusterIPRange, "findClusterIPRangeFromApiserver", err
 	}
 
 	clusterIPRange, err = findClusterIPRangeFromServiceCreation(clientSet)
 	if err != nil || clusterIPRange != "" {
-		return clusterIPRange, err
+		return clusterIPRange, "findClusterIPRangeFromServiceCreation", err
 	}
 
-	return "", nil
+	return "", "", nil
 }
 
 func findClusterIPRangeFromApiserver(clientSet kubernetes.Interface) (string, error) {
@@ -151,23 +152,23 @@ func parseServiceCIDRFrom(msg string) (string, error) {
 	return match[1], nil
 }
 
-func findPodIPRange(clientSet kubernetes.Interface) (string, error) {
+func findPodIPRange(clientSet kubernetes.Interface) (string, string, error) {
 	podIPRange, err := findPodIPRangeKubeController(clientSet)
 	if err != nil || podIPRange != "" {
-		return podIPRange, err
+		return podIPRange, "findPodIPRangeKubeController", err
 	}
 
 	podIPRange, err = findPodIPRangeKubeProxy(clientSet)
 	if err != nil || podIPRange != "" {
-		return podIPRange, err
+		return podIPRange, "findPodIPRangeKubeProxy", err
 	}
 
 	podIPRange, err = findPodIPRangeFromNodeSpec(clientSet)
 	if err != nil || podIPRange != "" {
-		return podIPRange, err
+		return podIPRange, "findPodIPRangeFromNodeSpec", err
 	}
 
-	return "", nil
+	return "", "", nil
 }
 
 func findPodIPRangeKubeController(clientSet kubernetes.Interface) (string, error) {

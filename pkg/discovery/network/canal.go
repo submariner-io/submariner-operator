@@ -21,6 +21,7 @@ package network
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
@@ -59,13 +60,14 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 	}
 
 	// Try to detect the service CIDRs using the generic functions
-	clusterIPRange, err := findClusterIPRange(clientSet)
+	clusterIPRange, clusterIPSource, err := findClusterIPRange(clientSet)
 	if err != nil {
 		return nil, err
 	}
 
 	if clusterIPRange != "" {
 		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
+		clusterNetwork.InfoSrc += fmt.Sprintf(" clusterIPSource: %s", clusterIPSource)
 	}
 
 	return clusterNetwork, nil

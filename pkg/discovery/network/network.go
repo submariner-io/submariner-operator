@@ -37,6 +37,7 @@ type ClusterNetwork struct {
 	NetworkPlugin  string
 	GlobalCIDR     string
 	PluginSettings map[string]string
+	InfoSrc        string
 }
 
 func (cn *ClusterNetwork) Show() {
@@ -56,7 +57,8 @@ func (cn *ClusterNetwork) Log(logger logr.Logger) {
 	logger.Info("Discovered K8s network details",
 		"plugin", cn.NetworkPlugin,
 		"clusterCIDRs", cn.PodCIDRs,
-		"serviceCIDRs", cn.ServiceCIDRs)
+		"serviceCIDRs", cn.ServiceCIDRs,
+		"infoSrc", cn.InfoSrc)
 }
 
 func (cn *ClusterNetwork) IsComplete() bool {
