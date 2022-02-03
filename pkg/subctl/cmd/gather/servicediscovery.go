@@ -115,6 +115,6 @@ func gatherConfigMapLighthouseDNS(info *Info, namespace string) {
 }
 
 func isCoreDNSTypeOcp(info *Info) bool {
-	pods, err := findPods(info.ClientSet, ocpCoreDNSPodLabel)
+	pods, err := findPods(info.ClientProducer.ForKubernetes(), ocpCoreDNSPodLabel)
 	return err == nil && len(pods.Items) > 0
 }
