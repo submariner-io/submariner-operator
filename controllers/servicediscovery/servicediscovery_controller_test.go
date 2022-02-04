@@ -218,4 +218,16 @@ func testDeletion() {
 
 		t.testFinalizerRemoved()
 	})
+
+	When("the openshift DNS config exists", func() {
+		BeforeEach(func() {
+			t.initClientObjs = append(t.initClientObjs, newDNSConfig(clusterIP))
+		})
+
+		It("should remove the lighthouse config", func() {
+			assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(""))
+		})
+
+		t.testFinalizerRemoved()
+	})
 }

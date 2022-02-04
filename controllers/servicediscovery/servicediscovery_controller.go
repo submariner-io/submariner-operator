@@ -173,7 +173,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	if apierrors.IsNotFound(err) {
 		// Try to update Openshift-DNS
-		return reconcile.Result{}, r.updateOpenshiftClusterDNSOperator(ctx, instance, reqLogger)
+		return reconcile.Result{}, r.configureOpenshiftClusterDNSOperator(ctx, instance)
 	}
 
 	return reconcile.Result{}, err
@@ -571,8 +571,23 @@ func findCoreDNSListeningPort(coreFile string) string {
 	return coreDNSPort
 }
 
-func (r *Reconciler) updateOpenshiftClusterDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
-	reqLogger logr.Logger) error {
+func (r *Reconciler) configureOpenshiftClusterDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery) error {
+	lighthouseDNSService := &corev1.Service{}
+
+	err := r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace}, lighthouseDNSService)
+	if err != nil {
+		return errors.Wrap(err, "error retrieving lighthouse DNS Service")
+	}
+
+	if lighthouseDNSService.Spec.ClusterIP == "" {
+		return goerrors.New("the lighthouse DNS Service ClusterIP is not set")
+	}
+
+	return r.updateLighthouseConfigInOpenshiftDNSOperator(ctx, instance, lighthouseDNSService.Spec.ClusterIP)
+}
+
+func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
+	clusterIP string) error {
 	// nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		dnsOperator := &operatorv1.DNS{}
@@ -587,14 +602,7 @@ func (r *Reconciler) updateOpenshiftClusterDNSOperator(ctx context.Context, inst
 			return err
 		}
 
-		lighthouseDNSService := &corev1.Service{}
-		err := r.config.OperatorClient.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
-			lighthouseDNSService)
-		if err != nil || lighthouseDNSService.Spec.ClusterIP == "" {
-			return goerrors.New("lighthouseDNSService ClusterIp should be available")
-		}
-
-		updatedForwardServers := getUpdatedForwardServers(instance, dnsOperator, lighthouseDNSService, reqLogger)
+		updatedForwardServers := getUpdatedForwardServers(instance, dnsOperator, clusterIP)
 		if updatedForwardServers == nil {
 			return nil
 		}
@@ -615,7 +623,7 @@ func (r *Reconciler) updateOpenshiftClusterDNSOperator(ctx context.Context, inst
 		})
 
 		if result == controllerutil.OperationResultUpdated {
-			reqLogger.Info("Updated Cluster DNS Operator", "DnsOperator.Name", dnsOperator.Name)
+			log.Info("Updated Cluster DNS Operator", "DnsOperator.Name", dnsOperator.Name)
 		}
 		return err
 	})
@@ -624,7 +632,7 @@ func (r *Reconciler) updateOpenshiftClusterDNSOperator(ctx context.Context, inst
 }
 
 func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dnsOperator *operatorv1.DNS,
-	lighthouseDNSService *corev1.Service, reqLogger logr.Logger) []operatorv1.Server {
+	clusterIP string) []operatorv1.Server {
 	updatedForwardServers := make([]operatorv1.Server, 0)
 	changed := false
 	containsLighthouse := false
@@ -639,17 +647,17 @@ func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dns
 			existingDomains = append(existingDomains, forwardServer.Zones...)
 
 			for _, upstreams := range forwardServer.ForwardPlugin.Upstreams {
-				if upstreams != lighthouseDNSService.Spec.ClusterIP {
+				if upstreams != clusterIP {
 					changed = true
 				}
-			}
-
-			if changed {
-				continue
 			}
 		} else {
 			updatedForwardServers = append(updatedForwardServers, forwardServer)
 		}
+	}
+
+	if clusterIP == "" {
+		return updatedForwardServers
 	}
 
 	sort.Strings(lighthouseDomains)
@@ -658,22 +666,22 @@ func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dns
 	if !reflect.DeepEqual(lighthouseDomains, existingDomains) {
 		changed = true
 
-		reqLogger.Info(fmt.Sprintf("Configured lighthouse zones changed from %v to %v", existingDomains, lighthouseDomains))
+		log.Info(fmt.Sprintf("Configured lighthouse zones changed from %v to %v", existingDomains, lighthouseDomains))
 	}
 
 	if containsLighthouse && !changed {
-		reqLogger.Info("Forward plugin is already configured in Cluster DNS Operator CR")
+		log.Info("Forward plugin is already configured in Cluster DNS Operator CR")
 		return nil
 	}
 
-	reqLogger.Info("Lighthouse DNS configuration changed, hence updating Cluster DNS Operator CR")
+	log.Info("Lighthouse DNS configuration changed, hence updating Cluster DNS Operator CR")
 
 	for _, domain := range lighthouseDomains {
 		lighthouseServer := operatorv1.Server{
 			Name:  lighthouseForwardPluginName,
 			Zones: []string{domain},
 			ForwardPlugin: operatorv1.ForwardPlugin{
-				Upstreams: []string{lighthouseDNSService.Spec.ClusterIP},
+				Upstreams: []string{clusterIP},
 			},
 		}
 		updatedForwardServers = append(updatedForwardServers, lighthouseServer)
