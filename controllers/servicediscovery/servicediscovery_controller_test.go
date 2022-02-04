@@ -204,8 +204,18 @@ func testDeletion() {
 		t.assertReconcileSuccess()
 	})
 
-	It("should remove the finalizer from the Submariner resource", func() {
-		test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &submariner_v1.ServiceDiscovery{}),
-			serviceDiscoveryName, constants.CleanupFinalizer)
+	When("the coredns ConfigMap exists", func() {
+		BeforeEach(func() {
+			t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
+		})
+
+		It("should remove the lighthouse config section", func() {
+			Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData("")))
+
+			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &submariner_v1.ServiceDiscovery{}),
+				serviceDiscoveryName, constants.CleanupFinalizer)
+		})
+
+		t.testFinalizerRemoved()
 	})
 }

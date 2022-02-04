@@ -168,7 +168,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 			return reconcile.Result{}, err
 		}
 	} else {
-		err = r.updateDNSConfigMap(ctx, instance, reqLogger, defaultCoreDNSNamespace, coreDNSName)
+		err = r.configureDNSConfigMap(ctx, instance, defaultCoreDNSNamespace, coreDNSName)
 	}
 
 	if apierrors.IsNotFound(err) {
@@ -487,20 +487,29 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 	return errors.Wrap(retryErr, "error updating DNS custom ConfigMap")
 }
 
-func (r *Reconciler) updateDNSConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
-	reqLogger logr.Logger, coreDNSNamespace, configMapName string) error {
+func (r *Reconciler) configureDNSConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery, configMapNamespace,
+	configMapName string) error {
+	lighthouseDNSService := &corev1.Service{}
+
+	err := r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDNSService)
+	if err != nil {
+		return errors.Wrap(err, "error retrieving lighthouse DNS Service")
+	}
+
+	if lighthouseDNSService.Spec.ClusterIP == "" {
+		return goerrors.New("the lighthouse DNS Service ClusterIP is not set")
+	}
+
+	return r.updateLighthouseConfigInConfigMap(ctx, cr, configMapNamespace, configMapName, lighthouseDNSService.Spec.ClusterIP)
+}
+
+func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
+	configMapNamespace, configMapName, clusterIP string) error {
 	// nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		configMap, err := r.config.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Get(ctx, configMapName, metav1.GetOptions{})
+		configMap, err := r.config.KubeClient.CoreV1().ConfigMaps(configMapNamespace).Get(ctx, configMapName, metav1.GetOptions{})
 		if err != nil {
 			return err
-		}
-
-		lighthouseDNSService := &corev1.Service{}
-		err = r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDNSService)
-		lighthouseClusterIP := lighthouseDNSService.Spec.ClusterIP
-		if err != nil || lighthouseClusterIP == "" {
-			return goerrors.New("lighthouseDNSService ClusterIp should be available")
 		}
 
 		coreFile := configMap.Data["Corefile"]
@@ -508,7 +517,7 @@ func (r *Reconciler) updateDNSConfigMap(ctx context.Context, cr *submarinerv1alp
 		if strings.Contains(coreFile, "lighthouse-start") {
 			// Assume this means we've already set the ConfigMap up, first remove existing lighthouse config
 			skip := false
-			reqLogger.Info("coredns configmap has lighthouse configuration hence updating")
+			log.Info("coredns configmap has lighthouse configuration hence updating")
 			lines := strings.Split(coreFile, "\n")
 			for _, line := range lines {
 				if strings.Contains(line, "lighthouse-start") {
@@ -524,21 +533,26 @@ func (r *Reconciler) updateDNSConfigMap(ctx context.Context, cr *submarinerv1alp
 			}
 			coreFile = newCoreStr
 		} else {
-			reqLogger.Info("coredns configmap does not have lighthouse configuration hence creating")
+			log.Info("coredns configmap does not have lighthouse configuration hence creating")
 		}
 
-		coreDNSPort := findCoreDNSListeningPort(coreFile)
+		if clusterIP != "" {
+			coreDNSPort := findCoreDNSListeningPort(coreFile)
 
-		expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
-		for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
-			expectedCorefile = fmt.Sprintf("%s%s:%s {\n    forward . %s\n}\n",
-				expectedCorefile, domain, coreDNSPort, lighthouseClusterIP)
+			expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
+			for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
+				expectedCorefile = fmt.Sprintf("%s%s:%s {\n    forward . %s\n}\n",
+					expectedCorefile, domain, coreDNSPort, clusterIP)
+			}
+
+			coreFile = expectedCorefile + "#lighthouse-end\n" + coreFile
 		}
-		coreFile = expectedCorefile + "#lighthouse-end\n" + coreFile
+
 		log.Info("Updated coredns ConfigMap " + coreFile)
 		configMap.Data["Corefile"] = coreFile
+
 		// Potentially retried
-		_, err = r.config.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Update(ctx, configMap, metav1.UpdateOptions{})
+		_, err = r.config.KubeClient.CoreV1().ConfigMaps(configMapNamespace).Update(ctx, configMap, metav1.UpdateOptions{})
 		return err
 	})
 
@@ -565,7 +579,7 @@ func (r *Reconciler) updateOpenshiftClusterDNSOperator(ctx context.Context, inst
 		if err := r.config.Client.Get(ctx, types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
 			// microshift uses the coredns image, but the DNS operator and CRDs are off
 			if meta.IsNoMatchError(err) {
-				err = r.updateDNSConfigMap(ctx, instance, reqLogger, microshiftDNSNamespace, microshiftDNSConfigMap)
+				err = r.configureDNSConfigMap(ctx, instance, microshiftDNSNamespace, microshiftDNSConfigMap)
 				return errors.Wrapf(err, "error trying to update microshift coredns configmap %q in namespace %q",
 					microshiftDNSNamespace, microshiftDNSNamespace)
 			}

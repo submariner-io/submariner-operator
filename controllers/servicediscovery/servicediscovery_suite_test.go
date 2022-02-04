@@ -28,7 +28,10 @@ import (
 	. "github.com/onsi/gomega"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
+	"github.com/submariner-io/admiral/pkg/test"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/constants"
+	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -257,6 +260,13 @@ func (t *testDriver) setLighthouseCoreDNSServiceIP() {
 	service := t.assertLighthouseCoreDNSService()
 	service.Spec.ClusterIP = clusterIP
 	Expect(t.fakeClient.Update(context.TODO(), service)).To(Succeed())
+}
+
+func (t *testDriver) testFinalizerRemoved() {
+	It("remove the finalizer from the Submariner resource", func() {
+		test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &submariner_v1.ServiceDiscovery{}),
+			serviceDiscoveryName, constants.CleanupFinalizer)
+	})
 }
 
 func assertDNSConfigServers(actual, expected *operatorv1.DNS) {
