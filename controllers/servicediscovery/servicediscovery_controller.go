@@ -311,16 +311,11 @@ prometheus :9153
 	}
 }
 
-func newCoreDNSCustomConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
-	namespace := defaultCoreDNSNamespace
-	if cr.Spec.CoreDNSCustomConfig.Namespace != "" {
-		namespace = cr.Spec.CoreDNSCustomConfig.Namespace
-	}
-
+func newCoreDNSCustomConfigMap(config *submarinerv1alpha1.CoreDNSCustomConfig) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Spec.CoreDNSCustomConfig.ConfigMapName,
-			Namespace: namespace,
+			Name:      config.ConfigMapName,
+			Namespace: getCustomCoreDNSNamespace(config),
 		},
 	}
 }
@@ -429,16 +424,20 @@ func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 	}
 }
 
+func getCustomCoreDNSNamespace(config *submarinerv1alpha1.CoreDNSCustomConfig) string {
+	if config.Namespace != "" {
+		return config.Namespace
+	}
+
+	return defaultCoreDNSNamespace
+}
+
 func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger) error {
 	var configFunc func(context.Context, *corev1.ConfigMap) (*corev1.ConfigMap, error)
 
 	customCoreDNSName := cr.Spec.CoreDNSCustomConfig.ConfigMapName
-	coreDNSNamespace := defaultCoreDNSNamespace
-
-	if cr.Spec.CoreDNSCustomConfig.Namespace != "" {
-		coreDNSNamespace = cr.Spec.CoreDNSCustomConfig.Namespace
-	}
+	coreDNSNamespace := getCustomCoreDNSNamespace(cr.Spec.CoreDNSCustomConfig)
 
 	// nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -447,7 +446,7 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 			configFunc = func(ctx context.Context, cm *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 				return r.config.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Create(ctx, cm, metav1.CreateOptions{})
 			}
-			configMap = newCoreDNSCustomConfigMap(cr)
+			configMap = newCoreDNSCustomConfigMap(cr.Spec.CoreDNSCustomConfig)
 		} else if err != nil {
 			return err
 		} else {
