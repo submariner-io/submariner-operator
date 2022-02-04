@@ -21,11 +21,16 @@ package servicediscovery
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/finalizer"
+	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/admiral/pkg/util"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
-	"github.com/submariner-io/submariner-operator/controllers/resource"
+	ctrlresource "github.com/submariner-io/submariner-operator/controllers/resource"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -33,7 +38,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 	var err error
 
 	if instance.Spec.CoreDNSCustomConfig != nil && instance.Spec.CoreDNSCustomConfig.ConfigMapName != "" {
-		// TODO
+		err = r.removeLighthouseConfigFromCustomDNSConfigMap(ctx, instance.Spec.CoreDNSCustomConfig)
 	} else {
 		err = r.updateLighthouseConfigInConfigMap(ctx, instance, defaultCoreDNSNamespace, coreDNSName, "")
 	}
@@ -47,8 +52,23 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 		return reconcile.Result{}, err
 	}
 
-	err = finalizer.Remove(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.ServiceDiscovery{}),
+	err = finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.ServiceDiscovery{}),
 		instance, constants.CleanupFinalizer)
 
 	return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
+}
+
+func (r *Reconciler) removeLighthouseConfigFromCustomDNSConfigMap(ctx context.Context,
+	config *operatorv1alpha1.CoreDNSCustomConfig) error {
+	configMap := newCoreDNSCustomConfigMap(config)
+
+	log.Info("Removing lighthouse config from custom DNS ConfigMap", "Name", configMap.Name, "Namespace", configMap.Namespace)
+
+	err := util.Update(ctx, resource.ForConfigMap(r.config.KubeClient, configMap.Namespace), configMap,
+		func(existing runtime.Object) (runtime.Object, error) {
+			delete(existing.(*corev1.ConfigMap).Data, "lighthouse.server")
+			return existing, nil
+		})
+
+	return errors.Wrapf(err, "error updating custom DNS ConfigMap %q", configMap.Name)
 }

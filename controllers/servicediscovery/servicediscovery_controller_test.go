@@ -230,4 +230,38 @@ func testDeletion() {
 
 		t.testFinalizerRemoved()
 	})
+
+	When("a custom coredns config is specified", func() {
+		BeforeEach(func() {
+			t.serviceDiscovery.Spec.CoreDNSCustomConfig = &submariner_v1.CoreDNSCustomConfig{
+				ConfigMapName: "custom-config",
+				Namespace:     "custom-config-ns",
+			}
+		})
+
+		Context("and the custom coredns ConfigMap exists", func() {
+			BeforeEach(func() {
+				t.createConfigMap(&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+						Namespace: t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace,
+					},
+					Data: map[string]string{
+						"lighthouse.server": strings.ReplaceAll(coreDNSConfigFormat, "$IP", clusterIP),
+					},
+				})
+			})
+
+			It("should remove the lighthouse config section", func() {
+				Expect(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data).ToNot(HaveKey("lighthouse.server"))
+			})
+
+			t.testFinalizerRemoved()
+		})
+
+		Context("and the custom coredns ConfigMap doesn't exist", func() {
+			t.testFinalizerRemoved()
+		})
+	})
 }
