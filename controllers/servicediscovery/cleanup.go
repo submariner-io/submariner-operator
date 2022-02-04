@@ -29,7 +29,19 @@ import (
 )
 
 func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) (reconcile.Result, error) {
-	err := finalizer.Remove(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.ServiceDiscovery{}),
+	var err error
+
+	if instance.Spec.CoreDNSCustomConfig != nil && instance.Spec.CoreDNSCustomConfig.ConfigMapName != "" {
+		// TODO
+	} else {
+		err = r.updateLighthouseConfigInConfigMap(ctx, instance, defaultCoreDNSNamespace, coreDNSName, "")
+	}
+
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	err = finalizer.Remove(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.ServiceDiscovery{}),
 		instance, constants.CleanupFinalizer)
 
 	return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
