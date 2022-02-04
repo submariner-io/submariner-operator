@@ -40,6 +40,7 @@ const InfoFileName = "broker-info.subm"
 func WriteInfoToFile(restConfig *rest.Config, brokerNamespace, ipsecFile string, components stringset.Interface,
 	customDomains []string, status reporter.Interface) error {
 	status.Start("Saving broker info to file %q", InfoFileName)
+	defer status.End()
 
 	kubeClient, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
@@ -70,14 +71,7 @@ func WriteInfoToFile(restConfig *rest.Config, brokerNamespace, ipsecFile string,
 		data.CustomDomains = &customDomains
 	}
 
-	err = data.writeToFile(InfoFileName)
-	if err != nil {
-		return status.Error(data.writeToFile(InfoFileName), "error saving broker info")
-	}
-
-	status.End()
-
-	return nil
+	return status.Error(data.writeToFile(InfoFileName), "error saving broker info")
 }
 
 func ReadInfoFromFile(filename string) (*Info, error) {

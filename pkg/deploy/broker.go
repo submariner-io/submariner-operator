@@ -78,14 +78,13 @@ func Broker(options *BrokerOptions, clientProducer client.Producer, status repor
 
 func deploy(options *BrokerOptions, status reporter.Interface, clientProducer client.Producer) error {
 	status.Start("Setting up broker RBAC")
+	defer status.End()
 
 	err := broker.Ensure(crd.UpdaterFromClientSet(clientProducer.ForCRD()), clientProducer.ForKubernetes(),
 		options.BrokerSpec.Components, false, options.BrokerNamespace)
 	if err != nil {
 		return status.Error(err, "error setting up broker RBAC")
 	}
-
-	status.End()
 
 	status.Start("Deploying the Submariner operator")
 
@@ -94,18 +93,11 @@ func deploy(options *BrokerOptions, status reporter.Interface, clientProducer cl
 		return status.Error(err, "error deploying Submariner operator")
 	}
 
-	status.End()
-
 	status.Start("Deploying the broker")
 
 	err = brokercr.Ensure(clientProducer.ForOperator(), options.BrokerNamespace, options.BrokerSpec)
-	if err != nil {
-		return status.Error(err, "Broker deployment failed")
-	}
 
-	status.End()
-
-	return nil
+	return status.Error(err, "Broker deployment failed")
 }
 
 func isValidComponents(componentSet stringset.Interface) error {
