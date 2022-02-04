@@ -46,10 +46,11 @@ type Interface interface {
 }
 
 func HandleError(reporter Interface, err error, message string, args ...interface{}) error {
-	err = errors.Wrapf(err, message, args...)
 	if err == nil {
 		return nil
 	}
+
+	err = errors.Wrapf(err, message, args...)
 
 	capitalizeFirst := func(str string) string {
 		for i, v := range str {
