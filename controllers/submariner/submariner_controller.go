@@ -32,6 +32,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/syncer"
 	"github.com/submariner-io/admiral/pkg/util"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/constants"
 	resourceiface "github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
@@ -61,7 +62,6 @@ import (
 const (
 	gatewayMetricsServerPort   = 8080
 	globalnetMetricsServerPort = 8081
-	SubmarinerFinalizer        = "submariner-controller-finalizer"
 )
 
 var log = logf.Log.WithName("controller_submariner")
@@ -270,7 +270,7 @@ func (r *Reconciler) getSubmariner(ctx context.Context, key types.NamespacedName
 
 func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Submariner) (*submopv1a1.Submariner, error) {
 	added, err := finalizer.Add(ctx, resourceiface.ForControllerClient(r.config.Client, instance.Namespace, &submopv1a1.Submariner{}),
-		instance, SubmarinerFinalizer)
+		instance, constants.CleanupFinalizer)
 	if err != nil {
 		return nil, err // nolint:wrapcheck // No need to wrap
 	}
