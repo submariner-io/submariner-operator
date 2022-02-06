@@ -27,6 +27,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/finalizer"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
@@ -136,7 +137,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 // nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.Submariner) error {
 	return finalizer.Remove(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.Submariner{}),
-		instance, SubmarinerFinalizer)
+		instance, constants.CleanupFinalizer)
 }
 
 func (r *Reconciler) ensurePodsDeleted(ctx context.Context, components []*component) (bool, error) {

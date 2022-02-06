@@ -27,10 +27,11 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/test"
 	operatorv1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/resource"
 	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	routeagent "github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -59,7 +60,7 @@ func testReconciliation() {
 	It("should add a finalizer to the Submariner resource", func() {
 		t.assertReconcileSuccess()
 		test.AwaitFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-			submarinerName, submarinerController.SubmarinerFinalizer)
+			submarinerName, constants.CleanupFinalizer)
 	})
 
 	When("the network details are not provided", func() {
@@ -177,7 +178,7 @@ func testReconciliation() {
 
 	When("the submariner network plugin syncer Deployment doesn't exist", func() {
 		BeforeEach(func() {
-			t.clusterNetwork.NetworkPlugin = constants.NetworkPluginOVNKubernetes
+			t.clusterNetwork.NetworkPlugin = routeagent.NetworkPluginOVNKubernetes
 		})
 
 		It("should create it", func() {
@@ -251,7 +252,7 @@ func testDeletion() {
 	t := newTestDriver()
 
 	BeforeEach(func() {
-		t.submariner.SetFinalizers([]string{submarinerController.SubmarinerFinalizer})
+		t.submariner.SetFinalizers([]string{constants.CleanupFinalizer})
 
 		now := metav1.Now()
 		t.submariner.SetDeletionTimestamp(&now)
@@ -259,7 +260,7 @@ func testDeletion() {
 
 	Context("", func() {
 		BeforeEach(func() {
-			t.clusterNetwork.NetworkPlugin = constants.NetworkPluginOVNKubernetes
+			t.clusterNetwork.NetworkPlugin = routeagent.NetworkPluginOVNKubernetes
 
 			t.initClientObjs = append(t.initClientObjs,
 				t.newDaemonSet(names.GatewayComponent),
@@ -303,7 +304,7 @@ func testDeletion() {
 
 			// Ensure the finalizer is still present.
 			test.AwaitFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, submarinerController.SubmarinerFinalizer)
+				submarinerName, constants.CleanupFinalizer)
 
 			// Finally, the controller should delete the uninstall DaemonSets/Deployments and remove the finalizer.
 			t.assertReconcileSuccess()
@@ -314,7 +315,7 @@ func testDeletion() {
 			t.assertNoDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, submarinerController.SubmarinerFinalizer)
+				submarinerName, constants.CleanupFinalizer)
 		})
 	})
 
@@ -342,7 +343,7 @@ func testDeletion() {
 			t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
 
 			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, submarinerController.SubmarinerFinalizer)
+				submarinerName, constants.CleanupFinalizer)
 		})
 	})
 
@@ -367,7 +368,7 @@ func testDeletion() {
 			t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
 
 			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, submarinerController.SubmarinerFinalizer)
+				submarinerName, constants.CleanupFinalizer)
 		})
 	})
 
@@ -388,7 +389,7 @@ func testDeletion() {
 			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
 
 			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, submarinerController.SubmarinerFinalizer)
+				submarinerName, constants.CleanupFinalizer)
 		})
 	})
 }
