@@ -38,7 +38,7 @@ var fileNameRegexp = regexp.MustCompile(`[<>:"/\|?*]`)
 // nolint:gocritic // hugeParam: listOptions - match K8s API.
 func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespace string, listOptions metav1.ListOptions) {
 	err := func() error {
-		list, err := info.DynClient.Resource(ofType).Namespace(namespace).List(context.TODO(), listOptions)
+		list, err := info.ClientProducer.ForDynamic().Resource(ofType).Namespace(namespace).List(context.TODO(), listOptions)
 		if err != nil {
 			return errors.WithMessagef(err, "error listing %q", ofType.Resource)
 		}
@@ -50,8 +50,8 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 			selectorStr = fmt.Sprintf("by field selector %q ", listOptions.FieldSelector)
 		}
 
-		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d %s %sin namespace %q", len(list.Items), ofType.Resource,
-			selectorStr, namespace))
+		info.Status.Success("Found %d %s %sin namespace %q", len(list.Items), ofType.Resource,
+			selectorStr, namespace)
 
 		for i := range list.Items {
 			item := &list.Items[i]
@@ -89,7 +89,7 @@ func ResourcesToYAMLFile(info *Info, ofType schema.GroupVersionResource, namespa
 		return nil
 	}()
 	if err != nil {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather %s: %s", ofType.Resource, err))
+		info.Status.Failure("Failed to gather %s: %s", ofType.Resource, err)
 	}
 }
 

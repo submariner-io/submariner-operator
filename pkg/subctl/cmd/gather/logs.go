@@ -20,7 +20,6 @@ package gather
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -37,12 +36,12 @@ func gatherPodLogs(podLabelSelector string, info *Info) {
 
 func gatherPodLogsByContainer(podLabelSelector, container string, info *Info) {
 	err := func() error {
-		pods, err := findPods(info.ClientSet, podLabelSelector)
+		pods, err := findPods(info.ClientProducer.ForKubernetes(), podLabelSelector)
 		if err != nil {
 			return err
 		}
 
-		info.Status.QueueSuccessMessage(fmt.Sprintf("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector))
+		info.Status.Success("Found %d pods matching label selector %q", len(pods.Items), podLabelSelector)
 
 		podLogOptions := corev1.PodLogOptions{
 			Container: container,
@@ -54,8 +53,8 @@ func gatherPodLogsByContainer(podLabelSelector, container string, info *Info) {
 		return nil
 	}()
 	if err != nil {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather logs for pods matching label selector %q: %s",
-			podLabelSelector, err))
+		info.Status.Failure("Failed to gather logs for pods matching label selector %q: %s",
+			podLabelSelector, err)
 	}
 }
 
@@ -68,12 +67,12 @@ func outputPodLogs(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info *In
 
 	err := outputPreviousPodLog(pod, podLogOptions, info, &podLogInfo)
 	if err != nil {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Error outputting previous log for pod %q: %v", pod.Name, err))
+		info.Status.Failure("Error outputting previous log for pod %q: %v", pod.Name, err)
 	}
 
 	err = outputCurrentPodLog(pod, podLogOptions, info, &podLogInfo)
 	if err != nil {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Error outputting current log for pod %q: %v", pod.Name, err))
+		info.Status.Failure("Error outputting current log for pod %q: %v", pod.Name, err)
 	}
 
 	return podLogInfo
@@ -131,14 +130,14 @@ func findPods(clientSet kubernetes.Interface, byLabelSelector string) (*corev1.P
 // nolint:gocritic // hugeParam: podLogOptions - purposely passed by value.
 func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info *Info, podLogInfo *LogInfo) error {
 	podLogOptions.Previous = true
-	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
+	logRequest := info.ClientProducer.ForKubernetes().CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
 	logStream, _ := logRequest.Stream(context.TODO())
 
 	// TODO: Check for error other than "no previous pods found"
 
 	// if no previous pods found, logstream == nil, ignore it
 	if logStream != nil {
-		info.Status.QueueWarningMessage(fmt.Sprintf("Found logs for previous instances of pod %s", pod.Name))
+		info.Status.Warning("Found logs for previous instances of pod %s", pod.Name)
 
 		fileName, err := writePodLogToFile(logStream, info, pod.Name, ".log.prev")
 		if err != nil {
@@ -161,7 +160,7 @@ func outputPreviousPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, i
 func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, info *Info, podLogInfo *LogInfo) error {
 	// Running with Previous = false on the same pod
 	podLogOptions.Previous = false
-	logRequest := info.ClientSet.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
+	logRequest := info.ClientProducer.ForKubernetes().CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOptions)
 
 	logStream, err := logRequest.Stream(context.TODO())
 	if err != nil {
@@ -178,13 +177,12 @@ func outputCurrentPodLog(pod *corev1.Pod, podLogOptions corev1.PodLogOptions, in
 
 func logPodInfo(info *Info, what, podLabelSelector string, process func(info *Info, pod *corev1.Pod)) {
 	err := func() error {
-		pods, err := findPods(info.ClientSet, podLabelSelector)
+		pods, err := findPods(info.ClientProducer.ForKubernetes(), podLabelSelector)
 		if err != nil {
 			return err
 		}
 
-		info.Status.QueueSuccessMessage(fmt.Sprintf("Gathering %s from %d pods matching label selector %q",
-			what, len(pods.Items), podLabelSelector))
+		info.Status.Success("Gathering %s from %d pods matching label selector %q", what, len(pods.Items), podLabelSelector)
 
 		for i := range pods.Items {
 			process(info, &pods.Items[i])
@@ -193,7 +191,7 @@ func logPodInfo(info *Info, what, podLabelSelector string, process func(info *In
 		return nil
 	}()
 	if err != nil {
-		info.Status.QueueFailureMessage(fmt.Sprintf("Failed to gather %s from pods matching label selector %q: %s",
-			what, podLabelSelector, err))
+		info.Status.Failure("Failed to gather %s from pods matching label selector %q: %s",
+			what, podLabelSelector, err)
 	}
 }

@@ -19,25 +19,23 @@ package gather
 
 import (
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/pkg/client"
+	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 type Info struct {
 	RestConfig           *rest.Config
-	Status               *cli.Status
-	ClientSet            kubernetes.Interface
-	DynClient            dynamic.Interface
+	Status               reporter.Interface
 	Submariner           *v1alpha1.Submariner
 	ServiceDiscovery     *v1alpha1.ServiceDiscovery
 	ClusterName          string
 	DirName              string
 	IncludeSensitiveData bool
 	Summary              *Summary
+	ClientProducer       client.Producer
 }
 
 type Summary struct {

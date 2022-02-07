@@ -50,6 +50,8 @@ type SubmarinerOptions struct {
 	CoreDNSCustomConfigMap        string
 	Repository                    string
 	ImageVersion                  string
+	ServiceCIDR                   string
+	ClusterCIDR                   string
 	CustomDomains                 []string
 }
 
@@ -95,8 +97,8 @@ func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info,
 		NatEnabled:               options.NATTraversal,
 		Debug:                    options.SubmarinerDebug,
 		ClusterID:                options.ClusterID,
-		ServiceCIDR:              netconfig.ServiceCIDR,
-		ClusterCIDR:              netconfig.ClusterCIDR,
+		ServiceCIDR:              options.ServiceCIDR,
+		ClusterCIDR:              options.ClusterCIDR,
 		Namespace:                constants.SubmarinerNamespace,
 		CableDriver:              options.CableDriver,
 		ServiceDiscoveryEnabled:  brokerInfo.IsServiceDiscoveryEnabled(),
@@ -108,8 +110,8 @@ func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info,
 			MaxPacketLossCount: options.HealthCheckMaxPacketLossCount,
 		},
 	}
-	if netconfig.GlobalnetCIDR != "" {
-		submarinerSpec.GlobalCIDR = netconfig.GlobalnetCIDR
+	if netconfig.GlobalCIDR != "" {
+		submarinerSpec.GlobalCIDR = netconfig.GlobalCIDR
 	}
 
 	if options.CoreDNSCustomConfigMap != "" {

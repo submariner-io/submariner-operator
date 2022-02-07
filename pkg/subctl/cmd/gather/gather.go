@@ -31,10 +31,9 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/brokercr"
-	subOperatorClientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -126,6 +125,14 @@ func gatherData(cluster *cmd.Cluster) bool {
 func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 	var err error
 	clusterName := cluster.Name
+	status := cli.NewReporter()
+
+	clientProducer, err := client.NewProducerFromRestConfig(cluster.Config)
+	if err != nil {
+		status.Failure("Error creating client producer")
+
+		return
+	}
 
 	fmt.Printf("Gathering information from cluster %q\n", clusterName)
 
@@ -135,35 +142,17 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 		DirName:              directory,
 		IncludeSensitiveData: includeSensitiveData,
 		Summary:              &Summary{},
+		ClientProducer:       clientProducer,
+		Submariner:           cluster.Submariner,
 	}
 
-	info.DynClient = cluster.DynClient
-	info.ClientSet = cluster.KubeClient
-
-	submarinerClient, err := subOperatorClientset.NewForConfig(cluster.Config)
-	if err != nil {
-		fmt.Printf("Error getting Submariner client: %s\n", err)
-		return
-	}
-
-	info.Submariner, err = submarinerClient.SubmarinerV1alpha1().Submariners(cmd.OperatorNamespace).
-		Get(context.TODO(), submarinercr.SubmarinerName, metav1.GetOptions{})
-	if err != nil {
-		info.Submariner = nil
-
-		if !apierrors.IsNotFound(err) {
-			fmt.Printf("Error getting Submariner resource: %s\n", err)
-			return
-		}
-	}
-
-	info.ServiceDiscovery, err = submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(cmd.OperatorNamespace).
+	info.ServiceDiscovery, err = clientProducer.ForOperator().SubmarinerV1alpha1().ServiceDiscoveries(cmd.OperatorNamespace).
 		Get(context.TODO(), names.ServiceDiscoveryCrName, metav1.GetOptions{})
 	if err != nil {
 		info.ServiceDiscovery = nil
 
 		if !apierrors.IsNotFound(err) {
-			fmt.Printf("Error getting ServiceDiscovery resource: %s\n", err)
+			status.Failure("Error getting ServiceDiscovery resource: %s", err)
 			return
 		}
 	}
@@ -172,11 +161,11 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 		if ok {
 			for dataType, ok := range gatherTypeFlags {
 				if ok {
-					info.Status = cli.NewStatus()
-					info.Status.Start(fmt.Sprintf("Gathering %s %s", module, dataType))
+					info.Status = cli.NewReporter()
+					info.Status.Start("Gathering %s %s", module, dataType)
 
 					if gatherFuncs[module](dataType, info) {
-						info.Status.EndWith(info.Status.ResultFromMessages())
+						info.Status.End()
 					}
 				}
 			}
@@ -189,7 +178,7 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 // nolint:gocritic // hugeParam: info - purposely passed by value.
 func gatherConnectivity(dataType string, info Info) bool {
 	if info.Submariner == nil {
-		info.Status.QueueWarningMessage("The Submariner connectivity components are not installed")
+		info.Status.Warning("The Submariner connectivity components are not installed")
 		return true
 	}
 
@@ -219,7 +208,7 @@ func gatherConnectivity(dataType string, info Info) bool {
 // nolint:gocritic // hugeParam: info - purposely passed by value.
 func gatherDiscovery(dataType string, info Info) bool {
 	if info.ServiceDiscovery == nil {
-		info.Status.QueueWarningMessage("The Submariner service discovery components are not installed")
+		info.Status.Warning("The Submariner service discovery components are not installed")
 		return true
 	}
 
@@ -246,33 +235,27 @@ func gatherBroker(dataType string, info Info) bool {
 	case Resources:
 		brokerRestConfig, brokerNamespace, err := restconfig.ForBroker(info.Submariner, info.ServiceDiscovery)
 		if err != nil {
-			info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker's rest config: %s", err))
+			info.Status.Failure("Error getting the broker's rest config: %s", err)
 			return true
 		}
 
 		if brokerRestConfig != nil {
 			info.RestConfig = brokerRestConfig
 
-			info.DynClient, info.ClientSet, err = restconfig.Clients(brokerRestConfig)
+			info.ClientProducer, err = client.NewProducerFromRestConfig(brokerRestConfig)
 			if err != nil {
-				info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the broker client: %s", err))
+				info.Status.Failure("Error creating broker client Producer: %s", err)
 				return true
 			}
 		} else {
-			submarinerClient, err := subOperatorClientset.NewForConfig(info.RestConfig)
-			if err != nil {
-				info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the Submariner client: %s", err))
-				return true
-			}
-
-			_, err = submarinerClient.SubmarinerV1alpha1().Brokers(cmd.OperatorNamespace).Get(
+			_, err = info.ClientProducer.ForOperator().SubmarinerV1alpha1().Brokers(cmd.OperatorNamespace).Get(
 				context.TODO(), brokercr.Name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return false
 			}
 
 			if err != nil {
-				info.Status.QueueFailureMessage(fmt.Sprintf("Error getting the Broker resource: %s", err))
+				info.Status.Failure("Error getting the Broker resource: %s", err)
 				return true
 			}
 

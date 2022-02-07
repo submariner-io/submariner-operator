@@ -64,7 +64,7 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	defer sPod.DeletePod()
+	defer sPod.Delete()
 
 	gatewayPodIP := sPod.Pod.Status.HostIP
 	podCommand = fmt.Sprintf("for i in $(seq 10); do timeout 2 nc -p 9898 %s 8080; done", gatewayPodIP)
@@ -75,14 +75,14 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	defer cPod.DeletePod()
+	defer cPod.Delete()
 
-	if err = cPod.AwaitPodCompletion(); err != nil {
+	if err = cPod.AwaitCompletion(); err != nil {
 		status.EndWithFailure("Error waiting for the client pod to finish its execution: %v", err)
 		return false
 	}
 
-	if err = sPod.AwaitPodCompletion(); err != nil {
+	if err = sPod.AwaitCompletion(); err != nil {
 		status.EndWithFailure("Error waiting for the sniffer pod to finish its execution: %v", err)
 		return false
 	}

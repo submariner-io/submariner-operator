@@ -15,7 +15,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package resource
+
+package pods
 
 import (
 	"bytes"
@@ -50,6 +51,7 @@ type ExecConfig struct {
 /* Following are sourced from:
    https://github.com/kubernetes/kubernetes/blob/master/test/e2e/framework/exec_util.go
 */
+
 type ExecOptions struct {
 	Command       []string
 	Namespace     string

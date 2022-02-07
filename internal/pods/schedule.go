@@ -15,7 +15,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package resource
+
+package pods
 
 import (
 	"context"
@@ -44,28 +45,28 @@ const (
 	PodNetworking  networkingType = false
 )
 
-type PodScheduling struct {
+type Scheduling struct {
 	ScheduleOn schedulingType
 	NodeName   string
 	Networking networkingType
 }
 
-type PodConfig struct {
+type Config struct {
 	Name       string
 	ClientSet  kubernetes.Interface
-	Scheduling PodScheduling
+	Scheduling Scheduling
 	Namespace  string
 	Command    string
 	Timeout    uint
 }
 
-type NetworkPod struct {
+type Scheduled struct {
 	Pod       *v1.Pod
-	Config    *PodConfig
+	Config    *Config
 	PodOutput string
 }
 
-func SchedulePodAwaitCompletion(config *PodConfig) (string, error) {
+func ScheduleAndAwaitCompletion(config *Config) (string, error) {
 	if config.Scheduling.ScheduleOn == InvalidScheduling {
 		config.Scheduling.ScheduleOn = GatewayNode
 	}
@@ -74,21 +75,21 @@ func SchedulePodAwaitCompletion(config *PodConfig) (string, error) {
 		config.Namespace = "default"
 	}
 
-	np := &NetworkPod{Config: config}
-	if err := np.schedulePod(); err != nil {
+	np := &Scheduled{Config: config}
+	if err := np.schedule(); err != nil {
 		return "", err
 	}
 
-	defer np.DeletePod()
+	defer np.Delete()
 
-	if err := np.AwaitPodCompletion(); err != nil {
+	if err := np.AwaitCompletion(); err != nil {
 		return "", err
 	}
 
 	return np.PodOutput, nil
 }
 
-func SchedulePod(config *PodConfig) (*NetworkPod, error) {
+func Schedule(config *Config) (*Scheduled, error) {
 	if config.Scheduling.ScheduleOn == InvalidScheduling {
 		config.Scheduling.ScheduleOn = GatewayNode
 	}
@@ -97,15 +98,15 @@ func SchedulePod(config *PodConfig) (*NetworkPod, error) {
 		config.Namespace = "default"
 	}
 
-	np := &NetworkPod{Config: config}
-	if err := np.schedulePod(); err != nil {
+	np := &Scheduled{Config: config}
+	if err := np.schedule(); err != nil {
 		return nil, err
 	}
 
 	return np, nil
 }
 
-func (np *NetworkPod) schedulePod() error {
+func (np *Scheduled) schedule() error {
 	if np.Config.Scheduling.ScheduleOn == CustomNode && np.Config.Scheduling.NodeName == "" {
 		return fmt.Errorf("CustomNode is specified for scheduling, but nodeName is missing")
 	}
@@ -158,7 +159,7 @@ func (np *NetworkPod) schedulePod() error {
 		return errors.Wrap(err, "error creating Pod")
 	}
 
-	err = np.awaitUntilPodScheduled()
+	err = np.awaitUntilScheduled()
 	if err != nil {
 		return err
 	}
@@ -166,13 +167,13 @@ func (np *NetworkPod) schedulePod() error {
 	return nil
 }
 
-func (np *NetworkPod) DeletePod() {
+func (np *Scheduled) Delete() {
 	pc := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 	_ = pc.Delete(context.TODO(), np.Pod.Name, metav1.DeleteOptions{})
 }
 
 // nolint:wrapcheck // No need to wrap errors here.
-func (np *NetworkPod) awaitUntilPodScheduled() error {
+func (np *Scheduled) awaitUntilScheduled() error {
 	pods := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 
 	pod, _, err := framework.AwaitResultOrError("await pod ready",
@@ -200,7 +201,7 @@ func (np *NetworkPod) awaitUntilPodScheduled() error {
 }
 
 // nolint:wrapcheck // No need to wrap errors here.
-func (np *NetworkPod) AwaitPodCompletion() error {
+func (np *Scheduled) AwaitCompletion() error {
 	pods := np.Config.ClientSet.CoreV1().Pods(np.Config.Namespace)
 
 	_, errorMsg, err := framework.AwaitResultOrError(
@@ -228,4 +229,41 @@ func (np *NetworkPod) AwaitPodCompletion() error {
 	}
 
 	return nil
+}
+
+func nodeAffinity(scheduling schedulingType) *v1.Affinity {
+	var nodeSelTerms []v1.NodeSelectorTerm
+
+	switch scheduling {
+	case GatewayNode:
+		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,
+			v1.NodeSelectorOpIn, []string{"true"})
+
+	case NonGatewayNode:
+		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,
+			v1.NodeSelectorOpDoesNotExist, nil)
+		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, framework.GatewayLabel,
+			v1.NodeSelectorOpNotIn, []string{"true"})
+	case InvalidScheduling:
+	case CustomNode:
+	}
+
+	return &v1.Affinity{
+		NodeAffinity: &v1.NodeAffinity{
+			RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
+				NodeSelectorTerms: nodeSelTerms,
+			},
+		},
+	}
+}
+
+func addNodeSelectorTerm(nodeSelTerms []v1.NodeSelectorTerm, label string,
+	op v1.NodeSelectorOperator, values []string) []v1.NodeSelectorTerm {
+	return append(nodeSelTerms, v1.NodeSelectorTerm{MatchExpressions: []v1.NodeSelectorRequirement{
+		{
+			Key:      label,
+			Operator: op,
+			Values:   values,
+		},
+	}})
 }

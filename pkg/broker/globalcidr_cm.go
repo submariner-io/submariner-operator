@@ -95,7 +95,7 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 	return cm, nil
 }
 
-func UpdateGlobalnetConfigMap(k8sClientset *kubernetes.Clientset, namespace string,
+func UpdateGlobalnetConfigMap(k8sClientset kubernetes.Interface, namespace string,
 	configMap *v1.ConfigMap, newCluster ClusterInfo) error {
 	var clusterInfo []ClusterInfo
 
