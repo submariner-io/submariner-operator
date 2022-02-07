@@ -494,7 +494,7 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset kubernetes.Interf
 				if apierrors.IsConflict(err) {
 					status.Warning("Conflict occurred updating the Globalnet ConfigMap - retrying")
 				} else {
-					status.Failure("Error updating the Globalnet ConfigMap: %v", err)
+					return status.Error(err, "error updating the Globalnet ConfigMap")
 				}
 
 				return err // nolint:wrapcheck // No need to wrap here
