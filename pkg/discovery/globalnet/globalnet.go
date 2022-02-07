@@ -283,6 +283,7 @@ func isCIDRPreConfigured(clusterID string, globalNetworks map[string]*GlobalNetw
 
 func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config, status reporter.Interface) (string, error) {
 	status.Start("Validating Globalnet configuration")
+	defer status.End()
 
 	globalnetClusterSize := netconfig.ClusterSize
 	globalnetCIDR := netconfig.GlobalCIDR
@@ -298,7 +299,6 @@ func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config, statu
 
 	if globalnetCIDR != "" && globalnetClusterSize != 0 {
 		status.Failure("Only one of cluster size and global CIDR can be specified")
-		status.End()
 
 		return "", errors.New("only one of cluster size and global CIDR can be specified")
 	}
@@ -321,8 +321,6 @@ func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config, statu
 			globalnetInfo.ClusterSize = 0
 		}
 	}
-
-	status.End()
 
 	return globalnetCIDR, nil
 }
@@ -376,6 +374,7 @@ func GetGlobalNetworks(kubeClient kubernetes.Interface, brokerNamespace string) 
 
 func AssignGlobalnetIPs(globalnetInfo *Info, netconfig Config, status reporter.Interface) (string, error) {
 	status.Start("Assigning Globalnet IPs")
+	defer status.End()
 
 	globalnetCIDR := netconfig.GlobalCIDR
 	clusterID := netconfig.ClusterID
@@ -413,8 +412,6 @@ func AssignGlobalnetIPs(globalnetInfo *Info, netconfig Config, status reporter.I
 			status.Success("Using specified global CIDR %s", globalnetCIDR)
 		}
 	}
-
-	status.End()
 
 	return globalnetCIDR, nil
 }
@@ -467,13 +464,12 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset kubernetes.Interf
 	netconfig *Config, status reporter.Interface) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		status.Start("Retrieving Globalnet information from the Broker")
+		defer status.End()
 
 		globalnetInfo, globalnetConfigMap, err := GetGlobalNetworks(brokerAdminClientset, brokerNamespace)
 		if err != nil {
 			return status.Error(err, "unable to retrieve Globalnet information")
 		}
-
-		status.End()
 
 		netconfig.GlobalCIDR, err = ValidateGlobalnetConfiguration(globalnetInfo, *netconfig, status)
 		if err != nil {
@@ -498,10 +494,8 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset kubernetes.Interf
 				if apierrors.IsConflict(err) {
 					status.Warning("Conflict occurred updating the Globalnet ConfigMap - retrying")
 				} else {
-					status.Failure("Error updating the Globalnet ConfigMap: %v", err)
+					return status.Error(err, "error updating the Globalnet ConfigMap")
 				}
-
-				status.End()
 
 				return err // nolint:wrapcheck // No need to wrap here
 			}
