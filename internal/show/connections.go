@@ -15,15 +15,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package show
 
 import (
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/table"
+	"github.com/submariner-io/submariner-operator/internal/constants"
+	"github.com/submariner-io/submariner-operator/internal/show/table"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
+	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
@@ -38,30 +39,27 @@ type connectionStatus struct {
 	status      submv1.ConnectionStatus
 }
 
-func init() {
-	showCmd.AddCommand(&cobra.Command{
-		Use:     "connections",
-		Short:   "Show cluster connectivity information",
-		Long:    `This command shows information about submariner endpoint connections with other clusters.`,
-		PreRunE: restConfigProducer.CheckVersionMismatch,
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, showConnections)
-		},
-	})
+func Connections(newCluster *cluster.Info, status reporter.Interface) bool {
+	if newCluster.Submariner == nil {
+		status.Warning(constants.SubmMissingMessage)
+
+		return true
+	}
+
+	return getConnectionsStatus(newCluster, status)
 }
 
-func getConnectionsStatus(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
+func getConnectionsStatus(newCluster *cluster.Info, status reporter.Interface) bool {
 	status.Start("Showing Connections")
 
-	gateways, err := cluster.GetGateways()
+	gateways, err := newCluster.GetGateways()
 	if err != nil {
-		status.EndWithFailure("Error retrieving gateways: %v", err)
+		status.Failure("Error retrieving gateways: %v", err)
 		return false
 	}
 
 	if len(gateways) == 0 {
-		status.EndWithFailure("There are no gateways detected")
+		status.Failure("There are no gateways detected")
 		return false
 	}
 
@@ -89,11 +87,11 @@ func getConnectionsStatus(cluster *cmd.Cluster) bool {
 	}
 
 	if len(connStatus) == 0 {
-		status.EndWithFailure("No connections found")
+		status.Failure("No connections found")
 		return false
 	}
 
-	status.EndWith(cli.Success)
+	status.End()
 	connectionPrinter.Print(connStatus)
 
 	return true
@@ -124,19 +122,6 @@ func remoteIPAndNATForConnection(connection *submv1.Connection) (string, string)
 	}
 
 	return connection.Endpoint.PrivateIP, "no"
-}
-
-func showConnections(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-
-	if cluster.Submariner == nil {
-		status.Start(cmd.SubmMissingMessage)
-		status.EndWith(cli.Warning)
-
-		return true
-	}
-
-	return getConnectionsStatus(cluster)
 }
 
 var connectionPrinter = table.Printer{
