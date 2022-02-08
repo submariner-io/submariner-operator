@@ -33,7 +33,7 @@ PATTERN := ^([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$
 IS_SEMANTIC_VERSION = $(shell [[ $(or $(BUNDLE_VERSION),$(VERSION),'undefined') =~ $(PATTERN) ]] && echo true || echo false)
 
 IMAGES = submariner-operator submariner-operator-index
-PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-route-agent lighthouse-agent lighthouse-coredns
+PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-globalnet submariner-route-agent lighthouse-agent lighthouse-coredns
 undefine SKIP
 undefine FOCUS
 undefine E2E_TESTDIR
