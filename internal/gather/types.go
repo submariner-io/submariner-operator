@@ -23,11 +23,9 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/rest"
 )
 
 type Info struct {
-	RestConfig           *rest.Config
 	Status               reporter.Interface
 	Submariner           *v1alpha1.Submariner
 	ServiceDiscovery     *v1alpha1.ServiceDiscovery

@@ -136,7 +136,7 @@ func getSpecificNode(info *Info, selector string) (map[string]types.UID, error) 
 }
 
 func getGWNodes(info *Info) (map[string]types.UID, error) {
-	selector := labels.SelectorFromSet(labels.Set(map[string]string{"submariner.io/gateway": "true"}))
+	selector := labels.SelectorFromSet(map[string]string{"submariner.io/gateway": "true"})
 
 	nodes, err := getSpecificNode(info, selector.String())
 	if err != nil {
@@ -221,7 +221,7 @@ func createFile(dirname string) io.Writer {
 
 	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0o666)
 	if err != nil {
-		fmt.Printf("Error creating file %s\n", fileName)
+		fmt.Printf( "Error creating file %s\n", fileName)
 	}
 
 	return f

@@ -188,8 +188,7 @@ func logLibreswanCmds(info *Info, pod *v1.Pod) {
 func execCmdInBash(info *Info, pod *v1.Pod, cmd string) (string, string, error) {
 	execOptions := pods.ExecOptionsFromPod(pod)
 	execConfig := pods.ExecConfig{
-		RestConfig: info.RestConfig,
-		ClientSet:  info.ClientProducer.ForKubernetes(),
+		ClientSet: info.ClientProducer.ForKubernetes(),
 	}
 
 	execOptions.Command = []string{"/bin/bash", "-c", cmd}
