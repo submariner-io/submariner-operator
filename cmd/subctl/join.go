@@ -20,6 +20,7 @@ package subctl
 
 import (
 	"fmt"
+	"net"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -31,6 +32,7 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/nodes"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/client"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/join"
 	"github.com/submariner-io/submariner-operator/pkg/reporter"
@@ -67,6 +69,7 @@ var joinCmd = &cobra.Command{
 		networkDetails := getNetworkDetails(clientProducer, status)
 		determinePodCIDR(networkDetails, status)
 		determineServiceCIDR(networkDetails, status)
+		determineExternalCIDR(networkDetails, status)
 
 		if brokerInfo.IsConnectivityEnabled() && labelGateway {
 			possiblyLabelGateway(clientProducer.ForKubernetes(), status)
@@ -91,6 +94,7 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&joinFlags.ClusterID, "clusterid", "", "cluster ID used to identify the tunnels")
 	cmd.Flags().StringVar(&joinFlags.ServiceCIDR, "servicecidr", "", "service CIDR")
 	cmd.Flags().StringVar(&joinFlags.ClusterCIDR, "clustercidr", "", "cluster CIDR")
+	cmd.Flags().StringVar(&joinFlags.ExternalCIDR, "externalcidr", "", "external CIDR")
 	cmd.Flags().StringVar(&joinFlags.Repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&joinFlags.ImageVersion, "version", "", "image version")
 	cmd.Flags().StringVar(&ignoredColorCodes, "colorcodes", "", "color codes")
@@ -323,4 +327,26 @@ func determineServiceCIDR(nd *network.ClusterNetwork, status reporter.Interface)
 		joinFlags.ServiceCIDR, err = askForCIDR("Service")
 		exit.OnError(status.Error(err, "Error collecting CIDR"))
 	}
+}
+
+// determineExternalCIDR validates and appends the external cidr to cluster cidr.
+func determineExternalCIDR(nd *network.ClusterNetwork, status reporter.Interface) {
+	if joinFlags.ExternalCIDR == "" {
+		return
+	}
+
+	err := globalnet.IsValidCIDR(joinFlags.ExternalCIDR)
+	if err != nil {
+		exit.OnError(status.Error(err, "Error collecting CIDR"))
+	}
+
+	_, externalCIDR, err := net.ParseCIDR(joinFlags.ExternalCIDR)
+	if err != nil {
+		exit.OnError(status.Error(err, "Error collecting CIDR"))
+	}
+
+	joinFlags.ExternalCIDR = externalCIDR.String()
+
+	nd.PodCIDRs = append(nd.PodCIDRs, joinFlags.ExternalCIDR)
+	joinFlags.ClusterCIDR = strings.Join(nd.PodCIDRs, ",")
 }

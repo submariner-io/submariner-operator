@@ -37,6 +37,7 @@ type Options struct {
 	ClusterID                     string
 	ServiceCIDR                   string
 	ClusterCIDR                   string
+	ExternalCIDR                  string
 	GlobalnetCIDR                 string
 	Repository                    string
 	ImageVersion                  string
