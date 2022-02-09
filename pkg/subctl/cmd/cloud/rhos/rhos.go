@@ -27,12 +27,16 @@ import (
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/cloud-prepare/pkg/k8s"
+	"github.com/submariner-io/cloud-prepare/pkg/ocp"
 	"github.com/submariner-io/cloud-prepare/pkg/rhos"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -64,8 +68,9 @@ func AddRHOSFlags(command *cobra.Command) {
 
 // RunOnRHOS runs the given function on RHOS, supplying it with a cloud instance connected to RHOS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to RHOS.
-func RunOnRHOS(restConfigProducer restconfig.Producer, function func(cloud api.Cloud, gwDeployer api.GatewayDeployer,
-	reporter api.Reporter) error) error {
+func RunOnRHOS(restConfigProducer restconfig.Producer, gwInstanceType string, dedicatedGWNodes bool,
+	function func(cloud api.Cloud, gwDeployer api.GatewayDeployer,
+		reporter api.Reporter) error) error {
 	if ocpMetadataFile != "" {
 		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
 		region = os.Getenv("OS_REGION_NAME")
@@ -101,6 +106,12 @@ func RunOnRHOS(restConfigProducer restconfig.Producer, function func(cloud api.C
 
 	k8sClientSet := k8s.NewInterface(clientSet)
 
+	restMapper, err := util.BuildRestMapper(k8sConfig)
+	exit.OnErrorWithMessage(err, "Failed to create restmapper")
+
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	exit.OnErrorWithMessage(err, "Failed to create dynamic client")
+
 	cloudInfo := rhos.CloudInfo{
 		Client:    providerClient,
 		InfraID:   infraID,
@@ -108,7 +119,9 @@ func RunOnRHOS(restConfigProducer restconfig.Producer, function func(cloud api.C
 		K8sClient: k8sClientSet,
 	}
 	rhosCloud := rhos.NewCloud(cloudInfo)
-	gwDeployer := rhos.NewOcpGatewayDeployer(cloudInfo, projectID)
+	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
+	gwDeployer := rhos.NewOcpGatewayDeployer(cloudInfo, msDeployer, projectID, gwInstanceType,
+		"", cloudEntry, dedicatedGWNodes)
 
 	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
 

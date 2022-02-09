@@ -31,10 +31,11 @@ var (
 )
 
 var (
-	awsGWInstanceType string
-	gcpGWInstanceType string
-	gateways          int
-	dedicatedGateway  bool
+	awsGWInstanceType  string
+	gcpGWInstanceType  string
+	rhosGWInstanceType string
+	gateways           int
+	dedicatedGateway   bool
 )
 
 var parentRestConfigProducer *restconfig.Producer
