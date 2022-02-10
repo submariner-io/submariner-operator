@@ -137,11 +137,10 @@ func addJoinFlags(cmd *cobra.Command) {
 
 func possiblyLabelGateway(kubeClient kubernetes.Interface, status reporter.Interface) {
 	status.Start("Retrieving the gateway nodes")
+	defer status.End()
 
 	gatewayNodes, err := nodes.ListGateways(kubeClient)
 	exit.OnError(status.Error(err, "Error retrieving the gateway nodes"))
-
-	status.End()
 
 	if len(gatewayNodes) > 0 {
 		fmt.Printf("   There are %d node(s) labeled as gateways:\n", len(gatewayNodes))
@@ -178,8 +177,6 @@ func possiblyLabelGateway(kubeClient kubernetes.Interface, status reporter.Inter
 
 	err = nodes.LabelAsGateway(kubeClient, nodeToLabel)
 	exit.OnError(status.Error(err, "Error labeling node %q as a gateway", nodeToLabel))
-
-	status.End()
 }
 
 func askForGatewayNode(workerNodeNames []string) (string, error) {

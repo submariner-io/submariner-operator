@@ -113,3 +113,14 @@ jobs:
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
       - name: Run yamllint
         run: make yamllint
+
+  yamls:
+    name: Embedded YAMLs up-to-date
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+      - name: Run make pkg/embeddedyamls/yamls.go to update embedded YAMLs
+        run: make pkg/embeddedyamls/yamls.go
+      - name: Validate that nothing has changed
+        run: git add -A && git diff --staged --exit-code -- pkg/embeddedyamls

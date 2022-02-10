@@ -38,12 +38,12 @@ require (
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
-	google.golang.org/api v0.66.0
+	google.golang.org/api v0.68.0
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.1
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/klog/v2 v2.8.0 // indirect
+	k8s.io/klog/v2 v2.8.0
 	sigs.k8s.io/controller-runtime v0.8.3
 	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/kustomize/cmd/config v0.9.11 // indirect

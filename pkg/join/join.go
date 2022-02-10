@@ -19,10 +19,11 @@ limitations under the License.
 package join
 
 import (
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
@@ -50,6 +51,7 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 	}
 
 	status.Start("Gathering relevant information from Broker")
+	defer status.End()
 
 	brokerAdminConfig, err := brokerInfo.GetBrokerAdministratorConfig()
 	if err != nil {
@@ -63,23 +65,17 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 
 	brokerNamespace := string(brokerInfo.ClientToken.Data["namespace"])
 	netconfig := globalnet.Config{
-		ClusterID:            options.ClusterID,
-		GlobalnetCIDR:        options.GlobalnetCIDR,
-		ServiceCIDR:          options.ServiceCIDR,
-		ClusterCIDR:          options.ClusterCIDR,
-		GlobalnetClusterSize: options.GlobalnetClusterSize,
+		ClusterID:   options.ClusterID,
+		GlobalCIDR:  options.GlobalnetCIDR,
+		ClusterSize: options.GlobalnetClusterSize,
 	}
 
 	if options.GlobalnetEnabled {
-		status.Start("Discovering multi cluster details")
-
-		err = globalnet.AllocateAndUpdateGlobalCIDRConfigMap(options.ClusterID, brokerAdminClientset, brokerNamespace, &netconfig)
+		err = globalnet.AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace, &netconfig, status)
 		if err != nil {
-			return status.Error(err, "Error Discovering multi cluster details")
+			return errors.Wrap(err, "unable to determine the global CIDR")
 		}
 	}
-
-	status.End()
 
 	status.Start("Deploying the Submariner operator")
 
@@ -88,16 +84,12 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 		return status.Error(err, "Error deploying the operator")
 	}
 
-	status.End()
-
 	status.Start("Creating SA for cluster")
 
 	brokerInfo.ClientToken, err = broker.CreateSAForCluster(brokerAdminClientset, options.ClusterID, brokerNamespace)
 	if err != nil {
 		return status.Error(err, "Error creating SA for cluster")
 	}
-
-	status.End()
 
 	status.Start("Connecting to Broker")
 
@@ -106,8 +98,6 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 	if err != nil {
 		return status.Error(err, "Error creating broker secret for cluster")
 	}
-
-	status.End()
 
 	imageOverrides, err := image.GetOverrides(options.ImageOverrideArr)
 	if err != nil {
@@ -124,7 +114,6 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 		}
 
 		status.Success("Submariner is up and running")
-		status.End()
 	} else if brokerInfo.IsServiceDiscoveryEnabled() {
 		status.Start("Deploying service discovery only")
 
@@ -135,7 +124,6 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 		}
 
 		status.Success("Service discovery is up and running")
-		status.End()
 	}
 
 	return nil
@@ -160,6 +148,8 @@ func submarinerOptionsFrom(joinOptions *Options) *deploy.SubmarinerOptions {
 		Repository:                    joinOptions.Repository,
 		ImageVersion:                  joinOptions.ImageVersion,
 		CustomDomains:                 joinOptions.CustomDomains,
+		ServiceCIDR:                   joinOptions.ServiceCIDR,
+		ClusterCIDR:                   joinOptions.ClusterCIDR,
 	}
 }
 
@@ -186,7 +176,7 @@ func checkRequirements(kubeClient kubernetes.Interface, ignoreRequirements bool,
 		if !ignoreRequirements {
 			status.Failure(msg)
 
-			return errors.New("version requirements not met")
+			return goerrors.New("version requirements not met")
 		}
 
 		status.Warning(msg)

@@ -105,7 +105,7 @@ func getVersions(info *Info) version {
 		Subctl: subctlversion.Version,
 	}
 
-	k8sServerVersion, err := info.ClientSet.Discovery().ServerVersion()
+	k8sServerVersion, err := info.ClientProducer.ForKubernetes().Discovery().ServerVersion()
 	if err != nil {
 		fmt.Println("error in getting k8s server version", err)
 		Versions.K8sServer = err.Error()
@@ -208,7 +208,7 @@ func getFormattedIP(ipAddrList, ipaddr string) string {
 
 // nolint:gocritic // hugeParam: listOptions - match K8s API.
 func listNodes(info *Info, listOptions metav1.ListOptions) (*v1.NodeList, error) {
-	nodes, err := info.ClientSet.CoreV1().Nodes().List(context.TODO(), listOptions)
+	nodes, err := info.ClientProducer.ForKubernetes().CoreV1().Nodes().List(context.TODO(), listOptions)
 	if err != nil {
 		return nil, errors.Wrap(err, "error listing Nodes")
 	}
