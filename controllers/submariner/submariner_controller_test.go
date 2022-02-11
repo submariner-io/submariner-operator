@@ -25,10 +25,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/submariner-io/admiral/pkg/test"
 	operatorv1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
-	"github.com/submariner-io/submariner-operator/controllers/resource"
+	"github.com/submariner-io/submariner-operator/controllers/test"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	routeagent "github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
@@ -58,14 +57,13 @@ func testReconciliation() {
 	t := newTestDriver()
 
 	It("should add a finalizer to the Submariner resource", func() {
-		t.assertReconcileSuccess()
-		test.AwaitFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-			submarinerName, constants.CleanupFinalizer)
+		t.AssertReconcileSuccess()
+		t.awaitFinalizer()
 	})
 
 	When("the network details are not provided", func() {
 		It("should use the detected network", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
 			updated := t.getSubmariner()
 			Expect(updated.Status.ServiceCIDR).To(Equal(testDetectedServiceCIDR))
@@ -75,15 +73,15 @@ func testReconciliation() {
 
 	When("the network details are provided", func() {
 		It("should use the provided ones instead of the detected ones", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
 			initial := t.getSubmariner()
 			initial.Spec.ServiceCIDR = testConfiguredServiceCIDR
 			initial.Spec.ClusterCIDR = testConfiguredClusterCIDR
 
-			Expect(t.fakeClient.Update(context.TODO(), initial)).To(Succeed())
+			Expect(t.Client.Update(context.TODO(), initial)).To(Succeed())
 
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
 			updated := t.getSubmariner()
 			Expect(updated.Status.ServiceCIDR).To(Equal(testConfiguredServiceCIDR))
@@ -93,58 +91,58 @@ func testReconciliation() {
 
 	When("the submariner gateway DaemonSet doesn't exist", func() {
 		It("should create it", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 			t.assertGatewayDaemonSet()
 		})
 	})
 
 	When("the submariner gateway DaemonSet already exists", func() {
 		BeforeEach(func() {
-			t.initClientObjs = append(t.initClientObjs, t.newDaemonSet(names.GatewayComponent))
+			t.InitClientObjs = append(t.InitClientObjs, t.NewDaemonSet(names.GatewayComponent))
 		})
 
 		It("should update it", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
 			initial := t.getSubmariner()
 			initial.Spec.ServiceCIDR = "101.96.1.0/16"
-			Expect(t.fakeClient.Update(context.TODO(), initial)).To(Succeed())
+			Expect(t.Client.Update(context.TODO(), initial)).To(Succeed())
 
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
-			updatedDaemonSet := t.assertDaemonSet(names.GatewayComponent)
-			Expect(envMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", initial.Spec.ServiceCIDR))
+			updatedDaemonSet := t.AssertDaemonSet(names.GatewayComponent)
+			Expect(test.EnvMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", initial.Spec.ServiceCIDR))
 		})
 	})
 
 	When("the submariner route-agent DaemonSet doesn't exist", func() {
 		It("should create it", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 			t.assertRouteAgentDaemonSet()
 		})
 	})
 
 	When("the submariner route-agent DaemonSet already exists", func() {
 		BeforeEach(func() {
-			t.initClientObjs = append(t.initClientObjs, t.newDaemonSet(names.RouteAgentComponent))
+			t.InitClientObjs = append(t.InitClientObjs, t.NewDaemonSet(names.RouteAgentComponent))
 		})
 
 		It("should update it", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
 			initial := t.getSubmariner()
 			initial.Spec.ClusterCIDR = "11.245.1.0/16"
-			Expect(t.fakeClient.Update(context.TODO(), initial)).To(Succeed())
+			Expect(t.Client.Update(context.TODO(), initial)).To(Succeed())
 
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
-			updatedDaemonSet := t.assertDaemonSet(names.RouteAgentComponent)
-			Expect(envMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", initial.Spec.ClusterCIDR))
+			updatedDaemonSet := t.AssertDaemonSet(names.RouteAgentComponent)
+			Expect(test.EnvMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", initial.Spec.ClusterCIDR))
 		})
 
 		When("a selected pod has a nil Started field", func() {
 			BeforeEach(func() {
-				t.initClientObjs = append(t.initClientObjs, &corev1.Pod{
+				t.InitClientObjs = append(t.InitClientObjs, &corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: t.submariner.Namespace,
 						Name:      names.RouteAgentComponent + "-pod",
@@ -164,14 +162,14 @@ func testReconciliation() {
 			})
 
 			It("should not crash", func() {
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 			})
 		})
 	})
 
 	When("the submariner globalnet DaemonSet doesn't exist", func() {
 		It("should create it", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 			t.assertGlobalnetDaemonSet()
 		})
 	})
@@ -182,20 +180,20 @@ func testReconciliation() {
 		})
 
 		It("should create it", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 			t.assertNetworkPluginSyncerDeployment()
 		})
 	})
 
 	When("the Submariner resource doesn't exist", func() {
 		BeforeEach(func() {
-			t.initClientObjs = nil
+			t.InitClientObjs = nil
 		})
 
 		It("should return success without creating any resources", func() {
-			t.assertReconcileSuccess()
-			t.assertNoDaemonSet(names.GatewayComponent)
-			t.assertNoDaemonSet(names.RouteAgentComponent)
+			t.AssertReconcileSuccess()
+			t.AssertNoDaemonSet(names.GatewayComponent)
+			t.AssertNoDaemonSet(names.RouteAgentComponent)
 		})
 	})
 
@@ -206,7 +204,7 @@ func testReconciliation() {
 		})
 
 		It("should update the resource with defaults", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
 			updated := t.getSubmariner()
 			Expect(updated.Spec.Repository).To(Equal(operatorv1.DefaultRepo))
@@ -216,33 +214,33 @@ func testReconciliation() {
 
 	When("DaemonSet creation fails", func() {
 		BeforeEach(func() {
-			t.fakeClient = &failingClient{Client: t.newClient(), onCreate: reflect.TypeOf(&appsv1.DaemonSet{})}
+			t.Client = &test.FailingClient{Client: t.NewClient(), OnCreate: reflect.TypeOf(&appsv1.DaemonSet{})}
 		})
 
 		It("should return an error", func() {
-			_, err := t.doReconcile()
+			_, err := t.DoReconcile()
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
 	When("DaemonSet retrieval fails", func() {
 		BeforeEach(func() {
-			t.fakeClient = &failingClient{Client: t.newClient(), onGet: reflect.TypeOf(&appsv1.DaemonSet{})}
+			t.Client = &test.FailingClient{Client: t.NewClient(), OnGet: reflect.TypeOf(&appsv1.DaemonSet{})}
 		})
 
 		It("should return an error", func() {
-			_, err := t.doReconcile()
+			_, err := t.DoReconcile()
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
 	When("Submariner resource retrieval fails", func() {
 		BeforeEach(func() {
-			t.fakeClient = &failingClient{Client: t.newClient(), onGet: reflect.TypeOf(&operatorv1.Submariner{})}
+			t.Client = &test.FailingClient{Client: t.NewClient(), OnGet: reflect.TypeOf(&operatorv1.Submariner{})}
 		})
 
 		It("should return an error", func() {
-			_, err := t.doReconcile()
+			_, err := t.DoReconcile()
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -262,60 +260,58 @@ func testDeletion() {
 		BeforeEach(func() {
 			t.clusterNetwork.NetworkPlugin = routeagent.NetworkPluginOVNKubernetes
 
-			t.initClientObjs = append(t.initClientObjs,
-				t.newDaemonSet(names.GatewayComponent),
-				t.newPodWithLabel("app", names.GatewayComponent),
-				t.newDaemonSet(names.RouteAgentComponent),
-				t.newDaemonSet(names.GlobalnetComponent),
-				t.newDeployment(names.NetworkPluginSyncerComponent))
+			t.InitClientObjs = append(t.InitClientObjs,
+				t.NewDaemonSet(names.GatewayComponent),
+				t.NewPodWithLabel("app", names.GatewayComponent),
+				t.NewDaemonSet(names.RouteAgentComponent),
+				t.NewDaemonSet(names.GlobalnetComponent),
+				t.NewDeployment(names.NetworkPluginSyncerComponent))
 		})
 
 		It("should run DaemonSets/Deployments to uninstall components", func() {
 			// The first reconcile invocation should delete the regular DaemonSets/Deployments.
-			t.assertReconcileRequeue()
+			t.AssertReconcileRequeue()
 
-			t.assertNoDaemonSet(names.GatewayComponent)
-			t.assertNoDaemonSet(names.RouteAgentComponent)
-			t.assertNoDaemonSet(names.GlobalnetComponent)
-			t.assertNoDeployment(names.NetworkPluginSyncerComponent)
+			t.AssertNoDaemonSet(names.GatewayComponent)
+			t.AssertNoDaemonSet(names.RouteAgentComponent)
+			t.AssertNoDaemonSet(names.GlobalnetComponent)
+			t.AssertNoDeployment(names.NetworkPluginSyncerComponent)
 
 			// Simulate the DaemonSet controller cleaning up its pods.
-			t.deletePods("app", names.GatewayComponent)
+			t.DeletePods("app", names.GatewayComponent)
 
 			// Next, the controller should create the corresponding uninstall DaemonSets/Deployments.
-			t.assertReconcileRequeue()
+			t.AssertReconcileRequeue()
 
 			// For the gateway DaemonSet, we'll only update it to nodes available but not yet ready at this point.
 			gatewayDS := t.assertUninstallGatewayDaemonSet()
-			t.updateDaemonSetToScheduled(gatewayDS)
+			t.UpdateDaemonSetToScheduled(gatewayDS)
 
 			// For the globalnet DaemonSet, we'll update it to observed but no nodes available - this will cause it to be deleted.
 			globalnetDS := t.assertUninstallGlobalnetDaemonSet()
-			t.updateDaemonSetToObserved(globalnetDS)
+			t.UpdateDaemonSetToObserved(globalnetDS)
 
-			t.updateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
-			t.updateDeploymentToReady(t.assertUninstallNetworkPluginSyncerDeployment())
+			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
+			t.UpdateDeploymentToReady(t.assertUninstallNetworkPluginSyncerDeployment())
 
 			// Next, the controller should again requeue b/c the gateway DaemonSet isn't ready yet.
-			t.assertReconcileRequeue()
+			t.AssertReconcileRequeue()
 
 			// Now update the gateway DaemonSet to ready.
-			t.updateDaemonSetToReady(gatewayDS)
+			t.UpdateDaemonSetToReady(gatewayDS)
 
 			// Ensure the finalizer is still present.
-			test.AwaitFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, constants.CleanupFinalizer)
+			t.awaitFinalizer()
 
 			// Finally, the controller should delete the uninstall DaemonSets/Deployments and remove the finalizer.
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
-			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
-			t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
-			t.assertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
-			t.assertNoDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
+			t.AssertNoDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
 
-			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, constants.CleanupFinalizer)
+			t.awaitNoFinalizer()
 		})
 	})
 
@@ -323,27 +319,26 @@ func testDeletion() {
 		BeforeEach(func() {
 			t.submariner.Spec.GlobalCIDR = ""
 
-			t.initClientObjs = append(t.initClientObjs,
-				t.newDaemonSet(names.GatewayComponent),
-				t.newDaemonSet(names.RouteAgentComponent))
+			t.InitClientObjs = append(t.InitClientObjs,
+				t.NewDaemonSet(names.GatewayComponent),
+				t.NewDaemonSet(names.RouteAgentComponent))
 		})
 
 		It("should only create uninstall DaemonSets/Deployments for installed components", func() {
-			t.assertReconcileRequeue()
+			t.AssertReconcileRequeue()
 
-			t.updateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
-			t.updateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
+			t.UpdateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
+			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
 
-			t.assertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
-			t.assertNoDaemonSet(names.AppendUninstall(names.NetworkPluginSyncerComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.NetworkPluginSyncerComponent))
 
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
-			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
-			t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
 
-			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, constants.CleanupFinalizer)
+			t.awaitNoFinalizer()
 		})
 	})
 
@@ -353,22 +348,21 @@ func testDeletion() {
 		})
 
 		It("should delete it", func() {
-			t.assertReconcileRequeue()
+			t.AssertReconcileRequeue()
 
-			t.updateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
-			t.updateDaemonSetToScheduled(t.assertUninstallRouteAgentDaemonSet())
+			t.UpdateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
+			t.UpdateDaemonSetToScheduled(t.assertUninstallRouteAgentDaemonSet())
 
 			ts := metav1.NewTime(time.Now().Add(-(uninstall.ComponentReadyTimeout + 10)))
 			t.submariner.SetDeletionTimestamp(&ts)
-			Expect(t.fakeClient.Update(context.TODO(), t.submariner)).To(Succeed())
+			Expect(t.Client.Update(context.TODO(), t.submariner)).To(Succeed())
 
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
-			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
-			t.assertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
 
-			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, constants.CleanupFinalizer)
+			t.awaitNoFinalizer()
 		})
 	})
 
@@ -376,20 +370,19 @@ func testDeletion() {
 		BeforeEach(func() {
 			t.submariner.Spec.Version = "0.11.1"
 
-			t.initClientObjs = append(t.initClientObjs,
-				t.newDaemonSet(names.GatewayComponent))
+			t.InitClientObjs = append(t.InitClientObjs,
+				t.NewDaemonSet(names.GatewayComponent))
 		})
 
 		It("should not perform uninstall", func() {
-			t.assertReconcileSuccess()
+			t.AssertReconcileSuccess()
 
-			_, err := t.getDaemonSet(names.GatewayComponent)
+			_, err := t.GetDaemonSet(names.GatewayComponent)
 			Expect(err).To(Succeed())
 
-			t.assertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
 
-			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &operatorv1.Submariner{}),
-				submarinerName, constants.CleanupFinalizer)
+			t.awaitNoFinalizer()
 		})
 	})
 }
