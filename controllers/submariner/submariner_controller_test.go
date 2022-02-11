@@ -29,7 +29,7 @@ import (
 	operatorv1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/resource"
-	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
+	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	routeagent "github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	appsv1 "k8s.io/api/apps/v1"
@@ -358,7 +358,7 @@ func testDeletion() {
 			t.updateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
 			t.updateDaemonSetToScheduled(t.assertUninstallRouteAgentDaemonSet())
 
-			ts := metav1.NewTime(time.Now().Add(-(submarinerController.UninstallComponentReadyTimeout + 10)))
+			ts := metav1.NewTime(time.Now().Add(-(uninstall.ComponentReadyTimeout + 10)))
 			t.submariner.SetDeletionTimestamp(&ts)
 			Expect(t.fakeClient.Update(context.TODO(), t.submariner)).To(Succeed())
 
