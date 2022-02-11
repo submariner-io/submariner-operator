@@ -107,15 +107,16 @@ func gatherData(cluster *cmd.Cluster) bool {
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
 	}
-
-	if _, err := os.Stat(directory); os.IsNotExist(err) {
-		err := os.MkdirAll(directory, 0o700)
+	// concatenate the name of the cluster with the root gather directory
+	subDirectory := fmt.Sprintf("%s/%s", directory, cluster.Name)
+	if _, err := os.Stat(subDirectory); os.IsNotExist(err) {
+		err := os.MkdirAll(subDirectory, 0o700)
 		if err != nil {
-			exit.OnErrorWithMessage(err, fmt.Sprintf("Error creating directory %q", directory))
+			exit.OnErrorWithMessage(err, fmt.Sprintf("Error creating directory %q", subDirectory))
 		}
 	}
 
-	gatherDataByCluster(cluster, directory)
+	gatherDataByCluster(cluster, subDirectory)
 
 	fmt.Printf("Files are stored under directory %q\n", directory)
 
