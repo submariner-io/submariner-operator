@@ -23,7 +23,7 @@ const (
 	RouteAgentComponent          = "submariner-routeagent"
 	GatewayComponent             = "submariner-gateway"
 	GlobalnetComponent           = "submariner-globalnet"
-	ServiceDiscoveryComponent    = "lighthouse-agent"
+	ServiceDiscoveryComponent    = "submariner-lighthouse-agent"
 	LighthouseCoreDNSComponent   = "lighthouse-coredns"
 	OperatorComponent            = "submariner-operator"
 	ServiceDiscoveryCrName       = "service-discovery"

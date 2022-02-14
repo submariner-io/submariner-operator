@@ -32,6 +32,8 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	"github.com/submariner-io/submariner-operator/controllers/test"
+	"github.com/submariner-io/submariner-operator/pkg/names"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -104,6 +106,24 @@ func newTestDriver() *testDriver {
 	})
 
 	return t
+}
+
+func (t *testDriver) awaitFinalizer() {
+	t.AwaitFinalizer(t.serviceDiscovery, constants.CleanupFinalizer)
+}
+
+func (t *testDriver) awaitNoFinalizer() {
+	t.AwaitNoFinalizer(t.serviceDiscovery, constants.CleanupFinalizer)
+}
+
+func (t *testDriver) assertUninstallServiceDiscoveryDeployment() *appsv1.Deployment {
+	deployment := t.AssertDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+
+	Expect(deployment.Spec.Template.Spec.InitContainers).To(HaveLen(1))
+	Expect(deployment.Spec.Template.Spec.InitContainers[0].Image).To(
+		Equal(fmt.Sprintf("%s/%s:%s", t.serviceDiscovery.Spec.Repository, names.ServiceDiscoveryImage, t.serviceDiscovery.Spec.Version)))
+
+	return deployment
 }
 
 func (t *testDriver) getDNSConfig() (*operatorv1.DNS, error) {
@@ -239,7 +259,7 @@ func (t *testDriver) setLighthouseCoreDNSServiceIP() {
 
 func (t *testDriver) testFinalizerRemoved() {
 	It("remove the finalizer from the Submariner resource", func() {
-		t.AwaitNoFinalizer(t.serviceDiscovery, constants.CleanupFinalizer)
+		t.awaitNoFinalizer()
 	})
 }
 
