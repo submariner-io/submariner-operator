@@ -18,6 +18,7 @@ limitations under the License.
 package servicediscovery_test
 
 import (
+	"context"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -26,17 +27,26 @@ import (
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/resource"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Service discovery controller", func() {
 	Context("Reconciliation", testReconciliation)
-	Context("Deletion", testDeletion)
+	Context("Deletion", func() {
+		Context("Coredns cleanup", testCoreDNSCleanup)
+		Context("Deployment cleanup", testDeploymentUninstall)
+	})
 })
 
 func testReconciliation() {
 	t := newTestDriver()
+
+	It("should add a finalizer to the ServiceDiscovery resource", func() {
+		_, _ = t.DoReconcile()
+		t.awaitFinalizer()
+	})
 
 	When("the openshift DNS config exists", func() {
 		Context("and the lighthouse config isn't present", func() {
@@ -190,7 +200,7 @@ func testReconciliation() {
 	})
 }
 
-func testDeletion() {
+func testCoreDNSCleanup() {
 	t := newTestDriver()
 
 	BeforeEach(func() {
@@ -201,6 +211,14 @@ func testDeletion() {
 	})
 
 	JustBeforeEach(func() {
+		deployment := t.NewDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+
+		var one int32 = 1
+		deployment.Spec.Replicas = &one
+
+		Expect(t.Client.Create(context.TODO(), deployment)).To(Succeed())
+		t.UpdateDeploymentToReady(deployment)
+
 		t.AssertReconcileSuccess()
 	})
 
@@ -262,6 +280,59 @@ func testDeletion() {
 
 		Context("and the custom coredns ConfigMap doesn't exist", func() {
 			t.testFinalizerRemoved()
+		})
+	})
+}
+
+func testDeploymentUninstall() {
+	t := newTestDriver()
+
+	BeforeEach(func() {
+		t.serviceDiscovery.SetFinalizers([]string{constants.CleanupFinalizer})
+
+		now := metav1.Now()
+		t.serviceDiscovery.SetDeletionTimestamp(&now)
+	})
+
+	Context("", func() {
+		BeforeEach(func() {
+			t.InitClientObjs = append(t.InitClientObjs,
+				t.NewDeployment(names.ServiceDiscoveryComponent))
+		})
+
+		It("should run a Deployment to uninstall the service discovery component", func() {
+			t.AssertReconcileRequeue()
+
+			t.AssertNoDeployment(names.ServiceDiscoveryComponent)
+
+			t.UpdateDeploymentToReady(t.assertUninstallServiceDiscoveryDeployment())
+
+			t.awaitFinalizer()
+
+			t.AssertReconcileSuccess()
+
+			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+
+			t.awaitNoFinalizer()
+		})
+	})
+
+	When("the version of the deleting ServiceDiscovery instance does not support uninstall", func() {
+		BeforeEach(func() {
+			t.serviceDiscovery.Spec.Version = "0.11.1"
+
+			t.InitClientObjs = append(t.InitClientObjs, t.NewDeployment(names.ServiceDiscoveryComponent))
+		})
+
+		It("should not perform uninstall", func() {
+			t.AssertReconcileSuccess()
+
+			_, err := t.GetDeployment(names.ServiceDiscoveryComponent)
+			Expect(err).To(Succeed())
+
+			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+
+			t.awaitNoFinalizer()
 		})
 	})
 }
