@@ -119,9 +119,8 @@ func (t *testDriver) awaitNoFinalizer() {
 func (t *testDriver) assertUninstallServiceDiscoveryDeployment() *appsv1.Deployment {
 	deployment := t.AssertDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
 
-	Expect(deployment.Spec.Template.Spec.InitContainers).To(HaveLen(1))
-	Expect(deployment.Spec.Template.Spec.InitContainers[0].Image).To(
-		Equal(fmt.Sprintf("%s/%s:%s", t.serviceDiscovery.Spec.Repository, names.ServiceDiscoveryImage, t.serviceDiscovery.Spec.Version)))
+	t.AssertUninstallInitContainer(&deployment.Spec.Template,
+		fmt.Sprintf("%s/%s:%s", t.serviceDiscovery.Spec.Repository, names.ServiceDiscoveryImage, t.serviceDiscovery.Spec.Version))
 
 	return deployment
 }

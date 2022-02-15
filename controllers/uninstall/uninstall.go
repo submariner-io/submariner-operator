@@ -33,7 +33,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const ComponentReadyTimeout = time.Minute * 2
+const (
+	ComponentReadyTimeout = time.Minute * 2
+	ContainerEnvVar       = "SUBMARINER_UNINSTALL"
+)
 
 var minComponentUninstallVersion = semver.New("0.12.0")
 
@@ -272,7 +275,7 @@ func convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
 	// See http://blog.itaysk.com/2017/12/26/the-single-use-daemonset-pattern-and-prepulling-images-in-kubernetes
 	// for more details.
 	podSpec.InitContainers = podSpec.Containers
-	podSpec.InitContainers[0].Env = append(podSpec.InitContainers[0].Env, corev1.EnvVar{Name: "UNINSTALL", Value: "true"})
+	podSpec.InitContainers[0].Env = append(podSpec.InitContainers[0].Env, corev1.EnvVar{Name: ContainerEnvVar, Value: "true"})
 
 	podSpec.Containers = []corev1.Container{
 		{
