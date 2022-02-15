@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	admtest "github.com/submariner-io/admiral/pkg/test"
 	"github.com/submariner-io/submariner-operator/controllers/resource"
+	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -137,6 +138,16 @@ func (d *Driver) AssertNoDeployment(name string) {
 	_, err := d.GetDeployment(name)
 	Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
 	Expect(err).To(HaveOccurred())
+}
+
+func (d *Driver) AssertUninstallInitContainer(template *corev1.PodTemplateSpec, image string) map[string]string {
+	Expect(template.Spec.InitContainers).To(HaveLen(1))
+	Expect(template.Spec.InitContainers[0].Image).To(Equal(image))
+
+	envMap := EnvMapFromVars(template.Spec.InitContainers[0].Env)
+	Expect(envMap).To(HaveKeyWithValue(uninstall.ContainerEnvVar, "true"))
+
+	return envMap
 }
 
 func (d *Driver) UpdateDaemonSetToReady(daemonSet *appsv1.DaemonSet) {
