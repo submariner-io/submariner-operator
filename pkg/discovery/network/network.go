@@ -120,6 +120,11 @@ func networkPluginsDiscovery(client controllerClient.Client) (*ClusterNetwork, e
 		}
 	}
 
+	flanelNet, err := discoverFlannelNetwork(client)
+	if err != nil || flanelNet != nil {
+		return flanelNet, err
+	}
+
 	return nil, nil
 }
 
