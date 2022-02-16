@@ -34,7 +34,7 @@ func newGCPPrepareCommand() *cobra.Command {
 		Run:   prepareGCP,
 	}
 
-	gcp.AddGCPFlags(cmd)
+	gcp.ClientArgs.AddGCPFlags(cmd)
 	cmd.Flags().StringVar(&gcpGWInstanceType, "gateway-instance", "n1-standard-4", "Type of gateway instance machine")
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of gateways to deploy")
@@ -61,7 +61,7 @@ func prepareGCP(cmd *cobra.Command, args []string) {
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := gcp.RunOnGCP(*parentRestConfigProducer, gcpGWInstanceType, dedicatedGateway,
+	err := gcp.ClientArgs.RunOnGCP(*parentRestConfigProducer, gcpGWInstanceType, dedicatedGateway,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {
 				gwInput := api.GatewayDeployInput{

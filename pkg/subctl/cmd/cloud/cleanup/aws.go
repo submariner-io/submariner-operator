@@ -35,13 +35,13 @@ func newAWSCleanupCommand() *cobra.Command {
 		Run: cleanupAws,
 	}
 
-	aws.AddAWSFlags(cmd)
+	aws.ClientArgs.AddAWSFlags(cmd)
 
 	return cmd
 }
 
 func cleanupAws(cmd *cobra.Command, args []string) {
-	err := aws.RunOnAWS(*parentRestConfigProducer, "",
+	err := aws.ClientArgs.RunOnAWS(*parentRestConfigProducer, "",
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			err := gwDeployer.Cleanup(reporter)

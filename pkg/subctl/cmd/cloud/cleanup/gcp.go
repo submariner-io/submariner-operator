@@ -34,13 +34,13 @@ func newGCPCleanupCommand() *cobra.Command {
 		Run:   cleanupGCP,
 	}
 
-	gcp.AddGCPFlags(cmd)
+	gcp.ClientArgs.AddGCPFlags(cmd)
 
 	return cmd
 }
 
 func cleanupGCP(cmd *cobra.Command, args []string) {
-	err := gcp.RunOnGCP(*parentRestConfigProducer, "", false,
+	err := gcp.ClientArgs.RunOnGCP(*parentRestConfigProducer, "", false,
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			err := gwDeployer.Cleanup(reporter)

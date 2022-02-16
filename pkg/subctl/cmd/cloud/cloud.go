@@ -24,6 +24,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/cleanup"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/prepare"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/vpcpeering"
 )
 
 var (
@@ -38,6 +39,7 @@ var (
 func init() {
 	cloudCmd.AddCommand(prepare.NewCommand(&restConfigProducer))
 	cloudCmd.AddCommand(cleanup.NewCommand(&restConfigProducer))
+	cloudCmd.AddCommand(vpcpeering.NewCommand(&restConfigProducer))
 	restConfigProducer.AddKubeContextFlag(cloudCmd)
 	cmd.AddToRootCommand(cloudCmd)
 }

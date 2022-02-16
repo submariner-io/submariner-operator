@@ -31,7 +31,6 @@ import (
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/cloud-prepare/pkg/gcp"
-	gcpClientIface "github.com/submariner-io/cloud-prepare/pkg/gcp/client"
 	"github.com/submariner-io/cloud-prepare/pkg/k8s"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
 	"github.com/submariner-io/submariner-operator/internal/exit"
@@ -40,7 +39,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
-	"google.golang.org/api/option"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 )
@@ -51,20 +49,29 @@ const (
 	projectIDFlag = "project-id"
 )
 
-var (
-	infraID         string
-	region          string
-	projectID       string
-	credentialsFile string
-	ocpMetadataFile string
-)
+type Args struct {
+	cloudName       string
+	InfraID         string
+	Region          string
+	ProjectID       string
+	CredentialsFile string
+	OcpMetadataFile string
+}
+
+var ClientArgs = NewArgs("")
+
+func NewArgs(name string) *Args {
+	return &Args{
+		cloudName: name,
+	}
+}
 
 // AddGCPFlags adds basic flags needed by GCP.
-func AddGCPFlags(command *cobra.Command) {
-	command.Flags().StringVar(&infraID, infraIDFlag, "", "GCP infra ID")
-	command.Flags().StringVar(&region, regionFlag, "", "GCP region")
-	command.Flags().StringVar(&projectID, projectIDFlag, "", "GCP project ID")
-	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
+func (args *Args) AddGCPFlags(command *cobra.Command) {
+	command.Flags().StringVar(&args.InfraID, infraIDFlag, "", "GCP infra ID")
+	command.Flags().StringVar(&args.Region, regionFlag, "", "GCP region")
+	command.Flags().StringVar(&args.ProjectID, projectIDFlag, "", "GCP project ID")
+	command.Flags().StringVar(&args.OcpMetadataFile, "ocp-metadata", "",
 		"OCP metadata.json file (or the directory containing it) from which to read the GCP infra ID "+
 			"and region from (takes precedence over the specific flags)")
 
@@ -74,38 +81,39 @@ func AddGCPFlags(command *cobra.Command) {
 	}
 
 	defaultCredentials := filepath.FromSlash(fmt.Sprintf("%s/.gcp/osServiceAccount.json", dirname))
-	command.Flags().StringVar(&credentialsFile, "credentials", defaultCredentials, "GCP credentials configuration file")
+	command.Flags().StringVar(&args.CredentialsFile, "credentials", defaultCredentials, "GCP credentials configuration file")
+}
+
+// ValidateFlags if the OcpMetadataFile is provided it overrides the infra-id and region flags.
+func (args *Args) ValidateFlags() {
+	if args.OcpMetadataFile != "" {
+		err := args.initializeFlagsFromOCPMetadata()
+		exit.OnErrorWithMessage(err, "Failed to read GCP Cluster information from OCP metadata file")
+	} else {
+		utils.ExpectFlag(args.getFlagName(infraIDFlag), args.InfraID)
+		utils.ExpectFlag(args.getFlagName(regionFlag), args.Region)
+		utils.ExpectFlag(args.getFlagName(projectIDFlag), args.ProjectID)
+	}
 }
 
 // RunOnGCP runs the given function on GCP, supplying it with a cloud instance connected to GCP and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to GCP.
-func RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, dedicatedGWNodes bool,
+func (args *Args) RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, dedicatedGWNodes bool,
 	function func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error) error {
-	if ocpMetadataFile != "" {
-		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
-		exit.OnErrorWithMessage(err, "Failed to read GCP Cluster information from OCP metadata file")
-	} else {
-		utils.ExpectFlag(infraIDFlag, infraID)
-		utils.ExpectFlag(regionFlag, region)
-		utils.ExpectFlag(projectIDFlag, region)
-	}
+	ClientArgs.ValidateFlags()
 
 	reporter := cloudutils.NewStatusReporter()
-	reporter.Started("Retrieving GCP credentials from your GCP configuration")
-
-	creds, err := getGCPCredentials()
-	exit.OnErrorWithMessage(err, "Failed to get GCP credentials")
-	reporter.Succeeded("")
 
 	reporter.Started("Initializing GCP connectivity")
 
-	options := []option.ClientOption{
-		option.WithCredentials(creds),
-		option.WithUserAgent("open-cluster-management.io submarineraddon/v1"),
+	gcpCloudInfo, err := gcp.NewCloudInfoFromSettings(args.CredentialsFile, args.ProjectID, args.InfraID, args.Region)
+	if err != nil {
+		reporter.Failed(err)
+
+		return errors.Wrap(err, "error loading default config")
 	}
 
-	gcpClient, err := gcpClientIface.NewClient(projectID, options)
-	exit.OnErrorWithMessage(err, "Failed to initialize a GCP Client")
+	reporter.Succeeded("")
 
 	k8sConfig, err := restConfigProducer.ForCluster()
 	exit.OnErrorWithMessage(err, "Failed to initialize a Kubernetes config")
@@ -121,36 +129,37 @@ func RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, ded
 	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
 	exit.OnErrorWithMessage(err, "Failed to create dynamic client")
 
-	gcpCloudInfo := gcp.CloudInfo{
-		ProjectID: projectID,
-		InfraID:   infraID,
-		Region:    region,
-		Client:    gcpClient,
-	}
-	gcpCloud := gcp.NewCloud(gcpCloudInfo)
 	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
 	// TODO: Ideally we should be able to specify the image for GWNode, but it was seen that
 	// with certain images, the instance is not coming up. Needs to be investigated further.
-	gwDeployer := gcp.NewOcpGatewayDeployer(gcpCloudInfo, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sClientSet)
+	gwDeployer := gcp.NewOcpGatewayDeployer(*gcpCloudInfo, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sClientSet)
 
 	exit.OnErrorWithMessage(err, "Failed to initialize a GatewayDeployer config")
 
-	return function(gcpCloud, gwDeployer, reporter)
+	return function(gcp.NewCloud(*gcpCloudInfo), gwDeployer, reporter)
 }
 
-func initializeFlagsFromOCPMetadata(metadataFile string) error {
-	fileInfo, err := os.Stat(metadataFile)
+func (args *Args) getFlagName(flag string) string {
+	if args.cloudName == "" {
+		return flag
+	}
+
+	return fmt.Sprintf("%v-%v", args.cloudName, flag)
+}
+
+func (args *Args) initializeFlagsFromOCPMetadata() error {
+	fileInfo, err := os.Stat(args.OcpMetadataFile)
 	if err != nil {
-		return errors.Wrapf(err, "failed to stat file %q", metadataFile)
+		return errors.Wrapf(err, "failed to stat file %q", args.OcpMetadataFile)
 	}
 
 	if fileInfo.IsDir() {
-		metadataFile = filepath.Join(metadataFile, "metadata.json")
+		args.OcpMetadataFile = filepath.Join(args.OcpMetadataFile, "metadata.json")
 	}
 
-	data, err := os.ReadFile(metadataFile)
+	data, err := os.ReadFile(args.OcpMetadataFile)
 	if err != nil {
-		return errors.Wrapf(err, "error reading file %q", metadataFile)
+		return errors.Wrapf(err, "error reading file %q", args.OcpMetadataFile)
 	}
 
 	var metadata struct {
@@ -166,17 +175,17 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 		return errors.Wrap(err, "error unmarshalling data")
 	}
 
-	infraID = metadata.InfraID
-	region = metadata.GCP.Region
-	projectID = metadata.GCP.ProjectID
+	args.InfraID = metadata.InfraID
+	args.Region = metadata.GCP.Region
+	args.ProjectID = metadata.GCP.ProjectID
 
 	return nil
 }
 
-func getGCPCredentials() (*google.Credentials, error) {
-	authJSON, err := os.ReadFile(credentialsFile)
+func (args *Args) getGCPCredentials() (*google.Credentials, error) {
+	authJSON, err := os.ReadFile(args.CredentialsFile)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error reading file %q", credentialsFile)
+		return nil, errors.Wrapf(err, "error reading file %q", args.CredentialsFile)
 	}
 
 	creds, err := google.CredentialsFromJSON(context.TODO(), authJSON, dns.CloudPlatformScope)

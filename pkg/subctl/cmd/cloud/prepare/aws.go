@@ -34,7 +34,7 @@ func newAWSPrepareCommand() *cobra.Command {
 		Run:   prepareAws,
 	}
 
-	aws.AddAWSFlags(cmd)
+	aws.ClientArgs.AddAWSFlags(cmd)
 	cmd.Flags().StringVar(&awsGWInstanceType, "gateway-instance", "c5d.large", "Type of gateways instance machine")
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of dedicated gateways to deploy (Set to `0` when using --load-balancer mode)")
@@ -64,7 +64,7 @@ func prepareAws(cmd *cobra.Command, args []string) {
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := aws.RunOnAWS(*parentRestConfigProducer, awsGWInstanceType,
+	err := aws.ClientArgs.RunOnAWS(*parentRestConfigProducer, awsGWInstanceType,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			if gateways > 0 {
 				gwInput := api.GatewayDeployInput{
