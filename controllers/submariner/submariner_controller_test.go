@@ -277,19 +277,18 @@ func testDeletion() {
 			t.AssertNoDaemonSet(names.GlobalnetComponent)
 			t.AssertNoDeployment(names.NetworkPluginSyncerComponent)
 
-			// Simulate the DaemonSet controller cleaning up its pods.
+			// Simulate the gateway DaemonSet controller cleaning up its pods.
 			t.DeletePods("app", names.GatewayComponent)
 
 			// Next, the controller should create the corresponding uninstall DaemonSets/Deployments.
 			t.AssertReconcileRequeue()
 
-			// For the gateway DaemonSet, we'll only update it to nodes available but not yet ready at this point.
-			gatewayDS := t.assertUninstallGatewayDaemonSet()
-			t.UpdateDaemonSetToScheduled(gatewayDS)
-
-			// For the globalnet DaemonSet, we'll update it to observed but no nodes available - this will cause it to be deleted.
+			// For the globalnet DaemonSet, we'll only update it to nodes available but not yet ready at this point.
 			globalnetDS := t.assertUninstallGlobalnetDaemonSet()
-			t.UpdateDaemonSetToObserved(globalnetDS)
+			t.UpdateDaemonSetToScheduled(globalnetDS)
+
+			// For the gateway DaemonSet, we'll update it to observed but no nodes available - this will cause it to be deleted.
+			t.UpdateDaemonSetToObserved(t.assertUninstallGatewayDaemonSet())
 
 			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
 			t.UpdateDeploymentToReady(t.assertUninstallNetworkPluginSyncerDeployment())
@@ -297,8 +296,8 @@ func testDeletion() {
 			// Next, the controller should again requeue b/c the gateway DaemonSet isn't ready yet.
 			t.AssertReconcileRequeue()
 
-			// Now update the gateway DaemonSet to ready.
-			t.UpdateDaemonSetToReady(gatewayDS)
+			// Now update the globalnet DaemonSet to ready.
+			t.UpdateDaemonSetToReady(globalnetDS)
 
 			// Ensure the finalizer is still present.
 			t.awaitFinalizer()
