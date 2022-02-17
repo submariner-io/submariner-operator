@@ -1,0 +1,53 @@
+---
+name: Polaris validations
+
+on:
+  pull_request:
+
+jobs:
+  default:
+    name: k8s
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+
+      - name: make subctl
+        run: |
+          make bin/subctl
+
+      - name: show subctl help
+        run: |
+          bin/subctl help
+          bin/subctl deploy-broker --help
+          bin/subctl join --help
+
+      - name: Deploy clusters
+        run: |
+          make clusters
+
+      - name: Deploy broker
+        run: |
+          bin/subctl deploy-broker --kubeconfig output/kubeconfigs/kind-config-cluster1 --broker-namespace newnamespace
+
+      - name: Label gateway nodes
+        run: |
+          kubectl --kubeconfig output/kubeconfigs/kind-config-cluster1 label node cluster1-worker submariner.io/gateway=true --overwrite
+          kubectl --kubeconfig output/kubeconfigs/kind-config-cluster2 label node cluster2-worker submariner.io/gateway=true --overwrite
+
+      - name: Join clusters
+        run: |
+          bin/subctl join --kubeconfig output/kubeconfigs/kind-config-cluster1 broker-info.subm --clusterid cluster1 --natt=false \
+            --servicecidr 100.1.0.0/16 --clustercidr 10.1.0.0/16
+          bin/subctl join --kubeconfig output/kubeconfigs/kind-config-cluster2 broker-info.subm --clusterid cluster2 --natt=false \
+            --servicecidr 100.2.0.0/16 --clustercidr 10.2.0.0/16
+
+      - name: Setup polaris
+        uses: fairwindsops/polaris/.github/actions/setup-polaris@master
+        with:
+          version: 5.0.0
+
+      - name: Run against cluster1 (has both Broker and Submariner)
+        run: |
+          polaris audit --kubeconfig output/kubeconfigs/kind-config-cluster1 --format pretty
