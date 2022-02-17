@@ -28,19 +28,18 @@ import (
 	. "github.com/onsi/gomega"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
-	"github.com/submariner-io/admiral/pkg/test"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
-	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
+	"github.com/submariner-io/submariner-operator/controllers/test"
+	"github.com/submariner-io/submariner-operator/pkg/names"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	fakeKubeClient "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
@@ -75,65 +74,60 @@ func TestSubmariner(t *testing.T) {
 }
 
 type testDriver struct {
-	initClientObjs   []controllerClient.Object
-	fakeClient       controllerClient.Client
+	test.Driver
 	kubeClient       *fakeKubeClient.Clientset
 	serviceDiscovery *submariner_v1.ServiceDiscovery
-	controller       *servicediscovery.Reconciler
 }
 
 func newTestDriver() *testDriver {
-	t := &testDriver{}
+	t := &testDriver{
+		Driver: test.Driver{
+			Namespace:    submarinerNamespace,
+			ResourceName: serviceDiscoveryName,
+		},
+	}
 
 	BeforeEach(func() {
-		t.fakeClient = nil
+		t.BeforeEach()
 		t.serviceDiscovery = newServiceDiscovery()
-		t.initClientObjs = []controllerClient.Object{t.serviceDiscovery}
 		t.kubeClient = fakeKubeClient.NewSimpleClientset()
+		t.InitClientObjs = []controllerClient.Object{t.serviceDiscovery}
 	})
 
 	JustBeforeEach(func() {
-		if t.fakeClient == nil {
-			t.fakeClient = t.newClient()
-		}
+		t.JustBeforeEach()
 
-		t.controller = servicediscovery.NewReconciler(&servicediscovery.Config{
-			Client:         t.fakeClient,
+		t.Controller = servicediscovery.NewReconciler(&servicediscovery.Config{
+			Client:         t.Client,
 			Scheme:         scheme.Scheme,
 			KubeClient:     t.kubeClient,
-			OperatorClient: t.fakeClient,
+			OperatorClient: t.Client,
 		})
 	})
 
 	return t
 }
 
-func (t *testDriver) newClient() controllerClient.Client {
-	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(t.initClientObjs...).Build()
+func (t *testDriver) awaitFinalizer() {
+	t.AwaitFinalizer(t.serviceDiscovery, constants.CleanupFinalizer)
 }
 
-func (t *testDriver) doReconcile() (reconcile.Result, error) {
-	return t.controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
-		Namespace: submarinerNamespace,
-		Name:      serviceDiscoveryName,
-	}})
+func (t *testDriver) awaitNoFinalizer() {
+	t.AwaitNoFinalizer(t.serviceDiscovery, constants.CleanupFinalizer)
 }
 
-func (t *testDriver) assertReconcileSuccess() {
-	r, err := t.doReconcile()
-	Expect(err).To(Succeed())
-	Expect(r.Requeue).To(BeFalse())
-	Expect(r.RequeueAfter).To(BeNumerically("==", 0))
-}
+func (t *testDriver) assertUninstallServiceDiscoveryDeployment() *appsv1.Deployment {
+	deployment := t.AssertDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
 
-func (t *testDriver) assertReconcileError() {
-	_, err := t.doReconcile()
-	Expect(err).ToNot(Succeed())
+	t.AssertUninstallInitContainer(&deployment.Spec.Template,
+		fmt.Sprintf("%s/%s:%s", t.serviceDiscovery.Spec.Repository, names.ServiceDiscoveryImage, t.serviceDiscovery.Spec.Version))
+
+	return deployment
 }
 
 func (t *testDriver) getDNSConfig() (*operatorv1.DNS, error) {
 	foundDNSConfig := &operatorv1.DNS{}
-	err := t.fakeClient.Get(context.TODO(), types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
+	err := t.Client.Get(context.TODO(), types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
 
 	return foundDNSConfig, err
 }
@@ -244,7 +238,7 @@ func newDNSService(clusterIP string) *corev1.Service {
 
 func (t *testDriver) assertLighthouseCoreDNSService() *corev1.Service {
 	service := &corev1.Service{}
-	Expect(t.fakeClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseDNSServiceName, Namespace: submarinerNamespace},
+	Expect(t.Client.Get(context.TODO(), types.NamespacedName{Name: lighthouseDNSServiceName, Namespace: submarinerNamespace},
 		service)).To(Succeed())
 
 	Expect(service.Labels).To(HaveKeyWithValue("app", lighthouseDNSServiceName))
@@ -259,13 +253,12 @@ func (t *testDriver) assertLighthouseCoreDNSService() *corev1.Service {
 func (t *testDriver) setLighthouseCoreDNSServiceIP() {
 	service := t.assertLighthouseCoreDNSService()
 	service.Spec.ClusterIP = clusterIP
-	Expect(t.fakeClient.Update(context.TODO(), service)).To(Succeed())
+	Expect(t.Client.Update(context.TODO(), service)).To(Succeed())
 }
 
 func (t *testDriver) testFinalizerRemoved() {
 	It("remove the finalizer from the Submariner resource", func() {
-		test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &submariner_v1.ServiceDiscovery{}),
-			serviceDiscoveryName, constants.CleanupFinalizer)
+		t.awaitNoFinalizer()
 	})
 }
 

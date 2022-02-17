@@ -18,6 +18,7 @@ limitations under the License.
 package servicediscovery_test
 
 import (
+	"context"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -26,26 +27,35 @@ import (
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/resource"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Service discovery controller", func() {
 	Context("Reconciliation", testReconciliation)
-	Context("Deletion", testDeletion)
+	Context("Deletion", func() {
+		Context("Coredns cleanup", testCoreDNSCleanup)
+		Context("Deployment cleanup", testDeploymentUninstall)
+	})
 })
 
 func testReconciliation() {
 	t := newTestDriver()
 
+	It("should add a finalizer to the ServiceDiscovery resource", func() {
+		_, _ = t.DoReconcile()
+		t.awaitFinalizer()
+	})
+
 	When("the openshift DNS config exists", func() {
 		Context("and the lighthouse config isn't present", func() {
 			BeforeEach(func() {
-				t.initClientObjs = append(t.initClientObjs, newDNSConfig(""), newDNSService(clusterIP))
+				t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(""), newDNSService(clusterIP))
 			})
 
 			It("should add it", func() {
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 
 				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(clusterIP))
 			})
@@ -55,11 +65,11 @@ func testReconciliation() {
 			updatedClusterIP := "10.10.10.11"
 
 			BeforeEach(func() {
-				t.initClientObjs = append(t.initClientObjs, newDNSConfig(clusterIP), newDNSService(updatedClusterIP))
+				t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(clusterIP), newDNSService(updatedClusterIP))
 			})
 
 			It("should update the lighthouse config", func() {
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 
 				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(updatedClusterIP))
 			})
@@ -67,15 +77,15 @@ func testReconciliation() {
 
 		Context("and the lighthouse DNS service doesn't exist", func() {
 			BeforeEach(func() {
-				t.initClientObjs = append(t.initClientObjs, newDNSConfig(""))
+				t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(""))
 			})
 
 			It("should create the service and add the lighthouse config", func() {
-				t.assertReconcileError()
+				t.AssertReconcileError()
 
 				t.setLighthouseCoreDNSServiceIP()
 
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 
 				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(clusterIP))
 			})
@@ -85,12 +95,12 @@ func testReconciliation() {
 	When("the coredns ConfigMap exists", func() {
 		Context("and the lighthouse config isn't present", func() {
 			BeforeEach(func() {
-				t.initClientObjs = append(t.initClientObjs, newDNSService(clusterIP))
+				t.InitClientObjs = append(t.InitClientObjs, newDNSService(clusterIP))
 				t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData("")))
 			})
 
 			It("should add it", func() {
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 
 				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
 			})
@@ -100,12 +110,12 @@ func testReconciliation() {
 			updatedClusterIP := "10.10.10.11"
 
 			BeforeEach(func() {
-				t.initClientObjs = append(t.initClientObjs, newDNSService(updatedClusterIP))
+				t.InitClientObjs = append(t.InitClientObjs, newDNSService(updatedClusterIP))
 				t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
 			})
 
 			It("should update the lighthouse config", func() {
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 
 				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(updatedClusterIP)))
 			})
@@ -117,11 +127,11 @@ func testReconciliation() {
 			})
 
 			It("should create the service and add the lighthouse config", func() {
-				t.assertReconcileError()
+				t.AssertReconcileError()
 
 				t.setLighthouseCoreDNSServiceIP()
 
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 
 				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
 			})
@@ -148,11 +158,11 @@ func testReconciliation() {
 					},
 				})
 
-				t.initClientObjs = append(t.initClientObjs, newDNSService(clusterIP))
+				t.InitClientObjs = append(t.InitClientObjs, newDNSService(clusterIP))
 			})
 
 			It("should update it", func() {
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 
 				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
@@ -162,11 +172,11 @@ func testReconciliation() {
 
 		Context("and the custom coredns ConfigMap doesn't exist", func() {
 			BeforeEach(func() {
-				t.initClientObjs = append(t.initClientObjs, newDNSService(clusterIP))
+				t.InitClientObjs = append(t.InitClientObjs, newDNSService(clusterIP))
 			})
 
 			It("should create it", func() {
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 
 				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
@@ -176,11 +186,11 @@ func testReconciliation() {
 
 		Context("and the lighthouse DNS service doesn't exist", func() {
 			It("should create the service and the custom coredns ConfigMap", func() {
-				t.assertReconcileError()
+				t.AssertReconcileError()
 
 				t.setLighthouseCoreDNSServiceIP()
 
-				t.assertReconcileSuccess()
+				t.AssertReconcileSuccess()
 
 				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
@@ -190,7 +200,7 @@ func testReconciliation() {
 	})
 }
 
-func testDeletion() {
+func testCoreDNSCleanup() {
 	t := newTestDriver()
 
 	BeforeEach(func() {
@@ -201,7 +211,15 @@ func testDeletion() {
 	})
 
 	JustBeforeEach(func() {
-		t.assertReconcileSuccess()
+		deployment := t.NewDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+
+		var one int32 = 1
+		deployment.Spec.Replicas = &one
+
+		Expect(t.Client.Create(context.TODO(), deployment)).To(Succeed())
+		t.UpdateDeploymentToReady(deployment)
+
+		t.AssertReconcileSuccess()
 	})
 
 	When("the coredns ConfigMap exists", func() {
@@ -212,7 +230,7 @@ func testDeletion() {
 		It("should remove the lighthouse config section", func() {
 			Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData("")))
 
-			test.AwaitNoFinalizer(resource.ForControllerClient(t.fakeClient, submarinerNamespace, &submariner_v1.ServiceDiscovery{}),
+			test.AwaitNoFinalizer(resource.ForControllerClient(t.Client, submarinerNamespace, &submariner_v1.ServiceDiscovery{}),
 				serviceDiscoveryName, constants.CleanupFinalizer)
 		})
 
@@ -221,7 +239,7 @@ func testDeletion() {
 
 	When("the openshift DNS config exists", func() {
 		BeforeEach(func() {
-			t.initClientObjs = append(t.initClientObjs, newDNSConfig(clusterIP))
+			t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(clusterIP))
 		})
 
 		It("should remove the lighthouse config", func() {
@@ -262,6 +280,59 @@ func testDeletion() {
 
 		Context("and the custom coredns ConfigMap doesn't exist", func() {
 			t.testFinalizerRemoved()
+		})
+	})
+}
+
+func testDeploymentUninstall() {
+	t := newTestDriver()
+
+	BeforeEach(func() {
+		t.serviceDiscovery.SetFinalizers([]string{constants.CleanupFinalizer})
+
+		now := metav1.Now()
+		t.serviceDiscovery.SetDeletionTimestamp(&now)
+	})
+
+	Context("", func() {
+		BeforeEach(func() {
+			t.InitClientObjs = append(t.InitClientObjs,
+				t.NewDeployment(names.ServiceDiscoveryComponent))
+		})
+
+		It("should run a Deployment to uninstall the service discovery component", func() {
+			t.AssertReconcileRequeue()
+
+			t.AssertNoDeployment(names.ServiceDiscoveryComponent)
+
+			t.UpdateDeploymentToReady(t.assertUninstallServiceDiscoveryDeployment())
+
+			t.awaitFinalizer()
+
+			t.AssertReconcileSuccess()
+
+			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+
+			t.awaitNoFinalizer()
+		})
+	})
+
+	When("the version of the deleting ServiceDiscovery instance does not support uninstall", func() {
+		BeforeEach(func() {
+			t.serviceDiscovery.Spec.Version = "0.11.1"
+
+			t.InitClientObjs = append(t.InitClientObjs, t.NewDeployment(names.ServiceDiscoveryComponent))
+		})
+
+		It("should not perform uninstall", func() {
+			t.AssertReconcileSuccess()
+
+			_, err := t.GetDeployment(names.ServiceDiscoveryComponent)
+			Expect(err).To(Succeed())
+
+			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+
+			t.awaitNoFinalizer()
 		})
 	})
 }
