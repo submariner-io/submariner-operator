@@ -31,11 +31,12 @@ var (
 )
 
 var (
-	awsGWInstanceType  string
-	gcpGWInstanceType  string
-	rhosGWInstanceType string
-	gateways           int
-	dedicatedGateway   bool
+	awsGWInstanceType   string
+	gcpGWInstanceType   string
+	rhosGWInstanceType  string
+	azureGWInstanceType string
+	gateways            int
+	dedicatedGateway    bool
 )
 
 var parentRestConfigProducer *restconfig.Producer
@@ -59,6 +60,7 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd.AddCommand(newAWSPrepareCommand())
 	cmd.AddCommand(newGCPPrepareCommand())
 	cmd.AddCommand(newRHOSPrepareCommand())
+	cmd.AddCommand(newAzurePrepareCommand())
 	cmd.AddCommand(newGenericPrepareCommand())
 
 	return cmd

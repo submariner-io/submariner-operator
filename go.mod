@@ -4,6 +4,8 @@ go 1.16
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.4
+	github.com/Azure/go-autorest/autorest v0.11.24
+	github.com/Azure/go-autorest/autorest/azure/auth v0.5.7
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
@@ -33,7 +35,7 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.4.0
 	github.com/submariner-io/admiral v0.12.0-m3.0.20220406154101-7826e6bf396a
-	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220407095330-513eb51af266
+	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220412224051-345dd0d4b24d
 	github.com/submariner-io/lighthouse v0.12.0-m3.0.20220317134734-8b52d23bc039
 	github.com/submariner-io/shipyard v0.12.0-m3.0.20220317174712-65b179ba2961
 	github.com/submariner-io/submariner v0.12.0-m3.0.20220315142604-5e67af228799
