@@ -57,6 +57,7 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 
 	cmd.AddCommand(newAWSPrepareCommand())
 	cmd.AddCommand(newGCPPrepareCommand())
+	cmd.AddCommand(newRHOSPrepareCommand())
 	cmd.AddCommand(newGenericPrepareCommand())
 
 	return cmd
