@@ -20,6 +20,7 @@ package servicediscovery
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/finalizer"
@@ -28,13 +29,22 @@ import (
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	ctrlresource "github.com/submariner-io/submariner-operator/controllers/resource"
+	"github.com/submariner-io/submariner-operator/controllers/uninstall"
+	"github.com/submariner-io/submariner-operator/pkg/names"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) (reconcile.Result, error) {
+	if uninstall.IsSupportedForVersion(instance.Spec.Version) {
+		log.Info("Deleting ServiceDiscovery version does not support uninstall", "version", instance.Spec.Version)
+		return reconcile.Result{}, r.removeFinalizer(ctx, instance)
+	}
+
 	var err error
 
 	if instance.Spec.CoreDNSCustomConfig != nil && instance.Spec.CoreDNSCustomConfig.ConfigMapName != "" {
@@ -52,10 +62,41 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 		return reconcile.Result{}, err
 	}
 
-	err = finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.ServiceDiscovery{}),
-		instance, constants.CleanupFinalizer)
+	components := []*uninstall.Component{
+		{
+			Resource: &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      names.ServiceDiscoveryComponent,
+					Namespace: instance.Namespace,
+				},
+			},
+			UninstallResource: newLighthouseAgent(instance, names.AppendUninstall(names.ServiceDiscoveryComponent)),
+		},
+	}
 
-	return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
+	uninstallInfo := &uninstall.Info{
+		Client:     r.config.Client,
+		Components: components,
+		StartTime:  instance.DeletionTimestamp.Time,
+		Log:        log,
+	}
+
+	requeue, err := uninstallInfo.Run(ctx)
+	if err != nil {
+		return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
+	}
+
+	if requeue {
+		return reconcile.Result{RequeueAfter: time.Millisecond * 100}, nil
+	}
+
+	return reconcile.Result{}, r.removeFinalizer(ctx, instance)
+}
+
+// nolint:wrapcheck // No need to wrap
+func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) error {
+	return finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.config.Client, instance.Namespace, instance),
+		instance, constants.CleanupFinalizer)
 }
 
 func (r *Reconciler) removeLighthouseConfigFromCustomDNSConfigMap(ctx context.Context,

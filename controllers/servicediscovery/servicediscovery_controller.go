@@ -61,7 +61,6 @@ var log = logf.Log.WithName("controller_servicediscovery")
 
 const (
 	componentName                 = "submariner-lighthouse"
-	deploymentName                = "submariner-lighthouse-agent"
 	lighthouseCoreDNSName         = "submariner-lighthouse-coredns"
 	defaultOpenShiftDNSController = "default"
 	lighthouseForwardPluginName   = "lighthouse"
@@ -118,7 +117,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		deployment := &appsv1.Deployment{}
 		opts := []controllerClient.DeleteAllOfOption{
 			controllerClient.InNamespace(request.NamespacedName.Namespace),
-			controllerClient.MatchingLabels{"app": deploymentName},
+			controllerClient.MatchingLabels{"app": names.ServiceDiscoveryComponent},
 		}
 		err := r.config.Client.DeleteAllOf(ctx, deployment, opts...)
 
@@ -205,14 +204,14 @@ func (r *Reconciler) addFinalizer(ctx context.Context,
 	return r.getServiceDiscovery(ctx, types.NamespacedName{Namespace: instance.Namespace, Name: instance.Name})
 }
 
-func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
+func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *appsv1.Deployment {
 	replicas := int32(1)
 	labels := map[string]string{
-		"app":       deploymentName,
+		"app":       name,
 		"component": componentName,
 	}
 	matchLabels := map[string]string{
-		"app": deploymentName,
+		"app": name,
 	}
 
 	terminationGracePeriodSeconds := int64(0)
@@ -237,7 +236,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
-			Name:      deploymentName,
+			Name:      name,
 			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -253,8 +252,8 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deploym
 					Containers: []corev1.Container{
 						{
 							Name:            "submariner-lighthouse-agent",
-							Image:           getImagePath(cr, names.ServiceDiscoveryImage, names.ServiceDiscoveryComponent),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.ServiceDiscoveryComponent]),
+							Image:           getImagePath(cr, names.ServiceDiscoveryImage, names.ServiceDiscoveryImage),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.ServiceDiscoveryImage]),
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
@@ -711,7 +710,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *Reconciler) ensureLightHouseAgent(instance *submarinerv1alpha1.ServiceDiscovery, reqLogger logr.Logger) error {
-	lightHouseAgent := newLighthouseAgent(instance)
+	lightHouseAgent := newLighthouseAgent(instance, names.ServiceDiscoveryComponent)
 	if _, err := helpers.ReconcileDeployment(instance, lightHouseAgent, reqLogger,
 		r.config.Client, r.config.Scheme); err != nil {
 		return errors.Wrap(err, "error reconciling agent deployment")
