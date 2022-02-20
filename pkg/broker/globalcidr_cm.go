@@ -30,11 +30,13 @@ import (
 )
 
 const (
-	GlobalCIDRConfigMapName = "submariner-globalnet-info"
-	GlobalnetStatusKey      = "globalnetEnabled"
-	ClusterInfoKey          = "clusterinfo"
-	GlobalnetCidrRange      = "globalnetCidrRange"
-	GlobalnetClusterSize    = "globalnetClusterSize"
+	GlobalCIDRConfigMapName     = "submariner-globalnet-info"
+	GlobalnetStatusKey          = "globalnetEnabled"
+	ClusterInfoKey              = "clusterinfo"
+	GlobalnetCidrRange          = "globalnetCidrRange"
+	GlobalnetClusterSize        = "globalnetClusterSize"
+	DefaultGlobalnetCIDR        = "242.0.0.0/8"
+	DefaultGlobalnetClusterSize = 65536 // i.e., x.x.x.x/16 subnet mask
 )
 
 type ClusterInfo struct {
