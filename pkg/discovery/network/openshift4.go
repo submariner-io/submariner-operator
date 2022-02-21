@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -90,12 +91,17 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 		result.ServiceCIDRs = append(result.ServiceCIDRs, serviceNetwork.(string))
 	}
 
-	result.NetworkPlugin, found, err = unstructured.NestedString(cr.Object, "spec", "networkType")
-
+	ocpNetworkType, found, err := unstructured.NestedString(cr.Object, "spec", "networkType")
 	if err != nil {
 		return nil, errors.Wrap(err, "error retrieving spec.networkType field")
 	} else if !found {
 		return nil, fmt.Errorf("field .spec.networkType expected, but not found in Network resource: %v", cr.Object)
+	}
+
+	if ocpNetworkType == "Calico" {
+		result.NetworkPlugin = constants.NetworkPluginCalico
+	} else {
+		result.NetworkPlugin = ocpNetworkType
 	}
 
 	return result, nil

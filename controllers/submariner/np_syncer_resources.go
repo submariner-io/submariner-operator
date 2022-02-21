@@ -98,7 +98,7 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 							},
 						},
 					},
-					ServiceAccountName: name,
+					ServiceAccountName: names.NetworkPluginSyncerComponent,
 					Tolerations:        []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},
 			},

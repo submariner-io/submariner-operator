@@ -2852,6 +2852,7 @@ rules:
       - ""
     resources:
       - services
+      - endpoints
     verbs:
       - create
       - get

@@ -58,6 +58,15 @@ func (c *Component) isInstalled() bool {
 }
 
 func (i *Info) Run(ctx context.Context) (bool, error) {
+	timedOut := time.Since(i.StartTime) >= ComponentReadyTimeout
+	if timedOut {
+		i.Log.Info("Timed out waiting for components to complete - aborting")
+
+		i.cleanup(ctx)
+
+		return false, nil
+	}
+
 	// First, delete the regular DaemonSets/Deployments.
 	for _, c := range i.Components {
 		if !c.isInstalled() {
@@ -71,9 +80,9 @@ func (i *Info) Run(ctx context.Context) (bool, error) {
 	}
 
 	// Next, ensure all their pods are cleaned up.
-	requeue, err := i.ensurePodsDeleted(ctx)
-	if requeue || err != nil {
-		return requeue, err
+	podsIncomplete, err := i.ensurePodsDeleted(ctx)
+	if err != nil {
+		return false, err
 	}
 
 	err = i.createUninstallResources(ctx)
@@ -81,7 +90,18 @@ func (i *Info) Run(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	return i.ensureUninstallResourcesComplete(ctx)
+	uninstallIncomplete, err := i.ensureUninstallResourcesComplete(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	if podsIncomplete || uninstallIncomplete {
+		return true, nil
+	}
+
+	i.cleanup(ctx)
+
+	return false, nil
 }
 
 func (i *Info) ensureDeleted(ctx context.Context, obj client.Object) error {
@@ -98,6 +118,8 @@ func (i *Info) ensureDeleted(ctx context.Context, obj client.Object) error {
 }
 
 func (i *Info) ensurePodsDeleted(ctx context.Context) (bool, error) {
+	requeue := false
+
 	for _, c := range i.Components {
 		if !c.isInstalled() {
 			continue
@@ -114,11 +136,12 @@ func (i *Info) ensurePodsDeleted(ctx context.Context) (bool, error) {
 		if numPods > 0 {
 			i.Log.Info(fmt.Sprintf("%T still has pods - requeueing: ", c.Resource), "name", c.Resource.GetName(),
 				"namespace", c.Resource.GetNamespace(), "numPods", numPods)
-			return true, nil
+
+			requeue = true
 		}
 	}
 
-	return false, nil
+	return requeue, nil
 }
 
 func (i *Info) createUninstallResources(ctx context.Context) error {
@@ -178,7 +201,7 @@ func (i *Info) createUninstallDaemonSetFrom(ctx context.Context, daemonSet *apps
 }
 
 func (i *Info) ensureUninstallResourcesComplete(ctx context.Context) (bool, error) {
-	timedOut := time.Since(i.StartTime) >= ComponentReadyTimeout
+	anyRequeue := false
 
 	for _, c := range i.Components {
 		if !c.isInstalled() {
@@ -190,9 +213,9 @@ func (i *Info) ensureUninstallResourcesComplete(ctx context.Context) (bool, erro
 
 		switch d := c.UninstallResource.(type) {
 		case *appsv1.DaemonSet:
-			requeue, err = i.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(d), timedOut)
+			requeue, err = i.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(d))
 		case *appsv1.Deployment:
-			requeue, err = i.ensureDeploymentReady(ctx, client.ObjectKeyFromObject(d), timedOut)
+			requeue, err = i.ensureDeploymentReady(ctx, client.ObjectKeyFromObject(d))
 		default:
 			panic(fmt.Sprintf("Unknown type: %T", d))
 		}
@@ -201,15 +224,13 @@ func (i *Info) ensureUninstallResourcesComplete(ctx context.Context) (bool, erro
 			return false, err
 		}
 
-		if requeue {
-			return true, nil
-		}
+		anyRequeue = anyRequeue || requeue
 	}
 
-	return false, nil
+	return anyRequeue, nil
 }
 
-func (i *Info) ensureDaemonSetReady(ctx context.Context, key client.ObjectKey, timedOut bool) (bool, error) {
+func (i *Info) ensureDaemonSetReady(ctx context.Context, key client.ObjectKey) (bool, error) {
 	daemonSet := &appsv1.DaemonSet{}
 
 	err := i.Client.Get(ctx, key, daemonSet)
@@ -228,20 +249,15 @@ func (i *Info) ensureDaemonSetReady(ctx context.Context, key client.ObjectKey, t
 	} else if daemonSet.Status.DesiredNumberScheduled != daemonSet.Status.NumberReady {
 		i.Log.Info("DaemonSet not ready yet:", "name", daemonSet.Name, "namespace", daemonSet.Namespace,
 			"DesiredNumberScheduled", daemonSet.Status.DesiredNumberScheduled, "NumberReady", daemonSet.Status.NumberReady)
-
-		if !timedOut {
-			return true, nil
-		}
-
-		i.Log.Info("DaemonSet timed out - deleting:", "name", daemonSet.Name, "namespace", daemonSet.Namespace)
+		return true, nil
 	} else {
 		i.Log.Info("DaemonSet is ready:", "name", daemonSet.Name, "namespace", daemonSet.Namespace)
 	}
 
-	return false, i.ensureDeleted(ctx, daemonSet)
+	return false, nil
 }
 
-func (i *Info) ensureDeploymentReady(ctx context.Context, key client.ObjectKey, timedOut bool) (bool, error) {
+func (i *Info) ensureDeploymentReady(ctx context.Context, key client.ObjectKey) (bool, error) {
 	deployment := &appsv1.Deployment{}
 
 	err := i.Client.Get(ctx, key, deployment)
@@ -257,17 +273,22 @@ func (i *Info) ensureDeploymentReady(ctx context.Context, key client.ObjectKey, 
 	if deployment.Status.AvailableReplicas != replicas {
 		i.Log.Info("Deployment not ready yet:", "name", deployment.Name, "namespace", deployment.Namespace,
 			"AvailableReplicas", deployment.Status.AvailableReplicas, "DesiredReplicas", replicas)
-
-		if !timedOut {
-			return true, nil
-		}
-
-		i.Log.Info("Deployment timed out - deleting:", "name", deployment.Name, "namespace", deployment.Namespace)
+		return true, nil
 	}
 
 	i.Log.Info("Deployment is ready:", "name", deployment.Name, "namespace", deployment.Namespace)
 
-	return false, i.ensureDeleted(ctx, deployment)
+	return false, nil
+}
+
+func (i *Info) cleanup(ctx context.Context) {
+	for _, c := range i.Components {
+		err := i.ensureDeleted(ctx, c.UninstallResource)
+		if err != nil {
+			i.Log.Error(err, "Unable to delete uninstall resource", "name", c.UninstallResource.GetName(),
+				"namespace", c.UninstallResource.GetNamespace())
+		}
+	}
 }
 
 func convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
@@ -304,5 +325,5 @@ func findPodsBySelector(ctx context.Context, clnt client.Reader, namespace strin
 
 func IsSupportedForVersion(version string) bool {
 	semVersion, _ := semver.NewVersion(version)
-	return !(semVersion != nil && !semVersion.LessThan(*minComponentUninstallVersion))
+	return semVersion == nil || !semVersion.LessThan(*minComponentUninstallVersion)
 }

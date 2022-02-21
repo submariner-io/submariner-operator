@@ -107,7 +107,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 							},
 						},
 					},
-					ServiceAccountName:            name,
+					ServiceAccountName:            names.GlobalnetComponent,
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
 					HostNetwork:                   true,
