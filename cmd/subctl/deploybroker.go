@@ -69,10 +69,10 @@ func init() {
 func addDeployBrokerFlags() {
 	deployBroker.PersistentFlags().BoolVar(&deployflags.BrokerSpec.GlobalnetEnabled, "globalnet", false,
 		"enable support for Overlapping CIDRs in connecting clusters (default disabled)")
-	deployBroker.PersistentFlags().StringVar(&deployflags.BrokerSpec.GlobalnetCIDRRange, "globalnet-cidr-range", "242.0.0.0/8",
-		"GlobalCIDR supernet range for allocating GlobalCIDRs to each cluster")
-	deployBroker.PersistentFlags().UintVar(&deployflags.BrokerSpec.DefaultGlobalnetClusterSize, "globalnet-cluster-size", 65536,
-		"default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
+	deployBroker.PersistentFlags().StringVar(&deployflags.BrokerSpec.GlobalnetCIDRRange, "globalnet-cidr-range",
+		broker.DefaultGlobalnetCIDR, "GlobalCIDR supernet range for allocating GlobalCIDRs to each cluster")
+	deployBroker.PersistentFlags().UintVar(&deployflags.BrokerSpec.DefaultGlobalnetClusterSize, "globalnet-cluster-size",
+		broker.DefaultGlobalnetClusterSize, "default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs)")
 
 	deployBroker.PersistentFlags().StringVar(&ipsecSubmFile, "ipsec-psk-from", "",
 		"import IPsec PSK from existing submariner broker file, like broker-info.subm")
