@@ -69,5 +69,7 @@ ${DAPPER_SOURCE}/bin/subctl benchmark throughput --intra-cluster ${KUBECONFIGS_D
 
 ${DAPPER_SOURCE}/bin/subctl benchmark throughput --verbose ${KUBECONFIGS_DIR}/kind-config-cluster1 ${KUBECONFIGS_DIR}/kind-config-cluster2
 
+${SCRIPTS_DIR}/e2e.sh "$@"
+
 print_clusters_message
 
