@@ -40,7 +40,7 @@ import (
 )
 
 func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) (reconcile.Result, error) {
-	if uninstall.IsSupportedForVersion(instance.Spec.Version) {
+	if !uninstall.IsSupportedForVersion(instance.Spec.Version) {
 		log.Info("Deleting ServiceDiscovery version does not support uninstall", "version", instance.Spec.Version)
 		return reconcile.Result{}, r.removeFinalizer(ctx, instance)
 	}

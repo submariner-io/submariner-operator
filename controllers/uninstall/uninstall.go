@@ -325,5 +325,5 @@ func findPodsBySelector(ctx context.Context, clnt client.Reader, namespace strin
 
 func IsSupportedForVersion(version string) bool {
 	semVersion, _ := semver.NewVersion(version)
-	return !(semVersion != nil && !semVersion.LessThan(*minComponentUninstallVersion))
+	return semVersion == nil || !semVersion.LessThan(*minComponentUninstallVersion)
 }
