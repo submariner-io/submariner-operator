@@ -30,6 +30,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 )
 
 // nolint:wrapcheck // No need to wrap errors here.
@@ -51,13 +52,6 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 		"component": "networkplugin-syncer",
 	}
 
-	matchLabels := map[string]string{
-		"app": name,
-	}
-
-	nReplicas := int32(1)
-	terminationGracePeriodSeconds := int64(1)
-
 	networkPluginSyncerDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
@@ -65,17 +59,19 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{
+				"app": name,
+			}},
 			Strategy: appsv1.DeploymentStrategy{
 				Type: appsv1.RecreateDeploymentStrategyType,
 			},
-			Replicas: &nReplicas,
+			Replicas: pointer.Int32(1),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					TerminationGracePeriodSeconds: pointer.Int64(1),
 					Containers: []corev1.Container{
 						{
 							Name:            name,

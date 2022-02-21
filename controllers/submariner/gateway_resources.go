@@ -36,6 +36,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -45,7 +46,6 @@ const (
 )
 
 func newGatewayDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet {
-	revisionHistoryLimit := int32(5)
 	maxUnavailable := intstr.FromInt(1)
 	podSelectorLabels := map[string]string{appLabel: name}
 
@@ -67,7 +67,7 @@ func newGatewayDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet
 				},
 				Type: appsv1.RollingUpdateDaemonSetStrategyType,
 			},
-			RevisionHistoryLimit: &revisionHistoryLimit,
+			RevisionHistoryLimit: pointer.Int32(5),
 		},
 	}
 
@@ -76,18 +76,6 @@ func newGatewayDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet
 
 // newGatewayPodTemplate returns a submariner pod with the same fields as the cr.
 func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabels map[string]string) corev1.PodTemplateSpec {
-	// Create privileged security context for Gateway pod
-	// FIXME: Seems like these have to be a var, so can pass pointer to bool var to SecurityContext. Cleaner option?
-	// The gateway needs to be privileged so it can write to /proc/sys
-	privileged := true
-	allowPrivilegeEscalation := true
-	runAsNonRoot := false
-	// We need to be able to update /var/lib/alternatives (for iptables)
-	readOnlyRootFilesystem := false
-
-	// Create Pod
-	terminationGracePeriodSeconds := int64(1)
-
 	// Default healthCheck Values
 	healthCheckEnabled := true
 	// The values are in seconds
@@ -168,10 +156,12 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 							Add:  []corev1.Capability{"net_admin"},
 							Drop: []corev1.Capability{"all"},
 						},
-						AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-						Privileged:               &privileged,
-						ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
-						RunAsNonRoot:             &runAsNonRoot,
+						// The gateway needs to be privileged so it can write to /proc/sys
+						AllowPrivilegeEscalation: pointer.Bool(true),
+						Privileged:               pointer.Bool(true),
+						RunAsNonRoot:             pointer.Bool(false),
+						// We need to be able to update /var/lib/alternatives (for iptables)
+						ReadOnlyRootFilesystem: pointer.Bool(false),
 					},
 					Ports: []corev1.ContainerPort{
 						{
@@ -226,7 +216,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 			},
 			ServiceAccountName:            names.GatewayComponent,
 			HostNetwork:                   true,
-			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+			TerminationGracePeriodSeconds: pointer.Int64(1),
 			RestartPolicy:                 corev1.RestartPolicyAlways,
 			DNSPolicy:                     corev1.DNSClusterFirst,
 			// The gateway engine must be able to run on any flagged node, regardless of existing taints
