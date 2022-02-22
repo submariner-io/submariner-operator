@@ -251,7 +251,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:            "submariner-lighthouse-agent",
+							Name:            name,
 							Image:           getImagePath(cr, names.ServiceDiscoveryImage, names.ServiceDiscoveryImage),
 							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.ServiceDiscoveryImage]),
 							Env: []corev1.EnvVar{
