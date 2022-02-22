@@ -20,10 +20,10 @@ package names
 /* Component names and other constants. */
 const (
 	NetworkPluginSyncerComponent = "submariner-networkplugin-syncer"
-	RouteAgentComponent          = "submariner-route-agent"
+	RouteAgentComponent          = "submariner-routeagent"
 	GatewayComponent             = "submariner-gateway"
 	GlobalnetComponent           = "submariner-globalnet"
-	ServiceDiscoveryComponent    = "lighthouse-agent"
+	ServiceDiscoveryComponent    = "submariner-lighthouse-agent"
 	LighthouseCoreDNSComponent   = "lighthouse-coredns"
 	OperatorComponent            = "submariner-operator"
 	ServiceDiscoveryCrName       = "service-discovery"
@@ -49,4 +49,8 @@ var (
 var ValidImageNames = []string{
 	NetworkPluginSyncerImage, RouteAgentImage, GatewayImage, GlobalnetImage,
 	ServiceDiscoveryImage, LighthouseCoreDNSImage, OperatorImage,
+}
+
+func AppendUninstall(name string) string {
+	return name + "-uninstall"
 }

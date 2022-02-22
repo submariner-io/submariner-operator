@@ -30,57 +30,53 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 )
 
 // nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.Submariner,
 	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger) error {
 	// Only OVNKubernetes needs networkplugin-syncer so far
-	if instance.Status.NetworkPlugin == constants.NetworkPluginOVNKubernetes {
+	if needsNetworkPluginSyncer(instance) {
 		_, err := helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,
-			clusterNetwork), reqLogger, r.config.Client, r.config.Scheme)
+			clusterNetwork, names.NetworkPluginSyncerComponent), reqLogger, r.config.Client, r.config.Scheme)
 		return err
 	}
 
 	return nil
 }
 
-func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork) *appsv1.Deployment {
+func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork, name string) *appsv1.Deployment {
 	labels := map[string]string{
-		"app":       "submariner-networkplugin-syncer",
+		"app":       name,
 		"component": "networkplugin-syncer",
 	}
-
-	matchLabels := map[string]string{
-		"app": "submariner-networkplugin-syncer",
-	}
-
-	nReplicas := int32(1)
-	terminationGracePeriodSeconds := int64(1)
 
 	networkPluginSyncerDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
-			Name:      "submariner-networkplugin-syncer",
+			Name:      name,
 			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{
+				"app": name,
+			}},
 			Strategy: appsv1.DeploymentStrategy{
 				Type: appsv1.RecreateDeploymentStrategyType,
 			},
-			Replicas: &nReplicas,
+			Replicas: pointer.Int32(1),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					TerminationGracePeriodSeconds: pointer.Int64(1),
 					Containers: []corev1.Container{
 						{
-							Name:            "submariner-networkplugin-syncer",
-							Image:           getImagePath(cr, names.NetworkPluginSyncerImage, names.NetworkPluginSyncerComponent),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.NetworkPluginSyncerComponent]),
+							Name:            name,
+							Image:           getImagePath(cr, names.NetworkPluginSyncerImage, names.NetworkPluginSyncerImage),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.NetworkPluginSyncerImage]),
 							Command:         []string{"submariner-networkplugin-syncer.sh"},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
@@ -98,7 +94,7 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 							},
 						},
 					},
-					ServiceAccountName: "submariner-networkplugin-syncer",
+					ServiceAccountName: names.NetworkPluginSyncerComponent,
 					Tolerations:        []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},
 			},
@@ -122,4 +118,8 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 	}
 
 	return networkPluginSyncerDeployment
+}
+
+func needsNetworkPluginSyncer(submariner *v1alpha1.Submariner) bool {
+	return submariner.Status.NetworkPlugin == constants.NetworkPluginOVNKubernetes
 }

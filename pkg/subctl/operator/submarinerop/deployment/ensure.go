@@ -28,6 +28,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/pointer"
 )
 
 // Ensure the operator is deployed, and running.
@@ -68,6 +69,10 @@ func Ensure(kubeClient kubernetes.Interface, namespace, image string, debug bool
 							Image:           image,
 							Command:         command,
 							ImagePullPolicy: imagePullPolicy,
+							SecurityContext: &v1.SecurityContext{
+								RunAsNonRoot:             pointer.Bool(true),
+								AllowPrivilegeEscalation: pointer.Bool(false),
+							},
 							Env: []v1.EnvVar{
 								{
 									Name: "WATCH_NAMESPACE", ValueFrom: &v1.EnvVarSource{

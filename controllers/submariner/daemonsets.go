@@ -86,22 +86,32 @@ func checkDaemonSetContainers(ctx context.Context, clnt client.Reader, daemonSet
 
 func retrieveDaemonSetContainerStatuses(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet,
 	namespace string) (*[]corev1.ContainerStatus, error) {
-	pods := &corev1.PodList{}
+	pods, err := findPodsBySelector(ctx, clnt, namespace, daemonSet.Spec.Selector)
+	if err != nil {
+		return nil, err
+	}
 
-	selector, err := metav1.LabelSelectorAsSelector(daemonSet.Spec.Selector)
+	containerStatuses := []corev1.ContainerStatus{}
+	for i := range pods {
+		containerStatuses = append(containerStatuses, pods[i].Status.ContainerStatuses...)
+	}
+
+	return &containerStatuses, nil
+}
+
+func findPodsBySelector(ctx context.Context, clnt client.Reader, namespace string,
+	labelSelector *metav1.LabelSelector) ([]corev1.Pod, error) {
+	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating label selector")
 	}
+
+	pods := &corev1.PodList{}
 
 	err = clnt.List(ctx, pods, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, errors.Wrap(err, "error listing DaemonSet pods")
 	}
 
-	containerStatuses := []corev1.ContainerStatus{}
-	for i := range pods.Items {
-		containerStatuses = append(containerStatuses, pods.Items[i].Status.ContainerStatuses...)
-	}
-
-	return &containerStatuses, nil
+	return pods.Items, nil
 }

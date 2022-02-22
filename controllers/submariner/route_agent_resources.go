@@ -29,47 +29,34 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/pointer"
 )
 
 // nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileRouteagentDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error) {
-	return helpers.ReconcileDaemonSet(instance, newRouteAgentDaemonSet(instance), reqLogger, r.config.Client, r.config.Scheme)
+	return helpers.ReconcileDaemonSet(instance, newRouteAgentDaemonSet(instance, names.RouteAgentComponent), reqLogger, r.config.Client,
+		r.config.Scheme)
 }
 
-func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
+func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet {
 	labels := map[string]string{
-		"app":       "submariner-routeagent",
+		"app":       name,
 		"component": "routeagent",
 	}
 
-	matchLabels := map[string]string{
-		"app": "submariner-routeagent",
-	}
-
-	allowPrivilegeEscalation := true
-	privileged := true
-	readOnlyFileSystem := false
-	runAsNonRoot := false
-	securityContextAllCapAllowEscal := corev1.SecurityContext{
-		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
-		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-		Privileged:               &privileged,
-		ReadOnlyRootFilesystem:   &readOnlyFileSystem,
-		RunAsNonRoot:             &runAsNonRoot,
-	}
-
-	terminationGracePeriodSeconds := int64(1)
 	maxUnavailable := intstr.FromString("100%")
 
-	routeAgentDaemonSet := &appsv1.DaemonSet{
+	return &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
-			Name:      "submariner-routeagent",
+			Name:      name,
 			Labels:    labels,
 		},
 		Spec: appsv1.DaemonSetSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{
+				"app": name,
+			}},
 			UpdateStrategy: appsv1.DaemonSetUpdateStrategy{
 				RollingUpdate: &appsv1.RollingUpdateDaemonSet{
 					MaxUnavailable: &maxUnavailable,
@@ -81,7 +68,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					TerminationGracePeriodSeconds: pointer.Int64(1),
 					Volumes: []corev1.Volume{
 						// We need to share /run/xtables.lock with the host for iptables
 						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
@@ -97,12 +84,18 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 					},
 					Containers: []corev1.Container{
 						{
-							Name:            "submariner-routeagent",
-							Image:           getImagePath(cr, names.RouteAgentImage, names.RouteAgentComponent),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
+							Name:            name,
+							Image:           getImagePath(cr, names.RouteAgentImage, names.RouteAgentImage),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentImage]),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
-							Command:         []string{"submariner-route-agent.sh"},
-							SecurityContext: &securityContextAllCapAllowEscal,
+							Command: []string{"submariner-route-agent.sh"},
+							SecurityContext: &corev1.SecurityContext{
+								Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
+								AllowPrivilegeEscalation: pointer.Bool(true),
+								Privileged:               pointer.Bool(true),
+								ReadOnlyRootFilesystem:   pointer.Bool(false),
+								RunAsNonRoot:             pointer.Bool(false),
+							},
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
@@ -124,7 +117,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 							},
 						},
 					},
-					ServiceAccountName: "submariner-routeagent",
+					ServiceAccountName: names.RouteAgentComponent,
 					HostNetwork:        true,
 					// The route agent engine on all nodes, regardless of existing taints
 					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
@@ -132,6 +125,4 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 			},
 		},
 	}
-
-	return routeAgentDaemonSet
 }

@@ -19,307 +19,320 @@ package servicediscovery_test
 
 import (
 	"context"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	operatorv1 "github.com/openshift/api/operator/v1"
-	"github.com/submariner-io/admiral/pkg/log/kzerolog"
+	"github.com/submariner-io/admiral/pkg/test"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
+	"github.com/submariner-io/submariner-operator/controllers/constants"
+	"github.com/submariner-io/submariner-operator/controllers/resource"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	clientset "k8s.io/client-go/kubernetes"
-	fakeKubeClient "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/kubernetes/scheme"
-	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const (
-	submarinerName      = "submariner"
-	submarinerNamespace = "submariner-operator"
-	clusterlocalConfig  = `clusterset.local:53 {
-    forward . `
-	superClusterlocalConfig = `supercluster.local:53 {
-    forward . `
-	IP = "10.10.10.10"
-)
-
-var _ = BeforeSuite(func() {
-	Expect(submariner_v1.AddToScheme(scheme.Scheme)).To(Succeed())
-	Expect(operatorv1.Install(scheme.Scheme)).To(Succeed())
+var _ = Describe("Service discovery controller", func() {
+	Context("Reconciliation", testReconciliation)
+	Context("Deletion", func() {
+		Context("Coredns cleanup", testCoreDNSCleanup)
+		Context("Deployment cleanup", testDeploymentUninstall)
+	})
 })
 
-var _ = Describe("", func() {
-	kzerolog.InitK8sLogging()
-})
+func testReconciliation() {
+	t := newTestDriver()
 
-var _ = Describe("Reconciliation", func() {
-	var (
-		initClientObjs   []controllerClient.Object
-		fakeClient       controllerClient.Client
-		fakeK8sClient    clientset.Interface
-		serviceDiscovery *submariner_v1.ServiceDiscovery
-		controller       *servicediscovery.Reconciler
-		reconcileErr     error
-		reconcileResult  reconcile.Result
-	)
+	It("should add a finalizer to the ServiceDiscovery resource", func() {
+		_, _ = t.DoReconcile()
+		t.awaitFinalizer()
+	})
 
-	newClient := func() controllerClient.Client {
-		return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(initClientObjs...).Build()
-	}
+	When("the openshift DNS config exists", func() {
+		Context("and the lighthouse config isn't present", func() {
+			BeforeEach(func() {
+				t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(""), newDNSService(clusterIP))
+			})
+
+			It("should add it", func() {
+				t.AssertReconcileSuccess()
+
+				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(clusterIP))
+			})
+		})
+
+		Context("and the lighthouse config is present and the lighthouse DNS service IP is updated", func() {
+			updatedClusterIP := "10.10.10.11"
+
+			BeforeEach(func() {
+				t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(clusterIP), newDNSService(updatedClusterIP))
+			})
+
+			It("should update the lighthouse config", func() {
+				t.AssertReconcileSuccess()
+
+				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(updatedClusterIP))
+			})
+		})
+
+		Context("and the lighthouse DNS service doesn't exist", func() {
+			BeforeEach(func() {
+				t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(""))
+			})
+
+			It("should create the service and add the lighthouse config", func() {
+				t.AssertReconcileError()
+
+				t.setLighthouseCoreDNSServiceIP()
+
+				t.AssertReconcileSuccess()
+
+				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(clusterIP))
+			})
+		})
+	})
+
+	When("the coredns ConfigMap exists", func() {
+		Context("and the lighthouse config isn't present", func() {
+			BeforeEach(func() {
+				t.InitClientObjs = append(t.InitClientObjs, newDNSService(clusterIP))
+				t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData("")))
+			})
+
+			It("should add it", func() {
+				t.AssertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+			})
+		})
+
+		Context("and the lighthouse config is present and the lighthouse DNS service IP is updated", func() {
+			updatedClusterIP := "10.10.10.11"
+
+			BeforeEach(func() {
+				t.InitClientObjs = append(t.InitClientObjs, newDNSService(updatedClusterIP))
+				t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
+			})
+
+			It("should update the lighthouse config", func() {
+				t.AssertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(updatedClusterIP)))
+			})
+		})
+
+		Context("and the lighthouse DNS service doesn't exist", func() {
+			BeforeEach(func() {
+				t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData("")))
+			})
+
+			It("should create the service and add the lighthouse config", func() {
+				t.AssertReconcileError()
+
+				t.setLighthouseCoreDNSServiceIP()
+
+				t.AssertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+			})
+		})
+	})
+
+	When("a custom coredns config is specified", func() {
+		BeforeEach(func() {
+			t.serviceDiscovery.Spec.CoreDNSCustomConfig = &submariner_v1.CoreDNSCustomConfig{
+				ConfigMapName: "custom-config",
+				Namespace:     "custom-config-ns",
+			}
+		})
+
+		Context("and the custom coredns ConfigMap already exists", func() {
+			BeforeEach(func() {
+				t.createConfigMap(&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+						Namespace: t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace,
+					},
+					Data: map[string]string{
+						"lighthouse.server": strings.ReplaceAll(coreDNSConfigFormat, "$IP", "1.2.3.4"),
+					},
+				})
+
+				t.InitClientObjs = append(t.InitClientObjs, newDNSService(clusterIP))
+			})
+
+			It("should update it", func() {
+				t.AssertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
+					strings.ReplaceAll(lighthouseDNSConfigFormat, "$IP", clusterIP)))
+			})
+		})
+
+		Context("and the custom coredns ConfigMap doesn't exist", func() {
+			BeforeEach(func() {
+				t.InitClientObjs = append(t.InitClientObjs, newDNSService(clusterIP))
+			})
+
+			It("should create it", func() {
+				t.AssertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
+					strings.ReplaceAll(lighthouseDNSConfigFormat, "$IP", clusterIP)))
+			})
+		})
+
+		Context("and the lighthouse DNS service doesn't exist", func() {
+			It("should create the service and the custom coredns ConfigMap", func() {
+				t.AssertReconcileError()
+
+				t.setLighthouseCoreDNSServiceIP()
+
+				t.AssertReconcileSuccess()
+
+				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
+					strings.ReplaceAll(lighthouseDNSConfigFormat, "$IP", clusterIP)))
+			})
+		})
+	})
+}
+
+func testCoreDNSCleanup() {
+	t := newTestDriver()
 
 	BeforeEach(func() {
-		fakeClient = nil
-		serviceDiscovery = newServiceDiscovery()
-		initClientObjs = []controllerClient.Object{serviceDiscovery}
+		t.serviceDiscovery.SetFinalizers([]string{constants.CleanupFinalizer})
+
+		now := metav1.Now()
+		t.serviceDiscovery.SetDeletionTimestamp(&now)
 	})
 
 	JustBeforeEach(func() {
-		if fakeClient == nil {
-			fakeClient = newClient()
-		}
+		deployment := t.NewDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
 
-		controller = servicediscovery.NewReconciler(&servicediscovery.Config{
-			Client:         fakeClient,
-			Scheme:         scheme.Scheme,
-			KubeClient:     fakeK8sClient,
-			OperatorClient: fakeClient,
-		})
+		var one int32 = 1
+		deployment.Spec.Replicas = &one
 
-		reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
-			Namespace: submarinerNamespace,
-			Name:      submarinerName,
-		}})
+		Expect(t.Client.Create(context.TODO(), deployment)).To(Succeed())
+		t.UpdateDeploymentToReady(deployment)
+
+		t.AssertReconcileSuccess()
 	})
 
-	When("the lighthouse DNS service IP is updated", func() {
-		var dnsconfig *operatorv1.DNS
-		var lighthouseDNSService *corev1.Service
-		oldClusterIP := IP
-		updatedClusterIP := "10.10.10.11"
+	When("the coredns ConfigMap exists", func() {
 		BeforeEach(func() {
-			dnsconfig = newDNSConfig(oldClusterIP)
-			lighthouseDNSService = newDNSService(updatedClusterIP)
-			initClientObjs = append(initClientObjs, dnsconfig, lighthouseDNSService)
-			fakeK8sClient = fakeKubeClient.NewSimpleClientset()
+			t.createConfigMap(newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
 		})
 
-		It("should update the the DNS config", func() {
-			Expect(reconcileErr).To(Succeed())
-			Expect(reconcileResult.Requeue).To(BeFalse())
+		It("should remove the lighthouse config section", func() {
+			Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData("")))
 
-			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
-
-			reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
-				Namespace: submarinerNamespace,
-				Name:      submarinerName,
-			}})
-
-			Expect(reconcileErr).To(Succeed())
-			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDNSConfigUpdated("default", fakeClient).Spec).To(Equal(newDNSConfig(updatedClusterIP).Spec))
+			test.AwaitNoFinalizer(resource.ForControllerClient(t.Client, submarinerNamespace, &submariner_v1.ServiceDiscovery{}),
+				serviceDiscoveryName, constants.CleanupFinalizer)
 		})
+
+		t.testFinalizerRemoved()
 	})
 
-	When("the lighthouse DNS service IP is not updated", func() {
-		var dnsconfig *operatorv1.DNS
-		var lighthouseDNSService *corev1.Service
-		clusterIP := IP
+	When("the openshift DNS config exists", func() {
 		BeforeEach(func() {
-			dnsconfig = newDNSConfig(clusterIP)
-			lighthouseDNSService = newDNSService(clusterIP)
-			initClientObjs = append(initClientObjs, dnsconfig, lighthouseDNSService)
-			fakeK8sClient = fakeKubeClient.NewSimpleClientset()
+			t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(clusterIP))
 		})
 
-		It("should not update the the DNS config", func() {
-			Expect(reconcileErr).To(Succeed())
-			Expect(reconcileResult.Requeue).To(BeFalse())
-
-			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
-
-			reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
-				Namespace: submarinerNamespace,
-				Name:      submarinerName,
-			}})
-
-			Expect(reconcileErr).To(Succeed())
-			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectDNSConfigUpdated("default", fakeClient).Spec).To(Equal(newDNSConfig(clusterIP).Spec))
+		It("should remove the lighthouse config", func() {
+			assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(""))
 		})
+
+		t.testFinalizerRemoved()
 	})
 
-	When("the lighthouse clusterIP is not configured", func() {
-		var lighthouseDNSService *corev1.Service
-		clusterIP := IP
+	When("a custom coredns config is specified", func() {
 		BeforeEach(func() {
-			lighthouseDNSService = newDNSService(clusterIP)
-			configMap := newConfigMap("")
-			initClientObjs = append(initClientObjs, lighthouseDNSService)
-			fakeK8sClient = fakeKubeClient.NewSimpleClientset(configMap)
+			t.serviceDiscovery.Spec.CoreDNSCustomConfig = &submariner_v1.CoreDNSCustomConfig{
+				ConfigMapName: "custom-config",
+				Namespace:     "custom-config-ns",
+			}
 		})
 
-		It("should update the coreDNS config map", func() {
-			Expect(reconcileErr).To(Succeed())
-			Expect(reconcileResult.Requeue).To(BeFalse())
-
-			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
-
-			reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
-				Namespace: submarinerNamespace,
-				Name:      submarinerName,
-			}})
-
-			Expect(reconcileErr).To(Succeed())
-			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + clusterIP + "\n}"))
-			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + clusterIP + "\n}"))
-		})
-	})
-
-	When("the lighthouse clusterIP is already configured", func() {
-		var lighthouseDNSService *corev1.Service
-		clusterIP := IP
-		updatedClusterIP := "10.10.10.11"
-		BeforeEach(func() {
-			lighthouseDNSService = newDNSService(updatedClusterIP)
-			lightHouseConfig := clusterlocalConfig + clusterIP + "\n}" + superClusterlocalConfig + clusterIP + "\n}"
-			configMap := newConfigMap(lightHouseConfig)
-			initClientObjs = append(initClientObjs, lighthouseDNSService)
-			fakeK8sClient = fakeKubeClient.NewSimpleClientset(configMap)
-		})
-
-		It("should update the coreDNS config map", func() {
-			Expect(reconcileErr).To(Succeed())
-			Expect(reconcileResult.Requeue).To(BeFalse())
-
-			Expect(fakeClient.Update(context.TODO(), serviceDiscovery)).To(Succeed())
-
-			reconcileResult, reconcileErr = controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
-				Namespace: submarinerNamespace,
-				Name:      submarinerName,
-			}})
-
-			Expect(reconcileErr).To(Succeed())
-			Expect(reconcileResult.Requeue).To(BeFalse())
-			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(clusterlocalConfig + updatedClusterIP))
-			Expect(expectCoreMapUpdated(fakeK8sClient).Data["Corefile"]).To(ContainSubstring(superClusterlocalConfig + updatedClusterIP))
-		})
-	})
-})
-
-func newServiceDiscovery() *submariner_v1.ServiceDiscovery {
-	return &submariner_v1.ServiceDiscovery{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      submarinerName,
-			Namespace: submarinerNamespace,
-		},
-		Spec: submariner_v1.ServiceDiscoverySpec{
-			GlobalnetEnabled:         false,
-			Repository:               "quay.io/submariner",
-			Version:                  "1.0.0",
-			BrokerK8sRemoteNamespace: "submariner-broker",
-			BrokerK8sApiServer:       "https://192.168.99.110:8443",
-			BrokerK8sApiServerToken:  "MIIDADCCAeigAw",
-			BrokerK8sCA:              "client.crt",
-			ClusterID:                "east",
-			Namespace:                "submariner_ns",
-			Debug:                    true,
-			CustomDomains:            []string{"supercluster.local"},
-		},
-	}
-}
-
-func newConfigMap(lighthouseConfig string) *corev1.ConfigMap {
-	corefile := lighthouseConfig + `.:53 {
-		errors
-		health {
-		lameduck 5s
-	}
-		ready
-		kubernetes cluster1.local in-addr.arpa ip6.arpa {
-		pods insecure
-		fallthrough in-addr.arpa ip6.arpa
-		ttl 30
-	}
-		prometheus :9153
-		forward . /etc/resolv.conf
-		cache 30
-		loop
-		reload
-		loadbalance
-	}`
-
-	return &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "coredns",
-			Namespace: "kube-system",
-		},
-		Data: map[string]string{
-			"Corefile": corefile,
-		},
-		BinaryData: nil,
-	}
-}
-
-func newDNSConfig(clusterIP string) *operatorv1.DNS {
-	return &operatorv1.DNS{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "default",
-		},
-		Spec: operatorv1.DNSSpec{
-			Servers: []operatorv1.Server{
-				{
-					Name:  "lighthouse",
-					Zones: []string{"clusterset.local"},
-					ForwardPlugin: operatorv1.ForwardPlugin{
-						Upstreams: []string{clusterIP},
+		Context("and the custom coredns ConfigMap exists", func() {
+			BeforeEach(func() {
+				t.createConfigMap(&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+						Namespace: t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace,
 					},
-				},
-				{
-					Name:  "lighthouse",
-					Zones: []string{"supercluster.local"},
-					ForwardPlugin: operatorv1.ForwardPlugin{
-						Upstreams: []string{clusterIP},
+					Data: map[string]string{
+						"lighthouse.server": strings.ReplaceAll(coreDNSConfigFormat, "$IP", clusterIP),
 					},
-				},
-			},
-		},
-	}
+				})
+			})
+
+			It("should remove the lighthouse config section", func() {
+				Expect(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data).ToNot(HaveKey("lighthouse.server"))
+			})
+
+			t.testFinalizerRemoved()
+		})
+
+		Context("and the custom coredns ConfigMap doesn't exist", func() {
+			t.testFinalizerRemoved()
+		})
+	})
 }
 
-func newDNSService(clusterIP string) *corev1.Service {
-	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "submariner-lighthouse-coredns",
-			Namespace: submarinerNamespace,
-		},
-		Spec: corev1.ServiceSpec{
-			ClusterIP: clusterIP,
-		},
-	}
-}
+func testDeploymentUninstall() {
+	t := newTestDriver()
 
-func getDNSConfig(name string, client controllerClient.Client) (*operatorv1.DNS, error) {
-	foundDNSConfig := &operatorv1.DNS{}
-	err := client.Get(context.TODO(), types.NamespacedName{Name: name}, foundDNSConfig)
+	BeforeEach(func() {
+		t.serviceDiscovery.SetFinalizers([]string{constants.CleanupFinalizer})
 
-	return foundDNSConfig, err
-}
+		now := metav1.Now()
+		t.serviceDiscovery.SetDeletionTimestamp(&now)
+	})
 
-func expectDNSConfigUpdated(name string, client controllerClient.Client) *operatorv1.DNS {
-	foundDNSConfig, err := getDNSConfig(name, client)
-	Expect(err).To(Succeed())
+	Context("", func() {
+		BeforeEach(func() {
+			t.InitClientObjs = append(t.InitClientObjs,
+				t.NewDeployment(names.ServiceDiscoveryComponent))
+		})
 
-	return foundDNSConfig
-}
+		It("should run a Deployment to uninstall the service discovery component", func() {
+			t.AssertReconcileRequeue()
 
-func expectCoreMapUpdated(client clientset.Interface) *corev1.ConfigMap {
-	foundCoreMap, err := client.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "coredns", metav1.GetOptions{})
-	Expect(err).To(Succeed())
+			t.AssertNoDeployment(names.ServiceDiscoveryComponent)
 
-	return foundCoreMap
+			t.UpdateDeploymentToReady(t.assertUninstallServiceDiscoveryDeployment())
+
+			t.awaitFinalizer()
+
+			t.AssertReconcileSuccess()
+
+			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+
+			t.awaitNoFinalizer()
+		})
+	})
+
+	When("the version of the deleting ServiceDiscovery instance does not support uninstall", func() {
+		BeforeEach(func() {
+			t.serviceDiscovery.Spec.Version = "0.11.1"
+
+			t.InitClientObjs = append(t.InitClientObjs, t.NewDeployment(names.ServiceDiscoveryComponent))
+		})
+
+		It("should not perform uninstall", func() {
+			t.AssertReconcileSuccess()
+
+			_, err := t.GetDeployment(names.ServiceDiscoveryComponent)
+			Expect(err).To(Succeed())
+
+			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+
+			t.awaitNoFinalizer()
+		})
+	})
 }

@@ -27,12 +27,14 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 )
 
 // nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance), reqLogger, r.config.Client, r.config.Scheme)
+	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance, names.GlobalnetComponent), reqLogger,
+		r.config.Client, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
@@ -43,38 +45,22 @@ func (r *Reconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, 
 	return daemonSet, err
 }
 
-func newGlobalnetDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
+func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet {
 	labels := map[string]string{
-		"app":       "submariner-globalnet",
+		"app":       name,
 		"component": "globalnet",
 	}
 
-	matchLabels := map[string]string{
-		"app": "submariner-globalnet",
-	}
-
-	allowPrivilegeEscalation := true
-	privileged := true
-	readOnlyFileSystem := false
-	runAsNonRoot := false
-	securityContextAllCapAllowEscal := corev1.SecurityContext{
-		Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
-		AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-		Privileged:               &privileged,
-		ReadOnlyRootFilesystem:   &readOnlyFileSystem,
-		RunAsNonRoot:             &runAsNonRoot,
-	}
-
-	terminationGracePeriodSeconds := int64(2)
-
-	globalnetDaemonSet := &appsv1.DaemonSet{
+	return &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
-			Name:      "submariner-globalnet",
+			Name:      name,
 			Labels:    labels,
 		},
 		Spec: appsv1.DaemonSetSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: matchLabels},
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{
+				"app": name,
+			}},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -87,10 +73,16 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 					},
 					Containers: []corev1.Container{
 						{
-							Name:            "submariner-globalnet",
-							Image:           getImagePath(cr, names.GlobalnetImage, names.GlobalnetComponent),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetComponent]),
-							SecurityContext: &securityContextAllCapAllowEscal,
+							Name:            name,
+							Image:           getImagePath(cr, names.GlobalnetImage, names.GlobalnetImage),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetImage]),
+							SecurityContext: &corev1.SecurityContext{
+								Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
+								AllowPrivilegeEscalation: pointer.Bool(true),
+								Privileged:               pointer.Bool(true),
+								ReadOnlyRootFilesystem:   pointer.Bool(false),
+								RunAsNonRoot:             pointer.Bool(false),
+							},
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
 							},
@@ -106,8 +98,8 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 							},
 						},
 					},
-					ServiceAccountName:            "submariner-globalnet",
-					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					ServiceAccountName:            names.GlobalnetComponent,
+					TerminationGracePeriodSeconds: pointer.Int64(2),
 					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
 					HostNetwork:                   true,
 					// The Globalnet Pod must be able to run on any flagged node, regardless of existing taints
@@ -116,6 +108,4 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 			},
 		},
 	}
-
-	return globalnetDaemonSet
 }

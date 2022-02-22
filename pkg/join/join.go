@@ -51,6 +51,7 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 	}
 
 	status.Start("Gathering relevant information from Broker")
+	defer status.End()
 
 	brokerAdminConfig, err := brokerInfo.GetBrokerAdministratorConfig()
 	if err != nil {
@@ -69,8 +70,6 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 		ClusterSize: options.GlobalnetClusterSize,
 	}
 
-	status.End()
-
 	if options.GlobalnetEnabled {
 		err = globalnet.AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset, brokerNamespace, &netconfig, status)
 		if err != nil {
@@ -85,16 +84,12 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 		return status.Error(err, "Error deploying the operator")
 	}
 
-	status.End()
-
 	status.Start("Creating SA for cluster")
 
 	brokerInfo.ClientToken, err = broker.CreateSAForCluster(brokerAdminClientset, options.ClusterID, brokerNamespace)
 	if err != nil {
 		return status.Error(err, "Error creating SA for cluster")
 	}
-
-	status.End()
 
 	status.Start("Connecting to Broker")
 
@@ -103,8 +98,6 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 	if err != nil {
 		return status.Error(err, "Error creating broker secret for cluster")
 	}
-
-	status.End()
 
 	imageOverrides, err := image.GetOverrides(options.ImageOverrideArr)
 	if err != nil {
@@ -121,7 +114,6 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 		}
 
 		status.Success("Submariner is up and running")
-		status.End()
 	} else if brokerInfo.IsServiceDiscoveryEnabled() {
 		status.Start("Deploying service discovery only")
 
@@ -132,7 +124,6 @@ func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer c
 		}
 
 		status.Success("Service discovery is up and running")
-		status.End()
 	}
 
 	return nil
