@@ -38,12 +38,23 @@ const (
 	ContainerEnvVar       = "SUBMARINER_UNINSTALL"
 )
 
+type stateType int
+
+const (
+	deleteComponent stateType = iota
+	awaitPodsDeleted
+	createUninstallComponent
+	awaitUninstallComplete
+	uninstallComplete
+)
+
 var minComponentUninstallVersion = semver.New("0.12.0")
 
 type Component struct {
 	Resource          client.Object
 	UninstallResource client.Object
 	CheckInstalled    func() bool
+	state             stateType
 }
 
 type Info struct {
@@ -67,41 +78,72 @@ func (i *Info) Run(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 
-	// First, delete the regular DaemonSets/Deployments.
-	for _, c := range i.Components {
-		if !c.isInstalled() {
-			continue
-		}
-
-		err := i.ensureDeleted(ctx, c.Resource)
-		if err != nil {
-			return false, err
-		}
-	}
-
-	// Next, ensure all their pods are cleaned up.
-	podsIncomplete, err := i.ensurePodsDeleted(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	err = i.createUninstallResources(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	uninstallIncomplete, err := i.ensureUninstallResourcesComplete(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	if podsIncomplete || uninstallIncomplete {
-		return true, nil
+	requeue, err := i.processComponents(ctx)
+	if requeue || err != nil {
+		return requeue, err
 	}
 
 	i.cleanup(ctx)
 
 	return false, nil
+}
+
+func (i *Info) processComponents(ctx context.Context) (bool, error) {
+	requeue := false
+
+	for _, c := range i.Components {
+		if !c.isInstalled() {
+			continue
+		}
+
+		if c.state == deleteComponent {
+			err := i.ensureDeleted(ctx, c.Resource)
+			if err != nil {
+				return false, err
+			}
+
+			c.state = awaitPodsDeleted
+		}
+
+		if c.state == awaitPodsDeleted {
+			podsIncomplete, err := i.ensurePodsDeleted(ctx, c)
+			if err != nil {
+				return false, err
+			}
+
+			if podsIncomplete {
+				requeue = true
+				continue
+			}
+
+			c.state = createUninstallComponent
+		}
+
+		if c.state == createUninstallComponent {
+			err := i.createUninstallResource(ctx, c)
+			if err != nil {
+				return false, err
+			}
+
+			c.state = awaitUninstallComplete
+		}
+
+		if c.state == awaitUninstallComplete {
+			uninstallIncomplete, err := i.ensureUninstallResourceComplete(ctx, c)
+			if err != nil {
+				return false, err
+			}
+
+			if uninstallIncomplete {
+				requeue = true
+				continue
+			}
+
+			c.state = uninstallComplete
+		}
+	}
+
+	return requeue, nil
 }
 
 func (i *Info) ensureDeleted(ctx context.Context, obj client.Object) error {
@@ -117,53 +159,39 @@ func (i *Info) ensureDeleted(ctx context.Context, obj client.Object) error {
 	return errors.Wrapf(err, "error deleting %#v", obj)
 }
 
-func (i *Info) ensurePodsDeleted(ctx context.Context) (bool, error) {
-	requeue := false
-
-	for _, c := range i.Components {
-		if !c.isInstalled() {
-			continue
-		}
-
-		pods, err := findPodsBySelector(ctx, i.Client, c.Resource.GetNamespace(), &metav1.LabelSelector{
-			MatchLabels: map[string]string{"app": c.Resource.GetName()},
-		})
-		if err != nil {
-			return false, err
-		}
-
-		numPods := len(pods)
-		if numPods > 0 {
-			i.Log.Info(fmt.Sprintf("%T still has pods - requeueing: ", c.Resource), "name", c.Resource.GetName(),
-				"namespace", c.Resource.GetNamespace(), "numPods", numPods)
-
-			requeue = true
-		}
+func (i *Info) ensurePodsDeleted(ctx context.Context, c *Component) (bool, error) {
+	pods, err := findPodsBySelector(ctx, i.Client, c.Resource.GetNamespace(), &metav1.LabelSelector{
+		MatchLabels: map[string]string{"app": c.Resource.GetName()},
+	})
+	if err != nil {
+		return false, err
 	}
 
-	return requeue, nil
+	numPods := len(pods)
+	if numPods > 0 {
+		i.Log.Info(fmt.Sprintf("%T still has pods - requeueing: ", c.Resource), "name", c.Resource.GetName(),
+			"namespace", c.Resource.GetNamespace(), "numPods", numPods)
+
+		return true, nil
+	}
+
+	return false, nil
 }
 
-func (i *Info) createUninstallResources(ctx context.Context) error {
-	for _, c := range i.Components {
-		if !c.isInstalled() {
-			continue
-		}
+func (i *Info) createUninstallResource(ctx context.Context, c *Component) error {
+	var err error
 
-		var err error
+	switch d := c.UninstallResource.(type) {
+	case *appsv1.DaemonSet:
+		err = i.createUninstallDaemonSetFrom(ctx, d)
+	case *appsv1.Deployment:
+		err = i.createUninstallDeploymentFrom(ctx, d)
+	default:
+		panic(fmt.Sprintf("Unknown type: %T", d))
+	}
 
-		switch d := c.UninstallResource.(type) {
-		case *appsv1.DaemonSet:
-			err = i.createUninstallDaemonSetFrom(ctx, d)
-		case *appsv1.Deployment:
-			err = i.createUninstallDeploymentFrom(ctx, d)
-		default:
-			panic(fmt.Sprintf("Unknown type: %T", d))
-		}
-
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -200,34 +228,24 @@ func (i *Info) createUninstallDaemonSetFrom(ctx context.Context, daemonSet *apps
 	return nil
 }
 
-func (i *Info) ensureUninstallResourcesComplete(ctx context.Context) (bool, error) {
-	anyRequeue := false
+func (i *Info) ensureUninstallResourceComplete(ctx context.Context, c *Component) (bool, error) {
+	var requeue bool
+	var err error
 
-	for _, c := range i.Components {
-		if !c.isInstalled() {
-			continue
-		}
-
-		var requeue bool
-		var err error
-
-		switch d := c.UninstallResource.(type) {
-		case *appsv1.DaemonSet:
-			requeue, err = i.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(d))
-		case *appsv1.Deployment:
-			requeue, err = i.ensureDeploymentReady(ctx, client.ObjectKeyFromObject(d))
-		default:
-			panic(fmt.Sprintf("Unknown type: %T", d))
-		}
-
-		if err != nil {
-			return false, err
-		}
-
-		anyRequeue = anyRequeue || requeue
+	switch d := c.UninstallResource.(type) {
+	case *appsv1.DaemonSet:
+		requeue, err = i.ensureDaemonSetReady(ctx, client.ObjectKeyFromObject(d))
+	case *appsv1.Deployment:
+		requeue, err = i.ensureDeploymentReady(ctx, client.ObjectKeyFromObject(d))
+	default:
+		panic(fmt.Sprintf("Unknown type: %T", d))
 	}
 
-	return anyRequeue, nil
+	if err != nil {
+		return false, err
+	}
+
+	return requeue, nil
 }
 
 func (i *Info) ensureDaemonSetReady(ctx context.Context, key client.ObjectKey) (bool, error) {
