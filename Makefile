@@ -164,7 +164,7 @@ package/Dockerfile.submariner-operator-index: packagemanifests
 # Generate deep-copy code
 CONTROLLER_DEEPCOPY := api/submariner/v1alpha1/zz_generated.deepcopy.go
 $(CONTROLLER_DEEPCOPY): $(VENDOR_MODULES) | $(CONTROLLER_GEN)
-	cd api && $(CONTROLLER_GEN) object:headerFile="$(CURDIR)/hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
+	$(CONTROLLER_GEN) object:headerFile="$(CURDIR)/hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
 
 # Generate embedded YAMLs
 EMBEDDED_YAMLS := pkg/embeddedyamls/yamls.go
@@ -221,11 +221,11 @@ $(CONTROLLER_GEN): $(VENDOR_MODULES)
 	$(GO) build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
 deploy/crds/submariner.io_servicediscoveries.yaml: ./api/submariner/v1alpha1/servicediscovery_types.go $(VENDOR_MODULES) | $(CONTROLLER_GEN)
-	cd api && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
 	test -f $@
 
 deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: ./api/submariner/v1alpha1/submariner_types.go $(VENDOR_MODULES) | $(CONTROLLER_GEN)
-	cd api && $(GO) mod vendor && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../deploy/crds
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
 	test -f $@
 
 # Submariner CRDs
