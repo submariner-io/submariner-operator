@@ -2874,15 +2874,6 @@ rules:
     resources:
       - clusterglobalegressips
       - globalegressips
-    verbs:
-      - create
-      - get
-      - list
-      - watch
-      - update
-  - apiGroups:
-      - submariner.io
-    resources:
       - globalingressips
     verbs:
       - create
