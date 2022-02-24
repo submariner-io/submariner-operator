@@ -29,6 +29,7 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -78,9 +79,13 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 		Log:        log,
 	}
 
-	requeue, err := uninstallInfo.Run(ctx)
+	requeue, timedOut, err := uninstallInfo.Run(ctx)
 	if err != nil {
 		return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
+	}
+
+	if !timedOut && instance.Spec.ServiceDiscoveryEnabled {
+		requeue = r.ensureServiceDiscoveryDeleted(ctx, instance.Namespace) || requeue
 	}
 
 	if requeue {
@@ -94,6 +99,21 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.Submariner) error {
 	return finalizer.Remove(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.Submariner{}),
 		instance, constants.CleanupFinalizer)
+}
+
+func (r *Reconciler) ensureServiceDiscoveryDeleted(ctx context.Context, namespace string) bool {
+	err := r.config.Client.Delete(ctx, newServiceDiscoveryCR(namespace))
+	if apierrors.IsNotFound(err) {
+		return false
+	}
+
+	if err == nil {
+		log.Info("Deleted the ServiceDiscovery resource")
+	} else {
+		log.Error(err, "Error deleting the ServiceDiscovery resource")
+	}
+
+	return true
 }
 
 func newDaemonSet(name, namespace string) *appsv1.DaemonSet {

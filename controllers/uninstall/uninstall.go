@@ -68,24 +68,24 @@ func (c *Component) isInstalled() bool {
 	return c.CheckInstalled == nil || c.CheckInstalled()
 }
 
-func (i *Info) Run(ctx context.Context) (bool, error) {
+func (i *Info) Run(ctx context.Context) (bool, bool, error) {
 	timedOut := time.Since(i.StartTime) >= ComponentReadyTimeout
 	if timedOut {
 		i.Log.Info("Timed out waiting for components to complete - aborting")
 
 		i.cleanup(ctx)
 
-		return false, nil
+		return false, true, nil
 	}
 
 	requeue, err := i.processComponents(ctx)
 	if requeue || err != nil {
-		return requeue, err
+		return requeue, false, err
 	}
 
 	i.cleanup(ctx)
 
-	return false, nil
+	return false, false, nil
 }
 
 func (i *Info) processComponents(ctx context.Context) (bool, error) {

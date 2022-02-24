@@ -81,7 +81,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 		Log:        log,
 	}
 
-	requeue, err := uninstallInfo.Run(ctx)
+	requeue, _, err := uninstallInfo.Run(ctx)
 	if err != nil {
 		return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
 	}

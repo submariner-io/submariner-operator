@@ -33,7 +33,9 @@ import (
 	routeagent "github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
@@ -381,6 +383,37 @@ func testDeletion() {
 			Expect(err).To(Succeed())
 
 			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+
+			t.awaitNoFinalizer()
+		})
+	})
+
+	Context("and ServiceDiscovery is enabled", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.GlobalCIDR = ""
+			t.submariner.Spec.ServiceDiscoveryEnabled = true
+
+			t.InitClientObjs = append(t.InitClientObjs,
+				&operatorv1.ServiceDiscovery{
+					ObjectMeta: metav1.ObjectMeta{
+						Namespace: submarinerNamespace,
+						Name:      names.ServiceDiscoveryCrName,
+					},
+				})
+		})
+
+		It("should delete the ServiceDiscovery resource", func() {
+			t.AssertReconcileRequeue()
+
+			t.UpdateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
+			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
+
+			t.AssertReconcileSuccess()
+
+			serviceDiscovery := &operatorv1.ServiceDiscovery{}
+			err := t.Client.Get(context.TODO(), types.NamespacedName{Name: names.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
+				serviceDiscovery)
+			Expect(errors.IsNotFound(err)).To(BeTrue(), "ServiceDiscovery still exists")
 
 			t.awaitNoFinalizer()
 		})

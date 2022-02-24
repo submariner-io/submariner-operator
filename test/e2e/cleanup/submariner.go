@@ -51,11 +51,13 @@ var _ = Describe("Submariner cleanup", func() {
 func testSubmarinerCleanup() {
 	var (
 		submarinerInterface           operatorv1alpha1client.SubmarinerInterface
+		serviceDiscoveryInterface     operatorv1alpha1client.ServiceDiscoveryInterface
 		submariner                    *operatorv1alpha1.Submariner
 		routeAgentPodMonitor          *podMonitor
 		gatewayPodMonitor             *podMonitor
 		globalnetPodMonitor           *podMonitor
 		networkPluginSyncerPodMonitor *podMonitor
+		lhAgentAgentPodMonitor        *podMonitor
 		brokerRestConfig              *rest.Config
 		stopCh                        chan struct{}
 	)
@@ -69,6 +71,7 @@ func testSubmarinerCleanup() {
 		Expect(err).To(Succeed())
 
 		submarinerInterface = operatorClient.SubmarinerV1alpha1().Submariners(framework.TestContext.SubmarinerNamespace)
+		serviceDiscoveryInterface = operatorClient.SubmarinerV1alpha1().ServiceDiscoveries(framework.TestContext.SubmarinerNamespace)
 
 		submariner, err = submarinerInterface.Get(context.TODO(), submarinercr.SubmarinerName, metav1.GetOptions{})
 		Expect(err).To(Succeed())
@@ -87,6 +90,10 @@ func testSubmarinerCleanup() {
 			names.NetworkPluginSyncerComponent, metav1.GetOptions{})
 		if err == nil {
 			networkPluginSyncerPodMonitor = startPodMonitor(names.AppendUninstall(names.NetworkPluginSyncerComponent), stopCh)
+		}
+
+		if submariner.Spec.ServiceDiscoveryEnabled {
+			lhAgentAgentPodMonitor = startPodMonitor(names.AppendUninstall(names.ServiceDiscoveryComponent), stopCh)
 		}
 	})
 
@@ -121,34 +128,42 @@ func testSubmarinerCleanup() {
 
 		By("Submariner resource deleted")
 
+		_, err := serviceDiscoveryInterface.Get(context.TODO(), names.ServiceDiscoveryCrName, metav1.GetOptions{})
+		assertIsNotFound(err, "ServiceDiscovery", names.ServiceDiscoveryCrName)
+
+		lhAgentAgentPodMonitor.assertUninstallPodsCompleted()
 		routeAgentPodMonitor.assertUninstallPodsCompleted()
 		gatewayPodMonitor.assertUninstallPodsCompleted()
 		globalnetPodMonitor.assertUninstallPodsCompleted()
 		networkPluginSyncerPodMonitor.assertUninstallPodsCompleted()
 
-		_, err := framework.KubeClients[framework.ClusterA].AppsV1().DaemonSets(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
+		_, err = framework.KubeClients[framework.ClusterA].AppsV1().DaemonSets(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
 			names.AppendUninstall(names.GatewayComponent), metav1.GetOptions{})
-		Expect(apierrors.IsNotFound(err)).To(BeTrue(), fmt.Sprintf("Unexpected DaemonSet %q found",
-			names.AppendUninstall(names.GatewayComponent)))
+		assertIsNotFound(err, "DaemonSet", names.AppendUninstall(names.GatewayComponent))
 
 		_, err = framework.KubeClients[framework.ClusterA].AppsV1().DaemonSets(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
 			names.AppendUninstall(names.RouteAgentComponent), metav1.GetOptions{})
-		Expect(apierrors.IsNotFound(err)).To(BeTrue(), fmt.Sprintf("Unexpected DaemonSet %q found",
-			names.AppendUninstall(names.RouteAgentComponent)))
+		assertIsNotFound(err, "DaemonSet", names.AppendUninstall(names.RouteAgentComponent))
 
 		_, err = framework.KubeClients[framework.ClusterA].AppsV1().DaemonSets(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
 			names.AppendUninstall(names.GlobalnetComponent), metav1.GetOptions{})
-		Expect(apierrors.IsNotFound(err)).To(BeTrue(), fmt.Sprintf("Unexpected DaemonSet %q found",
-			names.AppendUninstall(names.GlobalnetComponent)))
+		assertIsNotFound(err, "DaemonSet", names.AppendUninstall(names.GlobalnetComponent))
 
 		_, err = framework.KubeClients[framework.ClusterA].AppsV1().Deployments(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
 			names.AppendUninstall(names.NetworkPluginSyncerComponent), metav1.GetOptions{})
-		Expect(apierrors.IsNotFound(err)).To(BeTrue(), fmt.Sprintf("Unexpected Deployment %q found",
-			names.AppendUninstall(names.NetworkPluginSyncerComponent)))
+		assertIsNotFound(err, "Deployment", names.AppendUninstall(names.NetworkPluginSyncerComponent))
+
+		_, err = framework.KubeClients[framework.ClusterA].AppsV1().Deployments(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
+			names.AppendUninstall(names.ServiceDiscoveryComponent), metav1.GetOptions{})
+		assertIsNotFound(err, "Deployment", names.AppendUninstall(names.ServiceDiscoveryComponent))
 
 		assertNoClusterResources(brokerRestConfig, submariner.Spec.BrokerK8sRemoteNamespace)
 		assertNoEndpointResources(brokerRestConfig, submariner.Spec.BrokerK8sRemoteNamespace)
 		assertNoGlobalnetResources()
+
+		if submariner.Spec.ServiceDiscoveryEnabled {
+			Expect(getCorednsConfigMap().Data["Corefile"]).ToNot(ContainSubstring("lighthouse"))
+		}
 	})
 }
 
@@ -327,4 +342,24 @@ func getBrokerRestConfig(brokerNS string) *rest.Config {
 	}
 
 	return nil
+}
+
+func getCorednsConfigMap() *corev1.ConfigMap {
+	configMap, err := framework.KubeClients[framework.ClusterA].CoreV1().ConfigMaps("kube-system").Get(context.TODO(),
+		"coredns", metav1.GetOptions{})
+	Expect(err).To(Succeed())
+
+	return configMap
+}
+
+func assertIsNotFound(err error, typeName, objName string) {
+	if apierrors.IsNotFound(err) {
+		return
+	}
+
+	if err == nil {
+		Fail(fmt.Sprintf("Unexpected %s %q found", typeName, objName))
+	}
+
+	Expect(err).To(Succeed())
 }
