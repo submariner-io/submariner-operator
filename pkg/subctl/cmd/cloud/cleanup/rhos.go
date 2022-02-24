@@ -41,7 +41,7 @@ func newRHOSCleanupCommand() *cobra.Command {
 }
 
 func cleanupRHOS(cmd *cobra.Command, args []string) {
-	err := rhos.RunOnRHOS(*parentRestConfigProducer,
+	err := rhos.RunOnRHOS(*parentRestConfigProducer, "", false,
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			err := gwDeployer.Cleanup(reporter)
