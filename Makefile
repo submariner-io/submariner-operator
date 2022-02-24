@@ -38,6 +38,12 @@ undefine SKIP
 undefine FOCUS
 undefine E2E_TESTDIR
 
+ifneq (,$(filter ovn,$(_using)))
+SETTINGS = $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
+else
+SETTINGS = $(DAPPER_SOURCE)/.shipyard.e2e.yml
+endif
+
 include $(SHIPYARD_DIR)/Makefile.inc
 
 CROSS_TARGETS := linux-amd64 linux-arm64 linux-arm linux-s390x linux-ppc64le windows-amd64.exe darwin-amd64
@@ -45,15 +51,7 @@ BINARIES := bin/subctl
 CROSS_BINARIES := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,bin/subctl-$(VERSION)-%,$(cross)))
 CROSS_TARBALLS := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,dist/subctl-$(VERSION)-%.tar.xz,$(cross)))
 
-ifneq (,$(filter ovn,$(_using)))
-CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
-else
-CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.yml
-endif
-
-override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
-override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
-override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) cluster1 cluster2
+override E2E_ARGS += --settings $(SETTINGS) cluster1 cluster2
 export DEPLOY_ARGS
 override UNIT_TEST_ARGS += test internal/env
 override VALIDATE_ARGS += --skip-dirs pkg/client
