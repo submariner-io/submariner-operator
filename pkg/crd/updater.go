@@ -120,7 +120,8 @@ func (c *controllerClientCreator) Get(ctx context.Context, name string,
 }
 
 func (c *controllerClientCreator) Delete(ctx context.Context, name string,
-	options metav1.DeleteOptions) error { // nolint:gocritic // Match K8s API
+	options metav1.DeleteOptions, // nolint:gocritic // Match K8s API
+) error {
 	crd, err := c.Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return err

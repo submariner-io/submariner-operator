@@ -103,15 +103,15 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 
 	if clusterNetwork.PluginSettings != nil {
 		if ovndb, ok := clusterNetwork.PluginSettings[network.OvnNBDB]; ok {
-			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env =
-				append(networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env = append(
+				networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name: network.OvnNBDB, Value: ovndb,
 				})
 		}
 
 		if ovnsb, ok := clusterNetwork.PluginSettings[network.OvnSBDB]; ok {
-			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env =
-				append(networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env = append(
+				networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
 					Name: network.OvnSBDB, Value: ovnsb,
 				})
 		}
