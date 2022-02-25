@@ -28,12 +28,8 @@ import (
 
 type Producer interface {
 	ForCRD() apiextClient.Interface
-
 	ForKubernetes() kubernetes.Interface
-
 	ForDynamic() dynamic.Interface
-
 	ForOperator() operatorClientset.Interface
-
 	ForSubmariner() submarinerClientset.Interface
 }
