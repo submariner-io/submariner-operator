@@ -222,6 +222,7 @@ func gatherDiscovery(dataType string, info Info) bool {
 		gatherEndpointSlices(&info, corev1.NamespaceAll)
 		gatherConfigMapLighthouseDNS(&info, cmd.SubmarinerNamespace)
 		gatherConfigMapCoreDNS(&info)
+		gatherLabeledServices(&info, internalSvcLabel)
 	default:
 		return false
 	}
