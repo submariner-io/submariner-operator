@@ -25,7 +25,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	mcsclient "sigs.k8s.io/mcs-api/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 )
@@ -34,7 +34,7 @@ var (
 	unexportCmd = &cobra.Command{
 		Use:   "unexport",
 		Short: "Stop a resource from being exported to other clusters",
-		Long:  "This command stops exporting a resource so it isn't accessible to other clusters any more",
+		Long:  "This command stops exporting a resource so that it's no longer accessible to other clusters",
 	}
 	unexportServiceCmd = &cobra.Command{
 		Use:   "service <serviceName>",
@@ -55,14 +55,14 @@ func init() {
 
 func unexportService(cmd *cobra.Command, args []string) {
 	err := validateUnexportArguments(args)
-	utils.ExitOnError("Insufficient arguments", err)
+	exit.OnErrorWithMessage(err, "Insufficient arguments")
 
 	clientConfig := restConfigProducer.ClientConfig()
 	restConfig, err := clientConfig.ClientConfig()
-	utils.ExitOnError("Error connecting to the target cluster", err)
+	exit.OnErrorWithMessage(err, "Error connecting to the target cluster")
 
 	client, err := mcsclient.NewForConfig(restConfig)
-	utils.ExitOnError("Error connecting to the target cluster", err)
+	exit.OnErrorWithMessage(err, "Error connecting to the target cluster")
 
 	if namespace == "" {
 		if namespace, _, err = clientConfig.Namespace(); err != nil {
@@ -72,7 +72,7 @@ func unexportService(cmd *cobra.Command, args []string) {
 
 	err = client.ServiceExports(namespace).Delete(context.TODO(), args[0], metav1.DeleteOptions{})
 
-	utils.ExitOnError("Failed to unexport Service", err)
+	exit.OnErrorWithMessage(err, "Failed to unexport Service")
 	fmt.Fprintln(os.Stdout, "Service unexported successfully")
 }
 
