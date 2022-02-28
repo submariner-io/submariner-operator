@@ -2782,58 +2782,31 @@ rules:
       - ""
     resources:
       - pods
-      - services
-      - services/finalizers
-      - endpoints
-      - persistentvolumeclaims
-      - events
-      - configmaps
-      - secrets
     verbs:
-      - '*'
-  - apiGroups:
-      - apps
-    resources:
-      - deployments
-      - daemonsets
-      - replicasets
-      - statefulsets
-    verbs:
-      - '*'
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - servicemonitors
-    verbs:
-      - get
       - create
-  - apiGroups:
-      - apps
-    resourceNames:
-      - submariner-diagnose
-    resources:
-      - deployments/finalizers
-    verbs:
-      - update
+      - get
+      - list
   - apiGroups:
       - ""
     resources:
-      - pods
+      - configmaps
     verbs:
       - get
+      - list
   - apiGroups:
       - apps
     resources:
-      - replicasets
+      - daemonsets
     verbs:
       - get
+      - list
   - apiGroups:
       - submariner.io
     resources:
       - '*'
-      - servicediscoveries
     verbs:
-      - '*'
+      - get
+      - list
 `
 	Config_rbac_submariner_diagnose_role_binding_yaml = `---
 kind: RoleBinding
@@ -2856,69 +2829,22 @@ metadata:
 rules:
   # submariner-diagnose runs subctl diagnose to troubleshoot submariner
   # dpeloyment
-  - apiGroups:
+  - apiGroups:  # nodes are looked up to figure out network settings
       - ""
     resources:
       - configmaps
-    verbs:
-      - create
-      - get
-      - list
-      - watch
-      - update
-  - apiGroups:
-      - apiextensions.k8s.io
-    resources:
-      - customresourcedefinitions
+      - nodes
     verbs:
       - get
       - list
-      - create
-      - update
-      - delete
-      - watch
-  - apiGroups:  # pods, services and nodes are looked up to figure out network settings
+  - apiGroups:  # pods are created to run firewall diagnostics
       - ""
     resources:
       - pods
-      - services
-      - nodes
     verbs:
       - create
       - get
       - list
-      - watch
-  - apiGroups:
-      - operator.openshift.io
-    resources:
-      - dnses
-    verbs:
-      - get
-      - list
-      - watch
-      - update
-  - apiGroups:
-      - config.openshift.io
-    resources:
-      - networks
-    verbs:
-      - get
-      - list
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - servicemonitors
-    verbs:
-      - get
-      - create
 `
 	Config_rbac_submariner_diagnose_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
