@@ -48,18 +48,13 @@ var (
 		PreRunE: restConfigProducer.CheckVersionMismatch,
 		Run:     exportService,
 	}
-	serviceNamespace string
 )
 
 func init() {
 	restConfigProducer.AddKubeConfigFlag(exportCmd)
-	addServiceExportFlags(exportServiceCmd)
+	addNamespaceFlag(exportServiceCmd)
 	exportCmd.AddCommand(exportServiceCmd)
 	rootCmd.AddCommand(exportCmd)
-}
-
-func addServiceExportFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&serviceNamespace, "namespace", "n", "", "namespace of the service to be exported")
 }
 
 func exportService(cmd *cobra.Command, args []string) {
@@ -77,9 +72,9 @@ func exportService(cmd *cobra.Command, args []string) {
 
 	utils.ExitOnError("Error creating RestMapper for ServiceExport", err)
 
-	if serviceNamespace == "" {
-		if serviceNamespace, _, err = clientConfig.Namespace(); err != nil {
-			serviceNamespace = "default"
+	if namespace == "" {
+		if namespace, _, err = clientConfig.Namespace(); err != nil {
+			namespace = "default"
 		}
 	}
 
@@ -88,19 +83,19 @@ func exportService(cmd *cobra.Command, args []string) {
 
 	svcName := args[0]
 
-	_, err = clientSet.CoreV1().Services(serviceNamespace).Get(context.TODO(), svcName, metav1.GetOptions{})
-	utils.ExitOnError(fmt.Sprintf("Unable to find the Service %q in namespace %q", svcName, serviceNamespace), err)
+	_, err = clientSet.CoreV1().Services(namespace).Get(context.TODO(), svcName, metav1.GetOptions{})
+	utils.ExitOnError(fmt.Sprintf("Unable to find the Service %q in namespace %q", svcName, namespace), err)
 
 	mcsServiceExport := &mcsv1a1.ServiceExport{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      svcName,
-			Namespace: serviceNamespace,
+			Namespace: namespace,
 		},
 	}
 	resourceServiceExport, gvr, err := autil.ToUnstructuredResource(mcsServiceExport, restMapper)
 	utils.ExitOnError("Failed to convert to Unstructured", err)
 
-	_, err = dynClient.Resource(*gvr).Namespace(serviceNamespace).Create(context.TODO(), resourceServiceExport, metav1.CreateOptions{})
+	_, err = dynClient.Resource(*gvr).Namespace(namespace).Create(context.TODO(), resourceServiceExport, metav1.CreateOptions{})
 	if k8serrors.IsAlreadyExists(err) {
 		fmt.Fprintln(os.Stdout, "Service already exported")
 		return
