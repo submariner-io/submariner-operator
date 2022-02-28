@@ -82,7 +82,12 @@ func checkCNIConfig(cluster *cmd.Cluster) bool {
 		return false
 	}
 
-	status.EndWithSuccess("The detected CNI network plugin (%q) is supported", cluster.Submariner.Status.NetworkPlugin)
+	if cluster.Submariner.Status.NetworkPlugin == constants.NetworkPluginGeneric {
+		status.EndWithWarning("Submariner could not detect the CNI network plugin and is using (%q) plugin."+
+			" It may or may not work.", cluster.Submariner.Status.NetworkPlugin)
+	} else {
+		status.EndWithSuccess("The detected CNI network plugin (%q) is supported", cluster.Submariner.Status.NetworkPlugin)
+	}
 
 	return checkCalicoIPPoolsIfCalicoCNI(cluster)
 }
