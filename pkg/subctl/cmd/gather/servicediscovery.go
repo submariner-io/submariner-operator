@@ -20,6 +20,7 @@ package gather
 
 import (
 	lhconstants "github.com/submariner-io/lighthouse/pkg/constants"
+	corev1 "k8s.io/api/core/v1"
 	discoveryv1beta1 "k8s.io/api/discovery/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -32,6 +33,7 @@ const (
 	lighthouseComponentsLabel = "component=submariner-lighthouse"
 	k8sCoreDNSPodLabel        = "k8s-app=kube-dns"
 	ocpCoreDNSPodLabel        = "dns.operator.openshift.io/daemonset-dns=default"
+	internalSvcLabel          = "submariner.io/exportedServiceRef"
 )
 
 func gatherServiceDiscoveryPodLogs(info *Info) {
@@ -108,6 +110,15 @@ func gatherConfigMapCoreDNS(info *Info) {
 
 		gatherConfigMaps(info, namespace, metav1.ListOptions{FieldSelector: fieldSelector})
 	}
+}
+
+// gatherLabeledServices gathers a service based on the label provided.
+func gatherLabeledServices(info *Info, label string) {
+	ResourcesToYAMLFile(info, schema.GroupVersionResource{
+		Group:    corev1.SchemeGroupVersion.Group,
+		Version:  corev1.SchemeGroupVersion.Version,
+		Resource: "services",
+	}, corev1.NamespaceAll, metav1.ListOptions{LabelSelector: label})
 }
 
 func gatherConfigMapLighthouseDNS(info *Info, namespace string) {

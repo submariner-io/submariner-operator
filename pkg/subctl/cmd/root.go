@@ -48,6 +48,7 @@ var (
 		Short: "An installer for Submariner",
 	}
 	restConfigProducer = restconfig.NewProducer()
+	namespace          string
 )
 
 const SubmMissingMessage = "Submariner is not installed"
@@ -62,6 +63,10 @@ func init() {
 
 func AddToRootCommand(cmd *cobra.Command) {
 	rootCmd.AddCommand(cmd)
+}
+
+func addNamespaceFlag(cmd *cobra.Command) {
+	cmd.Flags().StringVarP(&namespace, "namespace", "n", "", "namespace to use")
 }
 
 const (

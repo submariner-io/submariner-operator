@@ -39,8 +39,7 @@ func updateDaemonSetStatus(ctx context.Context, clnt client.Reader, daemonSet *a
 		status.Status = &daemonSet.Status
 		if status.LastResourceVersion != daemonSet.ObjectMeta.ResourceVersion {
 			// The daemonset has changed, check its containers
-			mismatchedContainerImages, nonReadyContainerStates, err :=
-				checkDaemonSetContainers(ctx, clnt, daemonSet, namespace)
+			mismatchedContainerImages, nonReadyContainerStates, err := checkDaemonSetContainers(ctx, clnt, daemonSet, namespace)
 			if err != nil {
 				return err
 			}

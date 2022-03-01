@@ -327,6 +327,7 @@ test-subctl: bin/subctl deploy
 # show
 	bin/subctl show all --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1
 # verify is tested by the e2e target (run elsewhere)
+	bin/subctl uninstall -y --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1
 
 # Operator SDK
 # On version bumps, the checksum will need to be updated manually.
