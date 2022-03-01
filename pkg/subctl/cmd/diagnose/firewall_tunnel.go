@@ -190,15 +190,16 @@ func getTunnelPort(submariner *v1alpha1.Submariner, endpoint *subv1.Endpoint, st
 	var err error
 
 	switch endpoint.Spec.Backend {
-	case "libreswan", "wireguard":
+	case "libreswan", "wireguard", "vxlan":
 		tunnelPort, err = endpoint.Spec.GetBackendPort(subv1.UDPPortConfig, int32(submariner.Spec.CeIPSecNATTPort))
 		if err != nil {
-			status.QueueWarningMessage(fmt.Sprintf("Error reading tunnel port: %v", err))
+			status.EndWithFailure(fmt.Sprintf("Error reading tunnel port: %v", err))
+			return tunnelPort, false
 		}
 
 		return tunnelPort, true
 	default:
-		status.QueueFailureMessage(fmt.Sprintf("Could not determine the tunnel port for cable driver %q",
+		status.EndWithFailure(fmt.Sprintf("Could not determine the tunnel port for cable driver %q",
 			endpoint.Spec.Backend))
 		return tunnelPort, false
 	}
