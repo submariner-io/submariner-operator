@@ -80,6 +80,10 @@ func diagnoseAll(cluster *cmd.Cluster) bool {
 
 	fmt.Println()
 
+	success = checkGlobalnet(cluster) && success
+
+	fmt.Println()
+
 	fmt.Printf("Skipping inter-cluster firewall check as it requires two kubeconfigs." +
 		" Please run \"subctl diagnose firewall inter-cluster\" command manually.\n")
 
