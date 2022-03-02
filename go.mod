@@ -28,10 +28,10 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.3.0
 	github.com/submariner-io/admiral v0.12.0-rc0
-	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220228214527-6b57dd546a61
-	github.com/submariner-io/lighthouse v0.12.0-m3.0.20220228130053-4b4ae2fd5420
+	github.com/submariner-io/cloud-prepare v0.12.0-rc0
+	github.com/submariner-io/lighthouse v0.12.0-rc0
 	github.com/submariner-io/shipyard v0.12.0-rc0
-	github.com/submariner-io/submariner v0.12.0-m3.0.20220301153608-c60ee9d292d0
+	github.com/submariner-io/submariner v0.12.0-rc0
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.5
 	github.com/xlab/treeprint v1.1.0 // indirect
