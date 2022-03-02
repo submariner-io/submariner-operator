@@ -20,4 +20,4 @@ jobs:
 
       - name: Post mortem
         if: failure()
-        uses: submariner-io/shipyard/gh-actions/post-mortem@devel
+        uses: submariner-io/shipyard/gh-actions/post-mortem@release-0.12

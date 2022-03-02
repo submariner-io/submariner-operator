@@ -1,10 +1,10 @@
 ---
-name: Release Subctl devel
+name: Release Subctl release-0.12
 
 on:
   push:
     branches:
-      - devel
+      - release-0.12
 
 jobs:
   release-subctl-on-push:
