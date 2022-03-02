@@ -2765,6 +2765,100 @@ roleRef:
   name: submariner-globalnet
   apiGroup: rbac.authorization.k8s.io
 `
+	Config_rbac_submariner_diagnose_service_account_yaml = `---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: submariner-diagnose
+`
+	Config_rbac_submariner_diagnose_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: submariner-diagnose
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - create
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - submariner.io
+    resources:
+      - '*'
+    verbs:
+      - get
+      - list
+`
+	Config_rbac_submariner_diagnose_role_binding_yaml = `---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: submariner-diagnose
+subjects:
+  - kind: ServiceAccount
+    name: submariner-diagnose
+roleRef:
+  kind: Role
+  name: submariner-diagnose
+  apiGroup: rbac.authorization.k8s.io
+`
+	Config_rbac_submariner_diagnose_cluster_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: submariner-diagnose
+rules:
+  # submariner-diagnose runs subctl diagnose to troubleshoot submariner
+  # dpeloyment
+  - apiGroups:  # nodes are looked up to figure out network settings
+      - ""
+    resources:
+      - configmaps
+      - nodes
+    verbs:
+      - get
+      - list
+  - apiGroups:  # pods are created to run firewall diagnostics
+      - ""
+    resources:
+      - pods
+    verbs:
+      - create
+      - get
+      - list
+`
+	Config_rbac_submariner_diagnose_cluster_role_binding_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: submariner-diagnose
+subjects:
+  - kind: ServiceAccount
+    name: submariner-diagnose
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: submariner-diagnose
+`
 	Config_rbac_lighthouse_agent_service_account_yaml = `---
 apiVersion: v1
 kind: ServiceAccount
