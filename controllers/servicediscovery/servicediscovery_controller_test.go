@@ -314,6 +314,9 @@ func testDeploymentUninstall() {
 			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
 
 			t.awaitNoFinalizer()
+
+			t.AssertReconcileSuccess()
+			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
 		})
 	})
 
