@@ -163,10 +163,8 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 				if ok {
 					info.Status = cli.NewReporter()
 					info.Status.Start("Gathering %s %s", module, dataType)
-
-					if gatherFuncs[module](dataType, info) {
-						info.Status.End()
-					}
+					gatherFuncs[module](dataType, info)
+					info.Status.End()
 				}
 			}
 		}
