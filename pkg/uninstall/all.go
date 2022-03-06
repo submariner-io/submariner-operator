@@ -41,11 +41,6 @@ import (
 )
 
 func All(clients client.Producer, clusterName, submarinerNamespace string, status reporter.Interface) error {
-	_, err := clients.ForKubernetes().CoreV1().Namespaces().Get(context.TODO(), submarinerNamespace, metav1.GetOptions{})
-	if err != nil {
-		return status.Error(err, "Error retrieving the Submariner namespace %q", submarinerNamespace)
-	}
-
 	found, brokerNS, err := ensureSubmarinerDeleted(clients, clusterName, submarinerNamespace, status)
 	if err != nil {
 		return err
@@ -67,7 +62,7 @@ func All(clients client.Producer, clusterName, submarinerNamespace string, statu
 	defer status.End()
 
 	err = clients.ForKubernetes().CoreV1().Namespaces().Delete(context.TODO(), submarinerNamespace, metav1.DeleteOptions{})
-	if err != nil {
+	if err != nil && !apierrors.IsNotFound(err) {
 		return status.Error(err, "Error deleting the namespace")
 	}
 
