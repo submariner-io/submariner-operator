@@ -113,8 +113,8 @@ func getVersions(cluster *cmd.Cluster) bool {
 	versions, err = getServiceDiscoveryVersions(submarinerClient, versions)
 	exit.OnErrorWithMessage(err, "Unable to get the Service-Discovery version")
 
-	printVersions(versions)
 	status.EndWith(cli.Success)
+	printVersions(versions)
 
 	return true
 }
