@@ -40,41 +40,36 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-func All(clients client.Producer, submarinerNamespace string, status reporter.Interface) error {
-	_, err := clients.ForKubernetes().CoreV1().Namespaces().Get(context.TODO(), submarinerNamespace, metav1.GetOptions{})
-	if err != nil {
-		return status.Error(err, "Error retrieving the Submariner namespace %q", submarinerNamespace)
-	}
-
-	found, brokerNS, err := ensureSubmarinerDeleted(clients, submarinerNamespace, status)
+func All(clients client.Producer, clusterName, submarinerNamespace string, status reporter.Interface) error {
+	found, brokerNS, err := ensureSubmarinerDeleted(clients, clusterName, submarinerNamespace, status)
 	if err != nil {
 		return err
 	}
 
 	if !found {
-		brokerNS, err = ensureServiceDiscoveryDeleted(clients, submarinerNamespace, status)
+		brokerNS, err = ensureServiceDiscoveryDeleted(clients, clusterName, submarinerNamespace, status)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = deleteClusterRolesAndBindings(clients, status)
+	err = deleteClusterRolesAndBindings(clients, clusterName, status)
 	if err != nil {
 		return err
 	}
 
-	status.Start("Deleting the Submariner namespace %q", submarinerNamespace)
+	status.Start("Deleting the Submariner namespace %q on cluster %q", submarinerNamespace, clusterName)
 	defer status.End()
 
 	err = clients.ForKubernetes().CoreV1().Namespaces().Delete(context.TODO(), submarinerNamespace, metav1.DeleteOptions{})
-	if err != nil {
+	if err != nil && !apierrors.IsNotFound(err) {
 		return status.Error(err, "Error deleting the namespace")
 	}
 
 	if brokerNS != "" {
 		_, err := clients.ForKubernetes().CoreV1().Namespaces().Get(context.TODO(), brokerNS, metav1.GetOptions{})
 		if err == nil {
-			status.Start("Deleting the broker namespace %q", brokerNS)
+			status.Start("Deleting the broker namespace %q on cluster %q", brokerNS, clusterName)
 
 			err = clients.ForKubernetes().CoreV1().Namespaces().Delete(context.TODO(), brokerNS, metav1.DeleteOptions{})
 			if err != nil && !apierrors.IsNotFound(err) {
@@ -83,16 +78,16 @@ func All(clients client.Producer, submarinerNamespace string, status reporter.In
 		}
 	}
 
-	err = deleteCRDs(clients, status)
+	err = deleteCRDs(clients, clusterName, status)
 	if err != nil {
 		return err
 	}
 
-	return unlabelGatewayNodes(clients, status)
+	return unlabelGatewayNodes(clients, clusterName, status)
 }
 
-func unlabelGatewayNodes(clients client.Producer, status reporter.Interface) error {
-	status.Start("Unlabeling gateway nodes")
+func unlabelGatewayNodes(clients client.Producer, clusterName string, status reporter.Interface) error {
+	status.Start("Unlabeling gateway nodes on cluster %q", clusterName)
 	defer status.End()
 
 	list, err := clients.ForKubernetes().CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
@@ -125,8 +120,8 @@ func unlabelGatewayNodes(clients client.Producer, status reporter.Interface) err
 	return nil
 }
 
-func deleteCRDs(clients client.Producer, status reporter.Interface) error {
-	status.Start("Deleting the Submariner custom resource definitions")
+func deleteCRDs(clients client.Producer, clusterName string, status reporter.Interface) error {
+	status.Start("Deleting the Submariner custom resource definitions on cluster %q", clusterName)
 	defer status.End()
 
 	list, err := clients.ForCRD().ApiextensionsV1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
@@ -151,8 +146,8 @@ func deleteCRDs(clients client.Producer, status reporter.Interface) error {
 	return nil
 }
 
-func deleteClusterRolesAndBindings(clients client.Producer, status reporter.Interface) error {
-	status.Start("Deleting the Submariner cluster roles and bindings")
+func deleteClusterRolesAndBindings(clients client.Producer, clusterName string, status reporter.Interface) error {
+	status.Start("Deleting the Submariner cluster roles and bindings on cluster %q", clusterName)
 	defer status.End()
 
 	list, err := clients.ForKubernetes().RbacV1().ClusterRoleBindings().List(context.TODO(), metav1.ListOptions{})
@@ -181,16 +176,16 @@ func deleteClusterRolesAndBindings(clients client.Producer, status reporter.Inte
 	return nil
 }
 
-func ensureSubmarinerDeleted(clients client.Producer, namespace string, status reporter.Interface) (bool, string, error) {
+func ensureSubmarinerDeleted(clients client.Producer, clusterName, namespace string, status reporter.Interface) (bool, string, error) {
 	defer status.End()
 
-	status.Start("Checking if the connectivity component is installed")
+	status.Start("Checking if the connectivity component is installed on cluster %q", clusterName)
 
 	submClient := clients.ForOperator().SubmarinerV1alpha1().Submariners(namespace)
 
 	submariner, err := submClient.Get(context.TODO(), submarinercr.SubmarinerName, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		status.Success("The connectivity component is not installed - skipping")
+		status.Success("The connectivity component is not installed on cluster %q - skipping", clusterName)
 		return false, "", nil
 	}
 
@@ -198,7 +193,7 @@ func ensureSubmarinerDeleted(clients client.Producer, namespace string, status r
 		return false, "", status.Error(err, "Error retrieving the Submariner resource")
 	}
 
-	status.Success("The connectivity component is installed")
+	status.Success("The connectivity component is installed on cluster %q", clusterName)
 
 	status.Start("Deleting the Submariner resource - this may take some time")
 
@@ -208,16 +203,16 @@ func ensureSubmarinerDeleted(clients client.Producer, namespace string, status r
 		status.Error(err, "Error deleting Submariner resource %q", submariner.Name)
 }
 
-func ensureServiceDiscoveryDeleted(clients client.Producer, namespace string, status reporter.Interface) (string, error) {
+func ensureServiceDiscoveryDeleted(clients client.Producer, clusterName, namespace string, status reporter.Interface) (string, error) {
 	defer status.End()
 
-	status.Start("Checking if the service discovery component is installed")
+	status.Start("Checking if the service discovery component is installed on cluster %q", clusterName)
 
 	sdClient := clients.ForOperator().SubmarinerV1alpha1().ServiceDiscoveries(namespace)
 
 	serviceDiscovery, err := sdClient.Get(context.TODO(), names.ServiceDiscoveryCrName, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		status.Success("The service discovery component is not installed - skipping")
+		status.Success("The service discovery component is not installed on cluster %q - skipping", clusterName)
 		return "", nil
 	}
 
@@ -225,7 +220,7 @@ func ensureServiceDiscoveryDeleted(clients client.Producer, namespace string, st
 		return "", status.Error(err, "Error retrieving the ServiceDiscovery resource")
 	}
 
-	status.Success("The service discovery component is installed")
+	status.Success("The service discovery component is installed on cluster %q", clusterName)
 
 	status.Start("Deleting the ServiceDiscovery resource - this may take some time")
 

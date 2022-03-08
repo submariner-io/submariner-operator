@@ -19,6 +19,8 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/cli"
@@ -38,6 +40,9 @@ var uninstallCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		status := cli.NewStatus()
 
+		clusterName, err := restConfigProducer.GetClusterID()
+		exit.OnError(status.Error(err, "Error getting cluster name"))
+
 		config, err := restConfigProducer.ForCluster()
 		exit.OnError(status.Error(err, "Error creating REST config"))
 
@@ -47,7 +52,8 @@ var uninstallCmd = &cobra.Command{
 		if !noPrompt {
 			result := false
 			prompt := &survey.Confirm{
-				Message: "This will completely uninstall Submariner from the cluster. Are you sure you want to continue?",
+				Message: fmt.Sprintf("This will completely uninstall Submariner from the cluster %q. Are you sure you want to continue?",
+					clusterName),
 			}
 
 			_ = survey.AskOne(prompt, &result)
@@ -57,7 +63,7 @@ var uninstallCmd = &cobra.Command{
 			}
 		}
 
-		exit.OnError(uninstall.All(clientProducer, namespace, status))
+		exit.OnError(uninstall.All(clientProducer, clusterName, namespace, status))
 	},
 }
 

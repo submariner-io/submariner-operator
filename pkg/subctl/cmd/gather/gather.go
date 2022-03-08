@@ -19,6 +19,7 @@ limitations under the License.
 package gather
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -37,6 +38,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 )
 
 var (
@@ -101,8 +103,13 @@ var gatherCmd = &cobra.Command{
 }
 
 func gatherData(cluster *cmd.Cluster) bool {
+	var warningsBuf bytes.Buffer
 	err := checkGatherArguments()
 	exit.OnErrorWithMessage(err, "Invalid arguments")
+
+	rest.SetDefaultWarningHandler(rest.NewWarningWriter(&warningsBuf, rest.WarningWriterOptions{
+		Deduplicate: true,
+	}))
 
 	if directory == "" {
 		directory = "submariner-" + time.Now().UTC().Format("20060102150405") // submariner-YYYYMMDDHHMMSS
@@ -118,6 +125,11 @@ func gatherData(cluster *cmd.Cluster) bool {
 	gatherDataByCluster(cluster, directory)
 
 	fmt.Printf("Files are stored under directory %q\n", directory)
+
+	warnings := warningsBuf.String()
+	if warnings != "" {
+		fmt.Printf("\nEncountered following Kubernetes warnings while running:\n%s", warnings)
+	}
 
 	return true
 }
@@ -163,10 +175,8 @@ func gatherDataByCluster(cluster *cmd.Cluster, directory string) {
 				if ok {
 					info.Status = cli.NewReporter()
 					info.Status.Start("Gathering %s %s", module, dataType)
-
-					if gatherFuncs[module](dataType, info) {
-						info.Status.End()
-					}
+					gatherFuncs[module](dataType, info)
+					info.Status.End()
 				}
 			}
 		}

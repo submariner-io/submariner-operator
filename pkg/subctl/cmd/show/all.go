@@ -42,14 +42,21 @@ func init() {
 func showAll(cluster *cmd.Cluster) bool {
 	status := cli.NewStatus()
 
+	success := showBrokers(cluster)
+
+	fmt.Println()
+
 	if cluster.Submariner == nil {
+		success = getVersions(cluster) && success
+
+		fmt.Println()
 		status.Start(cmd.SubmMissingMessage)
 		status.EndWith(cli.Warning)
 
-		return true
+		return success
 	}
 
-	success := showConnections(cluster)
+	success = showConnections(cluster) && success
 
 	fmt.Println()
 
