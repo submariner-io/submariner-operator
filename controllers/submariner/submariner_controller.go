@@ -123,7 +123,7 @@ func NewReconciler(config *Config) *Reconciler {
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners/status,verbs=get;update;patch
 // nolint:gocyclo // Refactoring would yield functions with a lot of params which isn't ideal either.
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	reqLogger := log.V(2).WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Submariner")
 
 	// Fetch the Submariner instance
@@ -157,7 +157,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	initialStatus := instance.Status.DeepCopy()
 
-	clusterNetwork, err := r.discoverNetwork(instance)
+	clusterNetwork, err := r.discoverNetwork(instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
