@@ -70,6 +70,10 @@ func getSubmarinerVersion(submariner *v1alpha1.Submariner, versions []versionIma
 func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
 	operatorConfig, err := clientSet.AppsV1().Deployments(cmd.OperatorNamespace).Get(context.TODO(), names.OperatorComponent, v1.GetOptions{})
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return versions, nil
+		}
+
 		return nil, errors.Wrap(err, "error retrieving Deployment")
 	}
 
@@ -105,7 +109,9 @@ func getVersions(cluster *cmd.Cluster) bool {
 	submarinerClient, err := submarinerclientset.NewForConfig(cluster.Config)
 	exit.OnErrorWithMessage(err, "Unable to get the Submariner client")
 
-	versions = getSubmarinerVersion(cluster.Submariner, versions)
+	if cluster.Submariner != nil {
+		versions = getSubmarinerVersion(cluster.Submariner, versions)
+	}
 
 	versions, err = getOperatorVersion(cluster.KubeClient, versions)
 	exit.OnErrorWithMessage(err, "Unable to get the Operator version")
@@ -115,6 +121,10 @@ func getVersions(cluster *cmd.Cluster) bool {
 
 	status.EndWith(cli.Success)
 	printVersions(versions)
+
+	if len(versions) > 0 {
+		printVersions(versions)
+	}
 
 	return true
 }
