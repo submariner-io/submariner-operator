@@ -26,30 +26,3 @@ jobs:
           title: Broken link detected by CI
           content-filepath: .github/ISSUE_TEMPLATE/broken-link.md
           labels: automated, broken link
-
-  test-bundle-periodic:
-    name: Operator Bundle Test
-    if: github.repository_owner == 'submariner-io'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup kernel, increase the inotify settings
-        run: sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
-
-      - name: Check out the repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
-
-      - name: Fetch all git tags
-        run: git fetch origin +refs/tags/*:refs/tags/*
-
-      - name: Run E2E using the bundle deployment method
-        run: |
-          make e2e using=bundle,lighthouse REPO=localhost:5000 IMG=localhost:5000/submariner-operator:local && \
-          make scorecard
-
-      - name: Raise an Issue to report broken bundle
-        if: ${{ failure() }}
-        uses: peter-evans/create-issue-from-file@v2.3.2
-        with:
-          title: Broken bundle detected by CI
-          content-filepath: .github/ISSUE_TEMPLATE/broken-bundle.md
-          labels: automated, broken bundle
