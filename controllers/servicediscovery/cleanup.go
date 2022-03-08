@@ -40,6 +40,10 @@ import (
 )
 
 func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) (reconcile.Result, error) {
+	if !finalizer.IsPresent(instance, constants.CleanupFinalizer) {
+		return reconcile.Result{}, nil
+	}
+
 	if !uninstall.IsSupportedForVersion(instance.Spec.Version) {
 		log.Info("Deleting ServiceDiscovery version does not support uninstall", "version", instance.Spec.Version)
 		return reconcile.Result{}, r.removeFinalizer(ctx, instance)
@@ -87,7 +91,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 	}
 
 	if requeue {
-		return reconcile.Result{RequeueAfter: time.Millisecond * 100}, nil
+		return reconcile.Result{RequeueAfter: time.Millisecond * 500}, nil
 	}
 
 	return reconcile.Result{}, r.removeFinalizer(ctx, instance)
