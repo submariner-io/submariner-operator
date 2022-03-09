@@ -313,6 +313,9 @@ func testDeletion() {
 			t.AssertNoDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 			t.awaitNoFinalizer()
+
+			t.AssertReconcileSuccess()
+			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
 		})
 	})
 

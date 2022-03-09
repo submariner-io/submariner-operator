@@ -15,6 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package servicediscovery_test
 
 import (
@@ -314,6 +315,9 @@ func testDeploymentUninstall() {
 			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
 
 			t.awaitNoFinalizer()
+
+			t.AssertReconcileSuccess()
+			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
 		})
 	})
 

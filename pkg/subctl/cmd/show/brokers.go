@@ -15,55 +15,57 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-package diagnose
+package show
 
 import (
-	"github.com/spf13/cobra"
+	"context"
+	"fmt"
+	"strings"
+
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-	"github.com/submariner-io/submariner-operator/pkg/version"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func init() {
-	diagnoseCmd.AddCommand(&cobra.Command{
-		Use:   "k8s-version",
-		Short: "Check the Kubernetes version",
-		Long:  "This command checks if Submariner can be deployed on the Kubernetes version.",
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, checkK8sVersion)
-		},
-	})
-}
-
-func checkK8sVersion(cluster *cmd.Cluster) bool {
+func showBrokers(cluster *cmd.Cluster) bool {
+	template := "%-25.24s%-25.24s%-40.39s\n"
 	status := cli.NewStatus()
 
-	status.Start("Checking Submariner support for the Kubernetes version")
+	status.Start("Detecting broker(s)")
 
 	clientProducer, err := client.NewProducerFromRestConfig(cluster.Config)
 	if err != nil {
+		status.EndWithFailure("Error creating client producer")
+		return false
+	}
+
+	brokerList, err := clientProducer.ForOperator().SubmarinerV1alpha1().Brokers(corev1.NamespaceAll).List(
+		context.TODO(), metav1.ListOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
 		status.EndWithFailure(err.Error())
 		return false
 	}
 
-	k8sVersion, failedRequirements, err := version.CheckRequirements(clientProducer.ForKubernetes())
-	if err != nil {
-		status.EndWithFailure(err.Error())
-		return false
+	status.End()
+
+	brokers := brokerList.Items
+	if len(brokers) == 0 {
+		return true
 	}
 
-	for i := range failedRequirements {
-		status.QueueFailureMessage(failedRequirements[i])
-	}
+	fmt.Printf(template, "NAMESPACE", "NAME", "COMPONENTS")
 
-	if status.HasFailureMessages() {
-		status.EndWith(cli.Failure)
-		return false
+	for i := range brokers {
+		fmt.Printf(
+			template,
+			brokers[i].Namespace,
+			brokers[i].Name,
+			strings.Join(brokers[i].Spec.Components, ", "),
+		)
 	}
-
-	status.EndWithSuccess("Kubernetes version %q is supported", k8sVersion)
 
 	return true
 }
