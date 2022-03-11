@@ -31,7 +31,6 @@ jobs:
           # https://submariner.io/development/building-testing/ci-maintenance/
           - k8s_version: '1.17'
           # Run default E2E against all supported K8s versions
-          - k8s_version: '1.20'
           - k8s_version: '1.21'
           - k8s_version: '1.22'
     steps:
