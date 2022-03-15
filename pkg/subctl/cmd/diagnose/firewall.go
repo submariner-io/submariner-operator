@@ -108,9 +108,11 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 			return ""
 		}
 
-		defer sPod.Delete()
+		err = sPod.AwaitCompletion()
 
-		if err = sPod.AwaitCompletion(); err != nil {
+		sPod.Delete()
+
+		if err != nil {
 			status.EndWithFailure("Error waiting for the sniffer pod to finish its execution on node %q: %v", node.Name, err)
 			return ""
 		}
