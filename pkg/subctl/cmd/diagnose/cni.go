@@ -216,8 +216,7 @@ func getSpecBool(pool unstructured.Unstructured, key string) (bool, error) {
 	}
 
 	if !found {
-		message := fmt.Sprintf("%s status not found for IPPool %q", key, pool.GetName())
-		return false, fmt.Errorf(message)
+		return false, fmt.Errorf("%s status not found for IPPool %q", key, pool.GetName())
 	}
 
 	return isDisabled, nil
