@@ -25,9 +25,9 @@ import (
 
 func IsValidID(clusterID string) error {
 	// Make sure the clusterid is a valid DNS-1123 string
-	if match, _ := regexp.MatchString("^[a-z0-9][a-z0-9.-]*[a-z0-9]$", clusterID); !match {
+	if match, _ := regexp.MatchString("^[a-z0-9][a-z0-9-]*[a-z0-9]$", clusterID); !match {
 		return fmt.Errorf("cluster IDs must be valid DNS-1123 names, with only lowercase alphanumerics,\n"+
-			"'.' or '-' (and the first and last characters must be alphanumerics).\n"+
+			"or '-' (and the first and last characters must be alphanumerics).\n"+
 			"%s doesn't meet these requirements", clusterID)
 	}
 
