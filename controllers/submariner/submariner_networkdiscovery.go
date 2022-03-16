@@ -15,11 +15,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package submariner
 
 import (
 	"fmt"
 
+	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -51,14 +53,16 @@ func (r *Reconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*netw
 	return r.config.ClusterNetwork, errors.Wrap(err, "error discovering cluster network")
 }
 
-func (r *Reconciler) discoverNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
+func (r *Reconciler) discoverNetwork(submariner *submopv1a1.Submariner, log logr.Logger) (*network.ClusterNetwork, error) {
 	clusterNetwork, err := r.getClusterNetwork(submariner)
 	submariner.Status.ClusterCIDR = getCIDR(
+		log,
 		"Cluster",
 		submariner.Spec.ClusterCIDR,
 		clusterNetwork.PodCIDRs)
 
 	submariner.Status.ServiceCIDR = getCIDR(
+		log,
 		"Service",
 		submariner.Spec.ServiceCIDR,
 		clusterNetwork.ServiceCIDRs)
@@ -71,7 +75,7 @@ func (r *Reconciler) discoverNetwork(submariner *submopv1a1.Submariner) (*networ
 	return clusterNetwork, err
 }
 
-func getCIDR(cidrType, currentCIDR string, detectedCIDRs []string) string {
+func getCIDR(log logr.Logger, cidrType, currentCIDR string, detectedCIDRs []string) string {
 	detected := getFirstCIDR(detectedCIDRs)
 
 	if currentCIDR == "" {

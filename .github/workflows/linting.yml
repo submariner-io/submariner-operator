@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
       - name: Run make manifests to update CRDs
         run: make manifests
       - name: Validate that nothing has changed
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
         with:
           fetch-depth: 0
       - name: Run gitlint
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
       - name: Run golangci-lint
         run: make golangci-lint
 
@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
 
       - name: Check License Headers
         uses: kt3k/license_checker@d12a6d90c58e30fefed09f2c4d03ba57f4c673a8
@@ -77,7 +77,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
 
       - name: Check the licenses
         run: make licensecheck
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
 
       - name: Run markdown-link-check
         uses: gaurav-nelson/github-action-markdown-link-check@9710f0fec812ce0a3b98bef4c9d842fc1f39d976
@@ -101,16 +101,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
       - name: Run markdownlint
         run: make markdownlint
+
+  packagedoc-lint:
+    name: Package Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+      - name: Run packagedoc-lint
+        run: make packagedoc-lint
 
   yaml-lint:
     name: YAML
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
       - name: Run yamllint
         run: make yamllint
 
@@ -119,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
+        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
       - name: Run make pkg/embeddedyamls/yamls.go to update embedded YAMLs
         run: make pkg/embeddedyamls/yamls.go
       - name: Validate that nothing has changed

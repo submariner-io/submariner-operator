@@ -15,6 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package diagnose
 
 import (
@@ -215,8 +216,7 @@ func getSpecBool(pool unstructured.Unstructured, key string) (bool, error) {
 	}
 
 	if !found {
-		message := fmt.Sprintf("%s status not found for IPPool %q", key, pool.GetName())
-		return false, fmt.Errorf(message)
+		return false, fmt.Errorf("%s status not found for IPPool %q", key, pool.GetName())
 	}
 
 	return isDisabled, nil
