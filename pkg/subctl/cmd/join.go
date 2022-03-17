@@ -62,7 +62,6 @@ var (
 	ikePort                       int
 	preferredServer               bool
 	forceUDPEncaps                bool
-	ignoredColorCodes             string
 	natTraversal                  bool
 	ignoreRequirements            bool
 	globalnetEnabled              bool
@@ -93,8 +92,6 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
-	cmd.Flags().StringVar(&ignoredColorCodes, "colorcodes", "", "color codes")
-	_ = cmd.Flags().MarkDeprecated("colorcodes", "--colorcodes has no effect and is deprecated")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
 	cmd.Flags().BoolVar(&natTraversal, "natt", true, "enable NAT traversal for IPsec")
