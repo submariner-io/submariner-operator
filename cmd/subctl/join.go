@@ -38,8 +38,9 @@ import (
 )
 
 var (
-	joinFlags    join.Options
-	labelGateway bool
+	joinFlags         join.Options
+	labelGateway      bool
+	ignoredColorCodes string
 )
 
 var joinCmd = &cobra.Command{
@@ -92,6 +93,8 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&joinFlags.ClusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&joinFlags.Repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&joinFlags.ImageVersion, "version", "", "image version")
+	cmd.Flags().StringVar(&ignoredColorCodes, "colorcodes", "", "color codes")
+	_ = cmd.Flags().MarkDeprecated("colorcodes", "--colorcodes has no effect and is deprecated")
 	cmd.Flags().IntVar(&joinFlags.NATTPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&joinFlags.IKEPort, "ikeport", 500, "IPsec IKE port")
 	cmd.Flags().BoolVar(&joinFlags.NATTraversal, "natt", true, "enable NAT traversal for IPsec")
