@@ -19,9 +19,14 @@ limitations under the License.
 package cluster
 
 import (
+	"regexp"
+	"strings"
+
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
+
+const replaceChar = "0"
 
 func IsValidID(clusterID string) error {
 	if errs := validation.IsDNS1123Label(clusterID); len(errs) > 0 {
@@ -29,4 +34,25 @@ func IsValidID(clusterID string) error {
 	}
 
 	return nil
+}
+
+func SanitizeClusterID(clusterID string) string {
+	var result string
+	inputLen := len(clusterID)
+
+	if inputLen > 0 {
+		regDNS1123 := regexp.MustCompile("[^a-z0-9-]+")
+		result = strings.ToLower(clusterID)
+		result = regDNS1123.ReplaceAllString(result, "-")
+
+		if result[0] == '-' {
+			result = replaceChar + result[1:]
+		}
+
+		if result[inputLen-1:] == "-" {
+			result = result[:inputLen-1] + replaceChar
+		}
+	}
+
+	return result
 }
