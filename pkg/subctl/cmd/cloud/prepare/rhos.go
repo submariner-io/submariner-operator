@@ -38,7 +38,7 @@ func newRHOSPrepareCommand() *cobra.Command {
 	rhos.AddRHOSFlags(cmd)
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of gateways to deploy")
-	cmd.Flags().StringVar(&rhosGWInstanceType, "gateway-instance", "PnTAE.CPU_16_Memory_32768_Disk_80", "Type of gateway instance machine")
+	cmd.Flags().StringVar(&rhosGWInstanceType, "gateway-instance", "PnTAE.CPU_4_Memory_8192_Disk_50", "Type of gateway instance machine")
 	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", true,
 		"Whether a dedicated gateway node has to be deployed")
 
