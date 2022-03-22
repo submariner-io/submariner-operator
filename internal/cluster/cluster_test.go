@@ -26,7 +26,7 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/cluster"
 )
 
-var _ = Describe("IsValidID", func() {
+var _ = Describe("TestClusterIDs", func() {
 	When("the id only contains alphabetic characters", func() {
 		It("should be valid", func() {
 			Expect(cluster.IsValidID("abcdef")).To(Succeed())
@@ -61,12 +61,20 @@ var _ = Describe("IsValidID", func() {
 			Expect(cluster.IsValidID("abcdéfg")).To(Not(Succeed()))
 			Expect(cluster.IsValidID("abcde.g")).To(Not(Succeed()))
 		})
+		It("should convert invalid characters to dashes", func() {
+			Expect(cluster.SanitizeClusterID("abcdéfg")).To(Equal("abcd-fg"))
+			Expect(cluster.SanitizeClusterID("abcde.g")).To(Equal("abcde-g"))
+		})
 	})
 
 	When("the id starts or end with a dash", func() {
 		It("should not be valid", func() {
 			Expect(cluster.IsValidID("-abcdef")).To(Not(Succeed()))
 			Expect(cluster.IsValidID("abcdef-")).To(Not(Succeed()))
+		})
+		It("should replace dash with 0", func() {
+			Expect(cluster.SanitizeClusterID("-abcdef")).To(Equal("0abcdef"))
+			Expect(cluster.SanitizeClusterID("abcdef-")).To(Equal("abcdef0"))
 		})
 	})
 
@@ -81,6 +89,9 @@ var _ = Describe("IsValidID", func() {
 	When("the id is empty", func() {
 		It("should not be valid", func() {
 			Expect(cluster.IsValidID("")).To(Not(Succeed()))
+		})
+		It("should return empty string", func() {
+			Expect(cluster.SanitizeClusterID("")).To(Equal(""))
 		})
 	})
 })

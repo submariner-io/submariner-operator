@@ -260,6 +260,10 @@ func determineClusterID(status reporter.Interface) {
 	if joinFlags.ClusterID == "" {
 		joinFlags.ClusterID, err = restConfigProducer.GetClusterID()
 		exit.OnError(status.Error(err, "Error determining cluster ID of the target cluster"))
+
+		if err = cluster.IsValidID(joinFlags.ClusterID); err != nil {
+			joinFlags.ClusterID = cluster.SanitizeClusterID(joinFlags.ClusterID)
+		}
 	}
 
 	if joinFlags.ClusterID != "" {
