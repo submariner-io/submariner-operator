@@ -262,7 +262,7 @@ func determineClusterID(status reporter.Interface) {
 		exit.OnError(status.Error(err, "Error determining cluster ID of the target cluster"))
 
 		if err = cluster.IsValidID(joinFlags.ClusterID); err != nil {
-			joinFlags.ClusterID = cluster.SanitizeClusterID(joinFlags.ClusterID)
+			joinFlags.ClusterID = cluster.SanitizeID(joinFlags.ClusterID)
 		}
 	}
 

@@ -26,7 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-const replaceChar = "0"
+const rfc1123Compliant = "0"
 
 func IsValidID(clusterID string) error {
 	if errs := validation.IsDNS1123Label(clusterID); len(errs) > 0 {
@@ -36,22 +36,21 @@ func IsValidID(clusterID string) error {
 	return nil
 }
 
-func SanitizeClusterID(clusterID string) string {
-	var result string
-	inputLen := len(clusterID)
+func SanitizeID(clusterID string) string {
+	if clusterID == "" {
+		return ""
+	}
 
-	if inputLen > 0 {
-		regDNS1123 := regexp.MustCompile("[^a-z0-9-]+")
-		result = strings.ToLower(clusterID)
-		result = regDNS1123.ReplaceAllString(result, "-")
+	regDNS1123 := regexp.MustCompile("[^a-z0-9-]+")
+	result := regDNS1123.ReplaceAllString(strings.ToLower(clusterID), "-")
 
-		if result[0] == '-' {
-			result = replaceChar + result[1:]
-		}
+	if result[0] == '-' {
+		result = rfc1123Compliant + result[1:]
+	}
 
-		if result[inputLen-1:] == "-" {
-			result = result[:inputLen-1] + replaceChar
-		}
+	resultLen := len(result)
+	if result[resultLen-1] == '-' {
+		result = result[:resultLen-1] + rfc1123Compliant
 	}
 
 	return result
