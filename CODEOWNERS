@@ -3,11 +3,6 @@
 *.md @anfredette @astoycos @Billy99 @dfarrell07 @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
 /.github/workflows/ @anfredette @astoycos @Billy99 @mkolesnik @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
 /scripts/ @anfredette @astoycos @Billy99 @mkolesnik @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
-branch # @anfredette @astoycos @Billy99 @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
 build/* @anfredette @astoycos @Billy99 @mkolesnik @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
-codeowners # @anfredette @astoycos @Billy99 @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
-Core # @anfredette @astoycos @Billy99 @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
 Dockerfile.dapper @anfredette @astoycos @Billy99 @mkolesnik @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
-Feature # @anfredette @astoycos @Billy99 @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
 Makefile* @anfredette @astoycos @Billy99 @mkolesnik @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
-Submariner # @anfredette @astoycos @Billy99 @nerdalert @Oats87 @skitt @sridhargaddam @tpantelis
