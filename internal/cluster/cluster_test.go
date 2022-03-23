@@ -76,7 +76,7 @@ func testIsValidID() {
 		})
 	})
 
-	When("the id starts or ends	 with a dash", func() {
+	When("the id starts or ends with a dash", func() {
 		It("should not be valid", func() {
 			Expect(cluster.IsValidID("-abcdef")).To(Not(Succeed()))
 			Expect(cluster.IsValidID("abcdef-")).To(Not(Succeed()))
@@ -159,7 +159,7 @@ func testSanitizeID() {
 	})
 
 	When("the id has consecutive non alphanumeric characters", func() {
-		It("should repalce all such characters with a single dash", func() {
+		It("should replace all such characters with a single dash", func() {
 			Expect(cluster.SanitizeID("a@#$b@#$c")).To(Equal("a-b-c"))
 			Expect(cluster.SanitizeID("a@#$%^&*()._1")).To(Equal("a-1"))
 			Expect(cluster.SanitizeID("@abc!@#123@")).To(Equal("0abc-1230"))
