@@ -23,7 +23,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
-	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster.
@@ -31,20 +30,17 @@ func Ensure(crdUpdater crd.Updater) (bool, error) {
 	// Attempt to update or create the CRD definitions.
 	// TODO(majopela): In the future we may want to report when we have updated the existing
 	//                 CRD definition with new versions
-	submarinerCreated, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
-		embeddedyamls.Deploy_crds_submariner_io_submariners_yaml)
+	submarinerCreated, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(), "crds/submariner.io_submariners.yaml")
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning Submariner CRD")
 	}
 
-	serviceDiscoveryCreated, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
-		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
+	serviceDiscoveryCreated, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(), "crds/submariner.io_servicediscoveries.yaml")
 	if err != nil {
 		return false, errors.Wrap(err, "error provisioning ServiceDiscovery CRD")
 	}
 
-	brokerCreated, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
-		embeddedyamls.Deploy_crds_submariner_io_brokers_yaml)
+	brokerCreated, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(), "crds/submariner.io_brokers.yaml")
 
 	return submarinerCreated || serviceDiscoveryCreated || brokerCreated, errors.Wrap(err, "error provisioning Broker CRD")
 }

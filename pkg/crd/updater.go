@@ -24,7 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
-	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
+	"github.com/submariner-io/submariner-operator/deploy"
 	resourceutil "github.com/submariner-io/submariner-operator/pkg/resource"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -76,7 +76,7 @@ func UpdaterFromControllerClient(controllerClient client.Client) Updater {
 func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string) (bool, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
 
-	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
+	if err := deploy.GetObject(crdYaml, crd); err != nil {
 		return false, errors.Wrap(err, "error extracting embedded CRD")
 	}
 

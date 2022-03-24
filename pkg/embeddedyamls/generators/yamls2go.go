@@ -28,17 +28,6 @@ import (
 )
 
 var files = []string{
-	"deploy/crds/submariner.io_brokers.yaml",
-	"deploy/crds/submariner.io_submariners.yaml",
-	"deploy/crds/submariner.io_servicediscoveries.yaml",
-	"deploy/submariner/crds/submariner.io_clusters.yaml",
-	"deploy/submariner/crds/submariner.io_endpoints.yaml",
-	"deploy/submariner/crds/submariner.io_gateways.yaml",
-	"deploy/submariner/crds/submariner.io_clusterglobalegressips.yaml",
-	"deploy/submariner/crds/submariner.io_globalegressips.yaml",
-	"deploy/submariner/crds/submariner.io_globalingressips.yaml",
-	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml",
-	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml",
 	"config/rbac/submariner-operator/service_account.yaml",
 	"config/rbac/submariner-operator/role.yaml",
 	"config/rbac/submariner-operator/role_binding.yaml",

@@ -23,7 +23,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
-	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -54,8 +53,7 @@ func Ensure(crdUpdater crd.Updater, isBroker bool) (bool, error) {
 		return false, errors.Wrap(err, "error deleting the obsolete MultiClusterServices CRD")
 	}
 
-	installedMCSSI, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
-		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
+	installedMCSSI, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(), "mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml")
 	if err != nil {
 		return installedMCSSI, errors.Wrap(err, "error creating the MCS ServiceImport CRD")
 	}
@@ -65,14 +63,12 @@ func Ensure(crdUpdater crd.Updater, isBroker bool) (bool, error) {
 		return installedMCSSI, nil
 	}
 
-	installedMCSSE, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
-		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
+	installedMCSSE, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(), "mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml")
 	if err != nil {
 		return installedMCSSI || installedMCSSE, errors.Wrap(err, "error creating the MCS ServiceExport CRD")
 	}
 
-	installedSD, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
-		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
+	installedSD, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(), "crds/submariner.io_servicediscoveries.yaml")
 	if err != nil {
 		return installedMCSSI || installedMCSSE || installedSD, errors.Wrap(err, "error creating the ServiceDiscovery CRD")
 	}
