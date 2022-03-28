@@ -24,7 +24,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.18.1
+	github.com/onsi/gomega v1.19.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.4.0
