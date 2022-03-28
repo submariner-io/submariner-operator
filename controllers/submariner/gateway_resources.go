@@ -224,10 +224,6 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 			Volumes:     volumes,
 		},
 	}
-	if cr.Spec.CeIPSecIKEPort != 0 {
-		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
-			corev1.EnvVar{Name: "CE_IPSEC_IKEPORT", Value: strconv.Itoa(cr.Spec.CeIPSecIKEPort)})
-	}
 
 	if cr.Spec.CeIPSecNATTPort != 0 {
 		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
