@@ -42,7 +42,6 @@ type SubmarinerOptions struct {
 	LoadBalancerEnabled           bool
 	HealthCheckEnabled            bool
 	NATTPort                      int
-	IKEPort                       int
 	HealthCheckInterval           uint64
 	HealthCheckMaxPacketLossCount uint64
 	ClusterID                     string
@@ -82,7 +81,6 @@ func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info,
 		Repository:               getImageRepo(options.Repository),
 		Version:                  getImageVersion(options.ImageVersion),
 		CeIPSecNATTPort:          options.NATTPort,
-		CeIPSecIKEPort:           options.IKEPort,
 		CeIPSecDebug:             options.IPSecDebug,
 		CeIPSecForceUDPEncaps:    options.ForceUDPEncaps,
 		CeIPSecPreferredServer:   options.PreferredServer,
