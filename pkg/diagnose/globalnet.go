@@ -22,39 +22,22 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"github.com/submariner-io/submariner/pkg/globalnet/constants"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	mcsClientset "sigs.k8s.io/mcs-api/pkg/client/clientset/versioned"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 )
 
-func init() {
-	diagnoseCmd.AddCommand(&cobra.Command{
-		Use:   "globalnet",
-		Short: "Check globalnet configuration",
-		Long:  "This command checks globalnet configuration",
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, checkGlobalnet)
-		},
-	})
-}
+func GlobalnetConfig(clusterInfo *cluster.Info, status reporter.Interface) bool {
+	mustHaveSubmariner(clusterInfo)
 
-func checkGlobalnet(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-
-	if cluster.Submariner == nil {
-		status.Warning(cmd.SubmMissingMessage)
-		return true
-	}
-
-	if cluster.Submariner.Spec.GlobalCIDR == "" {
+	if clusterInfo.Submariner.Spec.GlobalCIDR == "" {
 		status.Success("Globalnet is not installed - skipping")
 		return true
 	}
@@ -64,19 +47,21 @@ func checkGlobalnet(cluster *cmd.Cluster) bool {
 
 	tracker := reporter.NewTracker(status)
 
-	checkClusterGlobalEgressIPs(cluster, tracker)
-	checkGlobalEgressIPs(cluster, tracker)
-	checkGlobalIngressIPs(cluster, tracker)
+	checkClusterGlobalEgressIPs(clusterInfo, tracker)
+	checkGlobalEgressIPs(clusterInfo, tracker)
+	checkGlobalIngressIPs(clusterInfo, tracker)
 
-	if !tracker.HasFailures() {
-		status.Success("Globalnet is properly configured and functioning")
+	if tracker.HasFailures() {
+		return false
 	}
 
-	return !tracker.HasFailures()
+	status.Success("Globalnet is properly configured and functioning")
+
+	return true
 }
 
-func checkClusterGlobalEgressIPs(cluster *cmd.Cluster, status reporter.Interface) {
-	clusterGlobalEgress, err := cluster.SubmClient.SubmarinerV1().ClusterGlobalEgressIPs(
+func checkClusterGlobalEgressIPs(clusterInfo *cluster.Info, status reporter.Interface) {
+	clusterGlobalEgress, err := clusterInfo.ClientProducer.ForSubmariner().SubmarinerV1().ClusterGlobalEgressIPs(
 		corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		status.Failure("Error listing the ClusterGlobalEgressIP resources: %v", err)
@@ -127,8 +112,8 @@ func checkClusterGlobalEgressIPs(cluster *cmd.Cluster, status reporter.Interface
 	}
 }
 
-func checkGlobalEgressIPs(cluster *cmd.Cluster, status reporter.Interface) {
-	globalEgressIps, err := cluster.SubmClient.SubmarinerV1().GlobalEgressIPs(
+func checkGlobalEgressIPs(clusterInfo *cluster.Info, status reporter.Interface) {
+	globalEgressIps, err := clusterInfo.ClientProducer.ForSubmariner().SubmarinerV1().GlobalEgressIPs(
 		corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		status.Failure("Error obtaining GlobalEgressIPs resources: %v", err)
@@ -160,14 +145,15 @@ func checkGlobalEgressIPs(cluster *cmd.Cluster, status reporter.Interface) {
 	}
 }
 
-func checkGlobalIngressIPs(cluster *cmd.Cluster, status reporter.Interface) {
-	mcsClient, err := mcsClientset.NewForConfig(cluster.Config)
-	if err != nil {
-		status.Failure("Error obtaining mcs client: %v", err)
-		return
+func checkGlobalIngressIPs(clusterInfo *cluster.Info, status reporter.Interface) {
+	serviceExportGVR := &schema.GroupVersionResource{
+		Group:    mcsv1a1.GroupVersion.Group,
+		Version:  mcsv1a1.GroupVersion.Version,
+		Resource: "serviceexports",
 	}
 
-	serviceExports, err := mcsClient.MulticlusterV1alpha1().ServiceExports(corev1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
+	serviceExports, err := clusterInfo.ClientProducer.ForDynamic().Resource(*serviceExportGVR).Namespace(corev1.NamespaceAll).
+		List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		status.Failure("Error listing ServiceExport resources: %v", err)
 		return
@@ -177,7 +163,7 @@ func checkGlobalIngressIPs(cluster *cmd.Cluster, status reporter.Interface) {
 		ns := serviceExports.Items[i].GetNamespace()
 		name := serviceExports.Items[i].GetName()
 
-		svc, err := cluster.KubeClient.CoreV1().Services(ns).Get(context.TODO(), name, metav1.GetOptions{})
+		svc, err := clusterInfo.ClientProducer.ForKubernetes().CoreV1().Services(ns).Get(context.TODO(), name, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
 			status.Warning("No matching Service resource found for exported service \"%s/%s\"", ns, name)
@@ -193,7 +179,8 @@ func checkGlobalIngressIPs(cluster *cmd.Cluster, status reporter.Interface) {
 			continue
 		}
 
-		globalIngress, err := cluster.SubmClient.SubmarinerV1().GlobalIngressIPs(ns).Get(context.TODO(), name, metav1.GetOptions{})
+		globalIngress, err := clusterInfo.ClientProducer.ForSubmariner().SubmarinerV1().GlobalIngressIPs(ns).Get(context.TODO(),
+			name, metav1.GetOptions{})
 
 		if apierrors.IsNotFound(err) {
 			status.Failure("No matching GlobalIngressIP resource found for exported service \"%s/%s\"", ns, name)
@@ -222,12 +209,14 @@ func checkGlobalIngressIPs(cluster *cmd.Cluster, status reporter.Interface) {
 			continue
 		}
 
-		verifyInternalService(cluster, status, ns, name, globalIngress)
+		verifyInternalService(clusterInfo, status, ns, name, globalIngress)
 	}
 }
 
-func verifyInternalService(cluster *cmd.Cluster, status reporter.Interface, ns, name string, globalIngress *submarinerv1.GlobalIngressIP) {
-	svcs, err := cluster.KubeClient.CoreV1().Services(ns).List(
+func verifyInternalService(clusterInfo *cluster.Info, status reporter.Interface, ns, name string,
+	globalIngress *submarinerv1.GlobalIngressIP,
+) {
+	svcs, err := clusterInfo.ClientProducer.ForKubernetes().CoreV1().Services(ns).List(
 		context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("submariner.io/exportedServiceRef=%s", name)})
 	if err != nil {
 		status.Failure("Error listing internal Services \"%s/%s\": %v", ns, name, err)
