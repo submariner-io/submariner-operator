@@ -28,6 +28,7 @@ import (
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 type Info struct {
@@ -65,4 +66,51 @@ func (c *Info) GetGateways() ([]submarinerv1.Gateway, error) {
 	}
 
 	return gateways.Items, nil
+}
+
+func (c *Info) HasSingleNode() (bool, error) {
+	nodes, err := c.ClientProducer.ForKubernetes().CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return false, errors.Wrap(err, "error listing Nodes")
+	}
+
+	return len(nodes.Items) == 1, nil
+}
+
+func (c *Info) GetLocalEndpoint() (*submarinerv1.Endpoint, error) {
+	endpoints, err := c.ClientProducer.ForSubmariner().SubmarinerV1().Endpoints(constants.OperatorNamespace).List(
+		context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "error listing Endpoints")
+	}
+
+	for i := range endpoints.Items {
+		if endpoints.Items[i].Spec.ClusterID == c.Submariner.Spec.ClusterID {
+			return &endpoints.Items[i], nil
+		}
+	}
+
+	return nil, apierrors.NewNotFound(schema.GroupResource{
+		Group:    submarinerv1.SchemeGroupVersion.Group,
+		Resource: "endpoints",
+	}, "local Endpoint")
+}
+
+func (c *Info) GetAnyRemoteEndpoint() (*submarinerv1.Endpoint, error) {
+	endpoints, err := c.ClientProducer.ForSubmariner().SubmarinerV1().Endpoints(constants.OperatorNamespace).List(
+		context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "error listing Endpoints")
+	}
+
+	for i := range endpoints.Items {
+		if endpoints.Items[i].Spec.ClusterID != c.Submariner.Spec.ClusterID {
+			return &endpoints.Items[i], nil
+		}
+	}
+
+	return nil, apierrors.NewNotFound(schema.GroupResource{
+		Group:    submarinerv1.SchemeGroupVersion.Group,
+		Resource: "endpoints",
+	}, "remote Endpoint")
 }
