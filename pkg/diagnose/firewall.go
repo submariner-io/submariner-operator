@@ -22,9 +22,9 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/internal/pods"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -75,12 +75,12 @@ func spawnSnifferPodOnNode(client kubernetes.Interface, nodeName, namespace, pod
 	return spawnPod(client, scheduling, "validate-sniffer", namespace, podCommand)
 }
 
-func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli.Status) string {
-	nodes, err := cluster.KubeClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+func getActiveGatewayNodeName(clusterInfo *cluster.Info, hostname string, status reporter.Interface) string {
+	nodes, err := clusterInfo.ClientProducer.ForKubernetes().CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
 		LabelSelector: "submariner.io/gateway=true",
 	})
 	if err != nil {
-		status.EndWithFailure("Error obtaining the Gateway Nodes in cluster %q: %v", cluster.Name, err)
+		status.Failure("Error obtaining the Gateway Nodes in cluster %q: %v", clusterInfo.Name, err)
 		return ""
 	}
 
@@ -93,9 +93,9 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 		// On some platforms, the nodeName does not match with the hostname.
 		// Submariner Endpoint stores the hostname info in the endpoint and not the nodeName. So, we spawn a
 		// tiny pod to read the hostname and return the corresponding node.
-		sPod, err := spawnSnifferPodOnNode(cluster.KubeClient, node.Name, "default", "hostname")
+		sPod, err := spawnSnifferPodOnNode(clusterInfo.ClientProducer.ForKubernetes(), node.Name, "default", "hostname")
 		if err != nil {
-			status.EndWithFailure("Error spawning the sniffer pod on the node %q: %v", node.Name, err)
+			status.Failure("Error spawning the sniffer pod on the node %q: %v", node.Name, err)
 			return ""
 		}
 
@@ -104,7 +104,7 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 		sPod.Delete()
 
 		if err != nil {
-			status.EndWithFailure("Error waiting for the sniffer pod to finish its execution on node %q: %v", node.Name, err)
+			status.Failure("Error waiting for the sniffer pod to finish its execution on node %q: %v", node.Name, err)
 			return ""
 		}
 
@@ -113,8 +113,8 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 		}
 	}
 
-	status.EndWithFailure("Could not find the active Gateway node %q in local cluster in cluster %q",
-		hostname, cluster.Name)
+	status.Failure("Could not find the active Gateway node %q in local cluster in cluster %q",
+		hostname, clusterInfo.Name)
 
 	return ""
 }
