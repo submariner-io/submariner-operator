@@ -22,127 +22,113 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 )
 
 const (
-	TCPSniffVxLANCommand = "tcpdump -ln -c 3 -i vx-submariner tcp and port 8080 and 'tcp[tcpflags] == tcp-syn'"
+	tcpSniffVxLANCommand = "tcpdump -ln -c 3 -i vx-submariner tcp and port 8080 and 'tcp[tcpflags] == tcp-syn'"
 )
 
-func init() {
-	command := &cobra.Command{
-		Use:   "intra-cluster",
-		Short: "Check firewall access for intra-cluster Submariner VxLAN traffic",
-		Long:  "This command checks if the firewall configuration allows traffic over vx-submariner interface.",
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, checkVxLANConfig)
-		},
-	}
-
-	addDiagnoseFWConfigFlags(command)
-	addVerboseFlag(command)
-	diagnoseFirewallConfigCmd.AddCommand(command)
-}
-
-func checkVxLANConfig(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-
-	if cluster.Submariner == nil {
-		status.Start(cmd.SubmMissingMessage)
-		status.EndWith(cli.Warning)
-
-		return true
-	}
+func VxLANConfig(clusterInfo *cluster.Info, options FirewallOptions, status reporter.Interface) bool {
+	mustHaveSubmariner(clusterInfo)
 
 	status.Start("Checking the firewall configuration to determine if VXLAN traffic is allowed")
+	defer status.End()
 
-	if isClusterSingleNode(cluster, status) {
-		// Skip the check if it's a single node cluster
-		return true
-	}
-
-	checkFWConfig(cluster, status)
-
-	if status.HasFailureMessages() {
-		status.EndWith(cli.Failure)
+	singleNode, err := clusterInfo.HasSingleNode()
+	if err != nil {
+		status.Failure(err.Error())
 		return false
 	}
 
-	status.EndWithSuccess("The firewall configuration allows VXLAN traffic")
+	if singleNode {
+		status.Success(singleNodeMessage)
+		return true
+	}
+
+	tracker := reporter.NewTracker(status)
+
+	checkFWConfig(clusterInfo, options, tracker)
+
+	if tracker.HasFailures() {
+		return false
+	}
+
+	status.Success("The firewall configuration allows VXLAN traffic")
 
 	return true
 }
 
-func checkFWConfig(cluster *cmd.Cluster, status *cli.Status) {
-	if cluster.Submariner.Status.NetworkPlugin == "OVNKubernetes" {
-		status.QueueSuccessMessage("This check is not necessary for the OVNKubernetes CNI plugin")
+func checkFWConfig(clusterInfo *cluster.Info, options FirewallOptions, status reporter.Interface) {
+	if clusterInfo.Submariner.Status.NetworkPlugin == "OVNKubernetes" {
+		status.Success("This check is not necessary for the OVNKubernetes CNI plugin")
 		return
 	}
 
-	localEndpoint := getLocalEndpointResource(cluster, status)
-	if localEndpoint == nil {
+	localEndpoint, err := clusterInfo.GetLocalEndpoint()
+	if err != nil {
+		status.Failure("Unable to obtain the local endpoint: %v", err)
 		return
 	}
 
-	remoteEndpoint := getAnyRemoteEndpointResource(cluster, status)
-	if remoteEndpoint == nil {
+	remoteEndpoint, err := clusterInfo.GetAnyRemoteEndpoint()
+	if err != nil {
+		status.Failure("Unable to obtain a remote endpoint: %v", err)
 		return
 	}
 
-	gwNodeName := getActiveGatewayNodeName(cluster, localEndpoint.Spec.Hostname, status)
+	gwNodeName := getActiveGatewayNodeName(clusterInfo, localEndpoint.Spec.Hostname, status)
 	if gwNodeName == "" {
 		return
 	}
 
-	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffVxLANCommand)
+	podCommand := fmt.Sprintf("timeout %d %s", options.ValidationTimeout, tcpSniffVxLANCommand)
 
-	sPod, err := spawnSnifferPodOnNode(cluster.KubeClient, gwNodeName, podNamespace, podCommand)
+	sPod, err := spawnSnifferPodOnNode(clusterInfo.ClientProducer.ForKubernetes(), gwNodeName, options.PodNamespace, podCommand)
 	if err != nil {
-		status.EndWithFailure("Error spawning the sniffer pod on the Gateway node: %v", err)
+		status.Failure("Error spawning the sniffer pod on the Gateway node: %v", err)
 		return
 	}
 
 	defer sPod.Delete()
 
 	remoteClusterIP := strings.Split(remoteEndpoint.Spec.Subnets[0], "/")[0]
-	podCommand = fmt.Sprintf("nc -w %d %s 8080", validationTimeout/2, remoteClusterIP)
+	podCommand = fmt.Sprintf("nc -w %d %s 8080", options.ValidationTimeout/2, remoteClusterIP)
 
-	cPod, err := spawnClientPodOnNonGatewayNode(cluster.KubeClient, podNamespace, podCommand)
+	cPod, err := spawnClientPodOnNonGatewayNode(clusterInfo.ClientProducer.ForKubernetes(), options.PodNamespace, podCommand)
 	if err != nil {
-		status.QueueFailureMessage(fmt.Sprintf("Error spawning the client pod on non-Gateway node: %v", err))
+		status.Failure("Error spawning the client pod on non-Gateway node: %v", err)
 		return
 	}
 
 	defer cPod.Delete()
 
 	if err = cPod.AwaitCompletion(); err != nil {
-		status.QueueFailureMessage(fmt.Sprintf("Error waiting for the client pod to finish its execution: %v", err))
+		status.Failure("Error waiting for the client pod to finish its execution: %v", err)
 		return
 	}
 
 	if err = sPod.AwaitCompletion(); err != nil {
-		status.QueueFailureMessage(fmt.Sprintf("Error waiting for the sniffer pod to finish its execution: %v", err))
+		status.Failure("Error waiting for the sniffer pod to finish its execution: %v", err)
 		return
 	}
 
-	if verboseOutput {
-		status.QueueSuccessMessage("tcpdump output from the sniffer pod on Gateway node")
-		status.QueueSuccessMessage(sPod.PodOutput)
+	if options.VerboseOutput {
+		status.Success("tcpdump output from the sniffer pod on Gateway node")
+		status.Success(sPod.PodOutput)
 	}
 
 	// Verify that tcpdump output (i.e, from snifferPod) contains the remoteClusterIP
 	if !strings.Contains(sPod.PodOutput, remoteClusterIP) {
-		status.QueueFailureMessage(fmt.Sprintf("The tcpdump output from the sniffer pod does not contain the expected remote"+
-			" endpoint IP %s. Please check that your firewall configuration allows UDP/4800 traffic.", remoteClusterIP))
+		status.Failure("The tcpdump output from the sniffer pod does not contain the expected remote"+
+			" endpoint IP %s. Please check that your firewall configuration allows UDP/4800 traffic.", remoteClusterIP)
 		return
 	}
 
 	// Verify that tcpdump output (i.e, from snifferPod) contains the clientPod IPaddress
 	if !strings.Contains(sPod.PodOutput, cPod.Pod.Status.PodIP) {
-		status.QueueFailureMessage(fmt.Sprintf("The tcpdump output from the sniffer pod does not contain the client pod's IP."+
-			" There seems to be some issue with the IPTable rules programmed on the %q node", cPod.Pod.Spec.NodeName))
-		return
+		status.Failure("The tcpdump output from the sniffer pod does not contain the client pod's IP."+
+			" There seems to be some issue with the IPTable rules programmed on the %q node", cPod.Pod.Spec.NodeName)
 	}
 }
