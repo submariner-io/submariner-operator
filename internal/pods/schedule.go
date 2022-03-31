@@ -124,7 +124,7 @@ func (np *Scheduled) schedule() error {
 			Containers: []v1.Container{
 				{
 					Name:    np.Config.Name,
-					Image:   "quay.io/submariner/nettest:devel",
+					Image:   "quay.io/submariner/nettest:feature-multi-active-gw",
 					Command: []string{"sh", "-c", "$(COMMAND) >/dev/termination-log 2>&1 || exit 0"},
 					Env: []v1.EnvVar{
 						{Name: "COMMAND", Value: np.Config.Command},

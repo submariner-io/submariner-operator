@@ -28,7 +28,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-var Version = "devel"
+var Version = "feature-multi-active-gw"
 
 const (
 	minK8sMajor = 1 // We need K8s 1.17 for endpoint slices
