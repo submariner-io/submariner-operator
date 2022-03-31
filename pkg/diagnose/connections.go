@@ -19,48 +19,27 @@ limitations under the License.
 package diagnose
 
 import (
-	"fmt"
-
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 )
 
-func init() {
-	diagnoseCmd.AddCommand(&cobra.Command{
-		Use:   "connections",
-		Short: "Check the Gateway connections",
-		Long:  "This command checks that the Gateway connections to other clusters are all established",
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, checkConnections)
-		},
-	})
-}
-
-func checkConnections(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-
-	if cluster.Submariner == nil {
-		status.Start(cmd.SubmMissingMessage)
-		status.EndWith(cli.Warning)
-
-		return true
-	}
-
+func Connections(clusterInfo *cluster.Info, status reporter.Interface) bool {
 	status.Start("Checking gateway connections")
+	defer status.End()
 
-	gateways, err := cluster.GetGateways()
+	gateways, err := clusterInfo.GetGateways()
 	if err != nil {
-		status.EndWithFailure("Error retrieving gateways: %v", err)
+		status.Failure("Error retrieving gateways: %v", err)
 		return false
 	}
 
 	if len(gateways) == 0 {
-		status.EndWithFailure("There are no gateways detected")
+		status.Failure("There are no gateways detected")
 		return false
 	}
 
+	tracker := reporter.NewTracker(status)
 	foundActive := false
 
 	for i := range gateways {
@@ -72,29 +51,28 @@ func checkConnections(cluster *cmd.Cluster) bool {
 		foundActive = true
 
 		if len(gateway.Status.Connections) == 0 {
-			status.QueueFailureMessage(fmt.Sprintf("There are no active connections on gateway %q", gateway.Name))
+			tracker.Failure("There are no active connections on gateway %q", gateway.Name)
 		}
 
 		for j := range gateway.Status.Connections {
 			connection := &gateway.Status.Connections[j]
 			if connection.Status == submv1.Connecting {
-				status.QueueFailureMessage(fmt.Sprintf("Connection to cluster %q is in progress", connection.Endpoint.ClusterID))
+				tracker.Failure("Connection to cluster %q is in progress", connection.Endpoint.ClusterID)
 			} else if connection.Status == submv1.ConnectionError {
-				status.QueueFailureMessage(fmt.Sprintf("Connection to cluster %q is not established", connection.Endpoint.ClusterID))
+				tracker.Failure("Connection to cluster %q is not established", connection.Endpoint.ClusterID)
 			}
 		}
 	}
 
 	if !foundActive {
-		status.QueueFailureMessage("No active gateway was found")
+		tracker.Failure("No active gateway was found")
 	}
 
-	if status.HasFailureMessages() {
-		status.EndWith(cli.Failure)
+	if tracker.HasFailures() {
 		return false
 	}
 
-	status.EndWithSuccess("All connections are established")
+	status.Success("All connections are established")
 
 	return true
 }
