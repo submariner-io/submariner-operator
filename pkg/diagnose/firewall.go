@@ -24,6 +24,16 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+const (
+	singleNodeMessage = "Skipping this check as it's a single node cluster"
+)
+
+type FirewallOptions struct {
+	ValidationTimeout uint
+	VerboseOutput     bool
+	PodNamespace      string
+}
+
 func spawnSnifferPodOnGatewayNode(client kubernetes.Interface, namespace, podCommand string) (*pods.Scheduled, error) {
 	scheduling := pods.Scheduling{ScheduleOn: pods.GatewayNode, Networking: pods.HostNetworking}
 	return spawnPod(client, scheduling, "validate-sniffer", namespace, podCommand)
@@ -35,7 +45,8 @@ func spawnClientPodOnNonGatewayNode(client kubernetes.Interface, namespace, podC
 }
 
 func spawnPod(client kubernetes.Interface, scheduling pods.Scheduling, podName, namespace,
-	podCommand string) (*pods.Scheduled, error) {
+	podCommand string,
+) (*pods.Scheduled, error) {
 	pod, err := pods.Schedule(&pods.Config{
 		Name:       podName,
 		ClientSet:  client,

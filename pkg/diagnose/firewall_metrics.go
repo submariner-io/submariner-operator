@@ -22,46 +22,36 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 )
 
 const (
-	TCPSniffMetricsCommand = "tcpdump -ln -c 5 -i any tcp and src port 9898 and dst port 8080 and 'tcp[tcpflags] == tcp-syn'"
+	tcpSniffMetricsCommand = "tcpdump -ln -c 5 -i any tcp and src port 9898 and dst port 8080 and 'tcp[tcpflags] == tcp-syn'"
 )
 
-func init() {
-	command := &cobra.Command{
-		Use:   "metrics",
-		Short: "Check firewall access to metrics",
-		Long:  "This command checks if the firewall configuration allows metrics to be accessed from the Gateway nodes.",
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, checkFirewallMetricsConfig)
-		},
-	}
-
-	addDiagnoseFWConfigFlags(command)
-	addVerboseFlag(command)
-
-	diagnoseFirewallConfigCmd.AddCommand(command)
-}
-
-func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
+func FirewallMetricsConfig(clusterInfo *cluster.Info, options FirewallOptions, status reporter.Interface) bool {
+	mustHaveSubmariner(clusterInfo)
 
 	status.Start("Checking the firewall configuration to determine if the metrics port (8080) is allowed")
+	defer status.End()
 
-	if isClusterSingleNode(cluster, status) {
-		// Skip the check if it's a single node cluster
+	singleNode, err := clusterInfo.HasSingleNode()
+	if err != nil {
+		status.Failure(err.Error())
+		return false
+	}
+
+	if singleNode {
+		status.Success(singleNodeMessage)
 		return true
 	}
 
-	podCommand := fmt.Sprintf("timeout %d %s", validationTimeout, TCPSniffMetricsCommand)
+	podCommand := fmt.Sprintf("timeout %d %s", options.ValidationTimeout, tcpSniffMetricsCommand)
 
-	sPod, err := spawnSnifferPodOnGatewayNode(cluster.KubeClient, podNamespace, podCommand)
+	sPod, err := spawnSnifferPodOnGatewayNode(clusterInfo.ClientProducer.ForKubernetes(), options.PodNamespace, podCommand)
 	if err != nil {
-		status.EndWithFailure("Error spawning the sniffer pod on the Gateway node: %v", err)
+		status.Failure("Error spawning the sniffer pod on the Gateway node: %v", err)
 		return false
 	}
 
@@ -70,44 +60,39 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 	gatewayPodIP := sPod.Pod.Status.HostIP
 	podCommand = fmt.Sprintf("for i in $(seq 10); do timeout 2 nc -p 9898 %s 8080; done", gatewayPodIP)
 
-	cPod, err := spawnClientPodOnNonGatewayNode(cluster.KubeClient, podNamespace, podCommand)
+	cPod, err := spawnClientPodOnNonGatewayNode(clusterInfo.ClientProducer.ForKubernetes(), options.PodNamespace, podCommand)
 	if err != nil {
-		status.EndWithFailure("Error spawning the client pod on non-Gateway node: %v", err)
+		status.Failure("Error spawning the client pod on non-Gateway node: %v", err)
 		return false
 	}
 
 	defer cPod.Delete()
 
 	if err = cPod.AwaitCompletion(); err != nil {
-		status.EndWithFailure("Error waiting for the client pod to finish its execution: %v", err)
+		status.Failure("Error waiting for the client pod to finish its execution: %v", err)
 		return false
 	}
 
 	if err = sPod.AwaitCompletion(); err != nil {
-		status.EndWithFailure("Error waiting for the sniffer pod to finish its execution: %v", err)
+		status.Failure("Error waiting for the sniffer pod to finish its execution: %v", err)
 		return false
 	}
 
-	if verboseOutput {
-		status.QueueSuccessMessage("tcpdump output from sniffer pod on Gateway node")
-		status.QueueSuccessMessage(sPod.PodOutput)
+	if options.VerboseOutput {
+		status.Success("tcpdump output from sniffer pod on Gateway node")
+		status.Success(sPod.PodOutput)
 	}
 
 	// Verify that tcpdump output (i.e, from snifferPod) contains the HostIP of clientPod
 	if !strings.Contains(sPod.PodOutput, cPod.Pod.Status.HostIP) {
-		status.EndWithFailure("The tcpdump output from the sniffer pod does not contain the"+
+		status.Failure("The tcpdump output from the sniffer pod does not contain the"+
 			" client pod HostIP. Please check that your firewall configuration allows TCP/8080 traffic"+
 			" on the %q node.", sPod.Pod.Spec.NodeName)
 
 		return false
 	}
 
-	if status.HasFailureMessages() {
-		status.EndWith(cli.Failure)
-		return false
-	}
-
-	status.EndWithSuccess("The firewall configuration allows metrics to be retrieved from Gateway nodes")
+	status.Success("The firewall configuration allows metrics to be retrieved from Gateway nodes")
 
 	return true
 }
