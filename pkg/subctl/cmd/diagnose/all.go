@@ -61,11 +61,7 @@ func diagnoseAll(cluster *cmd.Cluster) bool {
 
 	fmt.Println()
 
-	success = checkPods(cluster) && success
-
-	fmt.Println()
-
-	success = checkOverlappingCIDRs(cluster) && success
+	success = checkDeployments(cluster) && success
 
 	fmt.Println()
 
