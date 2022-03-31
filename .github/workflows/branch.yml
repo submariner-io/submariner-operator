@@ -10,5 +10,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check that the PR targets multi-active-gw
-        if: ${{ github.base_ref != 'feature/multi-active-gw' }}
+        if: ${{ github.base_ref != 'feature-multi-active-gw' }}
         run: exit 1
