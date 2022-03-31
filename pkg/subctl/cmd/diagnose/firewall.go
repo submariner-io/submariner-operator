@@ -49,11 +49,6 @@ func init() {
 	diagnoseCmd.AddCommand(diagnoseFirewallConfigCmd)
 }
 
-func spawnSnifferPodOnGatewayNode(client kubernetes.Interface, namespace, podCommand string) (*pods.Scheduled, error) {
-	scheduling := pods.Scheduling{ScheduleOn: pods.GatewayNode, Networking: pods.HostNetworking}
-	return spawnPod(client, scheduling, "validate-sniffer", namespace, podCommand)
-}
-
 func spawnSnifferPodOnNode(client kubernetes.Interface, nodeName, namespace, podCommand string) (*pods.Scheduled, error) {
 	scheduling := pods.Scheduling{
 		ScheduleOn: pods.CustomNode, NodeName: nodeName,
