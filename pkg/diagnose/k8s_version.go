@@ -19,51 +19,32 @@ limitations under the License.
 package diagnose
 
 import (
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/client"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/version"
+	"k8s.io/client-go/kubernetes"
 )
 
-func init() {
-	diagnoseCmd.AddCommand(&cobra.Command{
-		Use:   "k8s-version",
-		Short: "Check the Kubernetes version",
-		Long:  "This command checks if Submariner can be deployed on the Kubernetes version.",
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, checkK8sVersion)
-		},
-	})
-}
-
-func checkK8sVersion(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-
+func K8sVersion(client kubernetes.Interface, status reporter.Interface) bool {
 	status.Start("Checking Submariner support for the Kubernetes version")
+	defer status.End()
 
-	clientProducer, err := client.NewProducerFromRestConfig(cluster.Config)
+	k8sVersion, failedRequirements, err := version.CheckRequirements(client)
 	if err != nil {
-		status.EndWithFailure(err.Error())
+		status.Failure(err.Error())
 		return false
 	}
 
-	k8sVersion, failedRequirements, err := version.CheckRequirements(clientProducer.ForKubernetes())
-	if err != nil {
-		status.EndWithFailure(err.Error())
-		return false
-	}
+	tracker := reporter.NewTracker(status)
 
 	for i := range failedRequirements {
-		status.QueueFailureMessage(failedRequirements[i])
+		tracker.Failure(failedRequirements[i])
 	}
 
-	if status.HasFailureMessages() {
-		status.EndWith(cli.Failure)
+	if tracker.HasFailures() {
 		return false
 	}
 
-	status.EndWithSuccess("Kubernetes version %q is supported", k8sVersion)
+	status.Success("Kubernetes version %q is supported", k8sVersion)
 
 	return true
 }
