@@ -20,52 +20,38 @@ package diagnose
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/submariner-operator/internal/constants"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 	"github.com/submariner-io/submariner/pkg/cidr"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-func init() {
-	diagnoseCmd.AddCommand(&cobra.Command{
-		Use:   "deployment",
-		Short: "Check the Submariner deployment",
-		Long:  "This command checks that the Submariner components are properly deployed and running with no overlapping CIDRs.",
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, func(cluster *cmd.Cluster) bool {
-				if cluster.Submariner == nil {
-					status := cli.NewStatus()
-					status.Start(cmd.SubmMissingMessage)
-					status.EndWith(cli.Warning)
-					return true
-				}
-
-				return checkOverlappingCIDRs(cluster) && checkPods(cluster)
-			})
-		},
-	})
+func Deployments(clusterInfo *cluster.Info, status reporter.Interface) bool {
+	mustHaveSubmariner(clusterInfo)
+	return checkOverlappingCIDRs(clusterInfo, status) && checkPods(clusterInfo, status)
 }
 
-func checkOverlappingCIDRs(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-
-	if cluster.Submariner.Spec.GlobalCIDR != "" {
+func checkOverlappingCIDRs(clusterInfo *cluster.Info, status reporter.Interface) bool {
+	if clusterInfo.Submariner.Spec.GlobalCIDR != "" {
 		status.Start("Globalnet deployment detected - checking if globalnet CIDRs overlap")
 	} else {
 		status.Start("Non-Globalnet deployment detected - checking if cluster CIDRs overlap")
 	}
 
-	endpointList, err := cluster.SubmClient.SubmarinerV1().Endpoints(cluster.Submariner.Namespace).List(context.TODO(),
-		metav1.ListOptions{})
+	defer status.End()
+
+	endpointList, err := clusterInfo.ClientProducer.ForSubmariner().SubmarinerV1().Endpoints(clusterInfo.Submariner.Namespace).List(
+		context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		status.EndWithFailure("Error listing the Submariner endpoints: %v", err)
+		status.Failure("Error listing the Submariner endpoints: %v", err)
 		return false
 	}
+
+	tracker := reporter.NewTracker(status)
 
 	for i := range endpointList.Items {
 		source := &endpointList.Items[i]
@@ -77,8 +63,8 @@ func checkOverlappingCIDRs(cluster *cmd.Cluster) bool {
 			// Currently we dont support multiple endpoints in a cluster, hence return an error.
 			// When the corresponding support is added, this check needs to be updated.
 			if source.Spec.ClusterID == dest.Spec.ClusterID {
-				status.QueueFailureMessage(fmt.Sprintf("Found multiple Submariner endpoints (%q and %q) in cluster %q",
-					source.Name, dest.Name, source.Spec.ClusterID))
+				tracker.Failure("Found multiple Submariner endpoints (%q and %q) in cluster %q",
+					source.Name, dest.Name, source.Spec.ClusterID)
 				continue
 			}
 
@@ -86,66 +72,66 @@ func checkOverlappingCIDRs(cluster *cmd.Cluster) bool {
 				overlap, err := cidr.IsOverlapping(source.Spec.Subnets, subnet)
 				if err != nil {
 					// Ideally this case will never hit, as the subnets are valid CIDRs
-					status.QueueFailureMessage(fmt.Sprintf("Error parsing CIDR in cluster %q: %s", dest.Spec.ClusterID, err))
+					tracker.Failure("Error parsing CIDR in cluster %q: %s", dest.Spec.ClusterID, err)
 					continue
 				}
 
 				if overlap {
-					status.QueueFailureMessage(fmt.Sprintf("CIDR %q in cluster %q overlaps with cluster %q (CIDRs: %v)",
-						subnet, dest.Spec.ClusterID, source.Spec.ClusterID, source.Spec.Subnets))
+					tracker.Failure("CIDR %q in cluster %q overlaps with cluster %q (CIDRs: %v)",
+						subnet, dest.Spec.ClusterID, source.Spec.ClusterID, source.Spec.Subnets)
 				}
 			}
 		}
 	}
 
-	if status.HasFailureMessages() {
-		status.EndWith(cli.Failure)
+	if tracker.HasFailures() {
 		return false
 	}
 
-	if cluster.Submariner.Spec.GlobalCIDR != "" {
-		status.EndWithSuccess("Clusters do not have overlapping globalnet CIDRs")
+	if clusterInfo.Submariner.Spec.GlobalCIDR != "" {
+		status.Success("Clusters do not have overlapping globalnet CIDRs")
 	} else {
-		status.EndWithSuccess("Clusters do not have overlapping CIDRs")
+		status.Success("Clusters do not have overlapping CIDRs")
 	}
 
 	return true
 }
 
-func checkPods(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
+func checkPods(clusterInfo *cluster.Info, status reporter.Interface) bool {
 	status.Start("Checking Submariner pods")
+	defer status.End()
 
-	checkDaemonset(cluster.KubeClient, cmd.OperatorNamespace, "submariner-gateway", status)
-	checkDaemonset(cluster.KubeClient, cmd.OperatorNamespace, "submariner-routeagent", status)
+	tracker := reporter.NewTracker(status)
+
+	checkDaemonset(clusterInfo.ClientProducer.ForKubernetes(), constants.OperatorNamespace, "submariner-gateway", tracker)
+	checkDaemonset(clusterInfo.ClientProducer.ForKubernetes(), constants.OperatorNamespace, "submariner-routeagent", tracker)
 
 	// Check if service-discovery components are deployed and running if enabled
-	if cluster.Submariner.Spec.ServiceDiscoveryEnabled {
-		checkDeployment(cluster.KubeClient, cmd.OperatorNamespace, "submariner-lighthouse-agent", status)
-		checkDeployment(cluster.KubeClient, cmd.OperatorNamespace, "submariner-lighthouse-coredns", status)
+	if clusterInfo.Submariner.Spec.ServiceDiscoveryEnabled {
+		checkDeployment(clusterInfo.ClientProducer.ForKubernetes(), constants.OperatorNamespace, "submariner-lighthouse-agent", tracker)
+		checkDeployment(clusterInfo.ClientProducer.ForKubernetes(), constants.OperatorNamespace, "submariner-lighthouse-coredns", tracker)
 	}
 
 	// Check if globalnet components are deployed and running if enabled
-	if cluster.Submariner.Spec.GlobalCIDR != "" {
-		checkDaemonset(cluster.KubeClient, cmd.OperatorNamespace, "submariner-globalnet", status)
+	if clusterInfo.Submariner.Spec.GlobalCIDR != "" {
+		checkDaemonset(clusterInfo.ClientProducer.ForKubernetes(), constants.OperatorNamespace, "submariner-globalnet", tracker)
 	}
 
-	checkPodsStatus(cluster.KubeClient, cmd.OperatorNamespace, status)
+	checkPodsStatus(clusterInfo.ClientProducer.ForKubernetes(), constants.OperatorNamespace, tracker)
 
-	if status.HasFailureMessages() {
-		status.EndWith(cli.Failure)
+	if tracker.HasFailures() {
 		return false
 	}
 
-	status.EndWithSuccess("All Submariner pods are up and running")
+	status.Success("All Submariner pods are up and running")
 
 	return true
 }
 
-func checkDeployment(k8sClient kubernetes.Interface, namespace, deploymentName string, status *cli.Status) {
+func checkDeployment(k8sClient kubernetes.Interface, namespace, deploymentName string, status reporter.Interface) {
 	deployment, err := k8sClient.AppsV1().Deployments(namespace).Get(context.TODO(), deploymentName, metav1.GetOptions{})
 	if err != nil {
-		status.QueueFailureMessage(fmt.Sprintf("Error obtaining Deployment %q: %v", deploymentName, err))
+		status.Failure("Error obtaining Deployment %q: %v", deploymentName, err)
 		return
 	}
 
@@ -155,44 +141,44 @@ func checkDeployment(k8sClient kubernetes.Interface, namespace, deploymentName s
 	}
 
 	if deployment.Status.AvailableReplicas != replicas {
-		status.QueueFailureMessage(fmt.Sprintf("The desired number of replicas for Deployment %q (%d)"+
+		status.Failure("The desired number of replicas for Deployment %q (%d)"+
 			" does not match the actual number running (%d)", deploymentName, replicas,
-			deployment.Status.AvailableReplicas))
+			deployment.Status.AvailableReplicas)
 	}
 }
 
-func checkDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName string, status *cli.Status) {
+func checkDaemonset(k8sClient kubernetes.Interface, namespace, daemonSetName string, status reporter.Interface) {
 	daemonSet, err := k8sClient.AppsV1().DaemonSets(namespace).Get(context.TODO(), daemonSetName, metav1.GetOptions{})
 	if err != nil {
-		status.QueueFailureMessage(fmt.Sprintf("Error obtaining Daemonset %q: %v", daemonSetName, err))
+		status.Failure("Error obtaining Daemonset %q: %v", daemonSetName, err)
 		return
 	}
 
 	if daemonSet.Status.CurrentNumberScheduled != daemonSet.Status.DesiredNumberScheduled {
-		status.QueueFailureMessage(fmt.Sprintf("The desired number of running pods for DaemonSet %q (%d)"+
+		status.Failure("The desired number of running pods for DaemonSet %q (%d)"+
 			" does not match the actual number (%d)", daemonSetName, daemonSet.Status.DesiredNumberScheduled,
-			daemonSet.Status.CurrentNumberScheduled))
+			daemonSet.Status.CurrentNumberScheduled)
 	}
 }
 
-func checkPodsStatus(k8sClient kubernetes.Interface, namespace string, status *cli.Status) {
+func checkPodsStatus(k8sClient kubernetes.Interface, namespace string, status reporter.Interface) {
 	pods, err := k8sClient.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		status.QueueFailureMessage(fmt.Sprintf("Error obtaining Pods list: %v", err))
+		status.Failure("Error obtaining Pods list: %v", err)
 		return
 	}
 
 	for i := range pods.Items {
 		pod := &pods.Items[i]
 		if pod.Status.Phase != v1.PodRunning {
-			status.QueueFailureMessage(fmt.Sprintf("Pod %q is not running. (current state is %v)", pod.Name, pod.Status.Phase))
+			status.Failure("Pod %q is not running. (current state is %v)", pod.Name, pod.Status.Phase)
 			continue
 		}
 
 		for j := range pod.Status.ContainerStatuses {
 			c := &pod.Status.ContainerStatuses[j]
 			if c.RestartCount >= 5 {
-				status.QueueWarningMessage(fmt.Sprintf("Pod %q has restarted %d times", pod.Name, c.RestartCount))
+				status.Warning("Pod %q has restarted %d times", pod.Name, c.RestartCount)
 			}
 		}
 	}
