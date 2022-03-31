@@ -322,7 +322,7 @@ func testDeletion() {
 	Context("and some components aren't installed", func() {
 		BeforeEach(func() {
 			t.submariner.Spec.GlobalCIDR = ""
-			t.submariner.Spec.Version = "devel"
+			t.submariner.Spec.Version = "feature-multi-active-gw"
 
 			t.InitClientObjs = append(t.InitClientObjs,
 				t.NewDaemonSet(names.GatewayComponent),
