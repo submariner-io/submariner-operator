@@ -59,10 +59,8 @@ var (
 	repository                    string
 	imageVersion                  string
 	nattPort                      int
-	ikePort                       int
 	preferredServer               bool
 	forceUDPEncaps                bool
-	ignoredColorCodes             string
 	natTraversal                  bool
 	ignoreRequirements            bool
 	globalnetEnabled              bool
@@ -79,6 +77,9 @@ var (
 	healthCheckInterval           uint64
 	healthCheckMaxPacketLossCount uint64
 	corednsCustomConfigMap        string
+
+	// Deprecated: will be removed in 0.14.
+	ignoredIkePort int
 )
 
 func init() {
@@ -93,10 +94,9 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
-	cmd.Flags().StringVar(&ignoredColorCodes, "colorcodes", "", "color codes")
-	_ = cmd.Flags().MarkDeprecated("colorcodes", "--colorcodes has no effect and is deprecated")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
-	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
+	cmd.Flags().IntVar(&ignoredIkePort, "ikeport", 500, "IPsec IKE port")
+	_ = cmd.Flags().MarkDeprecated("ikeport", "the IKE port setting is ignored")
 	cmd.Flags().BoolVar(&natTraversal, "natt", true, "enable NAT traversal for IPsec")
 
 	cmd.Flags().BoolVar(&preferredServer, "preferred-server", false,
@@ -449,7 +449,6 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 		Repository:               getImageRepo(),
 		Version:                  getImageVersion(),
 		CeIPSecNATTPort:          nattPort,
-		CeIPSecIKEPort:           ikePort,
 		CeIPSecDebug:             ipsecDebug,
 		CeIPSecForceUDPEncaps:    forceUDPEncaps,
 		CeIPSecPreferredServer:   preferredServer,

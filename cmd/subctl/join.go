@@ -38,9 +38,11 @@ import (
 )
 
 var (
-	joinFlags         join.Options
-	labelGateway      bool
-	ignoredColorCodes string
+	joinFlags    join.Options
+	labelGateway bool
+
+	// Deprecated: will be removed in 0.14.
+	ignoredIkePort int
 )
 
 var joinCmd = &cobra.Command{
@@ -93,10 +95,9 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&joinFlags.ClusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&joinFlags.Repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&joinFlags.ImageVersion, "version", "", "image version")
-	cmd.Flags().StringVar(&ignoredColorCodes, "colorcodes", "", "color codes")
-	_ = cmd.Flags().MarkDeprecated("colorcodes", "--colorcodes has no effect and is deprecated")
 	cmd.Flags().IntVar(&joinFlags.NATTPort, "nattport", 4500, "IPsec NATT port")
-	cmd.Flags().IntVar(&joinFlags.IKEPort, "ikeport", 500, "IPsec IKE port")
+	cmd.Flags().IntVar(&ignoredIkePort, "ikeport", 500, "IPsec IKE port")
+	_ = cmd.Flags().MarkDeprecated("ikeport", "the IKE port setting is ignored")
 	cmd.Flags().BoolVar(&joinFlags.NATTraversal, "natt", true, "enable NAT traversal for IPsec")
 
 	cmd.Flags().BoolVar(&joinFlags.PreferredServer, "preferred-server", false,
@@ -263,6 +264,10 @@ func determineClusterID(status reporter.Interface) {
 	if joinFlags.ClusterID == "" {
 		joinFlags.ClusterID, err = restConfigProducer.GetClusterID()
 		exit.OnError(status.Error(err, "Error determining cluster ID of the target cluster"))
+
+		if err = cluster.IsValidID(joinFlags.ClusterID); err != nil {
+			joinFlags.ClusterID = cluster.SanitizeID(joinFlags.ClusterID)
+		}
 	}
 
 	if joinFlags.ClusterID != "" {
