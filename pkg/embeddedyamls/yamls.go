@@ -2313,19 +2313,6 @@ rules:
       - servicediscoveries
     verbs:
       - '*'
-  - apiGroups:
-      - lighthouse.submariner.io
-    resources:
-      - '*'
-      - serviceexports
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
 `
 	Config_rbac_submariner_gateway_role_binding_yaml = `---
 kind: RoleBinding
@@ -2485,19 +2472,6 @@ rules:
       - servicediscoveries
     verbs:
       - '*'
-  - apiGroups:
-      - lighthouse.submariner.io
-    resources:
-      - '*'
-      - serviceexports
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
 `
 	Config_rbac_submariner_route_agent_role_binding_yaml = `---
 kind: RoleBinding
@@ -2654,19 +2628,6 @@ rules:
       - servicediscoveries
     verbs:
       - '*'
-  - apiGroups:
-      - lighthouse.submariner.io
-    resources:
-      - '*'
-      - serviceexports
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
 `
 	Config_rbac_submariner_globalnet_role_binding_yaml = `---
 kind: RoleBinding
@@ -2966,17 +2927,6 @@ rules:
       - update
       - delete
       - deletecollection
-  - apiGroups:
-      - lighthouse.submariner.io
-    resources:
-      - "*"
-    verbs:
-      - create
-      - get
-      - list
-      - watch
-      - update
-      - delete
   - apiGroups:
       - submariner.io
     resources:
