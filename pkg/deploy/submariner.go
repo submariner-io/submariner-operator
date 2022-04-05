@@ -160,7 +160,7 @@ func getCustomCoreDNSParams(corednsCustomConfigMap string) (namespace, name stri
 func removeSchemaPrefix(brokerURL string) string {
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
-		brokerURL = brokerURL[(idx + 3):]
+		brokerURL = brokerURL[idx+3:]
 	}
 
 	return brokerURL
