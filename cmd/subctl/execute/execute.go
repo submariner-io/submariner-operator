@@ -30,10 +30,16 @@ import (
 )
 
 func OnMultiCluster(restConfigProducer restconfig.Producer, run func(*cluster.Info, reporter.Interface) bool) {
+	restConfigs := restConfigProducer.MustGetForClusters()
+	if len(restConfigs) == 0 {
+		fmt.Println("No kube config was provided. Please use the --kubeconfig flag or set the KUBECONFIG environment variable")
+		return
+	}
+
 	success := true
 	status := cli.NewReporter()
 
-	for _, config := range restConfigProducer.MustGetForClusters() {
+	for _, config := range restConfigs {
 		fmt.Printf("Cluster %q\n", config.ClusterName)
 
 		clientProducer, err := client.NewProducerFromRestConfig(config.Config)
