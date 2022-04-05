@@ -66,7 +66,7 @@ func CheckRequirements(k8sclient kubernetes.Interface) (string, []string, error)
 			errors.WithMessagef(err, "error parsing API server minor version %v", serverVersion.Minor)
 	}
 
-	if major < minK8sMajor || (major == minK8sMajor && minor < minK8sMinor) {
+	if major < minK8sMajor || major == minK8sMajor && minor < minK8sMinor {
 		failedRequirements = append(failedRequirements,
 			fmt.Sprintf("Submariner requires Kubernetes %d.%d; your cluster is running %s.%s",
 				minK8sMajor, minK8sMinor, serverVersion.Major, serverVersion.Minor))
