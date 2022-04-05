@@ -26,7 +26,7 @@ import (
 
 // IsTerminal returns true if the writer w is a terminal.
 func IsTerminal(w io.Writer) bool {
-	if v, ok := (w).(*os.File); ok {
+	if v, ok := w.(*os.File); ok {
 		return isatty.IsTerminal(v.Fd())
 	}
 

@@ -105,7 +105,7 @@ func LastIP(network *net.IPNet) uint {
 	ones, total := network.Mask.Size()
 	clusterSize := uint(total - ones)
 	firstIPInt := ipToUint(network.IP)
-	lastIPUint := (firstIPInt + 1<<clusterSize) - 1
+	lastIPUint := firstIPInt + 1<<clusterSize - 1
 
 	return lastIPUint
 }
