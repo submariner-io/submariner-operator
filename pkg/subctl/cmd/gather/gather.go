@@ -92,7 +92,7 @@ func addGatherFlags(gatherCmd *cobra.Command) {
 }
 
 var gatherCmd = &cobra.Command{
-	Use:   "gather <kubeConfig>",
+	Use:   "gather",
 	Short: "Gather troubleshooting information from a cluster",
 	Long: fmt.Sprintf("This command gathers information from a submariner cluster for troubleshooting. The information gathered "+
 		"can be selected by component (%v) and type (%v). Default is to capture all data.",
