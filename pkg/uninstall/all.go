@@ -231,7 +231,7 @@ func ensureServiceDiscoveryDeleted(clients client.Producer, clusterName, namespa
 }
 
 func ensureDeleted(resourceInterface resource.Interface, name string) error {
-	const maxWait = uninstall.ComponentReadyTimeout + (time.Second * 30)
+	const maxWait = uninstall.ComponentReadyTimeout + time.Second*30
 	const checkInterval = 2 * time.Second
 
 	// nolint:wrapcheck // Let the caller wrap errors

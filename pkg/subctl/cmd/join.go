@@ -306,7 +306,7 @@ func checkRequirements(k8sclient kubernetes.Interface) {
 		fmt.Println("The target cluster fails to meet Submariner's requirements:")
 
 		for i := range failedRequirements {
-			fmt.Printf("* %s\n", (failedRequirements)[i])
+			fmt.Printf("* %s\n", failedRequirements[i])
 		}
 
 		if !ignoreRequirements {
@@ -433,7 +433,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 	brokerURL := subctlData.BrokerURL
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
-		brokerURL = brokerURL[(idx + 3):]
+		brokerURL = brokerURL[idx+3:]
 	}
 
 	if customDomains == nil && subctlData.CustomDomains != nil {
@@ -516,7 +516,7 @@ func getImageRepo() string {
 func removeSchemaPrefix(brokerURL string) string {
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
-		brokerURL = brokerURL[(idx + 3):]
+		brokerURL = brokerURL[idx+3:]
 	}
 
 	return brokerURL
