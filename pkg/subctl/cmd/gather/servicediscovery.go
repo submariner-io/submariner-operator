@@ -21,7 +21,7 @@ package gather
 import (
 	lhconstants "github.com/submariner-io/lighthouse/pkg/constants"
 	corev1 "k8s.io/api/core/v1"
-	discoveryv1beta1 "k8s.io/api/discovery/v1beta1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
@@ -66,13 +66,13 @@ func gatherServiceImports(info *Info, namespace string) {
 
 func gatherEndpointSlices(info *Info, namespace string) {
 	labelMap := map[string]string{
-		discoveryv1beta1.LabelManagedBy: lhconstants.LabelValueManagedBy,
+		discoveryv1.LabelManagedBy: lhconstants.LabelValueManagedBy,
 	}
 	labelSelector := labels.Set(labelMap).String()
 
 	ResourcesToYAMLFile(info, schema.GroupVersionResource{
-		Group:    discoveryv1beta1.SchemeGroupVersion.Group,
-		Version:  discoveryv1beta1.SchemeGroupVersion.Version,
+		Group:    discoveryv1.SchemeGroupVersion.Group,
+		Version:  discoveryv1.SchemeGroupVersion.Version,
 		Resource: "endpointslices",
 	}, namespace, metav1.ListOptions{LabelSelector: labelSelector})
 }
