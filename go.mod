@@ -41,34 +41,32 @@ require (
 	github.com/uw-labs/lichen v0.1.5
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
-	go.uber.org/zap v1.17.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
 	google.golang.org/api v0.74.0
-	k8s.io/api v0.21.0
-	k8s.io/apiextensions-apiserver v0.20.1
-	k8s.io/apimachinery v0.21.0
+	k8s.io/api v0.21.11
+	k8s.io/apiextensions-apiserver v0.21.11
+	k8s.io/apimachinery v0.21.11
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/klog/v2 v2.8.0 // indirect
-	k8s.io/utils v0.0.0-20210305010621-2afb4311ab10
+	k8s.io/klog/v2 v2.9.0
+	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 	sigs.k8s.io/controller-runtime v0.8.3
 	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/kustomize/cmd/config v0.9.11 // indirect
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
 	sigs.k8s.io/kustomize/kyaml v0.10.19 // indirect
 	sigs.k8s.io/mcs-api v0.1.0
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.1 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
 
 // When changing pins, check the dependabot configuration too
 // in .github/dependabot.yml
 
-// Pinned to kubernetes-1.19.10
+// Pinned to kubernetes-1.21.11
 replace (
-	k8s.io/api => k8s.io/api v0.19.10
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.10
-	k8s.io/apimachinery => k8s.io/apimachinery v0.19.10
-	k8s.io/client-go => k8s.io/client-go v0.19.10
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.19.10
-	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.7.0
+	k8s.io/api => k8s.io/api v0.21.11
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.21.11
+	k8s.io/apimachinery => k8s.io/apimachinery v0.21.11
+	k8s.io/client-go => k8s.io/client-go v0.21.11
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.21.11
+	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.9.0
 )
