@@ -121,7 +121,6 @@ func getVersions(cluster *cmd.Cluster) bool {
 	exit.OnErrorWithMessage(err, "Unable to get the Service-Discovery version")
 
 	status.EndWith(cli.Success)
-	printVersions(versions)
 
 	if len(versions) > 0 {
 		printVersions(versions)

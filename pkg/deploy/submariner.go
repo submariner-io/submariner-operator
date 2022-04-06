@@ -42,7 +42,6 @@ type SubmarinerOptions struct {
 	LoadBalancerEnabled           bool
 	HealthCheckEnabled            bool
 	NATTPort                      int
-	IKEPort                       int
 	HealthCheckInterval           uint64
 	HealthCheckMaxPacketLossCount uint64
 	ClusterID                     string
@@ -82,7 +81,6 @@ func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info,
 		Repository:               getImageRepo(options.Repository),
 		Version:                  getImageVersion(options.ImageVersion),
 		CeIPSecNATTPort:          options.NATTPort,
-		CeIPSecIKEPort:           options.IKEPort,
 		CeIPSecDebug:             options.IPSecDebug,
 		CeIPSecForceUDPEncaps:    options.ForceUDPEncaps,
 		CeIPSecPreferredServer:   options.PreferredServer,
@@ -162,7 +160,7 @@ func getCustomCoreDNSParams(corednsCustomConfigMap string) (namespace, name stri
 func removeSchemaPrefix(brokerURL string) string {
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
-		brokerURL = brokerURL[(idx + 3):]
+		brokerURL = brokerURL[idx+3:]
 	}
 
 	return brokerURL

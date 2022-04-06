@@ -59,7 +59,6 @@ var (
 	repository                    string
 	imageVersion                  string
 	nattPort                      int
-	ikePort                       int
 	preferredServer               bool
 	forceUDPEncaps                bool
 	natTraversal                  bool
@@ -78,6 +77,9 @@ var (
 	healthCheckInterval           uint64
 	healthCheckMaxPacketLossCount uint64
 	corednsCustomConfigMap        string
+
+	// Deprecated: will be removed in 0.14.
+	ignoredIkePort int
 )
 
 func init() {
@@ -93,7 +95,8 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
-	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
+	cmd.Flags().IntVar(&ignoredIkePort, "ikeport", 500, "IPsec IKE port")
+	_ = cmd.Flags().MarkDeprecated("ikeport", "the IKE port setting is ignored")
 	cmd.Flags().BoolVar(&natTraversal, "natt", true, "enable NAT traversal for IPsec")
 
 	cmd.Flags().BoolVar(&preferredServer, "preferred-server", false,
@@ -303,7 +306,7 @@ func checkRequirements(k8sclient kubernetes.Interface) {
 		fmt.Println("The target cluster fails to meet Submariner's requirements:")
 
 		for i := range failedRequirements {
-			fmt.Printf("* %s\n", (failedRequirements)[i])
+			fmt.Printf("* %s\n", failedRequirements[i])
 		}
 
 		if !ignoreRequirements {
@@ -430,7 +433,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 	brokerURL := subctlData.BrokerURL
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
-		brokerURL = brokerURL[(idx + 3):]
+		brokerURL = brokerURL[idx+3:]
 	}
 
 	if customDomains == nil && subctlData.CustomDomains != nil {
@@ -446,7 +449,6 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 		Repository:               getImageRepo(),
 		Version:                  getImageVersion(),
 		CeIPSecNATTPort:          nattPort,
-		CeIPSecIKEPort:           ikePort,
 		CeIPSecDebug:             ipsecDebug,
 		CeIPSecForceUDPEncaps:    forceUDPEncaps,
 		CeIPSecPreferredServer:   preferredServer,
@@ -514,7 +516,7 @@ func getImageRepo() string {
 func removeSchemaPrefix(brokerURL string) string {
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
-		brokerURL = brokerURL[(idx + 3):]
+		brokerURL = brokerURL[idx+3:]
 	}
 
 	return brokerURL

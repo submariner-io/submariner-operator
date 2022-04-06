@@ -60,16 +60,3 @@ rules:
   - servicediscoveries
   verbs:
   - '*'
-- apiGroups:
-  - lighthouse.submariner.io
-  resources:
-  - '*'
-  - serviceexports
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
