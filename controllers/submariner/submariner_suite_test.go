@@ -101,8 +101,8 @@ func (t *testDriver) awaitFinalizer() {
 	t.AwaitFinalizer(t.submariner, constants.CleanupFinalizer)
 }
 
-func (t *testDriver) awaitNoFinalizer() {
-	t.AwaitNoFinalizer(t.submariner, constants.CleanupFinalizer)
+func (t *testDriver) awaitSubmarinerDeleted() {
+	t.AwaitNoResource(t.submariner)
 }
 
 func (t *testDriver) getSubmariner() *operatorv1.Submariner {
