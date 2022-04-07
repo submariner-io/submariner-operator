@@ -29,17 +29,20 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/rest"
 )
 
 type Info struct {
 	Name           string
+	RestConfig     *rest.Config
 	ClientProducer client.Producer
 	Submariner     *v1alpha1.Submariner
 }
 
-func NewInfo(clusterName string, clientProducer client.Producer) (*Info, error) {
+func NewInfo(clusterName string, clientProducer client.Producer, config *rest.Config) (*Info, error) {
 	info := &Info{
 		Name:           clusterName,
+		RestConfig:     config,
 		ClientProducer: clientProducer,
 	}
 

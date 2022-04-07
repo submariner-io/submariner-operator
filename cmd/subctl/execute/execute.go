@@ -53,7 +53,7 @@ func OnMultiCluster(restConfigProducer restconfig.Producer, run OnClusterFn) {
 			continue
 		}
 
-		clusterInfo, err := cluster.NewInfo(config.ClusterName, clientProducer)
+		clusterInfo, err := cluster.NewInfo(config.ClusterName, clientProducer, config.Config)
 		if err != nil {
 			success = false
 
