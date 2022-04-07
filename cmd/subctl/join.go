@@ -24,6 +24,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/cluster"
 	"github.com/submariner-io/submariner-operator/internal/constants"
@@ -33,7 +34,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/join"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"k8s.io/client-go/kubernetes"
 )
 

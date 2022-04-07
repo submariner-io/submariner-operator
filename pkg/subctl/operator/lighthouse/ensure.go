@@ -19,7 +19,7 @@ limitations under the License.
 package lighthouseop
 
 import (
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/serviceaccount"
 	"k8s.io/client-go/dynamic"
