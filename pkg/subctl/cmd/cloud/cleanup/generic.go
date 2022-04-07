@@ -20,7 +20,9 @@ package cleanup
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/generic"
 )
@@ -38,9 +40,9 @@ func newGenericCleanupCommand() *cobra.Command {
 
 func cleanupGenericCluster(cmd *cobra.Command, args []string) {
 	err := generic.RunOnK8sCluster(
-		*parentRestConfigProducer,
-		func(gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
-			return gwDeployer.Cleanup(reporter) // nolint:wrapcheck // No need to wrap here
+		*parentRestConfigProducer, cli.NewReporter(),
+		func(gwDeployer api.GatewayDeployer, status reporter.Interface) error {
+			return gwDeployer.Cleanup(status) // nolint:wrapcheck // No need to wrap here
 		})
 
 	exit.OnErrorWithMessage(err, "Failed to cleanup K8s cluster")
