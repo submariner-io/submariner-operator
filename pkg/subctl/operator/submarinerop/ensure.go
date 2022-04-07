@@ -19,10 +19,10 @@ limitations under the License.
 package submarinerop
 
 import (
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/namespace"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	lighthouseop "github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse"
 	opcrds "github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/crds"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop/deployment"
