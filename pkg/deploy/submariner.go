@@ -22,12 +22,12 @@ import (
 	"encoding/base64"
 	"strings"
 
+	"github.com/submariner-io/admiral/pkg/reporter"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/secret"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	v1 "k8s.io/api/core/v1"

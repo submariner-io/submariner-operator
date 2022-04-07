@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/cluster"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 )
 
 func OnMultiCluster(restConfigProducer restconfig.Producer, run func(*cluster.Info, reporter.Interface) bool) {
