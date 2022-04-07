@@ -21,7 +21,9 @@ package prepare
 import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
 )
@@ -62,21 +64,21 @@ func prepareRHOS(cmd *cobra.Command, args []string) {
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := rhos.RunOnRHOS(*parentRestConfigProducer, rhosGWInstanceType, dedicatedGateway,
-		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
+	err := rhos.RunOnRHOS(*parentRestConfigProducer, rhosGWInstanceType, dedicatedGateway, cli.NewReporter(),
+		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			if gateways > 0 {
 				gwInput := api.GatewayDeployInput{
 					PublicPorts: gwPorts,
 					Gateways:    gateways,
 				}
 
-				err := gwDeployer.Deploy(gwInput, reporter)
+				err := gwDeployer.Deploy(gwInput, status)
 				if err != nil {
 					return errors.Wrap(err, "Deployment failed")
 				}
 			}
 
-			return cloud.PrepareForSubmariner(input, reporter)
+			return cloud.PrepareForSubmariner(input, status)
 		})
 
 	exit.OnErrorWithMessage(err, "Failed to prepare RHOS  cloud")

@@ -19,28 +19,29 @@ limitations under the License.
 package generic
 
 import (
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/cloud-prepare/pkg/generic"
 	"github.com/submariner-io/cloud-prepare/pkg/k8s"
-	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"k8s.io/client-go/kubernetes"
 )
 
-func RunOnK8sCluster(restConfigProducer restconfig.Producer,
-	function func(gwDeployer api.GatewayDeployer, reporter api.Reporter) error) error {
+func RunOnK8sCluster(restConfigProducer restconfig.Producer, status reporter.Interface,
+	function func(api.GatewayDeployer, reporter.Interface) error) error {
 	k8sConfig, err := restConfigProducer.ForCluster()
-	exit.OnErrorWithMessage(err, "Failed to initialize a Kubernetes config")
+	if err != nil {
+		return status.Error(err, "error initializing Kubernetes config")
+	}
 
 	clientSet, err := kubernetes.NewForConfig(k8sConfig)
-	exit.OnErrorWithMessage(err, "Failed to create Kubernetes client")
+	if err != nil {
+		return status.Error(err, "error creating Kubernetes client")
+	}
 
 	k8sClientSet := k8s.NewInterface(clientSet)
 
 	gwDeployer := generic.NewGatewayDeployer(k8sClientSet)
 
-	reporter := cloudutils.NewStatusReporter()
-
-	return function(gwDeployer, reporter)
+	return function(gwDeployer, status)
 }
