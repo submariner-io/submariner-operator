@@ -49,7 +49,7 @@ func clusterInfoFrom(c *cmd.Cluster) *cluster.Info {
 	p, err := client.NewProducerFromRestConfig(c.Config)
 	exit.OnErrorWithMessage(err, "Error creating client producer")
 
-	i, err := cluster.NewInfo(c.Name, p)
+	i, err := cluster.NewInfo(c.Name, p, nil)
 	exit.OnErrorWithMessage(err, "Error initializing client info")
 
 	if i.Submariner == nil {
