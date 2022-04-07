@@ -24,12 +24,15 @@ import (
 
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/cluster"
 )
 
-func OnMultiCluster(restConfigProducer restconfig.Producer, run func(*cluster.Info, reporter.Interface) bool) {
+type OnClusterFn func(*cluster.Info, reporter.Interface) bool
+
+func OnMultiCluster(restConfigProducer restconfig.Producer, run OnClusterFn) {
 	restConfigs := restConfigProducer.MustGetForClusters()
 	if len(restConfigs) == 0 {
 		fmt.Println("No kube config was provided. Please use the --kubeconfig flag or set the KUBECONFIG environment variable")
@@ -67,5 +70,17 @@ func OnMultiCluster(restConfigProducer restconfig.Producer, run func(*cluster.In
 
 	if !success {
 		os.Exit(1)
+	}
+}
+
+func IfSubmarinerInstalled(run OnClusterFn) OnClusterFn {
+	return func(clusterInfo *cluster.Info, status reporter.Interface) bool {
+		if clusterInfo.Submariner == nil {
+			status.Warning(constants.SubmarinerNotInstalled)
+
+			return true
+		}
+
+		return run(clusterInfo, status)
 	}
 }
