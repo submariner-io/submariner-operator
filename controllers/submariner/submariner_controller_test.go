@@ -312,7 +312,7 @@ func testDeletion() {
 			t.AssertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
 			t.AssertNoDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
 
-			t.awaitNoFinalizer()
+			t.awaitSubmarinerDeleted()
 
 			t.AssertReconcileSuccess()
 			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
@@ -343,7 +343,7 @@ func testDeletion() {
 			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
 			t.AssertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
 
-			t.awaitNoFinalizer()
+			t.awaitSubmarinerDeleted()
 		})
 	})
 
@@ -367,7 +367,7 @@ func testDeletion() {
 			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
 			t.AssertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
 
-			t.awaitNoFinalizer()
+			t.awaitSubmarinerDeleted()
 		})
 	})
 
@@ -387,7 +387,7 @@ func testDeletion() {
 
 			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
 
-			t.awaitNoFinalizer()
+			t.awaitSubmarinerDeleted()
 		})
 	})
 
@@ -418,7 +418,7 @@ func testDeletion() {
 				serviceDiscovery)
 			Expect(errors.IsNotFound(err)).To(BeTrue(), "ServiceDiscovery still exists")
 
-			t.awaitNoFinalizer()
+			t.awaitSubmarinerDeleted()
 		})
 	})
 }

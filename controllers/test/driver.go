@@ -215,8 +215,8 @@ func (d *Driver) AwaitFinalizer(obj client.Object, finalizer string) {
 	admtest.AwaitFinalizer(resource.ForControllerClient(d.Client, d.Namespace, obj), obj.GetName(), finalizer)
 }
 
-func (d *Driver) AwaitNoFinalizer(obj client.Object, finalizer string) {
-	admtest.AwaitNoFinalizer(resource.ForControllerClient(d.Client, d.Namespace, obj), obj.GetName(), finalizer)
+func (d *Driver) AwaitNoResource(obj client.Object) {
+	admtest.AwaitNoResource(resource.ForControllerClient(d.Client, d.Namespace, obj), obj.GetName())
 }
 
 func EnvMapFrom(daemonSet *appsv1.DaemonSet) map[string]string {
