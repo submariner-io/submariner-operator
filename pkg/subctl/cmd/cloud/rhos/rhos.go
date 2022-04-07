@@ -27,14 +27,13 @@ import (
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/cloud-prepare/pkg/k8s"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
 	"github.com/submariner-io/cloud-prepare/pkg/rhos"
-	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -68,9 +67,8 @@ func AddRHOSFlags(command *cobra.Command) {
 
 // RunOnRHOS runs the given function on RHOS, supplying it with a cloud instance connected to RHOS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to RHOS.
-func RunOnRHOS(restConfigProducer restconfig.Producer, gwInstanceType string, dedicatedGWNodes bool,
-	function func(cloud api.Cloud, gwDeployer api.GatewayDeployer,
-		reporter api.Reporter) error) error {
+func RunOnRHOS(restConfigProducer restconfig.Producer, gwInstanceType string, dedicatedGWNodes bool, status reporter.Interface,
+	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error) error {
 	if ocpMetadataFile != "" {
 		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
 		region = os.Getenv("OS_REGION_NAME")
@@ -82,8 +80,7 @@ func RunOnRHOS(restConfigProducer restconfig.Producer, gwInstanceType string, de
 		utils.ExpectFlag(projectIDFlag, projectID)
 	}
 
-	reporter := cloudutils.NewStatusReporter()
-	reporter.Started("Retrieving RHOS credentials from your RHOS configuration")
+	status.Start("Retrieving RHOS credentials from your RHOS configuration")
 
 	// Using RHOS default "openstack", if not specified
 	if cloudEntry == "" {
@@ -95,22 +92,33 @@ func RunOnRHOS(restConfigProducer restconfig.Producer, gwInstanceType string, de
 	}
 
 	providerClient, err := clientconfig.AuthenticatedClient(opts)
+	if err != nil {
+		return status.Error(err, "error initializing RHOS Client")
+	}
 
-	utils.ExitOnError("Failed to initialize a RHOS Client", err)
+	status.End()
 
 	k8sConfig, err := restConfigProducer.ForCluster()
-	utils.ExitOnError("Failed to initialize a Kubernetes config", err)
+	if err != nil {
+		return status.Error(err, "error initializing Kubernetes config")
+	}
 
 	clientSet, err := kubernetes.NewForConfig(k8sConfig)
-	utils.ExitOnError("Failed to create Kubernetes client", err)
+	if err != nil {
+		return status.Error(err, "error creating Kubernetes client")
+	}
 
 	k8sClientSet := k8s.NewInterface(clientSet)
 
 	restMapper, err := util.BuildRestMapper(k8sConfig)
-	exit.OnErrorWithMessage(err, "Failed to create restmapper")
+	if err != nil {
+		return status.Error(err, "error creating REST mapper")
+	}
 
 	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
-	exit.OnErrorWithMessage(err, "Failed to create dynamic client")
+	if err != nil {
+		return status.Error(err, "error creating dynamic client")
+	}
 
 	cloudInfo := rhos.CloudInfo{
 		Client:    providerClient,
@@ -123,9 +131,7 @@ func RunOnRHOS(restConfigProducer restconfig.Producer, gwInstanceType string, de
 	gwDeployer := rhos.NewOcpGatewayDeployer(cloudInfo, msDeployer, projectID, gwInstanceType,
 		"", cloudEntry, dedicatedGWNodes)
 
-	utils.ExitOnError("Failed to initialize a GatewayDeployer config", err)
-
-	return function(rhosCloud, gwDeployer, reporter)
+	return function(rhosCloud, gwDeployer, status)
 }
 
 func initializeFlagsFromOCPMetadata(metadataFile string) error {
