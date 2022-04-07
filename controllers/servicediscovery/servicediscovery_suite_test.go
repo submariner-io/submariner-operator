@@ -112,8 +112,8 @@ func (t *testDriver) awaitFinalizer() {
 	t.AwaitFinalizer(t.serviceDiscovery, constants.CleanupFinalizer)
 }
 
-func (t *testDriver) awaitNoFinalizer() {
-	t.AwaitNoFinalizer(t.serviceDiscovery, constants.CleanupFinalizer)
+func (t *testDriver) awaitServiceDiscoveryDeleted() {
+	t.AwaitNoResource(t.serviceDiscovery)
 }
 
 func (t *testDriver) assertUninstallServiceDiscoveryDeployment() *appsv1.Deployment {
@@ -256,9 +256,9 @@ func (t *testDriver) setLighthouseCoreDNSServiceIP() {
 	Expect(t.Client.Update(context.TODO(), service)).To(Succeed())
 }
 
-func (t *testDriver) testFinalizerRemoved() {
-	It("remove the finalizer from the Submariner resource", func() {
-		t.awaitNoFinalizer()
+func (t *testDriver) testServiceDiscoveryDeleted() {
+	It("eventually delete the ServiceDiscovery resource", func() {
+		t.awaitServiceDiscoveryDeleted()
 	})
 }
 
