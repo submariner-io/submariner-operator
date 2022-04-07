@@ -24,10 +24,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/submariner-io/admiral/pkg/test"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
-	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -230,12 +228,9 @@ func testCoreDNSCleanup() {
 
 		It("should remove the lighthouse config section", func() {
 			Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData("")))
-
-			test.AwaitNoFinalizer(resource.ForControllerClient(t.Client, submarinerNamespace, &submariner_v1.ServiceDiscovery{}),
-				serviceDiscoveryName, constants.CleanupFinalizer)
 		})
 
-		t.testFinalizerRemoved()
+		t.testServiceDiscoveryDeleted()
 	})
 
 	When("the openshift DNS config exists", func() {
@@ -247,7 +242,7 @@ func testCoreDNSCleanup() {
 			assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(""))
 		})
 
-		t.testFinalizerRemoved()
+		t.testServiceDiscoveryDeleted()
 	})
 
 	When("a custom coredns config is specified", func() {
@@ -276,11 +271,11 @@ func testCoreDNSCleanup() {
 					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data).ToNot(HaveKey("lighthouse.server"))
 			})
 
-			t.testFinalizerRemoved()
+			t.testServiceDiscoveryDeleted()
 		})
 
 		Context("and the custom coredns ConfigMap doesn't exist", func() {
-			t.testFinalizerRemoved()
+			t.testServiceDiscoveryDeleted()
 		})
 	})
 }
@@ -314,7 +309,7 @@ func testDeploymentUninstall() {
 
 			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
 
-			t.awaitNoFinalizer()
+			t.awaitServiceDiscoveryDeleted()
 
 			t.AssertReconcileSuccess()
 			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
@@ -336,7 +331,7 @@ func testDeploymentUninstall() {
 
 			t.AssertNoDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
 
-			t.awaitNoFinalizer()
+			t.awaitServiceDiscoveryDeleted()
 		})
 	})
 }
