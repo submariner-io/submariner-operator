@@ -20,10 +20,10 @@ package deploy
 
 import (
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/client"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinerop"
 )
 
