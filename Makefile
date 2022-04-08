@@ -32,8 +32,13 @@ PATTERN := ^([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$
 # Test if VERSION matches the semantic versioning rule
 IS_SEMANTIC_VERSION = $(shell [[ $(or $(BUNDLE_VERSION),$(VERSION),'undefined') =~ $(PATTERN) ]] && echo true || echo false)
 
+gotodockerarch = $(patsubst arm,arm/v7,$(1))
+dockertogoarch = $(patsubst arm/v7,arm,$(1))
+
+PLATFORMS ?= linux/amd64,linux/arm64
 IMAGES = submariner-operator submariner-operator-index
 PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-globalnet submariner-route-agent lighthouse-agent lighthouse-coredns
+MULTIARCH_IMAGES := submariner-operator
 undefine SKIP
 undefine FOCUS
 undefine E2E_TESTDIR
@@ -126,25 +131,19 @@ export PATH := $(CURDIR)/bin:$(PATH)
 
 # Targets to make
 
-images: build
-
-e2e: deploy
+e2e: $(VENDOR_MODULES) deploy
 	scripts/kind-e2e/e2e.sh $(E2E_ARGS)
 
 clean:
 	rm -f bin/submariner-operator
 
 licensecheck: BUILD_ARGS=--noupx
-licensecheck: build bin/submariner-operator | bin/lichen
-	bin/lichen -c .lichen.yaml bin/submariner-operator
+licensecheck: build bin/linux/amd64/submariner-operator | bin/lichen
+	bin/lichen -c .lichen.yaml bin/linux/amd64/submariner-operator
 
 bin/lichen: $(VENDOR_MODULES)
 	mkdir -p $(@D)
 	$(GO) build -o $@ github.com/uw-labs/lichen
-
-package/Dockerfile.submariner-operator: bin/submariner-operator
-
-package/Dockerfile.submariner-operator-index: packagemanifests
 
 # Generate deep-copy code
 CONTROLLER_DEEPCOPY := api/submariner/v1alpha1/zz_generated.deepcopy.go
@@ -156,8 +155,8 @@ EMBEDDED_YAMLS := pkg/embeddedyamls/yamls.go
 $(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(VENDOR_MODULES) $(CONTROLLER_DEEPCOPY)
 	$(GO) generate pkg/embeddedyamls/generate.go
 
-bin/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
-	${SCRIPTS_DIR}/compile.sh \
+bin/%/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
+	GOARCH=$(call dockertogoarch,$(patsubst bin/linux/%/,%,$(dir $@))) ${SCRIPTS_DIR}/compile.sh \
 	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
 	$@ . $(BUILD_ARGS)
 
