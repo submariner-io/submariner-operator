@@ -63,7 +63,8 @@ func AddAWSFlags(command *cobra.Command) {
 // RunOnAWS runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.
 func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string, status reporter.Interface,
-	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error) error {
+	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
+) error {
 	if ocpMetadataFile != "" {
 		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
 		exit.OnErrorWithMessage(err, "Failed to read AWS information from OCP metadata file")

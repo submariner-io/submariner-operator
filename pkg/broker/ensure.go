@@ -193,7 +193,8 @@ func CreateOrUpdateBrokerAdminRole(clientset kubernetes.Interface, inNamespace s
 
 // nolint:wrapcheck // No need to wrap here
 func CreateNewBrokerRoleBinding(kubeClient kubernetes.Interface, serviceAccount, roleName, inNamespace string) (
-	brokerRoleBinding *rbacv1.RoleBinding, err error) {
+	brokerRoleBinding *rbacv1.RoleBinding, err error,
+) {
 	return kubeClient.RbacV1().RoleBindings(inNamespace).Create(
 		context.TODO(), NewBrokerRoleBinding(serviceAccount, roleName, inNamespace), metav1.CreateOptions{})
 }

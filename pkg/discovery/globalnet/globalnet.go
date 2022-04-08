@@ -461,7 +461,8 @@ func ValidateExistingGlobalNetworks(kubeClient kubernetes.Interface, namespace s
 }
 
 func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset kubernetes.Interface, brokerNamespace string,
-	netconfig *Config, status reporter.Interface) error {
+	netconfig *Config, status reporter.Interface,
+) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		status.Start("Retrieving Globalnet information from the Broker")
 		defer status.End()

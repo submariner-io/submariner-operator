@@ -80,7 +80,8 @@ func AddGCPFlags(command *cobra.Command) {
 // RunOnGCP runs the given function on GCP, supplying it with a cloud instance connected to GCP and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to GCP.
 func RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, dedicatedGWNodes bool, status reporter.Interface,
-	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error) error {
+	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
+) error {
 	if ocpMetadataFile != "" {
 		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
 		exit.OnErrorWithMessage(err, "Failed to read GCP Cluster information from OCP metadata file")

@@ -32,7 +32,8 @@ import (
 
 // nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
-	error) {
+	error,
+) {
 	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance, names.GlobalnetComponent), reqLogger,
 		r.config.Client, r.config.Scheme)
 	if err != nil {

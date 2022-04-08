@@ -94,21 +94,24 @@ func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string
 }
 
 func (c *controllerClientCreator) Create(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
-	options metav1.CreateOptions) (*apiextensions.CustomResourceDefinition, error) {
+	options metav1.CreateOptions,
+) (*apiextensions.CustomResourceDefinition, error) {
 	// TODO skitt handle options
 	err := c.client.Create(ctx, crd)
 	return crd, err
 }
 
 func (c *controllerClientCreator) Update(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
-	options metav1.UpdateOptions) (*apiextensions.CustomResourceDefinition, error) {
+	options metav1.UpdateOptions,
+) (*apiextensions.CustomResourceDefinition, error) {
 	// TODO skitt handle options
 	err := c.client.Update(ctx, crd)
 	return crd, err
 }
 
 func (c *controllerClientCreator) Get(ctx context.Context, name string,
-	options metav1.GetOptions) (*apiextensions.CustomResourceDefinition, error) {
+	options metav1.GetOptions,
+) (*apiextensions.CustomResourceDefinition, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
 	// TODO skitt handle options
 	err := c.client.Get(ctx, client.ObjectKey{Name: name}, crd)

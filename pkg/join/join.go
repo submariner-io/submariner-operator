@@ -39,7 +39,8 @@ import (
 )
 
 func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer client.Producer,
-	status reporter.Interface) error {
+	status reporter.Interface,
+) error {
 	err := checkRequirements(clientProducer.ForKubernetes(), options.IgnoreRequirements, status)
 	if err != nil {
 		return err

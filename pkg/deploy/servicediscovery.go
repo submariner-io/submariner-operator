@@ -40,7 +40,8 @@ type ServiceDiscoveryOptions struct {
 }
 
 func ServiceDiscovery(clientProducer client.Producer, options *ServiceDiscoveryOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
-	imageOverrides map[string]string, status reporter.Interface) error {
+	imageOverrides map[string]string, status reporter.Interface,
+) error {
 	serviceDiscoverySpec := populateServiceDiscoverySpec(options, brokerInfo, brokerSecret, imageOverrides)
 
 	err := servicediscoverycr.Ensure(clientProducer.ForOperator(), constants.OperatorNamespace, serviceDiscoverySpec)
@@ -52,7 +53,8 @@ func ServiceDiscovery(clientProducer client.Producer, options *ServiceDiscoveryO
 }
 
 func populateServiceDiscoverySpec(options *ServiceDiscoveryOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
-	imageOverrides map[string]string) *submariner.ServiceDiscoverySpec {
+	imageOverrides map[string]string,
+) *submariner.ServiceDiscoverySpec {
 	brokerURL := removeSchemaPrefix(brokerInfo.BrokerURL)
 
 	serviceDiscoverySpec := submariner.ServiceDiscoverySpec{
