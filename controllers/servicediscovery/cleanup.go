@@ -104,7 +104,8 @@ func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1al
 }
 
 func (r *Reconciler) removeLighthouseConfigFromCustomDNSConfigMap(ctx context.Context,
-	config *operatorv1alpha1.CoreDNSCustomConfig) error {
+	config *operatorv1alpha1.CoreDNSCustomConfig,
+) error {
 	configMap := newCoreDNSCustomConfigMap(config)
 
 	log.Info("Removing lighthouse config from custom DNS ConfigMap", "Name", configMap.Name, "Namespace", configMap.Namespace)

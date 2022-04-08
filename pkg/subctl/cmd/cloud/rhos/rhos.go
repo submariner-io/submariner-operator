@@ -68,7 +68,8 @@ func AddRHOSFlags(command *cobra.Command) {
 // RunOnRHOS runs the given function on RHOS, supplying it with a cloud instance connected to RHOS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to RHOS.
 func RunOnRHOS(restConfigProducer restconfig.Producer, gwInstanceType string, dedicatedGWNodes bool, status reporter.Interface,
-	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error) error {
+	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
+) error {
 	if ocpMetadataFile != "" {
 		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
 		region = os.Getenv("OS_REGION_NAME")

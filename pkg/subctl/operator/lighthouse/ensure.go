@@ -27,7 +27,8 @@ import (
 )
 
 func Ensure(status reporter.Interface, kubeClient kubernetes.Interface, dynClient dynamic.Interface,
-	operatorNamespace string) (bool, error) {
+	operatorNamespace string,
+) (bool, error) {
 	if created, err := serviceaccount.Ensure(kubeClient, operatorNamespace); err != nil {
 		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {

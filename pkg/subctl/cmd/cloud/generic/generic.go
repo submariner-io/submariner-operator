@@ -28,7 +28,8 @@ import (
 )
 
 func RunOnK8sCluster(restConfigProducer restconfig.Producer, status reporter.Interface,
-	function func(api.GatewayDeployer, reporter.Interface) error) error {
+	function func(api.GatewayDeployer, reporter.Interface) error,
+) error {
 	k8sConfig, err := restConfigProducer.ForCluster()
 	if err != nil {
 		return status.Error(err, "error initializing Kubernetes config")
