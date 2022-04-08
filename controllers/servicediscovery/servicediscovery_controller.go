@@ -191,7 +191,8 @@ func (r *Reconciler) getServiceDiscovery(ctx context.Context, key types.Namespac
 }
 
 func (r *Reconciler) addFinalizer(ctx context.Context,
-	instance *submarinerv1alpha1.ServiceDiscovery) (*submarinerv1alpha1.ServiceDiscovery, error) {
+	instance *submarinerv1alpha1.ServiceDiscovery,
+) (*submarinerv1alpha1.ServiceDiscovery, error) {
 	added, err := finalizer.Add(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace,
 		&submarinerv1alpha1.ServiceDiscovery{}), instance, constants.CleanupFinalizer)
 	if err != nil {
@@ -433,7 +434,8 @@ func getCustomCoreDNSNamespace(config *submarinerv1alpha1.CoreDNSCustomConfig) s
 }
 
 func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
-	reqLogger logr.Logger) error {
+	reqLogger logr.Logger,
+) error {
 	var configFunc func(context.Context, *corev1.ConfigMap) (*corev1.ConfigMap, error)
 
 	customCoreDNSName := cr.Spec.CoreDNSCustomConfig.ConfigMapName
@@ -487,7 +489,8 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 }
 
 func (r *Reconciler) configureDNSConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery, configMapNamespace,
-	configMapName string) error {
+	configMapName string,
+) error {
 	lighthouseDNSService := &corev1.Service{}
 
 	err := r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDNSService)
@@ -503,7 +506,8 @@ func (r *Reconciler) configureDNSConfigMap(ctx context.Context, cr *submarinerv1
 }
 
 func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
-	configMapNamespace, configMapName, clusterIP string) error {
+	configMapNamespace, configMapName, clusterIP string,
+) error {
 	// nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		configMap, err := r.config.KubeClient.CoreV1().ConfigMaps(configMapNamespace).Get(ctx, configMapName, metav1.GetOptions{})
@@ -586,7 +590,8 @@ func (r *Reconciler) configureOpenshiftClusterDNSOperator(ctx context.Context, i
 }
 
 func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
-	clusterIP string) error {
+	clusterIP string,
+) error {
 	// nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		dnsOperator := &operatorv1.DNS{}
@@ -631,7 +636,8 @@ func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Co
 }
 
 func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dnsOperator *operatorv1.DNS,
-	clusterIP string) []operatorv1.Server {
+	clusterIP string,
+) []operatorv1.Server {
 	updatedForwardServers := make([]operatorv1.Server, 0)
 	changed := false
 	containsLighthouse := false
@@ -744,7 +750,8 @@ func (r *Reconciler) ensureLighthouseCoreDNSDeployment(instance *submarinerv1alp
 }
 
 func (r *Reconciler) ensureLighthouseCoreDNSService(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
-	reqLogger logr.Logger) error {
+	reqLogger logr.Logger,
+) error {
 	lighthouseCoreDNSService := &corev1.Service{}
 
 	err := r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},

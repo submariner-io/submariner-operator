@@ -36,7 +36,8 @@ import (
 
 func Setup(namespace string, owner metav1.Object, labels map[string]string, port int32,
 	client controllerClient.Client, config *rest.Config, scheme *runtime.Scheme,
-	reqLogger logr.Logger) error {
+	reqLogger logr.Logger,
+) error {
 	app, ok := labels["app"]
 	if !ok {
 		return fmt.Errorf("no app label in the provided labels, %v", labels)

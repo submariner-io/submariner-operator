@@ -429,7 +429,8 @@ func populatePSKSecret(subctlData *datafile.SubctlData) *v1.Secret {
 }
 
 func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSecret *v1.Secret,
-	netconfig globalnet.Config) *submariner.SubmarinerSpec {
+	netconfig globalnet.Config,
+) *submariner.SubmarinerSpec {
 	brokerURL := subctlData.BrokerURL
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix

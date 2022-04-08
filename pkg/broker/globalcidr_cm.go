@@ -46,7 +46,8 @@ type ClusterInfo struct {
 }
 
 func CreateGlobalnetConfigMap(kubeClient kubernetes.Interface, globalnetEnabled bool, defaultGlobalCidrRange string,
-	defaultGlobalClusterSize uint, namespace string) error {
+	defaultGlobalClusterSize uint, namespace string,
+) error {
 	gnConfigMap, err := NewGlobalnetConfigMap(globalnetEnabled, defaultGlobalCidrRange, defaultGlobalClusterSize, namespace)
 	if err != nil {
 		return errors.Wrap(err, "error creating config map")
@@ -61,7 +62,8 @@ func CreateGlobalnetConfigMap(kubeClient kubernetes.Interface, globalnetEnabled 
 }
 
 func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
-	defaultGlobalClusterSize uint, namespace string) (*v1.ConfigMap, error) {
+	defaultGlobalClusterSize uint, namespace string,
+) (*v1.ConfigMap, error) {
 	labels := map[string]string{
 		"component": "submariner-globalnet",
 	}
@@ -99,7 +101,8 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 }
 
 func UpdateGlobalnetConfigMap(k8sClientset kubernetes.Interface, namespace string,
-	configMap *v1.ConfigMap, newCluster ClusterInfo) error {
+	configMap *v1.ConfigMap, newCluster ClusterInfo,
+) error {
 	var clusterInfo []ClusterInfo
 
 	err := json.Unmarshal([]byte(configMap.Data[ClusterInfoKey]), &clusterInfo)

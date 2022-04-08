@@ -28,7 +28,8 @@ import (
 )
 
 func Operator(status reporter.Interface, version, repository string, imageOverrideArr []string, debug bool,
-	clientProducer client.Producer) error {
+	clientProducer client.Producer,
+) error {
 	operatorImage, err := image.ForOperator(version, repository, imageOverrideArr)
 	if err != nil {
 		return errors.Wrap(err, "error overriding Operator Image")

@@ -40,7 +40,8 @@ const (
 
 // nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileLoadBalancer(
-	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*corev1.Service, error) {
+	instance *v1alpha1.Submariner, reqLogger logr.Logger,
+) (*corev1.Service, error) {
 	return helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.config.Client, r.config.Scheme)
 }
 
