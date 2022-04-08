@@ -1,6 +1,17 @@
-FROM quay.io/operator-framework/upstream-registry-builder as builder
+ARG BASE_BRANCH
+ARG SOURCE=/go/src/github.com/submariner-io/submariner-operator
 
-COPY packagemanifests manifests
+FROM quay.io/submariner/shipyard-dapper-base:${BASE_BRANCH} AS shipyard
+ARG SOURCE
+
+COPY . ${SOURCE}
+
+RUN make -C ${SOURCE} LOCAL_BUILD=1 packagemanifests
+
+FROM quay.io/operator-framework/upstream-registry-builder as builder
+ARG SOURCE
+
+COPY --from=shipyard ${SOURCE}/packagemanifests manifests
 RUN  find manifests -name \*.clusterserviceversion.yaml -exec sed -i 's/replaces: submariner.v0.0.0//g' {} + && \
      /bin/initializer -o ./bundles.db
 
