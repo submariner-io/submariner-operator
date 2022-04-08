@@ -35,7 +35,8 @@ import (
 
 // nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.Submariner,
-	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger) error {
+	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger,
+) error {
 	// Only OVNKubernetes needs networkplugin-syncer so far
 	if needsNetworkPluginSyncer(instance) {
 		_, err := helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,

@@ -69,7 +69,8 @@ func spawnClientPodOnNonGatewayNode(client kubernetes.Interface, namespace, podC
 }
 
 func spawnPod(client kubernetes.Interface, scheduling pods.Scheduling, podName, namespace,
-	podCommand string) (*pods.Scheduled, error) {
+	podCommand string,
+) (*pods.Scheduled, error) {
 	pod, err := pods.Schedule(&pods.Config{
 		Name:       podName,
 		ClientSet:  client,

@@ -55,7 +55,8 @@ type SubmarinerOptions struct {
 }
 
 func Submariner(clientProducer client.Producer, options *SubmarinerOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
-	netconfig globalnet.Config, imageOverrides map[string]string, status reporter.Interface) error {
+	netconfig globalnet.Config, imageOverrides map[string]string, status reporter.Interface,
+) error {
 	pskSecret, err := secret.Ensure(clientProducer.ForKubernetes(), constants.OperatorNamespace, brokerInfo.IPSecPSK)
 	if err != nil {
 		return status.Error(err, "Error creating PSK secret for cluster")
@@ -72,7 +73,8 @@ func Submariner(clientProducer client.Producer, options *SubmarinerOptions, brok
 }
 
 func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret, pskSecret *v1.Secret,
-	netconfig globalnet.Config, imageOverrides map[string]string) *submariner.SubmarinerSpec {
+	netconfig globalnet.Config, imageOverrides map[string]string,
+) *submariner.SubmarinerSpec {
 	brokerURL := removeSchemaPrefix(brokerInfo.BrokerURL)
 
 	// For backwards compatibility, the connection information is populated through the secret and individual components

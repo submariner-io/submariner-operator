@@ -64,7 +64,8 @@ func (cn *ClusterNetwork) IsComplete() bool {
 }
 
 func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, operatorClient operatorclientset.Interface,
-	operatorNamespace string) (*ClusterNetwork, error) {
+	operatorNamespace string,
+) (*ClusterNetwork, error) {
 	discovery, err := networkPluginsDiscovery(dynClient, clientSet)
 	if err != nil {
 		return nil, err

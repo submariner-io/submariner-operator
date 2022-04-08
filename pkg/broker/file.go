@@ -38,7 +38,8 @@ import (
 const InfoFileName = "broker-info.subm"
 
 func WriteInfoToFile(restConfig *rest.Config, brokerNamespace, ipsecFile string, components stringset.Interface,
-	customDomains []string, status reporter.Interface) error {
+	customDomains []string, status reporter.Interface,
+) error {
 	status.Start("Saving broker info to file %q", InfoFileName)
 	defer status.End()
 

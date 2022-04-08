@@ -325,7 +325,8 @@ func convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
 }
 
 func findPodsBySelector(ctx context.Context, clnt client.Reader, namespace string,
-	labelSelector *metav1.LabelSelector) ([]corev1.Pod, error) {
+	labelSelector *metav1.LabelSelector,
+) ([]corev1.Pod, error) {
 	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating label selector")
