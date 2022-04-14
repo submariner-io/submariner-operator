@@ -40,9 +40,6 @@ import (
 var (
 	joinFlags    join.Options
 	labelGateway bool
-
-	// Deprecated: will be removed in 0.14.
-	ignoredIkePort int
 )
 
 var joinCmd = &cobra.Command{
@@ -122,6 +119,8 @@ func addJoinFlags(cmd *cobra.Command) {
 		"list of domains to use for multicluster service discovery")
 	cmd.Flags().StringSliceVar(&joinFlags.ImageOverrideArr, "image-override", nil,
 		"override component image")
+	cmd.Flags().BoolVar(&joinFlags.MultiActiveGatewayEnabled, "multi-active-gateway", false,
+		"enable/disable Multiple Active Gateways for this cluster")
 	cmd.Flags().BoolVar(&joinFlags.HealthCheckEnabled, "health-check", true,
 		"enable Gateway health check")
 	cmd.Flags().Uint64Var(&joinFlags.HealthCheckInterval, "health-check-interval", 1,

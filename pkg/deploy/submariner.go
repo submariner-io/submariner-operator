@@ -41,6 +41,7 @@ type SubmarinerOptions struct {
 	SubmarinerDebug               bool
 	LoadBalancerEnabled           bool
 	HealthCheckEnabled            bool
+	MultiActiveGatewayEnabled     bool
 	NATTPort                      int
 	HealthCheckInterval           uint64
 	HealthCheckMaxPacketLossCount uint64
