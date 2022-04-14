@@ -48,7 +48,7 @@ func NewInfo(clusterName string, clientProducer client.Producer) (*Info, error) 
 	if err == nil {
 		info.Submariner = submariner
 	} else if !apierrors.IsNotFound(err) {
-		return nil, errors.New("error retrieving Submariner")
+		return nil, errors.Wrap(err, "error retrieving Submariner")
 	}
 
 	return info, nil
