@@ -63,3 +63,8 @@ jobs:
           cmd/bin/subctl verify --only connectivity --submariner-namespace=submariner-operator --verbose --connection-timeout 20 \
             --connection-attempts 4 --kubeconfig output/kubeconfigs/kind-config-cluster1:output/kubeconfigs/kind-config-cluster2 \
             --kubecontexts cluster1,cluster2
+
+      - name: Test diagnose
+        run: |
+          cmd/bin/subctl diagnose all --kubeconfig output/kubeconfigs/kind-config-cluster1
+          cmd/bin/subctl diagnose firewall inter-cluster output/kubeconfigs/kind-config-cluster1 output/kubeconfigs/kind-config-cluster2
