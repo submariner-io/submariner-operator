@@ -25,6 +25,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var files = []string{
@@ -166,7 +169,7 @@ func panicOnErr(err error) {
 }
 
 func constName(filename string) string {
-	return strings.Title(strings.ReplaceAll(
+	return cases.Title(language.English).String(strings.ReplaceAll(
 		strings.ReplaceAll(
 			strings.ReplaceAll(filename,
 				"-", "_"),
