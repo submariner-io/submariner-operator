@@ -19,22 +19,39 @@ limitations under the License.
 package cluster
 
 import (
-	"fmt"
 	"regexp"
+	"strings"
+
+	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
-func IsValidID(clusterID string) error {
-	// Make sure the clusterid is a valid DNS-1123 string
-	if match, _ := regexp.MatchString("^[a-z0-9][a-z0-9.-]*[a-z0-9]$", clusterID); !match {
-		return fmt.Errorf("cluster IDs must be valid DNS-1123 names, with only lowercase alphanumerics,\n"+
-			"'.' or '-' (and the first and last characters must be alphanumerics).\n"+
-			"%s doesn't meet these requirements", clusterID)
-	}
+const rfc1123Compliant = "0"
 
-	if len(clusterID) > 63 {
-		return fmt.Errorf("the cluster ID %q has a length of %d characters which exceeds the maximum"+
-			" supported length of 63", clusterID, len(clusterID))
+func IsValidID(clusterID string) error {
+	if errs := validation.IsDNS1123Label(clusterID); len(errs) > 0 {
+		return errors.Errorf("%s is not a valid ClusterID %v", clusterID, errs)
 	}
 
 	return nil
+}
+
+func SanitizeID(clusterID string) string {
+	if clusterID == "" {
+		return ""
+	}
+
+	regDNS1123 := regexp.MustCompile("[^a-z0-9-]+")
+	result := regDNS1123.ReplaceAllString(strings.ToLower(clusterID), "-")
+
+	if result[0] == '-' {
+		result = rfc1123Compliant + result[1:]
+	}
+
+	resultLen := len(result)
+	if result[resultLen-1] == '-' {
+		result = result[:resultLen-1] + rfc1123Compliant
+	}
+
+	return result
 }

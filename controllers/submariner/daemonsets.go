@@ -30,7 +30,8 @@ import (
 )
 
 func updateDaemonSetStatus(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,
-	namespace string) error {
+	namespace string,
+) error {
 	if daemonSet != nil {
 		if status == nil {
 			status = &v1alpha1.DaemonSetStatus{}
@@ -54,7 +55,8 @@ func updateDaemonSetStatus(ctx context.Context, clnt client.Reader, daemonSet *a
 }
 
 func checkDaemonSetContainers(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet,
-	namespace string) (bool, *[]corev1.ContainerState, error) {
+	namespace string,
+) (bool, *[]corev1.ContainerState, error) {
 	containerStatuses, err := retrieveDaemonSetContainerStatuses(ctx, clnt, daemonSet, namespace)
 	if err != nil {
 		return false, nil, err
@@ -68,7 +70,7 @@ func checkDaemonSetContainers(ctx context.Context, clnt client.Reader, daemonSet
 	for i := range *containerStatuses {
 		containerStatus := (*containerStatuses)[i]
 		if containerImageManifest == nil {
-			containerImageManifest = &(containerStatus.ImageID)
+			containerImageManifest = &containerStatus.ImageID
 		} else if *containerImageManifest != containerStatus.ImageID {
 			// Container mismatch
 			mismatchedContainerImages = true
@@ -84,7 +86,8 @@ func checkDaemonSetContainers(ctx context.Context, clnt client.Reader, daemonSet
 }
 
 func retrieveDaemonSetContainerStatuses(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet,
-	namespace string) (*[]corev1.ContainerStatus, error) {
+	namespace string,
+) (*[]corev1.ContainerStatus, error) {
 	pods, err := findPodsBySelector(ctx, clnt, namespace, daemonSet.Spec.Selector)
 	if err != nil {
 		return nil, err
@@ -99,7 +102,8 @@ func retrieveDaemonSetContainerStatuses(ctx context.Context, clnt client.Reader,
 }
 
 func findPodsBySelector(ctx context.Context, clnt client.Reader, namespace string,
-	labelSelector *metav1.LabelSelector) ([]corev1.Pod, error) {
+	labelSelector *metav1.LabelSelector,
+) ([]corev1.Pod, error) {
 	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating label selector")

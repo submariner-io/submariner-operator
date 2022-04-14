@@ -52,7 +52,7 @@ var (
 	operationTimeout                uint
 	connectionTimeout               uint
 	connectionAttempts              uint
-	reportDirectory                 string
+	junitReport                     string
 	submarinerNamespace             string
 	verifyOnly                      string
 	disruptiveTests                 bool
@@ -73,7 +73,7 @@ func addVerifyFlags(cmd *cobra.Command) {
 	cmd.Flags().UintVar(&operationTimeout, "operation-timeout", 240, "operation timeout for K8s API calls")
 	cmd.Flags().UintVar(&connectionTimeout, "connection-timeout", 60, "timeout in seconds per connection attempt")
 	cmd.Flags().UintVar(&connectionAttempts, "connection-attempts", 2, "maximum number of connection attempts")
-	cmd.Flags().StringVar(&reportDirectory, "report-dir", ".", "XML report directory")
+	cmd.Flags().StringVar(&junitReport, "junit-report", "", "XML report path and report name")
 	cmd.Flags().StringVar(&submarinerNamespace, "submariner-namespace", "submariner-operator", "namespace in which submariner is deployed")
 }
 
@@ -198,8 +198,7 @@ func configureTestingFramework(args []string) error {
 	framework.TestContext.OperationTimeout = operationTimeout
 	framework.TestContext.ConnectionTimeout = connectionTimeout
 	framework.TestContext.ConnectionAttempts = connectionAttempts
-	framework.TestContext.ReportDir = reportDirectory
-	framework.TestContext.ReportPrefix = "subctl"
+	framework.TestContext.JunitReport = junitReport
 	framework.TestContext.SubmarinerNamespace = submarinerNamespace
 
 	config.DefaultReporterConfig.Verbose = verboseConnectivityVerification

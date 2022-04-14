@@ -24,13 +24,13 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/image"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/deploy"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/secret"
 	"github.com/submariner-io/submariner-operator/pkg/version"
 	v1 "k8s.io/api/core/v1"
@@ -39,7 +39,8 @@ import (
 )
 
 func ClusterToBroker(brokerInfo *broker.Info, options *Options, clientProducer client.Producer,
-	status reporter.Interface) error {
+	status reporter.Interface,
+) error {
 	err := checkRequirements(clientProducer.ForKubernetes(), options.IgnoreRequirements, status)
 	if err != nil {
 		return err
@@ -139,7 +140,6 @@ func submarinerOptionsFrom(joinOptions *Options) *deploy.SubmarinerOptions {
 		LoadBalancerEnabled:           joinOptions.LoadBalancerEnabled,
 		HealthCheckEnabled:            joinOptions.HealthCheckEnabled,
 		NATTPort:                      joinOptions.NATTPort,
-		IKEPort:                       joinOptions.IKEPort,
 		HealthCheckInterval:           joinOptions.HealthCheckInterval,
 		HealthCheckMaxPacketLossCount: joinOptions.HealthCheckMaxPacketLossCount,
 		ClusterID:                     joinOptions.ClusterID,

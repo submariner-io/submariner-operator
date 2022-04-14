@@ -28,6 +28,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/cloud-prepare/pkg/gcp"
@@ -36,7 +37,6 @@ import (
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/dns/v1"
@@ -79,8 +79,9 @@ func AddGCPFlags(command *cobra.Command) {
 
 // RunOnGCP runs the given function on GCP, supplying it with a cloud instance connected to GCP and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to GCP.
-func RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, dedicatedGWNodes bool,
-	function func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error) error {
+func RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, dedicatedGWNodes bool, status reporter.Interface,
+	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
+) error {
 	if ocpMetadataFile != "" {
 		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
 		exit.OnErrorWithMessage(err, "Failed to read GCP Cluster information from OCP metadata file")
@@ -90,14 +91,16 @@ func RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, ded
 		utils.ExpectFlag(projectIDFlag, region)
 	}
 
-	reporter := cloudutils.NewStatusReporter()
-	reporter.Started("Retrieving GCP credentials from your GCP configuration")
+	status.Start("Retrieving GCP credentials from your GCP configuration")
 
 	creds, err := getGCPCredentials()
-	exit.OnErrorWithMessage(err, "Failed to get GCP credentials")
-	reporter.Succeeded("")
+	if err != nil {
+		return status.Error(err, "error retrieving GCP credentials")
+	}
 
-	reporter.Started("Initializing GCP connectivity")
+	status.End()
+
+	status.Start("Initializing GCP connectivity")
 
 	options := []option.ClientOption{
 		option.WithCredentials(creds),
@@ -105,21 +108,33 @@ func RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, ded
 	}
 
 	gcpClient, err := gcpClientIface.NewClient(projectID, options)
-	exit.OnErrorWithMessage(err, "Failed to initialize a GCP Client")
+	if err != nil {
+		return status.Error(err, "error initializing a GCP Client")
+	}
+
+	status.End()
 
 	k8sConfig, err := restConfigProducer.ForCluster()
-	exit.OnErrorWithMessage(err, "Failed to initialize a Kubernetes config")
+	if err != nil {
+		return status.Error(err, "error initializing Kubernetes config")
+	}
 
-	clientSet, err := kubernetes.NewForConfig(k8sConfig)
-	exit.OnErrorWithMessage(err, "Failed to create Kubernetes client")
+	clientSet, err := kubernetes.NewForConfig(k8sConfig.Config)
+	if err != nil {
+		return status.Error(err, "error creating Kubernetes client")
+	}
 
 	k8sClientSet := k8s.NewInterface(clientSet)
 
-	restMapper, err := util.BuildRestMapper(k8sConfig)
-	exit.OnErrorWithMessage(err, "Failed to create restmapper")
+	restMapper, err := util.BuildRestMapper(k8sConfig.Config)
+	if err != nil {
+		return status.Error(err, "error creating REST mapper")
+	}
 
-	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
-	exit.OnErrorWithMessage(err, "Failed to create dynamic client")
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig.Config)
+	if err != nil {
+		return status.Error(err, "error creating dynamic client")
+	}
 
 	gcpCloudInfo := gcp.CloudInfo{
 		ProjectID: projectID,
@@ -133,9 +148,7 @@ func RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceType string, ded
 	// with certain images, the instance is not coming up. Needs to be investigated further.
 	gwDeployer := gcp.NewOcpGatewayDeployer(gcpCloudInfo, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sClientSet)
 
-	exit.OnErrorWithMessage(err, "Failed to initialize a GatewayDeployer config")
-
-	return function(gcpCloud, gwDeployer, reporter)
+	return function(gcpCloud, gwDeployer, status)
 }
 
 func initializeFlagsFromOCPMetadata(metadataFile string) error {

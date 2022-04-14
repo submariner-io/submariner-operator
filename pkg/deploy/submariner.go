@@ -22,12 +22,12 @@ import (
 	"encoding/base64"
 	"strings"
 
+	"github.com/submariner-io/admiral/pkg/reporter"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/secret"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	v1 "k8s.io/api/core/v1"
@@ -42,7 +42,6 @@ type SubmarinerOptions struct {
 	LoadBalancerEnabled           bool
 	HealthCheckEnabled            bool
 	NATTPort                      int
-	IKEPort                       int
 	HealthCheckInterval           uint64
 	HealthCheckMaxPacketLossCount uint64
 	ClusterID                     string
@@ -56,7 +55,8 @@ type SubmarinerOptions struct {
 }
 
 func Submariner(clientProducer client.Producer, options *SubmarinerOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
-	netconfig globalnet.Config, imageOverrides map[string]string, status reporter.Interface) error {
+	netconfig globalnet.Config, imageOverrides map[string]string, status reporter.Interface,
+) error {
 	pskSecret, err := secret.Ensure(clientProducer.ForKubernetes(), constants.OperatorNamespace, brokerInfo.IPSecPSK)
 	if err != nil {
 		return status.Error(err, "Error creating PSK secret for cluster")
@@ -73,7 +73,8 @@ func Submariner(clientProducer client.Producer, options *SubmarinerOptions, brok
 }
 
 func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret, pskSecret *v1.Secret,
-	netconfig globalnet.Config, imageOverrides map[string]string) *submariner.SubmarinerSpec {
+	netconfig globalnet.Config, imageOverrides map[string]string,
+) *submariner.SubmarinerSpec {
 	brokerURL := removeSchemaPrefix(brokerInfo.BrokerURL)
 
 	// For backwards compatibility, the connection information is populated through the secret and individual components
@@ -82,7 +83,6 @@ func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info,
 		Repository:               getImageRepo(options.Repository),
 		Version:                  getImageVersion(options.ImageVersion),
 		CeIPSecNATTPort:          options.NATTPort,
-		CeIPSecIKEPort:           options.IKEPort,
 		CeIPSecDebug:             options.IPSecDebug,
 		CeIPSecForceUDPEncaps:    options.ForceUDPEncaps,
 		CeIPSecPreferredServer:   options.PreferredServer,
@@ -162,7 +162,7 @@ func getCustomCoreDNSParams(corednsCustomConfigMap string) (namespace, name stri
 func removeSchemaPrefix(brokerURL string) string {
 	if idx := strings.Index(brokerURL, "://"); idx >= 0 {
 		// Submariner doesn't work with a schema prefix
-		brokerURL = brokerURL[(idx + 3):]
+		brokerURL = brokerURL[idx+3:]
 	}
 
 	return brokerURL

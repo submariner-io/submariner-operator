@@ -224,10 +224,6 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 			Volumes:     volumes,
 		},
 	}
-	if cr.Spec.CeIPSecIKEPort != 0 {
-		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
-			corev1.EnvVar{Name: "CE_IPSEC_IKEPORT", Value: strconv.Itoa(cr.Spec.CeIPSecIKEPort)})
-	}
 
 	if cr.Spec.CeIPSecNATTPort != 0 {
 		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
@@ -249,7 +245,8 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 
 // nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileGatewayDaemonSet(
-	instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet, error) {
+	instance *v1alpha1.Submariner, reqLogger logr.Logger,
+) (*appsv1.DaemonSet, error) {
 	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance, names.GatewayComponent),
 		reqLogger, r.config.Client, r.config.Scheme)
 	if err != nil {
@@ -293,7 +290,8 @@ func buildGatewayStatusAndUpdateMetrics(gateways []submarinerv1.Gateway) []subma
 }
 
 func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
-	namespace string) ([]submarinerv1.Gateway, error) {
+	namespace string,
+) ([]submarinerv1.Gateway, error) {
 	foundGateways := &submarinerv1.GatewayList{}
 
 	err := r.config.Client.List(ctx, foundGateways, client.InNamespace(namespace))

@@ -34,7 +34,6 @@ function create_subm_vars() {
     subm_debug=false
     subm_broker=k8s
     ce_ipsec_debug=false
-    ce_ipsec_ikeport=500
     ce_ipsec_nattport=4500
 
     subm_ns=submariner-operator
@@ -201,7 +200,6 @@ function verify_subm_cr() {
   validate_equals '.spec.brokerK8sCA' $SUBMARINER_BROKER_CA
   validate_equals '.spec.brokerK8sRemoteNamespace' $SUBMARINER_BROKER_NS
   validate_equals '.spec.ceIPSecDebug' $ce_ipsec_debug
-  validate_equals '.spec.ceIPSecIKEPort' $ce_ipsec_ikeport
   validate_equals '.spec.ceIPSecNATTPort' $ce_ipsec_nattport
   validate_equals '.spec.repository' $subm_gateway_image_repo
   validate_equals '.spec.version' $subm_gateway_image_tag
@@ -274,7 +272,6 @@ function verify_subm_gateway_pod() {
   validate_pod_container_env 'BROKER_K8S_REMOTENAMESPACE' $SUBMARINER_BROKER_NS
   validate_pod_container_env 'BROKER_K8S_CA' $SUBMARINER_BROKER_CA
   validate_pod_container_env 'CE_IPSEC_DEBUG' $ce_ipsec_debug
-  validate_pod_container_env 'CE_IPSEC_IKEPORT' $ce_ipsec_ikeport
   validate_pod_container_env 'CE_IPSEC_NATTPORT' $ce_ipsec_nattport
 
   validate_equals '.spec.serviceAccount' 'submariner-gateway'

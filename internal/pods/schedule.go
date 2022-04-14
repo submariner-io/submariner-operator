@@ -258,7 +258,8 @@ func nodeAffinity(scheduling schedulingType) *v1.Affinity {
 }
 
 func addNodeSelectorTerm(nodeSelTerms []v1.NodeSelectorTerm, label string,
-	op v1.NodeSelectorOperator, values []string) []v1.NodeSelectorTerm {
+	op v1.NodeSelectorOperator, values []string,
+) []v1.NodeSelectorTerm {
 	return append(nodeSelTerms, v1.NodeSelectorTerm{MatchExpressions: []v1.NodeSelectorRequirement{
 		{
 			Key:      label,

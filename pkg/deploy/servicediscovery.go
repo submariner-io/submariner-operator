@@ -21,11 +21,11 @@ package deploy
 import (
 	"encoding/base64"
 
+	"github.com/submariner-io/admiral/pkg/reporter"
 	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/client"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/servicediscoverycr"
 	v1 "k8s.io/api/core/v1"
 )
@@ -40,7 +40,8 @@ type ServiceDiscoveryOptions struct {
 }
 
 func ServiceDiscovery(clientProducer client.Producer, options *ServiceDiscoveryOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
-	imageOverrides map[string]string, status reporter.Interface) error {
+	imageOverrides map[string]string, status reporter.Interface,
+) error {
 	serviceDiscoverySpec := populateServiceDiscoverySpec(options, brokerInfo, brokerSecret, imageOverrides)
 
 	err := servicediscoverycr.Ensure(clientProducer.ForOperator(), constants.OperatorNamespace, serviceDiscoverySpec)
@@ -52,7 +53,8 @@ func ServiceDiscovery(clientProducer client.Producer, options *ServiceDiscoveryO
 }
 
 func populateServiceDiscoverySpec(options *ServiceDiscoveryOptions, brokerInfo *broker.Info, brokerSecret *v1.Secret,
-	imageOverrides map[string]string) *submariner.ServiceDiscoverySpec {
+	imageOverrides map[string]string,
+) *submariner.ServiceDiscoverySpec {
 	brokerURL := removeSchemaPrefix(brokerInfo.BrokerURL)
 
 	serviceDiscoverySpec := submariner.ServiceDiscoverySpec{

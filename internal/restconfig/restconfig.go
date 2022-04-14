@@ -119,7 +119,26 @@ func (rcp *Producer) CountRequestedClusters() int {
 	return 1
 }
 
+func (rcp *Producer) ForCluster() (RestConfig, error) {
+	var restConfig RestConfig
+
+	restConfigs, err := rcp.getRestConfigs()
+	if err != nil {
+		return restConfig, err
+	}
+
+	if len(restConfigs) > 0 {
+		return restConfigs[0], nil
+	}
+
+	return restConfig, errors.New("error getting restconfig")
+}
+
 func (rcp *Producer) ForClusters() ([]RestConfig, error) {
+	return rcp.getRestConfigs()
+}
+
+func (rcp *Producer) getRestConfigs() ([]RestConfig, error) {
 	if rcp.inCluster {
 		restConfig, err := rest.InClusterConfig()
 		if err != nil {
@@ -142,6 +161,8 @@ func (rcp *Producer) ForClusters() ([]RestConfig, error) {
 	contexts := []string{}
 	if len(rcp.kubeContexts) > 0 {
 		contexts = append(contexts, rcp.kubeContexts...)
+	} else if len(rcp.kubeContext) > 0 {
+		contexts = append(contexts, rcp.kubeContext)
 	} else {
 		kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides)
 		rawConfig, err := kubeConfig.RawConfig()
@@ -275,11 +296,6 @@ func (rcp *Producer) GetClusterID() (string, error) {
 	return "", nil
 }
 
-func (rcp *Producer) ForCluster() (*rest.Config, error) {
-	config, err := rcp.ClientConfig().ClientConfig()
-	return config, errors.Wrap(err, "error retrieving client configuration")
-}
-
 // ClientConfig returns a clientcmd.ClientConfig to use when communicating with K8s.
 func (rcp *Producer) ClientConfig() clientcmd.ClientConfig {
 	rules := clientcmd.NewDefaultClientConfigLoadingRules()
@@ -299,7 +315,7 @@ func (rcp *Producer) CheckVersionMismatch(cmd *cobra.Command, args []string) err
 	config, err := rcp.ForCluster()
 	exit.OnErrorWithMessage(err, "The provided kubeconfig is invalid")
 
-	submariner := utils.GetSubmarinerResource(config)
+	submariner := utils.GetSubmarinerResource(config.Config)
 
 	if submariner != nil && submariner.Spec.Version != "" {
 		subctlVer, _ := semver.NewVersion(version.Version)

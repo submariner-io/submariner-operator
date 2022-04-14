@@ -26,8 +26,8 @@ import (
 	"net"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/broker"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
@@ -105,7 +105,7 @@ func LastIP(network *net.IPNet) uint {
 	ones, total := network.Mask.Size()
 	clusterSize := uint(total - ones)
 	firstIPInt := ipToUint(network.IP)
-	lastIPUint := (firstIPInt + 1<<clusterSize) - 1
+	lastIPUint := firstIPInt + 1<<clusterSize - 1
 
 	return lastIPUint
 }
@@ -461,7 +461,8 @@ func ValidateExistingGlobalNetworks(kubeClient kubernetes.Interface, namespace s
 }
 
 func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset kubernetes.Interface, brokerNamespace string,
-	netconfig *Config, status reporter.Interface) error {
+	netconfig *Config, status reporter.Interface,
+) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		status.Start("Retrieving Globalnet information from the Broker")
 		defer status.End()

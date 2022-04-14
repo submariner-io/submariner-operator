@@ -26,11 +26,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/admiral/pkg/stringset"
 	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/rbac"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -38,7 +38,8 @@ import (
 const InfoFileName = "broker-info.subm"
 
 func WriteInfoToFile(restConfig *rest.Config, brokerNamespace, ipsecFile string, components stringset.Interface,
-	customDomains []string, status reporter.Interface) error {
+	customDomains []string, status reporter.Interface,
+) error {
 	status.Start("Saving broker info to file %q", InfoFileName)
 	defer status.End()
 
