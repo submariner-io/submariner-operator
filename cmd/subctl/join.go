@@ -40,6 +40,9 @@ import (
 var (
 	joinFlags    join.Options
 	labelGateway bool
+
+	// Deprecated: will be removed in 0.14.
+	ignoredIkePort int
 )
 
 var joinCmd = &cobra.Command{
