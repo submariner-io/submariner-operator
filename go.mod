@@ -3,7 +3,7 @@ module github.com/submariner-io/submariner-operator
 go 1.16
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.2
+	github.com/AlecAivazis/survey/v2 v2.3.3
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
@@ -34,16 +34,16 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/submariner-io/admiral v0.12.0-m3.0.20220304150942-10c88bb61e69
 	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220216201630-d2a9f9d88aae
-	github.com/submariner-io/lighthouse v0.12.0-m3.0.20220215144325-3a00dd24acab
-	github.com/submariner-io/shipyard v0.12.0-m3
-	github.com/submariner-io/submariner v0.12.0-m3.0.20220118080926-1324572a65c0
+	github.com/submariner-io/lighthouse v0.12.0-m3.0.20220317134734-8b52d23bc039
+	github.com/submariner-io/shipyard v0.12.0-m3.0.20220317174712-65b179ba2961
+	github.com/submariner-io/submariner v0.12.0-m3.0.20220315142604-5e67af228799
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.5
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	go.uber.org/zap v1.17.0 // indirect
-	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
-	google.golang.org/api v0.71.0
+	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
+	google.golang.org/api v0.73.0
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.1
 	k8s.io/apimachinery v0.21.0

@@ -62,7 +62,6 @@ var (
 	ikePort                       int
 	preferredServer               bool
 	forceUDPEncaps                bool
-	ignoredColorCodes             string
 	natTraversal                  bool
 	ignoreRequirements            bool
 	globalnetEnabled              bool
@@ -71,6 +70,7 @@ var (
 	operatorDebug                 bool
 	labelGateway                  bool
 	loadBalancerEnabled           bool
+	multiActiveGatewayEnabled     bool
 	cableDriver                   string
 	globalnetClusterSize          uint
 	customDomains                 []string
@@ -93,8 +93,6 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&clusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&imageVersion, "version", "", "image version")
-	cmd.Flags().StringVar(&ignoredColorCodes, "colorcodes", "", "color codes")
-	_ = cmd.Flags().MarkDeprecated("colorcodes", "--colorcodes has no effect and is deprecated")
 	cmd.Flags().IntVar(&nattPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&ikePort, "ikeport", 500, "IPsec IKE port")
 	cmd.Flags().BoolVar(&natTraversal, "natt", true, "enable NAT traversal for IPsec")
@@ -121,6 +119,8 @@ func addJoinFlags(cmd *cobra.Command) {
 		"list of domains to use for multicluster service discovery")
 	cmd.Flags().StringSliceVar(&imageOverrideArr, "image-override", nil,
 		"override component image")
+	cmd.Flags().BoolVar(&multiActiveGatewayEnabled, "multi-active-gateway", false,
+		"enable/disable Multiple Active Gateways for this cluster")
 	cmd.Flags().BoolVar(&healthCheckEnable, "health-check", true,
 		"enable Gateway health check")
 	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-interval", 1,
@@ -446,31 +446,32 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 	// For backwards compatibility, the connection information is populated through the secret and individual components
 	// TODO skitt This will be removed in the release following 0.12
 	submarinerSpec := &submariner.SubmarinerSpec{
-		Repository:               getImageRepo(),
-		Version:                  getImageVersion(),
-		CeIPSecNATTPort:          nattPort,
-		CeIPSecIKEPort:           ikePort,
-		CeIPSecDebug:             ipsecDebug,
-		CeIPSecForceUDPEncaps:    forceUDPEncaps,
-		CeIPSecPreferredServer:   preferredServer,
-		CeIPSecPSK:               base64.StdEncoding.EncodeToString(subctlData.IPSecPSK.Data["psk"]),
-		CeIPSecPSKSecret:         pskSecret.ObjectMeta.Name,
-		BrokerK8sCA:              base64.StdEncoding.EncodeToString(brokerSecret.Data["ca.crt"]),
-		BrokerK8sRemoteNamespace: string(brokerSecret.Data["namespace"]),
-		BrokerK8sApiServerToken:  string(brokerSecret.Data["token"]),
-		BrokerK8sApiServer:       brokerURL,
-		BrokerK8sSecret:          brokerSecret.ObjectMeta.Name,
-		Broker:                   "k8s",
-		NatEnabled:               natTraversal,
-		Debug:                    submarinerDebug,
-		ClusterID:                clusterID,
-		ServiceCIDR:              serviceCIDR,
-		ClusterCIDR:              clusterCIDR,
-		Namespace:                SubmarinerNamespace,
-		CableDriver:              cableDriver,
-		ServiceDiscoveryEnabled:  subctlData.IsServiceDiscoveryEnabled(),
-		ImageOverrides:           imageOverrides,
-		LoadBalancerEnabled:      loadBalancerEnabled,
+		Repository:                getImageRepo(),
+		Version:                   getImageVersion(),
+		CeIPSecNATTPort:           nattPort,
+		CeIPSecIKEPort:            ikePort,
+		CeIPSecDebug:              ipsecDebug,
+		CeIPSecForceUDPEncaps:     forceUDPEncaps,
+		CeIPSecPreferredServer:    preferredServer,
+		CeIPSecPSK:                base64.StdEncoding.EncodeToString(subctlData.IPSecPSK.Data["psk"]),
+		CeIPSecPSKSecret:          pskSecret.ObjectMeta.Name,
+		BrokerK8sCA:               base64.StdEncoding.EncodeToString(brokerSecret.Data["ca.crt"]),
+		BrokerK8sRemoteNamespace:  string(brokerSecret.Data["namespace"]),
+		BrokerK8sApiServerToken:   string(brokerSecret.Data["token"]),
+		BrokerK8sApiServer:        brokerURL,
+		BrokerK8sSecret:           brokerSecret.ObjectMeta.Name,
+		Broker:                    "k8s",
+		NatEnabled:                natTraversal,
+		Debug:                     submarinerDebug,
+		ClusterID:                 clusterID,
+		ServiceCIDR:               serviceCIDR,
+		ClusterCIDR:               clusterCIDR,
+		Namespace:                 SubmarinerNamespace,
+		CableDriver:               cableDriver,
+		ServiceDiscoveryEnabled:   subctlData.IsServiceDiscoveryEnabled(),
+		ImageOverrides:            imageOverrides,
+		LoadBalancerEnabled:       loadBalancerEnabled,
+		MultiActiveGatewayEnabled: multiActiveGatewayEnabled,
 		ConnectionHealthCheck: &submariner.HealthCheckSpec{
 			Enabled:            healthCheckEnable,
 			IntervalSeconds:    healthCheckInterval,

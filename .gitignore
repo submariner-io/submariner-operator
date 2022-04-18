@@ -15,5 +15,5 @@ vendor/
 .shflags
 junit.xml
 Makefile.dapper
-Dockerfile.*
+/Dockerfile.*
 

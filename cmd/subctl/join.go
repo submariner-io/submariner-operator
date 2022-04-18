@@ -38,9 +38,8 @@ import (
 )
 
 var (
-	joinFlags         join.Options
-	labelGateway      bool
-	ignoredColorCodes string
+	joinFlags    join.Options
+	labelGateway bool
 )
 
 var joinCmd = &cobra.Command{
@@ -93,8 +92,6 @@ func addJoinFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&joinFlags.ClusterCIDR, "clustercidr", "", "cluster CIDR")
 	cmd.Flags().StringVar(&joinFlags.Repository, "repository", "", "image repository")
 	cmd.Flags().StringVar(&joinFlags.ImageVersion, "version", "", "image version")
-	cmd.Flags().StringVar(&ignoredColorCodes, "colorcodes", "", "color codes")
-	_ = cmd.Flags().MarkDeprecated("colorcodes", "--colorcodes has no effect and is deprecated")
 	cmd.Flags().IntVar(&joinFlags.NATTPort, "nattport", 4500, "IPsec NATT port")
 	cmd.Flags().IntVar(&joinFlags.IKEPort, "ikeport", 500, "IPsec IKE port")
 	cmd.Flags().BoolVar(&joinFlags.NATTraversal, "natt", true, "enable NAT traversal for IPsec")
@@ -121,6 +118,8 @@ func addJoinFlags(cmd *cobra.Command) {
 		"list of domains to use for multicluster service discovery")
 	cmd.Flags().StringSliceVar(&joinFlags.ImageOverrideArr, "image-override", nil,
 		"override component image")
+	cmd.Flags().BoolVar(&joinFlags.MultiActiveGatewayEnabled, "multi-active-gateway", false,
+		"enable/disable Multiple Active Gateways for this cluster")
 	cmd.Flags().BoolVar(&joinFlags.HealthCheckEnabled, "health-check", true,
 		"enable Gateway health check")
 	cmd.Flags().Uint64Var(&joinFlags.HealthCheckInterval, "health-check-interval", 1,

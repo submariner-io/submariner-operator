@@ -33,34 +33,35 @@ import (
 // SubmarinerSpec defines the desired state of Submariner
 // +k8s:openapi-gen=true
 type SubmarinerSpec struct {
-	Broker                   string               `json:"broker"`
-	BrokerK8sApiServer       string               `json:"brokerK8sApiServer"`
-	BrokerK8sApiServerToken  string               `json:"brokerK8sApiServerToken,omitempty"`
-	BrokerK8sCA              string               `json:"brokerK8sCA,omitempty"`
-	BrokerK8sSecret          string               `json:"brokerK8sSecret,omitempty"`
-	BrokerK8sRemoteNamespace string               `json:"brokerK8sRemoteNamespace"`
-	CableDriver              string               `json:"cableDriver,omitempty"`
-	CeIPSecPSK               string               `json:"ceIPSecPSK,omitempty"`
-	CeIPSecPSKSecret         string               `json:"ceIPSecPSKSecret,omitempty"`
-	ClusterCIDR              string               `json:"clusterCIDR"`
-	ClusterID                string               `json:"clusterID"`
-	ColorCodes               string               `json:"colorCodes,omitempty"`
-	Repository               string               `json:"repository,omitempty"`
-	ServiceCIDR              string               `json:"serviceCIDR"`
-	GlobalCIDR               string               `json:"globalCIDR,omitempty"`
-	Namespace                string               `json:"namespace"`
-	Version                  string               `json:"version,omitempty"`
-	CeIPSecIKEPort           int                  `json:"ceIPSecIKEPort,omitempty"`
-	CeIPSecNATTPort          int                  `json:"ceIPSecNATTPort,omitempty"`
-	CeIPSecDebug             bool                 `json:"ceIPSecDebug"`
-	CeIPSecPreferredServer   bool                 `json:"ceIPSecPreferredServer,omitempty"`
-	CeIPSecForceUDPEncaps    bool                 `json:"ceIPSecForceUDPEncaps,omitempty"`
-	Debug                    bool                 `json:"debug"`
-	NatEnabled               bool                 `json:"natEnabled"`
-	LoadBalancerEnabled      bool                 `json:"loadBalancerEnabled,omitempty"`
-	ServiceDiscoveryEnabled  bool                 `json:"serviceDiscoveryEnabled,omitempty"`
-	BrokerK8sInsecure        bool                 `json:"brokerK8sInsecure,omitempty"`
-	CoreDNSCustomConfig      *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
+	Broker                    string               `json:"broker"`
+	BrokerK8sApiServer        string               `json:"brokerK8sApiServer"`
+	BrokerK8sApiServerToken   string               `json:"brokerK8sApiServerToken,omitempty"`
+	BrokerK8sCA               string               `json:"brokerK8sCA,omitempty"`
+	BrokerK8sSecret           string               `json:"brokerK8sSecret,omitempty"`
+	BrokerK8sRemoteNamespace  string               `json:"brokerK8sRemoteNamespace"`
+	CableDriver               string               `json:"cableDriver,omitempty"`
+	CeIPSecPSK                string               `json:"ceIPSecPSK,omitempty"`
+	CeIPSecPSKSecret          string               `json:"ceIPSecPSKSecret,omitempty"`
+	ClusterCIDR               string               `json:"clusterCIDR"`
+	ClusterID                 string               `json:"clusterID"`
+	ColorCodes                string               `json:"colorCodes,omitempty"`
+	Repository                string               `json:"repository,omitempty"`
+	ServiceCIDR               string               `json:"serviceCIDR"`
+	GlobalCIDR                string               `json:"globalCIDR,omitempty"`
+	Namespace                 string               `json:"namespace"`
+	Version                   string               `json:"version,omitempty"`
+	CeIPSecIKEPort            int                  `json:"ceIPSecIKEPort,omitempty"`
+	CeIPSecNATTPort           int                  `json:"ceIPSecNATTPort,omitempty"`
+	CeIPSecDebug              bool                 `json:"ceIPSecDebug"`
+	CeIPSecPreferredServer    bool                 `json:"ceIPSecPreferredServer,omitempty"`
+	CeIPSecForceUDPEncaps     bool                 `json:"ceIPSecForceUDPEncaps,omitempty"`
+	Debug                     bool                 `json:"debug"`
+	NatEnabled                bool                 `json:"natEnabled"`
+	LoadBalancerEnabled       bool                 `json:"loadBalancerEnabled,omitempty"`
+	ServiceDiscoveryEnabled   bool                 `json:"serviceDiscoveryEnabled,omitempty"`
+	BrokerK8sInsecure         bool                 `json:"brokerK8sInsecure,omitempty"`
+	MultiActiveGatewayEnabled bool                 `json:"multiActiveGatewayEnabled,omitempty"`
+	CoreDNSCustomConfig       *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
 	// +listType=set
 	CustomDomains  []string          `json:"customDomains,omitempty"`
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
