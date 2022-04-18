@@ -30,41 +30,28 @@ import (
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/cloud-prepare/pkg/aws"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
-	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 	"k8s.io/client-go/dynamic"
 )
 
-const (
-	infraIDFlag = "infra-id"
-	regionFlag  = "region"
-)
-
-var (
-	infraID         string
-	region          string
-	profile         string
-	credentialsFile string
-	ocpMetadataFile string
-)
+type Config struct {
+	Gateways        int
+	InfraID         string
+	Region          string
+	Profile         string
+	CredentialsFile string
+	OcpMetadataFile string
+	GWInstanceType  string
+}
 
 // RunOnAWS runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.
-func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string, status reporter.Interface,
+func RunOnAWS(restConfigProducer restconfig.Producer, config *Config, status reporter.Interface,
 	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
 ) error {
-	if ocpMetadataFile != "" {
-		err := initializeFlagsFromOCPMetadata(ocpMetadataFile)
-		exit.OnErrorWithMessage(err, "Failed to read AWS information from OCP metadata file")
-	} else {
-		utils.ExpectFlag(infraIDFlag, infraID)
-		utils.ExpectFlag(regionFlag, region)
-	}
-
 	status.Start("Initializing AWS connectivity")
 
-	awsCloud, err := aws.NewCloudFromSettings(credentialsFile, profile, infraID, region)
+	awsCloud, err := aws.NewCloudFromSettings(config.CredentialsFile, config.Profile, config.InfraID, config.Region)
 	if err != nil {
 		return status.Error(err, "error loading default config")
 	}
@@ -88,7 +75,7 @@ func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string, sta
 
 	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
 
-	gwDeployer, err := aws.NewOcpGatewayDeployer(awsCloud, msDeployer, gwInstanceType)
+	gwDeployer, err := aws.NewOcpGatewayDeployer(awsCloud, msDeployer, config.GWInstanceType)
 	if err != nil {
 		return status.Error(err, "error creating the gateway deployer")
 	}
@@ -96,10 +83,10 @@ func RunOnAWS(restConfigProducer restconfig.Producer, gwInstanceType string, sta
 	return function(awsCloud, gwDeployer, status)
 }
 
-func initializeFlagsFromOCPMetadata(metadataFile string) error {
+func ReadFromFile(metadataFile string) (string, string, error) {
 	fileInfo, err := os.Stat(metadataFile)
 	if err != nil {
-		return errors.Wrapf(err, "failed to stat file %q", metadataFile)
+		return "", "", errors.Wrapf(err, "failed to stat file %q", metadataFile)
 	}
 
 	if fileInfo.IsDir() {
@@ -108,7 +95,7 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	data, err := os.ReadFile(metadataFile)
 	if err != nil {
-		return errors.Wrapf(err, "error reading file %q", metadataFile)
+		return "", "", errors.Wrapf(err, "error reading file %q", metadataFile)
 	}
 
 	var metadata struct {
@@ -120,11 +107,8 @@ func initializeFlagsFromOCPMetadata(metadataFile string) error {
 
 	err = json.Unmarshal(data, &metadata)
 	if err != nil {
-		return errors.Wrap(err, "error unmarshalling data")
+		return "", "", errors.Wrap(err, "error unmarshalling data")
 	}
 
-	infraID = metadata.InfraID
-	region = metadata.AWS.Region
-
-	return nil
+	return metadata.InfraID, metadata.AWS.Region, nil
 }

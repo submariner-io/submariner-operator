@@ -25,8 +25,10 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/cloud/aws"
 )
 
+var config aws.Config
+
 func Aws(restConfigProducer *restconfig.Producer, status reporter.Interface) error {
-	err := aws.RunOnAWS(*restConfigProducer, "", status,
+	err := aws.RunOnAWS(*restConfigProducer, &config, status,
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			err := gwDeployer.Cleanup(status)

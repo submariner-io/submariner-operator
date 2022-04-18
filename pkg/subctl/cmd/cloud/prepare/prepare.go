@@ -21,6 +21,7 @@ package prepare
 import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud"
 )
 
 var (
@@ -31,14 +32,16 @@ var (
 )
 
 var (
-	awsGWInstanceType  string
 	gcpGWInstanceType  string
 	rhosGWInstanceType string
 	gateways           int
 	dedicatedGateway   bool
 )
 
-var parentRestConfigProducer *restconfig.Producer
+var (
+	parentRestConfigProducer *restconfig.Producer
+	ports                    cloud.Ports
+)
 
 const DefaultNumGateways = 1
 
@@ -51,12 +54,12 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 		Long:  `This command prepares the cloud for Submariner installation.`,
 	}
 
-	cmd.PersistentFlags().Uint16Var(&nattPort, "natt-port", 4500, "IPSec NAT traversal port")
-	cmd.PersistentFlags().Uint16Var(&natDiscoveryPort, "nat-discovery-port", 4490, "NAT discovery port")
-	cmd.PersistentFlags().Uint16Var(&vxlanPort, "vxlan-port", 4800, "Internal VXLAN port")
-	cmd.PersistentFlags().Uint16Var(&metricsPort, "metrics-port", 8080, "Metrics port")
+	cmd.PersistentFlags().Uint16Var(&ports.Natt, "natt-port", 4500, "IPSec NAT traversal port")
+	cmd.PersistentFlags().Uint16Var(&ports.NatDiscovery, "nat-discovery-port", 4490, "NAT discovery port")
+	cmd.PersistentFlags().Uint16Var(&ports.Vxlan, "vxlan-port", 4800, "Internal VXLAN port")
+	cmd.PersistentFlags().Uint16Var(&ports.Metrics, "metrics-port", 8080, "Metrics port")
 
-	cmd.AddCommand(newAWSPrepareCommand())
+	cmd.AddCommand(newAWSPrepareCommand(restConfigProducer, ports))
 	cmd.AddCommand(newGCPPrepareCommand())
 	cmd.AddCommand(newRHOSPrepareCommand())
 	cmd.AddCommand(newGenericPrepareCommand())
