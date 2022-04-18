@@ -24,10 +24,10 @@ import (
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/aws"
 )
 
-func prepareAws(cmd *cobra.Command, args []string) {
+func Aws(cmd *cobra.Command, args []string) {
 	gwPorts := []api.PortSpec{
 		{Port: nattPort, Protocol: "udp"},
 		{Port: natDiscoveryPort, Protocol: "udp"},
