@@ -30,6 +30,9 @@ import (
 )
 
 var (
+	exportOptions struct {
+		namespace string
+	}
 	exportCmd = &cobra.Command{
 		Use:   "export",
 		Short: "Exports a resource to other clusters",
@@ -51,21 +54,20 @@ var (
 			exit.OnError(status.Error(err, "Error creating REST config"))
 
 			clientConfig := restConfigProducer.ClientConfig()
-			if serviceNamespace == "" {
-				if serviceNamespace, _, err = clientConfig.Namespace(); err != nil {
-					serviceNamespace = "default"
+			if exportOptions.namespace == "" {
+				if exportOptions.namespace, _, err = clientConfig.Namespace(); err != nil {
+					exportOptions.namespace = "default"
 				}
 				exit.OnErrorWithMessage(err, "Error getting service Namespace")
 			}
 
-			clientProducer, err := client.NewProducerFromRestConfig(config)
+			clientProducer, err := client.NewProducerFromRestConfig(config.Config)
 			exit.OnError(status.Error(err, "Error creating client producer"))
 
-			err = service.Export(clientProducer, serviceNamespace, args[0], status)
-			exit.OnErrorWithMessage(err, "Failed to export Service")
+			err = service.Export(clientProducer, exportOptions.namespace, args[0], status)
+			exit.OnError(err)
 		},
 	}
-	serviceNamespace string
 )
 
 func init() {
@@ -73,13 +75,9 @@ func init() {
 	exit.OnErrorWithMessage(err, "Failed to add to scheme")
 
 	restConfigProducer.AddKubeConfigFlag(exportCmd)
-	addServiceExportFlags(exportServiceCmd)
+	exportServiceCmd.Flags().StringVarP(&exportOptions.namespace, "namespace", "n", "", "namespace of the service to be exported")
 	exportCmd.AddCommand(exportServiceCmd)
 	rootCmd.AddCommand(exportCmd)
-}
-
-func addServiceExportFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&serviceNamespace, "namespace", "n", "", "namespace of the service to be exported")
 }
 
 func validateArguments(args []string) error {

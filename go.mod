@@ -3,7 +3,7 @@ module github.com/submariner-io/submariner-operator
 go 1.16
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.2
+	github.com/AlecAivazis/survey/v2 v2.3.4
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
@@ -24,7 +24,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.18.1
+	github.com/onsi/gomega v1.19.0
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.4.0
@@ -32,23 +32,23 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.4.0
-	github.com/submariner-io/admiral v0.12.0-m3.0.20220304150942-10c88bb61e69
-	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220216201630-d2a9f9d88aae
-	github.com/submariner-io/lighthouse v0.12.0-m3.0.20220215144325-3a00dd24acab
-	github.com/submariner-io/shipyard v0.12.0-m3
-	github.com/submariner-io/submariner v0.12.0-m3.0.20220118080926-1324572a65c0
+	github.com/submariner-io/admiral v0.12.0-m3.0.20220406154101-7826e6bf396a
+	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220407095330-513eb51af266
+	github.com/submariner-io/lighthouse v0.12.0-m3.0.20220317134734-8b52d23bc039
+	github.com/submariner-io/shipyard v0.12.0-m3.0.20220317174712-65b179ba2961
+	github.com/submariner-io/submariner v0.12.0-m3.0.20220315142604-5e67af228799
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.5
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	go.uber.org/zap v1.17.0 // indirect
-	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
-	google.golang.org/api v0.71.0
+	golang.org/x/oauth2 v0.0.0-20220309155454-6242fa91716a
+	google.golang.org/api v0.74.0
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.1
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/klog/v2 v2.8.0
+	k8s.io/klog/v2 v2.8.0 // indirect
 	k8s.io/utils v0.0.0-20210305010621-2afb4311ab10
 	sigs.k8s.io/controller-runtime v0.8.3
 	sigs.k8s.io/controller-tools v0.4.1

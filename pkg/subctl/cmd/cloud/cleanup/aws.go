@@ -20,7 +20,9 @@ package cleanup
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
 )
@@ -41,16 +43,16 @@ func newAWSCleanupCommand() *cobra.Command {
 }
 
 func cleanupAws(cmd *cobra.Command, args []string) {
-	err := aws.RunOnAWS(*parentRestConfigProducer, "",
+	err := aws.RunOnAWS(*parentRestConfigProducer, "", cli.NewReporter(),
 		// nolint:wrapcheck // No need to wrap errors here
-		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
-			err := gwDeployer.Cleanup(reporter)
+		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
+			err := gwDeployer.Cleanup(status)
 			if err != nil {
 				return err
 			}
 
-			return cloud.CleanupAfterSubmariner(reporter)
+			return cloud.CleanupAfterSubmariner(status)
 		})
 
-	exit.OnErrorWithMessage(err, "Failed to cleanup AWS cloud")
+	exit.OnError(err)
 }

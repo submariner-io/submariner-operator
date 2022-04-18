@@ -24,8 +24,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -34,26 +32,8 @@ const (
 )
 
 // Ensure ensures that the required resources are deployed on the target system
-// The resources handled here are the lighthouse CRDs: MultiClusterService,
-// ServiceImport, ServiceExport and ServiceDiscovery
-// nolint:gocyclo // This really isn't complex and just trips the threshold.
+// The resources handled here are the lighthouse CRDs: ServiceImport, ServiceExport and ServiceDiscovery.
 func Ensure(crdUpdater crd.Updater, isBroker bool) (bool, error) {
-	// Delete obsolete CRDs if they are still present
-	err := crdUpdater.Delete(context.TODO(), "serviceimports.lighthouse.submariner.io", metav1.DeleteOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return false, errors.Wrap(err, "error deleting the obsolete ServiceImport CRD")
-	}
-
-	err = crdUpdater.Delete(context.TODO(), "serviceexports.lighthouse.submariner.io", metav1.DeleteOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return false, errors.Wrap(err, "error deleting the obsolete ServiceExport CRD")
-	}
-
-	err = crdUpdater.Delete(context.TODO(), "multiclusterservices.lighthouse.submariner.io", metav1.DeleteOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
-		return false, errors.Wrap(err, "error deleting the obsolete MultiClusterServices CRD")
-	}
-
 	installedMCSSI, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
 	if err != nil {

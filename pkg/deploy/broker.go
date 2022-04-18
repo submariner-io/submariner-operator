@@ -21,6 +21,7 @@ package deploy
 import (
 	"fmt"
 
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/admiral/pkg/stringset"
 	submarinerv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/component"
@@ -29,7 +30,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/client"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
 )
 
 type BrokerOptions struct {

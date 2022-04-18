@@ -19,7 +19,7 @@ limitations under the License.
 package lighthouseop
 
 import (
-	"github.com/submariner-io/submariner-operator/pkg/reporter"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/scc"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/lighthouse/serviceaccount"
 	"k8s.io/client-go/dynamic"
@@ -27,7 +27,8 @@ import (
 )
 
 func Ensure(status reporter.Interface, kubeClient kubernetes.Interface, dynClient dynamic.Interface,
-	operatorNamespace string) (bool, error) {
+	operatorNamespace string,
+) (bool, error) {
 	if created, err := serviceaccount.Ensure(kubeClient, operatorNamespace); err != nil {
 		return created, err // nolint:wrapcheck // No need to wrap here
 	} else if created {

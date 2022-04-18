@@ -68,8 +68,8 @@ func ParseOperatorImage(operatorImage string) (string, string) {
 	pathParts := strings.SplitN(operatorImage, "/", 3)
 	if len(pathParts) == 1 {
 		repository = ""
-	} else if len(pathParts) < 3 || (!strings.Contains(pathParts[0], ".") &&
-		!strings.Contains(pathParts[0], ":") && pathParts[0] != "localhost") {
+	} else if len(pathParts) < 3 || !strings.Contains(pathParts[0], ".") &&
+		!strings.Contains(pathParts[0], ":") && pathParts[0] != "localhost" {
 		repository = pathParts[0]
 	} else {
 		repository = pathParts[0] + "/" + pathParts[1]

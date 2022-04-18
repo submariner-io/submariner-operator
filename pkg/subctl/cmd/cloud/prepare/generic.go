@@ -20,7 +20,9 @@ package prepare
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
+	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/generic"
 )
@@ -42,13 +44,13 @@ func newGenericPrepareCommand() *cobra.Command {
 func prepareGenericCluster(cmd *cobra.Command, args []string) {
 	// nolint:wrapcheck // No need to wrap errors here.
 	err := generic.RunOnK8sCluster(
-		*parentRestConfigProducer,
-		func(gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
+		*parentRestConfigProducer, cli.NewReporter(),
+		func(gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			if gateways > 0 {
 				gwInput := api.GatewayDeployInput{
 					Gateways: gateways,
 				}
-				err := gwDeployer.Deploy(gwInput, reporter)
+				err := gwDeployer.Deploy(gwInput, status)
 				if err != nil {
 					return err
 				}
