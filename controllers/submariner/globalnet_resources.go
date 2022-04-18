@@ -19,6 +19,8 @@ limitations under the License.
 package submariner
 
 import (
+	"strconv"
+
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
@@ -90,6 +92,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
+								{Name: "SUBMARINER_MULTIACTIVEGATEWAYENABLED", Value: strconv.FormatBool(cr.Spec.MultiActiveGatewayEnabled)},
 								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner-operator,kube-system,operators,openshift-monitoring,openshift-dns"},
 								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
