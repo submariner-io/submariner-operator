@@ -19,16 +19,14 @@ limitations under the License.
 package cleanup
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/aws"
 )
 
-func Aws(cmd *cobra.Command, args []string) {
-	err := aws.RunOnAWS(*parentRestConfigProducer, "", cli.NewReporter(),
+func Aws(restConfigProducer *restconfig.Producer, status reporter.Interface) error {
+	err := aws.RunOnAWS(*restConfigProducer, "", status,
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			err := gwDeployer.Cleanup(status)
@@ -38,6 +36,9 @@ func Aws(cmd *cobra.Command, args []string) {
 
 			return cloud.CleanupAfterSubmariner(status)
 		})
+	if err != nil {
+		return status.Error(err, "Failed to cleanup AWS cloud")
+	}
 
-	exit.OnError(err)
+	return nil
 }
