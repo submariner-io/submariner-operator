@@ -21,7 +21,8 @@ package aws
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/cloud-prepare/pkg/aws"
+	cpaws "github.com/submariner-io/cloud-prepare/pkg/aws"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/aws"
 )
 
 const (
@@ -29,20 +30,12 @@ const (
 	regionFlag  = "region"
 )
 
-var (
-	infraID         string
-	region          string
-	profile         string
-	credentialsFile string
-	ocpMetadataFile string
-)
-
 // AddAWSFlags adds basic flags needed by AWS.
-func AddAWSFlags(command *cobra.Command) {
-	command.Flags().StringVar(&infraID, infraIDFlag, "", "AWS infra ID")
-	command.Flags().StringVar(&region, regionFlag, "", "AWS region")
-	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
+func AddAWSFlags(command *cobra.Command, config *aws.Config) {
+	command.Flags().StringVar(&config.InfraID, infraIDFlag, "", "AWS infra ID")
+	command.Flags().StringVar(&config.Region, regionFlag, "", "AWS region")
+	command.Flags().StringVar(&config.OcpMetadataFile, "ocp-metadata", "",
 		"OCP metadata.json file (or directory containing it) to read AWS infra ID and region from (Takes precedence over the flags)")
-	command.Flags().StringVar(&profile, "profile", aws.DefaultProfile(), "AWS profile to use for credentials")
-	command.Flags().StringVar(&credentialsFile, "credentials", aws.DefaultCredentialsFile(), "AWS credentials configuration file")
+	command.Flags().StringVar(&config.Profile, "profile", cpaws.DefaultProfile(), "AWS profile to use for credentials")
+	command.Flags().StringVar(&config.CredentialsFile, "credentials", cpaws.DefaultCredentialsFile(), "AWS credentials configuration file")
 }

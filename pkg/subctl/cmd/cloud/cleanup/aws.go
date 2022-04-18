@@ -23,9 +23,12 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	cloudaws "github.com/submariner-io/submariner-operator/pkg/cloud/aws"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/cleanup"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
 )
+
+var config cloudaws.Config
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newAWSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command {
@@ -42,7 +45,7 @@ func newAWSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command
 		},
 	}
 
-	aws.AddAWSFlags(cmd)
+	aws.AddAWSFlags(cmd, &config)
 
 	return cmd
 }

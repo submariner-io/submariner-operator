@@ -19,18 +19,19 @@ limitations under the License.
 package prepare
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/aws"
 )
 
-func Aws(cmd *cobra.Command, args []string) {
+func Aws(restConfigProducer *restconfig.Producer, ports cloud.Ports, config *aws.Config, status reporter.Interface) error {
+	status.Start("Preparing AWS cloud for Submariner deployment")
+
 	gwPorts := []api.PortSpec{
-		{Port: nattPort, Protocol: "udp"},
-		{Port: natDiscoveryPort, Protocol: "udp"},
+		{Port: ports.Natt, Protocol: "udp"},
+		{Port: ports.NatDiscovery, Protocol: "udp"},
 
 		// ESP & AH protocols are used for private-ip to private-ip gateway communications.
 		{Port: 0, Protocol: "50"},
@@ -38,23 +39,23 @@ func Aws(cmd *cobra.Command, args []string) {
 	}
 	input := api.PrepareForSubmarinerInput{
 		InternalPorts: []api.PortSpec{
-			{Port: vxlanPort, Protocol: "udp"},
-			{Port: metricsPort, Protocol: "tcp"},
+			{Port: ports.Vxlan, Protocol: "udp"},
+			{Port: ports.Metrics, Protocol: "tcp"},
 		},
 	}
 
 	// For load-balanced gateways we want these ports open internally to facilitate private-ip to pivate-ip gateways communications.
-	if gateways == 0 {
+	if config.Gateways == 0 {
 		input.InternalPorts = append(input.InternalPorts, gwPorts...)
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := aws.RunOnAWS(*parentRestConfigProducer, awsGWInstanceType, cli.NewReporter(),
+	err := aws.RunOnAWS(*restConfigProducer, config, status,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
-			if gateways > 0 {
+			if config.Gateways > 0 {
 				gwInput := api.GatewayDeployInput{
 					PublicPorts: gwPorts,
-					Gateways:    gateways,
+					Gateways:    config.Gateways,
 				}
 				err := gwDeployer.Deploy(gwInput, status)
 				if err != nil {
@@ -64,6 +65,9 @@ func Aws(cmd *cobra.Command, args []string) {
 
 			return cloud.PrepareForSubmariner(input, status)
 		})
+	if err != nil {
+		return status.Error(err, "Failed to prepare AWS cloud")
+	}
 
-	exit.OnErrorWithMessage(err, "Failed to prepare AWS cloud")
+	return nil
 }
