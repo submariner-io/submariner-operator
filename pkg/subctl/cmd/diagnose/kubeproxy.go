@@ -19,17 +19,10 @@ limitations under the License.
 package diagnose
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/internal/pods"
+	"github.com/submariner-io/submariner-operator/pkg/diagnose"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
-)
-
-const (
-	kubeProxyIPVSIfaceCommand = "ip a s kube-ipvs0"
-	missingInterface          = "ip: can't find device"
 )
 
 func init() {
@@ -47,31 +40,5 @@ func init() {
 }
 
 func checkKubeProxyMode(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-	status.Start("Checking Submariner support for the kube-proxy mode")
-
-	scheduling := pods.Scheduling{ScheduleOn: pods.GatewayNode, Networking: pods.HostNetworking}
-
-	podOutput, err := pods.ScheduleAndAwaitCompletion(&pods.Config{
-		Name:       "query-iface-list",
-		ClientSet:  cluster.KubeClient,
-		Scheduling: scheduling,
-		Namespace:  podNamespace,
-		Command:    kubeProxyIPVSIfaceCommand,
-	})
-	if err != nil {
-		status.EndWithFailure("Error spawning the network pod: %v", err)
-		return false
-	}
-
-	if strings.Contains(podOutput, missingInterface) {
-		status.QueueSuccessMessage("The kube-proxy mode is supported")
-	} else {
-		status.QueueFailureMessage("The cluster is deployed with kube-proxy ipvs mode which Submariner does not support")
-	}
-
-	result := status.ResultFromMessages()
-	status.EndWith(result)
-
-	return result != cli.Failure
+	return diagnose.KubeProxyMode(cluster.KubeClient, podNamespace, cli.NewStatus())
 }
