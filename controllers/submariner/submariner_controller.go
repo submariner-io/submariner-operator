@@ -75,6 +75,8 @@ type Config struct {
 	SubmClient     submarinerclientset.Interface
 	DynClient      dynamic.Interface
 	ClusterNetwork *network.ClusterNetwork
+	// Flag to track if Globalnet DaemonSet has been deleted (now a Deployment).
+	GlobalNetDSDel bool
 }
 
 // Reconciler reconciles a Submariner object.
@@ -180,10 +182,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
-	var globalnetDaemonSet *appsv1.DaemonSet
-
 	if instance.Spec.GlobalCIDR != "" {
-		if globalnetDaemonSet, err = r.reconcileGlobalnetDaemonSet(instance, reqLogger); err != nil {
+		if _, err = r.reconcileGlobalnetDeployment(ctx, instance, reqLogger); err != nil {
 			return reconcile.Result{}, err
 		}
 	}
@@ -225,12 +225,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
-	err = updateDaemonSetStatus(ctx, r.config.Client, globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
-	if err != nil {
-		reqLogger.Error(err, "failed to check gateway daemonset containers")
+	// TODO: This is updating the "Globalnet Daemon Set Status" (globalnetDaemonSetStatus) in the
+	//       Submariners CRD Object. Since this is a Deployment with a replicaSet of 1, need to
+	//       determine how the status, if any, should be tracked, but no longer fits into the
+	//       DaemonSetStatus status struct. Probably need to define a new type similar to the way
+	//       LoadBalancerStatus is done.
+	//
+	// err = updateDaemonSetStatus(ctx, r.config.Client, globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
+	// if err != nil {
+	// 	reqLogger.Error(err, "failed to check gateway daemonset containers")
 
-		return reconcile.Result{}, err
-	}
+	// 	return reconcile.Result{}, err
+	// }
 
 	if loadBalancer != nil {
 		instance.Status.LoadBalancerStatus.Status = &loadBalancer.Status.LoadBalancer

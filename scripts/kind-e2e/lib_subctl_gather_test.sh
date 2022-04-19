@@ -43,7 +43,7 @@ function validate_gathered_files () {
   validate_resource_files $subm_ns 'servicediscoveries' 'ServiceDiscovery'
   validate_resource_files $subm_ns 'daemonsets' 'DaemonSet' '-l app=submariner-gateway'
   validate_resource_files $subm_ns 'daemonsets' 'DaemonSet' '-l app=submariner-routeagent'
-  validate_resource_files $subm_ns 'daemonsets' 'DaemonSet' '-l app=submariner-globalnet'
+  validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-globalnet'
   validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-networkplugin-syncer'
   validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-lighthouse-agent'
   validate_resource_files $subm_ns 'deployments' 'Deployment' '-l app=submariner-lighthouse-coredns'

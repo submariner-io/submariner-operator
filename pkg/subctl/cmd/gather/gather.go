@@ -298,7 +298,7 @@ func gatherOperator(dataType string, info Info) bool {
 		gatherSubmarinerOperatorDeployment(&info, cmd.SubmarinerNamespace)
 		gatherGatewayDaemonSet(&info, cmd.SubmarinerNamespace)
 		gatherRouteAgentDaemonSet(&info, cmd.SubmarinerNamespace)
-		gatherGlobalnetDaemonSet(&info, cmd.SubmarinerNamespace)
+		gatherGlobalnetDeployment(&info, cmd.SubmarinerNamespace)
 		gatherNetworkPluginSyncerDeployment(&info, cmd.SubmarinerNamespace)
 		gatherLighthouseAgentDeployment(&info, cmd.SubmarinerNamespace)
 		gatherLighthouseCoreDNSDeployment(&info, cmd.SubmarinerNamespace)

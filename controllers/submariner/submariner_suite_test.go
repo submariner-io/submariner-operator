@@ -184,29 +184,28 @@ func (t *testDriver) assertGatewayDaemonSetEnv(submariner *operatorv1.Submariner
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
 }
 
-func (t *testDriver) assertGlobalnetDaemonSet() {
-	daemonSet := t.AssertDaemonSet(names.GlobalnetComponent)
-	assertGatewayNodeSelector(daemonSet)
+func (t *testDriver) assertGlobalnetDeployment() {
+	deployment := t.AssertDeployment(names.GlobalnetComponent)
 
-	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
-	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
+	Expect(deployment.Spec.Template.Spec.Containers).To(HaveLen(1))
+	Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(
 		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GlobalnetImage, t.submariner.Spec.Version)))
 
-	t.assertGlobalnetDaemonSetEnv(t.withNetworkDiscovery(), test.EnvMapFrom(daemonSet))
+	t.assertGlobalnetDeploymentEnv(t.withNetworkDiscovery(),
+		test.EnvMapFromVars(deployment.Spec.Template.Spec.Containers[0].Env))
 }
 
-func (t *testDriver) assertUninstallGlobalnetDaemonSet() *appsv1.DaemonSet {
-	daemonSet := t.AssertDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
-	assertGatewayNodeSelector(daemonSet)
+func (t *testDriver) assertUninstallGlobalnetDeployment() *appsv1.Deployment {
+	deployment := t.AssertDeployment(names.AppendUninstall(names.GlobalnetComponent))
 
-	envMap := t.AssertUninstallInitContainer(&daemonSet.Spec.Template,
+	envMap := t.AssertUninstallInitContainer(&deployment.Spec.Template,
 		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GlobalnetImage, t.submariner.Spec.Version))
-	t.assertGlobalnetDaemonSetEnv(t.withNetworkDiscovery(), envMap)
+	t.assertGlobalnetDeploymentEnv(t.withNetworkDiscovery(), envMap)
 
-	return daemonSet
+	return deployment
 }
 
-func (t *testDriver) assertGlobalnetDaemonSetEnv(submariner *operatorv1.Submariner, envMap map[string]string) {
+func (t *testDriver) assertGlobalnetDeploymentEnv(submariner *operatorv1.Submariner, envMap map[string]string) {
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 }

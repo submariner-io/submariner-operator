@@ -55,8 +55,8 @@ func gatherRouteAgentDaemonSet(info *Info, namespace string) {
 	gatherDaemonSet(info, namespace, metav1.ListOptions{LabelSelector: routeagentPodLabel})
 }
 
-func gatherGlobalnetDaemonSet(info *Info, namespace string) {
-	gatherDaemonSet(info, namespace, metav1.ListOptions{LabelSelector: globalnetPodLabel})
+func gatherGlobalnetDeployment(info *Info, namespace string) {
+	gatherDeployment(info, namespace, metav1.ListOptions{LabelSelector: globalnetPodLabel})
 }
 
 func gatherNetworkPluginSyncerDeployment(info *Info, namespace string) {

@@ -169,10 +169,10 @@ func testReconciliation() {
 		})
 	})
 
-	When("the submariner globalnet DaemonSet doesn't exist", func() {
+	When("the submariner globalnet Deployment doesn't exist", func() {
 		It("should create it", func() {
 			t.AssertReconcileSuccess()
-			t.assertGlobalnetDaemonSet()
+			t.assertGlobalnetDeployment()
 		})
 	})
 
@@ -266,7 +266,7 @@ func testDeletion() {
 				t.NewDaemonSet(names.GatewayComponent),
 				t.NewPodWithLabel("app", names.GatewayComponent),
 				t.NewDaemonSet(names.RouteAgentComponent),
-				t.NewDaemonSet(names.GlobalnetComponent),
+				t.NewDeployment(names.GlobalnetComponent),
 				t.NewDeployment(names.NetworkPluginSyncerComponent))
 		})
 
@@ -276,7 +276,7 @@ func testDeletion() {
 
 			t.AssertNoDaemonSet(names.GatewayComponent)
 			t.AssertNoDaemonSet(names.RouteAgentComponent)
-			t.AssertNoDaemonSet(names.GlobalnetComponent)
+			t.AssertNoDeployment(names.GlobalnetComponent)
 			t.AssertNoDeployment(names.NetworkPluginSyncerComponent)
 
 			// Simulate the gateway DaemonSet controller cleaning up its pods.
@@ -285,9 +285,9 @@ func testDeletion() {
 			// Next, the controller should create the corresponding uninstall DaemonSets/Deployments.
 			t.AssertReconcileRequeue()
 
-			// For the globalnet DaemonSet, we'll only update it to nodes available but not yet ready at this point.
-			globalnetDS := t.assertUninstallGlobalnetDaemonSet()
-			t.UpdateDaemonSetToScheduled(globalnetDS)
+			// For the globalnet Deployment, we'll only update it to nodes available but not yet ready at this point.
+			// globalnetDeploy := t.assertUninstallGlobalnetDeployment()
+			// t.UpdateDeploymentToScheduled(globalnetDeploy)
 
 			// For the gateway DaemonSet, we'll update it to observed but no nodes available - this will cause it to be deleted.
 			t.UpdateDaemonSetToObserved(t.assertUninstallGatewayDaemonSet())
@@ -298,8 +298,8 @@ func testDeletion() {
 			// Next, the controller should again requeue b/c the gateway DaemonSet isn't ready yet.
 			t.AssertReconcileRequeue()
 
-			// Now update the globalnet DaemonSet to ready.
-			t.UpdateDaemonSetToReady(globalnetDS)
+			// Now update the globalnet Deployment to ready.
+			t.UpdateDeploymentToReady(t.assertUninstallGlobalnetDeployment())
 
 			// Ensure the finalizer is still present.
 			t.awaitFinalizer()
@@ -309,7 +309,7 @@ func testDeletion() {
 
 			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
 			t.AssertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
-			t.AssertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
+			t.AssertNoDeployment(names.AppendUninstall(names.GlobalnetComponent))
 			t.AssertNoDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 			t.awaitSubmarinerDeleted()
@@ -335,8 +335,8 @@ func testDeletion() {
 			t.UpdateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
 			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
 
-			t.AssertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
-			t.AssertNoDaemonSet(names.AppendUninstall(names.NetworkPluginSyncerComponent))
+			t.AssertNoDeployment(names.AppendUninstall(names.GlobalnetComponent))
+			t.AssertNoDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 			t.AssertReconcileSuccess()
 
