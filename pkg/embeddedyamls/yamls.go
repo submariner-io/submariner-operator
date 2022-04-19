@@ -198,6 +198,9 @@ spec:
                 type: object
               loadBalancerEnabled:
                 type: boolean
+              multiActiveGatewayEnabled:
+                description: Enable/Disable the Multiple Active Gateway Feature
+                type: boolean
               namespace:
                 type: string
               natEnabled:
