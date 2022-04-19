@@ -46,7 +46,7 @@ var (
 	operationTimeout                uint
 	connectionTimeout               uint
 	connectionAttempts              uint
-	junitReport                     string
+	reportDirectory                 string
 	submarinerNamespace             string
 	verifyOnly                      string
 	disruptiveTests                 bool
@@ -126,7 +126,7 @@ func addVerifyFlags(cmd *cobra.Command) {
 	cmd.Flags().UintVar(&operationTimeout, "operation-timeout", 240, "operation timeout for K8s API calls")
 	cmd.Flags().UintVar(&connectionTimeout, "connection-timeout", 60, "timeout in seconds per connection attempt")
 	cmd.Flags().UintVar(&connectionAttempts, "connection-attempts", 2, "maximum number of connection attempts")
-	cmd.Flags().StringVar(&junitReport, "junit-report", "", "XML report path and report name")
+	cmd.Flags().StringVar(&reportDirectory, "report-dir", ".", "XML report directory")
 	cmd.Flags().StringVar(&submarinerNamespace, "submariner-namespace", "submariner-operator", "namespace in which submariner is deployed")
 	cmd.Flags().StringVar(&verifyOnly, "only", strings.Join(getAllVerifyKeys(), ","), "comma separated verifications to be performed")
 	cmd.Flags().BoolVar(&disruptiveTests, "disruptive-tests", false, "enable disruptive verifications like gateway-failover")

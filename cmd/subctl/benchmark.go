@@ -123,7 +123,8 @@ func setUpTestFramework(args []string, restConfigProducer restconfig.Producer) e
 	framework.TestContext.OperationTimeout = operationTimeout
 	framework.TestContext.ConnectionTimeout = connectionTimeout
 	framework.TestContext.ConnectionAttempts = connectionAttempts
-	framework.TestContext.JunitReport = junitReport
+	framework.TestContext.ReportDir = reportDirectory
+	framework.TestContext.ReportPrefix = "subctl"
 	framework.TestContext.SubmarinerNamespace = constants.SubmarinerNamespace
 
 	config.DefaultReporterConfig.Verbose = verboseConnectivityVerification
