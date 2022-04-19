@@ -99,8 +99,8 @@ function verify_subm_deployed() {
     verify_subm_routeagent_container
 
     if [[ $globalnet = true ]]; then
-        #Verify SubM Globalnet Daemonset
-        verify_subm_globalnet_daemonset
+        #Verify SubM Globalnet Deployment
+        verify_subm_globalnet_deployment
     fi
 
     verify_network_plugin_syncer
@@ -287,18 +287,29 @@ function verify_subm_routeagent_daemonset() {
   verify_daemonset $routeagent_deployment_name submariner-routeagent
 }
 
-function verify_subm_globalnet_daemonset() {
-  verify_daemonset $globalnet_deployment_name submariner-globalnet
+function verify_subm_globalnet_deployment() {
+  verify_deployment $globalnet_deployment_name submariner-globalnet
 }
 
 function daemonset_created() {
   kubectl get DaemonSet $daemonset_name -n $subm_ns > /dev/null 2>&1
 }
 
+function deployment_created() {
+  kubectl get Deployment $deployment_name -n $subm_ns > /dev/null 2>&1
+}
+
 function daemonset_deployed() {
   local daemonset_name=$1
   local desiredNumberScheduled=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.desiredNumberScheduled}')
   local numberReady=$(kubectl get DaemonSet $daemonset_name -n $subm_ns -o jsonpath='{.status.numberReady}')
+  [[ "$numberReady" = "$desiredNumberScheduled" ]]
+}
+
+function deployment_deployed() {
+  local deployment_name=$1
+  local desiredNumberScheduled=$(kubectl get Deployment $deployment_name -n $subm_ns -o jsonpath='{.status.replicas}')
+  local numberReady=$(kubectl get Deployment $deployment_name -n $subm_ns -o jsonpath='{.status.readyReplicas}')
   [[ "$numberReady" = "$desiredNumberScheduled" ]]
 }
 
@@ -309,6 +320,15 @@ function verify_daemonset() {
   # Simple verification to ensure that the daemonset has been created and becomes ready
   with_retries 60 daemonset_created
   with_retries 120 daemonset_deployed
+}
+
+function verify_deployment() {
+  deployment_app=$1
+  deployment_name=$2
+
+  # Simple verification to ensure that the daemonset has been created and becomes ready
+  with_retries 60 deployment_created
+  with_retries 120 deployment_deployed
 }
 
 validate_pod_container_volume_mount() {

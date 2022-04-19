@@ -60,8 +60,8 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 			UninstallResource: newRouteAgentDaemonSet(instance, names.AppendUninstall(names.RouteAgentComponent)),
 		},
 		{
-			Resource:          newDaemonSet(names.GlobalnetComponent, instance.Namespace),
-			UninstallResource: newGlobalnetDaemonSet(instance, names.AppendUninstall(names.GlobalnetComponent)),
+			Resource:          newDeployment(names.GlobalnetComponent, instance.Namespace),
+			UninstallResource: newGlobalnetDeployment(instance, names.AppendUninstall(names.GlobalnetComponent)),
 			CheckInstalled: func() bool {
 				return instance.Spec.GlobalCIDR != ""
 			},
@@ -118,6 +118,27 @@ func (r *Reconciler) ensureServiceDiscoveryDeleted(ctx context.Context, namespac
 	}
 
 	return true
+}
+
+func (r *Reconciler) ensureGlobalnetDaemonSetDeleted(ctx context.Context, instance *operatorv1alpha1.Submariner) {
+	if !r.config.GlobalNetDSDel {
+		err := r.config.Client.Delete(ctx, newGlobalnetDaemonSet(instance, names.GlobalnetComponent))
+		if apierrors.IsNotFound(err) {
+			log.Info("Globalnet DaemonSet doesn't exist")
+
+			r.config.GlobalNetDSDel = true
+
+			return
+		}
+
+		if err == nil {
+			log.Info("Deleted the Globalnet DaemonSet resource")
+		} else {
+			log.Error(err, "Error deleting the Globalnet DaemonSet resource")
+		}
+
+		return
+	}
 }
 
 func newDaemonSet(name, namespace string) *appsv1.DaemonSet {

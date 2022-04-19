@@ -41,6 +41,9 @@ func AddToManager(mgr manager.Manager) error {
 		KubeClient: kubeClient,
 		SubmClient: submarinerclientset.NewForConfigOrDie(mgr.GetConfig()),
 		DynClient:  dynamic.NewForConfigOrDie(mgr.GetConfig()),
+
+		// Flag tracks if DaemonSet has been deleted or not to save cycles in reconciler.
+		GlobalNetDSDel: false,
 	}).SetupWithManager(mgr); err != nil {
 		return err
 	}
