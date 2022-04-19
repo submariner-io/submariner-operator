@@ -198,8 +198,6 @@ spec:
                 type: object
               loadBalancerEnabled:
                 type: boolean
-              multiActiveGatewayEnabled:
-                type: boolean
               namespace:
                 type: string
               natEnabled:
