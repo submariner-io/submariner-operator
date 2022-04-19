@@ -93,7 +93,7 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 		return ""
 	}
 
-	for i := range nodes.Items {
+	for i := range nodes.Items { // nolint // TODO MAG POC: Already fixed in devel
 		node := &nodes.Items[i]
 		if node.Name == hostname {
 			return hostname

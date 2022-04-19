@@ -215,7 +215,7 @@ func getSpecBool(pool unstructured.Unstructured, key string) (bool, error) {
 		return false, errors.Wrap(err, "error getting spec field")
 	}
 
-	if !found {
+	if !found { // nolint // TODO MAG POC: Already fixed in devel
 		message := fmt.Sprintf("%s status not found for IPPool %q", key, pool.GetName())
 		return false, fmt.Errorf(message)
 	}
