@@ -69,6 +69,9 @@ type SubmarinerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make manifests" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+
+	// Enable/Disable the Multiple Active Gateway Feature
+	MultiActiveGatewayEnabled bool `json:"multiActiveGatewayEnabled,omitempty"`
 }
 
 // SubmarinerStatus defines the observed state of Submariner

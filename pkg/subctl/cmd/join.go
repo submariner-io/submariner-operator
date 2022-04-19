@@ -69,6 +69,7 @@ var (
 	operatorDebug                 bool
 	labelGateway                  bool
 	loadBalancerEnabled           bool
+	multiActiveGatewayEnabled     bool
 	cableDriver                   string
 	globalnetClusterSize          uint
 	customDomains                 []string
@@ -121,6 +122,8 @@ func addJoinFlags(cmd *cobra.Command) {
 		"list of domains to use for multicluster service discovery")
 	cmd.Flags().StringSliceVar(&imageOverrideArr, "image-override", nil,
 		"override component image")
+	cmd.Flags().BoolVar(&multiActiveGatewayEnabled, "multi-active-gateway", false,
+		"enable/disable Multiple Active Gateways for this cluster")
 	cmd.Flags().BoolVar(&healthCheckEnable, "health-check", true,
 		"enable Gateway health check")
 	cmd.Flags().Uint64Var(&healthCheckInterval, "health-check-interval", 1,
@@ -476,6 +479,7 @@ func populateSubmarinerSpec(subctlData *datafile.SubctlData, brokerSecret, pskSe
 			IntervalSeconds:    healthCheckInterval,
 			MaxPacketLossCount: healthCheckMaxPacketLossCount,
 		},
+		MultiActiveGatewayEnabled: multiActiveGatewayEnabled,
 	}
 	if netconfig.GlobalCIDR != "" {
 		submarinerSpec.GlobalCIDR = netconfig.GlobalCIDR

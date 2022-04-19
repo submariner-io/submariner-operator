@@ -41,6 +41,7 @@ type SubmarinerOptions struct {
 	SubmarinerDebug               bool
 	LoadBalancerEnabled           bool
 	HealthCheckEnabled            bool
+	MultiActiveGatewayEnabled     bool
 	NATTPort                      int
 	HealthCheckInterval           uint64
 	HealthCheckMaxPacketLossCount uint64
@@ -109,6 +110,7 @@ func populateSubmarinerSpec(options *SubmarinerOptions, brokerInfo *broker.Info,
 			IntervalSeconds:    options.HealthCheckInterval,
 			MaxPacketLossCount: options.HealthCheckMaxPacketLossCount,
 		},
+		MultiActiveGatewayEnabled: options.MultiActiveGatewayEnabled,
 	}
 	if netconfig.GlobalCIDR != "" {
 		submarinerSpec.GlobalCIDR = netconfig.GlobalCIDR

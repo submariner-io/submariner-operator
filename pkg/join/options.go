@@ -29,6 +29,7 @@ type Options struct {
 	OperatorDebug                 bool
 	LoadBalancerEnabled           bool
 	HealthCheckEnabled            bool
+	MultiActiveGatewayEnabled     bool
 	NATTPort                      int
 	GlobalnetClusterSize          uint
 	HealthCheckInterval           uint64
