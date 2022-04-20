@@ -420,6 +420,11 @@ spec:
                         properties:
                           endpoint:
                             properties:
+                              allocated_ips:
+                                description: The list of allocated ClusterGlobaEgresslIPs.
+                                items:
+                                  type: string
+                                type: array
                               backend:
                                 type: string
                               backend_config:
@@ -490,6 +495,11 @@ spec:
                       type: string
                     localEndpoint:
                       properties:
+                        allocated_ips:
+                          description: The list of allocated ClusterGlobaEgresslIPs.
+                          items:
+                            type: string
+                          type: array
                         backend:
                           type: string
                         backend_config:
@@ -1179,6 +1189,11 @@ spec:
             type: object
           spec:
             properties:
+              allocated_ips:
+                description: The list of allocated ClusterGlobaEgresslIPs.
+                items:
+                  type: string
+                type: array
               backend:
                 type: string
               backend_config:
@@ -1273,6 +1288,11 @@ spec:
                   properties:
                     endpoint:
                       properties:
+                        allocated_ips:
+                          description: The list of allocated ClusterGlobaEgresslIPs.
+                          items:
+                            type: string
+                          type: array
                         backend:
                           type: string
                         backend_config:
@@ -1342,6 +1362,11 @@ spec:
                 type: string
               localEndpoint:
                 properties:
+                  allocated_ips:
+                    description: The list of allocated ClusterGlobaEgresslIPs.
+                    items:
+                      type: string
+                    type: array
                   backend:
                     type: string
                   backend_config:
