@@ -60,3 +60,14 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - submariner.io
+  resources:
+  - clusterglobalegressips
+  - globalegressips
+  - globalingressips
+  verbs:
+  - get
+  - list
+  - watch
+  - update
