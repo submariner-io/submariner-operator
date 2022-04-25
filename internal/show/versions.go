@@ -23,31 +23,18 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/internal/constants"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
-
-func init() {
-	showCmd.AddCommand(&cobra.Command{
-		Use:     "versions",
-		Short:   "Shows submariner component versions",
-		Long:    `This command shows the versions of the submariner components in the cluster.`,
-		PreRunE: restConfigProducer.CheckVersionMismatch,
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, showVersions)
-		},
-	})
-}
 
 type versionImageInfo struct {
 	component  string
@@ -69,7 +56,8 @@ func getSubmarinerVersion(submariner *v1alpha1.Submariner, versions []versionIma
 }
 
 func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
-	operatorConfig, err := clientSet.AppsV1().Deployments(cmd.OperatorNamespace).Get(context.TODO(), names.OperatorComponent, v1.GetOptions{})
+	operatorConfig, err := clientSet.AppsV1().Deployments(constants.OperatorNamespace).Get(context.TODO(), names.OperatorComponent,
+		v1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return versions, nil
@@ -86,7 +74,7 @@ func getOperatorVersion(clientSet kubernetes.Interface, versions []versionImageI
 }
 
 func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface, versions []versionImageInfo) ([]versionImageInfo, error) {
-	lighthouseAgentConfig, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(cmd.OperatorNamespace).Get(
+	lighthouseAgentConfig, err := submarinerClient.SubmarinerV1alpha1().ServiceDiscoveries(constants.OperatorNamespace).Get(
 		context.TODO(), names.ServiceDiscoveryCrName, v1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -102,44 +90,38 @@ func getServiceDiscoveryVersions(submarinerClient submarinerclientset.Interface,
 	return versions, nil
 }
 
-func getVersions(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
+func Versions(clusterInfo *cluster.Info, status reporter.Interface) bool {
 	status.Start("Showing versions")
 
 	var versions []versionImageInfo
-	submarinerClient, err := submarinerclientset.NewForConfig(cluster.Config)
-	exit.OnErrorWithMessage(err, "Unable to get the Submariner client")
 
-	if cluster.Submariner != nil {
-		versions = getSubmarinerVersion(cluster.Submariner, versions)
+	if clusterInfo.Submariner != nil {
+		versions = getSubmarinerVersion(clusterInfo.Submariner, versions)
 	}
 
-	versions, err = getOperatorVersion(cluster.KubeClient, versions)
-	exit.OnErrorWithMessage(err, "Unable to get the Operator version")
+	versions, err := getOperatorVersion(clusterInfo.ClientProducer.ForKubernetes(), versions)
+	if err != nil {
+		status.Failure("Unable to get the Operator version", err)
+		status.End()
 
-	versions, err = getServiceDiscoveryVersions(submarinerClient, versions)
-	exit.OnErrorWithMessage(err, "Unable to get the Service-Discovery version")
+		return false
+	}
 
-	status.EndWith(cli.Success)
+	versions, err = getServiceDiscoveryVersions(clusterInfo.ClientProducer.ForOperator(), versions)
+	if err != nil {
+		status.Failure("Unable to get the Service-Discovery version", err)
+		status.End()
+
+		return false
+	}
+
+	status.End()
 
 	if len(versions) > 0 {
 		printVersions(versions)
 	}
 
 	return true
-}
-
-func showVersions(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-
-	if cluster.Submariner == nil {
-		status.Start(cmd.SubmMissingMessage)
-		status.EndWith(cli.Warning)
-
-		return true
-	}
-
-	return getVersions(cluster)
 }
 
 func printVersions(versions []versionImageInfo) {

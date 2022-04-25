@@ -23,30 +23,24 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/client"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func showBrokers(cluster *cmd.Cluster) bool {
+func Brokers(clusterInfo *cluster.Info, status reporter.Interface) bool {
 	template := "%-25.24s%-25.24s%-40.39s\n"
-	status := cli.NewStatus()
 
 	status.Start("Detecting broker(s)")
 
-	clientProducer, err := client.NewProducerFromRestConfig(cluster.Config)
-	if err != nil {
-		status.EndWithFailure("Error creating client producer")
-		return false
-	}
-
-	brokerList, err := clientProducer.ForOperator().SubmarinerV1alpha1().Brokers(corev1.NamespaceAll).List(
+	brokerList, err := clusterInfo.ClientProducer.ForOperator().SubmarinerV1alpha1().Brokers(corev1.NamespaceAll).List(
 		context.TODO(), metav1.ListOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
-		status.EndWithFailure(err.Error())
+		status.Failure(err.Error())
+		status.End()
+
 		return false
 	}
 
