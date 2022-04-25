@@ -21,9 +21,8 @@ package show
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 )
 
 type endpointStatus struct {
@@ -44,30 +43,21 @@ func newEndpointsStatusFrom(clusterID, endpointIP, publicIP, cableDriver, endpoi
 	}
 }
 
-func init() {
-	showCmd.AddCommand(&cobra.Command{
-		Use:     "endpoints",
-		Short:   "Show submariner endpoint information",
-		Long:    `This command shows information about submariner endpoints in a cluster.`,
-		PreRunE: restConfigProducer.CheckVersionMismatch,
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, showEndpoints)
-		},
-	})
-}
-
-func getEndpointsStatus(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
+func Endpoints(clusterInfo *cluster.Info, status reporter.Interface) bool {
 	status.Start("Showing Endpoints")
 
-	gateways, err := cluster.GetGateways()
+	gateways, err := clusterInfo.GetGateways()
 	if err != nil {
-		status.EndWithFailure("Error retrieving gateways: %v", err)
+		status.Failure("Error retrieving gateways: %v", err)
+		status.End()
+
 		return false
 	}
 
 	if len(gateways) == 0 {
-		status.EndWithFailure("There are no gateways detected")
+		status.Failure("There are no gateways detected")
+		status.End()
+
 		return false
 	}
 
@@ -94,27 +84,16 @@ func getEndpointsStatus(cluster *cmd.Cluster) bool {
 	}
 
 	if len(epStatus) == 0 {
-		status.EndWithFailure("No Endpoints found")
+		status.Failure("No Endpoints found")
+		status.End()
+
 		return false
 	}
 
-	status.EndWith(cli.Success)
+	status.End()
 	printEndpoints(epStatus)
 
 	return true
-}
-
-func showEndpoints(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-
-	if cluster.Submariner == nil {
-		status.Start(cmd.SubmMissingMessage)
-		status.EndWith(cli.Warning)
-
-		return true
-	}
-
-	return getEndpointsStatus(cluster)
 }
 
 func printEndpoints(endpoints []endpointStatus) {

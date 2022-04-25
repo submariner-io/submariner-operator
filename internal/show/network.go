@@ -21,58 +21,50 @@ package show
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/internal/exit"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/submariner-operator/internal/constants"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
-func init() {
-	showCmd.AddCommand(&cobra.Command{
-		Use:   "networks",
-		Short: "Get information on your cluster related to submariner",
-		Long: `This command shows the status of submariner in your cluster,
-		      and the relevant network details from your cluster.`,
-		PreRunE: restConfigProducer.CheckVersionMismatch,
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, showNetwork)
-		},
-	})
-}
-
-func showNetwork(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
+func Network(clusterInfo *cluster.Info, status reporter.Interface) bool {
 	status.Start("Showing Network details")
 
 	var clusterNetwork *network.ClusterNetwork
 	var msg string
+	var err error
 
-	if cluster.Submariner != nil {
+	if clusterInfo.Submariner != nil {
 		msg = "    Discovered network details via Submariner:"
 		clusterNetwork = &network.ClusterNetwork{
-			PodCIDRs:      []string{cluster.Submariner.Status.ClusterCIDR},
-			ServiceCIDRs:  []string{cluster.Submariner.Status.ServiceCIDR},
-			NetworkPlugin: cluster.Submariner.Status.NetworkPlugin,
-			GlobalCIDR:    cluster.Submariner.Status.GlobalCIDR,
+			PodCIDRs:      []string{clusterInfo.Submariner.Status.ClusterCIDR},
+			ServiceCIDRs:  []string{clusterInfo.Submariner.Status.ServiceCIDR},
+			NetworkPlugin: clusterInfo.Submariner.Status.NetworkPlugin,
+			GlobalCIDR:    clusterInfo.Submariner.Status.GlobalCIDR,
 		}
 	} else {
 		msg = "    Discovered network details"
 
-		submarinerClient, err := submarinerclientset.NewForConfig(cluster.Config)
-		exit.OnErrorWithMessage(err, "Unable to get the Submariner client")
+		clusterNetwork, err = network.Discover(clusterInfo.ClientProducer.ForDynamic(), clusterInfo.ClientProducer.ForKubernetes(),
+			clusterInfo.ClientProducer.ForOperator(), constants.OperatorNamespace)
+		if err != nil {
+			status.Failure("There was an error discovering network details for this cluster", err)
+			status.End()
 
-		clusterNetwork, err = network.Discover(cluster.DynClient, cluster.KubeClient, submarinerClient, cmd.OperatorNamespace)
-		exit.OnErrorWithMessage(err, "There was an error discovering network details for this cluster")
+			return false
+		}
 	}
+
+	if clusterNetwork == nil {
+		status.Warning("The network details could not be determined")
+	}
+
+	status.End()
 
 	if clusterNetwork != nil {
 		fmt.Println(msg)
+		clusterNetwork.Show()
 	}
-
-	status.EndWith(cli.Success)
-	clusterNetwork.Show()
 
 	return true
 }

@@ -21,58 +21,43 @@ package show
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/submariner-operator/internal/constants"
+	"github.com/submariner-io/submariner-operator/pkg/cluster"
 )
 
-func init() {
-	showCmd.AddCommand(&cobra.Command{
-		Use:   "all",
-		Short: "Show information related to a submariner cluster",
-		Long: `This command shows information related to a submariner cluster:
-		      networks, endpoints, gateways, connections and component versions.`,
-		PreRunE: restConfigProducer.CheckVersionMismatch,
-		Run: func(command *cobra.Command, args []string) {
-			cmd.ExecuteMultiCluster(restConfigProducer, showAll)
-		},
-	})
-}
-
-func showAll(cluster *cmd.Cluster) bool {
-	status := cli.NewStatus()
-
-	success := showBrokers(cluster)
+func All(clusterInfo *cluster.Info, status reporter.Interface) bool {
+	success := Brokers(clusterInfo, status)
 
 	fmt.Println()
 
-	if cluster.Submariner == nil {
-		success = getVersions(cluster) && success
+	if clusterInfo.Submariner == nil {
+		success = Versions(clusterInfo, status) && success
 
 		fmt.Println()
-		status.Start(cmd.SubmMissingMessage)
-		status.EndWith(cli.Warning)
+
+		status.Warning(constants.SubmarinerNotInstalled)
 
 		return success
 	}
 
-	success = showConnections(cluster) && success
+	success = Connections(clusterInfo, status) && success
 
 	fmt.Println()
 
-	success = showEndpoints(cluster) && success
+	success = Endpoints(clusterInfo, status) && success
 
 	fmt.Println()
 
-	success = showGateways(cluster) && success
+	success = Gateways(clusterInfo, status) && success
 
 	fmt.Println()
 
-	success = showNetwork(cluster) && success
+	success = Network(clusterInfo, status) && success
 
 	fmt.Println()
 
-	success = showVersions(cluster) && success
+	success = Versions(clusterInfo, status) && success
 
 	return success
 }
