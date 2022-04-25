@@ -68,3 +68,7 @@ jobs:
         run: |
           cmd/bin/subctl diagnose all --kubeconfig output/kubeconfigs/kind-config-cluster1
           cmd/bin/subctl diagnose firewall inter-cluster output/kubeconfigs/kind-config-cluster1 output/kubeconfigs/kind-config-cluster2
+
+      - name: Test show
+        run: |
+          cmd/bin/subctl show all --kubeconfig output/kubeconfigs/kind-config-cluster1
