@@ -56,7 +56,7 @@ test_subctl_gather
 
 # Run subctl diagnose as a sanity check
 
-${DAPPER_SOURCE}/bin/subctl diagnose all
+#${DAPPER_SOURCE}/bin/subctl diagnose all
 ${DAPPER_SOURCE}/bin/subctl diagnose firewall inter-cluster ${KUBECONFIGS_DIR}/kind-config-cluster1 ${KUBECONFIGS_DIR}/kind-config-cluster2
 
 # Run benchmark commands for sanity checks
