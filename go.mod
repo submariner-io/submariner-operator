@@ -71,4 +71,5 @@ replace (
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.9.0
 )
 
-replace github.com/submariner-io/submariner => github.com/astoycos/submariner v0.12.0-m1.0.20220428190843-8a2fdf4866e3
+// Point to github.com/submariner-io/submariner@feature-multi-active-gw
+replace github.com/submariner-io/submariner => github.com/submariner-io/submariner v0.12.0-m3.0.20220502154739-568f97ce9ad2
