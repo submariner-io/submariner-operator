@@ -1406,10 +1406,11 @@ github.com/submariner-io/admiral v0.12.0 h1:o7w53UpkZPSwcIuG6hIT0aTDQC6HrLgcnZBi
 github.com/submariner-io/admiral v0.12.0/go.mod h1:AX0lc3FjWxM3KwSx0kU0b3f1xFxkm5k533pTehHl6QA=
 github.com/submariner-io/cloud-prepare v0.12.0 h1:tuWi77qa1CvY2p25EPDVfyWppQWrrKIlKwl8qRMugZc=
 github.com/submariner-io/cloud-prepare v0.12.0/go.mod h1:FPh8Ras/2G7teKW1sVlSK7WX1QYXodqbXuf/YV0yGAw=
-github.com/submariner-io/lighthouse v0.12.0 h1:ZvrKIO1z0EPQtlVy3oSHzxPDqVbjJe/j9cOT1WoYo9s=
-github.com/submariner-io/lighthouse v0.12.0/go.mod h1:ggT3u0O2IlEI5rkXjMvd+7r/lxZNqyBowadTj2CE+l0=
-github.com/submariner-io/shipyard v0.12.0 h1:vdOFYnSx/5WqMXfebhWWEzdaTdoBNBIvg/URRfGaYRY=
+github.com/submariner-io/lighthouse v0.12.1-0.20220428190125-bdaa08eb86e3 h1:CmEfFLlsqDyJBssJ7tPIRexKOownZrYdtv1aOR55HZA=
+github.com/submariner-io/lighthouse v0.12.1-0.20220428190125-bdaa08eb86e3/go.mod h1:b+k87bSbqFOp+oAMclAdkRIpAdqa6WJjH9ic3pmhRrw=
 github.com/submariner-io/shipyard v0.12.0/go.mod h1:i3KjrLOHgG1uL+OeYolFNV1BmaOGlh2jEMQfNKtXOAo=
+github.com/submariner-io/shipyard v0.12.1-0.20220421224802-2788e35a83cd h1:Ilgju1c00qDjrPy/Y5dSx0dsOd8Gqn1kgKrJtLhwGFM=
+github.com/submariner-io/shipyard v0.12.1-0.20220421224802-2788e35a83cd/go.mod h1:i3KjrLOHgG1uL+OeYolFNV1BmaOGlh2jEMQfNKtXOAo=
 github.com/submariner-io/submariner v0.12.0 h1:1WZJjir9ZQ506+lQRpfD9v1gf2L5ykkYzBzaSC0uHIc=
 github.com/submariner-io/submariner v0.12.0/go.mod h1:XvzGtDXPl/2+/ToZShQm65eL3IhgkEgm6/hLkkXZ/Fw=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
