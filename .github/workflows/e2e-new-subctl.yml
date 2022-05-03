@@ -72,3 +72,7 @@ jobs:
       - name: Test show
         run: |
           cmd/bin/subctl show all --kubeconfig output/kubeconfigs/kind-config-cluster1
+
+      - name: Test gather
+        run: |
+          cmd/bin/subctl gather --kubeconfig output/kubeconfigs/kind-config-cluster1
