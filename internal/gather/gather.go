@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/admiral/pkg/stringset"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/component"
 	"github.com/submariner-io/submariner-operator/internal/constants"
@@ -44,8 +45,8 @@ import (
 type Options struct {
 	Directory            string
 	IncludeSensitiveData bool
-	ModuleFlags          map[string]bool
-	TypeFlags            map[string]bool
+	Modules              []string
+	Types                []string
 }
 
 const (
@@ -53,17 +54,9 @@ const (
 	Resources = "resources"
 )
 
-var ModuleFlags = map[string]bool{
-	component.Connectivity:     false,
-	component.ServiceDiscovery: false,
-	component.Broker:           false,
-	component.Operator:         false,
-}
+var AllModules = stringset.New(component.Connectivity, component.ServiceDiscovery, component.Broker, component.Operator)
 
-var TypeFlags = map[string]bool{
-	"logs":      false,
-	"resources": false,
-}
+var AllTypes = stringset.New(Logs, Resources)
 
 var gatherFuncs = map[string]func(string, Info) bool{
 	component.Connectivity:     gatherConnectivity,
@@ -129,16 +122,12 @@ func gatherDataByCluster(clusterInfo *cluster.Info, status reporter.Interface, o
 		}
 	}
 
-	for module, ok := range options.ModuleFlags {
-		if ok {
-			for dataType, ok := range options.TypeFlags {
-				if ok {
-					info.Status = cli.NewReporter()
-					info.Status.Start("Gathering %s %s", module, dataType)
-					gatherFuncs[module](dataType, info)
-					info.Status.End()
-				}
-			}
+	for _, module := range options.Modules {
+		for _, dataType := range options.Types {
+			info.Status = cli.NewReporter()
+			info.Status.Start("Gathering %s %s", module, dataType)
+			gatherFuncs[module](dataType, info)
+			info.Status.End()
 		}
 	}
 
