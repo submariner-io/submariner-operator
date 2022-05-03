@@ -40,7 +40,7 @@ func newAWSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command
 		Run: func(cmd *cobra.Command, args []string) {
 			status := cli.NewReporter()
 
-			err := cleanup.Aws(&restConfigProducer, status)
+			err := cleanup.AWS(&restConfigProducer, status)
 			exit.OnError(err)
 		},
 	}
