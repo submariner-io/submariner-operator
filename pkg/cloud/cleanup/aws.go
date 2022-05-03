@@ -27,8 +27,8 @@ import (
 
 var config aws.Config
 
-func Aws(restConfigProducer *restconfig.Producer, status reporter.Interface) error {
-	err := aws.RunOnAWS(*restConfigProducer, &config, status,
+func AWS(restConfigProducer *restconfig.Producer, status reporter.Interface) error {
+	err := aws.RunOn(*restConfigProducer, &config, status,
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			err := gwDeployer.Cleanup(status)
