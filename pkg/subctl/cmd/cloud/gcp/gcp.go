@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/exit"
+	cloudgcp "github.com/submariner-io/submariner-operator/pkg/cloud/gcp"
 )
 
 const (
@@ -34,20 +35,12 @@ const (
 	projectIDFlag = "project-id"
 )
 
-var (
-	infraID         string
-	region          string
-	projectID       string
-	credentialsFile string
-	ocpMetadataFile string
-)
-
 // AddGCPFlags adds basic flags needed by GCP.
-func AddGCPFlags(command *cobra.Command) {
-	command.Flags().StringVar(&infraID, infraIDFlag, "", "GCP infra ID")
-	command.Flags().StringVar(&region, regionFlag, "", "GCP region")
-	command.Flags().StringVar(&projectID, projectIDFlag, "", "GCP project ID")
-	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
+func AddGCPFlags(command *cobra.Command, config *cloudgcp.Config) {
+	command.Flags().StringVar(&config.InfraID, infraIDFlag, "", "GCP infra ID")
+	command.Flags().StringVar(&config.Region, regionFlag, "", "GCP region")
+	command.Flags().StringVar(&config.ProjectID, projectIDFlag, "", "GCP project ID")
+	command.Flags().StringVar(&config.OcpMetadataFile, "ocp-metadata", "",
 		"OCP metadata.json file (or the directory containing it) from which to read the GCP infra ID "+
 			"and region from (takes precedence over the specific flags)")
 
@@ -57,5 +50,5 @@ func AddGCPFlags(command *cobra.Command) {
 	}
 
 	defaultCredentials := filepath.FromSlash(fmt.Sprintf("%s/.gcp/osServiceAccount.json", dirname))
-	command.Flags().StringVar(&credentialsFile, "credentials", defaultCredentials, "GCP credentials configuration file")
+	command.Flags().StringVar(&config.CredentialsFile, "credentials", defaultCredentials, "GCP credentials configuration file")
 }

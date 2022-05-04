@@ -19,18 +19,21 @@ limitations under the License.
 package prepare
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/gcp"
+	"golang.org/x/oauth2/google"
 )
 
-func GCP(cmd *cobra.Command, args []string) {
+func GCP(restConfigProducer *restconfig.Producer, ports *cloud.Ports, config *gcp.Config, creds *google.Credentials,
+	status reporter.Interface,
+) error {
 	gwPorts := []api.PortSpec{
-		{Port: nattPort, Protocol: "udp"},
-		{Port: natDiscoveryPort, Protocol: "udp"},
+		{Port: ports.Natt, Protocol: "udp"},
+		{Port: ports.NatDiscovery, Protocol: "udp"},
 
 		// ESP & AH protocols are used for private-ip to private-ip gateway communications
 		{Port: 0, Protocol: "esp"},
@@ -38,18 +41,18 @@ func GCP(cmd *cobra.Command, args []string) {
 	}
 	input := api.PrepareForSubmarinerInput{
 		InternalPorts: []api.PortSpec{
-			{Port: vxlanPort, Protocol: "udp"},
-			{Port: metricsPort, Protocol: "tcp"},
+			{Port: ports.Vxlan, Protocol: "udp"},
+			{Port: ports.Metrics, Protocol: "tcp"},
 		},
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := gcp.RunOn(*parentRestConfigProducer, gcpGWInstanceType, dedicatedGateway, cli.NewReporter(),
+	err := gcp.RunOn(restConfigProducer, config, creds, cli.NewReporter(),
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
-			if gateways > 0 {
+			if config.Gateways > 0 {
 				gwInput := api.GatewayDeployInput{
 					PublicPorts: gwPorts,
-					Gateways:    gateways,
+					Gateways:    config.Gateways,
 				}
 				err := gwDeployer.Deploy(gwInput, status)
 				if err != nil {
@@ -60,5 +63,5 @@ func GCP(cmd *cobra.Command, args []string) {
 			return cloud.PrepareForSubmariner(input, status)
 		})
 
-	exit.OnErrorWithMessage(err, "Failed to prepare GCP cloud")
+	return status.Error(err, "Failed to prepare GCP cloud")
 }

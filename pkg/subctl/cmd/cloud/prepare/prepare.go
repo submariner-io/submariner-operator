@@ -25,33 +25,19 @@ import (
 )
 
 var (
-	nattPort         uint16
-	natDiscoveryPort uint16
-	vxlanPort        uint16
-	metricsPort      uint16
-)
-
-var (
-	gcpGWInstanceType string
-	gateways          int
-	dedicatedGateway  bool
-)
-
-var (
-	parentRestConfigProducer *restconfig.Producer
-	ports                    cloud.Ports
+	gateways int
+	ports    cloud.Ports
 )
 
 const (
-	DefaultNumGateways = 1
-	projectIDFlag      = "project-id"
 	infraIDFlag        = "infra-id"
 	regionFlag         = "region"
+	projectIDFlag      = "project-id"
+	DefaultNumGateways = 1
 )
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
-	parentRestConfigProducer = restConfigProducer
 	cmd := &cobra.Command{
 		Use:   "prepare",
 		Short: "Prepare the cloud",
@@ -64,7 +50,7 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd.PersistentFlags().Uint16Var(&ports.Metrics, "metrics-port", 8080, "Metrics port")
 
 	cmd.AddCommand(newAWSPrepareCommand(restConfigProducer, ports))
-	cmd.AddCommand(newGCPPrepareCommand())
+	cmd.AddCommand(newGCPPrepareCommand(restConfigProducer, &ports))
 	cmd.AddCommand(newRHOSPrepareCommand(restConfigProducer, &ports))
 	cmd.AddCommand(newGenericPrepareCommand(restConfigProducer))
 
