@@ -20,24 +20,21 @@ package cleanup
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/cleanup"
 )
 
-var parentRestConfigProducer *restconfig.Producer
-
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
+func newGenericCleanupCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cleanup",
-		Short: "Clean up the cloud",
-		Long:  `This command cleans up the cloud after Submariner uninstallation.`,
+		Use:   "generic",
+		Short: "Cleans up a cluster after Submariner uninstallation",
+		Long:  "This command removes the labels from gateway nodes after Submariner uninstallation.",
+		Run: func(cmd *cobra.Command, args []string) {
+			exit.OnError(cleanup.GenericCluster(restConfigProducer, cli.NewReporter()))
+		},
 	}
-	parentRestConfigProducer = restConfigProducer
-
-	cmd.AddCommand(newAWSCleanupCommand(*parentRestConfigProducer))
-	cmd.AddCommand(newGCPCleanupCommand())
-	cmd.AddCommand(newRHOSCleanupCommand())
-	cmd.AddCommand(newGenericCleanupCommand(parentRestConfigProducer))
 
 	return cmd
 }
