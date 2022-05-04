@@ -27,7 +27,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func RunOnK8sCluster(restConfigProducer restconfig.Producer, status reporter.Interface,
+func RunOnCluster(restConfigProducer *restconfig.Producer, status reporter.Interface,
 	function func(api.GatewayDeployer, reporter.Interface) error,
 ) error {
 	k8sConfig, err := restConfigProducer.ForCluster()
