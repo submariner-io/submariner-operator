@@ -31,11 +31,6 @@ import (
 
 var config cloudaws.Config
 
-const (
-	infraIDFlag = "infra-id"
-	regionFlag  = "region"
-)
-
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newAWSPrepareCommand(restConfigProducer *restconfig.Producer, ports cloud.Ports) *cobra.Command {
 	cmd := &cobra.Command{
