@@ -25,6 +25,12 @@ import (
 
 var parentRestConfigProducer *restconfig.Producer
 
+const (
+	infraIDFlag   = "infra-id"
+	regionFlag    = "region"
+	projectIDFlag = "project-id"
+)
+
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd := &cobra.Command{

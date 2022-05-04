@@ -19,25 +19,53 @@ limitations under the License.
 package prepare
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/prepare"
+	cloudrhos "github.com/submariner-io/submariner-operator/pkg/cloud/rhos"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
+var rhosConfig cloudrhos.Config
+
 // newRHOSPrepareCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func newRHOSPrepareCommand() *cobra.Command {
+func newRHOSPrepareCommand(restConfigProducer *restconfig.Producer, ports *cloud.Ports) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rhos",
 		Short: "Prepare an OpenShift RHOS cloud",
 		Long:  "This command prepares an OpenShift installer-provisioned infrastructure (IPI) on RHOS cloud for Submariner installation.",
-		Run:   prepare.RHOS,
+		Run: func(cmd *cobra.Command, args []string) {
+			status := cli.NewReporter()
+
+			var err error
+			if config.OcpMetadataFile != "" {
+				rhosConfig.InfraID, rhosConfig.ProjectID, err = cloudrhos.ReadFromFile(config.OcpMetadataFile)
+				rhosConfig.Region = os.Getenv("OS_REGION_NAME")
+
+				exit.OnErrorWithMessage(err, "Failed to read RHOS Cluster information from OCP metadata file")
+			} else {
+				utils.ExpectFlag(infraIDFlag, rhosConfig.InfraID)
+				utils.ExpectFlag(regionFlag, rhosConfig.Region)
+				utils.ExpectFlag(projectIDFlag, rhosConfig.ProjectID)
+			}
+
+			err = prepare.RHOS(restConfigProducer, ports, &rhosConfig, status)
+			exit.OnError(err)
+		},
 	}
 
-	rhos.AddRHOSFlags(cmd)
-	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
+	rhos.AddRHOSFlags(cmd, &rhosConfig)
+	cmd.Flags().IntVar(&rhosConfig.Gateways, "gateways", DefaultNumGateways,
 		"Number of gateways to deploy")
-	cmd.Flags().StringVar(&rhosGWInstanceType, "gateway-instance", "PnTAE.CPU_4_Memory_8192_Disk_50", "Type of gateway instance machine")
-	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", true,
+	cmd.Flags().StringVar(&rhosConfig.GWInstanceType, "gateway-instance", "PnTAE.CPU_4_Memory_8192_Disk_50",
+		"Type of gateway instance machine")
+	cmd.Flags().BoolVar(&rhosConfig.DedicatedGateway, "dedicated-gateway", true,
 		"Whether a dedicated gateway node has to be deployed")
 
 	return cmd

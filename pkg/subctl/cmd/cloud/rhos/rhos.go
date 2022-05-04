@@ -21,6 +21,7 @@ package rhos
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/rhos"
 )
 
 const (
@@ -30,21 +31,13 @@ const (
 	cloudEntryFlag = "cloud-entry"
 )
 
-var (
-	infraID         string
-	region          string
-	projectID       string
-	ocpMetadataFile string
-	cloudEntry      string
-)
-
 // AddRHOSFlags adds basic flags needed by RHOS.
-func AddRHOSFlags(command *cobra.Command) {
-	command.Flags().StringVar(&infraID, infraIDFlag, "", "RHOS infra ID")
-	command.Flags().StringVar(&region, regionFlag, "", "RHOS region")
-	command.Flags().StringVar(&projectID, projectIDFlag, "", "RHOS project ID")
-	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
+func AddRHOSFlags(command *cobra.Command, config *rhos.Config) {
+	command.Flags().StringVar(&config.InfraID, infraIDFlag, "", "RHOS infra ID")
+	command.Flags().StringVar(&config.Region, regionFlag, "", "RHOS region")
+	command.Flags().StringVar(&config.ProjectID, projectIDFlag, "", "RHOS project ID")
+	command.Flags().StringVar(&config.OcpMetadataFile, "ocp-metadata", "",
 		"OCP metadata.json file (or the directory containing it) from which to read the RHOS infra ID "+
 			"and region from (takes precedence over the specific flags)")
-	command.Flags().StringVar(&cloudEntry, cloudEntryFlag, "", "the cloud entry to use")
+	command.Flags().StringVar(&config.CloudEntry, cloudEntryFlag, "", "the cloud entry to use")
 }
