@@ -23,10 +23,11 @@ import (
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/gcp"
+	"golang.org/x/oauth2/google"
 )
 
-func GCP(restConfigProducer *restconfig.Producer, status reporter.Interface) error {
-	err := gcp.RunOn(*restConfigProducer, "", false, status,
+func GCP(restConfigProducer *restconfig.Producer, config *gcp.Config, creds *google.Credentials, status reporter.Interface) error {
+	err := gcp.RunOn(restConfigProducer, config, creds, status,
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			err := gwDeployer.Cleanup(status)

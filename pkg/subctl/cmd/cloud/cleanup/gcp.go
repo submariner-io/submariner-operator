@@ -24,8 +24,12 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/cleanup"
+	cloudgcp "github.com/submariner-io/submariner-operator/pkg/cloud/gcp"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/gcp"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
+
+var gcpConfig cloudgcp.Config
 
 // newGCPCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newGCPCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command {
@@ -36,12 +40,30 @@ func newGCPCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command
 		Run: func(cmd *cobra.Command, args []string) {
 			status := cli.NewReporter()
 
-			err := cleanup.GCP(&restConfigProducer, status)
+			var err error
+			if gcpConfig.OcpMetadataFile != "" {
+				gcpConfig.InfraID, gcpConfig.Region, gcpConfig.ProjectID, err = cloudgcp.ReadFromFile(gcpConfig.OcpMetadataFile)
+				exit.OnErrorWithMessage(err, "Failed to read GCP Cluster information from OCP metadata file")
+			} else {
+				utils.ExpectFlag(infraIDFlag, gcpConfig.InfraID)
+				utils.ExpectFlag(regionFlag, gcpConfig.Region)
+				utils.ExpectFlag(projectIDFlag, gcpConfig.Region)
+			}
+
+			gcpConfig.GWInstanceType = ""
+			gcpConfig.DedicatedGateway = false
+
+			status.Start("Retrieving GCP credentials from your GCP configuration")
+
+			creds, err := cloudgcp.GetCredentials(gcpConfig.CredentialsFile)
+			exit.OnError(status.Error(err, "error retrieving GCP credentials"))
+
+			err = cleanup.GCP(&restConfigProducer, &gcpConfig, creds, status)
 			exit.OnError(err)
 		},
 	}
 
-	gcp.AddGCPFlags(cmd)
+	gcp.AddGCPFlags(cmd, &gcpConfig)
 
 	return cmd
 }
