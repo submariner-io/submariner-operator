@@ -26,7 +26,6 @@ import (
 
 	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
@@ -53,17 +52,6 @@ var (
 	ocpMetadataFile string
 	cloudEntry      string
 )
-
-// AddRHOSFlags adds basic flags needed by RHOS.
-func AddRHOSFlags(command *cobra.Command) {
-	command.Flags().StringVar(&infraID, infraIDFlag, "", "RHOS infra ID")
-	command.Flags().StringVar(&region, regionFlag, "", "RHOS region")
-	command.Flags().StringVar(&projectID, projectIDFlag, "", "RHOS project ID")
-	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
-		"OCP metadata.json file (or the directory containing it) from which to read the RHOS infra ID "+
-			"and region from (takes precedence over the specific flags)")
-	command.Flags().StringVar(&cloudEntry, cloudEntryFlag, "", "the cloud entry to use")
-}
 
 // RunOnRHOS runs the given function on RHOS, supplying it with a cloud instance connected to RHOS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to RHOS.
