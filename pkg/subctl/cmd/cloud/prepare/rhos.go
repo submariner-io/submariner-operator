@@ -20,6 +20,7 @@ package prepare
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/prepare"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
 )
 
@@ -29,7 +30,7 @@ func newRHOSPrepareCommand() *cobra.Command {
 		Use:   "rhos",
 		Short: "Prepare an OpenShift RHOS cloud",
 		Long:  "This command prepares an OpenShift installer-provisioned infrastructure (IPI) on RHOS cloud for Submariner installation.",
-		Run:   prepareRHOS,
+		Run:   prepare.RHOS,
 	}
 
 	rhos.AddRHOSFlags(cmd)
