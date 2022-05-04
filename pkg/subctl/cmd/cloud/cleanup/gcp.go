@@ -20,6 +20,7 @@ package cleanup
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/cleanup"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/gcp"
 )
 
@@ -29,7 +30,7 @@ func newGCPCleanupCommand() *cobra.Command {
 		Use:   "gcp",
 		Short: "Clean up a GCP cloud",
 		Long:  "This command cleans up an installer-provisioned infrastructure (IPI) on GCP-based cloud after Submariner uninstallation.",
-		Run:   cleanupGCP,
+		Run:   cleanup.GCP,
 	}
 
 	gcp.AddGCPFlags(cmd)
