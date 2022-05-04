@@ -22,12 +22,10 @@ package gcp
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
@@ -58,24 +56,6 @@ var (
 	credentialsFile string
 	ocpMetadataFile string
 )
-
-// AddGCPFlags adds basic flags needed by GCP.
-func AddGCPFlags(command *cobra.Command) {
-	command.Flags().StringVar(&infraID, infraIDFlag, "", "GCP infra ID")
-	command.Flags().StringVar(&region, regionFlag, "", "GCP region")
-	command.Flags().StringVar(&projectID, projectIDFlag, "", "GCP project ID")
-	command.Flags().StringVar(&ocpMetadataFile, "ocp-metadata", "",
-		"OCP metadata.json file (or the directory containing it) from which to read the GCP infra ID "+
-			"and region from (takes precedence over the specific flags)")
-
-	dirname, err := os.UserHomeDir()
-	if err != nil {
-		exit.OnErrorWithMessage(err, "failed to find home directory")
-	}
-
-	defaultCredentials := filepath.FromSlash(fmt.Sprintf("%s/.gcp/osServiceAccount.json", dirname))
-	command.Flags().StringVar(&credentialsFile, "credentials", defaultCredentials, "GCP credentials configuration file")
-}
 
 // RunOnGCP runs the given function on GCP, supplying it with a cloud instance connected to GCP and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to GCP.
