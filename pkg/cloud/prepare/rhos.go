@@ -28,25 +28,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
 )
 
-// newRHOSPrepareCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func newRHOSPrepareCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "rhos",
-		Short: "Prepare an OpenShift RHOS cloud",
-		Long:  "This command prepares an OpenShift installer-provisioned infrastructure (IPI) on RHOS cloud for Submariner installation.",
-		Run:   prepareRHOS,
-	}
-
-	rhos.AddRHOSFlags(cmd)
-	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
-		"Number of gateways to deploy")
-	cmd.Flags().StringVar(&rhosGWInstanceType, "gateway-instance", "PnTAE.CPU_4_Memory_8192_Disk_50", "Type of gateway instance machine")
-	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", true,
-		"Whether a dedicated gateway node has to be deployed")
-
-	return cmd
-}
-
 func prepareRHOS(cmd *cobra.Command, args []string) {
 	gwPorts := []api.PortSpec{
 		{Port: nattPort, Protocol: "udp"},

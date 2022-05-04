@@ -20,24 +20,20 @@ package cleanup
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/admiral/pkg/reporter"
-	"github.com/submariner-io/cloud-prepare/pkg/api"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
 )
 
-func cleanupRHOS(cmd *cobra.Command, args []string) {
-	err := rhos.RunOnRHOS(*parentRestConfigProducer, "", false, cli.NewReporter(),
-		// nolint:wrapcheck // No need to wrap errors here
-		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
-			err := gwDeployer.Cleanup(status)
-			if err != nil {
-				return err
-			}
+// newRHOSCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure.
+func newRHOSCleanupCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rhos",
+		Short: "Clean up an RHOS cloud",
+		Long: "This command cleans up an OpenShift installer-provisioned infrastructure (IPI) on RHOS-based" +
+			" cloud after Submariner uninstallation.",
+		Run: cleanupRHOS,
+	}
 
-			return cloud.CleanupAfterSubmariner(status)
-		})
+	rhos.AddRHOSFlags(cmd)
 
-	exit.OnErrorWithMessage(err, "Failed to cleanup RHOS cloud")
+	return cmd
 }
