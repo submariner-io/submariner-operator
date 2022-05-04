@@ -20,10 +20,6 @@ package prepare
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/admiral/pkg/reporter"
-	"github.com/submariner-io/cloud-prepare/pkg/api"
-	"github.com/submariner-io/submariner-operator/internal/cli"
-	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/gcp"
 )
 
@@ -44,40 +40,4 @@ func newGCPPrepareCommand() *cobra.Command {
 		"Whether a dedicated gateway node has to be deployed")
 
 	return cmd
-}
-
-func prepareGCP(cmd *cobra.Command, args []string) {
-	gwPorts := []api.PortSpec{
-		{Port: nattPort, Protocol: "udp"},
-		{Port: natDiscoveryPort, Protocol: "udp"},
-
-		// ESP & AH protocols are used for private-ip to private-ip gateway communications
-		{Port: 0, Protocol: "esp"},
-		{Port: 0, Protocol: "ah"},
-	}
-	input := api.PrepareForSubmarinerInput{
-		InternalPorts: []api.PortSpec{
-			{Port: vxlanPort, Protocol: "udp"},
-			{Port: metricsPort, Protocol: "tcp"},
-		},
-	}
-
-	// nolint:wrapcheck // No need to wrap errors here.
-	err := gcp.RunOnGCP(*parentRestConfigProducer, gcpGWInstanceType, dedicatedGateway, cli.NewReporter(),
-		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
-			if gateways > 0 {
-				gwInput := api.GatewayDeployInput{
-					PublicPorts: gwPorts,
-					Gateways:    gateways,
-				}
-				err := gwDeployer.Deploy(gwInput, status)
-				if err != nil {
-					return err
-				}
-			}
-
-			return cloud.PrepareForSubmariner(input, status)
-		})
-
-	exit.OnErrorWithMessage(err, "Failed to prepare GCP cloud")
 }
