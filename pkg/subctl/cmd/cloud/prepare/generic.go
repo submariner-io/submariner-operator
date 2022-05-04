@@ -16,28 +16,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cleanup
+package prepare
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/exit"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/prepare"
 )
 
-var parentRestConfigProducer *restconfig.Producer
-
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
+func newGenericPrepareCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cleanup",
-		Short: "Clean up the cloud",
-		Long:  `This command cleans up the cloud after Submariner uninstallation.`,
+		Use:   "generic",
+		Short: "Prepares a generic cluster for Submariner",
+		Long:  "This command labels the required number of gateway nodes for Submariner installation.",
+		Run: func(cmd *cobra.Command, args []string) {
+			exit.OnError(prepare.GenericCluster(restConfigProducer, gateways, cli.NewReporter()))
+		},
 	}
-	parentRestConfigProducer = restConfigProducer
 
-	cmd.AddCommand(newAWSCleanupCommand(*parentRestConfigProducer))
-	cmd.AddCommand(newGCPCleanupCommand())
-	cmd.AddCommand(newRHOSCleanupCommand())
-	cmd.AddCommand(newGenericCleanupCommand(parentRestConfigProducer))
+	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
+		"Number of gateways to deploy")
 
 	return cmd
 }
