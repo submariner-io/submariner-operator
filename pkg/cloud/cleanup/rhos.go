@@ -24,11 +24,11 @@ import (
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/rhos"
 )
 
-func cleanupRHOS(cmd *cobra.Command, args []string) {
-	err := rhos.RunOnRHOS(*parentRestConfigProducer, "", false, cli.NewReporter(),
+func RHOS(cmd *cobra.Command, args []string) {
+	err := rhos.RunOn(*parentRestConfigProducer, "", false, cli.NewReporter(),
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			err := gwDeployer.Cleanup(status)

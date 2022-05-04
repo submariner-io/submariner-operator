@@ -25,10 +25,10 @@ import (
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/rhos"
 )
 
-func prepareRHOS(cmd *cobra.Command, args []string) {
+func RHOS(cmd *cobra.Command, args []string) {
 	gwPorts := []api.PortSpec{
 		{Port: nattPort, Protocol: "udp"},
 		{Port: natDiscoveryPort, Protocol: "udp"},
@@ -45,7 +45,7 @@ func prepareRHOS(cmd *cobra.Command, args []string) {
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := rhos.RunOnRHOS(*parentRestConfigProducer, rhosGWInstanceType, dedicatedGateway, cli.NewReporter(),
+	err := rhos.RunOn(*parentRestConfigProducer, rhosGWInstanceType, dedicatedGateway, cli.NewReporter(),
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			if gateways > 0 {
 				gwInput := api.GatewayDeployInput{
