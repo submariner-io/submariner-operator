@@ -20,18 +20,26 @@ package cleanup
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/cleanup"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
 )
 
 // newRHOSCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func newRHOSCleanupCommand() *cobra.Command {
+func newRHOSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rhos",
 		Short: "Clean up an RHOS cloud",
 		Long: "This command cleans up an OpenShift installer-provisioned infrastructure (IPI) on RHOS-based" +
 			" cloud after Submariner uninstallation.",
-		Run: cleanup.RHOS,
+		Run: func(cmd *cobra.Command, args []string) {
+			status := cli.NewReporter()
+
+			err := cleanup.RHOS(&restConfigProducer, status)
+			exit.OnError(err)
+		},
 	}
 
 	rhos.AddRHOSFlags(cmd)
