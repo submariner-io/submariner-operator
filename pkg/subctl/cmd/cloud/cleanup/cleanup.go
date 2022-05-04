@@ -36,7 +36,7 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 
 	cmd.AddCommand(newAWSCleanupCommand(*parentRestConfigProducer))
 	cmd.AddCommand(newGCPCleanupCommand())
-	cmd.AddCommand(newRHOSCleanupCommand())
+	cmd.AddCommand(newRHOSCleanupCommand(*parentRestConfigProducer))
 	cmd.AddCommand(newGenericCleanupCommand(parentRestConfigProducer))
 
 	return cmd
