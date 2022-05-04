@@ -20,6 +20,7 @@ package prepare
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/prepare"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/gcp"
 )
 
@@ -29,7 +30,7 @@ func newGCPPrepareCommand() *cobra.Command {
 		Use:   "gcp",
 		Short: "Prepare an OpenShift GCP cloud",
 		Long:  "This command prepares an OpenShift installer-provisioned infrastructure (IPI) on GCP cloud for Submariner installation.",
-		Run:   prepareGCP,
+		Run:   prepare.GCP,
 	}
 
 	gcp.AddGCPFlags(cmd)
