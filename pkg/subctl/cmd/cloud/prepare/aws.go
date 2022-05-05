@@ -50,7 +50,7 @@ func newAWSPrepareCommand(restConfigProducer *restconfig.Producer, ports cloud.P
 				utils.ExpectFlag(regionFlag, config.Region)
 			}
 
-			err = prepare.AWS(restConfigProducer, ports, &config, status)
+			err = prepare.AWS(restConfigProducer, &ports, &config, status)
 			exit.OnError(err)
 		},
 	}

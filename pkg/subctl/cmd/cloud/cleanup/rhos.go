@@ -31,10 +31,10 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-var rhosConfig cloudrhos.Config
-
 // newRHOSCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newRHOSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command {
+	var rhosConfig cloudrhos.Config
+
 	cmd := &cobra.Command{
 		Use:   "rhos",
 		Short: "Clean up an RHOS cloud",
@@ -44,8 +44,8 @@ func newRHOSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Comman
 			status := cli.NewReporter()
 
 			var err error
-			if config.OcpMetadataFile != "" {
-				rhosConfig.InfraID, rhosConfig.ProjectID, err = cloudrhos.ReadFromFile(config.OcpMetadataFile)
+			if rhosConfig.OcpMetadataFile != "" {
+				rhosConfig.InfraID, rhosConfig.ProjectID, err = cloudrhos.ReadFromFile(rhosConfig.OcpMetadataFile)
 				rhosConfig.Region = os.Getenv("OS_REGION_NAME")
 
 				exit.OnErrorWithMessage(err, "Failed to read RHOS Cluster information from OCP metadata file")

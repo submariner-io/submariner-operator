@@ -84,3 +84,10 @@ func compareFiles(file1, file2 string) (bool, error) {
 
 	return bytes.Equal(first, second), nil
 }
+
+// expectFlag exits with an error if the flag value is empty.
+func expectFlag(flag, value string) {
+	if value == "" {
+		exit.WithMessage(fmt.Sprintf("You must specify the %q flag", flag))
+	}
+}
