@@ -20,30 +20,21 @@ package cleanup
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/admiral/pkg/reporter"
-	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/generic"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/cleanup"
 )
 
-func newGenericCleanupCommand() *cobra.Command {
+func newGenericCleanupCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generic",
 		Short: "Cleans up a cluster after Submariner uninstallation",
 		Long:  "This command removes the labels from gateway nodes after Submariner uninstallation.",
-		Run:   cleanupGenericCluster,
+		Run: func(cmd *cobra.Command, args []string) {
+			exit.OnError(cleanup.GenericCluster(restConfigProducer, cli.NewReporter()))
+		},
 	}
 
 	return cmd
-}
-
-func cleanupGenericCluster(cmd *cobra.Command, args []string) {
-	err := generic.RunOnK8sCluster(
-		*parentRestConfigProducer, cli.NewReporter(),
-		func(gwDeployer api.GatewayDeployer, status reporter.Interface) error {
-			return gwDeployer.Cleanup(status) // nolint:wrapcheck // No need to wrap here
-		})
-
-	exit.OnErrorWithMessage(err, "Failed to cleanup K8s cluster")
 }

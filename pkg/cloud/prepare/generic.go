@@ -16,33 +16,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package generic
+package prepare
 
 import (
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	"github.com/submariner-io/cloud-prepare/pkg/generic"
-	"github.com/submariner-io/cloud-prepare/pkg/k8s"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	"k8s.io/client-go/kubernetes"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/generic"
 )
 
-func RunOnK8sCluster(restConfigProducer restconfig.Producer, status reporter.Interface,
-	function func(api.GatewayDeployer, reporter.Interface) error,
-) error {
-	k8sConfig, err := restConfigProducer.ForCluster()
-	if err != nil {
-		return status.Error(err, "error initializing Kubernetes config")
-	}
+func GenericCluster(restConfigProducer *restconfig.Producer, gateways int, status reporter.Interface) error {
+	// nolint:wrapcheck // No need to wrap errors here.
+	err := generic.RunOnCluster(restConfigProducer, status,
+		func(gwDeployer api.GatewayDeployer, status reporter.Interface) error {
+			if gateways > 0 {
+				gwInput := api.GatewayDeployInput{
+					Gateways: gateways,
+				}
+				err := gwDeployer.Deploy(gwInput, status)
+				if err != nil {
+					return err
+				}
+			}
 
-	clientSet, err := kubernetes.NewForConfig(k8sConfig.Config)
-	if err != nil {
-		return status.Error(err, "error creating Kubernetes client")
-	}
+			return nil
+		})
 
-	k8sClientSet := k8s.NewInterface(clientSet)
-
-	gwDeployer := generic.NewGatewayDeployer(k8sClientSet)
-
-	return function(gwDeployer, status)
+	return status.Error(err, "Failed to prepare generic K8s cluster")
 }

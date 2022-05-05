@@ -19,25 +19,17 @@ limitations under the License.
 package cleanup
 
 import (
-	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/generic"
 )
 
-var parentRestConfigProducer *restconfig.Producer
+func GenericCluster(restConfigProducer *restconfig.Producer, status reporter.Interface) error {
+	err := generic.RunOnCluster(restConfigProducer, status,
+		func(gwDeployer api.GatewayDeployer, status reporter.Interface) error {
+			return gwDeployer.Cleanup(status) // nolint:wrapcheck // No need to wrap here
+		})
 
-// NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "cleanup",
-		Short: "Clean up the cloud",
-		Long:  `This command cleans up the cloud after Submariner uninstallation.`,
-	}
-	parentRestConfigProducer = restConfigProducer
-
-	cmd.AddCommand(newAWSCleanupCommand(*parentRestConfigProducer))
-	cmd.AddCommand(newGCPCleanupCommand())
-	cmd.AddCommand(newRHOSCleanupCommand())
-	cmd.AddCommand(newGenericCleanupCommand(parentRestConfigProducer))
-
-	return cmd
+	return status.Error(err, "Failed to cleanup generic K8s cluster")
 }

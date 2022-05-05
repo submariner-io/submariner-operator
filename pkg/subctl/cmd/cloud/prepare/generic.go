@@ -20,44 +20,24 @@ package prepare
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/admiral/pkg/reporter"
-	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/generic"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/prepare"
 )
 
-func newGenericPrepareCommand() *cobra.Command {
+func newGenericPrepareCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generic",
 		Short: "Prepares a generic cluster for Submariner",
 		Long:  "This command labels the required number of gateway nodes for Submariner installation.",
-		Run:   prepareGenericCluster,
+		Run: func(cmd *cobra.Command, args []string) {
+			exit.OnError(prepare.GenericCluster(restConfigProducer, gateways, cli.NewReporter()))
+		},
 	}
 
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of gateways to deploy")
 
 	return cmd
-}
-
-func prepareGenericCluster(cmd *cobra.Command, args []string) {
-	// nolint:wrapcheck // No need to wrap errors here.
-	err := generic.RunOnK8sCluster(
-		*parentRestConfigProducer, cli.NewReporter(),
-		func(gwDeployer api.GatewayDeployer, status reporter.Interface) error {
-			if gateways > 0 {
-				gwInput := api.GatewayDeployInput{
-					Gateways: gateways,
-				}
-				err := gwDeployer.Deploy(gwInput, status)
-				if err != nil {
-					return err
-				}
-			}
-
-			return nil
-		})
-
-	exit.OnErrorWithMessage(err, "Failed to prepare generic K8s cluster")
 }
