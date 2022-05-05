@@ -174,7 +174,7 @@ $(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submarin
 bin/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
 	${SCRIPTS_DIR}/compile.sh \
 	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
-	$@ main.go $(BUILD_ARGS)
+	$@ . $(BUILD_ARGS)
 
 bin/subctl: bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
 	ln -sf $(<F) $@
@@ -198,7 +198,7 @@ bin/subctl-%: $(EMBEDDED_YAMLS) $(shell find pkg/subctl/ -name "*.go") $(VENDOR_
 	$(SCRIPTS_DIR)/compile.sh \
 		--ldflags "-X 'github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)' \
 			   -X 'github.com/submariner-io/submariner-operator/api/submariner/v1alpha1.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}'" \
-		--noupx $@ ./pkg/subctl/main.go $(BUILD_ARGS)
+		--noupx $@ ./pkg/subctl $(BUILD_ARGS)
 
 cmd/bin/subctl-%: $(shell find cmd/ -name "*.go") $(VENDOR_MODULES)
 	mkdir -p cmd/bin
@@ -211,7 +211,7 @@ cmd/bin/subctl-%: $(shell find cmd/ -name "*.go") $(VENDOR_MODULES)
 	$(SCRIPTS_DIR)/compile.sh \
 		--ldflags "-X 'github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)' \
 		       -X 'github.com/submariner-io/submariner-operator/api/submariner/v1alpha1.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}'" \
-        --noupx $@ cmd/main.go $(BUILD_ARGS)
+        --noupx $@ ./cmd $(BUILD_ARGS)
 
 ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
 

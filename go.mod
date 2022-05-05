@@ -36,12 +36,12 @@ require (
 	github.com/submariner-io/shipyard v0.12.0-m3.0.20220502083230-61c39d6a891a
 	github.com/submariner-io/submariner v0.12.0-m3.0.20220315142604-5e67af228799
 	github.com/ulikunitz/xz v0.5.10 // indirect
-	github.com/uw-labs/lichen v0.1.5
+	github.com/uw-labs/lichen v0.1.7
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	golang.org/x/text v0.3.7
-	google.golang.org/api v0.77.0
+	google.golang.org/api v0.78.0
 	k8s.io/api v0.23.5
 	k8s.io/apiextensions-apiserver v0.23.5
 	k8s.io/apimachinery v0.23.5
