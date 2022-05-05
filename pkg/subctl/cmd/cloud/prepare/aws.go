@@ -29,15 +29,15 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
 )
 
-var config cloudaws.Config
-
 const (
 	infraIDFlag = "infra-id"
 	regionFlag  = "region"
 )
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func newAWSPrepareCommand(restConfigProducer *restconfig.Producer, ports cloud.Ports) *cobra.Command {
+func newAWSPrepareCommand(restConfigProducer *restconfig.Producer, ports *cloud.Ports) *cobra.Command {
+	awsConfig := &cloudaws.Config{}
+
 	cmd := &cobra.Command{
 		Use:   "aws",
 		Short: "Prepare an OpenShift AWS cloud",
@@ -46,22 +46,22 @@ func newAWSPrepareCommand(restConfigProducer *restconfig.Producer, ports cloud.P
 			status := cli.NewReporter()
 
 			var err error
-			if config.OcpMetadataFile != "" {
-				config.InfraID, config.Region, err = cloudaws.ReadFromFile(config.OcpMetadataFile)
+			if awsConfig.OcpMetadataFile != "" {
+				awsConfig.InfraID, awsConfig.Region, err = cloudaws.ReadFromFile(awsConfig.OcpMetadataFile)
 				exit.OnErrorWithMessage(err, "Failed to read AWS information from OCP metadata file")
 			} else {
-				expectFlag(infraIDFlag, config.InfraID)
-				expectFlag(regionFlag, config.Region)
+				expectFlag(infraIDFlag, awsConfig.InfraID)
+				expectFlag(regionFlag, awsConfig.Region)
 			}
 
-			err = prepare.AWS(restConfigProducer, ports, &config, status)
+			err = prepare.AWS(restConfigProducer, ports, awsConfig, status)
 			exit.OnError(err)
 		},
 	}
 
-	aws.AddAWSFlags(cmd, &config)
-	cmd.Flags().StringVar(&config.GWInstanceType, "gateway-instance", "c5d.large", "Type of gateways instance machine")
-	cmd.Flags().IntVar(&config.Gateways, "gateways", DefaultNumGateways,
+	aws.AddAWSFlags(cmd, awsConfig)
+	cmd.Flags().StringVar(&awsConfig.GWInstanceType, "gateway-instance", "c5d.large", "Type of gateways instance machine")
+	cmd.Flags().IntVar(&awsConfig.Gateways, "gateways", DefaultNumGateways,
 		"Number of dedicated gateways to deploy (Set to `0` when using --load-balancer mode)")
 
 	return cmd

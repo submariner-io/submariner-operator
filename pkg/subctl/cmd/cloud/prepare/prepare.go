@@ -59,7 +59,7 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd.PersistentFlags().Uint16Var(&ports.Vxlan, "vxlan-port", 4800, "Internal VXLAN port")
 	cmd.PersistentFlags().Uint16Var(&ports.Metrics, "metrics-port", 8080, "Metrics port")
 
-	cmd.AddCommand(newAWSPrepareCommand(restConfigProducer, ports))
+	cmd.AddCommand(newAWSPrepareCommand(restConfigProducer, &ports))
 	cmd.AddCommand(newGCPPrepareCommand())
 	cmd.AddCommand(newRHOSPrepareCommand())
 	cmd.AddCommand(newGenericPrepareCommand())
