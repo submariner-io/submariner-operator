@@ -28,10 +28,10 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
 )
 
-var config cloudaws.Config
-
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newAWSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command {
+	var config cloudaws.Config
+
 	cmd := &cobra.Command{
 		Use:   "aws",
 		Short: "Clean up an AWS cloud",
@@ -40,7 +40,7 @@ func newAWSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command
 		Run: func(cmd *cobra.Command, args []string) {
 			status := cli.NewReporter()
 
-			err := cleanup.AWS(&restConfigProducer, status)
+			err := cleanup.AWS(&restConfigProducer, &config, status)
 			exit.OnError(err)
 		},
 	}
