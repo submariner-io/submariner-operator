@@ -49,6 +49,15 @@ type Config struct {
 func RunOn(restConfigProducer restconfig.Producer, config *Config, status reporter.Interface,
 	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
 ) error {
+	if config.OcpMetadataFile != "" {
+		var err error
+
+		config.InfraID, config.Region, err = ReadFromFile(config.OcpMetadataFile)
+		if err != nil {
+			return status.Error(err, "Failed to read AWS information from OCP metadata file %q", config.OcpMetadataFile)
+		}
+	}
+
 	status.Start("Initializing AWS connectivity")
 
 	awsCloud, err := aws.NewCloudFromSettings(config.CredentialsFile, config.Profile, config.InfraID, config.Region)
