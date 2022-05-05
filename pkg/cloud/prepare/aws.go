@@ -26,7 +26,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/cloud/aws"
 )
 
-func AWS(restConfigProducer *restconfig.Producer, ports cloud.Ports, config *aws.Config, status reporter.Interface) error {
+func AWS(restConfigProducer *restconfig.Producer, ports *cloud.Ports, config *aws.Config, status reporter.Interface) error {
 	status.Start("Preparing AWS cloud for Submariner deployment")
 
 	gwPorts := []api.PortSpec{
@@ -50,7 +50,7 @@ func AWS(restConfigProducer *restconfig.Producer, ports cloud.Ports, config *aws
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := aws.RunOn(*restConfigProducer, config, status,
+	err := aws.RunOn(restConfigProducer, config, status,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			if config.Gateways > 0 {
 				gwInput := api.GatewayDeployInput{
@@ -65,9 +65,6 @@ func AWS(restConfigProducer *restconfig.Producer, ports cloud.Ports, config *aws
 
 			return cloud.PrepareForSubmariner(input, status)
 		})
-	if err != nil {
-		return status.Error(err, "Failed to prepare AWS cloud")
-	}
 
-	return nil
+	return status.Error(err, "Failed to prepare AWS cloud")
 }

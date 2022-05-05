@@ -46,7 +46,7 @@ type Config struct {
 
 // RunOn runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.
-func RunOn(restConfigProducer restconfig.Producer, config *Config, status reporter.Interface,
+func RunOn(restConfigProducer *restconfig.Producer, config *Config, status reporter.Interface,
 	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
 ) error {
 	if config.OcpMetadataFile != "" {
