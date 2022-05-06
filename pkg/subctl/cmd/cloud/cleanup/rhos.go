@@ -19,51 +19,40 @@ limitations under the License.
 package cleanup
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/admiral/pkg/reporter"
+	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
-	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	"github.com/submariner-io/submariner-operator/pkg/cloud/cleanup"
-	cloudrhos "github.com/submariner-io/submariner-operator/pkg/cloud/rhos"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
-var rhosConfig cloudrhos.Config
-
 // newRHOSCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func newRHOSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command {
+func newRHOSCleanupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rhos",
 		Short: "Clean up an RHOS cloud",
 		Long: "This command cleans up an OpenShift installer-provisioned infrastructure (IPI) on RHOS-based" +
 			" cloud after Submariner uninstallation.",
-		Run: func(cmd *cobra.Command, args []string) {
-			status := cli.NewReporter()
-
-			var err error
-			if config.OcpMetadataFile != "" {
-				rhosConfig.InfraID, rhosConfig.ProjectID, err = cloudrhos.ReadFromFile(config.OcpMetadataFile)
-				rhosConfig.Region = os.Getenv("OS_REGION_NAME")
-
-				exit.OnErrorWithMessage(err, "Failed to read RHOS Cluster information from OCP metadata file")
-			} else {
-				utils.ExpectFlag(infraIDFlag, rhosConfig.InfraID)
-				utils.ExpectFlag(regionFlag, rhosConfig.Region)
-				utils.ExpectFlag(projectIDFlag, rhosConfig.ProjectID)
-			}
-
-			rhosConfig.GWInstanceType = ""
-			rhosConfig.DedicatedGateway = false
-
-			err = cleanup.RHOS(&restConfigProducer, &rhosConfig, status)
-			exit.OnError(err)
-		},
+		Run: cleanupRHOS,
 	}
 
-	rhos.AddRHOSFlags(cmd, &rhosConfig)
+	rhos.AddRHOSFlags(cmd)
 
 	return cmd
+}
+
+func cleanupRHOS(cmd *cobra.Command, args []string) {
+	err := rhos.RunOnRHOS(*parentRestConfigProducer, "", false, cli.NewReporter(),
+		// nolint:wrapcheck // No need to wrap errors here
+		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
+			err := gwDeployer.Cleanup(status)
+			if err != nil {
+				return err
+			}
+
+			return cloud.CleanupAfterSubmariner(status)
+		})
+
+	exit.OnErrorWithMessage(err, "Failed to cleanup RHOS cloud")
 }
