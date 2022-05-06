@@ -32,9 +32,10 @@ var (
 )
 
 var (
-	gcpGWInstanceType string
-	gateways          int
-	dedicatedGateway  bool
+	gcpGWInstanceType  string
+	rhosGWInstanceType string
+	gateways           int
+	dedicatedGateway   bool
 )
 
 var (
@@ -42,12 +43,7 @@ var (
 	ports                    cloud.Ports
 )
 
-const (
-	DefaultNumGateways = 1
-	projectIDFlag      = "project-id"
-	infraIDFlag        = "infra-id"
-	regionFlag         = "region"
-)
+const DefaultNumGateways = 1
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
@@ -65,7 +61,7 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 
 	cmd.AddCommand(newAWSPrepareCommand(restConfigProducer, ports))
 	cmd.AddCommand(newGCPPrepareCommand())
-	cmd.AddCommand(newRHOSPrepareCommand(restConfigProducer, &ports))
+	cmd.AddCommand(newRHOSPrepareCommand())
 	cmd.AddCommand(newGenericPrepareCommand(restConfigProducer))
 
 	return cmd
