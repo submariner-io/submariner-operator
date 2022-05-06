@@ -26,6 +26,12 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/prepare"
 )
 
+const (
+	InfraIDFlag   = "infra-id"
+	RegionFlag    = "region"
+	ProjectIDFlag = "project-id"
+)
+
 var (
 	cloudCmd = &cobra.Command{
 		Use:   "cloud",
