@@ -35,7 +35,7 @@ require (
 	github.com/submariner-io/admiral v0.12.0-m3.0.20220406154101-7826e6bf396a
 	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220407095330-513eb51af266
 	github.com/submariner-io/lighthouse v0.12.0-m3.0.20220505120518-2ae7357ff15f
-	github.com/submariner-io/shipyard v0.12.0-m3.0.20220502083230-61c39d6a891a
+	github.com/submariner-io/shipyard v0.13.0-m1
 	github.com/submariner-io/submariner v0.12.0-m3.0.20220315142604-5e67af228799
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/urfave/cli v1.22.1 // indirect
