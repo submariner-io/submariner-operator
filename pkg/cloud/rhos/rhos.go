@@ -53,6 +53,15 @@ type Config struct {
 func RunOn(restConfigProducer *restconfig.Producer, config *Config, status reporter.Interface,
 	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
 ) error {
+	if config.OcpMetadataFile != "" {
+		var err error
+
+		config.InfraID, config.ProjectID, err = ReadFromFile(config.OcpMetadataFile)
+		config.Region = os.Getenv("OS_REGION_NAME")
+
+		return status.Error(err, "Failed to read RHOS Cluster information from OCP metadata file")
+	}
+
 	status.Start("Retrieving RHOS credentials from your RHOS configuration")
 
 	// Using RHOS default "openstack", if not specified
