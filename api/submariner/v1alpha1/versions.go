@@ -20,7 +20,7 @@ package v1alpha1
 
 var (
 	DefaultRepo                      = "quay.io/submariner"
-	DefaultSubmarinerOperatorVersion = "0.12.0"
-	DefaultSubmarinerVersion         = "0.12.0"
-	DefaultLighthouseVersion         = "0.12.0"
+	DefaultSubmarinerOperatorVersion = "0.12.1"
+	DefaultSubmarinerVersion         = "0.12.1"
+	DefaultLighthouseVersion         = "0.12.1"
 )
