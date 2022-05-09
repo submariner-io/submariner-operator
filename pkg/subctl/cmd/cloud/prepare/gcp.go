@@ -48,15 +48,10 @@ func newGCPPrepareCommand(restConfigProducer *restconfig.Producer, ports *cloud.
 			} else {
 				utils.ExpectFlag(infraIDFlag, gcpConfig.InfraID)
 				utils.ExpectFlag(regionFlag, gcpConfig.Region)
-				utils.ExpectFlag(projectIDFlag, gcpConfig.Region)
+				utils.ExpectFlag(projectIDFlag, gcpConfig.ProjectID)
 			}
 
-			status.Start("Retrieving GCP credentials from your GCP configuration")
-
-			creds, err := cloudgcp.GetCredentials(gcpConfig.CredentialsFile)
-			exit.OnError(status.Error(err, "error retrieving GCP credentials"))
-
-			err = prepare.GCP(restConfigProducer, ports, &gcpConfig, creds, status)
+			err = prepare.GCP(restConfigProducer, ports, &gcpConfig, status)
 			exit.OnError(err)
 		},
 	}

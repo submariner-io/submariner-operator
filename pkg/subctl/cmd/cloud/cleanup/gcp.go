@@ -47,7 +47,7 @@ func newGCPCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command
 			} else {
 				utils.ExpectFlag(infraIDFlag, gcpConfig.InfraID)
 				utils.ExpectFlag(regionFlag, gcpConfig.Region)
-				utils.ExpectFlag(projectIDFlag, gcpConfig.Region)
+				utils.ExpectFlag(projectIDFlag, gcpConfig.ProjectID)
 			}
 
 			gcpConfig.GWInstanceType = ""
@@ -55,10 +55,7 @@ func newGCPCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command
 
 			status.Start("Retrieving GCP credentials from your GCP configuration")
 
-			creds, err := cloudgcp.GetCredentials(gcpConfig.CredentialsFile)
-			exit.OnError(status.Error(err, "error retrieving GCP credentials"))
-
-			err = cleanup.GCP(&restConfigProducer, &gcpConfig, creds, status)
+			err = cleanup.GCP(&restConfigProducer, &gcpConfig, status)
 			exit.OnError(err)
 		},
 	}
