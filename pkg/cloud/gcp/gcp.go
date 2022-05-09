@@ -54,9 +54,24 @@ type Config struct {
 
 // RunOn runs the given function on GCP, supplying it with a cloud instance connected to GCP and a reporter that writes to CLI.
 // The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to GCP.
-func RunOn(restConfigProducer *restconfig.Producer, config *Config, creds *google.Credentials, status reporter.Interface,
+func RunOn(restConfigProducer *restconfig.Producer, config *Config, status reporter.Interface,
 	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
 ) error {
+	var err error
+	if config.OcpMetadataFile != "" {
+		config.InfraID, config.Region, config.ProjectID, err = ReadFromFile(config.OcpMetadataFile)
+		return status.Error(err, "Failed to read GCP Cluster information from OCP metadata file")
+	}
+
+	status.Start("Retrieving GCP credentials from your GCP configuration")
+
+	creds, err := getCredentials(config.CredentialsFile)
+	if err != nil {
+		return status.Error(err, "error retrieving GCP credentials")
+	}
+
+	status.End()
+
 	status.Start("Initializing GCP connectivity")
 
 	options := []option.ClientOption{
@@ -139,7 +154,7 @@ func ReadFromFile(metadataFile string) (string, string, string, error) {
 	return metadata.InfraID, metadata.GCP.Region, metadata.GCP.ProjectID, nil
 }
 
-func GetCredentials(credentialsFile string) (*google.Credentials, error) {
+func getCredentials(credentialsFile string) (*google.Credentials, error) {
 	authJSON, err := os.ReadFile(credentialsFile)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error reading file %q", credentialsFile)
