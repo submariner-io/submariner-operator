@@ -22,11 +22,11 @@ import (
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
-	"github.com/submariner-io/submariner-operator/pkg/cloud/aws"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/rhos"
 )
 
-func AWS(restConfigProducer *restconfig.Producer, config *aws.Config, status reporter.Interface) error {
-	err := aws.RunOn(restConfigProducer, config, status,
+func RHOS(restConfigProducer *restconfig.Producer, config *rhos.Config, status reporter.Interface) error {
+	err := rhos.RunOn(restConfigProducer, config, status,
 		// nolint:wrapcheck // No need to wrap errors here
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			err := gwDeployer.Cleanup(status)
@@ -37,5 +37,5 @@ func AWS(restConfigProducer *restconfig.Producer, config *aws.Config, status rep
 			return cloud.CleanupAfterSubmariner(status)
 		})
 
-	return status.Error(err, "Failed to cleanup AWS cloud")
+	return status.Error(err, "Failed to cleanup RHOS cloud")
 }

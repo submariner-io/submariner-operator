@@ -19,40 +19,51 @@ limitations under the License.
 package cleanup
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/admiral/pkg/reporter"
-	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/cleanup"
+	cloudrhos "github.com/submariner-io/submariner-operator/pkg/cloud/rhos"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 // newRHOSCleanupCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func newRHOSCleanupCommand() *cobra.Command {
+func newRHOSCleanupCommand(restConfigProducer restconfig.Producer) *cobra.Command {
+	var rhosConfig cloudrhos.Config
+
 	cmd := &cobra.Command{
 		Use:   "rhos",
 		Short: "Clean up an RHOS cloud",
 		Long: "This command cleans up an OpenShift installer-provisioned infrastructure (IPI) on RHOS-based" +
 			" cloud after Submariner uninstallation.",
-		Run: cleanupRHOS,
-	}
+		Run: func(cmd *cobra.Command, args []string) {
+			status := cli.NewReporter()
 
-	rhos.AddRHOSFlags(cmd)
+			var err error
+			if rhosConfig.OcpMetadataFile != "" {
+				rhosConfig.InfraID, rhosConfig.ProjectID, err = cloudrhos.ReadFromFile(rhosConfig.OcpMetadataFile)
+				rhosConfig.Region = os.Getenv("OS_REGION_NAME")
 
-	return cmd
-}
-
-func cleanupRHOS(cmd *cobra.Command, args []string) {
-	err := rhos.RunOnRHOS(*parentRestConfigProducer, "", false, cli.NewReporter(),
-		// nolint:wrapcheck // No need to wrap errors here
-		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
-			err := gwDeployer.Cleanup(status)
-			if err != nil {
-				return err
+				exit.OnErrorWithMessage(err, "Failed to read RHOS Cluster information from OCP metadata file")
+			} else {
+				utils.ExpectFlag(infraIDFlag, rhosConfig.InfraID)
+				utils.ExpectFlag(regionFlag, rhosConfig.Region)
+				utils.ExpectFlag(projectIDFlag, rhosConfig.ProjectID)
 			}
 
-			return cloud.CleanupAfterSubmariner(status)
-		})
+			rhosConfig.GWInstanceType = ""
+			rhosConfig.DedicatedGateway = false
 
-	exit.OnErrorWithMessage(err, "Failed to cleanup RHOS cloud")
+			err = cleanup.RHOS(&restConfigProducer, &rhosConfig, status)
+			exit.OnError(err)
+		},
+	}
+
+	rhos.AddRHOSFlags(cmd, &rhosConfig)
+
+	return cmd
 }

@@ -19,23 +19,22 @@ limitations under the License.
 package prepare
 
 import (
+	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/cloud"
-	"github.com/submariner-io/submariner-operator/pkg/cloud/aws"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/rhos"
 )
 
-func AWS(restConfigProducer *restconfig.Producer, ports *cloud.Ports, config *aws.Config, status reporter.Interface) error {
-	status.Start("Preparing AWS cloud for Submariner deployment")
-
+func RHOS(restConfigProducer *restconfig.Producer, ports *cloud.Ports, config *rhos.Config, status reporter.Interface) error {
 	gwPorts := []api.PortSpec{
 		{Port: ports.Natt, Protocol: "udp"},
 		{Port: ports.NatDiscovery, Protocol: "udp"},
 
-		// ESP & AH protocols are used for private-ip to private-ip gateway communications.
-		{Port: 0, Protocol: "50"},
-		{Port: 0, Protocol: "51"},
+		// ESP & AH protocols are used for private-ip to private-ip gateway communications
+		{Port: 0, Protocol: "esp"},
+		{Port: 0, Protocol: "ah"},
 	}
 	input := api.PrepareForSubmarinerInput{
 		InternalPorts: []api.PortSpec{
@@ -44,27 +43,23 @@ func AWS(restConfigProducer *restconfig.Producer, ports *cloud.Ports, config *aw
 		},
 	}
 
-	// For load-balanced gateways we want these ports open internally to facilitate private-ip to pivate-ip gateways communications.
-	if config.Gateways == 0 {
-		input.InternalPorts = append(input.InternalPorts, gwPorts...)
-	}
-
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := aws.RunOn(restConfigProducer, config, status,
+	err := rhos.RunOn(restConfigProducer, config, status,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			if config.Gateways > 0 {
 				gwInput := api.GatewayDeployInput{
 					PublicPorts: gwPorts,
 					Gateways:    config.Gateways,
 				}
+
 				err := gwDeployer.Deploy(gwInput, status)
 				if err != nil {
-					return err
+					return errors.Wrap(err, "Deployment failed")
 				}
 			}
 
 			return cloud.PrepareForSubmariner(input, status)
 		})
 
-	return status.Error(err, "Failed to prepare AWS cloud")
+	return status.Error(err, "Failed to prepare RHOS cloud")
 }

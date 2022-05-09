@@ -25,6 +25,12 @@ import (
 
 var parentRestConfigProducer *restconfig.Producer
 
+const (
+	infraIDFlag   = "infra-id"
+	regionFlag    = "region"
+	projectIDFlag = "project-id"
+)
+
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd := &cobra.Command{
@@ -35,8 +41,8 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	parentRestConfigProducer = restConfigProducer
 
 	cmd.AddCommand(newAWSCleanupCommand(*parentRestConfigProducer))
-	cmd.AddCommand(newGCPCleanupCommand())
-	cmd.AddCommand(newRHOSCleanupCommand())
+	cmd.AddCommand(newGCPCleanupCommand(*parentRestConfigProducer))
+	cmd.AddCommand(newRHOSCleanupCommand(*parentRestConfigProducer))
 	cmd.AddCommand(newGenericCleanupCommand(parentRestConfigProducer))
 
 	return cmd

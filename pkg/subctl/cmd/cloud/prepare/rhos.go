@@ -19,67 +19,54 @@ limitations under the License.
 package prepare
 
 import (
-	"github.com/pkg/errors"
+	"os"
+
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/admiral/pkg/reporter"
-	"github.com/submariner-io/cloud-prepare/pkg/api"
 	"github.com/submariner-io/submariner-operator/internal/cli"
 	"github.com/submariner-io/submariner-operator/internal/exit"
+	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	"github.com/submariner-io/submariner-operator/pkg/cloud"
+	"github.com/submariner-io/submariner-operator/pkg/cloud/prepare"
+	cloudrhos "github.com/submariner-io/submariner-operator/pkg/cloud/rhos"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/rhos"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
+var rhosConfig cloudrhos.Config
+
 // newRHOSPrepareCommand returns a new cobra.Command used to prepare a cloud infrastructure.
-func newRHOSPrepareCommand() *cobra.Command {
+func newRHOSPrepareCommand(restConfigProducer *restconfig.Producer, ports *cloud.Ports) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rhos",
 		Short: "Prepare an OpenShift RHOS cloud",
 		Long:  "This command prepares an OpenShift installer-provisioned infrastructure (IPI) on RHOS cloud for Submariner installation.",
-		Run:   prepareRHOS,
-	}
+		Run: func(cmd *cobra.Command, args []string) {
+			status := cli.NewReporter()
 
-	rhos.AddRHOSFlags(cmd)
-	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
-		"Number of gateways to deploy")
-	cmd.Flags().StringVar(&rhosGWInstanceType, "gateway-instance", "PnTAE.CPU_4_Memory_8192_Disk_50", "Type of gateway instance machine")
-	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", true,
-		"Whether a dedicated gateway node has to be deployed")
+			var err error
+			if config.OcpMetadataFile != "" {
+				rhosConfig.InfraID, rhosConfig.ProjectID, err = cloudrhos.ReadFromFile(config.OcpMetadataFile)
+				rhosConfig.Region = os.Getenv("OS_REGION_NAME")
 
-	return cmd
-}
+				exit.OnErrorWithMessage(err, "Failed to read RHOS Cluster information from OCP metadata file")
+			} else {
+				utils.ExpectFlag(infraIDFlag, rhosConfig.InfraID)
+				utils.ExpectFlag(regionFlag, rhosConfig.Region)
+				utils.ExpectFlag(projectIDFlag, rhosConfig.ProjectID)
+			}
 
-func prepareRHOS(cmd *cobra.Command, args []string) {
-	gwPorts := []api.PortSpec{
-		{Port: nattPort, Protocol: "udp"},
-		{Port: natDiscoveryPort, Protocol: "udp"},
-
-		// ESP & AH protocols are used for private-ip to private-ip gateway communications
-		{Port: 0, Protocol: "esp"},
-		{Port: 0, Protocol: "ah"},
-	}
-	input := api.PrepareForSubmarinerInput{
-		InternalPorts: []api.PortSpec{
-			{Port: vxlanPort, Protocol: "udp"},
-			{Port: metricsPort, Protocol: "tcp"},
+			err = prepare.RHOS(restConfigProducer, ports, &rhosConfig, status)
+			exit.OnError(err)
 		},
 	}
 
-	// nolint:wrapcheck // No need to wrap errors here.
-	err := rhos.RunOnRHOS(*parentRestConfigProducer, rhosGWInstanceType, dedicatedGateway, cli.NewReporter(),
-		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
-			if gateways > 0 {
-				gwInput := api.GatewayDeployInput{
-					PublicPorts: gwPorts,
-					Gateways:    gateways,
-				}
+	rhos.AddRHOSFlags(cmd, &rhosConfig)
+	cmd.Flags().IntVar(&rhosConfig.Gateways, "gateways", DefaultNumGateways,
+		"Number of gateways to deploy")
+	cmd.Flags().StringVar(&rhosConfig.GWInstanceType, "gateway-instance", "PnTAE.CPU_4_Memory_8192_Disk_50",
+		"Type of gateway instance machine")
+	cmd.Flags().BoolVar(&rhosConfig.DedicatedGateway, "dedicated-gateway", true,
+		"Whether a dedicated gateway node has to be deployed")
 
-				err := gwDeployer.Deploy(gwInput, status)
-				if err != nil {
-					return errors.Wrap(err, "Deployment failed")
-				}
-			}
-
-			return cloud.PrepareForSubmariner(input, status)
-		})
-
-	exit.OnErrorWithMessage(err, "Failed to prepare RHOS  cloud")
+	return cmd
 }

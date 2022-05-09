@@ -16,53 +16,57 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package aws provides common functionality to run cloud prepare/cleanup on AWS.
-package aws
+// Package rhos provides common functionality to run cloud prepare/cleanup on RHOS Clusters.
+package rhos
 
 import (
 	"encoding/json"
 	"os"
 	"path/filepath"
 
+	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
-	"github.com/submariner-io/cloud-prepare/pkg/aws"
+	"github.com/submariner-io/cloud-prepare/pkg/k8s"
 	"github.com/submariner-io/cloud-prepare/pkg/ocp"
+	"github.com/submariner-io/cloud-prepare/pkg/rhos"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 )
 
 type Config struct {
-	Gateways        int
-	InfraID         string
-	Region          string
-	Profile         string
-	CredentialsFile string
-	OcpMetadataFile string
-	GWInstanceType  string
+	DedicatedGateway bool
+	Gateways         int
+	InfraID          string
+	Region           string
+	ProjectID        string
+	OcpMetadataFile  string
+	CloudEntry       string
+	GWInstanceType   string
 }
 
-// RunOn runs the given function on AWS, supplying it with a cloud instance connected to AWS and a reporter that writes to CLI.
-// The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to AWS.
+// RunOn runs the given function on RHOS, supplying it with a cloud instance connected to RHOS and a reporter that writes to CLI.
+// The functions makes sure that infraID and region are specified, and extracts the credentials from a secret in order to connect to RHOS.
 func RunOn(restConfigProducer *restconfig.Producer, config *Config, status reporter.Interface,
 	function func(api.Cloud, api.GatewayDeployer, reporter.Interface) error,
 ) error {
-	if config.OcpMetadataFile != "" {
-		var err error
+	status.Start("Retrieving RHOS credentials from your RHOS configuration")
 
-		config.InfraID, config.Region, err = ReadFromFile(config.OcpMetadataFile)
-		if err != nil {
-			return status.Error(err, "Failed to read AWS information from OCP metadata file %q", config.OcpMetadataFile)
-		}
+	// Using RHOS default "openstack", if not specified
+	if config.CloudEntry == "" {
+		config.CloudEntry = "openstack"
 	}
 
-	status.Start("Initializing AWS connectivity")
+	opts := &clientconfig.ClientOpts{
+		Cloud: config.CloudEntry,
+	}
 
-	awsCloud, err := aws.NewCloudFromSettings(config.CredentialsFile, config.Profile, config.InfraID, config.Region)
+	providerClient, err := clientconfig.AuthenticatedClient(opts)
 	if err != nil {
-		return status.Error(err, "error loading default config")
+		return status.Error(err, "error initializing RHOS Client")
 	}
 
 	status.End()
@@ -71,6 +75,13 @@ func RunOn(restConfigProducer *restconfig.Producer, config *Config, status repor
 	if err != nil {
 		return status.Error(err, "error initializing Kubernetes config")
 	}
+
+	clientSet, err := kubernetes.NewForConfig(k8sConfig.Config)
+	if err != nil {
+		return status.Error(err, "error creating Kubernetes client")
+	}
+
+	k8sClientSet := k8s.NewInterface(clientSet)
 
 	restMapper, err := util.BuildRestMapper(k8sConfig.Config)
 	if err != nil {
@@ -82,14 +93,18 @@ func RunOn(restConfigProducer *restconfig.Producer, config *Config, status repor
 		return status.Error(err, "error creating dynamic client")
 	}
 
-	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
-
-	gwDeployer, err := aws.NewOcpGatewayDeployer(awsCloud, msDeployer, config.GWInstanceType)
-	if err != nil {
-		return status.Error(err, "error creating the gateway deployer")
+	cloudInfo := rhos.CloudInfo{
+		Client:    providerClient,
+		InfraID:   config.InfraID,
+		Region:    config.Region,
+		K8sClient: k8sClientSet,
 	}
+	rhosCloud := rhos.NewCloud(cloudInfo)
+	msDeployer := ocp.NewK8sMachinesetDeployer(restMapper, dynamicClient)
+	gwDeployer := rhos.NewOcpGatewayDeployer(cloudInfo, msDeployer, config.ProjectID, config.GWInstanceType,
+		"", config.CloudEntry, config.DedicatedGateway)
 
-	return function(awsCloud, gwDeployer, status)
+	return function(rhosCloud, gwDeployer, status)
 }
 
 func ReadFromFile(metadataFile string) (string, string, error) {
@@ -109,9 +124,9 @@ func ReadFromFile(metadataFile string) (string, string, error) {
 
 	var metadata struct {
 		InfraID string `json:"infraID"`
-		AWS     struct {
-			Region string `json:"region"`
-		} `json:"aws"`
+		RHOS    struct {
+			ProjectID string `json:"projectID"`
+		} `json:"rhos"`
 	}
 
 	err = json.Unmarshal(data, &metadata)
@@ -119,5 +134,5 @@ func ReadFromFile(metadataFile string) (string, string, error) {
 		return "", "", errors.Wrap(err, "error unmarshalling data")
 	}
 
-	return metadata.InfraID, metadata.AWS.Region, nil
+	return metadata.InfraID, metadata.RHOS.ProjectID, nil
 }

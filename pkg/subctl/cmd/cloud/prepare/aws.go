@@ -27,14 +27,10 @@ import (
 	cloudaws "github.com/submariner-io/submariner-operator/pkg/cloud/aws"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/prepare"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/aws"
+	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd/utils"
 )
 
 var config cloudaws.Config
-
-const (
-	infraIDFlag = "infra-id"
-	regionFlag  = "region"
-)
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func newAWSPrepareCommand(restConfigProducer *restconfig.Producer, ports cloud.Ports) *cobra.Command {
@@ -50,11 +46,11 @@ func newAWSPrepareCommand(restConfigProducer *restconfig.Producer, ports cloud.P
 				config.InfraID, config.Region, err = cloudaws.ReadFromFile(config.OcpMetadataFile)
 				exit.OnErrorWithMessage(err, "Failed to read AWS information from OCP metadata file")
 			} else {
-				expectFlag(infraIDFlag, config.InfraID)
-				expectFlag(regionFlag, config.Region)
+				utils.ExpectFlag(infraIDFlag, config.InfraID)
+				utils.ExpectFlag(regionFlag, config.Region)
 			}
 
-			err = prepare.AWS(restConfigProducer, ports, &config, status)
+			err = prepare.AWS(restConfigProducer, &ports, &config, status)
 			exit.OnError(err)
 		},
 	}
