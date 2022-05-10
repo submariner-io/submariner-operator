@@ -33,10 +33,10 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.4.0
 	github.com/submariner-io/admiral v0.13.0-m1
-	github.com/submariner-io/cloud-prepare v0.12.0-m3.0.20220407095330-513eb51af266
-	github.com/submariner-io/lighthouse v0.12.0-m3.0.20220505120518-2ae7357ff15f
+	github.com/submariner-io/cloud-prepare v0.13.0-m1
+	github.com/submariner-io/lighthouse v0.13.0-m1
 	github.com/submariner-io/shipyard v0.13.0-m1
-	github.com/submariner-io/submariner v0.12.0-m3.0.20220315142604-5e67af228799
+	github.com/submariner-io/submariner v0.13.0-m1
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/urfave/cli v1.22.1 // indirect
 	github.com/uw-labs/lichen v0.1.7
@@ -49,6 +49,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.21.11
 	k8s.io/apimachinery v0.21.11
 	k8s.io/client-go v12.0.0+incompatible
+	k8s.io/klog/v2 v2.40.1 // indirect
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 	sigs.k8s.io/controller-runtime v0.9.7
 	sigs.k8s.io/controller-tools v0.4.1
