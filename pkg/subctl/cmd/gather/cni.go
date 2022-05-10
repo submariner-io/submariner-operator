@@ -172,7 +172,7 @@ func gatherOVNResources(info *Info, networkPlugin string) {
 
 func gatherCableDriverResources(info *Info, cableDriver string) {
 	logPodInfo(info, "cable driver data", gatewayPodLabel, func(info *Info, pod *v1.Pod) {
-		if cableDriver == libreswan {
+		if cableDriver == libreswan || cableDriver == "" { // If none specified, use libreswan as default
 			logLibreswanCmds(info, pod)
 		}
 	})
