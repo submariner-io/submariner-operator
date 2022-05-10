@@ -25,12 +25,9 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/cloud"
 	"github.com/submariner-io/submariner-operator/pkg/cloud/gcp"
-	"golang.org/x/oauth2/google"
 )
 
-func GCP(restConfigProducer *restconfig.Producer, ports *cloud.Ports, config *gcp.Config, creds *google.Credentials,
-	status reporter.Interface,
-) error {
+func GCP(restConfigProducer *restconfig.Producer, ports *cloud.Ports, config *gcp.Config, status reporter.Interface) error {
 	gwPorts := []api.PortSpec{
 		{Port: ports.Natt, Protocol: "udp"},
 		{Port: ports.NatDiscovery, Protocol: "udp"},
@@ -47,7 +44,7 @@ func GCP(restConfigProducer *restconfig.Producer, ports *cloud.Ports, config *gc
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := gcp.RunOn(restConfigProducer, config, creds, cli.NewReporter(),
+	err := gcp.RunOn(restConfigProducer, config, cli.NewReporter(),
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, status reporter.Interface) error {
 			if config.Gateways > 0 {
 				gwInput := api.GatewayDeployInput{

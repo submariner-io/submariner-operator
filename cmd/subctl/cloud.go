@@ -27,6 +27,8 @@ const (
 	infraIDFlag        = "infra-id"
 	regionFlag         = "region"
 	defaultNumGateways = 1
+	projectIDFlag      = "project-id"
+	cloudEntryFlag     = "cloud-entry"
 )
 
 var (
