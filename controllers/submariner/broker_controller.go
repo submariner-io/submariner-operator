@@ -24,7 +24,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/broker"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
@@ -99,7 +98,7 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
 	}
 
-	err = broker.CreateGlobalnetConfigMap(kubeClient, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
+	err = globalnet.CreateConfigMap(kubeClient, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
 		instance.Spec.DefaultGlobalnetClusterSize, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
