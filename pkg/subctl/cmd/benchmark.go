@@ -20,7 +20,6 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
@@ -80,7 +79,7 @@ func checkBenchmarkArguments(args []string, intraCluster bool) error {
 	}
 
 	if len(args) == 2 {
-		if strings.Compare(args[0], args[1]) == 0 {
+		if args[0] == args[1] {
 			return fmt.Errorf("kubeconfig file <kubeConfig1> and <kubeConfig2> cannot be the same file")
 		}
 
