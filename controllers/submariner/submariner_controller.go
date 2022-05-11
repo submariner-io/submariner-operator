@@ -34,12 +34,12 @@ import (
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	resourceiface "github.com/submariner-io/submariner-operator/controllers/resource"
-	"github.com/submariner-io/submariner-operator/pkg/broker"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/images"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -82,8 +82,7 @@ type Reconciler struct {
 	config Config
 	log    logr.Logger
 
-	// We need to synchronize changes to the SA used to connect to the broker ("cluster-" + clusterID, see pkg/broker/rbac.go
-	// and broker.ClusterSAName()), of two kinds:
+	// We need to synchronize changes to the SA used to connect to the broker (see names.ForClusterSA), of two kinds:
 	// - changes to the token in the secret used by the SA;
 	// - changes to the SA itself.
 	// The secrets are communicated to the pods which need them by mounting them. This ensures that changes to the secret
@@ -369,7 +368,7 @@ func (r *Reconciler) setupSecretSyncer(instance *submopv1a1.Submariner, logger l
 						secret := from.(*corev1.Secret)
 						logger.V(level.TRACE).Info("Transforming secret", "secret", secret)
 						if saName, ok := secret.ObjectMeta.Annotations["kubernetes.io/service-account.name"]; ok &&
-							saName == broker.ClusterSAName(instance.Spec.ClusterID) {
+							saName == names.ForClusterSA(instance.Spec.ClusterID) {
 							transformedSecret := &corev1.Secret{
 								ObjectMeta: metav1.ObjectMeta{
 									Name: instance.Spec.BrokerK8sSecret,

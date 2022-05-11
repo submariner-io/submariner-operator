@@ -18,6 +18,8 @@ limitations under the License.
 
 package names
 
+import "fmt"
+
 /* Component names and other constants. */
 const (
 	NetworkPluginSyncerComponent = "submariner-networkplugin-syncer"
@@ -54,4 +56,8 @@ var ValidImageNames = []string{
 
 func AppendUninstall(name string) string {
 	return name + "-uninstall"
+}
+
+func ForClusterSA(clusterID string) string {
+	return fmt.Sprintf("cluster-%s", clusterID)
 }
