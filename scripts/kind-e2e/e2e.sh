@@ -46,28 +46,9 @@ else
 fi
 
 # run dataplane E2E tests between the two clusters
-${DAPPER_SOURCE}/bin/subctl verify ${verify} --submariner-namespace=$subm_ns \
+subctl verify ${verify} --submariner-namespace=$subm_ns \
     --verbose --connection-timeout 20 --connection-attempts 4 \
     --kubecontexts cluster1,cluster2
-
-. ${DAPPER_SOURCE}/scripts/kind-e2e/lib_subctl_gather_test.sh
-
-test_subctl_gather
-
-# Run subctl diagnose as a sanity check
-
-${DAPPER_SOURCE}/bin/subctl diagnose all
-${DAPPER_SOURCE}/bin/subctl diagnose firewall inter-cluster ${KUBECONFIGS_DIR}/kind-config-cluster1 ${KUBECONFIGS_DIR}/kind-config-cluster2
-
-# Run benchmark commands for sanity checks
-
-${DAPPER_SOURCE}/bin/subctl benchmark latency --intra-cluster ${KUBECONFIGS_DIR}/kind-config-cluster1
-
-${DAPPER_SOURCE}/bin/subctl benchmark latency ${KUBECONFIGS_DIR}/kind-config-cluster1 ${KUBECONFIGS_DIR}/kind-config-cluster2
-
-${DAPPER_SOURCE}/bin/subctl benchmark throughput --intra-cluster ${KUBECONFIGS_DIR}/kind-config-cluster1
-
-${DAPPER_SOURCE}/bin/subctl benchmark throughput --verbose ${KUBECONFIGS_DIR}/kind-config-cluster1 ${KUBECONFIGS_DIR}/kind-config-cluster2
 
 ${SCRIPTS_DIR}/e2e.sh "$@"
 

@@ -32,7 +32,7 @@ PATTERN := ^([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)\.([0-9]|[1-9][0-9]*)$
 # Test if VERSION matches the semantic versioning rule
 IS_SEMANTIC_VERSION = $(shell [[ $(or $(BUNDLE_VERSION),$(VERSION),'undefined') =~ $(PATTERN) ]] && echo true || echo false)
 
-IMAGES = submariner-operator submariner-operator-index subctl
+IMAGES = submariner-operator submariner-operator-index
 PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-globalnet submariner-route-agent lighthouse-agent lighthouse-coredns
 undefine SKIP
 undefine FOCUS
@@ -45,11 +45,6 @@ SETTINGS = $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
 include $(SHIPYARD_DIR)/Makefile.inc
-
-CROSS_TARGETS := linux-amd64 linux-arm64 linux-arm linux-s390x linux-ppc64le windows-amd64.exe darwin-amd64
-BINARIES := bin/subctl
-CROSS_BINARIES := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,bin/subctl-$(VERSION)-%,$(cross)))
-CROSS_TARBALLS := $(foreach cross,$(CROSS_TARGETS),$(patsubst %,dist/subctl-$(VERSION)-%.tar.xz,$(cross)))
 
 override E2E_ARGS += --settings $(SETTINGS) cluster1 cluster2
 export DEPLOY_ARGS
@@ -133,23 +128,15 @@ export PATH := $(CURDIR)/bin:$(PATH)
 
 images: build
 
-# Build subctl before deploying to ensure we use that
-# (with the PATH set above)
-deploy: bin/subctl
-
 e2e: deploy
 	scripts/kind-e2e/e2e.sh $(E2E_ARGS)
 
 clean:
-	rm -f $(BINARIES) $(CROSS_BINARIES) $(CROSS_TARBALLS)
-
-build: $(BINARIES)
-
-build-cross: $(CROSS_TARBALLS)
+	rm -f bin/submariner-operator
 
 licensecheck: BUILD_ARGS=--noupx
 licensecheck: build bin/submariner-operator | bin/lichen
-	bin/lichen -c .lichen.yaml $(BINARIES) bin/submariner-operator
+	bin/lichen -c .lichen.yaml bin/submariner-operator
 
 bin/lichen: $(VENDOR_MODULES)
 	mkdir -p $(@D)
@@ -158,8 +145,6 @@ bin/lichen: $(VENDOR_MODULES)
 package/Dockerfile.submariner-operator: bin/submariner-operator
 
 package/Dockerfile.submariner-operator-index: packagemanifests
-
-package/Dockerfile.subctl: bin/subctl
 
 # Generate deep-copy code
 CONTROLLER_DEEPCOPY := api/submariner/v1alpha1/zz_generated.deepcopy.go
@@ -175,43 +160,6 @@ bin/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
 	${SCRIPTS_DIR}/compile.sh \
 	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
 	$@ . $(BUILD_ARGS)
-
-bin/subctl: bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
-	ln -sf $(<F) $@
-
-cmd/bin/subctl: cmd/bin/subctl-$(VERSION)-$(GOOS)-$(GOARCH)$(GOEXE)
-	ln -sf $(<F) $@
-
-dist/subctl-%.tar.xz: bin/subctl-%
-	mkdir -p dist
-	tar -cJf $@ --transform "s/^bin/subctl-$(VERSION)/" $<
-
-# Versions may include hyphens so it's easier to use $(VERSION) than to extract them from the target
-bin/subctl-%: $(EMBEDDED_YAMLS) $(shell find pkg/subctl/ -name "*.go") $(VENDOR_MODULES)
-	mkdir -p $(@D)
-	target=$@; \
-	target=$${target%.exe}; \
-	components=($$(echo $${target//-/ })); \
-	GOOS=$${components[-2]}; \
-	GOARCH=$${components[-1]}; \
-	export GOARCH GOOS; \
-	$(SCRIPTS_DIR)/compile.sh \
-		--ldflags "-X 'github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)' \
-			   -X 'github.com/submariner-io/submariner-operator/api/submariner/v1alpha1.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}'" \
-		--noupx $@ ./pkg/subctl $(BUILD_ARGS)
-
-cmd/bin/subctl-%: $(shell find cmd/ -name "*.go") $(VENDOR_MODULES)
-	mkdir -p cmd/bin
-	target=$@; \
-	target=$${target%.exe}; \
-	components=($$(echo $${target//-/ })); \
-	GOOS=$${components[-2]}; \
-	GOARCH=$${components[-1]}; \
-	export GOARCH GOOS; \
-	$(SCRIPTS_DIR)/compile.sh \
-		--ldflags "-X 'github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)' \
-		       -X 'github.com/submariner-io/submariner-operator/api/submariner/v1alpha1.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}'" \
-        --noupx $@ ./cmd $(BUILD_ARGS)
 
 ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
 
@@ -304,32 +252,6 @@ olm:
 golangci-lint: $(EMBEDDED_YAMLS)
 
 unit: $(EMBEDDED_YAMLS)
-
-# Test as many of the config/context-dependent subctl commands as possible
-test-subctl: bin/subctl deploy
-# benchmark
-	bin/subctl benchmark latency --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1:$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster2 \
-		--kubecontexts cluster1,cluster2
-	bin/subctl benchmark latency --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 \
-		--kubecontexts cluster1 --intra-cluster
-	bin/subctl benchmark throughput --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1:$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster2 \
-		--kubecontexts cluster1,cluster2
-	bin/subctl benchmark throughput --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 \
-		--kubecontexts cluster1 --intra-cluster
-# cloud
-	bin/subctl cloud prepare generic --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 --kubecontext cluster1
-# deploy-broker is tested by the deploy target
-# diagnose
-	bin/subctl diagnose all --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1
-	bin/subctl diagnose firewall inter-cluster $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster2
-# export TBD
-# gather
-	bin/subctl gather $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1
-# join is tested by the deploy target
-# show
-	bin/subctl show all --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1
-# verify is tested by the e2e target (run elsewhere)
-	bin/subctl uninstall -y --kubeconfig $(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1
 
 # Operator SDK
 # On version bumps, the checksum will need to be updated manually.
