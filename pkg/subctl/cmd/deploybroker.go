@@ -175,7 +175,7 @@ var deployBroker = &cobra.Command{
 			utils.ExitOnError("Error validating existing globalCIDR configmap", err)
 		}
 
-		err = broker.CreateGlobalnetConfigMap(clientProducer.ForKubernetes(), globalnetEnable, globalnetCIDRRange,
+		err = globalnet.CreateConfigMap(clientProducer.ForKubernetes(), globalnetEnable, globalnetCIDRRange,
 			defaultGlobalnetClusterSize, brokerNamespace)
 		utils.ExitOnError("Error creating globalCIDR configmap on Broker", err)
 

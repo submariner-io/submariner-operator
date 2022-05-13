@@ -68,7 +68,7 @@ func Broker(options *BrokerOptions, clientProducer client.Producer, status repor
 		}
 	}
 
-	if err = broker.CreateGlobalnetConfigMap(clientProducer.ForKubernetes(), options.BrokerSpec.GlobalnetEnabled,
+	if err = globalnet.CreateConfigMap(clientProducer.ForKubernetes(), options.BrokerSpec.GlobalnetEnabled,
 		options.BrokerSpec.GlobalnetCIDRRange, options.BrokerSpec.DefaultGlobalnetClusterSize, options.BrokerNamespace); err != nil {
 		return status.Error(err, "error creating globalCIDR configmap on Broker")
 	}

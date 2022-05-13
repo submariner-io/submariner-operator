@@ -29,13 +29,8 @@ import (
 const (
 	submarinerBrokerClusterRole      = "submariner-k8s-broker-cluster"
 	submarinerBrokerAdminRole        = "submariner-k8s-broker-admin"
-	submarinerBrokerClusterSAFmt     = "cluster-%s"
 	submarinerBrokerClusterDefaultSA = "submariner-k8s-broker-client" // for backwards compatibility with documentation
 )
-
-func ClusterSAName(clusterID string) string {
-	return fmt.Sprintf(submarinerBrokerClusterSAFmt, clusterID)
-}
 
 func NewBrokerSA(submarinerBrokerSA string) *v1.ServiceAccount {
 	sa := &v1.ServiceAccount{
