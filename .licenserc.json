@@ -22,9 +22,6 @@
 	],
 	"ignore": [
 	    "pkg/client/clientset/",
-	    "internal/cli",
-		"internal/env",
-		"internal/log",
 	    "vendor/"
 	]
     },

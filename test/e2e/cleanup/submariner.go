@@ -35,7 +35,6 @@ import (
 	operatorclient "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	operatorv1alpha1client "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned/typed/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
 	submarinerclientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -73,7 +72,7 @@ func testSubmarinerCleanup() {
 		submarinerInterface = operatorClient.SubmarinerV1alpha1().Submariners(framework.TestContext.SubmarinerNamespace)
 		serviceDiscoveryInterface = operatorClient.SubmarinerV1alpha1().ServiceDiscoveries(framework.TestContext.SubmarinerNamespace)
 
-		submariner, err = submarinerInterface.Get(context.TODO(), submarinercr.SubmarinerName, metav1.GetOptions{})
+		submariner, err = submarinerInterface.Get(context.TODO(), names.SubmarinerCrName, metav1.GetOptions{})
 		Expect(err).To(Succeed())
 
 		brokerRestConfig = getBrokerRestConfig(submariner.Spec.BrokerK8sRemoteNamespace)
