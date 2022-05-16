@@ -25,7 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	operatorclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	"github.com/submariner-io/submariner-operator/pkg/subctl/operator/submarinercr"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -142,7 +142,7 @@ func getGlobalCIDRs(operatorClient operatorclientset.Interface, operatorNamespac
 	}
 
 	existingCfg, err := operatorClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(
-		context.TODO(), submarinercr.SubmarinerName, v1.GetOptions{})
+		context.TODO(), names.SubmarinerCrName, v1.GetOptions{})
 	if err != nil {
 		return "", errors.Wrap(err, "error retrieving Submariner resource")
 	}

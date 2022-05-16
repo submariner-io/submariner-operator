@@ -30,6 +30,7 @@ const (
 	LighthouseCoreDNSComponent   = "lighthouse-coredns"
 	OperatorComponent            = "submariner-operator"
 	ServiceDiscoveryCrName       = "service-discovery"
+	SubmarinerCrName             = "submariner"
 )
 
 /* These values are used by downstream distributions to override the component default image name. */
