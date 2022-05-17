@@ -24,8 +24,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/admiral/pkg/util"
 	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
-	resourceutil "github.com/submariner-io/submariner-operator/pkg/resource"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -80,7 +80,7 @@ func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string
 		return false, errors.Wrap(err, "error extracting embedded CRD")
 	}
 
-	return resourceutil.CreateOrUpdate(ctx, &resource.InterfaceFuncs{
+	result, err := util.CreateOrUpdate(ctx, &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
 			return u.Get(ctx, name, options)
 		},
@@ -90,7 +90,9 @@ func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string
 		UpdateFunc: func(ctx context.Context, obj runtime.Object, options metav1.UpdateOptions) (runtime.Object, error) {
 			return u.Update(ctx, obj.(*apiextensions.CustomResourceDefinition), options)
 		},
-	}, crd)
+	}, crd, util.Replace(crd))
+
+	return result == util.OperationResultCreated, err
 }
 
 func (c *controllerClientCreator) Create(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
