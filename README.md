@@ -21,17 +21,6 @@ Please refer the Quickstart Guides on Submariner's website:
 * [Google Kubernetes Engine](https://submariner.io/getting-started/quickstart/managed-kubernetes/gke/).
 * [Rancher](https://submariner.io/getting-started/quickstart/managed-kubernetes/rancher/).
 
-## Subctl Releases
-
-### Latest Stable Release
-
-This release has the latest stable binaries: [latest release](https://github.com/submariner-io/submariner-operator/releases/latest).
-
-### Latest Merged Release
-
-This release is constantly updated with the latest code, and might be unstable: [devel
-release](https://github.com/submariner-io/submariner-operator/releases/tag/subctl-devel).
-
 ## Building and Testing
 
 See the [Building and Testing docs on Submariner's website](https://submariner.io/development/building-testing/).
