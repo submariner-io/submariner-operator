@@ -9,6 +9,7 @@ cloud.google.com/go v0.45.1/go.mod h1:RpBamKRgapWJb87xiFSdk4g1CME7QZg3uwTez+TSTj
 cloud.google.com/go v0.46.3/go.mod h1:a6bKKbmY7er1mI7TEI4lsAkts/mkhTSZK8w33B4RAg0=
 cloud.google.com/go v0.49.0/go.mod h1:hGvAdzcWNbyuxS3nWhD7H2cIJxjRRTRLQVB0bdputVY=
 cloud.google.com/go v0.50.0/go.mod h1:r9sluTvynVuxRIOHXQEHMFffphuXHOMZMycpNR5e6To=
+cloud.google.com/go v0.51.0/go.mod h1:hWtGJ6gnXH+KgDv+V0zFGDvpi07n3z8ZNj3T1RW0Gcw=
 cloud.google.com/go v0.52.0/go.mod h1:pXajvRH/6o3+F9jDHZWQ5PbGhn+o8w9qiu/CffaVdO4=
 cloud.google.com/go v0.53.0/go.mod h1:fp/UouUEsRkN6ryDKNW/Upv/JBKnv6WDthjR6+vze6M=
 cloud.google.com/go v0.54.0/go.mod h1:1rq2OEkV3YMf6n/9ZvGWI3GWw0VoqH/1x2nd8Is/bPc=
@@ -1212,8 +1213,9 @@ github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMT
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/submariner-io/admiral v0.13.0-m1 h1:CgYd5kVNSX5ghTGRbSlB5PLWinuXmve0u+uNsnYb5XM=
 github.com/submariner-io/admiral v0.13.0-m1/go.mod h1:fgBeRxzNKP77awldhsAZujsljtoOeGogkMfz7lkbdZA=
-github.com/submariner-io/shipyard v0.13.0-m1 h1:jFdifPuYdGmlHVpjFKVclsCePCtBngOvB7TlqNniE+I=
 github.com/submariner-io/shipyard v0.13.0-m1/go.mod h1:JpJa1JxmdFqDUl7c/vJJE5HmRXxjZXeCgwa+d8uyVOs=
+github.com/submariner-io/shipyard v0.13.0-m2 h1:Lss22ebdN8P2KyylFkWEmHgakQq6wlVHxokZpBXleUM=
+github.com/submariner-io/shipyard v0.13.0-m2/go.mod h1:QC3tq6LKRCaavN3/pGw/QqSVIsVJKA9rbmNueihTydE=
 github.com/submariner-io/submariner v0.13.0-m1 h1:YqURCys2PF8QTwbrTs+Xop3/2+ILa8GDvtGD9rBVieE=
 github.com/submariner-io/submariner v0.13.0-m1/go.mod h1:0B3hmuwSJlLe2FCS9RwDs3zgZJcWq7W2muhaPDAIdJc=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
