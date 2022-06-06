@@ -134,6 +134,6 @@ func updateConfigMap(k8sClientset kubernetes.Interface, namespace string, config
 }
 
 // nolint:wrapcheck // No need to wrap here
-func getConfigMap(kubeClient kubernetes.Interface, namespace string) (*v1.ConfigMap, error) {
+func GetConfigMap(kubeClient kubernetes.Interface, namespace string) (*v1.ConfigMap, error) {
 	return kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), globalCIDRConfigMapName, metav1.GetOptions{})
 }

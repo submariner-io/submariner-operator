@@ -325,7 +325,7 @@ func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config, statu
 }
 
 func GetGlobalNetworks(kubeClient kubernetes.Interface, brokerNamespace string) (*Info, *v1.ConfigMap, error) {
-	configMap, err := getConfigMap(kubeClient, brokerNamespace)
+	configMap, err := GetConfigMap(kubeClient, brokerNamespace)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error retrieving globalnet ConfigMap")
 	}
