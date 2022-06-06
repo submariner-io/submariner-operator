@@ -26,7 +26,7 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -122,5 +122,5 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 }
 
 func needsNetworkPluginSyncer(submariner *v1alpha1.Submariner) bool {
-	return submariner.Status.NetworkPlugin == constants.NetworkPluginOVNKubernetes
+	return submariner.Status.NetworkPlugin == cni.OVNKubernetes
 }

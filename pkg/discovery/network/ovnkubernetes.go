@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -60,7 +60,7 @@ func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwo
 	}
 
 	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: constants.NetworkPluginOVNKubernetes,
+		NetworkPlugin: cni.OVNKubernetes,
 		PluginSettings: map[string]string{
 			OvnNBDB: fmt.Sprintf("%s:%s.%s:%d", dbConnectionProtocol, ovnKubeService, ovnDBPod.Namespace, OvnNBDBDefaultPort),
 			OvnSBDB: fmt.Sprintf("%s:%s.%s:%d", dbConnectionProtocol, ovnKubeService, ovnDBPod.Namespace, OvnSBDBDefaultPort),

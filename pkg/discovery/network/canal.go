@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,7 +54,7 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 	}
 
 	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: constants.NetworkPluginCanalFlannel,
+		NetworkPlugin: cni.CanalFlannel,
 		PodCIDRs:      []string{*podCIDR},
 	}
 

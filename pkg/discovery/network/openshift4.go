@@ -23,7 +23,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -99,7 +99,7 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 	}
 
 	if ocpNetworkType == "Calico" {
-		result.NetworkPlugin = constants.NetworkPluginCalico
+		result.NetworkPlugin = cni.Calico
 	} else {
 		result.NetworkPlugin = ocpNetworkType
 	}
