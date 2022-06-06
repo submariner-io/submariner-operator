@@ -30,7 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/test"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	routeagent "github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -178,7 +178,7 @@ func testReconciliation() {
 
 	When("the submariner network plugin syncer Deployment doesn't exist", func() {
 		BeforeEach(func() {
-			t.clusterNetwork.NetworkPlugin = routeagent.NetworkPluginOVNKubernetes
+			t.clusterNetwork.NetworkPlugin = cni.OVNKubernetes
 		})
 
 		It("should create it", func() {
@@ -260,7 +260,7 @@ func testDeletion() {
 
 	Context("", func() {
 		BeforeEach(func() {
-			t.clusterNetwork.NetworkPlugin = routeagent.NetworkPluginOVNKubernetes
+			t.clusterNetwork.NetworkPlugin = cni.OVNKubernetes
 
 			t.InitClientObjs = append(t.InitClientObjs,
 				t.NewDaemonSet(names.GatewayComponent),

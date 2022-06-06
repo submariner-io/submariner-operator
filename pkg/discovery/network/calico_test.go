@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -64,7 +64,7 @@ var _ = Describe("Calico Network", func() {
 		It("should return a ClusterNetwork with only service CIDRs", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(clusterNet).NotTo(BeNil())
-			Expect(clusterNet.NetworkPlugin).To(Equal(constants.NetworkPluginCalico))
+			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Calico))
 			Expect(clusterNet.PodCIDRs).To(BeEmpty())
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
 		})
@@ -84,7 +84,7 @@ var _ = Describe("Calico Network", func() {
 		It("should return a ClusterNetwork with pod and service CIDRs", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(clusterNet).NotTo(BeNil())
-			Expect(clusterNet.NetworkPlugin).To(Equal(constants.NetworkPluginCalico))
+			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Calico))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})

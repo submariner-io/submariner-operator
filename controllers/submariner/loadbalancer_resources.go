@@ -19,13 +19,12 @@ limitations under the License.
 package submariner
 
 import (
-	"strconv"
-
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"github.com/submariner-io/submariner/pkg/port"
 	corev1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -46,8 +45,6 @@ func (r *Reconciler) reconcileLoadBalancer(
 }
 
 func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {
-	nattPort, _ := strconv.ParseInt(submv1.DefaultNATTDiscoveryPort, 10, 32)
-
 	return &corev1.Service{
 		ObjectMeta: v1meta.ObjectMeta{
 			Name:      loadBalancerName,
@@ -74,8 +71,8 @@ func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {
 				},
 				{
 					Name:       nattDiscoveryPortName,
-					Port:       int32(nattPort),
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(nattPort)},
+					Port:       int32(port.NATTDiscovery),
+					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(port.NATTDiscovery)},
 					Protocol:   corev1.ProtocolUDP,
 				},
 			},

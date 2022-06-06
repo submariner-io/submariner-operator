@@ -31,6 +31,7 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	"github.com/submariner-io/submariner/pkg/port"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -87,8 +88,6 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 		healthCheckInterval = cr.Spec.ConnectionHealthCheck.IntervalSeconds
 		healthCheckMaxPacketLossCount = cr.Spec.ConnectionHealthCheck.MaxPacketLossCount
 	}
-
-	nattPort, _ := strconv.ParseInt(submarinerv1.DefaultNATTDiscoveryPort, 10, 32)
 
 	volumeMounts := []corev1.VolumeMount{
 		{Name: "ipsecd", MountPath: "/etc/ipsec.d", ReadOnly: false},
@@ -172,8 +171,8 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 						},
 						{
 							Name:          nattDiscoveryPortName,
-							HostPort:      int32(nattPort),
-							ContainerPort: int32(nattPort),
+							HostPort:      int32(port.NATTDiscovery),
+							ContainerPort: int32(port.NATTDiscovery),
 							Protocol:      corev1.ProtocolUDP,
 						},
 					},
