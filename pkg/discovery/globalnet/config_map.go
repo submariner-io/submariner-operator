@@ -137,3 +137,8 @@ func updateConfigMap(k8sClientset kubernetes.Interface, namespace string, config
 func GetConfigMap(kubeClient kubernetes.Interface, namespace string) (*v1.ConfigMap, error) {
 	return kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), globalCIDRConfigMapName, metav1.GetOptions{})
 }
+
+// nolint:wrapcheck // No need to wrap here
+func DeleteConfigMap(kubeClient kubernetes.Interface, namespace string) error {
+	return kubeClient.CoreV1().ConfigMaps(namespace).Delete(context.TODO(), globalCIDRConfigMapName, metav1.DeleteOptions{})
+}
