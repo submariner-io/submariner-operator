@@ -62,7 +62,6 @@ var log = logf.Log.WithName("controller_servicediscovery")
 
 const (
 	componentName                 = "submariner-lighthouse"
-	lighthouseCoreDNSName         = "submariner-lighthouse-coredns"
 	defaultOpenShiftDNSController = "default"
 	lighthouseForwardPluginName   = "lighthouse"
 	defaultCoreDNSNamespace       = "kube-system"
@@ -284,7 +283,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 
 func newLighthouseDNSConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {
 	labels := map[string]string{
-		"app":       lighthouseCoreDNSName,
+		"app":       names.LighthouseCoreDNSComponent,
 		"component": componentName,
 	}
 	config := `{
@@ -302,7 +301,7 @@ prometheus :9153
 
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      lighthouseCoreDNSName,
+			Name:      names.LighthouseCoreDNSComponent,
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},
@@ -324,11 +323,11 @@ func newCoreDNSCustomConfigMap(config *submarinerv1alpha1.CoreDNSCustomConfig) *
 func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
 	replicas := int32(2)
 	labels := map[string]string{
-		"app":       lighthouseCoreDNSName,
+		"app":       names.LighthouseCoreDNSComponent,
 		"component": componentName,
 	}
 	matchLabels := map[string]string{
-		"app": lighthouseCoreDNSName,
+		"app": names.LighthouseCoreDNSComponent,
 	}
 
 	terminationGracePeriodSeconds := int64(0)
@@ -339,7 +338,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
-			Name:      lighthouseCoreDNSName,
+			Name:      names.LighthouseCoreDNSComponent,
 			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -354,9 +353,9 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:            lighthouseCoreDNSName,
-							Image:           getImagePath(cr, names.LighthouseCoreDNSImage, names.LighthouseCoreDNSComponent),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.LighthouseCoreDNSComponent]),
+							Name:            names.LighthouseCoreDNSComponent,
+							Image:           getImagePath(cr, names.LighthouseCoreDNSImage, names.LighthouseCoreDNSImage),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.LighthouseCoreDNSImage]),
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 							},
@@ -382,7 +381,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 					Volumes: []corev1.Volume{
 						{Name: "config-volume", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
-							LocalObjectReference: corev1.LocalObjectReference{Name: lighthouseCoreDNSName},
+							LocalObjectReference: corev1.LocalObjectReference{Name: names.LighthouseCoreDNSComponent},
 							Items: []corev1.KeyToPath{
 								{Key: "Corefile", Path: "Corefile"},
 							},
@@ -397,14 +396,14 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 
 func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.Service {
 	labels := map[string]string{
-		"app":       lighthouseCoreDNSName,
+		"app":       names.LighthouseCoreDNSComponent,
 		"component": componentName,
 	}
 
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
-			Name:      lighthouseCoreDNSName,
+			Name:      names.LighthouseCoreDNSComponent,
 			Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{
@@ -419,7 +418,7 @@ func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 			}},
 			Type: corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				"app": lighthouseCoreDNSName,
+				"app": names.LighthouseCoreDNSComponent,
 			},
 		},
 	}
@@ -458,7 +457,8 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 		}
 
 		lighthouseDNSService := &corev1.Service{}
-		err = r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDNSService)
+		err = r.config.Client.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: cr.Namespace},
+			lighthouseDNSService)
 		lighthouseClusterIP := lighthouseDNSService.Spec.ClusterIP
 		if err != nil || lighthouseClusterIP == "" {
 			return goerrors.New("lighthouseDNSService ClusterIp should be available")
@@ -493,7 +493,8 @@ func (r *Reconciler) configureDNSConfigMap(ctx context.Context, cr *submarinerv1
 ) error {
 	lighthouseDNSService := &corev1.Service{}
 
-	err := r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: cr.Namespace}, lighthouseDNSService)
+	err := r.config.Client.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: cr.Namespace},
+		lighthouseDNSService)
 	if err != nil {
 		return errors.Wrap(err, "error retrieving lighthouse DNS Service")
 	}
@@ -577,7 +578,8 @@ func findCoreDNSListeningPort(coreFile string) string {
 func (r *Reconciler) configureOpenshiftClusterDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery) error {
 	lighthouseDNSService := &corev1.Service{}
 
-	err := r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace}, lighthouseDNSService)
+	err := r.config.Client.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: instance.Namespace},
+		lighthouseDNSService)
 	if err != nil {
 		return errors.Wrap(err, "error retrieving lighthouse DNS Service")
 	}
@@ -754,7 +756,7 @@ func (r *Reconciler) ensureLighthouseCoreDNSService(ctx context.Context, instanc
 ) error {
 	lighthouseCoreDNSService := &corev1.Service{}
 
-	err := r.config.Client.Get(ctx, types.NamespacedName{Name: lighthouseCoreDNSName, Namespace: instance.Namespace},
+	err := r.config.Client.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: instance.Namespace},
 		lighthouseCoreDNSService)
 	if apierrors.IsNotFound(err) {
 		lighthouseCoreDNSService = newLighthouseCoreDNSService(instance)
