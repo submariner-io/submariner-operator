@@ -318,8 +318,10 @@ func convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
 
 	podSpec.Containers = []corev1.Container{
 		{
-			Name:  "pause",
-			Image: "gcr.io/google_containers/pause",
+			Name: "pause",
+			// Note: K8s 1.25 is moving to a new image location, registry.k8s.io.
+			// See https://github.com/kubernetes/kubernetes/pull/109938.
+			Image: "k8s.gcr.io/pause",
 		},
 	}
 }
