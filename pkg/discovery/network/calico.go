@@ -22,7 +22,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -53,7 +53,7 @@ func discoverCalicoNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, err
 	}
 
 	if clusterNetwork != nil {
-		clusterNetwork.NetworkPlugin = constants.NetworkPluginCalico
+		clusterNetwork.NetworkPlugin = cni.Calico
 		return clusterNetwork, nil
 	}
 

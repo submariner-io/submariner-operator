@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -55,7 +55,7 @@ var _ = Describe("OvnKubernetes Network", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(clusterNet).NotTo(BeNil())
-			Expect(clusterNet.NetworkPlugin).To(Equal(constants.NetworkPluginOVNKubernetes))
+			Expect(clusterNet.NetworkPlugin).To(Equal(cni.OVNKubernetes))
 			connectionStr := fmt.Sprintf("tcp:%s.%s", ovnKubeSvcTest, ovnKubeNamespace)
 			Expect(clusterNet.PluginSettings["OVN_NBDB"]).To(Equal(connectionStr + ":6641"))
 			Expect(clusterNet.PluginSettings["OVN_SBDB"]).To(Equal(connectionStr + ":6642"))

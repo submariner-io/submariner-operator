@@ -5,10 +5,10 @@ go 1.17
 require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/coreos/prometheus-operator v0.38.1-0.20200424145508-7e176fda06cc
-	github.com/go-logr/logr v0.4.0
+	github.com/go-logr/logr v1.2.2
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.19.0
-	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
+	github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.4.0
 	github.com/operator-framework/operator-sdk v0.19.0
@@ -16,15 +16,15 @@ require (
 	github.com/prometheus/client_golang v1.12.2
 	github.com/submariner-io/admiral v0.13.0-m2
 	github.com/submariner-io/shipyard v0.13.0-m2
-	github.com/submariner-io/submariner v0.13.0-m2
+	github.com/submariner-io/submariner v0.13.0-m2.0.20220608112640-7f4a6a79da0d
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.3.7
-	k8s.io/api v0.21.11
-	k8s.io/apiextensions-apiserver v0.21.11
-	k8s.io/apimachinery v0.21.11
+	k8s.io/api v0.23.5
+	k8s.io/apiextensions-apiserver v0.23.5
+	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed
-	sigs.k8s.io/controller-runtime v0.9.7
+	sigs.k8s.io/controller-runtime v0.11.2
 	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
 	sigs.k8s.io/yaml v1.3.0
@@ -48,7 +48,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-errors/errors v1.2.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
@@ -125,7 +125,7 @@ require (
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/component-base v0.21.11 // indirect
+	k8s.io/component-base v0.23.5 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.40.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
@@ -142,6 +142,12 @@ require (
 
 // Pinned to kubernetes-1.21.11
 replace (
+	github.com/go-logr/logr => github.com/go-logr/logr v0.4.0
+	k8s.io/api => k8s.io/api v0.21.11
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.21.11
+	k8s.io/apimachinery => k8s.io/apimachinery v0.21.11
 	k8s.io/client-go => k8s.io/client-go v0.21.11
+	k8s.io/component-base => k8s.io/component-base v0.21.11
 	k8s.io/klog/v2 => k8s.io/klog/v2 v2.9.0
+	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.9.7
 )

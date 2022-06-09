@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,7 +33,7 @@ var _ = Describe("Canal Flannel Network", func() {
 		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			clusterNet := testDiscoverCanalFlannelWith(&canalFlannelCfgMap)
 			Expect(clusterNet).NotTo(BeNil())
-			Expect(clusterNet.NetworkPlugin).To(Equal(constants.NetworkPluginCanalFlannel))
+			Expect(clusterNet.NetworkPlugin).To(Equal(cni.CanalFlannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testCannalFlannelPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
 		})
@@ -46,7 +46,7 @@ var _ = Describe("Canal Flannel Network", func() {
 				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
-			Expect(clusterNet.NetworkPlugin).To(Equal(constants.NetworkPluginCanalFlannel))
+			Expect(clusterNet.NetworkPlugin).To(Equal(cni.CanalFlannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testCannalFlannelPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})

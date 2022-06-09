@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner/pkg/routeagent_driver/constants"
+	"github.com/submariner-io/submariner/pkg/cni"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic/fake"
@@ -37,7 +37,7 @@ var _ = Describe("OpenShift4 Network", func() {
 			Expect(cn.ServiceCIDRs).To(HaveLen(1))
 			Expect(cn.PodCIDRs).To(Equal([]string{"10.128.0.0/14", "10.132.0.0/14"}))
 			Expect(cn.ServiceCIDRs).To(Equal([]string{"172.30.0.0/16"}))
-			Expect(cn.NetworkPlugin).To(Equal(constants.NetworkPluginOpenShiftSDN))
+			Expect(cn.NetworkPlugin).To(Equal(cni.OpenShiftSDN))
 		})
 	})
 
