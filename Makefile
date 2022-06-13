@@ -51,7 +51,7 @@ endif
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
-override E2E_ARGS += --settings $(SETTINGS) cluster1 cluster2
+override E2E_ARGS += cluster1 cluster2
 export DEPLOY_ARGS
 override UNIT_TEST_ARGS += test internal/env
 override VALIDATE_ARGS += --skip-dirs pkg/client
