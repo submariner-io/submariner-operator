@@ -134,6 +134,10 @@ export PATH := $(CURDIR)/bin:$(PATH)
 e2e: $(VENDOR_MODULES)
 	scripts/test/e2e.sh $(E2E_ARGS)
 
+# [system-test] runs system level tests that validate the operator is properly deployed
+system-test:
+	scripts/test/system.sh
+
 clean:
 	rm -f bin/submariner-operator
 
@@ -271,7 +275,7 @@ $(OPERATOR_SDK):
 	sha256sum -c scripts/operator-sdk.sha256
 	chmod a+x $@
 
-.PHONY: build ci clean generate-clientset bundle packagemanifests kustomization is-semantic-version olm scorecard
+.PHONY: build ci clean generate-clientset bundle packagemanifests kustomization is-semantic-version olm scorecard system-test
 
 else
 
