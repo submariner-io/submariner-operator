@@ -132,7 +132,7 @@ export PATH := $(CURDIR)/bin:$(PATH)
 # Targets to make
 
 e2e: $(VENDOR_MODULES) deploy
-	scripts/kind-e2e/e2e.sh $(E2E_ARGS)
+	scripts/test/e2e.sh $(E2E_ARGS)
 
 clean:
 	rm -f bin/submariner-operator

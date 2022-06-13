@@ -30,7 +30,7 @@ declare_kubeconfig
 
 # Import functions for testing with Operator
 # NB: These are also used to verify non-Operator deployments, thereby asserting the two are mostly equivalent
-. ${DAPPER_SOURCE}/scripts/kind-e2e/lib_operator_verify_subm.sh
+. ${DAPPER_SOURCE}/scripts/test/lib_operator_verify_subm.sh
 
 create_subm_vars
 with_context "$broker" broker_vars
