@@ -131,7 +131,7 @@ export PATH := $(CURDIR)/bin:$(PATH)
 
 # Targets to make
 
-e2e: $(VENDOR_MODULES) deploy
+e2e: $(VENDOR_MODULES)
 	scripts/test/e2e.sh $(E2E_ARGS)
 
 clean:
