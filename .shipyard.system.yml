@@ -1,0 +1,6 @@
+---
+cni: weave
+submariner: true
+nodes: control-plane
+clusters:
+  cluster1:

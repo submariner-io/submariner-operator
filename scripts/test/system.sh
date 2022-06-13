@@ -1,9 +1,11 @@
 #!/bin/bash
-# This should only be sourced
-if [ "${0##*/}" = "lib_operator_verify_subm.sh" ]; then
-    echo "Don't run me, source me" >&2
-    exit 1
-fi
+
+. "${SCRIPTS_DIR}/lib/debug_functions"
+. "${SCRIPTS_DIR}/lib/utils"
+
+set -eo pipefail
+
+### Functions ###
 
 function verify_subm_gateway_label() {
   kubectl get node $cluster-worker -o jsonpath='{.metadata.labels}' | grep submariner.io/gateway:true
@@ -482,5 +484,29 @@ function verify_network_plugin_syncer {
   kubectl get clusterrolebinding submariner-networkplugin-syncer
 }
 
+function deploy_env_once() {
+    if with_context "${clusters[0]}" kubectl wait --for condition=Ready pods -l app=submariner-gateway -n "${subm_ns}" --timeout=3s > /dev/null 2>&1; then
+        echo "Submariner already deployed, skipping deployment..."
+        return
+    fi
 
+    make deploy SETTINGS="$settings" using="${USING}"
+    declare_kubeconfig
+}
+
+### Main ###
+
+settings="${DAPPER_SOURCE}/.shipyard.system.yml"
+[[ ! "${DEPLOY_ARGS}" =~ "--globalnet" ]] || globalnet=true
+load_settings
+create_subm_vars
+
+declare_kubeconfig
+deploy_env_once
+
+with_context "$broker" broker_vars
+
+with_context "$broker" verify_subm_broker_secrets
+
+run_subm_clusters verify_subm_deployed
 
