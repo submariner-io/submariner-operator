@@ -26,17 +26,13 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/cli"
 )
 
-const (
-	clientSourcePort = "9898"
-)
-
 func init() {
 	command := &cobra.Command{
-		Use:   "inter-cluster <localkubeconfig> <remotekubeconfig>",
-		Short: "Check firewall access to setup tunnels between the Gateway node",
-		Long:  "This command checks if the firewall configuration allows tunnels to be configured on the Gateway nodes.",
+		Use:   "nat-discovery <localkubeconfig> <remotekubeconfig>",
+		Short: "Check firewall access for nat-discovery to function properly",
+		Long:  "This command checks if the firewall configuration allows nat-discovery between the configured Gateway nodes.",
 		Args:  checkKubeconfigArgs,
-		Run:   validateTunnelConfig,
+		Run:   validateNatDiscoveryPort,
 	}
 
 	addDiagnoseFWConfigFlags(command)
@@ -44,21 +40,21 @@ func init() {
 	diagnoseFirewallConfigCmd.AddCommand(command)
 }
 
-func validateTunnelConfig(command *cobra.Command, args []string) {
+func validateNatDiscoveryPort(command *cobra.Command, args []string) {
 	localCluster, remoteCluster := getClusterDetails(args)
 
 	status := cli.NewStatus()
-	status.Start(fmt.Sprintf("Checking if tunnel port is opened on the gateway node of cluster %q", localCluster.Name))
+	status.Start(fmt.Sprintf("Checking if nat-discovery port is opened on the gateway node of cluster %q", localCluster.Name))
 
 	if isClusterSingleNode(remoteCluster, status) {
 		// Skip the check if it's a single node cluster
 		return
 	}
 
-	if !validateConnectivity(localCluster, remoteCluster, TunnelPort, status) {
-		status.EndWithFailure("Could not determine if tunnel port is allowed in the cluster %q", localCluster.Name)
+	if !validateConnectivity(localCluster, remoteCluster, NatDiscoveryPort, status) {
+		status.EndWithFailure("Could not determine if nat-discovery port is allowed in the cluster %q", localCluster.Name)
 		os.Exit(1)
 	}
 
-	status.EndWithSuccess("Tunnel port is allowed in the cluster %q", localCluster.Name)
+	status.EndWithSuccess("nat-discovery port is allowed in the cluster %q", localCluster.Name)
 }
