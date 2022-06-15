@@ -31,7 +31,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/syncer"
 	"github.com/submariner-io/admiral/pkg/util"
-	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	submopv1a1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	resourceiface "github.com/submariner-io/submariner-operator/controllers/resource"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"

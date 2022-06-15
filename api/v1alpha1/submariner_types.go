@@ -1,7 +1,5 @@
 /*
-SPDX-License-Identifier: Apache-2.0
-
-Copyright Contributors to the Submariner project.
+Copyright 2022.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,8 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"encoding/json"
-
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -30,8 +26,9 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// SubmarinerSpec defines the desired state of Submariner
 // +k8s:openapi-gen=true
+
+// SubmarinerSpec defines the desired state of Submariner
 type SubmarinerSpec struct {
 	Broker                   string               `json:"broker"`
 	BrokerK8sApiServer       string               `json:"brokerK8sApiServer"`
@@ -67,12 +64,12 @@ type SubmarinerSpec struct {
 	// +optional
 	ConnectionHealthCheck *HealthCheckSpec `json:"connectionHealthCheck,omitempty"`
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make manifests" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	// Important: Run "make" to regenerate code after modifying this file
 }
 
-// SubmarinerStatus defines the observed state of Submariner
 // +k8s:openapi-gen=true
+
+// SubmarinerStatus defines the observed state of Submariner
 type SubmarinerStatus struct {
 	NatEnabled                bool                    `json:"natEnabled"`
 	ColorCodes                string                  `json:"colorCodes,omitempty"`
@@ -88,8 +85,35 @@ type SubmarinerStatus struct {
 	Gateways                  *[]submv1.GatewayStatus `json:"gateways,omitempty"`
 	DeploymentInfo            DeploymentInfo          `json:"deploymentInfo,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make manifests" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	// Important: Run "make" to regenerate code after modifying this file
+}
+
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+// +kubebuilder:resource:path=submariners,scope=Namespaced
+// +genclient
+// +k8s:openapi-gen=true
+
+// Submariner is the Schema for the submariners API
+type Submariner struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   SubmarinerSpec   `json:"spec,omitempty"`
+	Status SubmarinerStatus `json:"status,omitempty"`
+}
+
+//+kubebuilder:object:root=true
+
+// SubmarinerList contains a list of Submariner
+type SubmarinerList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Submariner `json:"items"`
+}
+
+func init() {
+	SchemeBuilder.Register(&Submariner{}, &SubmarinerList{})
 }
 
 type LoadBalancerStatus struct {
@@ -136,94 +160,3 @@ const (
 	Azure                                = "azure"
 	Openstack                            = "openstack"
 )
-
-// +kubebuilder:object:root=true
-
-// Submariner is the Schema for the submariners API
-// +k8s:openapi-gen=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:path=submariners,scope=Namespaced
-// +genclient
-// +operator-sdk:csv:customresourcedefinitions:displayName="Submariner"
-type Submariner struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   SubmarinerSpec   `json:"spec,omitempty"`
-	Status SubmarinerStatus `json:"status,omitempty"`
-}
-
-// +kubebuilder:object:root=true
-
-// SubmarinerList contains a list of Submariner.
-type SubmarinerList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Submariner `json:"items"`
-}
-
-// BrokerSpec defines the desired state of Broker.
-// +k8s:openapi-gen=true
-type BrokerSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	Components                  []string `json:"components,omitempty"`
-	DefaultCustomDomains        []string `json:"defaultCustomDomains,omitempty"`
-	GlobalnetCIDRRange          string   `json:"globalnetCIDRRange,omitempty"`
-	DefaultGlobalnetClusterSize uint     `json:"defaultGlobalnetClusterSize,omitempty"`
-	GlobalnetEnabled            bool     `json:"globalnetEnabled,omitempty"`
-}
-
-// BrokerStatus defines the observed state of Broker
-// +k8s:openapi-gen=true
-type BrokerStatus struct { // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-}
-
-// +kubebuilder:object:root=true
-
-// Broker is the Schema for the brokers API
-// +k8s:openapi-gen=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:path=brokers,scope=Namespaced
-// +genclient
-// +operator-sdk:csv:customresourcedefinitions:displayName="Broker"
-type Broker struct { //nolint:govet // we want to keep the traditional order
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   BrokerSpec   `json:"spec,omitempty"`
-	Status BrokerStatus `json:"status,omitempty"`
-}
-
-// +kubebuilder:object:root=true
-
-// BrokerList contains a list of Broker.
-type BrokerList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Broker `json:"items"`
-}
-
-func init() {
-	SchemeBuilder.Register(&Submariner{}, &SubmarinerList{})
-	SchemeBuilder.Register(&Broker{}, &BrokerList{})
-}
-
-func (s *Submariner) UnmarshalJSON(data []byte) error {
-	type submarinerAlias Submariner
-
-	subm := &submarinerAlias{
-		Spec: SubmarinerSpec{
-			Repository: DefaultRepo,
-			Version:    DefaultSubmarinerVersion,
-		},
-	}
-
-	_ = json.Unmarshal(data, subm)
-
-	*s = Submariner(*subm)
-
-	return nil
-}

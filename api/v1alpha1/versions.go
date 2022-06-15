@@ -16,9 +16,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package submariner contains submariner API versions.
-//
-// This file ensures Go source parsers acknowledge the submariner package
-// and any child packages. It can be removed if any other Go source files are
-// added to this package.
-package submariner
+package v1alpha1
+
+var (
+	DefaultRepo                      = "quay.io/submariner"
+	DefaultSubmarinerOperatorVersion = "0.13.0-m2"
+	DefaultSubmarinerVersion         = "0.13.0-m2"
+)
