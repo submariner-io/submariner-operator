@@ -54,8 +54,14 @@ func prepareAws(cmd *cobra.Command, args []string) {
 	input := api.PrepareForSubmarinerInput{
 		InternalPorts: []api.PortSpec{
 			{Port: vxlanPort, Protocol: "udp"},
-			{Port: metricsPort, Protocol: "tcp"},
 		},
+	}
+
+	for i := range metricsPort {
+		port := api.PortSpec{
+			Port: metricsPort[i], Protocol: "tcp",
+		}
+		input.InternalPorts = append(input.InternalPorts, port)
 	}
 
 	// For load-balanced gateways we want these ports open internally to facilitate private-ip to pivate-ip gateways communications.

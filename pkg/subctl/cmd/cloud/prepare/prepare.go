@@ -19,15 +19,19 @@ limitations under the License.
 package prepare
 
 import (
+	"strconv"
+
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
+	subctlcmd "github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
 
 var (
 	nattPort         uint16
 	natDiscoveryPort uint16
 	vxlanPort        uint16
-	metricsPort      uint16
+	metricsPort      []uint16
 )
 
 var (
@@ -54,7 +58,13 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd.PersistentFlags().Uint16Var(&nattPort, "natt-port", 4500, "IPSec NAT traversal port")
 	cmd.PersistentFlags().Uint16Var(&natDiscoveryPort, "nat-discovery-port", 4490, "NAT discovery port")
 	cmd.PersistentFlags().Uint16Var(&vxlanPort, "vxlan-port", 4800, "Internal VXLAN port")
-	cmd.PersistentFlags().Uint16Var(&metricsPort, "metrics-port", 8080, "Metrics port")
+
+	metricsPort = append(metricsPort, 8080, 8081)
+
+	cmd.PersistentFlags().Var(&subctlcmd.Uint16Slice{Value: &metricsPort}, "metrics-ports", "Metrics ports")
+
+	cmd.PersistentFlags().Var(&metricsAliasType{}, "metrics-port", "Metrics port")
+	_ = cmd.PersistentFlags().MarkDeprecated("metrics-port", "Use metrics-ports instead")
 
 	cmd.AddCommand(newAWSPrepareCommand())
 	cmd.AddCommand(newGCPPrepareCommand())
@@ -62,4 +72,25 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd.AddCommand(newGenericPrepareCommand())
 
 	return cmd
+}
+
+type metricsAliasType struct{}
+
+func (m metricsAliasType) String() string {
+	return strconv.FormatUint(uint64(metricsPort[0]), 10)
+}
+
+func (m metricsAliasType) Set(s string) error {
+	v, err := strconv.ParseUint(s, 0, 16)
+	if err != nil {
+		return errors.Wrap(err, "conversion to uint16 failed")
+	}
+
+	metricsPort = []uint16{uint16(v)}
+
+	return nil
+}
+
+func (m metricsAliasType) Type() string {
+	return "uint16"
 }
