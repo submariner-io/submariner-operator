@@ -57,8 +57,14 @@ func prepareRHOS(cmd *cobra.Command, args []string) {
 	input := api.PrepareForSubmarinerInput{
 		InternalPorts: []api.PortSpec{
 			{Port: vxlanPort, Protocol: "udp"},
-			{Port: metricsPort, Protocol: "tcp"},
 		},
+	}
+
+	for i := range metricsPort {
+		port := api.PortSpec{
+			Port: metricsPort[i], Protocol: "tcp",
+		}
+		input.InternalPorts = append(input.InternalPorts, port)
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
