@@ -27,7 +27,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.3.0
-	github.com/submariner-io/admiral v0.12.1
+	github.com/submariner-io/admiral v0.12.2-0.20220628083409-00ac56522dfb
 	github.com/submariner-io/cloud-prepare v0.12.1
 	github.com/submariner-io/lighthouse v0.12.1
 	github.com/submariner-io/shipyard v0.12.1
