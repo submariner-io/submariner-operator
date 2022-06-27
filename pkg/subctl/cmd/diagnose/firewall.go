@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/cli"
+	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/pods"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
@@ -121,7 +122,7 @@ func getActiveGatewayNodeName(cluster *cmd.Cluster, hostname string, status *cli
 		// On some platforms, the nodeName does not match with the hostname.
 		// Submariner Endpoint stores the hostname info in the endpoint and not the nodeName. So, we spawn a
 		// tiny pod to read the hostname and return the corresponding node.
-		sPod, err := spawnSnifferPodOnNode(cluster.KubeClient, node.Name, "default", "hostname")
+		sPod, err := spawnSnifferPodOnNode(cluster.KubeClient, node.Name, constants.OperatorNamespace, "hostname")
 		if err != nil {
 			status.EndWithFailure("Error spawning the sniffer pod on the node %q: %v", node.Name, err)
 			return ""
