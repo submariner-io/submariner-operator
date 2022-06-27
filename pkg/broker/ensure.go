@@ -64,8 +64,10 @@ func Ensure(crdUpdater crd.Updater, kubeClient kubernetes.Interface, componentAr
 		}
 	}
 
+	brokerNamespaceLabels := map[string]string{}
+
 	// Create the namespace
-	_, err := namespace.Ensure(kubeClient, brokerNS)
+	_, err := namespace.Ensure(kubeClient, brokerNS, brokerNamespaceLabels)
 	if err != nil {
 		return err // nolint:wrapcheck // No need to wrap here
 	}

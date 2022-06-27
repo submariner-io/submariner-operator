@@ -22,17 +22,33 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/admiral/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 )
 
 // Ensure functions updates or installs the operator CRDs in the cluster.
-func Ensure(kubeClient kubernetes.Interface, namespace string) (bool, error) {
-	ns := &v1.Namespace{ObjectMeta: v1meta.ObjectMeta{Name: namespace}}
+func Ensure(kubeClient kubernetes.Interface, namespace string, namespaceLabels map[string]string) (bool, error) {
+	ns := &v1.Namespace{ObjectMeta: v1meta.ObjectMeta{Name: namespace, Labels: namespaceLabels}}
 
-	_, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), ns, v1meta.CreateOptions{})
+	_, err := util.CreateOrUpdate(context.TODO(), resource.ForNamespace(kubeClient), ns, func(existing runtime.Object) (runtime.Object,
+		error,
+	) {
+		ns := existing.(*v1.Namespace)
+
+		if ns.Labels == nil {
+			ns.Labels = map[string]string{}
+		}
+
+		for k, v := range namespaceLabels {
+			ns.Labels[k] = v
+		}
+		return existing, nil
+	})
 
 	if err == nil {
 		return true, nil
