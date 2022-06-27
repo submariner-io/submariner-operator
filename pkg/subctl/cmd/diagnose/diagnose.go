@@ -20,6 +20,7 @@ package diagnose
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/submariner-io/submariner-operator/internal/constants"
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 	"github.com/submariner-io/submariner-operator/pkg/subctl/cmd"
 )
@@ -47,6 +48,6 @@ func addVerboseFlag(command *cobra.Command) {
 }
 
 func addNamespaceFlag(command *cobra.Command) {
-	command.Flags().StringVar(&podNamespace, "namespace", "default",
+	command.Flags().StringVar(&podNamespace, "namespace", constants.OperatorNamespace,
 		"namespace in which validation pods should be deployed")
 }

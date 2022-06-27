@@ -24,6 +24,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	"github.com/submariner-io/submariner-operator/internal/constants"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -72,7 +73,7 @@ func ScheduleAndAwaitCompletion(config *Config) (string, error) {
 	}
 
 	if config.Namespace == "" {
-		config.Namespace = "default"
+		config.Namespace = constants.OperatorNamespace
 	}
 
 	np := &Scheduled{Config: config}
@@ -95,7 +96,7 @@ func Schedule(config *Config) (*Scheduled, error) {
 	}
 
 	if config.Namespace == "" {
-		config.Namespace = "default"
+		config.Namespace = constants.OperatorNamespace
 	}
 
 	np := &Scheduled{Config: config}
