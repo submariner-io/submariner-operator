@@ -38,7 +38,12 @@ func Ensure(status reporter.Interface, clientProducer client.Producer, operatorN
 		status.Success("Created operator CRDs")
 	}
 
-	if created, err := namespace.Ensure(clientProducer.ForKubernetes(), operatorNamespace); err != nil {
+	operatorNamespaceLabels := map[string]string{
+		"pod-security.kubernetes.io/enforce": "privileged", "pod-security.kubernetes.io/audit": "privileged",
+		"pod-security.kubernetes.io/warn": "privileged",
+	}
+
+	if created, err := namespace.Ensure(clientProducer.ForKubernetes(), operatorNamespace, operatorNamespaceLabels); err != nil {
 		return err
 	} else if created {
 		status.Success("Created operator namespace: %s", operatorNamespace)
