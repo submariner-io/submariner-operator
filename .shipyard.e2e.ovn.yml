@@ -1,7 +1,7 @@
 ---
 cni: ovn
 submariner: true
-nodes: control-plane worker worker
+nodes: control-plane worker
 clusters:
   cluster1:
   cluster2:
