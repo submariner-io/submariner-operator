@@ -56,12 +56,6 @@ export DEPLOY_ARGS
 override UNIT_TEST_ARGS += test internal/env
 override VALIDATE_ARGS += --skip-dirs pkg/client
 
-# Process extra flags from the `using=a,b,c` optional flag
-
-ifneq (,$(filter lighthouse,$(_using)))
-override DEPLOY_ARGS += --deploytool_broker_args '--components service-discovery,connectivity'
-endif
-
 GO ?= go
 GOARCH = $(shell $(GO) env GOARCH)
 GOEXE = $(shell $(GO) env GOEXE)
