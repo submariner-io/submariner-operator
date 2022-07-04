@@ -1,4 +1,0 @@
----
-resources:
-  - submariner-metrics-reader/role.yaml
-  - submariner-metrics-reader/role_binding.yaml

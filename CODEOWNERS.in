@@ -1,6 +1,0 @@
-@dfarrell07 *.md
-@mkolesnik /.github/workflows/ /scripts/ Makefile* Dockerfile.dapper build/*
-@Oats87 *
-@skitt *
-@sridhargaddam *
-@tpantelis *

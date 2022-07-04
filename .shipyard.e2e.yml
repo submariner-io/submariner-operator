@@ -1,7 +1,0 @@
----
-cni: weave
-submariner: true
-nodes: control-plane worker
-clusters:
-  cluster1:
-  cluster2:
