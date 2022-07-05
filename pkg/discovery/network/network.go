@@ -24,11 +24,12 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	operatorclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
+	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/names"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type ClusterNetwork struct {
@@ -63,7 +64,7 @@ func (cn *ClusterNetwork) IsComplete() bool {
 	return cn != nil && len(cn.ServiceCIDRs) > 0 && len(cn.PodCIDRs) > 0
 }
 
-func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, operatorClient operatorclientset.Interface,
+func Discover(dynClient dynamic.Interface, clientSet kubernetes.Interface, operatorClient client.Client,
 	operatorNamespace string,
 ) (*ClusterNetwork, error) {
 	discovery, err := networkPluginsDiscovery(dynClient, clientSet)
@@ -136,13 +137,14 @@ func networkPluginsDiscovery(dynClient dynamic.Interface, clientSet kubernetes.I
 	return nil, nil
 }
 
-func getGlobalCIDRs(operatorClient operatorclientset.Interface, operatorNamespace string) (string, error) {
+func getGlobalCIDRs(operatorClient client.Client, operatorNamespace string) (string, error) {
 	if operatorClient == nil {
 		return "", nil
 	}
 
-	existingCfg, err := operatorClient.SubmarinerV1alpha1().Submariners(operatorNamespace).Get(
-		context.TODO(), names.SubmarinerCrName, v1.GetOptions{})
+	existingCfg := submariner.Submariner{}
+
+	err := operatorClient.Get(context.TODO(), types.NamespacedName{Namespace: operatorNamespace, Name: names.SubmarinerCrName}, &existingCfg)
 	if err != nil {
 		return "", errors.Wrap(err, "error retrieving Submariner resource")
 	}

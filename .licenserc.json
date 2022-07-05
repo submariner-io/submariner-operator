@@ -21,7 +21,6 @@
 	    "Copyright Contributors to the Submariner project."
 	],
 	"ignore": [
-	    "pkg/client/clientset/",
 	    "vendor/"
 	]
     },
