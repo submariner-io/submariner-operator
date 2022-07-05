@@ -34,7 +34,6 @@ import (
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	resourceiface "github.com/submariner-io/submariner-operator/controllers/resource"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
@@ -72,7 +71,6 @@ type Config struct {
 	RestConfig     *rest.Config
 	Scheme         *runtime.Scheme
 	KubeClient     kubernetes.Interface
-	SubmClient     submarinerclientset.Interface
 	DynClient      dynamic.Interface
 	ClusterNetwork *network.ClusterNetwork
 }

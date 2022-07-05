@@ -32,8 +32,6 @@ import (
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
-	operatorclient "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
-	operatorv1alpha1client "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned/typed/submariner/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerclientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
@@ -41,6 +39,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Submariner cleanup", func() {
@@ -49,8 +48,7 @@ var _ = Describe("Submariner cleanup", func() {
 
 func testSubmarinerCleanup() {
 	var (
-		submarinerInterface           operatorv1alpha1client.SubmarinerInterface
-		serviceDiscoveryInterface     operatorv1alpha1client.ServiceDiscoveryInterface
+		crClient                      client.Client
 		submariner                    *operatorv1alpha1.Submariner
 		routeAgentPodMonitor          *podMonitor
 		gatewayPodMonitor             *podMonitor
@@ -66,13 +64,20 @@ func testSubmarinerCleanup() {
 
 		framework.DetectGlobalnet()
 
-		operatorClient, err := operatorclient.NewForConfig(framework.RestConfigs[framework.ClusterA])
+		var err error
+
+		crClient, err = client.New(framework.RestConfigs[framework.ClusterA], client.Options{})
 		Expect(err).To(Succeed())
+		Expect(operatorv1alpha1.AddToScheme(crClient.Scheme())).To(Succeed())
 
-		submarinerInterface = operatorClient.SubmarinerV1alpha1().Submariners(framework.TestContext.SubmarinerNamespace)
-		serviceDiscoveryInterface = operatorClient.SubmarinerV1alpha1().ServiceDiscoveries(framework.TestContext.SubmarinerNamespace)
-
-		submariner, err = submarinerInterface.Get(context.TODO(), names.SubmarinerCrName, metav1.GetOptions{})
+		submariner = &operatorv1alpha1.Submariner{}
+		err = crClient.Get(
+			context.TODO(),
+			client.ObjectKey{
+				Namespace: framework.TestContext.SubmarinerNamespace,
+				Name:      names.SubmarinerCrName,
+			},
+			submariner)
 		Expect(err).To(Succeed())
 
 		brokerRestConfig = getBrokerRestConfig(submariner.Spec.BrokerK8sRemoteNamespace)
@@ -101,12 +106,13 @@ func testSubmarinerCleanup() {
 
 		if submariner != nil {
 			submariner.ObjectMeta = metav1.ObjectMeta{
+				Namespace:   submariner.Namespace,
 				Name:        submariner.Name,
 				Labels:      submariner.Labels,
 				Annotations: submariner.Annotations,
 			}
 
-			_, err := submarinerInterface.Create(context.TODO(), submariner, metav1.CreateOptions{})
+			err := crClient.Create(context.TODO(), submariner)
 			if err != nil {
 				framework.Errorf("Error re-creating Submariner: %v", err)
 			} else {
@@ -116,18 +122,33 @@ func testSubmarinerCleanup() {
 	})
 
 	It("should run DaemonSets/Deployments to uninstall components", func() {
-		By(fmt.Sprintf("Deleting Submariner resource in %q", framework.TestContext.ClusterIDs[framework.ClusterA]))
+		By(fmt.Sprintf("Deleting Submariner resource %v in %q", submariner, framework.TestContext.ClusterIDs[framework.ClusterA]))
 
-		Expect(submarinerInterface.Delete(context.TODO(), submariner.Name, metav1.DeleteOptions{})).To(Succeed())
+		err := crClient.Delete(context.TODO(), submariner)
+		Expect(err).To(Succeed())
 
 		Eventually(func() bool {
-			_, err := submarinerInterface.Get(context.TODO(), submariner.Name, metav1.GetOptions{})
+			err := crClient.Get(
+				context.TODO(),
+				client.ObjectKey{
+					Namespace: framework.TestContext.SubmarinerNamespace,
+					Name:      names.SubmarinerCrName,
+				},
+				submariner)
 			return apierrors.IsNotFound(err)
 		}, uninstall.ComponentReadyTimeout*2).Should(BeTrue(), "Submariner resource not deleted")
 
 		By("Submariner resource deleted")
 
-		_, err := serviceDiscoveryInterface.Get(context.TODO(), names.ServiceDiscoveryCrName, metav1.GetOptions{})
+		serviceDiscovery := &operatorv1alpha1.ServiceDiscovery{}
+
+		err = crClient.Get(
+			context.TODO(),
+			client.ObjectKey{
+				Namespace: framework.TestContext.SubmarinerNamespace,
+				Name:      names.ServiceDiscoveryCrName,
+			},
+			serviceDiscovery)
 		assertIsNotFound(err, "ServiceDiscovery", names.ServiceDiscoveryCrName)
 
 		lhAgentAgentPodMonitor.assertUninstallPodsCompleted()
@@ -167,10 +188,10 @@ func testSubmarinerCleanup() {
 }
 
 func assertNoGlobalnetResources() {
-	client, err := submarinerclientset.NewForConfig(framework.RestConfigs[framework.ClusterA])
+	submarinerClient, err := submarinerclientset.NewForConfig(framework.RestConfigs[framework.ClusterA])
 	Expect(err).To(Succeed())
 
-	list, err := client.SubmarinerV1().ClusterGlobalEgressIPs(metav1.NamespaceNone).List(context.TODO(), metav1.ListOptions{})
+	list, err := submarinerClient.SubmarinerV1().ClusterGlobalEgressIPs(metav1.NamespaceNone).List(context.TODO(), metav1.ListOptions{})
 	Expect(err).To(Succeed())
 	Expect(list.Items).To(BeEmpty())
 }

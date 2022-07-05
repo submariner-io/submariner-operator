@@ -22,7 +22,6 @@ import (
 	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
-	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -39,7 +38,6 @@ func AddToManager(mgr manager.Manager) error {
 		RestConfig: mgr.GetConfig(),
 		Scheme:     mgr.GetScheme(),
 		KubeClient: kubeClient,
-		SubmClient: submarinerclientset.NewForConfigOrDie(mgr.GetConfig()),
 		DynClient:  dynamic.NewForConfigOrDie(mgr.GetConfig()),
 	}).SetupWithManager(mgr); err != nil {
 		return err
