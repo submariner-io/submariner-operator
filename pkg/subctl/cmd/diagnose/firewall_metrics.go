@@ -70,7 +70,7 @@ func checkFirewallMetricsConfig(cluster *cmd.Cluster) bool {
 	gatewayPodIP := sPod.Pod.Status.HostIP
 	podCommand = fmt.Sprintf("for i in $(seq 10); do timeout 2 nc -p 9898 %s 8080; done", gatewayPodIP)
 
-	cPod, err := spawnClientPodOnNonGatewayNode(cluster.KubeClient, podNamespace, podCommand)
+	cPod, err := spawnClientPodOnNonGWNodeWithHostNwk(cluster.KubeClient, podNamespace, podCommand)
 	if err != nil {
 		status.EndWithFailure("Error spawning the client pod on non-Gateway node: %v", err)
 		return false
