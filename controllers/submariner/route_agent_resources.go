@@ -47,6 +47,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 	}
 
 	maxUnavailable := intstr.FromString("100%")
+	hostPathType := corev1.HostPathFileOrCreate
 
 	return &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -74,10 +75,12 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 						// We need to share /run/xtables.lock with the host for iptables
 						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
 							Path: "/run/xtables.lock",
+							Type: &hostPathType,
 						}}},
 						// We need to share /run/openvswitch/db.sock with the host for OVS
 						{Name: "host-run-openvswitch-db-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
 							Path: "/run/openvswitch/db.sock",
+							Type: &hostPathType,
 						}}},
 						{Name: "host-sys", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
 							Path: "/sys",
