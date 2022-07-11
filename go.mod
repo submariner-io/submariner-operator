@@ -37,6 +37,7 @@ require (
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
+	golang.org/x/text v0.3.8-0.20220509174342-b4bca84b0361 // indirect
 	google.golang.org/api v0.70.0
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.1
