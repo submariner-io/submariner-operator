@@ -43,7 +43,7 @@ undefine SKIP
 undefine FOCUS
 undefine E2E_TESTDIR
 
-ifneq (,$(filter ovn,$(_using)))
+ifneq (,$(filter ovn,$(USING)))
 SETTINGS = $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
 else
 SETTINGS = $(DAPPER_SOURCE)/.shipyard.e2e.yml
