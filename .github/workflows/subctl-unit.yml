@@ -1,0 +1,37 @@
+---
+name: Consuming Projects
+
+on:
+  pull_request:
+
+jobs:
+  unit-testing:
+    name: Check subctl
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the submariner-operator repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        with:
+          path: submariner-operator
+
+      - name: Check out the subctl repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        with:
+          repository: submariner-io/subctl
+          path: subctl
+
+      - name: Check out the shipyard repository
+        # This is required so that we can run a build involving multiple
+        # repositories (using LOCAL_BUILD=1)
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+        with:
+          repository: submariner-io/shipyard
+          path: shipyard
+
+      - name: Update the subctl build to use the current submariner-operator
+        run: |
+          cd subctl
+          go mod edit -replace=github.com/submariner-io/submariner-operator=../submariner-operator
+
+      - name: Run Go subctl unit tests
+        run: make -C subctl LOCAL_BUILD=1 unit
