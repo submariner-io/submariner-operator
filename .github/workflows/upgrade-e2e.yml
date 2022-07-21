@@ -4,6 +4,7 @@ name: Upgrade
 on:
   pull_request:
     types: [ready_for_review, opened, reopened, synchronize, converted_to_draft, labeled]
+    branches: [devel]
 
 jobs:
   upgrade-e2e:
