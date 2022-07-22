@@ -2729,6 +2729,7 @@ rules:
       - ""
     resources:
       - configmaps
+      - namespaces
     verbs:
       - get
       - list
@@ -2736,6 +2737,7 @@ rules:
       - apps
     resources:
       - daemonsets
+      - deployments
     verbs:
       - get
       - list
