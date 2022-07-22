@@ -24,6 +24,7 @@ rules:
       - apps
     resources:
       - daemonsets
+      - deployments
     verbs:
       - get
       - list
