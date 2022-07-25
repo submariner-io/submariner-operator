@@ -22,7 +22,7 @@ command -v subctl || curl -Ls https://get.submariner.io | VERSION=devel bash
 
 load_settings
 verify="connectivity"
-[[ ! ${DEPLOY_ARGS} =~ "service-discovery" ]] || verify="service-discovery"
+[[ ! ${DEPLOY_ARGS} =~ "service_discovery" ]] || verify="service-discovery"
 contexts="${clusters[@]}"
 
 # Run generic E2E tests between the clusters
