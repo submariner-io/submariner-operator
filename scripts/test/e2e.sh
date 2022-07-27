@@ -7,7 +7,6 @@
 set -em -o pipefail
 
 subm_ns=submariner-operator
-settings="${SETTINGS}"
 
 ### Main ###
 
@@ -22,7 +21,7 @@ command -v subctl || curl -Ls https://get.submariner.io | VERSION=devel bash
 
 load_settings
 verify="connectivity"
-[[ ! ${DEPLOY_ARGS} =~ "service_discovery" ]] || verify="service-discovery"
+[[ "${LIGHTHOUSE}" != "true" ]] || verify="service-discovery"
 contexts="${clusters[@]}"
 
 # Run generic E2E tests between the clusters
