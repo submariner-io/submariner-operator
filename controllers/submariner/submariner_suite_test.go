@@ -28,7 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
-	operatorv1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/controllers/test"
@@ -44,7 +44,7 @@ import (
 )
 
 var _ = BeforeSuite(func() {
-	Expect(operatorv1.AddToScheme(scheme.Scheme)).To(Succeed())
+	Expect(v1alpha1.AddToScheme(scheme.Scheme)).To(Succeed())
 	Expect(apiextensions.AddToScheme(scheme.Scheme)).To(Succeed())
 	Expect(submarinerv1.AddToScheme(scheme.Scheme)).To(Succeed())
 })
@@ -60,7 +60,7 @@ func TestSubmariner(t *testing.T) {
 
 type testDriver struct {
 	test.Driver
-	submariner     *operatorv1.Submariner
+	submariner     *v1alpha1.Submariner
 	clusterNetwork *network.ClusterNetwork
 }
 
@@ -105,8 +105,8 @@ func (t *testDriver) awaitSubmarinerDeleted() {
 	t.AwaitNoResource(t.submariner)
 }
 
-func (t *testDriver) getSubmariner() *operatorv1.Submariner {
-	obj := &operatorv1.Submariner{}
+func (t *testDriver) getSubmariner() *v1alpha1.Submariner {
+	obj := &v1alpha1.Submariner{}
 	err := t.Client.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, obj)
 	Expect(err).To(Succeed())
 
@@ -133,7 +133,7 @@ func (t *testDriver) assertUninstallRouteAgentDaemonSet() *appsv1.DaemonSet {
 	return daemonSet
 }
 
-func (t *testDriver) assertRouteAgentDaemonSetEnv(submariner *operatorv1.Submariner, envMap map[string]string) {
+func (t *testDriver) assertRouteAgentDaemonSetEnv(submariner *v1alpha1.Submariner, envMap map[string]string) {
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Status.ClusterCIDR))
@@ -164,7 +164,7 @@ func (t *testDriver) assertUninstallGatewayDaemonSet() *appsv1.DaemonSet {
 	return daemonSet
 }
 
-func (t *testDriver) assertGatewayDaemonSetEnv(submariner *operatorv1.Submariner, envMap map[string]string) {
+func (t *testDriver) assertGatewayDaemonSetEnv(submariner *v1alpha1.Submariner, envMap map[string]string) {
 	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_PSK", submariner.Spec.CeIPSecPSK))
 	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_NATTPORT", strconv.Itoa(submariner.Spec.CeIPSecNATTPort)))
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("RemoteNamespace"), submariner.Spec.BrokerK8sRemoteNamespace))
@@ -206,7 +206,7 @@ func (t *testDriver) assertUninstallGlobalnetDaemonSet() *appsv1.DaemonSet {
 	return daemonSet
 }
 
-func (t *testDriver) assertGlobalnetDaemonSetEnv(submariner *operatorv1.Submariner, envMap map[string]string) {
+func (t *testDriver) assertGlobalnetDaemonSetEnv(submariner *v1alpha1.Submariner, envMap map[string]string) {
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 }
@@ -232,7 +232,7 @@ func (t *testDriver) assertUninstallNetworkPluginSyncerDeployment() *appsv1.Depl
 	return deployment
 }
 
-func (t *testDriver) assertNetworkPluginSyncerDeploymentEnv(submariner *operatorv1.Submariner, envMap map[string]string) {
+func (t *testDriver) assertNetworkPluginSyncerDeploymentEnv(submariner *v1alpha1.Submariner, envMap map[string]string) {
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Status.ClusterCIDR))
@@ -246,7 +246,7 @@ func assertGatewayNodeSelector(daemonSet *appsv1.DaemonSet) {
 	Expect(daemonSet.Spec.Template.Spec.NodeSelector["submariner.io/gateway"]).To(Equal("true"))
 }
 
-func (t *testDriver) withNetworkDiscovery() *operatorv1.Submariner {
+func (t *testDriver) withNetworkDiscovery() *v1alpha1.Submariner {
 	t.submariner.Status.ClusterCIDR = getClusterCIDR(t.submariner, t.clusterNetwork)
 	t.submariner.Status.ServiceCIDR = getServiceCIDR(t.submariner, t.clusterNetwork)
 	t.submariner.Status.GlobalCIDR = getGlobalCIDR(t.submariner, t.clusterNetwork)
@@ -255,13 +255,13 @@ func (t *testDriver) withNetworkDiscovery() *operatorv1.Submariner {
 	return t.submariner
 }
 
-func newSubmariner() *operatorv1.Submariner {
-	return &operatorv1.Submariner{
+func newSubmariner() *v1alpha1.Submariner {
+	return &v1alpha1.Submariner{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      submarinerName,
 			Namespace: submarinerNamespace,
 		},
-		Spec: operatorv1.SubmarinerSpec{
+		Spec: v1alpha1.SubmarinerSpec{
 			Repository:               "quay.io/submariner",
 			Version:                  "0.12.0",
 			CeIPSecNATTPort:          4500,
@@ -284,7 +284,7 @@ func newSubmariner() *operatorv1.Submariner {
 	}
 }
 
-func getClusterCIDR(submariner *operatorv1.Submariner, clusterNetwork *network.ClusterNetwork) string {
+func getClusterCIDR(submariner *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork) string {
 	if submariner.Spec.ClusterCIDR != "" {
 		return submariner.Spec.ClusterCIDR
 	}
@@ -292,7 +292,7 @@ func getClusterCIDR(submariner *operatorv1.Submariner, clusterNetwork *network.C
 	return clusterNetwork.PodCIDRs[0]
 }
 
-func getServiceCIDR(submariner *operatorv1.Submariner, clusterNetwork *network.ClusterNetwork) string {
+func getServiceCIDR(submariner *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork) string {
 	if submariner.Spec.ServiceCIDR != "" {
 		return submariner.Spec.ServiceCIDR
 	}
@@ -300,7 +300,7 @@ func getServiceCIDR(submariner *operatorv1.Submariner, clusterNetwork *network.C
 	return clusterNetwork.ServiceCIDRs[0]
 }
 
-func getGlobalCIDR(submariner *operatorv1.Submariner, clusterNetwork *network.ClusterNetwork) string {
+func getGlobalCIDR(submariner *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork) string {
 	if submariner.Spec.GlobalCIDR != "" {
 		return submariner.Spec.GlobalCIDR
 	}

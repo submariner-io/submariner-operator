@@ -35,7 +35,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/submariner-operator/api"
-	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
