@@ -24,7 +24,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
+	v1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
