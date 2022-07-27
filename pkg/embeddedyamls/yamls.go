@@ -41,7 +41,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Broker is the Schema for the brokers API
+        description: Broker is the Schema for the brokers API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -74,7 +74,7 @@ spec:
                 type: boolean
             type: object
           status:
-            description: BrokerStatus defines the observed state of Broker
+            description: BrokerStatus defines the observed state of Broker.
             type: object
         type: object
     served: true
@@ -109,7 +109,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Submariner is the Schema for the submariners API
+        description: Submariner is the Schema for the submariners API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -124,7 +124,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: SubmarinerSpec defines the desired state of Submariner
+            description: SubmarinerSpec defines the desired state of Submariner.
             properties:
               broker:
                 type: string
@@ -223,7 +223,7 @@ spec:
             - serviceCIDR
             type: object
           status:
-            description: SubmarinerStatus defines the observed state of Submariner
+            description: SubmarinerStatus defines the observed state of Submariner.
             properties:
               clusterCIDR:
                 type: string
@@ -990,7 +990,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: ServiceDiscoverySpec defines the desired state of ServiceDiscovery
+            description: ServiceDiscoverySpec defines the desired state of ServiceDiscovery.
             properties:
               brokerK8sApiServer:
                 type: string
@@ -1040,7 +1040,7 @@ spec:
             - namespace
             type: object
           status:
-            description: ServiceDiscoveryStatus defines the observed state of ServiceDiscovery
+            description: ServiceDiscoveryStatus defines the observed state of ServiceDiscovery.
             properties:
               deploymentInfo:
                 properties:

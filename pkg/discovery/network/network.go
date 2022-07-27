@@ -24,7 +24,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	submariner "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
@@ -142,7 +142,7 @@ func getGlobalCIDRs(operatorClient client.Client, operatorNamespace string) (str
 		return "", nil
 	}
 
-	existingCfg := submariner.Submariner{}
+	existingCfg := v1alpha1.Submariner{}
 
 	err := operatorClient.Get(context.TODO(), types.NamespacedName{Namespace: operatorNamespace, Name: names.SubmarinerCrName}, &existingCfg)
 	if err != nil {

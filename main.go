@@ -34,8 +34,7 @@ import (
 	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
-	"github.com/submariner-io/submariner-operator/api"
-	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
@@ -80,7 +79,7 @@ func printVersion() {
 // nolint:wsl // block should not end with a whitespace.
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(submarinerv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(apiextensions.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
@@ -159,7 +158,7 @@ func main() {
 	}
 
 	// Setup Scheme for all resources
-	if err := api.AddToScheme(mgr.GetScheme()); err != nil {
+	if err := v1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
@@ -242,7 +241,7 @@ func createServiceMonitors(ctx context.Context, cfg *rest.Config, servicePorts [
 func serveCRMetrics(cfg *rest.Config) error {
 	// Below function returns filtered operator/CustomResource specific GVKs.
 	// For more control override the below GVK list with your own custom logic.
-	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(api.AddToScheme)
+	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(v1alpha1.AddToScheme)
 	if err != nil {
 		return errors.Wrap(err, "error getting GVKs")
 	}

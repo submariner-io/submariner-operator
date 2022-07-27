@@ -24,12 +24,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add 	must have json tags for the fields to be serialized.
+// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// ServiceDiscoverySpec defines the desired state of ServiceDiscovery
-// +k8s:openapi-gen=true
+// ServiceDiscoverySpec defines the desired state of ServiceDiscovery.
 type ServiceDiscoverySpec struct {
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+
 	BrokerK8sApiServer       string               `json:"brokerK8sApiServer"`
 	BrokerK8sApiServerToken  string               `json:"brokerK8sApiServerToken,omitempty"`
 	BrokerK8sCA              string               `json:"brokerK8sCA,omitempty"`
@@ -46,41 +47,30 @@ type ServiceDiscoverySpec struct {
 	// +listType=set
 	CustomDomains  []string          `json:"customDomains,omitempty"`
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make manifests" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 }
 
-type CoreDNSCustomConfig struct {
-	ConfigMapName string `json:"configMapName,omitempty"`
-	Namespace     string `json:"namespace,omitempty"`
-}
-
-// ServiceDiscoveryStatus defines the observed state of ServiceDiscovery
-// +k8s:openapi-gen=true
+// ServiceDiscoveryStatus defines the observed state of ServiceDiscovery.
 type ServiceDiscoveryStatus struct {
-	DeploymentInfo DeploymentInfo `json:"deploymentInfo,omitempty"`
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make manifests" to regenerate code after modifying this file
-	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	// Important: Run "make" to regenerate code after modifying this file
+
+	DeploymentInfo DeploymentInfo `json:"deploymentInfo,omitempty"`
 }
 
-// +kubebuilder:object:root=true
+//+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
+//+kubebuilder:resource:path=servicediscoveries,scope=Namespaced
 
 // ServiceDiscovery is the Schema for the servicediscoveries API.
-// +k8s:openapi-gen=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:path=servicediscoveries,scope=Namespaced
-// +genclient
-// +operator-sdk:csv:customresourcedefinitions:displayName="Lighthouse"
 type ServiceDiscovery struct {
-	Status            ServiceDiscoveryStatus `json:"status,omitempty"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              ServiceDiscoverySpec `json:"spec,omitempty"`
 	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   ServiceDiscoverySpec   `json:"spec,omitempty"`
+	Status ServiceDiscoveryStatus `json:"status,omitempty"`
 }
 
-// +kubebuilder:object:root=true
+//+kubebuilder:object:root=true
 
 // ServiceDiscoveryList contains a list of ServiceDiscovery.
 type ServiceDiscoveryList struct {
@@ -91,6 +81,11 @@ type ServiceDiscoveryList struct {
 
 func init() {
 	SchemeBuilder.Register(&ServiceDiscovery{}, &ServiceDiscoveryList{})
+}
+
+type CoreDNSCustomConfig struct {
+	ConfigMapName string `json:"configMapName,omitempty"`
+	Namespace     string `json:"namespace,omitempty"`
 }
 
 func (sd *ServiceDiscovery) UnmarshalJSON(data []byte) error {
