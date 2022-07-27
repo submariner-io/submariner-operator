@@ -39,9 +39,6 @@ PLATFORMS ?= linux/amd64,linux/arm64
 IMAGES = submariner-operator submariner-operator-index
 PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-globalnet submariner-route-agent lighthouse-agent lighthouse-coredns
 MULTIARCH_IMAGES := submariner-operator
-undefine SKIP
-undefine FOCUS
-undefine E2E_TESTDIR
 
 ifneq (,$(filter ovn,$(USING)))
 SETTINGS = $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
@@ -51,10 +48,7 @@ endif
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
-override E2E_ARGS += cluster1 cluster2
-export DEPLOY_ARGS
 override UNIT_TEST_ARGS += test internal/env
-override VALIDATE_ARGS += --skip-dirs pkg/client
 
 GO ?= go
 GOARCH = $(shell $(GO) env GOARCH)
@@ -126,7 +120,7 @@ export PATH := $(CURDIR)/bin:$(PATH)
 # Targets to make
 
 e2e: $(VENDOR_MODULES)
-	scripts/test/e2e.sh $(E2E_ARGS)
+	scripts/test/e2e.sh cluster1 cluster2
 
 # [system-test] runs system level tests that validate the operator is properly deployed
 system-test:
@@ -135,7 +129,7 @@ system-test:
 clean:
 	rm -f bin/submariner-operator
 
-licensecheck: BUILD_ARGS=--noupx
+licensecheck: export BUILD_UPX = false
 licensecheck: build bin/linux/amd64/submariner-operator | bin/lichen
 	bin/lichen -c .lichen.yaml bin/linux/amd64/submariner-operator
 
@@ -154,9 +148,9 @@ $(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submarin
 	$(GO) generate pkg/embeddedyamls/generate.go
 
 bin/%/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
-	GOARCH=$(call dockertogoarch,$(patsubst bin/linux/%/,%,$(dir $@))) ${SCRIPTS_DIR}/compile.sh \
-	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
-	$@ . $(BUILD_ARGS)
+	GOARCH=$(call dockertogoarch,$(patsubst bin/linux/%/,%,$(dir $@))) \
+	LDFLAGS="-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
+	${SCRIPTS_DIR}/compile.sh $@ .
 
 ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
 
@@ -243,8 +237,7 @@ scorecard: bundle olm clusters
 	$(OPERATOR_SDK) scorecard --kubeconfig=$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 -o text ./bundle
 
 # Create the clusters with olm
-olm:
-	$(eval override CLUSTERS_ARGS += --olm)
+olm: export OLM = true
 
 golangci-lint: $(EMBEDDED_YAMLS)
 
