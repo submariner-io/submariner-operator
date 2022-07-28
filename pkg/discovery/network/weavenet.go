@@ -20,11 +20,11 @@ package network
 
 import (
 	"github.com/submariner-io/submariner/pkg/cni"
-	"k8s.io/client-go/kubernetes"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	weaveNetPod, err := FindPod(clientSet, "name=weave-net")
+func discoverWeaveNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+	weaveNetPod, err := FindPod(client, "name=weave-net")
 
 	if err != nil || weaveNetPod == nil {
 		return nil, err
@@ -43,7 +43,7 @@ func discoverWeaveNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, erro
 		}
 	}
 
-	clusterIPRange, err := findClusterIPRange(clientSet)
+	clusterIPRange, err := findClusterIPRange(client)
 	if err == nil && clusterIPRange != "" {
 		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
 	}

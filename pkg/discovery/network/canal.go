@@ -24,21 +24,23 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/cni"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/apimachinery/pkg/types"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // nolint:nilnil // Intentional as the purpose is to discover.
-func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
+func discoverCanalFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
 	// TODO: this must be smarter, looking for the canal daemonset, with labels k8s-app=canal
 	//  and then the reference on the container volumes:
 	//   - configMap:
 	//          defaultMode: 420
 	//          name: canal-config
 	//        name: flannel-cfg
-	cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get(context.TODO(), "canal-config", metav1.GetOptions{})
+	cm := &corev1.ConfigMap{}
+
+	err := client.Get(context.TODO(), types.NamespacedName{Namespace: "kube-system", Name: "canal-config"}, cm)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil
@@ -59,7 +61,7 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 	}
 
 	// Try to detect the service CIDRs using the generic functions
-	clusterIPRange, err := findClusterIPRange(clientSet)
+	clusterIPRange, err := findClusterIPRange(client)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +73,7 @@ func discoverCanalFlannelNetwork(clientSet kubernetes.Interface) (*ClusterNetwor
 	return clusterNetwork, nil
 }
 
-func extractPodCIDRFromNetConfigJSON(cm *v1.ConfigMap) *string {
+func extractPodCIDRFromNetConfigJSON(cm *corev1.ConfigMap) *string {
 	netConfJSON := cm.Data["net-conf.json"]
 	if netConfJSON == "" {
 		return nil

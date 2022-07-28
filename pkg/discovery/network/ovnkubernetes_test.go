@@ -27,7 +27,7 @@ import (
 	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const ovnKubeNamespace = "ovn-kubernetes"
@@ -80,9 +80,9 @@ var _ = Describe("OvnKubernetes Network", func() {
 	})
 })
 
-func testOvnKubernetesDiscoveryWith(objects ...runtime.Object) (*network.ClusterNetwork, error) {
-	clientSet := newTestClient(objects...)
-	return network.Discover(nil, clientSet, nil, "")
+func testOvnKubernetesDiscoveryWith(objects ...controllerClient.Object) (*network.ClusterNetwork, error) {
+	client := newTestClient(objects...)
+	return network.Discover(client, "")
 }
 
 func ovnFakeConfigMap(namespace, name string) *v1.ConfigMap {

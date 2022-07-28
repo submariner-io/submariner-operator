@@ -24,7 +24,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Weave Network", func() {
@@ -69,9 +69,9 @@ var _ = Describe("Weave Network", func() {
 	})
 })
 
-func testDiscoverWeaveWith(objects ...runtime.Object) *network.ClusterNetwork {
-	clientSet := newTestClient(objects...)
-	clusterNet, err := network.Discover(nil, clientSet, nil, "")
+func testDiscoverWeaveWith(objects ...controllerClient.Object) *network.ClusterNetwork {
+	client := newTestClient(objects...)
+	clusterNet, err := network.Discover(client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet

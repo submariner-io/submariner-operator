@@ -25,12 +25,14 @@ import (
 	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var _ = Describe("Calico Network", func() {
 	var (
-		initObjs     []runtime.Object
+		initObjs     []client.Object
 		clusterNet   *network.ClusterNetwork
 		err          error
 		calicoCfgMap = &v1.ConfigMap{
@@ -47,18 +49,18 @@ var _ = Describe("Calico Network", func() {
 	})
 
 	JustBeforeEach(func() {
-		clientSet := newTestClient(initObjs...)
-		clusterNet, err = network.Discover(nil, clientSet, nil, "")
+		client := fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(initObjs...).Build()
+		clusterNet, err = network.Discover(client, "")
 	})
 
 	When("no kube pod information is available", func() {
 		JustBeforeEach(func() {
-			initObjs = []runtime.Object{
+			initObjs = []client.Object{
 				calicoCfgMap,
 			}
 
-			clientSet := newTestClient(initObjs...)
-			clusterNet, err = network.Discover(nil, clientSet, nil, "")
+			client := newTestClient(initObjs...)
+			clusterNet, err = network.Discover(client, "")
 		})
 
 		It("should return a ClusterNetwork with only service CIDRs", func() {
@@ -72,14 +74,14 @@ var _ = Describe("Calico Network", func() {
 
 	When("kube pod information is available", func() {
 		JustBeforeEach(func() {
-			initObjs = []runtime.Object{
+			initObjs = []client.Object{
 				calicoCfgMap,
 				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
 				fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-cidr=" + testPodCIDR}, []v1.EnvVar{}),
 			}
 
-			clientSet := newTestClient(initObjs...)
-			clusterNet, err = network.Discover(nil, clientSet, nil, "")
+			client := newTestClient(initObjs...)
+			clusterNet, err = network.Discover(client, "")
 		})
 		It("should return a ClusterNetwork with pod and service CIDRs", func() {
 			Expect(err).NotTo(HaveOccurred())

@@ -22,7 +22,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 const (
@@ -34,19 +36,18 @@ const (
 )
 
 var _ = Describe("findPod", func() {
-	var clientSet *fake.Clientset
+	var client client.Client
 
 	BeforeEach(func() {
-		clientSet = fake.NewSimpleClientset(
+		client = fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(
 			fakePodWithName(testFirstPod, testComponent1, nil, nil),
 			fakePodWithName(testSecondPod, testComponent2, nil, nil),
-			fakePodWithName(testThirdPod, testComponent2, nil, nil),
-		)
+			fakePodWithName(testThirdPod, testComponent2, nil, nil)).Build()
 	})
 
 	When("There are no pods to be found", func() {
 		It("Should return nil", func() {
-			pod, err := network.FindPod(clientSet, "component=not-to-be-found")
+			pod, err := network.FindPod(client, "component=not-to-be-found")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pod).To(BeNil())
 		})
@@ -54,7 +55,7 @@ var _ = Describe("findPod", func() {
 
 	When("A pod is found", func() {
 		It("Should return the pod", func() {
-			pod, err := network.FindPod(clientSet, componentLabel(testComponent1))
+			pod, err := network.FindPod(client, componentLabel(testComponent1))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pod.Name).To(Equal(testFirstPod))
 		})
@@ -62,7 +63,7 @@ var _ = Describe("findPod", func() {
 
 	When("Multiple pods are found", func() {
 		It("Should return the first pod", func() {
-			pod, err := network.FindPod(clientSet, componentLabel(testComponent2))
+			pod, err := network.FindPod(client, componentLabel(testComponent2))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pod.Name).To(Equal(testSecondPod))
 		})
@@ -76,21 +77,21 @@ const (
 )
 
 var _ = Describe("findPodCommandParameter", func() {
-	var clientSet *fake.Clientset
+	var client client.Client
 
 	BeforeEach(func() {
-		clientSet = fake.NewSimpleClientset(
+		client = fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(
 			fakePodWithName(testFirstPod, testComponent1, nil, nil),
 			fakePodWithName(testSecondPod, testComponent2,
 				[]string{"component1", testParameter1 + "=" + testValue1}, nil),
 			fakePodWithName(testThirdPod, testComponent3,
 				[]string{"sh", "-c", "component1 " + testParameter1 + "=" + testValue1}, nil),
-		)
+		).Build()
 	})
 
 	When("There are no pods to be found", func() {
 		It("Should return empty string", func() {
-			param, err := network.FindPodCommandParameter(clientSet, componentLabel("not-to-be-found"), testParameter1)
+			param, err := network.FindPodCommandParameter(client, componentLabel("not-to-be-found"), testParameter1)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(param).To(BeEmpty())
 		})
@@ -98,7 +99,7 @@ var _ = Describe("findPodCommandParameter", func() {
 
 	When("A pod is found, but does not contain the parameter", func() {
 		It("Should return an empty string", func() {
-			param, err := network.FindPodCommandParameter(clientSet, componentLabel(testComponent1), "unknown-parameter")
+			param, err := network.FindPodCommandParameter(client, componentLabel(testComponent1), "unknown-parameter")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(param).To(BeEmpty())
 		})
@@ -106,7 +107,7 @@ var _ = Describe("findPodCommandParameter", func() {
 
 	When("A pod is found, and contains the parameter", func() {
 		It("Should return the parameter value", func() {
-			param, err := network.FindPodCommandParameter(clientSet, componentLabel(testComponent2), testParameter1)
+			param, err := network.FindPodCommandParameter(client, componentLabel(testComponent2), testParameter1)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(param).To(Equal(testValue1))
 		})
@@ -114,7 +115,7 @@ var _ = Describe("findPodCommandParameter", func() {
 
 	When("A pod is found, and the parameter is wrapped in a sh call", func() {
 		It("Should return the parameter value", func() {
-			param, err := network.FindPodCommandParameter(clientSet, componentLabel(testComponent3), testParameter1)
+			param, err := network.FindPodCommandParameter(client, componentLabel(testComponent3), testParameter1)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(param).To(Equal(testValue1))
 		})

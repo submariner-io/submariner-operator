@@ -35,7 +35,7 @@ func (r *Reconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*netw
 		return r.config.ClusterNetwork, nil
 	}
 
-	clusterNetwork, err := network.Discover(r.config.DynClient, r.config.KubeClient, r.config.ScopedClient, submariner.Namespace)
+	clusterNetwork, err := network.Discover(r.config.GeneralClient, submariner.Namespace)
 	if err != nil {
 		log.Error(err, "Error trying to discover network")
 	}
