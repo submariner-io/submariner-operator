@@ -29,8 +29,8 @@ import (
 	"github.com/submariner-io/admiral/pkg/reporter"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/retry"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Info struct {
@@ -324,8 +324,8 @@ func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config, statu
 	return globalnetCIDR, nil
 }
 
-func GetGlobalNetworks(kubeClient kubernetes.Interface, brokerNamespace string) (*Info, *v1.ConfigMap, error) {
-	configMap, err := GetConfigMap(kubeClient, brokerNamespace)
+func GetGlobalNetworks(client controllerClient.Client, brokerNamespace string) (*Info, *v1.ConfigMap, error) {
+	configMap, err := GetConfigMap(client, brokerNamespace)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error retrieving globalnet ConfigMap")
 	}
@@ -440,8 +440,8 @@ func IsValidCIDR(cidr string) error {
 	return nil
 }
 
-func ValidateExistingGlobalNetworks(kubeClient kubernetes.Interface, namespace string) error {
-	globalnetInfo, _, err := GetGlobalNetworks(kubeClient, namespace)
+func ValidateExistingGlobalNetworks(client controllerClient.Client, namespace string) error {
+	globalnetInfo, _, err := GetGlobalNetworks(client, namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil
@@ -459,14 +459,14 @@ func ValidateExistingGlobalNetworks(kubeClient kubernetes.Interface, namespace s
 	return nil
 }
 
-func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset kubernetes.Interface, brokerNamespace string,
+func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClient controllerClient.Client, brokerNamespace string,
 	netconfig *Config, status reporter.Interface,
 ) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		status.Start("Retrieving Globalnet information from the Broker")
 		defer status.End()
 
-		globalnetInfo, globalnetConfigMap, err := GetGlobalNetworks(brokerAdminClientset, brokerNamespace)
+		globalnetInfo, globalnetConfigMap, err := GetGlobalNetworks(brokerAdminClient, brokerNamespace)
 		if err != nil {
 			return status.Error(err, "unable to retrieve Globalnet information")
 		}
@@ -490,7 +490,7 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClientset kubernetes.Interf
 
 				status.Start("Updating the Globalnet information on the Broker")
 
-				err = updateConfigMap(brokerAdminClientset, brokerNamespace, globalnetConfigMap, newClusterInfo)
+				err = updateConfigMap(brokerAdminClient, globalnetConfigMap, newClusterInfo)
 				if apierrors.IsConflict(err) {
 					status.Warning("Conflict occurred updating the Globalnet ConfigMap - retrying")
 				} else {
