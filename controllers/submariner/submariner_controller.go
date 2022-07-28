@@ -48,7 +48,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -73,7 +72,6 @@ type Config struct {
 	GeneralClient  client.Client
 	RestConfig     *rest.Config
 	Scheme         *runtime.Scheme
-	KubeClient     kubernetes.Interface
 	DynClient      dynamic.Interface
 	ClusterNetwork *network.ClusterNetwork
 }
