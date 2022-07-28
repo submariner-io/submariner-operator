@@ -38,7 +38,6 @@ func AddToManager(mgr manager.Manager) error {
 		GeneralClient: generalClient,
 		RestConfig:    mgr.GetConfig(),
 		Scheme:        mgr.GetScheme(),
-		KubeClient:    kubeClient,
 		DynClient:     dynamic.NewForConfigOrDie(mgr.GetConfig()),
 	}).SetupWithManager(mgr); err != nil {
 		return err
