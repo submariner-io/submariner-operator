@@ -23,13 +23,13 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/admiral/pkg/fake"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/cni"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes/fake"
-	fakecorev1 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
-	"k8s.io/client-go/testing"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes/scheme"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
+	fakeClient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 const (
@@ -44,7 +44,7 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-proxy", []string{"kube-proxy", "--cluster-ABCD=1.2.3.4"}, []v1.EnvVar{}),
+				fakePod("kube-proxy", []string{"kube-proxy", "--cluster-ABCD=1.2.3.4"}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -67,7 +67,7 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-ABCD=1.2.3.4"}, []v1.EnvVar{}),
+				fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-ABCD=1.2.3.4"}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -90,7 +90,7 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--cluster-ABCD=1.2.3.4"}, []v1.EnvVar{}),
+				fakePod("kube-apiserver", []string{"kube-apiserver", "--cluster-ABCD=1.2.3.4"}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -113,7 +113,7 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-cidr=" + testPodCIDR}, []v1.EnvVar{}),
+				fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-cidr=" + testPodCIDR}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -136,7 +136,7 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-proxy", []string{"kube-proxy", "--cluster-cidr=" + testPodCIDR}, []v1.EnvVar{}),
+				fakePod("kube-proxy", []string{"kube-proxy", "--cluster-cidr=" + testPodCIDR}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -159,7 +159,7 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
+				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -182,8 +182,8 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-proxy", []string{"kube-proxy", "--cluster-cidr=" + testPodCIDR}, []v1.EnvVar{}),
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
+				fakePod("kube-proxy", []string{"kube-proxy", "--cluster-cidr=" + testPodCIDR}, []corev1.EnvVar{}),
+				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -250,7 +250,7 @@ var _ = Describe("Generic Network", func() {
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
 				fakeNode("node1", testPodCIDR),
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
+				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []corev1.EnvVar{}),
 			)
 		})
 
@@ -266,8 +266,8 @@ var _ = Describe("Generic Network", func() {
 
 	When("No kube-api pod exists and invalid service creation returns no error", func() {
 		It("Should return error and nil cluster network", func() {
-			clientSet := fake.NewSimpleClientset()
-			clusterNet, err := network.Discover(nil, clientSet, nil, "")
+			client := fakeClient.NewClientBuilder().WithScheme(scheme.Scheme).Build()
+			clusterNet, err := network.Discover(client, "")
 			Expect(err).To(HaveOccurred())
 			Expect(clusterNet).To(BeNil())
 		})
@@ -275,15 +275,15 @@ var _ = Describe("Generic Network", func() {
 
 	When("No kube-api pod exists and invalid service creation returns an unexpected error", func() {
 		It("Should return error and nil cluster network", func() {
-			clientSet := fake.NewSimpleClientset()
+			client := fake.NewReactingClient(nil)
+
 			// Inject error for create services to return expectedErr
-			clientSet.CoreV1().(*fakecorev1.FakeCoreV1).PrependReactor("create", "services",
-				func(action testing.Action) (handled bool, ret runtime.Object, err error) {
-					return true,
-						nil,
-						fmt.Errorf("%s", testServiceCIDR)
+			client.AddReactor(fake.Create, &corev1.Service{},
+				func(obj interface{}) (bool, error) {
+					return true, fmt.Errorf("%s", testServiceCIDR)
 				})
-			clusterNet, err := network.Discover(nil, clientSet, nil, "")
+
+			clusterNet, err := network.Discover(client, "")
 			Expect(err).To(HaveOccurred())
 			Expect(clusterNet).To(BeNil())
 		})
@@ -310,26 +310,25 @@ var _ = Describe("Generic Network", func() {
 	})
 })
 
-func testDiscoverGenericWith(objects ...runtime.Object) *network.ClusterNetwork {
-	clientSet := newTestClient(objects...)
-	clusterNet, err := network.Discover(nil, clientSet, nil, "")
+func testDiscoverGenericWith(objects ...controllerClient.Object) *network.ClusterNetwork {
+	client := newTestClient(objects...)
+	clusterNet, err := network.Discover(client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet
 }
 
-func newTestClient(objects ...runtime.Object) *fake.Clientset {
-	clientSet := fake.NewSimpleClientset(objects...)
+func newTestClient(objects ...controllerClient.Object) controllerClient.Client {
+	client := fake.NewReactingClient(fakeClient.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build())
+
 	// Inject error for create services to return expectedErr
-	clientSet.CoreV1().(*fakecorev1.FakeCoreV1).PrependReactor("create", "services",
-		func(action testing.Action) (handled bool, ret runtime.Object, err error) {
-			return true,
-				nil,
-				fmt.Errorf("The Service \"invalid-svc\" is invalid: "+
-					"spec.clusterIPs: Invalid value: []string{\"1.1.1.1\"}: failed to "+
-					"allocated ip:1.1.1.1 with error:provided IP is not in the valid range. "+
-					"The range of valid IPs is %s", testServiceCIDRFromService)
+	client.AddReactor(fake.Create, &corev1.Service{},
+		func(obj interface{}) (bool, error) {
+			return true, fmt.Errorf("The Service \"invalid-svc\" is invalid: "+
+				"spec.clusterIPs: Invalid value: []string{\"1.1.1.1\"}: failed to "+
+				"allocated ip:1.1.1.1 with error:provided IP is not in the valid range. "+
+				"The range of valid IPs is %s", testServiceCIDRFromService)
 		})
 
-	return clientSet
+	return client
 }

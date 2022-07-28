@@ -25,7 +25,7 @@ import (
 	"github.com/submariner-io/submariner/pkg/cni"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/dynamic/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var _ = Describe("OpenShift4 Network", func() {
@@ -61,10 +61,7 @@ func testOS4DiscoveryWith(json []byte) (*network.ClusterNetwork, error) {
 	err := obj.UnmarshalJSON(json)
 	Expect(err).NotTo(HaveOccurred())
 
-	scheme := runtime.NewScheme()
-	dynClient := fake.NewSimpleDynamicClient(scheme, obj)
-
-	return network.Discover(dynClient, nil, nil, "")
+	return network.Discover(fake.NewClientBuilder().WithScheme(runtime.NewScheme()).WithObjects(obj).Build(), "")
 }
 
 func getNetworkJSON() []byte {

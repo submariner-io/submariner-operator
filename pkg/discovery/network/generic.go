@@ -26,15 +26,15 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/cni"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/client-go/kubernetes"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // nolint:nilnil // Intentional as the purpose is to discover.
-func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	clusterNetwork, err := discoverNetwork(clientSet)
+func discoverGenericNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+	clusterNetwork, err := discoverNetwork(client)
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +48,10 @@ func discoverGenericNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, er
 }
 
 // nolint:nilnil // Intentional as the purpose is to discover.
-func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
+func discoverNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
 	clusterNetwork := &ClusterNetwork{}
 
-	podIPRange, err := findPodIPRange(clientSet)
+	podIPRange, err := findPodIPRange(client)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 		clusterNetwork.PodCIDRs = []string{podIPRange}
 	}
 
-	clusterIPRange, err := findClusterIPRange(clientSet)
+	clusterIPRange, err := findClusterIPRange(client)
 	if err != nil {
 		return nil, err
 	}
@@ -76,13 +76,13 @@ func discoverNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
 	return nil, nil
 }
 
-func findClusterIPRange(clientSet kubernetes.Interface) (string, error) {
-	clusterIPRange, err := findClusterIPRangeFromApiserver(clientSet)
+func findClusterIPRange(client controllerClient.Client) (string, error) {
+	clusterIPRange, err := findClusterIPRangeFromApiserver(client)
 	if err != nil || clusterIPRange != "" {
 		return clusterIPRange, err
 	}
 
-	clusterIPRange, err = findClusterIPRangeFromServiceCreation(clientSet)
+	clusterIPRange, err = findClusterIPRangeFromServiceCreation(client)
 	if err != nil || clusterIPRange != "" {
 		return clusterIPRange, err
 	}
@@ -90,19 +90,27 @@ func findClusterIPRange(clientSet kubernetes.Interface) (string, error) {
 	return "", nil
 }
 
-func findClusterIPRangeFromApiserver(clientSet kubernetes.Interface) (string, error) {
-	return FindPodCommandParameter(clientSet, "component=kube-apiserver", "--service-cluster-ip-range")
+func findClusterIPRangeFromApiserver(client controllerClient.Client) (string, error) {
+	return FindPodCommandParameter(client, "component=kube-apiserver", "--service-cluster-ip-range")
 }
 
-func findClusterIPRangeFromServiceCreation(clientSet kubernetes.Interface) (string, error) {
+func findClusterIPRangeFromServiceCreation(client controllerClient.Client) (string, error) {
+	ns := os.Getenv("WATCH_NAMESPACE")
+	// WATCH_NAMESPACE env should be set to operator's namespace, if running in operator
+	if ns == "" {
+		// otherwise, it should be called from subctl command, so use "default" namespace
+		ns = "default"
+	}
+
 	// find service cidr based on https://stackoverflow.com/questions/44190607/how-do-you-find-the-cluster-service-cidr-of-a-kubernetes-cluster
-	invalidSvcSpec := &v1.Service{
+	invalidSvcSpec := &corev1.Service{
 		ObjectMeta: v1meta.ObjectMeta{
-			Name: "invalid-svc",
+			Name:      "invalid-svc",
+			Namespace: ns,
 		},
-		Spec: v1.ServiceSpec{
+		Spec: corev1.ServiceSpec{
 			ClusterIP: "1.1.1.1",
-			Ports: []v1.ServicePort{
+			Ports: []corev1.ServicePort{
 				{
 					Port: 443,
 					TargetPort: intstr.IntOrString{
@@ -113,15 +121,8 @@ func findClusterIPRangeFromServiceCreation(clientSet kubernetes.Interface) (stri
 		},
 	}
 
-	ns := os.Getenv("WATCH_NAMESPACE")
-	// WATCH_NAMESPACE env should be set to operator's namespace, if running in operator
-	if ns == "" {
-		// otherwise, it should be called from subctl command, so use "default" namespace
-		ns = "default"
-	}
-
 	// create service to the namespace
-	_, err := clientSet.CoreV1().Services(ns).Create(context.TODO(), invalidSvcSpec, v1meta.CreateOptions{})
+	err := client.Create(context.TODO(), invalidSvcSpec)
 
 	// creating invalid service didn't fail as expected
 	if err == nil {
@@ -151,18 +152,18 @@ func parseServiceCIDRFrom(msg string) (string, error) {
 	return match[1], nil
 }
 
-func findPodIPRange(clientSet kubernetes.Interface) (string, error) {
-	podIPRange, err := findPodIPRangeKubeController(clientSet)
+func findPodIPRange(client controllerClient.Client) (string, error) {
+	podIPRange, err := findPodIPRangeKubeController(client)
 	if err != nil || podIPRange != "" {
 		return podIPRange, err
 	}
 
-	podIPRange, err = findPodIPRangeKubeProxy(clientSet)
+	podIPRange, err = findPodIPRangeKubeProxy(client)
 	if err != nil || podIPRange != "" {
 		return podIPRange, err
 	}
 
-	podIPRange, err = findPodIPRangeFromNodeSpec(clientSet)
+	podIPRange, err = findPodIPRangeFromNodeSpec(client)
 	if err != nil || podIPRange != "" {
 		return podIPRange, err
 	}
@@ -170,16 +171,18 @@ func findPodIPRange(clientSet kubernetes.Interface) (string, error) {
 	return "", nil
 }
 
-func findPodIPRangeKubeController(clientSet kubernetes.Interface) (string, error) {
-	return FindPodCommandParameter(clientSet, "component=kube-controller-manager", "--cluster-cidr")
+func findPodIPRangeKubeController(client controllerClient.Client) (string, error) {
+	return FindPodCommandParameter(client, "component=kube-controller-manager", "--cluster-cidr")
 }
 
-func findPodIPRangeKubeProxy(clientSet kubernetes.Interface) (string, error) {
-	return FindPodCommandParameter(clientSet, "component=kube-proxy", "--cluster-cidr")
+func findPodIPRangeKubeProxy(client controllerClient.Client) (string, error) {
+	return FindPodCommandParameter(client, "component=kube-proxy", "--cluster-cidr")
 }
 
-func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) {
-	nodes, err := clientSet.CoreV1().Nodes().List(context.TODO(), v1meta.ListOptions{})
+func findPodIPRangeFromNodeSpec(client controllerClient.Client) (string, error) {
+	nodes := &corev1.NodeList{}
+
+	err := client.List(context.TODO(), nodes)
 	if err != nil {
 		return "", errors.WithMessagef(err, "error listing nodes")
 	}
@@ -187,7 +190,7 @@ func findPodIPRangeFromNodeSpec(clientSet kubernetes.Interface) (string, error) 
 	return parseToPodCidr(nodes.Items)
 }
 
-func parseToPodCidr(nodes []v1.Node) (string, error) {
+func parseToPodCidr(nodes []corev1.Node) (string, error) {
 	for i := range nodes {
 		if nodes[i].Spec.PodCIDR != "" {
 			return nodes[i].Spec.PodCIDR, nil
