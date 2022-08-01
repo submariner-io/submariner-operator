@@ -172,17 +172,6 @@ deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submar
 	cd vendor/github.com/submariner-io/submariner && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
 	test -f $@
 
-# Generate the clientset for the Submariner APIs
-# It needs to be run when the Submariner APIs change
-generate-clientset: $(VENDOR_MODULES)
-	git clone https://github.com/kubernetes/code-generator -b kubernetes-1.19.10 $${GOPATH}/src/k8s.io/code-generator
-	cd $${GOPATH}/src/k8s.io/code-generator && $(GO) mod vendor
-	GO111MODULE=on $${GOPATH}/src/k8s.io/code-generator/generate-groups.sh \
-		client,deepcopy \
-		github.com/submariner-io/submariner-operator/pkg/client \
-		github.com/submariner-io/submariner-operator/api \
-		submariner:v1alpha1
-
 # Generate manifests e.g. CRD, RBAC etc
 manifests: $(CONTROLLER_DEEPCOPY) $(CONTROLLER_GEN) $(VENDOR_MODULES)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
@@ -262,7 +251,7 @@ $(OPERATOR_SDK):
 	sha256sum -c scripts/operator-sdk.sha256
 	chmod a+x $@
 
-.PHONY: build ci clean generate-clientset bundle packagemanifests kustomization is-semantic-version olm scorecard system-test
+.PHONY: build ci clean bundle packagemanifests kustomization is-semantic-version olm scorecard system-test
 
 else
 
