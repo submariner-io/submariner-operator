@@ -31,23 +31,23 @@ import (
 // nolint:wrapcheck // No need to wrap errors here.
 func AddToManager(mgr manager.Manager) error {
 	kubeClient := kubernetes.NewForConfigOrDie(mgr.GetConfig())
-	operatorClient, _ := operatorclient.NewClient(mgr.GetConfig())
+	generalClient, _ := operatorclient.NewClient(mgr.GetConfig())
 
 	if err := submariner.NewReconciler(&submariner.Config{
-		ScopedClient: mgr.GetClient(),
-		RestConfig:   mgr.GetConfig(),
-		Scheme:       mgr.GetScheme(),
-		KubeClient:   kubeClient,
-		DynClient:    dynamic.NewForConfigOrDie(mgr.GetConfig()),
+		ScopedClient:  mgr.GetClient(),
+		GeneralClient: generalClient,
+		RestConfig:    mgr.GetConfig(),
+		Scheme:        mgr.GetScheme(),
+		KubeClient:    kubeClient,
+		DynClient:     dynamic.NewForConfigOrDie(mgr.GetConfig()),
 	}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
 	return servicediscovery.NewReconciler(&servicediscovery.Config{
-		Client:         mgr.GetClient(),
-		RestConfig:     mgr.GetConfig(),
-		Scheme:         mgr.GetScheme(),
-		KubeClient:     kubeClient,
-		OperatorClient: operatorClient,
+		Client:     mgr.GetClient(),
+		RestConfig: mgr.GetConfig(),
+		Scheme:     mgr.GetScheme(),
+		KubeClient: kubeClient,
 	}).SetupWithManager(mgr)
 }
