@@ -100,7 +100,7 @@ function verify_subm_deployed() {
     # Verify SubM Routeagent container
     verify_subm_routeagent_container
 
-    if [[ $globalnet = true ]]; then
+    if [[ "$GLOBALNET" == true ]]; then
         #Verify SubM Globalnet Daemonset
         verify_subm_globalnet_daemonset
     fi
@@ -490,14 +490,13 @@ function deploy_env_once() {
         return
     fi
 
-    make deploy SETTINGS="$settings" using="${USING}"
+    make deploy SETTINGS="$SETTINGS" using="${USING}"
     declare_kubeconfig
 }
 
 ### Main ###
 
-settings="${DAPPER_SOURCE}/.shipyard.system.yml"
-[[ ! "${DEPLOY_ARGS}" =~ "--globalnet" ]] || globalnet=true
+SETTINGS="${DAPPER_SOURCE}/.shipyard.system.yml"
 load_settings
 create_subm_vars
 
