@@ -41,7 +41,7 @@ const (
 func (r *Reconciler) reconcileLoadBalancer(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*corev1.Service, error) {
-	return helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.config.Client, r.config.Scheme)
+	return helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.config.ScopedClient, r.config.Scheme)
 }
 
 func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {

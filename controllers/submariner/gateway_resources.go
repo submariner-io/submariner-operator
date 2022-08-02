@@ -247,12 +247,12 @@ func (r *Reconciler) reconcileGatewayDaemonSet(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*appsv1.DaemonSet, error) {
 	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance, names.GatewayComponent),
-		reqLogger, r.config.Client, r.config.Scheme)
+		reqLogger, r.config.ScopedClient, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
 
-	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.config.Client,
+	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.config.ScopedClient,
 		r.config.RestConfig, r.config.Scheme, reqLogger)
 
 	return daemonSet, err
@@ -293,7 +293,7 @@ func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
 ) ([]submarinerv1.Gateway, error) {
 	foundGateways := &submarinerv1.GatewayList{}
 
-	err := r.config.Client.List(ctx, foundGateways, client.InNamespace(namespace))
+	err := r.config.ScopedClient.List(ctx, foundGateways, client.InNamespace(namespace))
 	if err != nil && apierrors.IsNotFound(err) {
 		return []submarinerv1.Gateway{}, nil
 	}
