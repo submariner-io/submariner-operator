@@ -66,8 +66,9 @@ const (
 var log = logf.Log.WithName("controller_submariner")
 
 type Config struct {
-	// This client is a split client that reads objects from the cache and writes to the apiserver
-	Client         client.Client
+	// This client is scoped to the operator namespace intended to only be used for resources created and maintained by this
+	// controller. Also it's a split client that reads objects from the cache and writes to the apiserver.
+	ScopedClient   client.Client
 	RestConfig     *rest.Config
 	Scheme         *runtime.Scheme
 	KubeClient     kubernetes.Interface
@@ -208,21 +209,21 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
 	instance.Status.Gateways = &gatewayStatuses
 
-	err = updateDaemonSetStatus(ctx, r.config.Client, gatewayDaemonSet, &instance.Status.GatewayDaemonSetStatus, request.Namespace)
+	err = updateDaemonSetStatus(ctx, r.config.ScopedClient, gatewayDaemonSet, &instance.Status.GatewayDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check gateway daemonset containers")
 
 		return reconcile.Result{}, err
 	}
 
-	err = updateDaemonSetStatus(ctx, r.config.Client, routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
+	err = updateDaemonSetStatus(ctx, r.config.ScopedClient, routeagentDaemonSet, &instance.Status.RouteAgentDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check route agent daemonset containers")
 
 		return reconcile.Result{}, err
 	}
 
-	err = updateDaemonSetStatus(ctx, r.config.Client, globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
+	err = updateDaemonSetStatus(ctx, r.config.ScopedClient, globalnetDaemonSet, &instance.Status.GlobalnetDaemonSetStatus, request.Namespace)
 	if err != nil {
 		reqLogger.Error(err, "failed to check gateway daemonset containers")
 
@@ -236,7 +237,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	if !reflect.DeepEqual(instance.Status, initialStatus) {
-		err := r.config.Client.Status().Update(ctx, instance)
+		err := r.config.ScopedClient.Status().Update(ctx, instance)
 		if err != nil {
 			// Log the error, but indicate success, to avoid reconciliation storms
 			// TODO skitt determine what we should really be doing for concurrent updates to the Submariner CR
@@ -257,7 +258,7 @@ func getImagePath(submariner *submopv1a1.Submariner, imageName, componentName st
 func (r *Reconciler) getSubmariner(ctx context.Context, key types.NamespacedName) (*submopv1a1.Submariner, error) {
 	instance := &submopv1a1.Submariner{}
 
-	err := r.config.Client.Get(ctx, key, instance)
+	err := r.config.ScopedClient.Get(ctx, key, instance)
 	if err != nil {
 		return nil, errors.Wrap(err, "error retrieving Submariner resource")
 	}
@@ -266,7 +267,7 @@ func (r *Reconciler) getSubmariner(ctx context.Context, key types.NamespacedName
 }
 
 func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Submariner) (*submopv1a1.Submariner, error) {
-	added, err := finalizer.Add(ctx, resourceiface.ForControllerClient(r.config.Client, instance.Namespace, &submopv1a1.Submariner{}),
+	added, err := finalizer.Add(ctx, resourceiface.ForControllerClient(r.config.ScopedClient, instance.Namespace, &submopv1a1.Submariner{}),
 		instance, constants.CleanupFinalizer)
 	if err != nil {
 		return nil, err // nolint:wrapcheck // No need to wrap
@@ -330,7 +331,7 @@ func (r *Reconciler) setupSecretSyncer(instance *submopv1a1.Submariner, logger l
 
 	if instance.Spec.BrokerK8sSecret != "" {
 		if _, ok := r.secretSyncCancelFuncs[instance.Spec.BrokerK8sSecret]; !ok {
-			_, gvr, err := util.ToUnstructuredResource(&corev1.Secret{}, r.config.Client.RESTMapper())
+			_, gvr, err := util.ToUnstructuredResource(&corev1.Secret{}, r.config.ScopedClient.RESTMapper())
 			if err != nil {
 				return errors.Wrap(err, "error calculating the GVR for the Secret type")
 			}
@@ -358,10 +359,10 @@ func (r *Reconciler) setupSecretSyncer(instance *submopv1a1.Submariner, logger l
 					SourceClient:    brokerClient,
 					SourceNamespace: instance.Spec.BrokerK8sRemoteNamespace,
 					Direction:       syncer.None,
-					RestMapper:      r.config.Client.RESTMapper(),
+					RestMapper:      r.config.ScopedClient.RESTMapper(),
 					Scheme:          r.config.Scheme,
 					Federator: federate.NewCreateOrUpdateFederator(
-						r.config.DynClient, r.config.Client.RESTMapper(), namespace, ""),
+						r.config.DynClient, r.config.ScopedClient.RESTMapper(), namespace, ""),
 					Transform: func(from runtime.Object, numRequeues int, op syncer.Operation) (runtime.Object, bool) {
 						secret := from.(*corev1.Secret)
 						logger.V(level.TRACE).Info("Transforming secret", "secret", secret)

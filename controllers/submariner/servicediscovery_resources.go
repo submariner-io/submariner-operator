@@ -38,7 +38,7 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if isEnabled {
 			sd := newServiceDiscoveryCR(submariner.Namespace)
-			result, err := controllerutil.CreateOrUpdate(ctx, r.config.Client, sd, func() error {
+			result, err := controllerutil.CreateOrUpdate(ctx, r.config.ScopedClient, sd, func() error {
 				sd.Spec = v1alpha1.ServiceDiscoverySpec{
 					Version:                  submariner.Spec.Version,
 					Repository:               submariner.Spec.Repository,
@@ -75,7 +75,7 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 		}
 
 		sdExisting := newServiceDiscoveryCR(submariner.Namespace)
-		err := r.config.Client.Delete(ctx, sdExisting)
+		err := r.config.ScopedClient.Delete(ctx, sdExisting)
 		if apierrors.IsNotFound(err) {
 			return nil
 		} else if err == nil {

@@ -88,7 +88,7 @@ func newTestDriver() *testDriver {
 		t.JustBeforeEach()
 
 		t.Controller = submarinerController.NewReconciler(&submarinerController.Config{
-			Client:         t.Client,
+			ScopedClient:   t.Client,
 			Scheme:         scheme.Scheme,
 			ClusterNetwork: t.clusterNetwork,
 		})

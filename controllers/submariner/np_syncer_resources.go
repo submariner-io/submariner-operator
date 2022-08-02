@@ -40,7 +40,7 @@ func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.S
 	// Only OVNKubernetes needs networkplugin-syncer so far
 	if needsNetworkPluginSyncer(instance) {
 		_, err := helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,
-			clusterNetwork, names.NetworkPluginSyncerComponent), reqLogger, r.config.Client, r.config.Scheme)
+			clusterNetwork, names.NetworkPluginSyncerComponent), reqLogger, r.config.ScopedClient, r.config.Scheme)
 		return err
 	}
 
