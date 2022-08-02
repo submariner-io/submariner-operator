@@ -98,10 +98,9 @@ func newTestDriver() *testDriver {
 		t.JustBeforeEach()
 
 		t.Controller = servicediscovery.NewReconciler(&servicediscovery.Config{
-			Client:         t.Client,
-			Scheme:         scheme.Scheme,
-			KubeClient:     t.kubeClient,
-			OperatorClient: t.Client,
+			Client:     t.Client,
+			Scheme:     scheme.Scheme,
+			KubeClient: t.kubeClient,
 		})
 	})
 

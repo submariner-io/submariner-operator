@@ -68,7 +68,9 @@ var log = logf.Log.WithName("controller_submariner")
 type Config struct {
 	// This client is scoped to the operator namespace intended to only be used for resources created and maintained by this
 	// controller. Also it's a split client that reads objects from the cache and writes to the apiserver.
-	ScopedClient   client.Client
+	ScopedClient client.Client
+	// This client can be used to access any other resource not in the operator namespace.
+	GeneralClient  client.Client
 	RestConfig     *rest.Config
 	Scheme         *runtime.Scheme
 	KubeClient     kubernetes.Interface

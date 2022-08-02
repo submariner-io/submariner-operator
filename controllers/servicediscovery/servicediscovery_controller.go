@@ -73,11 +73,10 @@ const (
 
 type Config struct {
 	// This client is a split client that reads objects from the cache and writes to the apiserver
-	Client         controllerClient.Client
-	RestConfig     *rest.Config
-	Scheme         *runtime.Scheme
-	KubeClient     clientset.Interface
-	OperatorClient controllerClient.Client
+	Client     controllerClient.Client
+	RestConfig *rest.Config
+	Scheme     *runtime.Scheme
+	KubeClient clientset.Interface
 }
 
 // Reconciler reconciles a ServiceDiscovery object.
