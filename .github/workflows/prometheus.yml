@@ -26,6 +26,11 @@ jobs:
           df -h
           free -h
 
+      - name: Increase inotify settings
+        run: |
+          sudo sysctl fs.inotify.max_user_watches=524288
+          sudo sysctl fs.inotify.max_user_instances=512
+
       - name: Deploy clusters+Submariner using the latest image, with Prometheus
         run: make deploy using=prometheus
 
