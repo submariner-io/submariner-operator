@@ -23,7 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	submopv1a1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	submopv1a1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 )
 
