@@ -24,8 +24,9 @@ import (
 	"strings"
 
 	"github.com/submariner-io/submariner/pkg/cni"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -36,14 +37,15 @@ const (
 	OvnSBDBDefaultPort = 6642
 )
 
-func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	ovnDBPod, err := FindPod(clientSet, "name=ovnkube-db")
+func discoverOvnKubernetesNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+	ovnDBPod, err := FindPod(client, "name=ovnkube-db")
 
 	if err != nil || ovnDBPod == nil {
 		return nil, err
 	}
 
-	if _, err := clientSet.CoreV1().Services(ovnDBPod.Namespace).Get(context.TODO(), ovnKubeService, v1.GetOptions{}); err != nil {
+	err = client.Get(context.TODO(), types.NamespacedName{Namespace: ovnDBPod.Namespace, Name: ovnKubeService}, &corev1.Service{})
+	if err != nil {
 		return nil, fmt.Errorf("error finding %q service in %q namespace", ovnKubeService, ovnDBPod.Namespace)
 	}
 
@@ -68,7 +70,10 @@ func discoverOvnKubernetesNetwork(clientSet kubernetes.Interface) (*ClusterNetwo
 	}
 
 	// If the cluster/service CIDRs weren't found we leave it to the generic functions to figure out later
-	if ovnConfig, err := clientSet.CoreV1().ConfigMaps(ovnDBPod.Namespace).Get(context.TODO(), "ovn-config", v1.GetOptions{}); err == nil {
+	ovnConfig := &corev1.ConfigMap{}
+
+	err = client.Get(context.TODO(), types.NamespacedName{Namespace: ovnDBPod.Namespace, Name: "ovn-config"}, ovnConfig)
+	if err == nil {
 		if netCidr, ok := ovnConfig.Data["net_cidr"]; ok {
 			clusterNetwork.PodCIDRs = []string{netCidr}
 		}

@@ -25,7 +25,7 @@ import (
 	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Canal Flannel Network", func() {
@@ -53,17 +53,17 @@ var _ = Describe("Canal Flannel Network", func() {
 	})
 })
 
-func testDiscoverCanalFlannelWith(objects ...runtime.Object) *network.ClusterNetwork {
-	clientSet := newTestClient(objects...)
-	clusterNet, err := network.Discover(nil, clientSet, nil, "")
+func testDiscoverCanalFlannelWith(objects ...controllerClient.Object) *network.ClusterNetwork {
+	client := newTestClient(objects...)
+	clusterNet, err := network.Discover(client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet
 }
 
-func testDiscoverWith(objects ...runtime.Object) *network.ClusterNetwork {
-	clientSet := newTestClient(objects...)
-	clusterNet, err := network.Discover(nil, clientSet, nil, "")
+func testDiscoverWith(objects ...controllerClient.Object) *network.ClusterNetwork {
+	client := newTestClient(objects...)
+	clusterNet, err := network.Discover(client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet

@@ -25,7 +25,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	operatorv1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/test"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
@@ -209,8 +209,8 @@ func testReconciliation() {
 			t.AssertReconcileSuccess()
 
 			updated := t.getSubmariner()
-			Expect(updated.Spec.Repository).To(Equal(operatorv1.DefaultRepo))
-			Expect(updated.Spec.Version).To(Equal(operatorv1.DefaultSubmarinerVersion))
+			Expect(updated.Spec.Repository).To(Equal(v1alpha1.DefaultRepo))
+			Expect(updated.Spec.Version).To(Equal(v1alpha1.DefaultSubmarinerVersion))
 		})
 	})
 
@@ -238,7 +238,7 @@ func testReconciliation() {
 
 	When("Submariner resource retrieval fails", func() {
 		BeforeEach(func() {
-			t.Client = &test.FailingClient{Client: t.NewClient(), OnGet: reflect.TypeOf(&operatorv1.Submariner{})}
+			t.Client = &test.FailingClient{Client: t.NewClient(), OnGet: reflect.TypeOf(&v1alpha1.Submariner{})}
 		})
 
 		It("should return an error", func() {
@@ -397,7 +397,7 @@ func testDeletion() {
 			t.submariner.Spec.ServiceDiscoveryEnabled = true
 
 			t.InitClientObjs = append(t.InitClientObjs,
-				&operatorv1.ServiceDiscovery{
+				&v1alpha1.ServiceDiscovery{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: submarinerNamespace,
 						Name:      names.ServiceDiscoveryCrName,
@@ -413,7 +413,7 @@ func testDeletion() {
 
 			t.AssertReconcileSuccess()
 
-			serviceDiscovery := &operatorv1.ServiceDiscovery{}
+			serviceDiscovery := &v1alpha1.ServiceDiscovery{}
 			err := t.Client.Get(context.TODO(), types.NamespacedName{Name: names.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
 				serviceDiscovery)
 			Expect(errors.IsNotFound(err)).To(BeTrue(), "ServiceDiscovery still exists")

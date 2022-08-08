@@ -23,13 +23,13 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
-	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func FindPodCommandParameter(clientSet kubernetes.Interface, labelSelector, parameter string) (string, error) {
-	pod, err := FindPod(clientSet, labelSelector)
+func FindPodCommandParameter(client controllerClient.Client, labelSelector, parameter string) (string, error) {
+	pod, err := FindPod(client, labelSelector)
 
 	if err != nil || pod == nil {
 		return "", err
@@ -55,11 +55,15 @@ func FindPodCommandParameter(clientSet kubernetes.Interface, labelSelector, para
 }
 
 // nolint:nilnil // Intentional as the purpose is to find.
-func FindPod(clientSet kubernetes.Interface, labelSelector string) (*v1.Pod, error) {
-	pods, err := clientSet.CoreV1().Pods("").List(context.TODO(), v1meta.ListOptions{
-		LabelSelector: labelSelector,
-		Limit:         1,
-	})
+func FindPod(client controllerClient.Client, labelSelector string) (*corev1.Pod, error) {
+	selector, err := labels.Parse(labelSelector)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "error parsing label selector %q", labelSelector)
+	}
+
+	pods := &corev1.PodList{}
+
+	err = client.List(context.TODO(), pods, controllerClient.InNamespace(""), controllerClient.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, errors.WithMessagef(err, "error listing Pods by label selector %q", labelSelector)
 	}

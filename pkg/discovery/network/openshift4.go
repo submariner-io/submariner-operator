@@ -25,36 +25,32 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/cni"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
+	"k8s.io/apimachinery/pkg/types"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var openshift4clusterNetworkGVR = schema.GroupVersionResource{
-	Group:    "config.openshift.io",
-	Version:  "v1",
-	Resource: "networks",
-}
-
 // nolint:nilnil // Intentional as the purpose is to discover.
-func discoverOpenShift4Network(dynClient dynamic.Interface) (*ClusterNetwork, error) {
-	if dynClient == nil {
-		return nil, nil
-	}
+func discoverOpenShift4Network(client controllerClient.Client) (*ClusterNetwork, error) {
+	network := &unstructured.Unstructured{}
+	network.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "config.openshift.io",
+		Kind:    "Network",
+		Version: "v1",
+	})
 
-	crClient := dynClient.Resource(openshift4clusterNetworkGVR)
-
-	cr, err := crClient.Get(context.TODO(), "cluster", metav1.GetOptions{})
+	err := client.Get(context.TODO(), types.NamespacedName{Name: "cluster"}, network)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) || meta.IsNoMatchError(err) {
 			return nil, nil
 		}
 
 		return nil, errors.WithMessage(err, "error obtaining the default 'cluster' OpenShift4 Network config resource")
 	}
 
-	return parseOS4Network(cr)
+	return parseOS4Network(network)
 }
 
 func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {

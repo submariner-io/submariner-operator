@@ -30,7 +30,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/watcher"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
-	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerclientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"

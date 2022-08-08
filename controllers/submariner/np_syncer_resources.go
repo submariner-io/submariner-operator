@@ -22,7 +22,7 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/names"
@@ -40,7 +40,7 @@ func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.S
 	// Only OVNKubernetes needs networkplugin-syncer so far
 	if needsNetworkPluginSyncer(instance) {
 		_, err := helpers.ReconcileDeployment(instance, newNetworkPluginSyncerDeployment(instance,
-			clusterNetwork, names.NetworkPluginSyncerComponent), reqLogger, r.config.Client, r.config.Scheme)
+			clusterNetwork, names.NetworkPluginSyncerComponent), reqLogger, r.config.ScopedClient, r.config.Scheme)
 		return err
 	}
 

@@ -23,7 +23,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,7 +38,7 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if isEnabled {
 			sd := newServiceDiscoveryCR(submariner.Namespace)
-			result, err := controllerutil.CreateOrUpdate(ctx, r.config.Client, sd, func() error {
+			result, err := controllerutil.CreateOrUpdate(ctx, r.config.ScopedClient, sd, func() error {
 				sd.Spec = v1alpha1.ServiceDiscoverySpec{
 					Version:                  submariner.Spec.Version,
 					Repository:               submariner.Spec.Repository,
@@ -75,7 +75,7 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 		}
 
 		sdExisting := newServiceDiscoveryCR(submariner.Namespace)
-		err := r.config.Client.Delete(ctx, sdExisting)
+		err := r.config.ScopedClient.Delete(ctx, sdExisting)
 		if apierrors.IsNotFound(err) {
 			return nil
 		} else if err == nil {

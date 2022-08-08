@@ -24,10 +24,11 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/apimachinery/pkg/types"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -45,7 +46,7 @@ type clusterInfo struct {
 	GlobalCidr []string `json:"global_cidr"`
 }
 
-func CreateConfigMap(kubeClient kubernetes.Interface, globalnetEnabled bool, defaultGlobalCidrRange string,
+func CreateConfigMap(client controllerClient.Client, globalnetEnabled bool, defaultGlobalCidrRange string,
 	defaultGlobalClusterSize uint, namespace string,
 ) error {
 	gnConfigMap, err := NewGlobalnetConfigMap(globalnetEnabled, defaultGlobalCidrRange, defaultGlobalClusterSize, namespace)
@@ -53,7 +54,7 @@ func CreateConfigMap(kubeClient kubernetes.Interface, globalnetEnabled bool, def
 		return errors.Wrap(err, "error creating config map")
 	}
 
-	_, err = kubeClient.CoreV1().ConfigMaps(namespace).Create(context.TODO(), gnConfigMap, metav1.CreateOptions{})
+	err = client.Create(context.TODO(), gnConfigMap)
 	if err == nil || apierrors.IsAlreadyExists(err) {
 		return nil
 	}
@@ -63,7 +64,7 @@ func CreateConfigMap(kubeClient kubernetes.Interface, globalnetEnabled bool, def
 
 func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 	defaultGlobalClusterSize uint, namespace string,
-) (*v1.ConfigMap, error) {
+) (*corev1.ConfigMap, error) {
 	labels := map[string]string{
 		"component": "submariner-globalnet",
 	}
@@ -88,7 +89,7 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 		}
 	}
 
-	cm := &v1.ConfigMap{
+	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      globalCIDRConfigMapName,
 			Namespace: namespace,
@@ -100,7 +101,7 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 	return cm, nil
 }
 
-func updateConfigMap(k8sClientset kubernetes.Interface, namespace string, configMap *v1.ConfigMap, newCluster clusterInfo,
+func updateConfigMap(client controllerClient.Client, configMap *corev1.ConfigMap, newCluster clusterInfo,
 ) error {
 	var existingInfo []clusterInfo
 
@@ -128,17 +129,21 @@ func updateConfigMap(k8sClientset kubernetes.Interface, namespace string, config
 	}
 
 	configMap.Data[clusterInfoKey] = string(data)
-	_, err = k8sClientset.CoreV1().ConfigMaps(namespace).Update(context.TODO(), configMap, metav1.UpdateOptions{})
+	err = client.Update(context.TODO(), configMap)
 
 	return errors.Wrapf(err, "error updating ConfigMap")
 }
 
 // nolint:wrapcheck // No need to wrap here
-func GetConfigMap(kubeClient kubernetes.Interface, namespace string) (*v1.ConfigMap, error) {
-	return kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), globalCIDRConfigMapName, metav1.GetOptions{})
+func GetConfigMap(client controllerClient.Client, namespace string) (*corev1.ConfigMap, error) {
+	cm := &corev1.ConfigMap{}
+	return cm, client.Get(context.TODO(), types.NamespacedName{Namespace: namespace, Name: globalCIDRConfigMapName}, cm)
 }
 
 // nolint:wrapcheck // No need to wrap here
-func DeleteConfigMap(kubeClient kubernetes.Interface, namespace string) error {
-	return kubeClient.CoreV1().ConfigMaps(namespace).Delete(context.TODO(), globalCIDRConfigMapName, metav1.DeleteOptions{})
+func DeleteConfigMap(client controllerClient.Client, namespace string) error {
+	return client.Delete(context.TODO(), &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
+		Name:      globalCIDRConfigMapName,
+		Namespace: namespace,
+	}})
 }

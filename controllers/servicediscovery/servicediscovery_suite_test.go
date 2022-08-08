@@ -28,7 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
-	submariner_v1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	"github.com/submariner-io/submariner-operator/controllers/test"
@@ -60,7 +60,7 @@ supercluster.local:53 {
 )
 
 var _ = BeforeSuite(func() {
-	Expect(submariner_v1.AddToScheme(scheme.Scheme)).To(Succeed())
+	Expect(v1alpha1.AddToScheme(scheme.Scheme)).To(Succeed())
 	Expect(operatorv1.Install(scheme.Scheme)).To(Succeed())
 })
 
@@ -76,7 +76,7 @@ func TestSubmariner(t *testing.T) {
 type testDriver struct {
 	test.Driver
 	kubeClient       *fakeKubeClient.Clientset
-	serviceDiscovery *submariner_v1.ServiceDiscovery
+	serviceDiscovery *v1alpha1.ServiceDiscovery
 }
 
 func newTestDriver() *testDriver {
@@ -98,10 +98,9 @@ func newTestDriver() *testDriver {
 		t.JustBeforeEach()
 
 		t.Controller = servicediscovery.NewReconciler(&servicediscovery.Config{
-			Client:         t.Client,
-			Scheme:         scheme.Scheme,
-			KubeClient:     t.kubeClient,
-			OperatorClient: t.Client,
+			Client:     t.Client,
+			Scheme:     scheme.Scheme,
+			KubeClient: t.kubeClient,
 		})
 	})
 
@@ -202,13 +201,13 @@ func newDNSConfig(clusterIP string) *operatorv1.DNS {
 	return dns
 }
 
-func newServiceDiscovery() *submariner_v1.ServiceDiscovery {
-	return &submariner_v1.ServiceDiscovery{
+func newServiceDiscovery() *v1alpha1.ServiceDiscovery {
+	return &v1alpha1.ServiceDiscovery{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      serviceDiscoveryName,
 			Namespace: submarinerNamespace,
 		},
-		Spec: submariner_v1.ServiceDiscoverySpec{
+		Spec: v1alpha1.ServiceDiscoverySpec{
 			GlobalnetEnabled:         false,
 			Repository:               "quay.io/submariner",
 			Version:                  "1.0.0",

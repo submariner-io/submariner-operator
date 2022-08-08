@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/submariner-io/admiral/pkg/finalizer"
-	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
@@ -77,7 +77,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 	}
 
 	uninstallInfo := &uninstall.Info{
-		Client:     r.config.Client,
+		Client:     r.config.ScopedClient,
 		Components: components,
 		StartTime:  instance.DeletionTimestamp.Time,
 		Log:        log,
@@ -101,12 +101,12 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 
 // nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.Submariner) error {
-	return finalizer.Remove(ctx, resource.ForControllerClient(r.config.Client, instance.Namespace, &operatorv1alpha1.Submariner{}),
+	return finalizer.Remove(ctx, resource.ForControllerClient(r.config.ScopedClient, instance.Namespace, &operatorv1alpha1.Submariner{}),
 		instance, constants.CleanupFinalizer)
 }
 
 func (r *Reconciler) ensureServiceDiscoveryDeleted(ctx context.Context, namespace string) bool {
-	err := r.config.Client.Delete(ctx, newServiceDiscoveryCR(namespace))
+	err := r.config.ScopedClient.Delete(ctx, newServiceDiscoveryCR(namespace))
 	if apierrors.IsNotFound(err) {
 		return false
 	}

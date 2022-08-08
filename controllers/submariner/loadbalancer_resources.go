@@ -20,7 +20,7 @@ package submariner
 
 import (
 	"github.com/go-logr/logr"
-	"github.com/submariner-io/submariner-operator/api/submariner/v1alpha1"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
@@ -41,7 +41,7 @@ const (
 func (r *Reconciler) reconcileLoadBalancer(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*corev1.Service, error) {
-	return helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.config.Client, r.config.Scheme)
+	return helpers.ReconcileService(instance, newLoadBalancerService(instance), reqLogger, r.config.ScopedClient, r.config.Scheme)
 }
 
 func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {

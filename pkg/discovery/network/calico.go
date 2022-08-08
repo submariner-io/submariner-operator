@@ -23,13 +23,16 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/cni"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // nolint:nilnil // Intentional as the purpose is to discover.
-func discoverCalicoNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, error) {
-	cmList, err := clientSet.CoreV1().ConfigMaps(metav1.NamespaceAll).List(context.TODO(), metav1.ListOptions{})
+func discoverCalicoNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+	cmList := &corev1.ConfigMapList{}
+
+	err := client.List(context.TODO(), cmList, controllerClient.InNamespace(metav1.NamespaceAll))
 	if err != nil {
 		return nil, errors.Wrapf(err, "error listing ConfigMaps")
 	}
@@ -47,7 +50,7 @@ func discoverCalicoNetwork(clientSet kubernetes.Interface) (*ClusterNetwork, err
 		return nil, nil
 	}
 
-	clusterNetwork, err := discoverNetwork(clientSet)
+	clusterNetwork, err := discoverNetwork(client)
 	if err != nil {
 		return nil, err
 	}
