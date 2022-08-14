@@ -2721,6 +2721,7 @@ rules:
     resources:
       - pods
     verbs:
+      - delete
       - create
       - get
       - list
