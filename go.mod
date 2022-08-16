@@ -14,7 +14,7 @@ require (
 	github.com/operator-framework/operator-sdk v0.19.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.13.0
-	github.com/submariner-io/admiral v0.13.0-m2.0.20220801071419-0e67fb0a36e6
+	github.com/submariner-io/admiral v0.14.0-m0
 	github.com/submariner-io/shipyard v0.14.0-m0
 	github.com/submariner-io/submariner v0.13.0-m2.0.20220608112640-7f4a6a79da0d
 	github.com/uw-labs/lichen v0.1.7
@@ -150,3 +150,5 @@ replace (
 	k8s.io/klog/v2 => k8s.io/klog/v2 v2.9.0
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.9.7
 )
+
+replace github.com/submariner-io/admiral => github.com/submariner-io/admiral v0.13.0-m2.0.20220801140742-ec171a9f687d
