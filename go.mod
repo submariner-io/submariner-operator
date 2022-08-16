@@ -25,7 +25,7 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9
 	sigs.k8s.io/controller-runtime v0.12.1
-	sigs.k8s.io/controller-tools v0.4.1
+	sigs.k8s.io/controller-tools v0.8.0
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -54,7 +54,7 @@ require (
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/spec v0.20.3 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
-	github.com/gobuffalo/flect v0.2.1 // indirect
+	github.com/gobuffalo/flect v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect

@@ -20,13 +20,12 @@ limitations under the License.
 package embeddedyamls
 
 const (
-	Deploy_crds_submariner_io_brokers_yaml = `
----
+	Deploy_crds_submariner_io_brokers_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: brokers.submariner.io
 spec:
@@ -88,13 +87,12 @@ status:
   conditions: []
   storedVersions: []
 `
-	Deploy_crds_submariner_io_submariners_yaml = `
----
+	Deploy_crds_submariner_io_submariners_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: submariners.submariner.io
 spec:
@@ -737,9 +735,9 @@ spec:
                                       the service port The format of the error shall
                                       comply with the following rules: - built-in
                                       error values shall be specified in this file
-                                      and those shall use   CamelCase names - cloud
+                                      and those shall use CamelCase names - cloud
                                       provider specific error values must have names
-                                      that comply with the   format foo.example.com/CamelCase.
+                                      that comply with the format foo.example.com/CamelCase.
                                       --- The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)'
                                     maxLength: 316
                                     pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
@@ -954,13 +952,12 @@ status:
   conditions: []
   storedVersions: []
 `
-	Deploy_crds_submariner_io_servicediscoveries_yaml = `
----
+	Deploy_crds_submariner_io_servicediscoveries_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: servicediscoveries.submariner.io
 spec:
@@ -1066,13 +1063,12 @@ status:
   conditions: []
   storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_clusters_yaml = `
----
+	Deploy_submariner_crds_submariner_io_clusters_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: clusters.submariner.io
 spec:
@@ -1140,13 +1136,12 @@ status:
   conditions: []
   storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_endpoints_yaml = `
----
+	Deploy_submariner_crds_submariner_io_endpoints_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: endpoints.submariner.io
 spec:
@@ -1224,13 +1219,12 @@ status:
   conditions: []
   storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_gateways_yaml = `
----
+	Deploy_submariner_crds_submariner_io_gateways_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: gateways.submariner.io
 spec:
@@ -1399,13 +1393,12 @@ status:
   conditions: []
   storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_clusterglobalegressips_yaml = `
----
+	Deploy_submariner_crds_submariner_io_clusterglobalegressips_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: clusterglobalegressips.submariner.io
 spec:
@@ -1461,13 +1454,12 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition ` + "``" + `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` + "``" + `
-                    \n     // other fields }"
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                    ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` + "``" + ` \n // other fields }"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
@@ -1538,13 +1530,12 @@ status:
   conditions: []
   storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_globalegressips_yaml = `
----
+	Deploy_submariner_crds_submariner_io_globalegressips_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: globalegressips.submariner.io
 spec:
@@ -1648,13 +1639,12 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition ` + "``" + `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` + "``" + `
-                    \n     // other fields }"
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                    ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` + "``" + ` \n // other fields }"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
@@ -1725,13 +1715,12 @@ status:
   conditions: []
   storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_globalingressips_yaml = `
----
+	Deploy_submariner_crds_submariner_io_globalingressips_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: globalingressips.submariner.io
 spec:
@@ -1803,13 +1792,12 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition ` + "``" + `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` + "``" + `
-                    \n     // other fields }"
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                    ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` + "``" + ` \n // other fields }"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
