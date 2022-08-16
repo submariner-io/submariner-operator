@@ -20,6 +20,7 @@ package metrics
 import (
 	"context"
 	"fmt"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
@@ -33,7 +34,10 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-var ErrServiceMonitorNotPresent = fmt.Errorf("no ServiceMonitor registered with the API")
+var (
+	log                         = logf.Log.WithName("metrics")
+	ErrServiceMonitorNotPresent = fmt.Errorf("no ServiceMonitor registered with the API")
+)
 
 const openshiftMonitoringNS = "openshift-monitoring"
 

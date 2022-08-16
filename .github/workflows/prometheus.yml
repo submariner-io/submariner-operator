@@ -44,3 +44,14 @@ jobs:
           done;
           curl -s --data-urlencode query=submariner_gateways http://localhost:9090/api/v1/query | jq .;
           exit 1
+
+      # This is just for testing.
+      - name: Check the service monitors created
+        run: >-
+          KUBECONFIG=$(find $(git rev-parse --show-toplevel)/output/kubeconfigs/ -type f -printf %p:)
+          kubectl --context=cluster1 get servicemonitors -n submariner-operator
+
+      - name: Check the services created
+        run: >-
+          KUBECONFIG=$(find $(git rev-parse --show-toplevel)/output/kubeconfigs/ -type f -printf %p:)
+          kubectl --context=cluster1 get service -n submariner-operator
