@@ -97,11 +97,11 @@ func newTestDriver() *testDriver {
 	JustBeforeEach(func() {
 		t.JustBeforeEach()
 
-		t.Controller = servicediscovery.NewReconciler(&servicediscovery.Config{
+		t.Controller = &servicediscovery.Reconciler{
 			Client:     t.Client,
 			Scheme:     scheme.Scheme,
 			KubeClient: t.kubeClient,
-		})
+		}
 	})
 
 	return t
