@@ -187,8 +187,6 @@ func main() {
 	if err = (&submariner.BrokerReconciler{
 		Client: mgr.GetClient(),
 		Config: mgr.GetConfig(),
-		Log:    logf.Log.WithName("controllers").WithName("Broker"),
-		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Broker")
 		os.Exit(1)
