@@ -20,17 +20,14 @@ package controllers
 
 import (
 	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
-	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 // AddToManager adds all Controllers to the Manager.
 // nolint:wrapcheck // No need to wrap errors here.
 func AddToManager(mgr manager.Manager) error {
-	kubeClient := kubernetes.NewForConfigOrDie(mgr.GetConfig())
 	generalClient, _ := operatorclient.NewClient(mgr.GetConfig())
 
 	if err := submariner.NewReconciler(&submariner.Config{
@@ -43,10 +40,5 @@ func AddToManager(mgr manager.Manager) error {
 		return err
 	}
 
-	return servicediscovery.NewReconciler(&servicediscovery.Config{
-		Client:     mgr.GetClient(),
-		RestConfig: mgr.GetConfig(),
-		Scheme:     mgr.GetScheme(),
-		KubeClient: kubeClient,
-	}).SetupWithManager(mgr)
+	return nil
 }

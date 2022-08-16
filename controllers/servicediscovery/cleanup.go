@@ -79,7 +79,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 	}
 
 	uninstallInfo := &uninstall.Info{
-		Client:     r.config.Client,
+		Client:     r.Client,
 		Components: components,
 		StartTime:  instance.DeletionTimestamp.Time,
 		Log:        log,
@@ -99,7 +99,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 
 // nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) error {
-	return finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.config.Client, instance.Namespace, instance),
+	return finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.Client, instance.Namespace, instance),
 		instance, constants.CleanupFinalizer)
 }
 
@@ -110,7 +110,7 @@ func (r *Reconciler) removeLighthouseConfigFromCustomDNSConfigMap(ctx context.Co
 
 	log.Info("Removing lighthouse config from custom DNS ConfigMap", "Name", configMap.Name, "Namespace", configMap.Namespace)
 
-	err := util.Update(ctx, resource.ForConfigMap(r.config.KubeClient, configMap.Namespace), configMap,
+	err := util.Update(ctx, resource.ForConfigMap(r.KubeClient, configMap.Namespace), configMap,
 		func(existing runtime.Object) (runtime.Object, error) {
 			delete(existing.(*corev1.ConfigMap).Data, "lighthouse.server")
 			return existing, nil
