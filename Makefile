@@ -105,7 +105,7 @@ endif
 REPO ?= quay.io/submariner
 IMG ?= $(REPO)/submariner-operator:$(VERSION)
 # Produce v1 CRDs, requiring Kubernetes 1.16 or later
-CRD_OPTIONS ?= "crd:crdVersions=v1,trivialVersions=false"
+CRD_OPTIONS ?= "crd:crdVersions=v1"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell $(GO) env GOBIN))

@@ -20,13 +20,12 @@ limitations under the License.
 package embeddedyamls
 
 const (
-	Deploy_crds_submariner_io_brokers_yaml = `
----
+	Deploy_crds_submariner_io_brokers_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: brokers.submariner.io
 spec:
@@ -81,20 +80,13 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 `
-	Deploy_crds_submariner_io_submariners_yaml = `
----
+	Deploy_crds_submariner_io_submariners_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: submariners.submariner.io
 spec:
@@ -266,7 +258,7 @@ spec:
                           description: Details about a terminated container
                           properties:
                             containerID:
-                              description: Container's ID in the format 'docker://<container_id>'
+                              description: Container's ID in the format '<type>://<container_id>'
                               type: string
                             exitCode:
                               description: Exit status from the last termination of
@@ -379,9 +371,9 @@ spec:
                         format: int32
                         type: integer
                       numberReady:
-                        description: The number of nodes that should be running the
-                          daemon pod and have one or more of the daemon pod running
-                          and ready.
+                        description: numberReady is the number of nodes that should
+                          be running the daemon pod and have one or more of the daemon
+                          pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
@@ -561,7 +553,7 @@ spec:
                           description: Details about a terminated container
                           properties:
                             containerID:
-                              description: Container's ID in the format 'docker://<container_id>'
+                              description: Container's ID in the format '<type>://<container_id>'
                               type: string
                             exitCode:
                               description: Exit status from the last termination of
@@ -674,9 +666,9 @@ spec:
                         format: int32
                         type: integer
                       numberReady:
-                        description: The number of nodes that should be running the
-                          daemon pod and have one or more of the daemon pod running
-                          and ready.
+                        description: numberReady is the number of nodes that should
+                          be running the daemon pod and have one or more of the daemon
+                          pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
@@ -737,9 +729,9 @@ spec:
                                       the service port The format of the error shall
                                       comply with the following rules: - built-in
                                       error values shall be specified in this file
-                                      and those shall use   CamelCase names - cloud
+                                      and those shall use CamelCase names - cloud
                                       provider specific error values must have names
-                                      that comply with the   format foo.example.com/CamelCase.
+                                      that comply with the format foo.example.com/CamelCase.
                                       --- The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)'
                                     maxLength: 316
                                     pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
@@ -793,7 +785,7 @@ spec:
                           description: Details about a terminated container
                           properties:
                             containerID:
-                              description: Container's ID in the format 'docker://<container_id>'
+                              description: Container's ID in the format '<type>://<container_id>'
                               type: string
                             exitCode:
                               description: Exit status from the last termination of
@@ -906,9 +898,9 @@ spec:
                         format: int32
                         type: integer
                       numberReady:
-                        description: The number of nodes that should be running the
-                          daemon pod and have one or more of the daemon pod running
-                          and ready.
+                        description: numberReady is the number of nodes that should
+                          be running the daemon pod and have one or more of the daemon
+                          pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
@@ -947,20 +939,13 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 `
-	Deploy_crds_submariner_io_servicediscoveries_yaml = `
----
+	Deploy_crds_submariner_io_servicediscoveries_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: servicediscoveries.submariner.io
 spec:
@@ -1059,20 +1044,13 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_clusters_yaml = `
----
+	Deploy_submariner_crds_submariner_io_clusters_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: clusters.submariner.io
 spec:
@@ -1133,20 +1111,13 @@ spec:
         type: object
     served: true
     storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_endpoints_yaml = `
----
+	Deploy_submariner_crds_submariner_io_endpoints_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: endpoints.submariner.io
 spec:
@@ -1217,20 +1188,13 @@ spec:
         type: object
     served: true
     storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_gateways_yaml = `
----
+	Deploy_submariner_crds_submariner_io_gateways_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: gateways.submariner.io
 spec:
@@ -1392,20 +1356,13 @@ spec:
     served: true
     storage: true
     subresources: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_clusterglobalegressips_yaml = `
----
+	Deploy_submariner_crds_submariner_io_clusterglobalegressips_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: clusterglobalegressips.submariner.io
 spec:
@@ -1461,13 +1418,12 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition ` + "``" + `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` + "``" + `
-                    \n     // other fields }"
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                    ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` + "``" + ` \n // other fields }"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
@@ -1531,20 +1487,13 @@ spec:
         type: object
     served: true
     storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_globalegressips_yaml = `
----
+	Deploy_submariner_crds_submariner_io_globalegressips_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: globalegressips.submariner.io
 spec:
@@ -1634,6 +1583,7 @@ spec:
                       are ANDed.
                     type: object
                 type: object
+                x-kubernetes-map-type: atomic
             type: object
           status:
             description: The most recently observed status. Read-only.
@@ -1648,13 +1598,12 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition ` + "``" + `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` + "``" + `
-                    \n     // other fields }"
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                    ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` + "``" + ` \n // other fields }"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
@@ -1718,20 +1667,13 @@ spec:
         type: object
     served: true
     storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 `
-	Deploy_submariner_crds_submariner_io_globalingressips_yaml = `
----
+	Deploy_submariner_crds_submariner_io_globalingressips_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: globalingressips.submariner.io
 spec:
@@ -1778,6 +1720,7 @@ spec:
                       TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               serviceRef:
                 description: The reference to a targeted Service, if applicable.
                 properties:
@@ -1786,6 +1729,7 @@ spec:
                       TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               target:
                 description: Specifies the type of the entity targeted by this object.
                 type: string
@@ -1803,13 +1747,12 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{     // Represents the observations of a
-                    foo's current state.     // Known .status.conditions.type are:
-                    \"Available\", \"Progressing\", and \"Degraded\"     // +patchMergeKey=type
-                    \    // +patchStrategy=merge     // +listType=map     // +listMapKey=type
-                    \    Conditions []metav1.Condition ` + "``" + `json:\"conditions,omitempty\"
-                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` + "``" + `
-                    \n     // other fields }"
+                    type FooStatus struct{ // Represents the observations of a foo's
+                    current state. // Known .status.conditions.type are: \"Available\",
+                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                    ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
+                    protobuf:\"bytes,1,rep,name=conditions\"` + "``" + ` \n // other fields }"
                   properties:
                     lastTransitionTime:
                       description: lastTransitionTime is the last time the condition
@@ -1874,12 +1817,6 @@ spec:
     served: true
     storage: true
     subresources: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
 `
 	Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml = `apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition

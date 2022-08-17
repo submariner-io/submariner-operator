@@ -57,9 +57,8 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 
 		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
 			toUpdate.Spec = daemonSet.Spec
-			for k, v := range daemonSet.Labels {
-				toUpdate.Labels[k] = v
-			}
+			copyLabels(daemonSet, toUpdate)
+
 			// Set the owner and controller.
 			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
 		})
@@ -117,9 +116,8 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 
 		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
 			toUpdate.Spec = deployment.Spec
-			for k, v := range deployment.Labels {
-				toUpdate.Labels[k] = v
-			}
+			copyLabels(deployment, toUpdate)
+
 			// Set the owner and controller
 			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
 		})
@@ -163,9 +161,8 @@ func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLog
 
 		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
 			toUpdate.Data = configMap.Data
-			for k, v := range configMap.Labels {
-				toUpdate.Labels[k] = v
-			}
+			copyLabels(configMap, toUpdate)
+
 			// Set the owner and controller
 			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
 		})
@@ -216,9 +213,12 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 				service.Spec.HealthCheckNodePort = toUpdate.Spec.HealthCheckNodePort
 			}
 			toUpdate.Spec = service.Spec
-			for k, v := range service.Labels {
-				toUpdate.Labels[k] = v
+			copyLabels(service, toUpdate)
+
+			if toUpdate.Annotations == nil {
+				toUpdate.Annotations = map[string]string{}
 			}
+
 			for k, v := range service.Annotations {
 				toUpdate.Annotations[k] = v
 			}
@@ -267,4 +267,14 @@ func IsImmutableError(err error) bool {
 	}
 
 	return false
+}
+
+func copyLabels(from, to controllerClient.Object) {
+	if to.GetLabels() == nil {
+		to.SetLabels(map[string]string{})
+	}
+
+	for k, v := range from.GetLabels() {
+		to.GetLabels()[k] = v
+	}
 }

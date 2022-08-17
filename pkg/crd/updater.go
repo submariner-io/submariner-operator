@@ -96,7 +96,7 @@ func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string
 }
 
 func (c *controllerClientCreator) Create(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
-	options metav1.CreateOptions,
+	options metav1.CreateOptions, //nolint:gocritic // hugeParam - match K8s API
 ) (*apiextensions.CustomResourceDefinition, error) {
 	// TODO skitt handle options
 	err := c.client.Create(ctx, crd)
@@ -104,7 +104,7 @@ func (c *controllerClientCreator) Create(ctx context.Context, crd *apiextensions
 }
 
 func (c *controllerClientCreator) Update(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
-	options metav1.UpdateOptions,
+	options metav1.UpdateOptions, //nolint:gocritic // hugeParam - match K8s API
 ) (*apiextensions.CustomResourceDefinition, error) {
 	// TODO skitt handle options
 	err := c.client.Update(ctx, crd)

@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: submariners.submariner.io
 spec:
@@ -19,7 +18,7 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Submariner is the Schema for the submariners API
+        description: Submariner is the Schema for the submariners API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,7 +33,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: SubmarinerSpec defines the desired state of Submariner
+            description: SubmarinerSpec defines the desired state of Submariner.
             properties:
               broker:
                 type: string
@@ -133,7 +132,7 @@ spec:
             - serviceCIDR
             type: object
           status:
-            description: SubmarinerStatus defines the observed state of Submariner
+            description: SubmarinerStatus defines the observed state of Submariner.
             properties:
               clusterCIDR:
                 type: string
@@ -176,7 +175,7 @@ spec:
                           description: Details about a terminated container
                           properties:
                             containerID:
-                              description: Container's ID in the format 'docker://<container_id>'
+                              description: Container's ID in the format '<type>://<container_id>'
                               type: string
                             exitCode:
                               description: Exit status from the last termination of
@@ -289,9 +288,9 @@ spec:
                         format: int32
                         type: integer
                       numberReady:
-                        description: The number of nodes that should be running the
-                          daemon pod and have one or more of the daemon pod running
-                          and ready.
+                        description: numberReady is the number of nodes that should
+                          be running the daemon pod and have one or more of the daemon
+                          pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
@@ -471,7 +470,7 @@ spec:
                           description: Details about a terminated container
                           properties:
                             containerID:
-                              description: Container's ID in the format 'docker://<container_id>'
+                              description: Container's ID in the format '<type>://<container_id>'
                               type: string
                             exitCode:
                               description: Exit status from the last termination of
@@ -584,9 +583,9 @@ spec:
                         format: int32
                         type: integer
                       numberReady:
-                        description: The number of nodes that should be running the
-                          daemon pod and have one or more of the daemon pod running
-                          and ready.
+                        description: numberReady is the number of nodes that should
+                          be running the daemon pod and have one or more of the daemon
+                          pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
@@ -647,9 +646,9 @@ spec:
                                       the service port The format of the error shall
                                       comply with the following rules: - built-in
                                       error values shall be specified in this file
-                                      and those shall use   CamelCase names - cloud
+                                      and those shall use CamelCase names - cloud
                                       provider specific error values must have names
-                                      that comply with the   format foo.example.com/CamelCase.
+                                      that comply with the format foo.example.com/CamelCase.
                                       --- The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)'
                                     maxLength: 316
                                     pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
@@ -703,7 +702,7 @@ spec:
                           description: Details about a terminated container
                           properties:
                             containerID:
-                              description: Container's ID in the format 'docker://<container_id>'
+                              description: Container's ID in the format '<type>://<container_id>'
                               type: string
                             exitCode:
                               description: Exit status from the last termination of
@@ -816,9 +815,9 @@ spec:
                         format: int32
                         type: integer
                       numberReady:
-                        description: The number of nodes that should be running the
-                          daemon pod and have one or more of the daemon pod running
-                          and ready.
+                        description: numberReady is the number of nodes that should
+                          be running the daemon pod and have one or more of the daemon
+                          pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
@@ -857,9 +856,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
