@@ -34,15 +34,12 @@ import (
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	resourceiface "github.com/submariner-io/submariner-operator/controllers/resource"
-	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -283,26 +280,6 @@ func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Subm
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	// Set up the CRDs we need
-	crdUpdater, err := crd.UpdaterFromRestConfig(mgr.GetConfig())
-	if err != nil {
-		return errors.Wrap(err, "error creating CRDUpdater")
-	}
-
-	if err := gateway.Ensure(crdUpdater); err != nil {
-		return err // nolint:wrapcheck // Errors are already wrapped
-	}
-
-	// These are required so that we can retrieve Gateway objects using the dynamic client
-	if err := submv1.AddToScheme(mgr.GetScheme()); err != nil {
-		return errors.Wrap(err, "error adding to the scheme")
-	}
-
-	// These are required so that we can manipulate CRDs
-	if err := apiextensions.AddToScheme(mgr.GetScheme()); err != nil {
-		return errors.Wrap(err, "error adding to the scheme")
-	}
-
 	// Watch for changes to the gateway status in the same namespace
 	mapFn := handler.MapFunc(
 		func(object client.Object) []reconcile.Request {

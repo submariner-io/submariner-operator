@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"syscall"
 
 	// TODO: in operator-sdk v1 the below utilities were moved to internal.
 	"github.com/operator-framework/operator-lib/leader"
@@ -38,9 +37,11 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
+	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	"github.com/submariner-io/submariner-operator/pkg/metrics"
 	"github.com/submariner-io/submariner-operator/pkg/version"
+	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	v1 "k8s.io/api/core/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
@@ -74,14 +75,6 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 	log.Info(fmt.Sprintf("Version of operator-sdk: %v", sdkVersion.Version))
 	log.Info(fmt.Sprintf("Submariner operator version: %v", version.Version))
-}
-
-// nolint:wsl // block should not end with a whitespace.
-func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(v1alpha1.AddToScheme(scheme))
-	utilruntime.Must(apiextensions.AddToScheme(scheme))
-	// +kubebuilder:scaffold:scheme
 }
 
 func init() {
@@ -123,6 +116,36 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Set up the CRDs we need
+	crdUpdater, err := crd.UpdaterFromRestConfig(cfg)
+	if err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	log.Info("Creating the Lighthouse CRDs")
+
+	if _, err = lighthouse.Ensure(crdUpdater, lighthouse.DataCluster); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	log.Info("Creating the Gateway CRDs")
+
+	if err := gateway.Ensure(crdUpdater); err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
+	// Setup Scheme for all resources
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+	// These are required so that we can manipulate CRDs
+	utilruntime.Must(apiextensions.AddToScheme(scheme))
+	// These are required so that we can retrieve Gateway objects using the dynamic client
+	utilruntime.Must(submv1.AddToScheme(scheme))
+	// +kubebuilder:scaffold:scheme
+
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
@@ -136,32 +159,6 @@ func main() {
 	}
 
 	log.Info("Registering Components.")
-
-	// Set up the CRDs we need
-	crdUpdater, err := crd.UpdaterFromRestConfig(cfg)
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-
-	log.Info("Creating the Lighthouse CRDs")
-
-	updated, err := lighthouse.Ensure(crdUpdater, lighthouse.DataCluster)
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-
-	if updated {
-		log.Info("The Lighthouse CRDs were updated, restarting...")
-		restartOperator()
-	}
-
-	// Setup Scheme for all resources
-	if err := v1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
 
 	// Setup all Controllers
 	if err := controllers.AddToManager(mgr); err != nil {
@@ -259,23 +256,6 @@ func serveCRMetrics(cfg *rest.Config) error {
 	}
 
 	return nil
-}
-
-func restartOperator() {
-	binary, err := os.Executable()
-	if err != nil {
-		log.Error(err, "unable to find our executable")
-		// We'll end up crashing and the orchestrator will restart us
-		os.Exit(1)
-	}
-
-	if err = syscall.Exec(binary, os.Args, os.Environ()); err != nil {
-		log.Error(err, "error restarting the operator")
-		os.Exit(1)
-	}
-
-	// Something went wrong, rely on the orchestrator to restart us
-	os.Exit(1)
 }
 
 // getWatchNamespace returns the Namespace the operator should be watching for changes.
