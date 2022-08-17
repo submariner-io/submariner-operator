@@ -21,8 +21,8 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
+	"os"
 
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
@@ -37,13 +37,21 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-var log = logf.Log.WithName("metrics")
+var (
+	log             = logf.Log.WithName("metrics")
+	errNoNamespace  = fmt.Errorf("namespace not found for current environment")
+	errRunLocal     = fmt.Errorf("operator run mode forced to local")
+	forceRunModeEnv = "OSDK_FORCE_RUN_MODE"
+)
 
 const (
 	// OperatorPortName defines the default operator metrics port name used in the metrics Service.
 	OperatorPortName = "http-metrics"
 	// CRPortName defines the custom resource specific metrics' port name used in the metrics Service.
-	CRPortName = "cr-metrics"
+	CRPortName                = "cr-metrics"
+	OperatorNameEnvVar string = "OPERATOR_NAME"
+	LocalRunMode       string = "local"
+	PodNameEnvVar      string = "POD_NAME"
 )
 
 // CreateMetricsService creates a Kubernetes Service to expose the passed metrics
@@ -65,7 +73,7 @@ func CreateMetricsService(ctx context.Context, cfg *rest.Config, servicePorts []
 
 	s, err := initOperatorService(ctx, client, servicePorts)
 	if err != nil {
-		if goerrors.Is(err, k8sutil.ErrNoNamespace) || goerrors.Is(err, k8sutil.ErrRunLocal) {
+		if goerrors.Is(err, errNoNamespace) || goerrors.Is(err, errRunLocal) {
 			log.Info("Skipping metrics Service creation; not running in a cluster.")
 			return nil, false, nil
 		}
@@ -93,12 +101,12 @@ func CreateMetricsService(ctx context.Context, cfg *rest.Config, servicePorts []
 
 // initOperatorService returns the static service which exposes specified port(s).
 func initOperatorService(ctx context.Context, client crclient.Client, sp []v1.ServicePort) (*v1.Service, error) {
-	operatorName, err := k8sutil.GetOperatorName()
+	operatorName, err := getOperatorName()
 	if err != nil {
 		return nil, err // nolint:wrapcheck // No need to wrap here
 	}
 
-	namespace, err := k8sutil.GetOperatorNamespace()
+	namespace, err := GetWatchNamespace()
 	if err != nil {
 		return nil, err // nolint:wrapcheck // No need to wrap here
 	}
@@ -129,14 +137,14 @@ func initOperatorService(ctx context.Context, client crclient.Client, sp []v1.Se
 
 func getPodOwnerRef(ctx context.Context, client crclient.Client, ns string) (*metav1.OwnerReference, error) {
 	// Get current Pod the operator is running in
-	pod, err := k8sutil.GetPod(ctx, client, ns)
+	pod, err := getPod(ctx, client, ns)
 	if err != nil {
 		return nil, err // nolint:wrapcheck // No need to wrap here
 	}
 
 	podOwnerRefs := metav1.NewControllerRef(pod, pod.GroupVersionKind())
 
-	// Get Owner that the Pod belongs to
+	// Get Owner that the Pod belongs to.
 	ownerRef := metav1.GetControllerOf(pod)
 
 	finalOwnerRef, found, err := findFinalOwnerRef(ctx, client, ns, ownerRef)
@@ -148,7 +156,7 @@ func getPodOwnerRef(ctx context.Context, client crclient.Client, ns string) (*me
 		return finalOwnerRef, nil
 	}
 
-	// Default to returning Pod as the Owner
+	// Default to returning Pod as the Owner.
 	return podOwnerRefs, nil
 }
 
@@ -178,4 +186,70 @@ func findFinalOwnerRef(ctx context.Context, client crclient.Client, ns string,
 		ownerRef.Name, "Namespace", ns)
 
 	return ownerRef, true, nil
+}
+
+// getOperatorName return the operator name.
+func getOperatorName() (string, error) {
+	operatorName, found := os.LookupEnv(OperatorNameEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", OperatorNameEnvVar)
+	}
+	if operatorName == "" {
+		return "", fmt.Errorf("%s must not be empty", OperatorNameEnvVar)
+	}
+
+	return operatorName, nil
+}
+
+// GetWatchNamespace returns the Namespace the operator should be watching for changes.
+func GetWatchNamespace() (string, error) {
+	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
+	// which specifies the Namespace to watch.
+	// An empty value means the operator is running with cluster scope.
+	watchNamespaceEnvVar := "WATCH_NAMESPACE"
+
+	ns, found := os.LookupEnv(watchNamespaceEnvVar)
+	if !found {
+		return "", fmt.Errorf("%s must be set", watchNamespaceEnvVar)
+	}
+
+	return ns, nil
+}
+
+func isRunModeLocal() bool {
+	return os.Getenv(forceRunModeEnv) == LocalRunMode
+}
+
+// getPod returns a Pod object that corresponds to the pod in which the code
+// is currently running.
+// It expects the environment variable POD_NAME to be set by the downwards API.
+func getPod(ctx context.Context, client crclient.Client, ns string) (*v1.Pod, error) {
+	if isRunModeLocal() {
+		return nil, errRunLocal
+	}
+
+	podName := os.Getenv(PodNameEnvVar)
+	if podName == "" {
+		return nil, fmt.Errorf("required env %s not set, please configure downward API", PodNameEnvVar)
+	}
+
+	log.V(1).Info("Found podname", "Pod.Name", podName)
+
+	pod := &v1.Pod{}
+	key := crclient.ObjectKey{Namespace: ns, Name: podName}
+
+	err := client.Get(ctx, key, pod)
+	if err != nil {
+		log.Error(err, "Failed to get Pod", "Pod.Namespace", ns, "Pod.Name", podName)
+		return nil, err
+	}
+
+	// .Get() clears the APIVersion and Kind,
+	// so we need to set them before returning the object.
+	pod.TypeMeta.APIVersion = "v1"
+	pod.TypeMeta.Kind = "Pod"
+
+	log.V(1).Info("Found Pod", "Pod.Namespace", ns, "Pod.Name", pod.Name)
+
+	return pod, nil
 }

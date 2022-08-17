@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -151,5 +150,25 @@ func hasServiceMonitor(config *rest.Config) (bool, error) {
 	apiVersion := "monitoring.coreos.com/v1"
 	kind := "ServiceMonitor"
 
-	return k8sutil.ResourceExists(dc, apiVersion, kind) // nolint:wrapcheck // No need to wrap here
+	return resourceExists(dc, apiVersion, kind) // nolint:wrapcheck // No need to wrap here
+}
+
+// resourceExists returns true if the given resource kind exists in the given api groupversion.
+func resourceExists(dc discovery.DiscoveryInterface, apiGroupVersion, kind string) (bool, error) {
+	_, apiLists, err := dc.ServerGroupsAndResources()
+	if err != nil {
+		return false, err
+	}
+
+	for _, apiList := range apiLists {
+		if apiList.GroupVersion == apiGroupVersion {
+			for _, r := range apiList.APIResources {
+				if r.Kind == kind {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
 }
