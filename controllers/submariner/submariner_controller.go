@@ -55,8 +55,10 @@ import (
 )
 
 const (
-	gatewayMetricsServerPort   = 8080
-	globalnetMetricsServerPort = 8081
+	gatewayMetricsServicePort   = 8080
+	globalnetMetricsServicePort = 8081
+	gatewayMetricsServerPort    = "32780"
+	globalnetMetricsServerPort  = "32781"
 )
 
 var log = logf.Log.WithName("controller_submariner")
@@ -183,6 +185,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 	}
 
+	if _, err = r.reconcileMetricsProxyDaemonSet(instance, reqLogger); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	if err := r.reconcileNetworkPluginSyncerDeployment(instance, clusterNetwork, reqLogger); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -226,6 +232,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 		return reconcile.Result{}, err
 	}
+
+	// TODO: vthapar Add metrics-proxy status to Submariner CR so we can update it with daemonset status
 
 	if loadBalancer != nil {
 		instance.Status.LoadBalancerStatus.Status = &loadBalancer.Status.LoadBalancer

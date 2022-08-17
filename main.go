@@ -153,7 +153,7 @@ func main() {
 	log.Info("Setting up metrics services and monitors")
 
 	// Setup the metrics services and service monitors
-	labels := map[string]string{"name": os.Getenv("OPERATOR_NAME")}
+	name := os.Getenv("OPERATOR_NAME")
 
 	// We need a new client using the manager's rest.Config because
 	// the manager's caches haven't started yet and it won't allow
@@ -163,7 +163,7 @@ func main() {
 		log.Error(err, "Error obtaining a Kubernetes client")
 	}
 
-	if err := metrics.Setup(namespace, nil, labels, metricsPort, metricsClient, cfg, scheme, log); err != nil {
+	if err := metrics.Setup(name, namespace, "name", name, nil, metricsPort, metricsClient, cfg, scheme, log); err != nil {
 		log.Error(err, "Error setting up metrics services and monitors")
 	}
 

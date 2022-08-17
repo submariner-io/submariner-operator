@@ -692,8 +692,8 @@ func (r *Reconciler) ensureLightHouseAgent(instance *submarinerv1alpha1.ServiceD
 		return errors.Wrap(err, "error reconciling agent deployment")
 	}
 
-	err := metrics.Setup(instance.Namespace, instance, lightHouseAgent.GetLabels(), 8082, r.ScopedClient,
-		r.RestConfig, r.Scheme, reqLogger)
+	err := metrics.Setup(names.ServiceDiscoveryComponent, instance.Namespace, "app", names.ServiceDiscoveryComponent,
+		instance, 8082, r.ScopedClient, r.RestConfig, r.Scheme, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "error setting up metrics")
 	}
@@ -709,8 +709,8 @@ func (r *Reconciler) ensureLighthouseCoreDNSDeployment(instance *submarinerv1alp
 		return errors.Wrap(err, "error reconciling coredns deployment")
 	}
 
-	err := metrics.Setup(instance.Namespace, instance, lighthouseCoreDNSDeployment.GetLabels(), 9153, r.ScopedClient, r.RestConfig,
-		r.Scheme, reqLogger)
+	err := metrics.Setup(names.LighthouseCoreDNSComponent, instance.Namespace, "app", names.LighthouseCoreDNSComponent, instance,
+		9153, r.ScopedClient, r.RestConfig, r.Scheme, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "error setting up coredns metrics")
 	}
