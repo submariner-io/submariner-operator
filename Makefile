@@ -37,7 +37,7 @@ dockertogoarch = $(patsubst arm/v7,arm,$(1))
 
 PLATFORMS ?= linux/amd64,linux/arm64
 IMAGES = submariner-operator submariner-operator-index
-PRELOAD_IMAGES := $(IMAGES) submariner-gateway submariner-globalnet submariner-route-agent lighthouse-agent lighthouse-coredns
+PRELOAD_IMAGES := submariner-operator submariner-gateway submariner-globalnet submariner-route-agent lighthouse-agent lighthouse-coredns
 MULTIARCH_IMAGES := submariner-operator
 
 ifneq (,$(filter ovn,$(USING)))
