@@ -147,8 +147,8 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 			Containers: []corev1.Container{
 				{
 					Name:            name,
-					Image:           getImagePath(cr, names.GatewayImage, names.GatewayImage),
-					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayImage]),
+					Image:           getImagePath(cr, names.GatewayImage, names.GatewayComponent),
+					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayComponent]),
 					Command:         []string{"submariner.sh"},
 					SecurityContext: &corev1.SecurityContext{
 						Capabilities: &corev1.Capabilities{
