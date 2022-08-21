@@ -44,12 +44,6 @@ var (
 	OperatorImage            = "submariner-operator"
 )
 
-/* Deprecated: These values are used by downstream distributions to patch the image names by adding a prefix/suffix. */
-var (
-	ImagePrefix  = ""
-	ImagePostfix = ""
-)
-
 var ValidImageNames = []string{
 	NetworkPluginSyncerImage, RouteAgentImage, GatewayImage, GlobalnetImage,
 	ServiceDiscoveryImage, LighthouseCoreDNSImage, OperatorImage,
