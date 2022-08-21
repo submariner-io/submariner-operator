@@ -24,13 +24,10 @@ import (
 	"strings"
 
 	apis "github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/pkg/names"
 	v1 "k8s.io/api/core/v1"
 )
 
 func GetImagePath(repo, version, image, component string, imageOverrides map[string]string) string {
-	var path string
-
 	if override, ok := imageOverrides[component]; ok {
 		return override
 	}
@@ -39,13 +36,13 @@ func GetImagePath(repo, version, image, component string, imageOverrides map[str
 		return relatedImage
 	}
 
+	path := image
+
 	// If the repository is "local" we don't append it on the front of the image,
 	// a local repository is used for development, testing and CI when we inject
 	// images in the cluster, for example submariner-gateway:local, or submariner-route-agent:local
-	if repo == "local" {
-		path = image
-	} else {
-		path = fmt.Sprintf("%s/%s%s%s", repo, names.ImagePrefix, image, names.ImagePostfix)
+	if repo != "local" {
+		path = fmt.Sprintf("%s/%s", repo, image)
 	}
 
 	path = fmt.Sprintf("%s:%s", path, version)
