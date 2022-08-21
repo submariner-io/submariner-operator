@@ -75,8 +75,8 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 					Containers: []corev1.Container{
 						{
 							Name:            name,
-							Image:           getImagePath(cr, names.GlobalnetImage, names.GlobalnetImage),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetImage]),
+							Image:           getImagePath(cr, names.GlobalnetImage, names.GlobalnetComponent),
+							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetComponent]),
 							SecurityContext: &corev1.SecurityContext{
 								Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
 								AllowPrivilegeEscalation: pointer.Bool(true),
