@@ -275,13 +275,9 @@ var _ = Describe("Generic Network", func() {
 
 	When("No kube-api pod exists and invalid service creation returns an unexpected error", func() {
 		It("Should return error and nil cluster network", func() {
-			client := fake.NewReactingClient(nil)
-
 			// Inject error for create services to return expectedErr
-			client.AddReactor(fake.Create, &corev1.Service{},
-				func(obj interface{}) (bool, error) {
-					return true, fmt.Errorf("%s", testServiceCIDR)
-				})
+			client := fake.NewReactingClient(nil).AddReactor(fake.Create, &corev1.Service{},
+				fake.FailingReaction(fmt.Errorf("%s", testServiceCIDR)))
 
 			clusterNet, err := network.Discover(client, "")
 			Expect(err).To(HaveOccurred())
@@ -319,16 +315,10 @@ func testDiscoverGenericWith(objects ...controllerClient.Object) *network.Cluste
 }
 
 func newTestClient(objects ...controllerClient.Object) controllerClient.Client {
-	client := fake.NewReactingClient(fakeClient.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build())
-
 	// Inject error for create services to return expectedErr
-	client.AddReactor(fake.Create, &corev1.Service{},
-		func(obj interface{}) (bool, error) {
-			return true, fmt.Errorf("The Service \"invalid-svc\" is invalid: "+
-				"spec.clusterIPs: Invalid value: []string{\"1.1.1.1\"}: failed to "+
-				"allocated ip:1.1.1.1 with error:provided IP is not in the valid range. "+
-				"The range of valid IPs is %s", testServiceCIDRFromService)
-		})
-
-	return client
+	return fake.NewReactingClient(fakeClient.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objects...).Build()).
+		AddReactor(fake.Create, &corev1.Service{}, fake.FailingReaction(fmt.Errorf("The Service \"invalid-svc\" is invalid: "+
+			"spec.clusterIPs: Invalid value: []string{\"1.1.1.1\"}: failed to "+
+			"allocated ip:1.1.1.1 with error:provided IP is not in the valid range. "+
+			"The range of valid IPs is %s", testServiceCIDRFromService)))
 }

@@ -20,11 +20,11 @@ package submariner_test
 
 import (
 	"context"
-	"reflect"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/admiral/pkg/fake"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/test"
@@ -216,7 +216,7 @@ func testReconciliation() {
 
 	When("DaemonSet creation fails", func() {
 		BeforeEach(func() {
-			t.Client = &test.FailingClient{Client: t.NewClient(), OnCreate: reflect.TypeOf(&appsv1.DaemonSet{})}
+			t.Client = fake.NewReactingClient(t.NewClient()).AddReactor(fake.Create, &appsv1.DaemonSet{}, fake.FailingReaction(nil))
 		})
 
 		It("should return an error", func() {
@@ -227,7 +227,7 @@ func testReconciliation() {
 
 	When("DaemonSet retrieval fails", func() {
 		BeforeEach(func() {
-			t.Client = &test.FailingClient{Client: t.NewClient(), OnGet: reflect.TypeOf(&appsv1.DaemonSet{})}
+			t.Client = fake.NewReactingClient(t.NewClient()).AddReactor(fake.Get, &appsv1.DaemonSet{}, fake.FailingReaction(nil))
 		})
 
 		It("should return an error", func() {
@@ -238,7 +238,7 @@ func testReconciliation() {
 
 	When("Submariner resource retrieval fails", func() {
 		BeforeEach(func() {
-			t.Client = &test.FailingClient{Client: t.NewClient(), OnGet: reflect.TypeOf(&v1alpha1.Submariner{})}
+			t.Client = fake.NewReactingClient(t.NewClient()).AddReactor(fake.Get, &v1alpha1.Submariner{}, fake.FailingReaction(nil))
 		})
 
 		It("should return an error", func() {
