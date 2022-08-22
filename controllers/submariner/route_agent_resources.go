@@ -120,6 +120,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 					},
 					ServiceAccountName: names.RouteAgentComponent,
 					HostNetwork:        true,
+					DNSPolicy:          corev1.DNSClusterFirstWithHostNet,
 					// The route agent engine on all nodes, regardless of existing taints
 					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},
