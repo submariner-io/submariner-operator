@@ -216,9 +216,9 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 			},
 			ServiceAccountName:            names.GatewayComponent,
 			HostNetwork:                   true,
+			DNSPolicy:                     corev1.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: pointer.Int64(1),
 			RestartPolicy:                 corev1.RestartPolicyAlways,
-			DNSPolicy:                     corev1.DNSClusterFirst,
 			// The gateway engine must be able to run on any flagged node, regardless of existing taints
 			Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 			Volumes:     volumes,
