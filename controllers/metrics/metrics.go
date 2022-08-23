@@ -38,12 +38,20 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 	client controllerClient.Client, config *rest.Config, scheme *runtime.Scheme,
 	reqLogger logr.Logger,
 ) error {
-	app, ok := labels["app"]
+	applicationKey := "app"
+	applicationName, ok := labels[applicationKey]
+
 	if !ok {
-		return fmt.Errorf("no app label in the provided labels, %v", labels)
+		applicationKey := "name"
+		applicationName, ok = labels[applicationKey]
+
+		if !ok {
+			return fmt.Errorf("no app or name label in the provided labels, %v", labels)
+		}
 	}
 
-	metricsService, err := helpers.ReconcileService(owner, newMetricsService(namespace, app, port), reqLogger, client, scheme)
+	metricsService, err := helpers.ReconcileService(owner, newMetricsService(namespace, applicationKey, applicationName, port), reqLogger,
+		client, scheme)
 	if err != nil {
 		return err // nolint:wrapcheck // No need to wrap here
 	}
@@ -67,11 +75,10 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 }
 
 // newMetricsService populates a Service providing access to metrics for the given application.
-// It is assumed that the application's resources are labeled with "app=" the given app name.
 // The Service is named after the application name, suffixed with "-metrics".
-func newMetricsService(namespace, app string, port int32) *corev1.Service {
+func newMetricsService(namespace, appKey, appName string, port int32) *corev1.Service {
 	labels := map[string]string{
-		"app": app,
+		appKey: appName,
 	}
 
 	servicePorts := []corev1.ServicePort{
@@ -85,7 +92,7 @@ func newMetricsService(namespace, app string, port int32) *corev1.Service {
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:    labels,
 			Namespace: namespace,
-			Name:      fmt.Sprintf("%s-metrics", app),
+			Name:      fmt.Sprintf("%s-metrics", appName),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:    servicePorts,

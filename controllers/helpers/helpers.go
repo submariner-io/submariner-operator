@@ -192,9 +192,11 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 ) (*corev1.Service, error) {
 	var err error
 
-	// Set the owner and controller
-	if err := controllerutil.SetControllerReference(owner, service, scheme); err != nil {
-		return nil, errors.Wrapf(err, "error setting owner reference for Service %s/%s", service.Namespace, service.Name)
+	if owner != nil {
+		// Set the owner and controller
+		if err := controllerutil.SetControllerReference(owner, service, scheme); err != nil {
+			return nil, errors.Wrapf(err, "error setting owner reference for Service %s/%s", service.Namespace, service.Name)
+		}
 	}
 
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -222,8 +224,11 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 			for k, v := range service.Annotations {
 				toUpdate.Annotations[k] = v
 			}
-			// Set the owner and controller
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
+			if owner != nil {
+				// Set the owner and controller
+				return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
+			}
+			return nil
 		})
 		if err != nil {
 			return err // nolint:wrapcheck // No need to wrap here
