@@ -31,9 +31,13 @@ import (
 	"k8s.io/client-go/discovery"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-var ErrServiceMonitorNotPresent = fmt.Errorf("no ServiceMonitor registered with the API")
+var (
+	log                         = logf.Log.WithName("metrics")
+	ErrServiceMonitorNotPresent = fmt.Errorf("no ServiceMonitor registered with the API")
+)
 
 const openshiftMonitoringNS = "openshift-monitoring"
 
