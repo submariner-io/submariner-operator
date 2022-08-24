@@ -6,6 +6,8 @@ on:
     types: [ready_for_review, opened, reopened, synchronize, converted_to_draft, labeled]
     branches: [devel]
 
+permissions: {}
+
 jobs:
   upgrade-e2e:
     name: Latest Release to Latest Version
