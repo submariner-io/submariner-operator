@@ -4,6 +4,8 @@ name: System Tests
 on:
   pull_request:
 
+permissions: {}
+
 jobs:
   system-test:
     name: Deployment

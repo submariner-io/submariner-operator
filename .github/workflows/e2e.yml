@@ -5,6 +5,8 @@ on:
   pull_request:
     types: [ready_for_review, opened, reopened, synchronize, converted_to_draft, labeled]
 
+permissions: {}
+
 jobs:
   e2e:
     name: E2E
