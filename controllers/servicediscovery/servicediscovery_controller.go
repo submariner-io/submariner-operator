@@ -33,6 +33,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/finalizer"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
+	"github.com/submariner-io/admiral/pkg/util"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/helpers"
@@ -48,7 +49,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -73,10 +73,11 @@ const (
 
 // Reconciler reconciles a ServiceDiscovery object.
 type Reconciler struct {
-	Client     controllerClient.Client
-	Scheme     *runtime.Scheme
-	RestConfig *rest.Config
-	KubeClient clientset.Interface
+	Client controllerClient.Client
+	// This client can be used to access any other resource not in the operator namespace.
+	GeneralClient controllerClient.Client
+	Scheme        *runtime.Scheme
+	RestConfig    *rest.Config
 }
 
 // blank assignment to verify that Reconciler implements reconcile.Reconciler.
@@ -421,29 +422,11 @@ func getCustomCoreDNSNamespace(config *submarinerv1alpha1.CoreDNSCustomConfig) s
 func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger,
 ) error {
-	var configFunc func(context.Context, *corev1.ConfigMap) (*corev1.ConfigMap, error)
+	configMap := newCoreDNSCustomConfigMap(cr.Spec.CoreDNSCustomConfig)
 
-	customCoreDNSName := cr.Spec.CoreDNSCustomConfig.ConfigMapName
-	coreDNSNamespace := getCustomCoreDNSNamespace(cr.Spec.CoreDNSCustomConfig)
-
-	// nolint:wrapcheck // No need to wrap errors here
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		configMap, err := r.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Get(ctx, customCoreDNSName, metav1.GetOptions{})
-		if apierrors.IsNotFound(err) {
-			configFunc = func(ctx context.Context, cm *corev1.ConfigMap) (*corev1.ConfigMap, error) {
-				return r.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Create(ctx, cm, metav1.CreateOptions{})
-			}
-			configMap = newCoreDNSCustomConfigMap(cr.Spec.CoreDNSCustomConfig)
-		} else if err != nil {
-			return err
-		} else {
-			configFunc = func(ctx context.Context, cm *corev1.ConfigMap) (*corev1.ConfigMap, error) {
-				return r.KubeClient.CoreV1().ConfigMaps(coreDNSNamespace).Update(ctx, cm, metav1.UpdateOptions{})
-			}
-		}
-
+	_, err := controllerutil.CreateOrUpdate(ctx, r.GeneralClient, configMap, func() error {
 		lighthouseDNSService := &corev1.Service{}
-		err = r.Client.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: cr.Namespace},
+		err := r.Client.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: cr.Namespace},
 			lighthouseDNSService)
 		lighthouseClusterIP := lighthouseDNSService.Spec.ClusterIP
 		if err != nil || lighthouseClusterIP == "" {
@@ -451,12 +434,12 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 		}
 
 		if configMap.Data == nil {
-			reqLogger.Info("Initializing configMap.Data in " + customCoreDNSName)
+			reqLogger.Info("Initializing configMap.Data in " + configMap.Name)
 			configMap.Data = make(map[string]string)
 		}
 
 		if _, ok := configMap.Data["lighthouse.server"]; ok {
-			reqLogger.Info("Overwriting existing lighthouse.server data in " + customCoreDNSName)
+			reqLogger.Info("Overwriting existing lighthouse.server data in " + configMap.Name)
 		}
 
 		coreFile := ""
@@ -464,14 +447,14 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 			coreFile = fmt.Sprintf("%s%s:53 {\n    forward . %s\n}\n",
 				coreFile, domain, lighthouseClusterIP)
 		}
+
 		log.Info("Updating coredns-custom ConfigMap for lighthouse.server: " + coreFile)
 		configMap.Data["lighthouse.server"] = coreFile
-		// Potentially retried
-		_, err = configFunc(ctx, configMap)
-		return err
+
+		return nil
 	})
 
-	return errors.Wrap(retryErr, "error updating DNS custom ConfigMap")
+	return errors.Wrap(err, "error updating DNS custom ConfigMap")
 }
 
 func (r *Reconciler) configureDNSConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery, configMapNamespace,
@@ -495,58 +478,54 @@ func (r *Reconciler) configureDNSConfigMap(ctx context.Context, cr *submarinerv1
 func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
 	configMapNamespace, configMapName, clusterIP string,
 ) error {
-	// nolint:wrapcheck // No need to wrap errors here
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		configMap, err := r.KubeClient.CoreV1().ConfigMaps(configMapNamespace).Get(ctx, configMapName, metav1.GetOptions{})
-		if err != nil {
-			return err
-		}
+	configMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: configMapNamespace, Name: configMapName}}
+	err := util.MustUpdate(ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
+		func(obj runtime.Object) (runtime.Object, error) {
+			existing := obj.(*corev1.ConfigMap)
 
-		coreFile := configMap.Data["Corefile"]
-		newCoreStr := ""
-		if strings.Contains(coreFile, "lighthouse-start") {
-			// Assume this means we've already set the ConfigMap up, first remove existing lighthouse config
-			skip := false
-			log.Info("coredns configmap has lighthouse configuration hence updating")
-			lines := strings.Split(coreFile, "\n")
-			for _, line := range lines {
-				if strings.Contains(line, "lighthouse-start") {
-					skip = true
-				} else if strings.Contains(line, "lighthouse-end") {
-					skip = false
-					continue
+			coreFile := existing.Data["Corefile"]
+			if strings.Contains(coreFile, "lighthouse-start") {
+				// Assume this means we've already set the ConfigMap up, first remove existing lighthouse config
+				newCoreStr := ""
+				skip := false
+				log.Info("coredns configmap has lighthouse configuration hence updating")
+				lines := strings.Split(coreFile, "\n")
+				for _, line := range lines {
+					if strings.Contains(line, "lighthouse-start") {
+						skip = true
+					} else if strings.Contains(line, "lighthouse-end") {
+						skip = false
+						continue
+					}
+					if skip {
+						continue
+					}
+					newCoreStr = newCoreStr + line + "\n"
 				}
-				if skip {
-					continue
-				}
-				newCoreStr = newCoreStr + line + "\n"
-			}
-			coreFile = newCoreStr
-		} else {
-			log.Info("coredns configmap does not have lighthouse configuration hence creating")
-		}
-
-		if clusterIP != "" {
-			coreDNSPort := findCoreDNSListeningPort(coreFile)
-
-			expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
-			for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
-				expectedCorefile = fmt.Sprintf("%s%s:%s {\n    forward . %s\n}\n",
-					expectedCorefile, domain, coreDNSPort, clusterIP)
+				coreFile = newCoreStr
+			} else {
+				log.Info("coredns configmap does not have lighthouse configuration hence creating")
 			}
 
-			coreFile = expectedCorefile + "#lighthouse-end\n" + coreFile
-		}
+			if clusterIP != "" {
+				coreDNSPort := findCoreDNSListeningPort(coreFile)
 
-		log.Info("Updated coredns ConfigMap " + coreFile)
-		configMap.Data["Corefile"] = coreFile
+				expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
+				for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
+					expectedCorefile = fmt.Sprintf("%s%s:%s {\n    forward . %s\n}\n",
+						expectedCorefile, domain, coreDNSPort, clusterIP)
+				}
 
-		// Potentially retried
-		_, err = r.KubeClient.CoreV1().ConfigMaps(configMapNamespace).Update(ctx, configMap, metav1.UpdateOptions{})
-		return err
-	})
+				coreFile = expectedCorefile + "#lighthouse-end\n" + coreFile
+			}
 
-	return errors.Wrap(retryErr, "error updating DNS ConfigMap")
+			log.Info("Updated coredns ConfigMap " + coreFile)
+			existing.Data["Corefile"] = coreFile
+
+			return existing, nil
+		})
+
+	return errors.Wrap(err, "error updating DNS ConfigMap")
 }
 
 func findCoreDNSListeningPort(coreFile string) string {

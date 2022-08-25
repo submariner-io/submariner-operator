@@ -110,7 +110,7 @@ func (r *Reconciler) removeLighthouseConfigFromCustomDNSConfigMap(ctx context.Co
 
 	log.Info("Removing lighthouse config from custom DNS ConfigMap", "Name", configMap.Name, "Namespace", configMap.Namespace)
 
-	err := util.Update(ctx, resource.ForConfigMap(r.KubeClient, configMap.Namespace), configMap,
+	err := util.Update(ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
 		func(existing runtime.Object) (runtime.Object, error) {
 			delete(existing.(*corev1.ConfigMap).Data, "lighthouse.server")
 			return existing, nil

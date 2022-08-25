@@ -37,7 +37,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	fakeKubeClient "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -75,7 +74,6 @@ func TestSubmariner(t *testing.T) {
 
 type testDriver struct {
 	test.Driver
-	kubeClient       *fakeKubeClient.Clientset
 	serviceDiscovery *v1alpha1.ServiceDiscovery
 }
 
@@ -90,7 +88,6 @@ func newTestDriver() *testDriver {
 	BeforeEach(func() {
 		t.BeforeEach()
 		t.serviceDiscovery = newServiceDiscovery()
-		t.kubeClient = fakeKubeClient.NewSimpleClientset()
 		t.InitClientObjs = []controllerClient.Object{t.serviceDiscovery}
 	})
 
@@ -98,9 +95,9 @@ func newTestDriver() *testDriver {
 		t.JustBeforeEach()
 
 		t.Controller = &servicediscovery.Reconciler{
-			Client:     t.Client,
-			Scheme:     scheme.Scheme,
-			KubeClient: t.kubeClient,
+			Client:        t.Client,
+			GeneralClient: t.Client,
+			Scheme:        scheme.Scheme,
 		}
 	})
 
@@ -143,15 +140,11 @@ func (t *testDriver) assertCoreDNSConfigMap() *corev1.ConfigMap {
 }
 
 func (t *testDriver) assertConfigMap(name, namespace string) *corev1.ConfigMap {
-	foundCoreMap, err := t.kubeClient.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	foundCoreMap := &corev1.ConfigMap{}
+	err := t.Client.Get(context.TODO(), controllerClient.ObjectKey{Namespace: namespace, Name: name}, foundCoreMap)
 	Expect(err).To(Succeed())
 
 	return foundCoreMap
-}
-
-func (t *testDriver) createConfigMap(cm *corev1.ConfigMap) {
-	_, err := t.kubeClient.CoreV1().ConfigMaps(cm.Namespace).Create(context.TODO(), cm, metav1.CreateOptions{})
-	Expect(err).To(Succeed())
 }
 
 func newDNSConfig(clusterIP string) *operatorv1.DNS {
