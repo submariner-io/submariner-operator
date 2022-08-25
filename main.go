@@ -26,7 +26,7 @@ import (
 	"os"
 	"runtime"
 
-	// TODO: in operator-sdk v1 the below utilities were moved to internal.
+	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	"github.com/operator-framework/operator-lib/leader"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"
@@ -34,7 +34,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers"
+	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
@@ -47,6 +47,8 @@ import (
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
@@ -158,14 +160,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info("Registering Components.")
-
-	// Setup all Controllers
-	if err := controllers.AddToManager(mgr); err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-
 	if err = serveCRMetrics(cfg); err != nil {
 		log.Info("Could not generate and serve custom resource metrics", "error", err.Error())
 	}
@@ -184,15 +178,40 @@ func main() {
 
 	createServiceMonitors(ctx, cfg, servicePorts, namespace)
 
+	log.Info("Registering Components.")
+
+	// Setup all Controllers
 	if err = (&submariner.BrokerReconciler{
 		Client: mgr.GetClient(),
 		Config: mgr.GetConfig(),
-		Log:    logf.Log.WithName("controllers").WithName("Broker"),
-		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Broker")
 		os.Exit(1)
 	}
+
+	generalClient, _ := operatorclient.NewClient(mgr.GetConfig())
+
+	if err = submariner.NewReconciler(&submariner.Config{
+		ScopedClient:  mgr.GetClient(),
+		GeneralClient: generalClient,
+		RestConfig:    mgr.GetConfig(),
+		Scheme:        mgr.GetScheme(),
+		DynClient:     dynamic.NewForConfigOrDie(mgr.GetConfig()),
+	}).SetupWithManager(mgr); err != nil {
+		log.Error(err, "unable to create controller", "controller", "Submariner")
+		os.Exit(1)
+	}
+
+	if err = (&servicediscovery.Reconciler{
+		Client:     mgr.GetClient(),
+		Scheme:     mgr.GetScheme(),
+		RestConfig: mgr.GetConfig(),
+		KubeClient: kubernetes.NewForConfigOrDie(mgr.GetConfig()),
+	}).SetupWithManager(mgr); err != nil {
+		log.Error(err, "unable to create controller", "controller", "ServiceDiscovery")
+		os.Exit(1)
+	}
+
 	// +kubebuilder:scaffold:builder
 
 	// Start the Cmd

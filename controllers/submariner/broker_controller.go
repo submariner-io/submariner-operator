@@ -21,7 +21,6 @@ package submariner
 import (
 	"context"
 
-	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
@@ -29,7 +28,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,17 +38,14 @@ import (
 type BrokerReconciler struct {
 	Client client.Client
 	Config *rest.Config
-	Log    logr.Logger
-	Scheme *runtime.Scheme
 }
 
-// TODO skitt: these rbac declarations (and others, see submariner_controller.go) need to be separated
-// from methods in order to be taken into account; but they produce ClusterRoles, not the Roles we want
-// +kubebuilder:rbac:groups=submariner.io,resources=brokers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=submariner.io,resources=brokers/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=submariner.io,resources=brokers,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=submariner.io,resources=brokers/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=submariner.io,resources=brokers/finalizers,verbs=update
+
 func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
 	_ = context.Background()
-	_ = r.Log.WithValues("broker", request.NamespacedName)
 
 	// Fetch the Broker instance
 	instance := &v1alpha1.Broker{}
