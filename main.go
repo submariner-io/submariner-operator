@@ -41,7 +41,6 @@ import (
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -193,10 +192,10 @@ func main() {
 	}
 
 	if err = (&servicediscovery.Reconciler{
-		Client:     mgr.GetClient(),
-		Scheme:     mgr.GetScheme(),
-		RestConfig: mgr.GetConfig(),
-		KubeClient: kubernetes.NewForConfigOrDie(mgr.GetConfig()),
+		Client:        mgr.GetClient(),
+		GeneralClient: generalClient,
+		Scheme:        mgr.GetScheme(),
+		RestConfig:    mgr.GetConfig(),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "ServiceDiscovery")
 		os.Exit(1)
