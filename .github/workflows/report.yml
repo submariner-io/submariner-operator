@@ -51,8 +51,3 @@ jobs:
       - name: Show CodeQL scan SARIF report
         if: always()
         run: cat ../results/go.sarif
-      - name: Upload CodeQL scan SARIF report
-        if: always()
-        uses: github/codeql-action/upload-sarif@7fee4ca032ac341c12486c4c06822c5221c76533
-        with:
-          sarif_file: ../results/go.sarif
