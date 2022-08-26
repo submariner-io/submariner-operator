@@ -2232,6 +2232,7 @@ rules:
   - apiGroups:
       - ""
     resources:
+      - pods
       - services
       - services/finalizers
       - endpoints
