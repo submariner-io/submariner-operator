@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -151,9 +150,23 @@ func populateEndpointsFromServicePorts(s *v1.Service) []monitoringv1.Endpoint {
 
 // hasServiceMonitor checks if ServiceMonitor is registered in the cluster.
 func hasServiceMonitor(config *rest.Config) (bool, error) {
-	dc := discovery.NewDiscoveryClientForConfigOrDie(config)
 	apiVersion := "monitoring.coreos.com/v1"
 	kind := "ServiceMonitor"
 
-	return k8sutil.ResourceExists(dc, apiVersion, kind) // nolint:wrapcheck // No need to wrap here
+	_, apiLists, err := discovery.NewDiscoveryClientForConfigOrDie(config).ServerGroupsAndResources()
+	if err != nil {
+		return false, err // nolint:wrapcheck // No need to wrap here
+	}
+
+	for _, apiList := range apiLists {
+		if apiList.GroupVersion == apiVersion {
+			for i := range apiList.APIResources {
+				if apiList.APIResources[i].Kind == kind {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
 }
