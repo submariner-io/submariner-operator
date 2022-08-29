@@ -16,10 +16,8 @@ jobs:
       ( github.event.action == 'labeled' && github.event.label.name == 'check-prometheus' )
       || ( github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'check-prometheus') )
     steps:
-      - name: Check out the Shipyard repository
+      - name: Check out the repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-        with:
-          repository: submariner-io/shipyard
 
       - name: Reclaim free space
         run: |

@@ -42,7 +42,7 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 	applicationName, ok := labels[applicationKey]
 
 	if !ok {
-		applicationKey := "name"
+		applicationKey = "name"
 		applicationName, ok = labels[applicationKey]
 
 		if !ok {
