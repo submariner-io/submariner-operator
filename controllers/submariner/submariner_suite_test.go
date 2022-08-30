@@ -75,7 +75,7 @@ func newTestDriver() *testDriver {
 	BeforeEach(func() {
 		t.BeforeEach()
 		t.submariner = newSubmariner()
-		t.InitClientObjs = []controllerClient.Object{t.submariner}
+		t.InitScopedClientObjs = []controllerClient.Object{t.submariner}
 
 		t.clusterNetwork = &network.ClusterNetwork{
 			NetworkPlugin: "fake",
@@ -88,8 +88,8 @@ func newTestDriver() *testDriver {
 		t.JustBeforeEach()
 
 		t.Controller = submarinerController.NewReconciler(&submarinerController.Config{
-			ScopedClient:   t.Client,
-			GeneralClient:  t.Client,
+			ScopedClient:   t.ScopedClient,
+			GeneralClient:  t.ScopedClient,
 			Scheme:         scheme.Scheme,
 			ClusterNetwork: t.clusterNetwork,
 		})
@@ -108,7 +108,7 @@ func (t *testDriver) awaitSubmarinerDeleted() {
 
 func (t *testDriver) getSubmariner() *v1alpha1.Submariner {
 	obj := &v1alpha1.Submariner{}
-	err := t.Client.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, obj)
+	err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: submarinerName, Namespace: submarinerNamespace}, obj)
 	Expect(err).To(Succeed())
 
 	return obj

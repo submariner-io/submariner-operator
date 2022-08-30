@@ -50,7 +50,7 @@ func testReconciliation() {
 	When("the openshift DNS config exists", func() {
 		Context("and the lighthouse config isn't present", func() {
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(""), newDNSService(clusterIP))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(""), newDNSService(clusterIP))
 			})
 
 			It("should add it", func() {
@@ -64,7 +64,7 @@ func testReconciliation() {
 			updatedClusterIP := "10.10.10.11"
 
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(clusterIP), newDNSService(updatedClusterIP))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(clusterIP), newDNSService(updatedClusterIP))
 			})
 
 			It("should update the lighthouse config", func() {
@@ -76,7 +76,7 @@ func testReconciliation() {
 
 		Context("and the lighthouse DNS service doesn't exist", func() {
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(""))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(""))
 			})
 
 			It("should create the service and add the lighthouse config", func() {
@@ -94,7 +94,8 @@ func testReconciliation() {
 	When("the coredns ConfigMap exists", func() {
 		Context("and the lighthouse config isn't present", func() {
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, newDNSService(clusterIP), newCoreDNSConfigMap(coreDNSCorefileData("")))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP),
+					newCoreDNSConfigMap(coreDNSCorefileData("")))
 			})
 
 			It("should add it", func() {
@@ -108,7 +109,8 @@ func testReconciliation() {
 			updatedClusterIP := "10.10.10.11"
 
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, newDNSService(updatedClusterIP), newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(updatedClusterIP),
+					newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
 			})
 
 			It("should update the lighthouse config", func() {
@@ -120,7 +122,7 @@ func testReconciliation() {
 
 		Context("and the lighthouse DNS service doesn't exist", func() {
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, newCoreDNSConfigMap(coreDNSCorefileData("")))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newCoreDNSConfigMap(coreDNSCorefileData("")))
 			})
 
 			It("should create the service and add the lighthouse config", func() {
@@ -145,7 +147,7 @@ func testReconciliation() {
 
 		Context("and the custom coredns ConfigMap already exists", func() {
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, newDNSService(clusterIP), &corev1.ConfigMap{
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP), &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 						Namespace: t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace,
@@ -167,7 +169,7 @@ func testReconciliation() {
 
 		Context("and the custom coredns ConfigMap doesn't exist", func() {
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, newDNSService(clusterIP))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
 			})
 
 			It("should create it", func() {
@@ -211,7 +213,7 @@ func testCoreDNSCleanup() {
 		var one int32 = 1
 		deployment.Spec.Replicas = &one
 
-		Expect(t.Client.Create(context.TODO(), deployment)).To(Succeed())
+		Expect(t.ScopedClient.Create(context.TODO(), deployment)).To(Succeed())
 		t.UpdateDeploymentToReady(deployment)
 
 		t.AssertReconcileSuccess()
@@ -219,7 +221,7 @@ func testCoreDNSCleanup() {
 
 	When("the coredns ConfigMap exists", func() {
 		BeforeEach(func() {
-			t.InitClientObjs = append(t.InitClientObjs, newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
 		})
 
 		It("should remove the lighthouse config section", func() {
@@ -231,7 +233,7 @@ func testCoreDNSCleanup() {
 
 	When("the openshift DNS config exists", func() {
 		BeforeEach(func() {
-			t.InitClientObjs = append(t.InitClientObjs, newDNSConfig(clusterIP))
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(clusterIP))
 		})
 
 		It("should remove the lighthouse config", func() {
@@ -251,7 +253,7 @@ func testCoreDNSCleanup() {
 
 		Context("and the custom coredns ConfigMap exists", func() {
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, &corev1.ConfigMap{
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 						Namespace: t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace,
@@ -288,7 +290,7 @@ func testDeploymentUninstall() {
 
 	Context("", func() {
 		BeforeEach(func() {
-			t.InitClientObjs = append(t.InitClientObjs,
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs,
 				t.NewDeployment(names.ServiceDiscoveryComponent))
 		})
 
@@ -316,7 +318,7 @@ func testDeploymentUninstall() {
 		BeforeEach(func() {
 			t.serviceDiscovery.Spec.Version = "0.11.1"
 
-			t.InitClientObjs = append(t.InitClientObjs, t.NewDeployment(names.ServiceDiscoveryComponent))
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, t.NewDeployment(names.ServiceDiscoveryComponent))
 		})
 
 		It("should not perform uninstall", func() {
