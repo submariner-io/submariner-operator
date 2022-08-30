@@ -39,27 +39,27 @@ import (
 )
 
 type Driver struct {
-	InitClientObjs []client.Object
-	Client         client.Client
-	Controller     reconcile.Reconciler
-	Namespace      string
-	ResourceName   string
+	InitScopedClientObjs []client.Object
+	ScopedClient         client.Client
+	Controller           reconcile.Reconciler
+	Namespace            string
+	ResourceName         string
 }
 
 func (d *Driver) BeforeEach() {
-	d.Client = nil
-	d.InitClientObjs = []client.Object{}
+	d.ScopedClient = nil
+	d.InitScopedClientObjs = []client.Object{}
 	d.Controller = nil
 }
 
 func (d *Driver) JustBeforeEach() {
-	if d.Client == nil {
-		d.Client = d.NewClient()
+	if d.ScopedClient == nil {
+		d.ScopedClient = d.NewScopedClient()
 	}
 }
 
-func (d *Driver) NewClient() client.Client {
-	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(d.InitClientObjs...).Build()
+func (d *Driver) NewScopedClient() client.Client {
+	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(d.InitScopedClientObjs...).Build()
 }
 
 func (d *Driver) DoReconcile() (reconcile.Result, error) {
@@ -90,7 +90,7 @@ func (d *Driver) AssertReconcileError() {
 
 func (d *Driver) GetDaemonSet(name string) (*appsv1.DaemonSet, error) {
 	foundDaemonSet := &appsv1.DaemonSet{}
-	err := d.Client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: d.Namespace}, foundDaemonSet)
+	err := d.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: d.Namespace}, foundDaemonSet)
 
 	return foundDaemonSet, err
 }
@@ -117,7 +117,7 @@ func (d *Driver) AssertNoDaemonSet(name string) {
 
 func (d *Driver) GetDeployment(name string) (*appsv1.Deployment, error) {
 	found := &appsv1.Deployment{}
-	err := d.Client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: d.Namespace}, found)
+	err := d.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: d.Namespace}, found)
 
 	return found, err
 }
@@ -153,26 +153,26 @@ func (d *Driver) AssertUninstallInitContainer(template *corev1.PodTemplateSpec, 
 func (d *Driver) UpdateDaemonSetToReady(daemonSet *appsv1.DaemonSet) {
 	d.UpdateDaemonSetToScheduled(daemonSet)
 	daemonSet.Status.NumberReady = daemonSet.Status.DesiredNumberScheduled
-	Expect(d.Client.Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
 func (d *Driver) UpdateDaemonSetToObserved(daemonSet *appsv1.DaemonSet) {
 	daemonSet.Generation = 1
 	daemonSet.Status.ObservedGeneration = daemonSet.Generation
-	Expect(d.Client.Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
 func (d *Driver) UpdateDaemonSetToScheduled(daemonSet *appsv1.DaemonSet) {
 	daemonSet.Generation = 1
 	daemonSet.Status.ObservedGeneration = daemonSet.Generation
 	daemonSet.Status.DesiredNumberScheduled = 1
-	Expect(d.Client.Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
 func (d *Driver) UpdateDeploymentToReady(deployment *appsv1.Deployment) {
 	deployment.Status.ReadyReplicas = *deployment.Spec.Replicas
 	deployment.Status.AvailableReplicas = *deployment.Spec.Replicas
-	Expect(d.Client.Update(context.TODO(), deployment)).To(Succeed())
+	Expect(d.ScopedClient.Update(context.TODO(), deployment)).To(Succeed())
 }
 
 func (d *Driver) NewDaemonSet(name string) *appsv1.DaemonSet {
@@ -206,17 +206,17 @@ func (d *Driver) NewPodWithLabel(label, value string) *corev1.Pod {
 }
 
 func (d *Driver) DeletePods(label, value string) {
-	err := d.Client.DeleteAllOf(context.TODO(), &corev1.Pod{}, client.InNamespace(d.Namespace),
+	err := d.ScopedClient.DeleteAllOf(context.TODO(), &corev1.Pod{}, client.InNamespace(d.Namespace),
 		client.MatchingLabelsSelector{Selector: labels.SelectorFromSet(map[string]string{label: value})})
 	Expect(err).To(Succeed())
 }
 
 func (d *Driver) AwaitFinalizer(obj client.Object, finalizer string) {
-	admtest.AwaitFinalizer(resource.ForControllerClient(d.Client, d.Namespace, obj), obj.GetName(), finalizer)
+	admtest.AwaitFinalizer(resource.ForControllerClient(d.ScopedClient, d.Namespace, obj), obj.GetName(), finalizer)
 }
 
 func (d *Driver) AwaitNoResource(obj client.Object) {
-	admtest.AwaitNoResource(resource.ForControllerClient(d.Client, d.Namespace, obj), obj.GetName())
+	admtest.AwaitNoResource(resource.ForControllerClient(d.ScopedClient, d.Namespace, obj), obj.GetName())
 }
 
 func EnvMapFrom(daemonSet *appsv1.DaemonSet) map[string]string {

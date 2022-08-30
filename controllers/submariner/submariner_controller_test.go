@@ -81,7 +81,7 @@ func testReconciliation() {
 			initial.Spec.ServiceCIDR = testConfiguredServiceCIDR
 			initial.Spec.ClusterCIDR = testConfiguredClusterCIDR
 
-			Expect(t.Client.Update(context.TODO(), initial)).To(Succeed())
+			Expect(t.ScopedClient.Update(context.TODO(), initial)).To(Succeed())
 
 			t.AssertReconcileSuccess()
 
@@ -100,7 +100,7 @@ func testReconciliation() {
 
 	When("the submariner gateway DaemonSet already exists", func() {
 		BeforeEach(func() {
-			t.InitClientObjs = append(t.InitClientObjs, t.NewDaemonSet(names.GatewayComponent))
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, t.NewDaemonSet(names.GatewayComponent))
 		})
 
 		It("should update it", func() {
@@ -108,7 +108,7 @@ func testReconciliation() {
 
 			initial := t.getSubmariner()
 			initial.Spec.ServiceCIDR = "101.96.1.0/16"
-			Expect(t.Client.Update(context.TODO(), initial)).To(Succeed())
+			Expect(t.ScopedClient.Update(context.TODO(), initial)).To(Succeed())
 
 			t.AssertReconcileSuccess()
 
@@ -126,7 +126,7 @@ func testReconciliation() {
 
 	When("the submariner route-agent DaemonSet already exists", func() {
 		BeforeEach(func() {
-			t.InitClientObjs = append(t.InitClientObjs, t.NewDaemonSet(names.RouteAgentComponent))
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, t.NewDaemonSet(names.RouteAgentComponent))
 		})
 
 		It("should update it", func() {
@@ -134,7 +134,7 @@ func testReconciliation() {
 
 			initial := t.getSubmariner()
 			initial.Spec.ClusterCIDR = "11.245.1.0/16"
-			Expect(t.Client.Update(context.TODO(), initial)).To(Succeed())
+			Expect(t.ScopedClient.Update(context.TODO(), initial)).To(Succeed())
 
 			t.AssertReconcileSuccess()
 
@@ -144,7 +144,7 @@ func testReconciliation() {
 
 		When("a selected pod has a nil Started field", func() {
 			BeforeEach(func() {
-				t.InitClientObjs = append(t.InitClientObjs, &corev1.Pod{
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, &corev1.Pod{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: t.submariner.Namespace,
 						Name:      names.RouteAgentComponent + "-pod",
@@ -189,7 +189,7 @@ func testReconciliation() {
 
 	When("the Submariner resource doesn't exist", func() {
 		BeforeEach(func() {
-			t.InitClientObjs = nil
+			t.InitScopedClientObjs = nil
 		})
 
 		It("should return success without creating any resources", func() {
@@ -216,7 +216,8 @@ func testReconciliation() {
 
 	When("DaemonSet creation fails", func() {
 		BeforeEach(func() {
-			t.Client = fake.NewReactingClient(t.NewClient()).AddReactor(fake.Create, &appsv1.DaemonSet{}, fake.FailingReaction(nil))
+			t.ScopedClient = fake.NewReactingClient(t.NewScopedClient()).AddReactor(fake.Create, &appsv1.DaemonSet{},
+				fake.FailingReaction(nil))
 		})
 
 		It("should return an error", func() {
@@ -227,7 +228,8 @@ func testReconciliation() {
 
 	When("DaemonSet retrieval fails", func() {
 		BeforeEach(func() {
-			t.Client = fake.NewReactingClient(t.NewClient()).AddReactor(fake.Get, &appsv1.DaemonSet{}, fake.FailingReaction(nil))
+			t.ScopedClient = fake.NewReactingClient(t.NewScopedClient()).AddReactor(fake.Get, &appsv1.DaemonSet{},
+				fake.FailingReaction(nil))
 		})
 
 		It("should return an error", func() {
@@ -238,7 +240,8 @@ func testReconciliation() {
 
 	When("Submariner resource retrieval fails", func() {
 		BeforeEach(func() {
-			t.Client = fake.NewReactingClient(t.NewClient()).AddReactor(fake.Get, &v1alpha1.Submariner{}, fake.FailingReaction(nil))
+			t.ScopedClient = fake.NewReactingClient(t.NewScopedClient()).AddReactor(fake.Get, &v1alpha1.Submariner{},
+				fake.FailingReaction(nil))
 		})
 
 		It("should return an error", func() {
@@ -262,7 +265,7 @@ func testDeletion() {
 		BeforeEach(func() {
 			t.clusterNetwork.NetworkPlugin = cni.OVNKubernetes
 
-			t.InitClientObjs = append(t.InitClientObjs,
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs,
 				t.NewDaemonSet(names.GatewayComponent),
 				t.NewPodWithLabel("app", names.GatewayComponent),
 				t.NewDaemonSet(names.RouteAgentComponent),
@@ -324,7 +327,7 @@ func testDeletion() {
 			t.submariner.Spec.GlobalCIDR = ""
 			t.submariner.Spec.Version = "devel"
 
-			t.InitClientObjs = append(t.InitClientObjs,
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs,
 				t.NewDaemonSet(names.GatewayComponent),
 				t.NewDaemonSet(names.RouteAgentComponent))
 		})
@@ -360,7 +363,7 @@ func testDeletion() {
 
 			ts := metav1.NewTime(time.Now().Add(-(uninstall.ComponentReadyTimeout + 10)))
 			t.submariner.SetDeletionTimestamp(&ts)
-			Expect(t.Client.Update(context.TODO(), t.submariner)).To(Succeed())
+			Expect(t.ScopedClient.Update(context.TODO(), t.submariner)).To(Succeed())
 
 			t.AssertReconcileSuccess()
 
@@ -375,7 +378,7 @@ func testDeletion() {
 		BeforeEach(func() {
 			t.submariner.Spec.Version = "0.11.1"
 
-			t.InitClientObjs = append(t.InitClientObjs,
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs,
 				t.NewDaemonSet(names.GatewayComponent))
 		})
 
@@ -396,7 +399,7 @@ func testDeletion() {
 			t.submariner.Spec.GlobalCIDR = ""
 			t.submariner.Spec.ServiceDiscoveryEnabled = true
 
-			t.InitClientObjs = append(t.InitClientObjs,
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs,
 				&v1alpha1.ServiceDiscovery{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: submarinerNamespace,
@@ -414,7 +417,7 @@ func testDeletion() {
 			t.AssertReconcileSuccess()
 
 			serviceDiscovery := &v1alpha1.ServiceDiscovery{}
-			err := t.Client.Get(context.TODO(), types.NamespacedName{Name: names.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
+			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: names.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
 				serviceDiscovery)
 			Expect(errors.IsNotFound(err)).To(BeTrue(), "ServiceDiscovery still exists")
 

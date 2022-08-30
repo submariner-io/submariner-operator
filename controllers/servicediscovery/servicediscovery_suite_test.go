@@ -88,15 +88,15 @@ func newTestDriver() *testDriver {
 	BeforeEach(func() {
 		t.BeforeEach()
 		t.serviceDiscovery = newServiceDiscovery()
-		t.InitClientObjs = []controllerClient.Object{t.serviceDiscovery}
+		t.InitScopedClientObjs = []controllerClient.Object{t.serviceDiscovery}
 	})
 
 	JustBeforeEach(func() {
 		t.JustBeforeEach()
 
 		t.Controller = &servicediscovery.Reconciler{
-			ScopedClient:  t.Client,
-			GeneralClient: t.Client,
+			ScopedClient:  t.ScopedClient,
+			GeneralClient: t.ScopedClient,
 			Scheme:        scheme.Scheme,
 		}
 	})
@@ -123,7 +123,7 @@ func (t *testDriver) assertUninstallServiceDiscoveryDeployment() *appsv1.Deploym
 
 func (t *testDriver) getDNSConfig() (*operatorv1.DNS, error) {
 	foundDNSConfig := &operatorv1.DNS{}
-	err := t.Client.Get(context.TODO(), types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
+	err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
 
 	return foundDNSConfig, err
 }
@@ -141,7 +141,7 @@ func (t *testDriver) assertCoreDNSConfigMap() *corev1.ConfigMap {
 
 func (t *testDriver) assertConfigMap(name, namespace string) *corev1.ConfigMap {
 	foundCoreMap := &corev1.ConfigMap{}
-	err := t.Client.Get(context.TODO(), controllerClient.ObjectKey{Namespace: namespace, Name: name}, foundCoreMap)
+	err := t.ScopedClient.Get(context.TODO(), controllerClient.ObjectKey{Namespace: namespace, Name: name}, foundCoreMap)
 	Expect(err).To(Succeed())
 
 	return foundCoreMap
@@ -230,7 +230,7 @@ func newDNSService(clusterIP string) *corev1.Service {
 
 func (t *testDriver) assertLighthouseCoreDNSService() *corev1.Service {
 	service := &corev1.Service{}
-	Expect(t.Client.Get(context.TODO(), types.NamespacedName{Name: lighthouseDNSServiceName, Namespace: submarinerNamespace},
+	Expect(t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseDNSServiceName, Namespace: submarinerNamespace},
 		service)).To(Succeed())
 
 	Expect(service.Labels).To(HaveKeyWithValue("app", lighthouseDNSServiceName))
@@ -245,7 +245,7 @@ func (t *testDriver) assertLighthouseCoreDNSService() *corev1.Service {
 func (t *testDriver) setLighthouseCoreDNSServiceIP() {
 	service := t.assertLighthouseCoreDNSService()
 	service.Spec.ClusterIP = clusterIP
-	Expect(t.Client.Update(context.TODO(), service)).To(Succeed())
+	Expect(t.ScopedClient.Update(context.TODO(), service)).To(Succeed())
 }
 
 func (t *testDriver) testServiceDiscoveryDeleted() {
