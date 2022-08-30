@@ -89,7 +89,7 @@ func newTestDriver() *testDriver {
 
 		t.Controller = submarinerController.NewReconciler(&submarinerController.Config{
 			ScopedClient:   t.ScopedClient,
-			GeneralClient:  t.ScopedClient,
+			GeneralClient:  t.GeneralClient,
 			Scheme:         scheme.Scheme,
 			ClusterNetwork: t.clusterNetwork,
 		})
