@@ -95,7 +95,7 @@ func newTestDriver() *testDriver {
 		t.JustBeforeEach()
 
 		t.Controller = &servicediscovery.Reconciler{
-			Client:        t.Client,
+			ScopedClient:  t.Client,
 			GeneralClient: t.Client,
 			Scheme:        scheme.Scheme,
 		}

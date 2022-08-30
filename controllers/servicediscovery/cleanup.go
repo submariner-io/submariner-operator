@@ -79,7 +79,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 	}
 
 	uninstallInfo := &uninstall.Info{
-		Client:     r.Client,
+		Client:     r.ScopedClient,
 		Components: components,
 		StartTime:  instance.DeletionTimestamp.Time,
 		Log:        log,
@@ -99,7 +99,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 
 // nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) error {
-	return finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.Client, instance.Namespace, instance),
+	return finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.ScopedClient, instance.Namespace, instance),
 		instance, constants.CleanupFinalizer)
 }
 

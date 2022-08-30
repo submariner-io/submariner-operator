@@ -192,7 +192,7 @@ func main() {
 	}
 
 	if err = (&servicediscovery.Reconciler{
-		Client:        mgr.GetClient(),
+		ScopedClient:  mgr.GetClient(),
 		GeneralClient: generalClient,
 		Scheme:        mgr.GetScheme(),
 		RestConfig:    mgr.GetConfig(),
