@@ -39,16 +39,20 @@ import (
 )
 
 type Driver struct {
-	InitScopedClientObjs []client.Object
-	ScopedClient         client.Client
-	Controller           reconcile.Reconciler
-	Namespace            string
-	ResourceName         string
+	InitScopedClientObjs  []client.Object
+	ScopedClient          client.Client
+	InitGeneralClientObjs []client.Object
+	GeneralClient         client.Client
+	Controller            reconcile.Reconciler
+	Namespace             string
+	ResourceName          string
 }
 
 func (d *Driver) BeforeEach() {
 	d.ScopedClient = nil
 	d.InitScopedClientObjs = []client.Object{}
+	d.GeneralClient = nil
+	d.InitGeneralClientObjs = []client.Object{}
 	d.Controller = nil
 }
 
@@ -56,10 +60,18 @@ func (d *Driver) JustBeforeEach() {
 	if d.ScopedClient == nil {
 		d.ScopedClient = d.NewScopedClient()
 	}
+
+	if d.GeneralClient == nil {
+		d.GeneralClient = d.NewGeneralClient()
+	}
 }
 
 func (d *Driver) NewScopedClient() client.Client {
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(d.InitScopedClientObjs...).Build()
+}
+
+func (d *Driver) NewGeneralClient() client.Client {
+	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(d.InitGeneralClientObjs...).Build()
 }
 
 func (d *Driver) DoReconcile() (reconcile.Result, error) {

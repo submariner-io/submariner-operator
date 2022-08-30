@@ -96,7 +96,7 @@ func newTestDriver() *testDriver {
 
 		t.Controller = &servicediscovery.Reconciler{
 			ScopedClient:  t.ScopedClient,
-			GeneralClient: t.ScopedClient,
+			GeneralClient: t.GeneralClient,
 			Scheme:        scheme.Scheme,
 		}
 	})
@@ -141,7 +141,7 @@ func (t *testDriver) assertCoreDNSConfigMap() *corev1.ConfigMap {
 
 func (t *testDriver) assertConfigMap(name, namespace string) *corev1.ConfigMap {
 	foundCoreMap := &corev1.ConfigMap{}
-	err := t.ScopedClient.Get(context.TODO(), controllerClient.ObjectKey{Namespace: namespace, Name: name}, foundCoreMap)
+	err := t.GeneralClient.Get(context.TODO(), controllerClient.ObjectKey{Namespace: namespace, Name: name}, foundCoreMap)
 	Expect(err).To(Succeed())
 
 	return foundCoreMap

@@ -94,8 +94,8 @@ func testReconciliation() {
 	When("the coredns ConfigMap exists", func() {
 		Context("and the lighthouse config isn't present", func() {
 			BeforeEach(func() {
-				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP),
-					newCoreDNSConfigMap(coreDNSCorefileData("")))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newCoreDNSConfigMap(coreDNSCorefileData("")))
 			})
 
 			It("should add it", func() {
@@ -109,8 +109,8 @@ func testReconciliation() {
 			updatedClusterIP := "10.10.10.11"
 
 			BeforeEach(func() {
-				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(updatedClusterIP),
-					newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(updatedClusterIP))
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
 			})
 
 			It("should update the lighthouse config", func() {
@@ -122,7 +122,7 @@ func testReconciliation() {
 
 		Context("and the lighthouse DNS service doesn't exist", func() {
 			BeforeEach(func() {
-				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newCoreDNSConfigMap(coreDNSCorefileData("")))
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newCoreDNSConfigMap(coreDNSCorefileData("")))
 			})
 
 			It("should create the service and add the lighthouse config", func() {
@@ -221,7 +221,7 @@ func testCoreDNSCleanup() {
 
 	When("the coredns ConfigMap exists", func() {
 		BeforeEach(func() {
-			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
+			t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
 		})
 
 		It("should remove the lighthouse config section", func() {
@@ -253,7 +253,7 @@ func testCoreDNSCleanup() {
 
 		Context("and the custom coredns ConfigMap exists", func() {
 			BeforeEach(func() {
-				t.InitScopedClientObjs = append(t.InitScopedClientObjs, &corev1.ConfigMap{
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 						Namespace: t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace,
