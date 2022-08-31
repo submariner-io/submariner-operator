@@ -23,7 +23,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/pkg/metrics"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -50,7 +50,7 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 		}
 	}
 
-	metricsService, err := helpers.ReconcileService(owner, newMetricsService(namespace, applicationKey, applicationName, port), reqLogger,
+	metricsService, err := apply.Service(owner, newMetricsService(namespace, applicationKey, applicationName, port), reqLogger,
 		client, scheme)
 	if err != nil {
 		return err // nolint:wrapcheck // No need to wrap here
