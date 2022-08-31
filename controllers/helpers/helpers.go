@@ -26,7 +26,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -249,15 +248,6 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 	}
 
 	return service, errors.WithMessagef(err, "error creating or updating Service %s/%s", service.Namespace, service.Name)
-}
-
-func GetPullPolicy(version, override string) corev1.PullPolicy {
-	if len(override) > 0 {
-		tag := strings.Split(override, ":")[1]
-		return images.GetPullPolicy(tag)
-	}
-
-	return images.GetPullPolicy(version)
 }
 
 func IsImmutableError(err error) bool {

@@ -50,7 +50,16 @@ func GetImagePath(repo, version, image, component string, imageOverrides map[str
 	return path
 }
 
-func GetPullPolicy(version string) v1.PullPolicy {
+func GetPullPolicy(version, override string) v1.PullPolicy {
+	if len(override) > 0 {
+		tag := strings.Split(override, ":")[1]
+		return getPullPolicy(tag)
+	}
+
+	return getPullPolicy(version)
+}
+
+func getPullPolicy(version string) v1.PullPolicy {
 	if version == "devel" || version == "local" || strings.HasPrefix(version, "release-") {
 		return v1.PullAlways
 	}
