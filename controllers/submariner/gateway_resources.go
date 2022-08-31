@@ -27,7 +27,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
@@ -247,7 +247,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 func (r *Reconciler) reconcileGatewayDaemonSet(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*appsv1.DaemonSet, error) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance, names.GatewayComponent),
+	daemonSet, err := apply.DaemonSet(instance, newGatewayDaemonSet(instance, names.GatewayComponent),
 		reqLogger, r.config.ScopedClient, r.config.Scheme)
 	if err != nil {
 		return nil, err
