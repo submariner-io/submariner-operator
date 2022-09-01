@@ -28,8 +28,9 @@ function create_subm_vars() {
     declare_cidrs
     natEnabled=false
 
-    subm_gateway_image_repo="localhost:5000"
-    subm_gateway_image_tag=local
+    # The version is set in api/v1alpha1/versions.go but `subctl` overrides it to the base branch
+    subm_gateway_image_tag=${BASE_BRANCH}
+    subm_gateway_image_repo=$(git grep DefaultRepo api/v1alpha1/versions.go | cut -f2 -d'"')
 
     # FIXME: Actually act on this size request in controller
     subm_gateway_size=3
@@ -229,6 +230,12 @@ function verify_subm_op_pod() {
   kubectl logs $subm_operator_pod_name --namespace=$subm_ns
 
   # TODO: Verify logs?
+
+  json_file=/tmp/${subm_operator_pod_name}.${cluster}.json
+  kubectl get pod $subm_operator_pod_name --namespace=$subm_ns -o json | tee $json_file
+
+  validate_pod_container_equals 'image' "localhost:5000/submariner-operator:local"
+  validate_pod_container_has 'command' 'submariner-operator'
 }
 
 function validate_pod_container_equals() {
@@ -255,7 +262,7 @@ function verify_subm_gateway_pod() {
   json_file=/tmp/${subm_gateway_pod_name}.${cluster}.json
   kubectl get pod $subm_gateway_pod_name --namespace=$subm_ns -o json | tee $json_file
 
-  validate_pod_container_equals 'image' "${subm_gateway_image_repo}/submariner-gateway:local"
+  validate_pod_container_equals 'image' "${subm_gateway_image_repo}/submariner-gateway:${subm_gateway_image_tag}"
   validate_pod_container_has 'securityContext.capabilities.add' 'net_admin'
   validate_pod_container_equals 'securityContext.allowPrivilegeEscalation' 'true'
   validate_pod_container_equals 'securityContext.privileged' 'true'
