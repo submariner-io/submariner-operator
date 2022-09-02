@@ -2520,6 +2520,7 @@ rules:
       - get
       - list
       - watch
+      - update
     resources:
       - nodes
 `
