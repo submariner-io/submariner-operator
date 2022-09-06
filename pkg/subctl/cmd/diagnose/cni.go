@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/coreos/go-semver/semver"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/submariner-operator/internal/cli"
@@ -33,6 +34,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 )
+
+var minSubMVersionForOVN = semver.New("0.13.0")
 
 var supportedNetworkPlugins = []string{
 	constants.NetworkPluginGeneric, constants.NetworkPluginCanalFlannel, constants.NetworkPluginWeaveNet,
@@ -81,6 +84,16 @@ func checkCNIConfig(cluster *cmd.Cluster) bool {
 		status.EndWithFailure("The detected CNI network plugin (%q) is not supported by Submariner."+
 			" Supported network plugins: %v\n", cluster.Submariner.Status.NetworkPlugin, supportedNetworkPlugins)
 		return false
+	}
+
+	if cluster.Submariner.Status.NetworkPlugin == constants.NetworkPluginOVNKubernetes &&
+		cluster.Submariner.Spec.Version != "devel" {
+		submarinerVer, _ := semver.NewVersion(cluster.Submariner.Spec.Version)
+		if submarinerVer != nil && submarinerVer.LessThan(*minSubMVersionForOVN) {
+			status.EndWithFailure("The Submariner version %v is less than the minimum supported version %v for OVNKubernetes CNI",
+				cluster.Submariner.Spec.Version, minSubMVersionForOVN)
+			return false
+		}
 	}
 
 	if cluster.Submariner.Status.NetworkPlugin == constants.NetworkPluginGeneric {
