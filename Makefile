@@ -17,7 +17,7 @@ endif
 
 ifneq (,$(DAPPER_HOST_ARCH))
 
-OPERATOR_SDK_VERSION := 1.0.1
+OPERATOR_SDK_VERSION := 1.23.0
 OPERATOR_SDK := $(CURDIR)/bin/operator-sdk
 
 KUSTOMIZE_VERSION := 3.10.0
@@ -74,24 +74,6 @@ ifneq ($(origin DEFAULT_CHANNEL), undefined)
 BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
-
-# Options for 'packagemanifests'
-IS_CHANNEL_DEFAULT ?= 1
-ifneq ($(origin FROM_VERSION), undefined)
-ifneq ($(FROM_VERSION), 0.0.0)
-PKG_FROM_VERSION := --from-version=$(FROM_VERSION)
-REPLACES_OP := add
-else
-REPLACES_OP := remove
-endif
-endif
-ifneq ($(origin CHANNEL), undefined)
-PKG_CHANNELS := --channel=$(CHANNEL)
-endif
-ifeq ($(IS_CHANNEL_DEFAULT), 1)
-PKG_IS_DEFAULT_CHANNEL := --default-channel
-endif
-PKG_MAN_OPTS ?= $(PKG_FROM_VERSION) $(PKG_CHANNELS) $(PKG_IS_DEFAULT_CHANNEL)
 
 # Set the kustomize base path
 ifeq ($(IS_OCP), true)
@@ -153,11 +135,17 @@ bin/%/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
 
 ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
 
-# Operator CRDs
-$(CONTROLLER_GEN): $(VENDOR_MODULES)
+# Download controller-gen locally if not already downloaded.
+CONTROLLER_TOOLS_VERSION := 0.9.2
+$(CONTROLLER_GEN):
 	mkdir -p $(@D)
 	$(GO) build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
+	## TODO (Jaanki) Use go install instead
+	# $(GO) install sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION)
 
+controller-gen: $(CONTROLLER_GEN)
+
+# Operator CRDs
 deploy/crds/submariner.io_servicediscoveries.yaml: ./api/v1alpha1/servicediscovery_types.go $(VENDOR_MODULES) | $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
 	test -f $@
@@ -181,11 +169,13 @@ is-semantic-version:
 	    $(error 'ERROR: VERSION "$(BUNDLE_VERSION)" does not match the format required by operator-sdk.')
     endif
 
-# TODO: a workaround until this issue will be fixed https://github.com/kubernetes-sigs/kustomize/issues/4008
+## Download kustomize locally if not already downloaded.
+KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 $(KUSTOMIZE):
 	mkdir -p $(@D)
-	#GOBIN=$(CURDIR)/bin GO111MODULE=on $(GO) get sigs.k8s.io/kustomize/kustomize/v3
-	scripts/kustomize/install_kustomize.sh $(KUSTOMIZE_VERSION) $(CURDIR)/bin
+	{ curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(@D); }
+
+kustomize: $(KUSTOMIZE)
 
 # Generate kustomization.yaml for bundle
 kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
@@ -208,16 +198,6 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 
-# Generate package manifests
-packagemanifests: $(OPERATOR_SDK) $(KUSTOMIZE) kustomization
-	($(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
-	| $(OPERATOR_SDK) generate packagemanifests -q --version $(BUNDLE_VERSION) $(PKG_MAN_OPTS))
-	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml)
-	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml
-	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml
-	sed -i -e 's/$$(VERSION)/$(VERSION)/g' packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml
-	mv packagemanifests/$(BUNDLE_VERSION)/submariner.clusterserviceversion.yaml packagemanifests/$(BUNDLE_VERSION)/submariner.v$(BUNDLE_VERSION).clusterserviceversion.yaml
-
 # Statically validate the operator bundle using Scorecard.
 scorecard: bundle olm clusters
 	timeout 60 bash -c "until KUBECONFIG=$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 \
@@ -232,25 +212,21 @@ golangci-lint: $(EMBEDDED_YAMLS)
 unit: $(EMBEDDED_YAMLS)
 
 # Operator SDK
-# On version bumps, the checksum will need to be updated manually.
-# If necessary, the verification *keys* can be updated as follows:
-# * update scripts/operator-sdk-signing-key.asc, import the relevant key,
-#   and export it with
-#     gpg --armor --export-options export-minimal --export \
-#     ${fingerprint} >> scripts/operator-sdk-signing-key.asc
-#   (replacing ${fingerprint} with the full fingerprint);
-# * to update scripts/operator-sdk-signing-keyring.gpg, run
-#     gpg --no-options -q --batch --no-default-keyring \
-#     --output scripts/operator-sdk-signing-keyring.gpg \
-#     --dearmor scripts/operator-sdk-signing-key.asc
 $(OPERATOR_SDK):
-	curl -Lo $@ "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk-v${OPERATOR_SDK_VERSION}-x86_64-linux-gnu"
-	curl -Lo $@.asc "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk-v${OPERATOR_SDK_VERSION}-x86_64-linux-gnu.asc"
-	gpgv --keyring scripts/operator-sdk-signing-keyring.gpg $@.asc $@
-	sha256sum -c scripts/operator-sdk.sha256
+	mkdir -p $(@D) && \
+	cd $(@D) && \
+	curl -Lo $@ "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk_linux_amd64" && \
+	curl -Lo checksums.txt.asc "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/checksums.txt.asc" && \
+	curl -Lo checksums.txt "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/checksums.txt"
+	## TODO (Jaanki) Add checksums
+	#gpg --verify checksums.txt.asc checksums.txt
+	#gpgv --keyring scripts/operator-sdk-signing-keyring.gpg $@.asc $@
+	#sha256sum -c scripts/operator-sdk.sha256
 	chmod a+x $@
 
-.PHONY: build ci clean bundle packagemanifests kustomization is-semantic-version olm scorecard system-test
+operator-sdk: $(OPERATOR_SDK)
+
+.PHONY: build ci clean bundle kustomization is-semantic-version olm scorecard system-test controller-gen kustomize operator-sdk
 
 else
 
@@ -262,7 +238,7 @@ Makefile.dapper:
 
 include Makefile.dapper
 
-.PHONY: deploy bundle packagemanifests kustomization is-semantic-version licensecheck
+.PHONY: deploy bundle kustomization is-semantic-version licensecheck controller-gen kustomize operator-sdk
 
 endif
 
