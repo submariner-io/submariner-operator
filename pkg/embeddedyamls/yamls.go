@@ -2779,14 +2779,6 @@ rules:
     verbs:
       - get
       - list
-  - apiGroups:  # pods are created to run firewall diagnostics
-      - ""
-    resources:
-      - pods
-    verbs:
-      - create
-      - get
-      - list
 `
 	Config_rbac_submariner_diagnose_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
