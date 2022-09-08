@@ -5,35 +5,51 @@ resources:
   - submariner-operator/role_binding.yaml
   - submariner-operator/cluster_role.yaml
   - submariner-operator/cluster_role_binding.yaml
+  - submariner-operator/ocp_cluster_role.yaml
+  - submariner-operator/ocp_cluster_role_binding.yaml
   - submariner-gateway/service_account.yaml
   - submariner-gateway/role.yaml
   - submariner-gateway/role_binding.yaml
   - submariner-gateway/cluster_role.yaml
   - submariner-gateway/cluster_role_binding.yaml
+  - submariner-gateway/ocp_cluster_role.yaml
+  - submariner-gateway/ocp_cluster_role_binding.yaml
   - submariner-route-agent/service_account.yaml
   - submariner-route-agent/role.yaml
   - submariner-route-agent/role_binding.yaml
   - submariner-route-agent/cluster_role.yaml
   - submariner-route-agent/cluster_role_binding.yaml
+  - submariner-route-agent/ocp_cluster_role.yaml
+  - submariner-route-agent/ocp_cluster_role_binding.yaml
   - submariner-globalnet/service_account.yaml
   - submariner-globalnet/role.yaml
   - submariner-globalnet/role_binding.yaml
   - submariner-globalnet/cluster_role.yaml
   - submariner-globalnet/cluster_role_binding.yaml
+  - submariner-globalnet/ocp_cluster_role.yaml
+  - submariner-globalnet/ocp_cluster_role_binding.yaml
   - submariner-diagnose/service_account.yaml
   - submariner-diagnose/role.yaml
   - submariner-diagnose/role_binding.yaml
   - submariner-diagnose/cluster_role.yaml
   - submariner-diagnose/cluster_role_binding.yaml
+  - submariner-diagnose/ocp_cluster_role.yaml
+  - submariner-diagnose/ocp_cluster_role_binding.yaml
   - lighthouse-agent/service_account.yaml
   - lighthouse-agent/cluster_role.yaml
   - lighthouse-agent/cluster_role_binding.yaml
+  - lighthouse-agent/ocp_cluster_role.yaml
+  - lighthouse-agent/ocp_cluster_role_binding.yaml
   - lighthouse-coredns/service_account.yaml
   - lighthouse-coredns/cluster_role.yaml
   - lighthouse-coredns/cluster_role_binding.yaml
+  - lighthouse-coredns/ocp_cluster_role.yaml
+  - lighthouse-coredns/ocp_cluster_role_binding.yaml
   - networkplugin_syncer/service_account.yaml
   - networkplugin_syncer/cluster_role.yaml
   - networkplugin_syncer/cluster_role_binding.yaml
+  - networkplugin_syncer/ocp_cluster_role.yaml
+  - networkplugin_syncer/ocp_cluster_role_binding.yaml
 # - leader_election/leader_election_role.yaml
 # - leader_election/leader_election_role_binding.yaml
 # Comment the following 4 lines if you want to disable
