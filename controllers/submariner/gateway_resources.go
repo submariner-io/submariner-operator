@@ -200,6 +200,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 						{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
 						{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
 						{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
+						{Name: "SUBMARINER_METRICSPORT", Value: gatewayMetricsServerPort},
 						{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
 							FieldRef: &corev1.ObjectFieldSelector{
 								FieldPath: "spec.nodeName",
@@ -253,8 +254,8 @@ func (r *Reconciler) reconcileGatewayDaemonSet(
 		return nil, err
 	}
 
-	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.config.ScopedClient,
-		r.config.RestConfig, r.config.Scheme, reqLogger)
+	err = metrics.Setup(names.GatewayComponent, instance.Namespace, "app", names.MetricsProxyComponent, instance, gatewayMetricsServicePort,
+		r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
 
 	return daemonSet, err
 }

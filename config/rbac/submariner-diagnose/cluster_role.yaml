@@ -14,11 +14,3 @@ rules:
     verbs:
       - get
       - list
-  - apiGroups:  # pods are created to run firewall diagnostics
-      - ""
-    resources:
-      - pods
-    verbs:
-      - create
-      - get
-      - list
