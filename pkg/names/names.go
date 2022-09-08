@@ -31,6 +31,7 @@ const (
 	OperatorComponent            = "submariner-operator"
 	ServiceDiscoveryCrName       = "service-discovery"
 	SubmarinerCrName             = "submariner"
+	MetricsProxyComponent        = "submariner-metrics-proxy"
 )
 
 /* These values are used by downstream distributions to override the component default image name. */
@@ -42,6 +43,7 @@ var (
 	ServiceDiscoveryImage    = "lighthouse-agent"
 	LighthouseCoreDNSImage   = "lighthouse-coredns"
 	OperatorImage            = "submariner-operator"
+	MetricsProxyImage        = "nettest"
 )
 
 var ValidImageNames = []string{
