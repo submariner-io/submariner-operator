@@ -2779,6 +2779,19 @@ rules:
     verbs:
       - get
       - list
+  - apiGroups:
+      - submariner.io
+    resources:
+      - clusterglobalegressips
+      - globalegressips
+    verbs:
+      - list
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - "serviceexports"
+    verbs:
+      - list
 `
 	Config_rbac_submariner_diagnose_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
