@@ -41,8 +41,8 @@ func (r *Reconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, 
 		return nil, err
 	}
 
-	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), globalnetMetricsServerPort,
-		r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
+	err = metrics.Setup(names.GlobalnetComponent, instance.Namespace, "app", names.MetricsProxyComponent,
+		instance, globalnetMetricsServicePort, r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
 
 	return daemonSet, err
 }
@@ -92,6 +92,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner-operator,kube-system,operators,openshift-monitoring,openshift-dns"},
+								{Name: "SUBMARINER_METRICSPORT", Value: globalnetMetricsServerPort},
 								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										FieldPath: "spec.nodeName",
