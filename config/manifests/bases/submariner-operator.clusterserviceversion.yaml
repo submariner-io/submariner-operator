@@ -9,8 +9,8 @@ metadata:
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
     description: Creates and manages Submariner deployments.
     operatorframework.io/suggested-namespace: submariner-operator
-    operators.operatorframework.io/builder: operator-sdk-v1.0.1
-    operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+    operators.operatorframework.io/builder: operator-sdk-v1.23.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
     repository: https://github.com/submariner-io/submariner-operator
     support: Submariner
   name: submariner.v0.0.0

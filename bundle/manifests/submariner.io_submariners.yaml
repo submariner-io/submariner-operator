@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.4.1
+    controller-gen.kubebuilder.io/version: v0.9.2
   creationTimestamp: null
   name: submariners.submariner.io
 spec:
@@ -17,18 +17,22 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Submariner is the Schema for the submariners API
+        description: Submariner is the Schema for the submariners API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
           spec:
-            description: SubmarinerSpec defines the desired state of Submariner
+            description: SubmarinerSpec defines the desired state of Submariner.
             properties:
               broker:
                 type: string
@@ -38,7 +42,11 @@ spec:
                 type: string
               brokerK8sCA:
                 type: string
+              brokerK8sInsecure:
+                type: boolean
               brokerK8sRemoteNamespace:
+                type: string
+              brokerK8sSecret:
                 type: string
               cableDriver:
                 type: string
@@ -51,6 +59,8 @@ spec:
               ceIPSecNATTPort:
                 type: integer
               ceIPSecPSK:
+                type: string
+              ceIPSecPSKSecret:
                 type: string
               ceIPSecPreferredServer:
                 type: boolean
@@ -69,7 +79,8 @@ spec:
                     format: int64
                     type: integer
                   maxPacketLossCount:
-                    description: The maximum number of packets lost at which the health checker will mark the connection as down.
+                    description: The maximum number of packets lost at which the health
+                      checker will mark the connection as down.
                     format: int64
                     type: integer
                 type: object
@@ -110,11 +121,8 @@ spec:
             required:
             - broker
             - brokerK8sApiServer
-            - brokerK8sApiServerToken
-            - brokerK8sCA
             - brokerK8sRemoteNamespace
             - ceIPSecDebug
-            - ceIPSecPSK
             - clusterCIDR
             - clusterID
             - debug
@@ -123,7 +131,7 @@ spec:
             - serviceCIDR
             type: object
           status:
-            description: SubmarinerStatus defines the observed state of Submariner
+            description: SubmarinerStatus defines the observed state of Submariner.
             properties:
               clusterCIDR:
                 type: string
@@ -150,7 +158,9 @@ spec:
                     type: boolean
                   nonReadyContainerStates:
                     items:
-                      description: ContainerState holds a possible state of container. Only one of its members may be specified. If none of them is specified, the default one is ContainerStateWaiting.
+                      description: ContainerState holds a possible state of container.
+                        Only one of its members may be specified. If none of them
+                        is specified, the default one is ContainerStateWaiting.
                       properties:
                         running:
                           description: Details about a running container
@@ -164,10 +174,11 @@ spec:
                           description: Details about a terminated container
                           properties:
                             containerID:
-                              description: Container's ID in the format 'docker://<container_id>'
+                              description: Container's ID in the format '<type>://<container_id>'
                               type: string
                             exitCode:
-                              description: Exit status from the last termination of the container
+                              description: Exit status from the last termination of
+                                the container
                               format: int32
                               type: integer
                             finishedAt:
@@ -175,17 +186,21 @@ spec:
                               format: date-time
                               type: string
                             message:
-                              description: Message regarding the last termination of the container
+                              description: Message regarding the last termination
+                                of the container
                               type: string
                             reason:
-                              description: (brief) reason from the last termination of the container
+                              description: (brief) reason from the last termination
+                                of the container
                               type: string
                             signal:
-                              description: Signal from the last termination of the container
+                              description: Signal from the last termination of the
+                                container
                               format: int32
                               type: integer
                             startedAt:
-                              description: Time at which previous execution of the container started
+                              description: Time at which previous execution of the
+                                container started
                               format: date-time
                               type: string
                           required:
@@ -195,38 +210,49 @@ spec:
                           description: Details about a waiting container
                           properties:
                             message:
-                              description: Message regarding why the container is not yet running.
+                              description: Message regarding why the container is
+                                not yet running.
                               type: string
                             reason:
-                              description: (brief) reason the container is not yet running.
+                              description: (brief) reason the container is not yet
+                                running.
                               type: string
                           type: object
                       type: object
                     type: array
                   status:
-                    description: DaemonSetStatus represents the current status of a daemon set.
+                    description: DaemonSetStatus represents the current status of
+                      a daemon set.
                     properties:
                       collisionCount:
-                        description: Count of hash collisions for the DaemonSet. The DaemonSet controller uses this field as a collision avoidance mechanism when it needs to create the name for the newest ControllerRevision.
+                        description: Count of hash collisions for the DaemonSet. The
+                          DaemonSet controller uses this field as a collision avoidance
+                          mechanism when it needs to create the name for the newest
+                          ControllerRevision.
                         format: int32
                         type: integer
                       conditions:
-                        description: Represents the latest available observations of a DaemonSet's current state.
+                        description: Represents the latest available observations
+                          of a DaemonSet's current state.
                         items:
-                          description: DaemonSetCondition describes the state of a DaemonSet at a certain point.
+                          description: DaemonSetCondition describes the state of a
+                            DaemonSet at a certain point.
                           properties:
                             lastTransitionTime:
-                              description: Last time the condition transitioned from one status to another.
+                              description: Last time the condition transitioned from
+                                one status to another.
                               format: date-time
                               type: string
                             message:
-                              description: A human readable message indicating details about the transition.
+                              description: A human readable message indicating details
+                                about the transition.
                               type: string
                             reason:
                               description: The reason for the condition's last transition.
                               type: string
                             status:
-                              description: Status of the condition, one of True, False, Unknown.
+                              description: Status of the condition, one of True, False,
+                                Unknown.
                               type: string
                             type:
                               description: Type of DaemonSet condition.
@@ -237,35 +263,49 @@ spec:
                           type: object
                         type: array
                       currentNumberScheduled:
-                        description: 'The number of nodes that are running at least 1 daemon pod and are supposed to run the daemon pod. More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: 'The number of nodes that are running at least
+                          1 daemon pod and are supposed to run the daemon pod. More
+                          info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                         format: int32
                         type: integer
                       desiredNumberScheduled:
-                        description: 'The total number of nodes that should be running the daemon pod (including nodes correctly running the daemon pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: 'The total number of nodes that should be running
+                          the daemon pod (including nodes correctly running the daemon
+                          pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                         format: int32
                         type: integer
                       numberAvailable:
-                        description: The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and available (ready for at least spec.minReadySeconds)
+                        description: The number of nodes that should be running the
+                          daemon pod and have one or more of the daemon pod running
+                          and available (ready for at least spec.minReadySeconds)
                         format: int32
                         type: integer
                       numberMisscheduled:
-                        description: 'The number of nodes that are running the daemon pod, but are not supposed to run the daemon pod. More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: 'The number of nodes that are running the daemon
+                          pod, but are not supposed to run the daemon pod. More info:
+                          https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                         format: int32
                         type: integer
                       numberReady:
-                        description: The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and ready.
+                        description: numberReady is the number of nodes that should
+                          be running the daemon pod and have one or more of the daemon
+                          pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
-                        description: The number of nodes that should be running the daemon pod and have none of the daemon pod running and available (ready for at least spec.minReadySeconds)
+                        description: The number of nodes that should be running the
+                          daemon pod and have none of the daemon pod running and available
+                          (ready for at least spec.minReadySeconds)
                         format: int32
                         type: integer
                       observedGeneration:
-                        description: The most recent generation observed by the daemon set controller.
+                        description: The most recent generation observed by the daemon
+                          set controller.
                         format: int64
                         type: integer
                       updatedNumberScheduled:
-                        description: The total number of nodes that are running updated daemon pod
+                        description: The total number of nodes that are running updated
+                          daemon pod
                         format: int32
                         type: integer
                     required:
@@ -294,6 +334,8 @@ spec:
                               cable_name:
                                 type: string
                               cluster_id:
+                                maxLength: 63
+                                minLength: 1
                                 type: string
                               healthCheckIP:
                                 type: string
@@ -320,7 +362,9 @@ spec:
                             - subnets
                             type: object
                           latencyRTT:
-                            description: LatencySpec describes the round trip time information for a packet between the gateway pods of two clusters.
+                            description: LatencySpec describes the round trip time
+                              information for a packet between the gateway pods of
+                              two clusters.
                             properties:
                               average:
                                 type: string
@@ -360,6 +404,8 @@ spec:
                         cable_name:
                           type: string
                         cluster_id:
+                          maxLength: 63
+                          minLength: 1
                           type: string
                         healthCheckIP:
                           type: string
@@ -407,7 +453,9 @@ spec:
                     type: boolean
                   nonReadyContainerStates:
                     items:
-                      description: ContainerState holds a possible state of container. Only one of its members may be specified. If none of them is specified, the default one is ContainerStateWaiting.
+                      description: ContainerState holds a possible state of container.
+                        Only one of its members may be specified. If none of them
+                        is specified, the default one is ContainerStateWaiting.
                       properties:
                         running:
                           description: Details about a running container
@@ -421,10 +469,11 @@ spec:
                           description: Details about a terminated container
                           properties:
                             containerID:
-                              description: Container's ID in the format 'docker://<container_id>'
+                              description: Container's ID in the format '<type>://<container_id>'
                               type: string
                             exitCode:
-                              description: Exit status from the last termination of the container
+                              description: Exit status from the last termination of
+                                the container
                               format: int32
                               type: integer
                             finishedAt:
@@ -432,17 +481,21 @@ spec:
                               format: date-time
                               type: string
                             message:
-                              description: Message regarding the last termination of the container
+                              description: Message regarding the last termination
+                                of the container
                               type: string
                             reason:
-                              description: (brief) reason from the last termination of the container
+                              description: (brief) reason from the last termination
+                                of the container
                               type: string
                             signal:
-                              description: Signal from the last termination of the container
+                              description: Signal from the last termination of the
+                                container
                               format: int32
                               type: integer
                             startedAt:
-                              description: Time at which previous execution of the container started
+                              description: Time at which previous execution of the
+                                container started
                               format: date-time
                               type: string
                           required:
@@ -452,38 +505,49 @@ spec:
                           description: Details about a waiting container
                           properties:
                             message:
-                              description: Message regarding why the container is not yet running.
+                              description: Message regarding why the container is
+                                not yet running.
                               type: string
                             reason:
-                              description: (brief) reason the container is not yet running.
+                              description: (brief) reason the container is not yet
+                                running.
                               type: string
                           type: object
                       type: object
                     type: array
                   status:
-                    description: DaemonSetStatus represents the current status of a daemon set.
+                    description: DaemonSetStatus represents the current status of
+                      a daemon set.
                     properties:
                       collisionCount:
-                        description: Count of hash collisions for the DaemonSet. The DaemonSet controller uses this field as a collision avoidance mechanism when it needs to create the name for the newest ControllerRevision.
+                        description: Count of hash collisions for the DaemonSet. The
+                          DaemonSet controller uses this field as a collision avoidance
+                          mechanism when it needs to create the name for the newest
+                          ControllerRevision.
                         format: int32
                         type: integer
                       conditions:
-                        description: Represents the latest available observations of a DaemonSet's current state.
+                        description: Represents the latest available observations
+                          of a DaemonSet's current state.
                         items:
-                          description: DaemonSetCondition describes the state of a DaemonSet at a certain point.
+                          description: DaemonSetCondition describes the state of a
+                            DaemonSet at a certain point.
                           properties:
                             lastTransitionTime:
-                              description: Last time the condition transitioned from one status to another.
+                              description: Last time the condition transitioned from
+                                one status to another.
                               format: date-time
                               type: string
                             message:
-                              description: A human readable message indicating details about the transition.
+                              description: A human readable message indicating details
+                                about the transition.
                               type: string
                             reason:
                               description: The reason for the condition's last transition.
                               type: string
                             status:
-                              description: Status of the condition, one of True, False, Unknown.
+                              description: Status of the condition, one of True, False,
+                                Unknown.
                               type: string
                             type:
                               description: Type of DaemonSet condition.
@@ -494,35 +558,49 @@ spec:
                           type: object
                         type: array
                       currentNumberScheduled:
-                        description: 'The number of nodes that are running at least 1 daemon pod and are supposed to run the daemon pod. More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: 'The number of nodes that are running at least
+                          1 daemon pod and are supposed to run the daemon pod. More
+                          info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                         format: int32
                         type: integer
                       desiredNumberScheduled:
-                        description: 'The total number of nodes that should be running the daemon pod (including nodes correctly running the daemon pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: 'The total number of nodes that should be running
+                          the daemon pod (including nodes correctly running the daemon
+                          pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                         format: int32
                         type: integer
                       numberAvailable:
-                        description: The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and available (ready for at least spec.minReadySeconds)
+                        description: The number of nodes that should be running the
+                          daemon pod and have one or more of the daemon pod running
+                          and available (ready for at least spec.minReadySeconds)
                         format: int32
                         type: integer
                       numberMisscheduled:
-                        description: 'The number of nodes that are running the daemon pod, but are not supposed to run the daemon pod. More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: 'The number of nodes that are running the daemon
+                          pod, but are not supposed to run the daemon pod. More info:
+                          https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                         format: int32
                         type: integer
                       numberReady:
-                        description: The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and ready.
+                        description: numberReady is the number of nodes that should
+                          be running the daemon pod and have one or more of the daemon
+                          pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
-                        description: The number of nodes that should be running the daemon pod and have none of the daemon pod running and available (ready for at least spec.minReadySeconds)
+                        description: The number of nodes that should be running the
+                          daemon pod and have none of the daemon pod running and available
+                          (ready for at least spec.minReadySeconds)
                         format: int32
                         type: integer
                       observedGeneration:
-                        description: The most recent generation observed by the daemon set controller.
+                        description: The most recent generation observed by the daemon
+                          set controller.
                         format: int64
                         type: integer
                       updatedNumberScheduled:
-                        description: The total number of nodes that are running updated daemon pod
+                        description: The total number of nodes that are running updated
+                          daemon pod
                         format: int32
                         type: integer
                     required:
@@ -540,16 +618,57 @@ spec:
                     description: LoadBalancerStatus represents the status of a load-balancer.
                     properties:
                       ingress:
-                        description: Ingress is a list containing ingress points for the load-balancer. Traffic intended for the service should be sent to these ingress points.
+                        description: Ingress is a list containing ingress points for
+                          the load-balancer. Traffic intended for the service should
+                          be sent to these ingress points.
                         items:
-                          description: 'LoadBalancerIngress represents the status of a load-balancer ingress point: traffic intended for the service should be sent to an ingress point.'
+                          description: 'LoadBalancerIngress represents the status
+                            of a load-balancer ingress point: traffic intended for
+                            the service should be sent to an ingress point.'
                           properties:
                             hostname:
-                              description: Hostname is set for load-balancer ingress points that are DNS based (typically AWS load-balancers)
+                              description: Hostname is set for load-balancer ingress
+                                points that are DNS based (typically AWS load-balancers)
                               type: string
                             ip:
-                              description: IP is set for load-balancer ingress points that are IP based (typically GCE or OpenStack load-balancers)
+                              description: IP is set for load-balancer ingress points
+                                that are IP based (typically GCE or OpenStack load-balancers)
                               type: string
+                            ports:
+                              description: Ports is a list of records of service ports
+                                If used, every port defined in the service should
+                                have an entry in it
+                              items:
+                                properties:
+                                  error:
+                                    description: 'Error is to record the problem with
+                                      the service port The format of the error shall
+                                      comply with the following rules: - built-in
+                                      error values shall be specified in this file
+                                      and those shall use CamelCase names - cloud
+                                      provider specific error values must have names
+                                      that comply with the format foo.example.com/CamelCase.
+                                      --- The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)'
+                                    maxLength: 316
+                                    pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                                    type: string
+                                  port:
+                                    description: Port is the port number of the service
+                                      port of which status is recorded here
+                                    format: int32
+                                    type: integer
+                                  protocol:
+                                    default: TCP
+                                    description: 'Protocol is the protocol of the
+                                      service port of which status is recorded here
+                                      The supported values are: "TCP", "UDP", "SCTP"'
+                                    type: string
+                                required:
+                                - port
+                                - protocol
+                                type: object
+                              type: array
+                              x-kubernetes-list-type: atomic
                           type: object
                         type: array
                     type: object
@@ -566,7 +685,9 @@ spec:
                     type: boolean
                   nonReadyContainerStates:
                     items:
-                      description: ContainerState holds a possible state of container. Only one of its members may be specified. If none of them is specified, the default one is ContainerStateWaiting.
+                      description: ContainerState holds a possible state of container.
+                        Only one of its members may be specified. If none of them
+                        is specified, the default one is ContainerStateWaiting.
                       properties:
                         running:
                           description: Details about a running container
@@ -580,10 +701,11 @@ spec:
                           description: Details about a terminated container
                           properties:
                             containerID:
-                              description: Container's ID in the format 'docker://<container_id>'
+                              description: Container's ID in the format '<type>://<container_id>'
                               type: string
                             exitCode:
-                              description: Exit status from the last termination of the container
+                              description: Exit status from the last termination of
+                                the container
                               format: int32
                               type: integer
                             finishedAt:
@@ -591,17 +713,21 @@ spec:
                               format: date-time
                               type: string
                             message:
-                              description: Message regarding the last termination of the container
+                              description: Message regarding the last termination
+                                of the container
                               type: string
                             reason:
-                              description: (brief) reason from the last termination of the container
+                              description: (brief) reason from the last termination
+                                of the container
                               type: string
                             signal:
-                              description: Signal from the last termination of the container
+                              description: Signal from the last termination of the
+                                container
                               format: int32
                               type: integer
                             startedAt:
-                              description: Time at which previous execution of the container started
+                              description: Time at which previous execution of the
+                                container started
                               format: date-time
                               type: string
                           required:
@@ -611,38 +737,49 @@ spec:
                           description: Details about a waiting container
                           properties:
                             message:
-                              description: Message regarding why the container is not yet running.
+                              description: Message regarding why the container is
+                                not yet running.
                               type: string
                             reason:
-                              description: (brief) reason the container is not yet running.
+                              description: (brief) reason the container is not yet
+                                running.
                               type: string
                           type: object
                       type: object
                     type: array
                   status:
-                    description: DaemonSetStatus represents the current status of a daemon set.
+                    description: DaemonSetStatus represents the current status of
+                      a daemon set.
                     properties:
                       collisionCount:
-                        description: Count of hash collisions for the DaemonSet. The DaemonSet controller uses this field as a collision avoidance mechanism when it needs to create the name for the newest ControllerRevision.
+                        description: Count of hash collisions for the DaemonSet. The
+                          DaemonSet controller uses this field as a collision avoidance
+                          mechanism when it needs to create the name for the newest
+                          ControllerRevision.
                         format: int32
                         type: integer
                       conditions:
-                        description: Represents the latest available observations of a DaemonSet's current state.
+                        description: Represents the latest available observations
+                          of a DaemonSet's current state.
                         items:
-                          description: DaemonSetCondition describes the state of a DaemonSet at a certain point.
+                          description: DaemonSetCondition describes the state of a
+                            DaemonSet at a certain point.
                           properties:
                             lastTransitionTime:
-                              description: Last time the condition transitioned from one status to another.
+                              description: Last time the condition transitioned from
+                                one status to another.
                               format: date-time
                               type: string
                             message:
-                              description: A human readable message indicating details about the transition.
+                              description: A human readable message indicating details
+                                about the transition.
                               type: string
                             reason:
                               description: The reason for the condition's last transition.
                               type: string
                             status:
-                              description: Status of the condition, one of True, False, Unknown.
+                              description: Status of the condition, one of True, False,
+                                Unknown.
                               type: string
                             type:
                               description: Type of DaemonSet condition.
@@ -653,35 +790,49 @@ spec:
                           type: object
                         type: array
                       currentNumberScheduled:
-                        description: 'The number of nodes that are running at least 1 daemon pod and are supposed to run the daemon pod. More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: 'The number of nodes that are running at least
+                          1 daemon pod and are supposed to run the daemon pod. More
+                          info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                         format: int32
                         type: integer
                       desiredNumberScheduled:
-                        description: 'The total number of nodes that should be running the daemon pod (including nodes correctly running the daemon pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: 'The total number of nodes that should be running
+                          the daemon pod (including nodes correctly running the daemon
+                          pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                         format: int32
                         type: integer
                       numberAvailable:
-                        description: The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and available (ready for at least spec.minReadySeconds)
+                        description: The number of nodes that should be running the
+                          daemon pod and have one or more of the daemon pod running
+                          and available (ready for at least spec.minReadySeconds)
                         format: int32
                         type: integer
                       numberMisscheduled:
-                        description: 'The number of nodes that are running the daemon pod, but are not supposed to run the daemon pod. More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: 'The number of nodes that are running the daemon
+                          pod, but are not supposed to run the daemon pod. More info:
+                          https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
                         format: int32
                         type: integer
                       numberReady:
-                        description: The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and ready.
+                        description: numberReady is the number of nodes that should
+                          be running the daemon pod and have one or more of the daemon
+                          pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
-                        description: The number of nodes that should be running the daemon pod and have none of the daemon pod running and available (ready for at least spec.minReadySeconds)
+                        description: The number of nodes that should be running the
+                          daemon pod and have none of the daemon pod running and available
+                          (ready for at least spec.minReadySeconds)
                         format: int32
                         type: integer
                       observedGeneration:
-                        description: The most recent generation observed by the daemon set controller.
+                        description: The most recent generation observed by the daemon
+                          set controller.
                         format: int64
                         type: integer
                       updatedNumberScheduled:
-                        description: The total number of nodes that are running updated daemon pod
+                        description: The total number of nodes that are running updated
+                          daemon pod
                         format: int32
                         type: integer
                     required:
@@ -708,5 +859,5 @@ status:
   acceptedNames:
     kind: ""
     plural: ""
-  conditions: []
-  storedVersions: []
+  conditions: null
+  storedVersions: null

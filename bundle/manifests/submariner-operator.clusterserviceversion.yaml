@@ -1,0 +1,288 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "submariner.io/v1alpha1",
+          "kind": "Broker",
+          "metadata": {
+            "name": "submariner-broker"
+          },
+          "spec": {
+            "components": [
+              "service-discovery",
+              "connectivity"
+            ],
+            "defaultGlobalnetClusterSize": 8192,
+            "globalnetEnabled": false
+          }
+        },
+        {
+          "apiVersion": "submariner.io/v1alpha1",
+          "kind": "Submariner",
+          "metadata": {
+            "name": "submariner"
+          },
+          "spec": {
+            "broker": "k8s",
+            "brokerK8sApiServer": "192.168.67.110:8443",
+            "brokerK8sApiServerToken": "$(BROKER_K8S_API_TOKEN)",
+            "brokerK8sCA": "$(BROKER_K8S_CA)",
+            "brokerK8sRemoteNamespace": "submariner-k8s-broker",
+            "cableDriver": "libreswan",
+            "ceIPSecDebug": false,
+            "ceIPSecIKEPort": 500,
+            "ceIPSecNATTPort": 4500,
+            "ceIPSecPSK": "$(IPSEC_PSK)",
+            "clusterCIDR": "192.168.67.0/24",
+            "clusterID": "cluster1",
+            "connectionHealthCheck": {
+              "enabled": false,
+              "intervalSeconds": 1,
+              "maxPacketLossCount": 5
+            },
+            "debug": false,
+            "globalCIDR": "",
+            "namespace": "submariner-operator",
+            "natEnabled": true,
+            "repository": "repo",
+            "serviceCIDR": "192.168.66.0/24",
+            "serviceDiscoveryEnabled": true,
+            "version": "$(VERSION)"
+          }
+        }
+      ]
+    capabilities: Basic Install
+    operators.operatorframework.io/builder: operator-sdk-v1.23.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+  name: submariner-operator.v0.14.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - kind: Broker
+      name: brokers.submariner.io
+      version: v1alpha1
+    - kind: Submariner
+      name: submariners.submariner.io
+      version: v1alpha1
+  description: Submariner Operator description. TODO.
+  displayName: Submariner Operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - create
+          - get
+          - list
+          - watch
+          - update
+        - apiGroups:
+          - apiextensions.k8s.io
+          resources:
+          - customresourcedefinitions
+          verbs:
+          - get
+          - list
+          - create
+          - update
+          - delete
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - nodes
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - operator.openshift.io
+          resources:
+          - dnses
+          verbs:
+          - get
+          - list
+          - watch
+          - update
+        - apiGroups:
+          - config.openshift.io
+          resources:
+          - networks
+          verbs:
+          - get
+          - list
+        - apiGroups:
+          - ""
+          resources:
+          - namespaces
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        serviceAccountName: submariner-operator
+      deployments:
+      - label:
+          control-plane: submariner-operator
+        name: submariner-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              control-plane: submariner-operator
+          strategy: {}
+          template:
+            metadata:
+              labels:
+                control-plane: submariner-operator
+            spec:
+              containers:
+              - command:
+                - submariner-operator
+                env:
+                - name: WATCH_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.annotations['olm.targetNamespaces']
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: OPERATOR_NAME
+                  value: submariner-operator
+                - name: RELATED_IMAGE_submariner-operator
+                  value: quay.io/submariner/submariner-operator:$(VERSION)
+                - name: RELATED_IMAGE_submariner-gateway
+                  value: quay.io/submariner/submariner-gateway:$(VERSION)
+                - name: RELATED_IMAGE_submariner-route-agent
+                  value: quay.io/submariner/submariner-route-agent:$(VERSION)
+                - name: RELATED_IMAGE_submariner-globalnet
+                  value: quay.io/submariner/submariner-globalnet:$(VERSION)
+                - name: RELATED_IMAGE_submariner-networkplugin-syncer
+                  value: quay.io/submariner/submariner-networkplugin-syncer:$(VERSION)
+                - name: RELATED_IMAGE_lighthouse-agent
+                  value: quay.io/submariner/lighthouse-agent:$(VERSION)
+                - name: RELATED_IMAGE_lighthouse-coredns
+                  value: quay.io/submariner/lighthouse-coredns:$(VERSION)
+                image: controller:0.0.0
+                imagePullPolicy: Always
+                name: submariner-operator
+                resources: {}
+              serviceAccountName: submariner-operator
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          - services
+          - services/finalizers
+          - endpoints
+          - persistentvolumeclaims
+          - events
+          - configmaps
+          - secrets
+          verbs:
+          - '*'
+        - apiGroups:
+          - apps
+          resources:
+          - deployments
+          - daemonsets
+          - replicasets
+          - statefulsets
+          verbs:
+          - '*'
+        - apiGroups:
+          - monitoring.coreos.com
+          resources:
+          - servicemonitors
+          verbs:
+          - get
+          - create
+        - apiGroups:
+          - apps
+          resourceNames:
+          - submariner-operator
+          resources:
+          - deployments/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          verbs:
+          - get
+        - apiGroups:
+          - apps
+          resources:
+          - replicasets
+          verbs:
+          - get
+        - apiGroups:
+          - submariner.io
+          resources:
+          - '*'
+          - servicediscoveries
+          verbs:
+          - '*'
+        serviceAccountName: submariner-operator
+    strategy: deployment
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - submariner-operator
+  links:
+  - name: Submariner Operator
+    url: https://submariner-operator.domain
+  maintainers:
+  - email: your@email.com
+    name: Maintainer Name
+  maturity: alpha
+  provider:
+    name: Provider Name
+    url: https://your.domain
+  relatedImages:
+  - image: quay.io/submariner/submariner-operator:$(VERSION)
+    name: submariner-operator
+  - image: quay.io/submariner/submariner-gateway:$(VERSION)
+    name: submariner-gateway
+  - image: quay.io/submariner/submariner-route-agent:$(VERSION)
+    name: submariner-route-agent
+  - image: quay.io/submariner/submariner-globalnet:$(VERSION)
+    name: submariner-globalnet
+  - image: quay.io/submariner/submariner-networkplugin-syncer:$(VERSION)
+    name: submariner-networkplugin-syncer
+  - image: quay.io/submariner/lighthouse-agent:$(VERSION)
+    name: lighthouse-agent
+  - image: quay.io/submariner/lighthouse-coredns:$(VERSION)
+    name: lighthouse-coredns
+  version: 0.14.0

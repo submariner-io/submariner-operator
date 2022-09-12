@@ -198,7 +198,7 @@ kustomize: $(KUSTOMIZE)
 
 # Generate kustomization.yaml for bundle
 kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
-	$(OPERATOR_SDK) generate kustomize manifests -q
+	$(OPERATOR_SDK) generate kustomize manifests --input-dir=config/manifests --interactive=false --verbose
 	(cd config/manifests && $(KUSTOMIZE) edit set image controller=$(IMG) && \
 	 $(KUSTOMIZE) edit set image repo=$(REPO))
 	sed -e 's/$${VERSION}/$(BUNDLE_VERSION)/g' config/bundle/kustomization.template.yaml > config/bundle/kustomization.yaml
@@ -208,13 +208,13 @@ kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
 
 # Generate bundle manifests and metadata, then validate generated files
-bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
+bundle: $(KUSTOMIZE) $(OPERATOR_SDK) ## kustomization
 	($(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
-	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS))
-	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml)
-	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml
-	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
-	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
+	| $(OPERATOR_SDK) generate bundle --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS))
+	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner-operator.clusterserviceversion.yaml)
+	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner-operator.clusterserviceversion.yaml
+	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner-operator.clusterserviceversion.yaml
+	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner-operator.clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 # Statically validate the operator bundle using Scorecard.

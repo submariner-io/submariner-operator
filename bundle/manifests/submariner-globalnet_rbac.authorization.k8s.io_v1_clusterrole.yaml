@@ -8,15 +8,25 @@ rules:
   - ""
   resources:
   - pods
-  - services
   - namespaces
   - nodes
-  - endpoints
   verbs:
   - get
   - list
   - watch
   - update
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - delete
 - apiGroups:
   - submariner.io
   resources:
@@ -31,15 +41,6 @@ rules:
   resources:
   - clusterglobalegressips
   - globalegressips
-  verbs:
-  - create
-  - get
-  - list
-  - watch
-  - update
-- apiGroups:
-  - submariner.io
-  resources:
   - globalingressips
   verbs:
   - create
@@ -57,3 +58,12 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - network.openshift.io
+  resources:
+  - service/externalips
+  verbs:
+  - create
+  - get
+  - list
+  - delete

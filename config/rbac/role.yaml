@@ -1,0 +1,59 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - submariner.io
+  resources:
+  - brokers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - submariner.io
+  resources:
+  - brokers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - submariner.io
+  resources:
+  - brokers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - submariner.io
+  resources:
+  - servicediscoveries
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - submariner.io
+  resources:
+  - servicediscoveries/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - submariner.io
+  resources:
+  - servicediscoveries/status
+  verbs:
+  - get
+  - patch
+  - update
