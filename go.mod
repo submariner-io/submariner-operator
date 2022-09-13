@@ -12,7 +12,7 @@ require (
 	github.com/operator-framework/operator-lib v0.11.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.59.1
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.59.0
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.59.1
 	github.com/prometheus/client_golang v1.13.0
 	github.com/submariner-io/admiral v0.14.0-m1
 	github.com/submariner-io/shipyard v0.14.0-m1
