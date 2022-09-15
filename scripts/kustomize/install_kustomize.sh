@@ -70,7 +70,7 @@ function readlink_f {
   echo "$RESULT"
 }
 
-where="$(readlink_f $where)/"
+where="$(readlink_f "$where")/"
 
 if [ -f "${where}kustomize" ]; then
   echo "${where}kustomize exists. Remove it first."
@@ -80,7 +80,7 @@ elif [ -d "${where}kustomize" ]; then
   exit 1
 fi
 
-tmpDir=`mktemp -d`
+tmpDir=$(mktemp -d)
 if [[ ! "$tmpDir" || ! -d "$tmpDir" ]]; then
   echo "Could not create temp dir."
   exit 1
@@ -102,23 +102,23 @@ elif [[ "$OSTYPE" == darwin* ]]; then
   opsys=darwin
 fi
 
-RELEASE_URL=$(curl -s $release_url |\
-  grep browser_download.*${opsys}_${arch} |\
+RELEASE_URL=$(curl -s "$release_url" |\
+  grep "browser_download.*${opsys}_${arch}" |\
   cut -d '"' -f 4 |\
   sort -V | tail -n 1)
 
-if [ ! -n "$RELEASE_URL" ]; then
+if [ -z "$RELEASE_URL" ]; then
   echo "Version $version does not exist."
   exit 1
 fi
 
-CHECKSUMS_URL=$(curl -s $release_url |\
-  grep browser_download.*$checksums.txt |\
+CHECKSUMS_URL=$(curl -s "$release_url" |\
+  grep "browser_download.*checksums.txt" |\
   cut -d '"' -f 4 |\
   sort -V | tail -n 1)
 
-curl -sLO $RELEASE_URL
-curl -sLO $CHECKSUMS_URL
+curl -sLO "$RELEASE_URL"
+curl -sLO "$CHECKSUMS_URL"
 
 sha256sum --ignore-missing -c checksums.txt
 
@@ -128,6 +128,6 @@ cp ./kustomize "$where"
 
 popd >& /dev/null
 
-${where}kustomize version
+"${where}"kustomize version
 
 echo "kustomize installed to ${where}kustomize"
