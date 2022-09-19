@@ -1,0 +1,13 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ocp-submariner-globalnet
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ocp-submariner-globalnet
+subjects:
+  - kind: ServiceAccount
+    name: submariner-globalnet
+    namespace: placeholder
