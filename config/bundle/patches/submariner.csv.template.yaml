@@ -1,4 +1,0 @@
----
-- op: ${REPLACES_OP}
-  path: /spec/replaces
-  value: submariner.v${FROM_VERSION}
