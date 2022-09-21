@@ -14,7 +14,7 @@ require (
 	github.com/operator-framework/operator-sdk v0.19.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.2
-	github.com/submariner-io/admiral v0.13.0
+	github.com/submariner-io/admiral v0.13.1
 	github.com/submariner-io/shipyard v0.13.1
 	github.com/submariner-io/submariner v0.13.0
 	github.com/uw-labs/lichen v0.1.7
