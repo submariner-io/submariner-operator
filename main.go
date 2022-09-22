@@ -83,7 +83,10 @@ func main() {
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
 
-	kzerolog.AddFlags(nil)
+	flags := flag.NewFlagSet("kzerolog", flag.ExitOnError)
+	kzerolog.AddFlags(flags)
+	_ = flags.Parse([]string{"-v=6"})
+
 	flag.Parse()
 
 	if help {
