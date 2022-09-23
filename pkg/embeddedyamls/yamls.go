@@ -1418,8 +1418,8 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{ // Represents the observations of a foo's
-                    current state. // Known .status.conditions.type are: \"Available\",
+                    \n type FooStatus struct{ // Represents the observations of a
+                    foo's current state. // Known .status.conditions.type are: \"Available\",
                     \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
                     // +listType=map // +listMapKey=type Conditions []metav1.Condition
                     ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
@@ -1598,8 +1598,8 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{ // Represents the observations of a foo's
-                    current state. // Known .status.conditions.type are: \"Available\",
+                    \n type FooStatus struct{ // Represents the observations of a
+                    foo's current state. // Known .status.conditions.type are: \"Available\",
                     \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
                     // +listType=map // +listMapKey=type Conditions []metav1.Condition
                     ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
@@ -1747,8 +1747,8 @@ spec:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
                     use as an array at the field path .status.conditions.  For example,
-                    type FooStatus struct{ // Represents the observations of a foo's
-                    current state. // Known .status.conditions.type are: \"Available\",
+                    \n type FooStatus struct{ // Represents the observations of a
+                    foo's current state. // Known .status.conditions.type are: \"Available\",
                     \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
                     // +listType=map // +listMapKey=type Conditions []metav1.Condition
                     ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
@@ -2216,6 +2216,34 @@ roleRef:
   kind: ClusterRole
   name: submariner-operator
 `
+	Config_rbac_submariner_operator_ocp_cluster_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ocp-submariner-operator
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resourceNames:
+      - privileged
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+`
+	Config_rbac_submariner_operator_ocp_cluster_role_binding_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ocp-submariner-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ocp-submariner-operator
+subjects:
+  - kind: ServiceAccount
+    name: submariner-operator
+`
 	Config_rbac_submariner_gateway_service_account_yaml = `---
 apiVersion: v1
 kind: ServiceAccount
@@ -2384,6 +2412,34 @@ roleRef:
   kind: ClusterRole
   name: submariner-gateway
 `
+	Config_rbac_submariner_gateway_ocp_cluster_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ocp-submariner-gateway
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resourceNames:
+      - privileged
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+`
+	Config_rbac_submariner_gateway_ocp_cluster_role_binding_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ocp-submariner-gateway
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ocp-submariner-gateway
+subjects:
+  - kind: ServiceAccount
+    name: submariner-gateway
+`
 	Config_rbac_submariner_route_agent_service_account_yaml = `---
 apiVersion: v1
 kind: ServiceAccount
@@ -2536,6 +2592,34 @@ roleRef:
   kind: ClusterRole
   name: submariner-routeagent
   apiGroup: rbac.authorization.k8s.io
+`
+	Config_rbac_submariner_route_agent_ocp_cluster_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ocp-submariner-routeagent
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resourceNames:
+      - privileged
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+`
+	Config_rbac_submariner_route_agent_ocp_cluster_role_binding_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ocp-submariner-routeagent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ocp-submariner-routeagent
+subjects:
+  - kind: ServiceAccount
+    name: submariner-routeagent
 `
 	Config_rbac_submariner_globalnet_service_account_yaml = `---
 apiVersion: v1
@@ -2704,6 +2788,34 @@ roleRef:
   name: submariner-globalnet
   apiGroup: rbac.authorization.k8s.io
 `
+	Config_rbac_submariner_globalnet_ocp_cluster_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ocp-submariner-globalnet
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resourceNames:
+      - privileged
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+`
+	Config_rbac_submariner_globalnet_ocp_cluster_role_binding_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ocp-submariner-globalnet
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ocp-submariner-globalnet
+subjects:
+  - kind: ServiceAccount
+    name: submariner-globalnet
+`
 	Config_rbac_submariner_diagnose_service_account_yaml = `---
 apiVersion: v1
 kind: ServiceAccount
@@ -2806,6 +2918,34 @@ roleRef:
   kind: ClusterRole
   name: submariner-diagnose
 `
+	Config_rbac_submariner_diagnose_ocp_cluster_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ocp-submariner-diagnose
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resourceNames:
+      - privileged
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+`
+	Config_rbac_submariner_diagnose_ocp_cluster_role_binding_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ocp-submariner-diagnose
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ocp-submariner-diagnose
+subjects:
+  - kind: ServiceAccount
+    name: submariner-diagnose
+`
 	Config_rbac_lighthouse_agent_service_account_yaml = `---
 apiVersion: v1
 kind: ServiceAccount
@@ -2877,6 +3017,34 @@ roleRef:
   name: submariner-lighthouse-agent
   apiGroup: rbac.authorization.k8s.io
 `
+	Config_rbac_lighthouse_agent_ocp_cluster_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ocp-submariner-lighthouse-agent
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resourceNames:
+      - privileged
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+`
+	Config_rbac_lighthouse_agent_ocp_cluster_role_binding_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ocp-submariner-lighthouse-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ocp-submariner-lighthouse-agent
+subjects:
+  - kind: ServiceAccount
+    name: submariner-lighthouse-agent
+`
 	Config_rbac_lighthouse_coredns_service_account_yaml = `---
 apiVersion: v1
 kind: ServiceAccount
@@ -2946,6 +3114,34 @@ roleRef:
   name: submariner-lighthouse-coredns
   apiGroup: rbac.authorization.k8s.io
 `
+	Config_rbac_lighthouse_coredns_ocp_cluster_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ocp-submariner-lighthouse-coredns
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resourceNames:
+      - privileged
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+`
+	Config_rbac_lighthouse_coredns_ocp_cluster_role_binding_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ocp-submariner-lighthouse-coredns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ocp-submariner-lighthouse-coredns
+subjects:
+  - kind: ServiceAccount
+    name: submariner-lighthouse-coredns
+`
 	Config_rbac_networkplugin_syncer_service_account_yaml = `---
 apiVersion: v1
 kind: ServiceAccount
@@ -2995,6 +3191,34 @@ roleRef:
   kind: ClusterRole
   name: submariner-networkplugin-syncer
   apiGroup: rbac.authorization.k8s.io
+`
+	Config_rbac_networkplugin_syncer_ocp_cluster_role_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ocp-submariner-networkplugin-syncer
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resourceNames:
+      - privileged
+    resources:
+      - securitycontextconstraints
+    verbs:
+      - use
+`
+	Config_rbac_networkplugin_syncer_ocp_cluster_role_binding_yaml = `---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ocp-submariner-networkplugin-syncer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ocp-submariner-networkplugin-syncer
+subjects:
+  - kind: ServiceAccount
+    name: submariner-networkplugin-syncer
 `
 	Config_openshift_rbac_submariner_metrics_reader_role_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
