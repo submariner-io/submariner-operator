@@ -110,6 +110,11 @@ func networkPluginsDiscovery(client controllerClient.Client) (*ClusterNetwork, e
 		return osClusterNet, err
 	}
 
+	kindNet, err := discoverKindNetwork(client)
+	if err != nil || kindNet != nil {
+		return kindNet, err
+	}
+
 	weaveClusterNet, err := discoverWeaveNetwork(client)
 	if err != nil || weaveClusterNet != nil {
 		return weaveClusterNet, err
