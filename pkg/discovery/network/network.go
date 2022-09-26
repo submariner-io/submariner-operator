@@ -103,36 +103,21 @@ func Discover(client controllerClient.Client, operatorNamespace string) (*Cluste
 	return discoverGenericNetwork(client)
 }
 
+type pluginDiscoveryFn func(controllerClient.Client) (*ClusterNetwork, error)
+
+var discoverFunctions = []pluginDiscoveryFn{}
+
+func registerNetworkPluginDiscoveryFunction(function pluginDiscoveryFn) {
+	discoverFunctions = append(discoverFunctions, function)
+}
+
 // nolint:nilnil // Intentional as the purpose is to discover.
 func networkPluginsDiscovery(client controllerClient.Client) (*ClusterNetwork, error) {
-	osClusterNet, err := discoverOpenShift4Network(client)
-	if err != nil || osClusterNet != nil {
-		return osClusterNet, err
-	}
-
-	kindNet, err := discoverKindNetwork(client)
-	if err != nil || kindNet != nil {
-		return kindNet, err
-	}
-
-	weaveClusterNet, err := discoverWeaveNetwork(client)
-	if err != nil || weaveClusterNet != nil {
-		return weaveClusterNet, err
-	}
-
-	canalClusterNet, err := discoverCanalFlannelNetwork(client)
-	if err != nil || canalClusterNet != nil {
-		return canalClusterNet, err
-	}
-
-	ovnClusterNet, err := discoverOvnKubernetesNetwork(client)
-	if err != nil || ovnClusterNet != nil {
-		return ovnClusterNet, err
-	}
-
-	calicoClusterNet, err := discoverCalicoNetwork(client)
-	if err != nil || calicoClusterNet != nil {
-		return calicoClusterNet, err
+	for _, function := range discoverFunctions {
+		network, err := function(client)
+		if err != nil || network != nil {
+			return network, err
+		}
 	}
 
 	return nil, nil

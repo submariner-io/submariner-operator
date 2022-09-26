@@ -24,7 +24,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/cni"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
@@ -61,7 +61,7 @@ func testOS4DiscoveryWith(json []byte) (*network.ClusterNetwork, error) {
 	err := obj.UnmarshalJSON(json)
 	Expect(err).NotTo(HaveOccurred())
 
-	return network.Discover(fake.NewClientBuilder().WithScheme(runtime.NewScheme()).WithObjects(obj).Build(), "")
+	return network.Discover(fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(obj).Build(), "")
 }
 
 func getNetworkJSON() []byte {

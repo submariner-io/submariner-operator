@@ -23,6 +23,10 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+func init() {
+	registerNetworkPluginDiscoveryFunction(discoverWeaveNetwork)
+}
+
 func discoverWeaveNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
 	weaveNetPod, err := FindPod(client, "name=weave-net")
 
