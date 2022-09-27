@@ -135,8 +135,6 @@ jobs:
         uses: github/codeql-action/init@86f3159a697a097a813ad9bfa0002412d97690a4
         with:
           languages: go
-      - name: Build code, creating CodeQL database
-        run: make build
       - name: Run CodeQL variant analysis
         uses: github/codeql-action/analyze@86f3159a697a097a813ad9bfa0002412d97690a4
       - name: Show CodeQL scan SARIF report
