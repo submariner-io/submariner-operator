@@ -212,17 +212,27 @@ golangci-lint: $(EMBEDDED_YAMLS)
 unit: $(EMBEDDED_YAMLS)
 
 # Operator SDK
+# If necessary, the verification *keys* can be updated as follows:
+# * update scripts/operator-sdk-signing-key.asc, import the relevant key,
+#   and export it with
+#     gpg --armor --export-options export-minimal --export \
+#     ${fingerprint} >> scripts/operator-sdk-signing-key.asc
+#   (replacing ${fingerprint} with the full fingerprint);
+# * to update scripts/operator-sdk-signing-keyring.gpg, run
+#     gpg --no-options -q --batch --no-default-keyring \
+#     --output scripts/operator-sdk-signing-keyring.gpg \
+#     --dearmor scripts/operator-sdk-signing-key.asc
 $(OPERATOR_SDK):
 	mkdir -p $(@D) && \
 	cd $(@D) && \
-	curl -Lo $@ "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk_linux_amd64" && \
+	curl -LO "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk_linux_amd64" && \
 	curl -Lo checksums.txt.asc "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/checksums.txt.asc" && \
-	curl -Lo checksums.txt "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/checksums.txt"
-	## TODO (Jaanki) Add checksums
-	#gpg --verify checksums.txt.asc checksums.txt
-	#gpgv --keyring scripts/operator-sdk-signing-keyring.gpg $@.asc $@
-	#sha256sum -c scripts/operator-sdk.sha256
+	curl -Lo checksums.txt "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/checksums.txt" && \
+	sha256sum -c --ignore-missing --quiet checksums.txt
+	gpgv --keyring scripts/operator-sdk-signing-keyring.gpg bin/checksums.txt.asc bin/checksums.txt
+	mv bin/operator-sdk_linux_amd64 "$@"
 	chmod a+x $@
+	rm bin/checksums.txt*
 
 operator-sdk: $(OPERATOR_SDK)
 
