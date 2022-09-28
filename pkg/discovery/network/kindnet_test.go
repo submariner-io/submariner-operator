@@ -24,35 +24,35 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
-	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("Weave Network", func() {
-	When("There are weave pods but no kube api", func() {
+var _ = Describe("Kindnet CNI", func() {
+	When("There are kindnet pods but there are no kube-api pods", func() {
 		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverNetwork(
-				fakePod("weave-net", []string{"weave-net"}, []v1.EnvVar{{Name: "IPALLOC_RANGE", Value: testPodCIDR}}),
+				fakePod("kindnet", []string{"kindnet"}, []v1.EnvVar{{Name: "POD_SUBNET", Value: testPodCIDR}}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
+
 		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
 		})
 
-		It("Should identify the networkplugin as weave-net", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(cni.WeaveNet))
+		It("Should identify the networkplugin as kindnet CNI", func() {
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(cni.KindNet))
 		})
 	})
 
-	When("There are weave and kube api pods", func() {
+	When("There are kindnet and kube-api pods", func() {
 		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverNetwork(
-				fakePod("weave-net", []string{"weave-net"}, []v1.EnvVar{{Name: "IPALLOC_RANGE", Value: testPodCIDR}}),
+				fakePod("kindnet", []string{"kindnet"}, []v1.EnvVar{{Name: "POD_SUBNET", Value: testPodCIDR}}),
 				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
@@ -63,16 +63,8 @@ var _ = Describe("Weave Network", func() {
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
 		})
 
-		It("Should identify the network plugin as weave", func() {
-			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(cni.WeaveNet))
+		It("Should identify the network plugin as kindnet CNI", func() {
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(cni.KindNet))
 		})
 	})
 })
-
-func testDiscoverNetwork(objects ...controllerClient.Object) *network.ClusterNetwork {
-	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(client, "")
-	Expect(err).NotTo(HaveOccurred())
-
-	return clusterNet
-}

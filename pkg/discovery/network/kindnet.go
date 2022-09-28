@@ -24,23 +24,23 @@ import (
 )
 
 func init() {
-	registerNetworkPluginDiscoveryFunction(discoverWeaveNetwork)
+	registerNetworkPluginDiscoveryFunction(discoverKindNetwork)
 }
 
-func discoverWeaveNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
-	weaveNetPod, err := FindPod(client, "name=weave-net")
+func discoverKindNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+	kindNetPod, err := FindPod(client, "app=kindnet")
 
-	if err != nil || weaveNetPod == nil {
+	if err != nil || kindNetPod == nil {
 		return nil, err
 	}
 
 	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: cni.WeaveNet,
+		NetworkPlugin: cni.KindNet,
 	}
 
-	for i := range weaveNetPod.Spec.Containers {
-		for _, envVar := range weaveNetPod.Spec.Containers[i].Env {
-			if envVar.Name == "IPALLOC_RANGE" {
+	for i := range kindNetPod.Spec.Containers {
+		for _, envVar := range kindNetPod.Spec.Containers[i].Env {
+			if envVar.Name == "POD_SUBNET" {
 				clusterNetwork.PodCIDRs = []string{envVar.Value}
 				break
 			}
