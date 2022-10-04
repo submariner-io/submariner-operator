@@ -29,12 +29,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func updateDaemonSetStatus(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatus,
+func updateDaemonSetStatus(ctx context.Context, clnt client.Reader, daemonSet *appsv1.DaemonSet, status *v1alpha1.DaemonSetStatusWrapper,
 	namespace string,
 ) error {
 	if daemonSet != nil {
 		if status == nil {
-			status = &v1alpha1.DaemonSetStatus{}
+			status = &v1alpha1.DaemonSetStatusWrapper{}
 		}
 
 		status.Status = &daemonSet.Status
