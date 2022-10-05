@@ -116,6 +116,31 @@ jobs:
       - name: Run packagedoc-lint
         run: make packagedoc-lint
 
+  shellcheck:
+    name: Shell
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Run shellcheck
+        run: make shellcheck
+
+  variant-analysis:
+    name: Variant Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@e0e5ded33cabb451ae0a9768fc7b0410bad9ad44
+        with:
+          languages: go
+      - name: Run CodeQL variant analysis
+        uses: github/codeql-action/analyze@e0e5ded33cabb451ae0a9768fc7b0410bad9ad44
+      - name: Show CodeQL scan SARIF report
+        if: always()
+        run: cat ../results/go.sarif
+
   vulnerability-scan:
     name: Vulnerability Scanning
     runs-on: ubuntu-latest
@@ -123,7 +148,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       - name: Run Anchore vulnerability scanner
-        uses: anchore/scan-action@ecfd0e98932e57ea8f68f29c4f418fc41a8194db
+        uses: anchore/scan-action@d5aa5b6cb9414b0c7771438046ff5bcfa2854ed7
         id: scan
         with:
           path: "."
@@ -134,27 +159,9 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Upload Anchore scan SARIF report
         if: always()
-        uses: github/codeql-action/upload-sarif@c7f292ea4f542c473194b33813ccd4c207a6c725
+        uses: github/codeql-action/upload-sarif@e0e5ded33cabb451ae0a9768fc7b0410bad9ad44
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
-
-  variant-analysis:
-    name: Variant Analysis
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@2ca79b6fa8d3ec278944088b4aa5f46912db5d63
-        with:
-          languages: go
-      - name: Build code, creating CodeQL database
-        run: make build
-      - name: Run CodeQL variant analysis
-        uses: github/codeql-action/analyze@2ca79b6fa8d3ec278944088b4aa5f46912db5d63
-      - name: Show CodeQL scan SARIF report
-        if: always()
-        run: cat ../results/go.sarif
 
   yaml-lint:
     name: YAML

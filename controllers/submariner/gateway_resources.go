@@ -27,8 +27,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"github.com/submariner-io/submariner/pkg/port"
@@ -148,7 +149,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 				{
 					Name:            name,
 					Image:           getImagePath(cr, names.GatewayImage, names.GatewayComponent),
-					ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayComponent]),
+					ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayComponent]),
 					Command:         []string{"submariner.sh"},
 					SecurityContext: &corev1.SecurityContext{
 						Capabilities: &corev1.Capabilities{
@@ -199,6 +200,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 						{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
 						{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
 						{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
+						{Name: "SUBMARINER_METRICSPORT", Value: gatewayMetricsServerPort},
 						{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
 							FieldRef: &corev1.ObjectFieldSelector{
 								FieldPath: "spec.nodeName",
@@ -246,14 +248,14 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 func (r *Reconciler) reconcileGatewayDaemonSet(
 	instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*appsv1.DaemonSet, error) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGatewayDaemonSet(instance, names.GatewayComponent),
+	daemonSet, err := apply.DaemonSet(instance, newGatewayDaemonSet(instance, names.GatewayComponent),
 		reqLogger, r.config.ScopedClient, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
 
-	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), gatewayMetricsServerPort, r.config.ScopedClient,
-		r.config.RestConfig, r.config.Scheme, reqLogger)
+	err = metrics.Setup(names.GatewayComponent, instance.Namespace, "app", names.MetricsProxyComponent, instance, gatewayMetricsServicePort,
+		r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
 
 	return daemonSet, err
 }

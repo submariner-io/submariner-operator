@@ -23,7 +23,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/pkg/metrics"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -34,24 +34,11 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func Setup(namespace string, owner metav1.Object, labels map[string]string, port int32,
-	client controllerClient.Client, config *rest.Config, scheme *runtime.Scheme,
-	reqLogger logr.Logger,
+func Setup(serviceName, namespace, applicationKey, applicationName string, owner metav1.Object, port int32,
+	client controllerClient.Client, config *rest.Config, scheme *runtime.Scheme, reqLogger logr.Logger,
 ) error {
-	applicationKey := "app"
-	applicationName, ok := labels[applicationKey]
-
-	if !ok {
-		applicationKey = "name"
-		applicationName, ok = labels[applicationKey]
-
-		if !ok {
-			return fmt.Errorf("no app or name label in the provided labels, %v", labels)
-		}
-	}
-
-	metricsService, err := helpers.ReconcileService(owner, newMetricsService(namespace, applicationKey, applicationName, port), reqLogger,
-		client, scheme)
+	metricsService, err := apply.Service(owner, newMetricsService(serviceName, namespace, applicationKey,
+		applicationName, port), reqLogger, client, scheme)
 	if err != nil {
 		return err // nolint:wrapcheck // No need to wrap here
 	}
@@ -76,9 +63,13 @@ func Setup(namespace string, owner metav1.Object, labels map[string]string, port
 
 // newMetricsService populates a Service providing access to metrics for the given application.
 // The Service is named after the application name, suffixed with "-metrics".
-func newMetricsService(namespace, appKey, appName string, port int32) *corev1.Service {
+func newMetricsService(name, namespace, appKey, appName string, port int32) *corev1.Service {
 	labels := map[string]string{
 		appKey: appName,
+	}
+
+	if name == "" {
+		name = appName
 	}
 
 	servicePorts := []corev1.ServicePort{
@@ -92,7 +83,7 @@ func newMetricsService(namespace, appKey, appName string, port int32) *corev1.Se
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:    labels,
 			Namespace: namespace,
-			Name:      fmt.Sprintf("%s-metrics", appName),
+			Name:      fmt.Sprintf("%s-metrics", name),
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:    servicePorts,

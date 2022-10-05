@@ -21,8 +21,9 @@ package submariner
 import (
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/helpers"
+	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -34,14 +35,14 @@ import (
 func (r *Reconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error,
 ) {
-	daemonSet, err := helpers.ReconcileDaemonSet(instance, newGlobalnetDaemonSet(instance, names.GlobalnetComponent), reqLogger,
+	daemonSet, err := apply.DaemonSet(instance, newGlobalnetDaemonSet(instance, names.GlobalnetComponent), reqLogger,
 		r.config.ScopedClient, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
 
-	err = metrics.Setup(instance.Namespace, instance, daemonSet.GetLabels(), globalnetMetricsServerPort,
-		r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
+	err = metrics.Setup(names.GlobalnetComponent, instance.Namespace, "app", names.MetricsProxyComponent,
+		instance, globalnetMetricsServicePort, r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
 
 	return daemonSet, err
 }
@@ -76,7 +77,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 						{
 							Name:            name,
 							Image:           getImagePath(cr, names.GlobalnetImage, names.GlobalnetComponent),
-							ImagePullPolicy: helpers.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetComponent]),
+							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetComponent]),
 							SecurityContext: &corev1.SecurityContext{
 								Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
 								AllowPrivilegeEscalation: pointer.Bool(true),
@@ -91,6 +92,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner-operator,kube-system,operators,openshift-monitoring,openshift-dns"},
+								{Name: "SUBMARINER_METRICSPORT", Value: globalnetMetricsServerPort},
 								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										FieldPath: "spec.nodeName",

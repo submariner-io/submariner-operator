@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 // nolint:dupl // These functions are similar but not duplicated.
-package helpers
+package apply
 
 import (
 	"context"
@@ -26,7 +26,6 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/images"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -38,7 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger,
+func DaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger,
 	client controllerClient.Client, scheme *runtime.Scheme,
 ) (*appsv1.DaemonSet, error) {
 	var err error
@@ -63,7 +62,7 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
 		})
 		if err != nil {
-			if IsImmutableError(err) {
+			if isImmutableError(err) {
 				reqLogger.Info("Re-creating a DaemonSet because it has immutable fields", "DaemonSet.Namespace",
 					daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
 
@@ -97,7 +96,7 @@ func ReconcileDaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLog
 	return daemonSet, errors.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
 }
 
-func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, reqLogger logr.Logger,
+func Deployment(owner metav1.Object, deployment *appsv1.Deployment, reqLogger logr.Logger,
 	client controllerClient.Client, scheme *runtime.Scheme,
 ) (*appsv1.Deployment, error) {
 	var err error
@@ -142,7 +141,7 @@ func ReconcileDeployment(owner metav1.Object, deployment *appsv1.Deployment, req
 	return deployment, errors.WithMessagef(err, "error creating or updating Deployment %s/%s", deployment.Namespace, deployment.Name)
 }
 
-func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLogger logr.Logger,
+func ConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLogger logr.Logger,
 	client controllerClient.Client, scheme *runtime.Scheme,
 ) (*corev1.ConfigMap, error) {
 	var err error
@@ -187,7 +186,7 @@ func ReconcileConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLog
 	return configMap, errors.WithMessagef(err, "error creating or updating ConfigMap %s/%s", configMap.Namespace, configMap.Name)
 }
 
-func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger logr.Logger,
+func Service(owner metav1.Object, service *corev1.Service, reqLogger logr.Logger,
 	client controllerClient.Client, scheme *runtime.Scheme,
 ) (*corev1.Service, error) {
 	var err error
@@ -251,16 +250,7 @@ func ReconcileService(owner metav1.Object, service *corev1.Service, reqLogger lo
 	return service, errors.WithMessagef(err, "error creating or updating Service %s/%s", service.Namespace, service.Name)
 }
 
-func GetPullPolicy(version, override string) corev1.PullPolicy {
-	if len(override) > 0 {
-		tag := strings.Split(override, ":")[1]
-		return images.GetPullPolicy(tag)
-	}
-
-	return images.GetPullPolicy(version)
-}
-
-func IsImmutableError(err error) bool {
+func isImmutableError(err error) bool {
 	if !apierrors.IsInvalid(err) {
 		return false
 	}

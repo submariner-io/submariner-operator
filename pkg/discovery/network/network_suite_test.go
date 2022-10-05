@@ -45,7 +45,7 @@ func fakePodWithNamespace(namespace, name, component string, command []string, e
 		ObjectMeta: v1meta.ObjectMeta{
 			Namespace: namespace,
 			Name:      name,
-			Labels:    map[string]string{"component": component, "name": component},
+			Labels:    map[string]string{"component": component, "name": component, "app": component},
 		},
 
 		Spec: v1.PodSpec{

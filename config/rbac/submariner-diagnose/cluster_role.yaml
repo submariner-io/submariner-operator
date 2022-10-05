@@ -14,11 +14,16 @@ rules:
     verbs:
       - get
       - list
-  - apiGroups:  # pods are created to run firewall diagnostics
-      - ""
+  - apiGroups:
+      - submariner.io
     resources:
-      - pods
+      - clusterglobalegressips
+      - globalegressips
     verbs:
-      - create
-      - get
+      - list
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - "serviceexports"
+    verbs:
       - list

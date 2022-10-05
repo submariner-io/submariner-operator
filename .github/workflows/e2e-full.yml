@@ -18,7 +18,7 @@ jobs:
       matrix:
         globalnet: ['', 'globalnet']
         # Run most tests against the latest K8s version
-        k8s_version: ['1.24']
+        k8s_version: ['1.25']
         lighthouse: ['', 'lighthouse']
         ovn: ['', 'ovn']
         exclude:
@@ -35,6 +35,7 @@ jobs:
           # Run default E2E against all supported K8s versions
           - k8s_version: '1.22'
           - k8s_version: '1.23'
+          - k8s_version: '1.24'
     steps:
       - name: Check out the repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
