@@ -2843,6 +2843,7 @@ rules:
     resources:
       - configmaps
       - namespaces
+      - services
     verbs:
       - get
       - list
@@ -2855,9 +2856,23 @@ rules:
       - get
       - list
   - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+  - apiGroups:
       - submariner.io
     resources:
       - '*'
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - "*"
     verbs:
       - get
       - list
