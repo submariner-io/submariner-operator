@@ -186,6 +186,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 						{Name: "SUBMARINER_COLORCODES", Value: cr.Spec.ColorCodes},
 						{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
 						{Name: "SUBMARINER_NATENABLED", Value: strconv.FormatBool(cr.Spec.NatEnabled)},
+						{Name: "AIR_GAPPED_DEPLOYMENT", Value: strconv.FormatBool(cr.Spec.AirGappedDeployment)},
 						{Name: "SUBMARINER_BROKER", Value: cr.Spec.Broker},
 						{Name: "SUBMARINER_CABLEDRIVER", Value: cr.Spec.CableDriver},
 						{Name: broker.EnvironmentVariable("ApiServer"), Value: cr.Spec.BrokerK8sApiServer},
