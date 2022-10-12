@@ -207,6 +207,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	gatewayStatuses := buildGatewayStatusAndUpdateMetrics(gateways)
 
 	instance.Status.NatEnabled = instance.Spec.NatEnabled
+	instance.Status.AirGappedDeployment = instance.Spec.AirGappedDeployment
 	instance.Status.ColorCodes = instance.Spec.ColorCodes
 	instance.Status.ClusterID = instance.Spec.ClusterID
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
