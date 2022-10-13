@@ -118,6 +118,8 @@ spec:
           spec:
             description: SubmarinerSpec defines the desired state of Submariner.
             properties:
+              airGappedDeployment:
+                type: boolean
               broker:
                 type: string
               brokerK8sApiServer:
@@ -217,6 +219,8 @@ spec:
           status:
             description: SubmarinerStatus defines the observed state of Submariner.
             properties:
+              airGappedDeployment:
+                type: boolean
               clusterCIDR:
                 type: string
               clusterID:
@@ -931,6 +935,7 @@ spec:
               serviceCIDR:
                 type: string
             required:
+            - airGappedDeployment
             - clusterID
             - natEnabled
             type: object
@@ -2843,6 +2848,7 @@ rules:
     resources:
       - configmaps
       - namespaces
+      - services
     verbs:
       - get
       - list
@@ -2855,9 +2861,23 @@ rules:
       - get
       - list
   - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
+      - list
+  - apiGroups:
       - submariner.io
     resources:
       - '*'
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - "*"
     verbs:
       - get
       - list

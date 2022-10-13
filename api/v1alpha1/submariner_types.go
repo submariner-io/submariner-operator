@@ -59,6 +59,7 @@ type SubmarinerSpec struct {
 	CeIPSecForceUDPEncaps    bool                 `json:"ceIPSecForceUDPEncaps,omitempty"`
 	Debug                    bool                 `json:"debug"`
 	NatEnabled               bool                 `json:"natEnabled"`
+	AirGappedDeployment      bool                 `json:"airGappedDeployment,omitempty"`
 	LoadBalancerEnabled      bool                 `json:"loadBalancerEnabled,omitempty"`
 	ServiceDiscoveryEnabled  bool                 `json:"serviceDiscoveryEnabled,omitempty"`
 	BrokerK8sInsecure        bool                 `json:"brokerK8sInsecure,omitempty"`
@@ -76,6 +77,7 @@ type SubmarinerStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	NatEnabled                bool                    `json:"natEnabled"`
+	AirGappedDeployment       bool                    `json:"airGappedDeployment"`
 	ColorCodes                string                  `json:"colorCodes,omitempty"`
 	ClusterID                 string                  `json:"clusterID"`
 	ServiceCIDR               string                  `json:"serviceCIDR,omitempty"`

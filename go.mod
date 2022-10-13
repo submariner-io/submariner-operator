@@ -6,16 +6,16 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/go-logr/logr v1.2.3
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.20.2
+	github.com/onsi/gomega v1.22.1
 	github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46
 	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
 	github.com/operator-framework/operator-lib v0.11.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.59.2
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.59.2
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.60.1
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.60.1
 	github.com/prometheus/client_golang v1.13.0
-	github.com/submariner-io/admiral v0.14.0-m1
-	github.com/submariner-io/shipyard v0.14.0-m1
+	github.com/submariner-io/admiral v0.14.0-m2
+	github.com/submariner-io/shipyard v0.14.0-m2
 	github.com/submariner-io/submariner v0.14.0-m1.0.20220926102553-d3362895ea5e
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.3.8-0.20220509174342-b4bca84b0361
