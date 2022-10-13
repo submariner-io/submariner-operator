@@ -77,7 +77,7 @@ type SubmarinerStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	NatEnabled                bool                    `json:"natEnabled"`
-	AirGappedDeployment       bool                    `json:"airGappedDeployment"`
+	AirGappedDeployment       bool                    `json:"airGappedDeployment,omitempty"`
 	ColorCodes                string                  `json:"colorCodes,omitempty"`
 	ClusterID                 string                  `json:"clusterID"`
 	ServiceCIDR               string                  `json:"serviceCIDR,omitempty"`
