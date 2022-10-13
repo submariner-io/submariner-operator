@@ -935,7 +935,6 @@ spec:
               serviceCIDR:
                 type: string
             required:
-            - airGappedDeployment
             - clusterID
             - natEnabled
             type: object
