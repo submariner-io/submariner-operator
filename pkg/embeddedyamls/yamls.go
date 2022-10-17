@@ -2908,7 +2908,9 @@ rules:
     resources:
       - clusterglobalegressips
       - globalegressips
+      - globalingressips
     verbs:
+      - get
       - list
   - apiGroups:
       - discovery.k8s.io
