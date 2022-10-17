@@ -2847,7 +2847,6 @@ rules:
     resources:
       - configmaps
       - namespaces
-      - services
     verbs:
       - get
       - list
@@ -2856,13 +2855,6 @@ rules:
     resources:
       - daemonsets
       - deployments
-    verbs:
-      - get
-      - list
-  - apiGroups:
-      - discovery.k8s.io
-    resources:
-      - endpointslices
     verbs:
       - get
       - list
@@ -2907,6 +2899,7 @@ rules:
     resources:
       - configmaps
       - nodes
+      - services
     verbs:
       - get
       - list
@@ -2916,6 +2909,13 @@ rules:
       - clusterglobalegressips
       - globalegressips
     verbs:
+      - list
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - get
       - list
   - apiGroups:
       - multicluster.x-k8s.io
