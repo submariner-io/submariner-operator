@@ -36,7 +36,7 @@ func init() {
 	registerNetworkPluginDiscoveryFunction(discoverOpenShift4Network)
 }
 
-// nolint:nilnil // Intentional as the purpose is to discover.
+//nolint:nilnil // Intentional as the purpose is to discover.
 func discoverOpenShift4Network(client controllerClient.Client) (*ClusterNetwork, error) {
 	network := &unstructured.Unstructured{}
 	network.SetGroupVersionKind(schema.GroupVersionKind{

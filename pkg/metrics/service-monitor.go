@@ -155,7 +155,7 @@ func hasServiceMonitor(config *rest.Config) (bool, error) {
 
 	_, apiLists, err := discovery.NewDiscoveryClientForConfigOrDie(config).ServerGroupsAndResources()
 	if err != nil {
-		return false, err // nolint:wrapcheck // No need to wrap here
+		return false, err //nolint:wrapcheck // No need to wrap here
 	}
 
 	for _, apiList := range apiLists {

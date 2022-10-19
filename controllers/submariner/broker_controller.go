@@ -72,31 +72,31 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 
 	err = gateway.Ensure(crdUpdater)
 	if err != nil {
-		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
+		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
 	// Lighthouse CRDs
 	_, err = lighthouse.Ensure(crdUpdater, lighthouse.BrokerCluster)
 	if err != nil {
-		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
+		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
 	// Globalnet
 	err = globalnet.ValidateExistingGlobalNetworks(r.Client, request.Namespace)
 	if err != nil {
-		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
+		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
 	err = globalnet.CreateConfigMap(r.Client, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
 		instance.Spec.DefaultGlobalnetClusterSize, request.Namespace)
 	if err != nil {
-		return ctrl.Result{}, err // nolint:wrapcheck // Errors are already wrapped
+		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
 	return ctrl.Result{}, nil
 }
 
-// nolint:wrapcheck // No need to wrap here.
+//nolint:wrapcheck // No need to wrap here.
 func (r *BrokerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Broker{}).

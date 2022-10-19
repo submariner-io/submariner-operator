@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// nolint:wrapcheck // These functions are basically wrappers for the k8s APIs.
+//nolint:wrapcheck // These functions are basically wrappers for the k8s APIs.
 package crd
 
 import (
@@ -125,7 +125,7 @@ func (c *controllerClientCreator) Get(ctx context.Context, name string,
 }
 
 func (c *controllerClientCreator) Delete(ctx context.Context, name string,
-	options metav1.DeleteOptions, // nolint:gocritic // Match K8s API
+	options metav1.DeleteOptions, //nolint:gocritic // Match K8s API
 ) error {
 	crd, err := c.Get(ctx, name, metav1.GetOptions{})
 	if err != nil {

@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// nolint:dupl // These functions are similar but not duplicated.
+//nolint:dupl // These functions are similar but not duplicated.
 package apply
 
 import (
@@ -59,7 +59,7 @@ func DaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.
 			copyLabels(daemonSet, toUpdate)
 
 			// Set the owner and controller.
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme) //nolint:wrapcheck // No need to wrap here
 		})
 		if err != nil {
 			if isImmutableError(err) {
@@ -67,16 +67,16 @@ func DaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.
 					daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
 
 				if err := client.Delete(context.TODO(), toUpdate); err != nil {
-					return err // nolint:wrapcheck // No need to wrap here
+					return err //nolint:wrapcheck // No need to wrap here
 				}
 
 				if err := client.Create(context.TODO(), daemonSet); err != nil {
-					return err // nolint:wrapcheck // No need to wrap here
+					return err //nolint:wrapcheck // No need to wrap here
 				}
 
 				return nil
 			}
-			return err // nolint:wrapcheck // No need to wrap here
+			return err //nolint:wrapcheck // No need to wrap here
 		}
 
 		if result == controllerutil.OperationResultCreated {
@@ -118,10 +118,10 @@ func Deployment(owner metav1.Object, deployment *appsv1.Deployment, reqLogger lo
 			copyLabels(deployment, toUpdate)
 
 			// Set the owner and controller
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme) //nolint:wrapcheck // No need to wrap here
 		})
 		if err != nil {
-			return err // nolint:wrapcheck // No need to wrap here
+			return err //nolint:wrapcheck // No need to wrap here
 		}
 
 		if result == controllerutil.OperationResultCreated {
@@ -163,10 +163,10 @@ func ConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLogger logr.
 			copyLabels(configMap, toUpdate)
 
 			// Set the owner and controller
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme) //nolint:wrapcheck // No need to wrap here
 		})
 		if err != nil {
-			return err // nolint:wrapcheck // No need to wrap here
+			return err //nolint:wrapcheck // No need to wrap here
 		}
 
 		if result == controllerutil.OperationResultCreated {
@@ -225,12 +225,12 @@ func Service(owner metav1.Object, service *corev1.Service, reqLogger logr.Logger
 			}
 			if owner != nil {
 				// Set the owner and controller
-				return controllerutil.SetControllerReference(owner, toUpdate, scheme) // nolint:wrapcheck // No need to wrap here
+				return controllerutil.SetControllerReference(owner, toUpdate, scheme) //nolint:wrapcheck // No need to wrap here
 			}
 			return nil
 		})
 		if err != nil {
-			return err // nolint:wrapcheck // No need to wrap here
+			return err //nolint:wrapcheck // No need to wrap here
 		}
 
 		if result == controllerutil.OperationResultCreated {

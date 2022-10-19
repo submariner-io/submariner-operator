@@ -32,7 +32,7 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// nolint:nilnil // Intentional as the purpose is to discover.
+//nolint:nilnil // Intentional as the purpose is to discover.
 func discoverGenericNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
 	clusterNetwork, err := discoverNetwork(client)
 	if err != nil {
@@ -47,7 +47,7 @@ func discoverGenericNetwork(client controllerClient.Client) (*ClusterNetwork, er
 	return nil, nil
 }
 
-// nolint:nilnil // Intentional as the purpose is to discover.
+//nolint:nilnil // Intentional as the purpose is to discover.
 func discoverNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
 	clusterNetwork := &ClusterNetwork{}
 

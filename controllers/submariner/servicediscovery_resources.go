@@ -34,7 +34,7 @@ import (
 func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner *v1alpha1.Submariner, reqLogger logr.Logger,
 	isEnabled bool,
 ) error {
-	// nolint:wrapcheck // No need to wrap errors here
+	//nolint:wrapcheck // No need to wrap errors here
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		if isEnabled {
 			sd := newServiceDiscoveryCR(submariner.Namespace)

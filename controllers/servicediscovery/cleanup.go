@@ -87,7 +87,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 
 	requeue, _, err := uninstallInfo.Run(ctx)
 	if err != nil {
-		return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
+		return reconcile.Result{}, err //nolint:wrapcheck // No need to wrap
 	}
 
 	if requeue {
@@ -97,7 +97,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 	return reconcile.Result{}, r.removeFinalizer(ctx, instance)
 }
 
-// nolint:wrapcheck // No need to wrap
+//nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) error {
 	return finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.ScopedClient, instance.Namespace, instance),
 		instance, constants.CleanupFinalizer)
