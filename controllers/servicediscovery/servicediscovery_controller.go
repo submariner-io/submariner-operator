@@ -184,7 +184,7 @@ func (r *Reconciler) addFinalizer(ctx context.Context,
 	added, err := finalizer.Add(ctx, resource.ForControllerClient(r.ScopedClient, instance.Namespace,
 		&submarinerv1alpha1.ServiceDiscovery{}), instance, constants.CleanupFinalizer)
 	if err != nil {
-		return nil, err // nolint:wrapcheck // No need to wrap
+		return nil, err //nolint:wrapcheck // No need to wrap
 	}
 
 	if !added {
@@ -561,7 +561,7 @@ func (r *Reconciler) configureOpenshiftClusterDNSOperator(ctx context.Context, i
 func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
 	clusterIP string,
 ) error {
-	// nolint:wrapcheck // No need to wrap errors here
+	//nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		dnsOperator := &operatorv1.DNS{}
 		if err := r.ScopedClient.Get(ctx, types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
@@ -669,7 +669,7 @@ func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, imageName, co
 		submariner.Spec.ImageOverrides)
 }
 
-// nolint:wrapcheck // No need to wrap errors here.
+//nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// These are required so that we can manipulate DNS ConfigMap
 	if err := operatorv1.Install(mgr.GetScheme()); err != nil {

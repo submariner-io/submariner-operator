@@ -31,7 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// nolint:wrapcheck // No need to wrap errors here.
+//nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileMetricsProxyDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
 	error,
 ) {

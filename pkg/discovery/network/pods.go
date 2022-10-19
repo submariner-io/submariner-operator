@@ -54,7 +54,7 @@ func FindPodCommandParameter(client controllerClient.Client, labelSelector, para
 	return "", nil
 }
 
-// nolint:nilnil // Intentional as the purpose is to find.
+//nolint:nilnil // Intentional as the purpose is to find.
 func FindPod(client controllerClient.Client, labelSelector string) (*corev1.Pod, error) {
 	selector, err := labels.Parse(labelSelector)
 	if err != nil {

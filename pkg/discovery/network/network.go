@@ -111,7 +111,7 @@ func registerNetworkPluginDiscoveryFunction(function pluginDiscoveryFn) {
 	discoverFunctions = append(discoverFunctions, function)
 }
 
-// nolint:nilnil // Intentional as the purpose is to discover.
+//nolint:nilnil // Intentional as the purpose is to discover.
 func networkPluginsDiscovery(client controllerClient.Client) (*ClusterNetwork, error) {
 	for _, function := range discoverFunctions {
 		network, err := function(client)

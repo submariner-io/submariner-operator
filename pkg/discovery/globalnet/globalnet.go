@@ -69,13 +69,13 @@ var globalCidr = GlobalCIDR{allocatedCount: 0}
 func isOverlappingCIDR(cidrList []string, cidr string) (bool, error) {
 	_, newNet, err := net.ParseCIDR(cidr)
 	if err != nil {
-		return false, err // nolint:wrapcheck // No need to wrap here
+		return false, err //nolint:wrapcheck // No need to wrap here
 	}
 
 	for _, v := range cidrList {
 		_, baseNet, err := net.ParseCIDR(v)
 		if err != nil {
-			return false, err // nolint:wrapcheck // No need to wrap here
+			return false, err //nolint:wrapcheck // No need to wrap here
 		}
 
 		if baseNet.Contains(newNet.IP) || newNet.Contains(baseNet.IP) {
@@ -217,7 +217,7 @@ func uintToIP(ip uint) net.IP {
 func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
 	_, network, err := net.ParseCIDR(cidrRange)
 	if err != nil {
-		return 0, err // nolint:wrapcheck // No need to wrap here
+		return 0, err //nolint:wrapcheck // No need to wrap here
 	}
 
 	ones, totalbits := network.Mask.Size()
@@ -418,7 +418,7 @@ func AssignGlobalnetIPs(globalnetInfo *Info, netconfig Config, status reporter.I
 func IsValidCIDR(cidr string) error {
 	ip, _, err := net.ParseCIDR(cidr)
 	if err != nil {
-		return err // nolint:wrapcheck // No need to wrap here
+		return err //nolint:wrapcheck // No need to wrap here
 	}
 
 	if ip.IsUnspecified() {
@@ -504,5 +504,5 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClient controllerClient.Cli
 		return nil
 	})
 
-	return retryErr // nolint:wrapcheck // No need to wrap here
+	return retryErr //nolint:wrapcheck // No need to wrap here
 }

@@ -74,7 +74,7 @@ func init() {
 	flag.BoolVar(&help, "help", help, "Print usage options")
 }
 
-// nolint:gocyclo // No further refactors necessary
+//nolint:gocyclo // No further refactors necessary
 func main() {
 	var enableLeaderElection bool
 	var probeAddr string

@@ -32,7 +32,7 @@ func init() {
 	registerNetworkPluginDiscoveryFunction(discoverCalicoNetwork)
 }
 
-// nolint:nilnil // Intentional as the purpose is to discover.
+//nolint:nilnil // Intentional as the purpose is to discover.
 func discoverCalicoNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
 	cmList := &corev1.ConfigMapList{}
 

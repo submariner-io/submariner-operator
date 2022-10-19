@@ -28,7 +28,7 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// nolint:wrapcheck // These functions are pass-through wrappers for the k8s APIs.
+//nolint:wrapcheck // These functions are pass-through wrappers for the k8s APIs.
 func ForControllerClient(client controllerClient.Client, namespace string, objType controllerClient.Object) resource.Interface {
 	return &resource.InterfaceFuncs{
 		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
