@@ -118,7 +118,7 @@ func NewReconciler(config *Config) *Reconciler {
 
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners/status,verbs=get;update;patch
-// nolint:gocyclo // Refactoring would yield functions with a lot of params which isn't ideal either.
+//nolint:gocyclo // Refactoring would yield functions with a lot of params which isn't ideal either.
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.V(2).WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling Submariner")
@@ -276,7 +276,7 @@ func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Subm
 	added, err := finalizer.Add(ctx, resourceiface.ForControllerClient(r.config.ScopedClient, instance.Namespace, &submopv1a1.Submariner{}),
 		instance, constants.CleanupFinalizer)
 	if err != nil {
-		return nil, err // nolint:wrapcheck // No need to wrap
+		return nil, err //nolint:wrapcheck // No need to wrap
 	}
 
 	if !added {
@@ -300,7 +300,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}
 		})
 
-	// nolint:wrapcheck // No need to wrap here
+	//nolint:wrapcheck // No need to wrap here
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("submariner-controller").
 		// Watch for changes to primary resource Submariner

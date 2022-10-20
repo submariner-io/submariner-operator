@@ -85,7 +85,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 
 	requeue, timedOut, err := uninstallInfo.Run(ctx)
 	if err != nil {
-		return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
+		return reconcile.Result{}, err //nolint:wrapcheck // No need to wrap
 	}
 
 	if !timedOut && instance.Spec.ServiceDiscoveryEnabled {
@@ -99,7 +99,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 	return reconcile.Result{}, r.removeFinalizer(ctx, instance)
 }
 
-// nolint:wrapcheck // No need to wrap
+//nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.Submariner) error {
 	return finalizer.Remove(ctx, resource.ForControllerClient(r.config.ScopedClient, instance.Namespace, &operatorv1alpha1.Submariner{}),
 		instance, constants.CleanupFinalizer)

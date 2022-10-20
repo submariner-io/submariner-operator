@@ -134,13 +134,13 @@ func updateConfigMap(client controllerClient.Client, configMap *corev1.ConfigMap
 	return errors.Wrapf(err, "error updating ConfigMap")
 }
 
-// nolint:wrapcheck // No need to wrap here
+//nolint:wrapcheck // No need to wrap here
 func GetConfigMap(client controllerClient.Client, namespace string) (*corev1.ConfigMap, error) {
 	cm := &corev1.ConfigMap{}
 	return cm, client.Get(context.TODO(), types.NamespacedName{Namespace: namespace, Name: globalCIDRConfigMapName}, cm)
 }
 
-// nolint:wrapcheck // No need to wrap here
+//nolint:wrapcheck // No need to wrap here
 func DeleteConfigMap(client controllerClient.Client, namespace string) error {
 	return client.Delete(context.TODO(), &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
 		Name:      globalCIDRConfigMapName,

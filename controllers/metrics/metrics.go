@@ -40,7 +40,7 @@ func Setup(serviceName, namespace, applicationKey, applicationName string, owner
 	metricsService, err := apply.Service(owner, newMetricsService(serviceName, namespace, applicationKey,
 		applicationName, port), reqLogger, client, scheme)
 	if err != nil {
-		return err // nolint:wrapcheck // No need to wrap here
+		return err //nolint:wrapcheck // No need to wrap here
 	}
 
 	if config != nil {
@@ -53,7 +53,7 @@ func Setup(serviceName, namespace, applicationKey, applicationName string, owner
 			if errors.Is(err, metrics.ErrServiceMonitorNotPresent) {
 				reqLogger.Info("Install prometheus-operator in your cluster to create ServiceMonitor objects", "error", err.Error())
 			} else if !k8serrors.IsAlreadyExists(err) {
-				return err // nolint:wrapcheck // No need to wrap here
+				return err //nolint:wrapcheck // No need to wrap here
 			}
 		}
 	}

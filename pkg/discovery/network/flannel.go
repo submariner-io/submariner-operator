@@ -20,47 +20,74 @@ package network
 
 import (
 	"context"
-	"encoding/json"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/cni"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func init() {
-	registerNetworkPluginDiscoveryFunction(discoverCanalFlannelNetwork)
-}
+// nolint:nilnil // Intentional as the purpose is to discover.
+func discoverFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+	daemonsets := &appsv1.DaemonSetList{}
 
-//nolint:nilnil // Intentional as the purpose is to discover.
-func discoverCanalFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
-	// TODO: this must be smarter, looking for the canal daemonset, with labels k8s-app=canal
-	//  and then the reference on the container volumes:
-	//   - configMap:
-	//          defaultMode: 420
-	//          name: canal-config
-	//        name: flannel-cfg
+	err := client.List(context.TODO(), daemonsets, controllerClient.InNamespace(metav1.NamespaceSystem))
+	if err != nil {
+		return nil, errors.WithMessage(err, "error listing the Daemonsets")
+	}
+
+	volumes := make([]corev1.Volume, 0)
+	// look for a daemonset matching "flannel"
+	for k := range daemonsets.Items {
+		if strings.Contains(daemonsets.Items[k].Name, "flannel") {
+			volumes = daemonsets.Items[k].Spec.Template.Spec.Volumes
+		}
+	}
+
+	if len(volumes) < 1 {
+		return nil, nil
+	}
+
+	var flannelConfigMap string
+	// look for the associated confimap to the flannel daemonset
+	for k := range volumes {
+		if strings.Contains(volumes[k].Name, "flannel") {
+			if volumes[k].ConfigMap.Name != "" {
+				flannelConfigMap = volumes[k].ConfigMap.Name
+			}
+		}
+	}
+
+	if flannelConfigMap == "" {
+		return nil, nil
+	}
+
+	// look for the configmap details using the configmap name discovered from the daemonset
 	cm := &corev1.ConfigMap{}
 
-	err := client.Get(context.TODO(), types.NamespacedName{Namespace: "kube-system", Name: "canal-config"}, cm)
+	err = client.Get(context.TODO(), controllerClient.ObjectKey{
+		Namespace: metav1.NamespaceSystem,
+		Name:      flannelConfigMap,
+	}, cm)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
 
-		return nil, errors.WithMessage(err, "error obtaining the \"canal-config\" ConfigMap")
+		return nil, errors.WithMessage(err, "error listing the Daemonsets")
 	}
 
 	podCIDR := extractPodCIDRFromNetConfigJSON(cm)
-
 	if podCIDR == nil {
 		return nil, nil
 	}
 
 	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: cni.CanalFlannel,
+		NetworkPlugin: cni.Flannel,
 		PodCIDRs:      []string{*podCIDR},
 	}
 
@@ -75,21 +102,4 @@ func discoverCanalFlannelNetwork(client controllerClient.Client) (*ClusterNetwor
 	}
 
 	return clusterNetwork, nil
-}
-
-func extractPodCIDRFromNetConfigJSON(cm *corev1.ConfigMap) *string {
-	netConfJSON := cm.Data["net-conf.json"]
-	if netConfJSON == "" {
-		return nil
-	}
-	var netConf struct {
-		Network string `json:"Network"`
-		// All the other fields are ignored by Unmarshal
-	}
-
-	if err := json.Unmarshal([]byte(netConfJSON), &netConf); err == nil {
-		return &netConf.Network
-	}
-
-	return nil
 }
