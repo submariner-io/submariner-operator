@@ -76,20 +76,20 @@ type SubmarinerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	NatEnabled                bool                    `json:"natEnabled"`
-	AirGappedDeployment       bool                    `json:"airGappedDeployment,omitempty"`
-	ColorCodes                string                  `json:"colorCodes,omitempty"`
-	ClusterID                 string                  `json:"clusterID"`
-	ServiceCIDR               string                  `json:"serviceCIDR,omitempty"`
-	ClusterCIDR               string                  `json:"clusterCIDR,omitempty"`
-	GlobalCIDR                string                  `json:"globalCIDR,omitempty"`
-	NetworkPlugin             string                  `json:"networkPlugin,omitempty"`
-	GatewayDaemonSetStatus    DaemonSetStatus         `json:"gatewayDaemonSetStatus,omitempty"`
-	RouteAgentDaemonSetStatus DaemonSetStatus         `json:"routeAgentDaemonSetStatus,omitempty"`
-	GlobalnetDaemonSetStatus  DaemonSetStatus         `json:"globalnetDaemonSetStatus,omitempty"`
-	LoadBalancerStatus        LoadBalancerStatus      `json:"loadBalancerStatus,omitempty"`
-	Gateways                  *[]submv1.GatewayStatus `json:"gateways,omitempty"`
-	DeploymentInfo            DeploymentInfo          `json:"deploymentInfo,omitempty"`
+	NatEnabled                bool                      `json:"natEnabled"`
+	AirGappedDeployment       bool                      `json:"airGappedDeployment,omitempty"`
+	ColorCodes                string                    `json:"colorCodes,omitempty"`
+	ClusterID                 string                    `json:"clusterID"`
+	ServiceCIDR               string                    `json:"serviceCIDR,omitempty"`
+	ClusterCIDR               string                    `json:"clusterCIDR,omitempty"`
+	GlobalCIDR                string                    `json:"globalCIDR,omitempty"`
+	NetworkPlugin             string                    `json:"networkPlugin,omitempty"`
+	GatewayDaemonSetStatus    DaemonSetStatusWrapper    `json:"gatewayDaemonSetStatus,omitempty"`
+	RouteAgentDaemonSetStatus DaemonSetStatusWrapper    `json:"routeAgentDaemonSetStatus,omitempty"`
+	GlobalnetDaemonSetStatus  DaemonSetStatusWrapper    `json:"globalnetDaemonSetStatus,omitempty"`
+	LoadBalancerStatus        LoadBalancerStatusWrapper `json:"loadBalancerStatus,omitempty"`
+	Gateways                  *[]submv1.GatewayStatus   `json:"gateways,omitempty"`
+	DeploymentInfo            DeploymentInfo            `json:"deploymentInfo,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -118,11 +118,11 @@ func init() {
 	SchemeBuilder.Register(&Submariner{}, &SubmarinerList{})
 }
 
-type LoadBalancerStatus struct {
+type LoadBalancerStatusWrapper struct {
 	Status *corev1.LoadBalancerStatus `json:"status,omitempty"`
 }
 
-type DaemonSetStatus struct {
+type DaemonSetStatusWrapper struct {
 	LastResourceVersion       string                   `json:"lastResourceVersion,omitempty"`
 	Status                    *appsv1.DaemonSetStatus  `json:"status,omitempty"`
 	NonReadyContainerStates   *[]corev1.ContainerState `json:"nonReadyContainerStates,omitempty"`
