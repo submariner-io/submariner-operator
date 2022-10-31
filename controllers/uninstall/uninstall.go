@@ -26,6 +26,7 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -58,10 +59,11 @@ type Component struct {
 }
 
 type Info struct {
-	Client     client.Client
-	Components []*Component
-	StartTime  time.Time
-	Log        logr.Logger
+	Client       client.Client
+	Components   []*Component
+	GetImageInfo func(imageName, componentName string) (string, corev1.PullPolicy)
+	StartTime    time.Time
+	Log          logr.Logger
 }
 
 func (c *Component) isInstalled() bool {
@@ -198,7 +200,7 @@ func (i *Info) createUninstallResource(ctx context.Context, c *Component) error 
 }
 
 func (i *Info) createUninstallDeploymentFrom(ctx context.Context, deployment *appsv1.Deployment) error {
-	convertPodSpecContainersToUninstall(&deployment.Spec.Template.Spec)
+	i.convertPodSpecContainersToUninstall(&deployment.Spec.Template.Spec)
 
 	err := i.Client.Create(ctx, deployment)
 	if err != nil {
@@ -213,7 +215,7 @@ func (i *Info) createUninstallDeploymentFrom(ctx context.Context, deployment *ap
 }
 
 func (i *Info) createUninstallDaemonSetFrom(ctx context.Context, daemonSet *appsv1.DaemonSet) error {
-	convertPodSpecContainersToUninstall(&daemonSet.Spec.Template.Spec)
+	i.convertPodSpecContainersToUninstall(&daemonSet.Spec.Template.Spec)
 
 	err := i.Client.Create(ctx, daemonSet)
 	if err != nil {
@@ -309,19 +311,21 @@ func (i *Info) cleanup(ctx context.Context) {
 	}
 }
 
-func convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
+func (i *Info) convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
 	// We're going to use the PodSpec to run a one-time task by using an init container to run the task.
 	// See http://blog.itaysk.com/2017/12/26/the-single-use-daemonset-pattern-and-prepulling-images-in-kubernetes
 	// for more details.
 	podSpec.InitContainers = podSpec.Containers
 	podSpec.InitContainers[0].Env = append(podSpec.InitContainers[0].Env, corev1.EnvVar{Name: ContainerEnvVar, Value: "true"})
 
+	image, pullPolicy := i.GetImageInfo(names.NettestImage, names.NettestComponent)
+
 	podSpec.Containers = []corev1.Container{
 		{
-			Name: "pause",
-			// Note: K8s 1.25 is moving to a new image location, registry.k8s.io.
-			// See https://github.com/kubernetes/kubernetes/pull/109938.
-			Image: "k8s.gcr.io/pause",
+			Name:            "pause",
+			Image:           image,
+			ImagePullPolicy: pullPolicy,
+			Command:         []string{"sleep", "infinity"},
 		},
 	}
 }
