@@ -27,8 +27,10 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -81,6 +83,10 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 		Components: components,
 		StartTime:  instance.DeletionTimestamp.Time,
 		Log:        log,
+		GetImageInfo: func(imageName, componentName string) (string, corev1.PullPolicy) {
+			return getImagePath(instance, imageName, componentName),
+				images.GetPullPolicy(instance.Spec.Version, instance.Spec.ImageOverrides[componentName])
+		},
 	}
 
 	requeue, timedOut, err := uninstallInfo.Run(ctx)

@@ -30,6 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	ctrlresource "github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -83,6 +84,10 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 		Components: components,
 		StartTime:  instance.DeletionTimestamp.Time,
 		Log:        log,
+		GetImageInfo: func(imageName, componentName string) (string, corev1.PullPolicy) {
+			return getImagePath(instance, imageName, componentName),
+				images.GetPullPolicy(instance.Spec.Version, instance.Spec.ImageOverrides[componentName])
+		},
 	}
 
 	requeue, _, err := uninstallInfo.Run(ctx)
