@@ -2103,12 +2103,6 @@ rules:
     verbs:
       - update
   - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
       - apps
     resources:
       - replicasets
@@ -2295,12 +2289,6 @@ rules:
       - deployments/finalizers
     verbs:
       - update
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
   - apiGroups:
       - apps
     resources:
@@ -2490,12 +2478,6 @@ rules:
     verbs:
       - update
   - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
       - apps
     resources:
       - replicasets
@@ -2672,12 +2654,6 @@ rules:
       - deployments/finalizers
     verbs:
       - update
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
   - apiGroups:
       - apps
     resources:
