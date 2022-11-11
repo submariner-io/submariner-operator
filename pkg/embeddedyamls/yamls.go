@@ -2109,12 +2109,6 @@ rules:
     verbs:
       - get
   - apiGroups:
-      - apps
-    resources:
-      - replicasets
-    verbs:
-      - get
-  - apiGroups:
       - submariner.io
     resources:
       - '*'
@@ -2300,12 +2294,6 @@ rules:
       - ""
     resources:
       - pods
-    verbs:
-      - get
-  - apiGroups:
-      - apps
-    resources:
-      - replicasets
     verbs:
       - get
   - apiGroups:
@@ -2498,12 +2486,6 @@ rules:
     verbs:
       - get
   - apiGroups:
-      - apps
-    resources:
-      - replicasets
-    verbs:
-      - get
-  - apiGroups:
       - submariner.io
     resources:
       - '*'
@@ -2679,12 +2661,6 @@ rules:
       - ""
     resources:
       - pods
-    verbs:
-      - get
-  - apiGroups:
-      - apps
-    resources:
-      - replicasets
     verbs:
       - get
   - apiGroups:
