@@ -2676,12 +2676,6 @@ rules:
     verbs:
       - update
   - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
       - apps
     resources:
       - replicasets
