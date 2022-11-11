@@ -2118,7 +2118,6 @@ rules:
       - submariner.io
     resources:
       - '*'
-      - servicediscoveries
     verbs:
       - '*'
 `
@@ -2312,7 +2311,6 @@ rules:
       - submariner.io
     resources:
       - '*'
-      - servicediscoveries
     verbs:
       - '*'
   - apiGroups:
@@ -2507,7 +2505,6 @@ rules:
       - submariner.io
     resources:
       - '*'
-      - servicediscoveries
     verbs:
       - '*'
 `
@@ -2691,7 +2688,6 @@ rules:
       - submariner.io
     resources:
       - '*'
-      - servicediscoveries
     verbs:
       - '*'
 `
