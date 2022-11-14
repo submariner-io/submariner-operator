@@ -19,9 +19,9 @@ require (
 	github.com/submariner-io/submariner v0.14.0-m1.0.20220926102553-d3362895ea5e
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.4.0
-	k8s.io/api v0.25.0
+	k8s.io/api v0.25.4
 	k8s.io/apiextensions-apiserver v0.25.0
-	k8s.io/apimachinery v0.25.0
+	k8s.io/apimachinery v0.25.4
 	k8s.io/client-go v0.25.0
 	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73
 	sigs.k8s.io/controller-runtime v0.12.3
