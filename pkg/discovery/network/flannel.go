@@ -31,7 +31,7 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// nolint:nilnil // Intentional as the purpose is to discover.
+//nolint:nilnil // Intentional as the purpose is to discover.
 func discoverFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
 	daemonsets := &appsv1.DaemonSetList{}
 
