@@ -34,9 +34,8 @@ command -v subctl || curl -Ls https://get.submariner.io | VERSION=devel bash
 load_settings
 verify="connectivity"
 [[ "${LIGHTHOUSE}" != "true" ]] || verify="service-discovery"
-contexts="${clusters[*]}"
 
 # Run generic E2E tests between the clusters
 subctl verify --only "${verify}" --submariner-namespace="$subm_ns" \
     --verbose --connection-timeout 20 --connection-attempts 4 \
-    --kubecontexts "${contexts//${IFS:0:1}/,}"
+    --context "${clusters[0]}" --tocontext "${clusters[1]}"

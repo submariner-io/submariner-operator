@@ -34,7 +34,7 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-// nolint:wrapcheck // No need to wrap errors here.
+//nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.Submariner,
 	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger,
 ) error {

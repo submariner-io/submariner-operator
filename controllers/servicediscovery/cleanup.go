@@ -30,6 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/constants"
 	ctrlresource "github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
+	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -83,11 +84,15 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 		Components: components,
 		StartTime:  instance.DeletionTimestamp.Time,
 		Log:        log,
+		GetImageInfo: func(imageName, componentName string) (string, corev1.PullPolicy) {
+			return getImagePath(instance, imageName, componentName),
+				images.GetPullPolicy(instance.Spec.Version, instance.Spec.ImageOverrides[componentName])
+		},
 	}
 
 	requeue, _, err := uninstallInfo.Run(ctx)
 	if err != nil {
-		return reconcile.Result{}, err // nolint:wrapcheck // No need to wrap
+		return reconcile.Result{}, err //nolint:wrapcheck // No need to wrap
 	}
 
 	if requeue {
@@ -97,7 +102,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 	return reconcile.Result{}, r.removeFinalizer(ctx, instance)
 }
 
-// nolint:wrapcheck // No need to wrap
+//nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) error {
 	return finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.ScopedClient, instance.Namespace, instance),
 		instance, constants.CleanupFinalizer)
