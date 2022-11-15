@@ -58,6 +58,5 @@ rules:
       - submariner.io
     resources:
       - '*'
-      - servicediscoveries
     verbs:
       - '*'
