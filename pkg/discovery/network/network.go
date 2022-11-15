@@ -62,15 +62,15 @@ func (cn *ClusterNetwork) IsComplete() bool {
 	return cn != nil && len(cn.ServiceCIDRs) > 0 && len(cn.PodCIDRs) > 0
 }
 
-func Discover(client controllerClient.Client, operatorNamespace string) (*ClusterNetwork, error) {
-	discovery, err := networkPluginsDiscovery(client)
+func Discover(ctx context.Context, client controllerClient.Client, operatorNamespace string) (*ClusterNetwork, error) {
+	discovery, err := networkPluginsDiscovery(ctx, client)
 	if err != nil {
 		return nil, err
 	}
 
 	if discovery != nil {
 		// TODO: The other branch of this if will not try to find the globalCIDRs
-		globalCIDR, _ := getGlobalCIDRs(client, operatorNamespace)
+		globalCIDR, _ := getGlobalCIDRs(ctx, client, operatorNamespace)
 		discovery.GlobalCIDR = globalCIDR
 
 		if discovery.IsComplete() {
@@ -80,7 +80,7 @@ func Discover(client controllerClient.Client, operatorNamespace string) (*Cluste
 		// If the info we got from the non-generic plugins is incomplete
 		// try to complete with the generic discovery mechanisms
 		if len(discovery.ServiceCIDRs) == 0 || len(discovery.PodCIDRs) == 0 {
-			genericNet, err := discoverGenericNetwork(client)
+			genericNet, err := discoverGenericNetwork(ctx, client)
 			if err != nil {
 				return nil, err
 			}
@@ -100,10 +100,10 @@ func Discover(client controllerClient.Client, operatorNamespace string) (*Cluste
 	}
 
 	// If nothing specific was discovered, use the generic discovery
-	return discoverGenericNetwork(client)
+	return discoverGenericNetwork(ctx, client)
 }
 
-type pluginDiscoveryFn func(controllerClient.Client) (*ClusterNetwork, error)
+type pluginDiscoveryFn func(context.Context, controllerClient.Client) (*ClusterNetwork, error)
 
 var discoverFunctions = []pluginDiscoveryFn{}
 
@@ -112,15 +112,15 @@ func registerNetworkPluginDiscoveryFunction(function pluginDiscoveryFn) {
 }
 
 //nolint:nilnil // Intentional as the purpose is to discover.
-func networkPluginsDiscovery(client controllerClient.Client) (*ClusterNetwork, error) {
+func networkPluginsDiscovery(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	for _, function := range discoverFunctions {
-		network, err := function(client)
+		network, err := function(ctx, client)
 		if err != nil || network != nil {
 			return network, err
 		}
 	}
 
-	flanelNet, err := discoverFlannelNetwork(client)
+	flanelNet, err := discoverFlannelNetwork(ctx, client)
 	if err != nil || flanelNet != nil {
 		return flanelNet, err
 	}
@@ -128,14 +128,14 @@ func networkPluginsDiscovery(client controllerClient.Client) (*ClusterNetwork, e
 	return nil, nil
 }
 
-func getGlobalCIDRs(operatorClient controllerClient.Client, operatorNamespace string) (string, error) {
+func getGlobalCIDRs(ctx context.Context, operatorClient controllerClient.Client, operatorNamespace string) (string, error) {
 	if operatorClient == nil {
 		return "", nil
 	}
 
 	existingCfg := v1alpha1.Submariner{}
 
-	err := operatorClient.Get(context.TODO(), types.NamespacedName{Namespace: operatorNamespace, Name: names.SubmarinerCrName}, &existingCfg)
+	err := operatorClient.Get(ctx, types.NamespacedName{Namespace: operatorNamespace, Name: names.SubmarinerCrName}, &existingCfg)
 	if err != nil {
 		return "", errors.Wrap(err, "error retrieving Submariner resource")
 	}

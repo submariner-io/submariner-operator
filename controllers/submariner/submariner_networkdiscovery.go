@@ -19,6 +19,7 @@ limitations under the License.
 package submariner
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-logr/logr"
@@ -27,7 +28,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 )
 
-func (r *Reconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
+func (r *Reconciler) getClusterNetwork(ctx context.Context, submariner *submopv1a1.Submariner) (*network.ClusterNetwork, error) {
 	const UnknownPlugin = "unknown"
 
 	// If a previously cached discovery exists, use that
@@ -35,7 +36,7 @@ func (r *Reconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*netw
 		return r.config.ClusterNetwork, nil
 	}
 
-	clusterNetwork, err := network.Discover(r.config.GeneralClient, submariner.Namespace)
+	clusterNetwork, err := network.Discover(ctx, r.config.GeneralClient, submariner.Namespace)
 	if err != nil {
 		log.Error(err, "Error trying to discover network")
 	}
@@ -53,8 +54,9 @@ func (r *Reconciler) getClusterNetwork(submariner *submopv1a1.Submariner) (*netw
 	return r.config.ClusterNetwork, errors.Wrap(err, "error discovering cluster network")
 }
 
-func (r *Reconciler) discoverNetwork(submariner *submopv1a1.Submariner, log logr.Logger) (*network.ClusterNetwork, error) {
-	clusterNetwork, err := r.getClusterNetwork(submariner)
+func (r *Reconciler) discoverNetwork(ctx context.Context, submariner *submopv1a1.Submariner, log logr.Logger,
+) (*network.ClusterNetwork, error) {
+	clusterNetwork, err := r.getClusterNetwork(ctx, submariner)
 	submariner.Status.ClusterCIDR = getCIDR(
 		log,
 		"Cluster",

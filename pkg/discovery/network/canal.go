@@ -35,7 +35,7 @@ func init() {
 }
 
 //nolint:nilnil // Intentional as the purpose is to discover.
-func discoverCanalFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+func discoverCanalFlannelNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	// TODO: this must be smarter, looking for the canal daemonset, with labels k8s-app=canal
 	//  and then the reference on the container volumes:
 	//   - configMap:
@@ -44,7 +44,7 @@ func discoverCanalFlannelNetwork(client controllerClient.Client) (*ClusterNetwor
 	//        name: flannel-cfg
 	cm := &corev1.ConfigMap{}
 
-	err := client.Get(context.TODO(), types.NamespacedName{Namespace: "kube-system", Name: "canal-config"}, cm)
+	err := client.Get(ctx, types.NamespacedName{Namespace: "kube-system", Name: "canal-config"}, cm)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, nil
@@ -65,7 +65,7 @@ func discoverCanalFlannelNetwork(client controllerClient.Client) (*ClusterNetwor
 	}
 
 	// Try to detect the service CIDRs using the generic functions
-	clusterIPRange, err := findClusterIPRange(client)
+	clusterIPRange, err := findClusterIPRange(ctx, client)
 	if err != nil {
 		return nil, err
 	}

@@ -19,6 +19,8 @@ limitations under the License.
 package network_test
 
 import (
+	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -61,7 +63,7 @@ func testOS4DiscoveryWith(json []byte) (*network.ClusterNetwork, error) {
 	err := obj.UnmarshalJSON(json)
 	Expect(err).NotTo(HaveOccurred())
 
-	return network.Discover(fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(obj).Build(), "")
+	return network.Discover(context.TODO(), fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(obj).Build(), "")
 }
 
 func getNetworkJSON() []byte {

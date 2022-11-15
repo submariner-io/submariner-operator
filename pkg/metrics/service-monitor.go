@@ -44,7 +44,8 @@ type ServiceMonitorUpdater func(*monitoringv1.ServiceMonitor) error
 
 // CreateServiceMonitors creates ServiceMonitors objects based on an array of Service objects.
 // If CR ServiceMonitor is not registered in the Cluster it will not attempt at creating resources.
-func CreateServiceMonitors(config *rest.Config, ns string, services []*v1.Service) ([]*monitoringv1.ServiceMonitor, error) {
+func CreateServiceMonitors(ctx context.Context, config *rest.Config, ns string, services []*v1.Service,
+) ([]*monitoringv1.ServiceMonitor, error) {
 	// check if we can even create ServiceMonitors
 	exists, err := hasServiceMonitor(config)
 	if err != nil {
@@ -63,7 +64,7 @@ func CreateServiceMonitors(config *rest.Config, ns string, services []*v1.Servic
 		return nil, errors.Wrap(err, "error getting kube client")
 	}
 
-	if _, err := cs.CoreV1().Namespaces().Get(context.TODO(), openshiftMonitoringNS, metav1.GetOptions{}); err == nil {
+	if _, err := cs.CoreV1().Namespaces().Get(ctx, openshiftMonitoringNS, metav1.GetOptions{}); err == nil {
 		ns = openshiftMonitoringNS
 	} else if !apierrors.IsNotFound(err) {
 		log.Error(err, "Error checking for the OpenShift monitoring namespace")
@@ -79,7 +80,7 @@ func CreateServiceMonitors(config *rest.Config, ns string, services []*v1.Servic
 
 		sm := GenerateServiceMonitor(ns, s)
 
-		smc, err := mclient.ServiceMonitors(ns).Create(context.TODO(), sm, metav1.CreateOptions{})
+		smc, err := mclient.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating ServiceMonitor")
 		}

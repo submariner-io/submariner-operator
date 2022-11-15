@@ -19,6 +19,8 @@ limitations under the License.
 package network_test
 
 import (
+	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -55,7 +57,7 @@ var _ = Describe("Canal Flannel Network", func() {
 
 func testDiscoverCanalFlannelWith(objects ...controllerClient.Object) *network.ClusterNetwork {
 	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(client, "")
+	clusterNet, err := network.Discover(context.TODO(), client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet
@@ -63,7 +65,7 @@ func testDiscoverCanalFlannelWith(objects ...controllerClient.Object) *network.C
 
 func testDiscoverWith(objects ...controllerClient.Object) *network.ClusterNetwork {
 	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(client, "")
+	clusterNet, err := network.Discover(context.TODO(), client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet
