@@ -28,8 +28,8 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func FindPodCommandParameter(client controllerClient.Client, labelSelector, parameter string) (string, error) {
-	pod, err := FindPod(client, labelSelector)
+func FindPodCommandParameter(ctx context.Context, client controllerClient.Client, labelSelector, parameter string) (string, error) {
+	pod, err := FindPod(ctx, client, labelSelector)
 
 	if err != nil || pod == nil {
 		return "", err
@@ -55,7 +55,7 @@ func FindPodCommandParameter(client controllerClient.Client, labelSelector, para
 }
 
 //nolint:nilnil // Intentional as the purpose is to find.
-func FindPod(client controllerClient.Client, labelSelector string) (*corev1.Pod, error) {
+func FindPod(ctx context.Context, client controllerClient.Client, labelSelector string) (*corev1.Pod, error) {
 	selector, err := labels.Parse(labelSelector)
 	if err != nil {
 		return nil, errors.WithMessagef(err, "error parsing label selector %q", labelSelector)
@@ -63,7 +63,7 @@ func FindPod(client controllerClient.Client, labelSelector string) (*corev1.Pod,
 
 	pods := &corev1.PodList{}
 
-	err = client.List(context.TODO(), pods, controllerClient.InNamespace(""), controllerClient.MatchingLabelsSelector{Selector: selector})
+	err = client.List(ctx, pods, controllerClient.InNamespace(""), controllerClient.MatchingLabelsSelector{Selector: selector})
 	if err != nil {
 		return nil, errors.WithMessagef(err, "error listing Pods by label selector %q", labelSelector)
 	}

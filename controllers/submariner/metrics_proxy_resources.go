@@ -19,6 +19,7 @@ limitations under the License.
 package submariner
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/go-logr/logr"
@@ -32,10 +33,9 @@ import (
 )
 
 //nolint:wrapcheck // No need to wrap errors here.
-func (r *Reconciler) reconcileMetricsProxyDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
-	error,
-) {
-	return apply.DaemonSet(instance, newMetricsProxyDaemonSet(instance), reqLogger,
+func (r *Reconciler) reconcileMetricsProxyDaemonSet(ctx context.Context, instance *v1alpha1.Submariner, reqLogger logr.Logger,
+) (*appsv1.DaemonSet, error) {
+	return apply.DaemonSet(ctx, instance, newMetricsProxyDaemonSet(instance), reqLogger,
 		r.config.ScopedClient, r.config.Scheme)
 }
 

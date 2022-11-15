@@ -19,6 +19,7 @@ limitations under the License.
 package network_test
 
 import (
+	"context"
 	"fmt"
 
 	. "github.com/onsi/ginkgo"
@@ -267,7 +268,7 @@ var _ = Describe("Generic Network", func() {
 	When("No kube-api pod exists and invalid service creation returns no error", func() {
 		It("Should return error and nil cluster network", func() {
 			client := fakeClient.NewClientBuilder().WithScheme(scheme.Scheme).Build()
-			clusterNet, err := network.Discover(client, "")
+			clusterNet, err := network.Discover(context.TODO(), client, "")
 			Expect(err).To(HaveOccurred())
 			Expect(clusterNet).To(BeNil())
 		})
@@ -279,7 +280,7 @@ var _ = Describe("Generic Network", func() {
 			client := fake.NewReactingClient(nil).AddReactor(fake.Create, &corev1.Service{},
 				fake.FailingReaction(fmt.Errorf("%s", testServiceCIDR)))
 
-			clusterNet, err := network.Discover(client, "")
+			clusterNet, err := network.Discover(context.TODO(), client, "")
 			Expect(err).To(HaveOccurred())
 			Expect(clusterNet).To(BeNil())
 		})
@@ -308,7 +309,7 @@ var _ = Describe("Generic Network", func() {
 
 func testDiscoverGenericWith(objects ...controllerClient.Object) *network.ClusterNetwork {
 	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(client, "")
+	clusterNet, err := network.Discover(context.TODO(), client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet

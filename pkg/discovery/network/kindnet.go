@@ -19,6 +19,8 @@ limitations under the License.
 package network
 
 import (
+	"context"
+
 	"github.com/submariner-io/submariner/pkg/cni"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -27,8 +29,8 @@ func init() {
 	registerNetworkPluginDiscoveryFunction(discoverKindNetwork)
 }
 
-func discoverKindNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
-	kindNetPod, err := FindPod(client, "app=kindnet")
+func discoverKindNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
+	kindNetPod, err := FindPod(ctx, client, "app=kindnet")
 
 	if err != nil || kindNetPod == nil {
 		return nil, err
@@ -47,7 +49,7 @@ func discoverKindNetwork(client controllerClient.Client) (*ClusterNetwork, error
 		}
 	}
 
-	clusterIPRange, err := findClusterIPRange(client)
+	clusterIPRange, err := findClusterIPRange(ctx, client)
 	if err == nil && clusterIPRange != "" {
 		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
 	}

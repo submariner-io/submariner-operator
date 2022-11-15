@@ -19,6 +19,8 @@ limitations under the License.
 package submariner
 
 import (
+	"context"
+
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
@@ -32,16 +34,15 @@ import (
 )
 
 //nolint:wrapcheck // No need to wrap errors here.
-func (r *Reconciler) reconcileGlobalnetDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
-	error,
-) {
-	daemonSet, err := apply.DaemonSet(instance, newGlobalnetDaemonSet(instance, names.GlobalnetComponent), reqLogger,
+func (r *Reconciler) reconcileGlobalnetDaemonSet(ctx context.Context, instance *v1alpha1.Submariner, reqLogger logr.Logger,
+) (*appsv1.DaemonSet, error) {
+	daemonSet, err := apply.DaemonSet(ctx, instance, newGlobalnetDaemonSet(instance, names.GlobalnetComponent), reqLogger,
 		r.config.ScopedClient, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
 
-	err = metrics.Setup(names.GlobalnetComponent, instance.Namespace, "app", names.MetricsProxyComponent,
+	err = metrics.Setup(ctx, names.GlobalnetComponent, instance.Namespace, "app", names.MetricsProxyComponent,
 		instance, globalnetMetricsServicePort, r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
 
 	return daemonSet, err

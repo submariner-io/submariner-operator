@@ -19,6 +19,7 @@ limitations under the License.
 package submariner
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -34,10 +35,9 @@ import (
 )
 
 //nolint:wrapcheck // No need to wrap errors here.
-func (r *Reconciler) reconcileRouteagentDaemonSet(instance *v1alpha1.Submariner, reqLogger logr.Logger) (*appsv1.DaemonSet,
-	error,
-) {
-	return apply.DaemonSet(instance, newRouteAgentDaemonSet(instance, names.RouteAgentComponent), reqLogger, r.config.ScopedClient,
+func (r *Reconciler) reconcileRouteagentDaemonSet(ctx context.Context, instance *v1alpha1.Submariner, reqLogger logr.Logger,
+) (*appsv1.DaemonSet, error) {
+	return apply.DaemonSet(ctx, instance, newRouteAgentDaemonSet(instance, names.RouteAgentComponent), reqLogger, r.config.ScopedClient,
 		r.config.Scheme)
 }
 

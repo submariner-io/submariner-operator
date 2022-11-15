@@ -41,14 +41,14 @@ func init() {
 	registerNetworkPluginDiscoveryFunction(discoverOvnKubernetesNetwork)
 }
 
-func discoverOvnKubernetesNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
-	ovnDBPod, err := FindPod(client, "name=ovnkube-db")
+func discoverOvnKubernetesNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
+	ovnDBPod, err := FindPod(ctx, client, "name=ovnkube-db")
 
 	if err != nil || ovnDBPod == nil {
 		return nil, err
 	}
 
-	err = client.Get(context.TODO(), types.NamespacedName{Namespace: ovnDBPod.Namespace, Name: ovnKubeService}, &corev1.Service{})
+	err = client.Get(ctx, types.NamespacedName{Namespace: ovnDBPod.Namespace, Name: ovnKubeService}, &corev1.Service{})
 	if err != nil {
 		return nil, fmt.Errorf("error finding %q service in %q namespace", ovnKubeService, ovnDBPod.Namespace)
 	}
@@ -76,7 +76,7 @@ func discoverOvnKubernetesNetwork(client controllerClient.Client) (*ClusterNetwo
 	// If the cluster/service CIDRs weren't found we leave it to the generic functions to figure out later
 	ovnConfig := &corev1.ConfigMap{}
 
-	err = client.Get(context.TODO(), types.NamespacedName{Namespace: ovnDBPod.Namespace, Name: "ovn-config"}, ovnConfig)
+	err = client.Get(ctx, types.NamespacedName{Namespace: ovnDBPod.Namespace, Name: "ovn-config"}, ovnConfig)
 	if err == nil {
 		if netCidr, ok := ovnConfig.Data["net_cidr"]; ok {
 			clusterNetwork.PodCIDRs = []string{netCidr}

@@ -46,7 +46,7 @@ type clusterInfo struct {
 	GlobalCidr []string `json:"global_cidr"`
 }
 
-func CreateConfigMap(client controllerClient.Client, globalnetEnabled bool, defaultGlobalCidrRange string,
+func CreateConfigMap(ctx context.Context, client controllerClient.Client, globalnetEnabled bool, defaultGlobalCidrRange string,
 	defaultGlobalClusterSize uint, namespace string,
 ) error {
 	gnConfigMap, err := NewGlobalnetConfigMap(globalnetEnabled, defaultGlobalCidrRange, defaultGlobalClusterSize, namespace)
@@ -54,7 +54,7 @@ func CreateConfigMap(client controllerClient.Client, globalnetEnabled bool, defa
 		return errors.Wrap(err, "error creating config map")
 	}
 
-	err = client.Create(context.TODO(), gnConfigMap)
+	err = client.Create(ctx, gnConfigMap)
 	if err == nil || apierrors.IsAlreadyExists(err) {
 		return nil
 	}
@@ -101,7 +101,7 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 	return cm, nil
 }
 
-func updateConfigMap(client controllerClient.Client, configMap *corev1.ConfigMap, newCluster clusterInfo,
+func updateConfigMap(ctx context.Context, client controllerClient.Client, configMap *corev1.ConfigMap, newCluster clusterInfo,
 ) error {
 	var existingInfo []clusterInfo
 
@@ -129,20 +129,20 @@ func updateConfigMap(client controllerClient.Client, configMap *corev1.ConfigMap
 	}
 
 	configMap.Data[clusterInfoKey] = string(data)
-	err = client.Update(context.TODO(), configMap)
+	err = client.Update(ctx, configMap)
 
 	return errors.Wrapf(err, "error updating ConfigMap")
 }
 
 //nolint:wrapcheck // No need to wrap here
-func GetConfigMap(client controllerClient.Client, namespace string) (*corev1.ConfigMap, error) {
+func GetConfigMap(ctx context.Context, client controllerClient.Client, namespace string) (*corev1.ConfigMap, error) {
 	cm := &corev1.ConfigMap{}
-	return cm, client.Get(context.TODO(), types.NamespacedName{Namespace: namespace, Name: globalCIDRConfigMapName}, cm)
+	return cm, client.Get(ctx, types.NamespacedName{Namespace: namespace, Name: globalCIDRConfigMapName}, cm)
 }
 
 //nolint:wrapcheck // No need to wrap here
-func DeleteConfigMap(client controllerClient.Client, namespace string) error {
-	return client.Delete(context.TODO(), &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
+func DeleteConfigMap(ctx context.Context, client controllerClient.Client, namespace string) error {
+	return client.Delete(ctx, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
 		Name:      globalCIDRConfigMapName,
 		Namespace: namespace,
 	}})

@@ -127,19 +127,19 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return r.doCleanup(ctx, instance)
 	}
 
-	err = r.ensureLightHouseAgent(instance, reqLogger)
+	err = r.ensureLightHouseAgent(ctx, instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	lighthouseDNSConfigMap := newLighthouseDNSConfigMap(instance)
-	if _, err = apply.ConfigMap(instance, lighthouseDNSConfigMap, reqLogger,
+	if _, err = apply.ConfigMap(ctx, instance, lighthouseDNSConfigMap, reqLogger,
 		r.ScopedClient, r.Scheme); err != nil {
 		log.Error(err, "Error creating the lighthouseCoreDNS configMap")
 		return reconcile.Result{}, errors.Wrap(err, "error reconciling ConfigMap")
 	}
 
-	err = r.ensureLighthouseCoreDNSDeployment(instance, reqLogger)
+	err = r.ensureLighthouseCoreDNSDeployment(ctx, instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -685,14 +685,15 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *Reconciler) ensureLightHouseAgent(instance *submarinerv1alpha1.ServiceDiscovery, reqLogger logr.Logger) error {
+func (r *Reconciler) ensureLightHouseAgent(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery, reqLogger logr.Logger,
+) error {
 	lightHouseAgent := newLighthouseAgent(instance, names.ServiceDiscoveryComponent)
-	if _, err := apply.Deployment(instance, lightHouseAgent, reqLogger,
+	if _, err := apply.Deployment(ctx, instance, lightHouseAgent, reqLogger,
 		r.ScopedClient, r.Scheme); err != nil {
 		return errors.Wrap(err, "error reconciling agent deployment")
 	}
 
-	err := metrics.Setup(names.ServiceDiscoveryComponent, instance.Namespace, "app", names.ServiceDiscoveryComponent,
+	err := metrics.Setup(ctx, names.ServiceDiscoveryComponent, instance.Namespace, "app", names.ServiceDiscoveryComponent,
 		instance, 8082, r.ScopedClient, r.RestConfig, r.Scheme, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "error setting up metrics")
@@ -701,15 +702,17 @@ func (r *Reconciler) ensureLightHouseAgent(instance *submarinerv1alpha1.ServiceD
 	return nil
 }
 
-func (r *Reconciler) ensureLighthouseCoreDNSDeployment(instance *submarinerv1alpha1.ServiceDiscovery, reqLogger logr.Logger) error {
+func (r *Reconciler) ensureLighthouseCoreDNSDeployment(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
+	reqLogger logr.Logger,
+) error {
 	lighthouseCoreDNSDeployment := newLighthouseCoreDNSDeployment(instance)
-	if _, err := apply.Deployment(instance, lighthouseCoreDNSDeployment, reqLogger,
+	if _, err := apply.Deployment(ctx, instance, lighthouseCoreDNSDeployment, reqLogger,
 		r.ScopedClient, r.Scheme); err != nil {
 		log.Error(err, "Error creating the lighthouseCoreDNS deployment")
 		return errors.Wrap(err, "error reconciling coredns deployment")
 	}
 
-	err := metrics.Setup(names.LighthouseCoreDNSComponent, instance.Namespace, "app", names.LighthouseCoreDNSComponent, instance,
+	err := metrics.Setup(ctx, names.LighthouseCoreDNSComponent, instance.Namespace, "app", names.LighthouseCoreDNSComponent, instance,
 		9153, r.ScopedClient, r.RestConfig, r.Scheme, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "error setting up coredns metrics")
@@ -727,7 +730,7 @@ func (r *Reconciler) ensureLighthouseCoreDNSService(ctx context.Context, instanc
 		lighthouseCoreDNSService)
 	if apierrors.IsNotFound(err) {
 		lighthouseCoreDNSService = newLighthouseCoreDNSService(instance)
-		if _, err = apply.Service(instance, lighthouseCoreDNSService, reqLogger,
+		if _, err = apply.Service(ctx, instance, lighthouseCoreDNSService, reqLogger,
 			r.ScopedClient, r.Scheme); err != nil {
 			log.Error(err, "Error creating the lighthouseCoreDNS service")
 

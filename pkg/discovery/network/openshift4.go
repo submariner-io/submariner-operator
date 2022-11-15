@@ -37,7 +37,7 @@ func init() {
 }
 
 //nolint:nilnil // Intentional as the purpose is to discover.
-func discoverOpenShift4Network(client controllerClient.Client) (*ClusterNetwork, error) {
+func discoverOpenShift4Network(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	network := &unstructured.Unstructured{}
 	network.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "config.openshift.io",
@@ -45,7 +45,7 @@ func discoverOpenShift4Network(client controllerClient.Client) (*ClusterNetwork,
 		Version: "v1",
 	})
 
-	err := client.Get(context.TODO(), types.NamespacedName{Name: "cluster"}, network)
+	err := client.Get(ctx, types.NamespacedName{Name: "cluster"}, network)
 	if err != nil {
 		if apierrors.IsNotFound(err) || meta.IsNoMatchError(err) {
 			return nil, nil

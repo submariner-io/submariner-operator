@@ -126,14 +126,14 @@ func main() {
 
 	log.Info("Creating the Lighthouse CRDs")
 
-	if _, err = lighthouse.Ensure(crdUpdater, lighthouse.DataCluster); err != nil {
+	if _, err = lighthouse.Ensure(ctx, crdUpdater, lighthouse.DataCluster); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
 
 	log.Info("Creating the Gateway CRDs")
 
-	if err := gateway.Ensure(crdUpdater); err != nil {
+	if err := gateway.Ensure(ctx, crdUpdater); err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
@@ -176,7 +176,7 @@ func main() {
 		log.Error(err, "Error obtaining a Kubernetes client")
 	}
 
-	if err := metrics.Setup(name, namespace, "name", name, nil, metricsPort, metricsClient, cfg, scheme, log); err != nil {
+	if err := metrics.Setup(ctx, name, namespace, "name", name, nil, metricsPort, metricsClient, cfg, scheme, log); err != nil {
 		log.Error(err, "Error setting up metrics services and monitors")
 	}
 

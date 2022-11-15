@@ -70,24 +70,24 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 	// Broker CRDs
 	crdUpdater := crd.UpdaterFromControllerClient(r.Client)
 
-	err = gateway.Ensure(crdUpdater)
+	err = gateway.Ensure(ctx, crdUpdater)
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
 	// Lighthouse CRDs
-	_, err = lighthouse.Ensure(crdUpdater, lighthouse.BrokerCluster)
+	_, err = lighthouse.Ensure(ctx, crdUpdater, lighthouse.BrokerCluster)
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
 	// Globalnet
-	err = globalnet.ValidateExistingGlobalNetworks(r.Client, request.Namespace)
+	err = globalnet.ValidateExistingGlobalNetworks(ctx, r.Client, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
-	err = globalnet.CreateConfigMap(r.Client, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
+	err = globalnet.CreateConfigMap(ctx, r.Client, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
 		instance.Spec.DefaultGlobalnetClusterSize, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
