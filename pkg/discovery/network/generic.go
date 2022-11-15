@@ -33,8 +33,8 @@ import (
 )
 
 //nolint:nilnil // Intentional as the purpose is to discover.
-func discoverGenericNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
-	clusterNetwork, err := discoverNetwork(client)
+func discoverGenericNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
+	clusterNetwork, err := discoverNetwork(ctx, client)
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +48,10 @@ func discoverGenericNetwork(client controllerClient.Client) (*ClusterNetwork, er
 }
 
 //nolint:nilnil // Intentional as the purpose is to discover.
-func discoverNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+func discoverNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	clusterNetwork := &ClusterNetwork{}
 
-	podIPRange, err := findPodIPRange(client)
+	podIPRange, err := findPodIPRange(ctx, client)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func discoverNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
 		clusterNetwork.PodCIDRs = []string{podIPRange}
 	}
 
-	clusterIPRange, err := findClusterIPRange(client)
+	clusterIPRange, err := findClusterIPRange(ctx, client)
 	if err != nil {
 		return nil, err
 	}
@@ -76,13 +76,13 @@ func discoverNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
 	return nil, nil
 }
 
-func findClusterIPRange(client controllerClient.Client) (string, error) {
-	clusterIPRange, err := findClusterIPRangeFromApiserver(client)
+func findClusterIPRange(ctx context.Context, client controllerClient.Client) (string, error) {
+	clusterIPRange, err := findClusterIPRangeFromApiserver(ctx, client)
 	if err != nil || clusterIPRange != "" {
 		return clusterIPRange, err
 	}
 
-	clusterIPRange, err = findClusterIPRangeFromServiceCreation(client)
+	clusterIPRange, err = findClusterIPRangeFromServiceCreation(ctx, client)
 	if err != nil || clusterIPRange != "" {
 		return clusterIPRange, err
 	}
@@ -90,11 +90,11 @@ func findClusterIPRange(client controllerClient.Client) (string, error) {
 	return "", nil
 }
 
-func findClusterIPRangeFromApiserver(client controllerClient.Client) (string, error) {
-	return FindPodCommandParameter(client, "component=kube-apiserver", "--service-cluster-ip-range")
+func findClusterIPRangeFromApiserver(ctx context.Context, client controllerClient.Client) (string, error) {
+	return FindPodCommandParameter(ctx, client, "component=kube-apiserver", "--service-cluster-ip-range")
 }
 
-func findClusterIPRangeFromServiceCreation(client controllerClient.Client) (string, error) {
+func findClusterIPRangeFromServiceCreation(ctx context.Context, client controllerClient.Client) (string, error) {
 	ns := os.Getenv("WATCH_NAMESPACE")
 	// WATCH_NAMESPACE env should be set to operator's namespace, if running in operator
 	if ns == "" {
@@ -122,7 +122,7 @@ func findClusterIPRangeFromServiceCreation(client controllerClient.Client) (stri
 	}
 
 	// create service to the namespace
-	err := client.Create(context.TODO(), invalidSvcSpec)
+	err := client.Create(ctx, invalidSvcSpec)
 
 	// creating invalid service didn't fail as expected
 	if err == nil {
@@ -152,18 +152,18 @@ func parseServiceCIDRFrom(msg string) (string, error) {
 	return match[1], nil
 }
 
-func findPodIPRange(client controllerClient.Client) (string, error) {
-	podIPRange, err := findPodIPRangeKubeController(client)
+func findPodIPRange(ctx context.Context, client controllerClient.Client) (string, error) {
+	podIPRange, err := findPodIPRangeKubeController(ctx, client)
 	if err != nil || podIPRange != "" {
 		return podIPRange, err
 	}
 
-	podIPRange, err = findPodIPRangeKubeProxy(client)
+	podIPRange, err = findPodIPRangeKubeProxy(ctx, client)
 	if err != nil || podIPRange != "" {
 		return podIPRange, err
 	}
 
-	podIPRange, err = findPodIPRangeFromNodeSpec(client)
+	podIPRange, err = findPodIPRangeFromNodeSpec(ctx, client)
 	if err != nil || podIPRange != "" {
 		return podIPRange, err
 	}
@@ -171,18 +171,18 @@ func findPodIPRange(client controllerClient.Client) (string, error) {
 	return "", nil
 }
 
-func findPodIPRangeKubeController(client controllerClient.Client) (string, error) {
-	return FindPodCommandParameter(client, "component=kube-controller-manager", "--cluster-cidr")
+func findPodIPRangeKubeController(ctx context.Context, client controllerClient.Client) (string, error) {
+	return FindPodCommandParameter(ctx, client, "component=kube-controller-manager", "--cluster-cidr")
 }
 
-func findPodIPRangeKubeProxy(client controllerClient.Client) (string, error) {
-	return FindPodCommandParameter(client, "component=kube-proxy", "--cluster-cidr")
+func findPodIPRangeKubeProxy(ctx context.Context, client controllerClient.Client) (string, error) {
+	return FindPodCommandParameter(ctx, client, "component=kube-proxy", "--cluster-cidr")
 }
 
-func findPodIPRangeFromNodeSpec(client controllerClient.Client) (string, error) {
+func findPodIPRangeFromNodeSpec(ctx context.Context, client controllerClient.Client) (string, error) {
 	nodes := &corev1.NodeList{}
 
-	err := client.List(context.TODO(), nodes)
+	err := client.List(ctx, nodes)
 	if err != nil {
 		return "", errors.WithMessagef(err, "error listing nodes")
 	}

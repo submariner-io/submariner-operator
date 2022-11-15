@@ -118,6 +118,7 @@ func NewReconciler(config *Config) *Reconciler {
 
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=submariner.io,resources=submariners/status,verbs=get;update;patch
+//
 //nolint:gocyclo // Refactoring would yield functions with a lot of params which isn't ideal either.
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.V(2).WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
@@ -154,25 +155,25 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	initialStatus := instance.Status.DeepCopy()
 
-	clusterNetwork, err := r.discoverNetwork(instance, reqLogger)
+	clusterNetwork, err := r.discoverNetwork(ctx, instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	gatewayDaemonSet, err := r.reconcileGatewayDaemonSet(instance, reqLogger)
+	gatewayDaemonSet, err := r.reconcileGatewayDaemonSet(ctx, instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	var loadBalancer *corev1.Service
 	if instance.Spec.LoadBalancerEnabled {
-		loadBalancer, err = r.reconcileLoadBalancer(instance, reqLogger)
+		loadBalancer, err = r.reconcileLoadBalancer(ctx, instance, reqLogger)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 	}
 
-	routeagentDaemonSet, err := r.reconcileRouteagentDaemonSet(instance, reqLogger)
+	routeagentDaemonSet, err := r.reconcileRouteagentDaemonSet(ctx, instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -180,16 +181,16 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	var globalnetDaemonSet *appsv1.DaemonSet
 
 	if instance.Spec.GlobalCIDR != "" {
-		if globalnetDaemonSet, err = r.reconcileGlobalnetDaemonSet(instance, reqLogger); err != nil {
+		if globalnetDaemonSet, err = r.reconcileGlobalnetDaemonSet(ctx, instance, reqLogger); err != nil {
 			return reconcile.Result{}, err
 		}
 	}
 
-	if _, err = r.reconcileMetricsProxyDaemonSet(instance, reqLogger); err != nil {
+	if _, err = r.reconcileMetricsProxyDaemonSet(ctx, instance, reqLogger); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileNetworkPluginSyncerDeployment(instance, clusterNetwork, reqLogger); err != nil {
+	if err := r.reconcileNetworkPluginSyncerDeployment(ctx, instance, clusterNetwork, reqLogger); err != nil {
 		return reconcile.Result{}, err
 	}
 

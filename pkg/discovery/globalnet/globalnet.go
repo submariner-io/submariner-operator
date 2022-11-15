@@ -19,6 +19,7 @@ limitations under the License.
 package globalnet
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -324,8 +325,8 @@ func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config, statu
 	return globalnetCIDR, nil
 }
 
-func GetGlobalNetworks(client controllerClient.Client, brokerNamespace string) (*Info, *v1.ConfigMap, error) {
-	configMap, err := GetConfigMap(client, brokerNamespace)
+func GetGlobalNetworks(ctx context.Context, client controllerClient.Client, brokerNamespace string) (*Info, *v1.ConfigMap, error) {
+	configMap, err := GetConfigMap(ctx, client, brokerNamespace)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error retrieving globalnet ConfigMap")
 	}
@@ -440,8 +441,8 @@ func IsValidCIDR(cidr string) error {
 	return nil
 }
 
-func ValidateExistingGlobalNetworks(client controllerClient.Client, namespace string) error {
-	globalnetInfo, _, err := GetGlobalNetworks(client, namespace)
+func ValidateExistingGlobalNetworks(ctx context.Context, client controllerClient.Client, namespace string) error {
+	globalnetInfo, _, err := GetGlobalNetworks(ctx, client, namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil
@@ -459,14 +460,14 @@ func ValidateExistingGlobalNetworks(client controllerClient.Client, namespace st
 	return nil
 }
 
-func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClient controllerClient.Client, brokerNamespace string,
+func AllocateAndUpdateGlobalCIDRConfigMap(ctx context.Context, brokerAdminClient controllerClient.Client, brokerNamespace string,
 	netconfig *Config, status reporter.Interface,
 ) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		status.Start("Retrieving Globalnet information from the Broker")
 		defer status.End()
 
-		globalnetInfo, globalnetConfigMap, err := GetGlobalNetworks(brokerAdminClient, brokerNamespace)
+		globalnetInfo, globalnetConfigMap, err := GetGlobalNetworks(ctx, brokerAdminClient, brokerNamespace)
 		if err != nil {
 			return status.Error(err, "unable to retrieve Globalnet information")
 		}
@@ -490,7 +491,7 @@ func AllocateAndUpdateGlobalCIDRConfigMap(brokerAdminClient controllerClient.Cli
 
 				status.Start("Updating the Globalnet information on the Broker")
 
-				err = updateConfigMap(brokerAdminClient, globalnetConfigMap, newClusterInfo)
+				err = updateConfigMap(ctx, brokerAdminClient, globalnetConfigMap, newClusterInfo)
 				if apierrors.IsConflict(err) {
 					status.Warning("Conflict occurred updating the Globalnet ConfigMap - retrying")
 				} else {

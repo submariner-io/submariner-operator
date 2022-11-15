@@ -32,10 +32,10 @@ import (
 )
 
 //nolint:nilnil // Intentional as the purpose is to discover.
-func discoverFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+func discoverFlannelNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	daemonsets := &appsv1.DaemonSetList{}
 
-	err := client.List(context.TODO(), daemonsets, controllerClient.InNamespace(metav1.NamespaceSystem))
+	err := client.List(ctx, daemonsets, controllerClient.InNamespace(metav1.NamespaceSystem))
 	if err != nil {
 		return nil, errors.WithMessage(err, "error listing the Daemonsets")
 	}
@@ -69,7 +69,7 @@ func discoverFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, er
 	// look for the configmap details using the configmap name discovered from the daemonset
 	cm := &corev1.ConfigMap{}
 
-	err = client.Get(context.TODO(), controllerClient.ObjectKey{
+	err = client.Get(ctx, controllerClient.ObjectKey{
 		Namespace: metav1.NamespaceSystem,
 		Name:      flannelConfigMap,
 	}, cm)
@@ -92,7 +92,7 @@ func discoverFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, er
 	}
 
 	// Try to detect the service CIDRs using the generic functions
-	clusterIPRange, err := findClusterIPRange(client)
+	clusterIPRange, err := findClusterIPRange(ctx, client)
 	if err != nil {
 		return nil, err
 	}

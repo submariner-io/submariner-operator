@@ -247,16 +247,16 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 
 //nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileGatewayDaemonSet(
-	instance *v1alpha1.Submariner, reqLogger logr.Logger,
+	ctx context.Context, instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*appsv1.DaemonSet, error) {
-	daemonSet, err := apply.DaemonSet(instance, newGatewayDaemonSet(instance, names.GatewayComponent),
+	daemonSet, err := apply.DaemonSet(ctx, instance, newGatewayDaemonSet(instance, names.GatewayComponent),
 		reqLogger, r.config.ScopedClient, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
 
-	err = metrics.Setup(names.GatewayComponent, instance.Namespace, "app", names.MetricsProxyComponent, instance, gatewayMetricsServicePort,
-		r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
+	err = metrics.Setup(ctx, names.GatewayComponent, instance.Namespace, "app", names.MetricsProxyComponent, instance,
+		gatewayMetricsServicePort, r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
 
 	return daemonSet, err
 }

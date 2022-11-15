@@ -33,8 +33,8 @@ const (
 
 // Ensure ensures that the required resources are deployed on the target system
 // The resources handled here are the lighthouse CRDs: ServiceImport, ServiceExport and ServiceDiscovery.
-func Ensure(crdUpdater crd.Updater, isBroker bool) (bool, error) {
-	installedMCSSI, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
+func Ensure(ctx context.Context, crdUpdater crd.Updater, isBroker bool) (bool, error) {
+	installedMCSSI, err := crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
 	if err != nil {
 		return installedMCSSI, errors.Wrap(err, "error creating the MCS ServiceImport CRD")
@@ -45,13 +45,13 @@ func Ensure(crdUpdater crd.Updater, isBroker bool) (bool, error) {
 		return installedMCSSI, nil
 	}
 
-	installedMCSSE, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
+	installedMCSSE, err := crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
 	if err != nil {
 		return installedMCSSI || installedMCSSE, errors.Wrap(err, "error creating the MCS ServiceExport CRD")
 	}
 
-	installedSD, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
+	installedSD, err := crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
 	if err != nil {
 		return installedMCSSI || installedMCSSE || installedSD, errors.Wrap(err, "error creating the ServiceDiscovery CRD")
