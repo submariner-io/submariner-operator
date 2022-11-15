@@ -19,6 +19,7 @@ limitations under the License.
 package submariner
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -35,12 +36,12 @@ import (
 )
 
 //nolint:wrapcheck // No need to wrap errors here.
-func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(instance *v1alpha1.Submariner,
+func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(ctx context.Context, instance *v1alpha1.Submariner,
 	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger,
 ) error {
 	// Only OVNKubernetes needs networkplugin-syncer so far
 	if needsNetworkPluginSyncer(instance) {
-		_, err := apply.Deployment(instance, newNetworkPluginSyncerDeployment(instance,
+		_, err := apply.Deployment(ctx, instance, newNetworkPluginSyncerDeployment(instance,
 			clusterNetwork, names.NetworkPluginSyncerComponent), reqLogger, r.config.ScopedClient, r.config.Scheme)
 		return err
 	}

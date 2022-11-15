@@ -37,7 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-func DaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger,
+func DaemonSet(ctx context.Context, owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.Logger,
 	client controllerClient.Client, scheme *runtime.Scheme,
 ) (*appsv1.DaemonSet, error) {
 	var err error
@@ -54,7 +54,7 @@ func DaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.
 			Labels:    map[string]string{},
 		}}
 
-		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
+		result, err := controllerutil.CreateOrUpdate(ctx, client, toUpdate, func() error {
 			toUpdate.Spec = daemonSet.Spec
 			copyLabels(daemonSet, toUpdate)
 
@@ -66,11 +66,11 @@ func DaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.
 				reqLogger.Info("Re-creating a DaemonSet because it has immutable fields", "DaemonSet.Namespace",
 					daemonSet.Namespace, "DaemonSet.Name", daemonSet.Name)
 
-				if err := client.Delete(context.TODO(), toUpdate); err != nil {
+				if err := client.Delete(ctx, toUpdate); err != nil {
 					return err //nolint:wrapcheck // No need to wrap here
 				}
 
-				if err := client.Create(context.TODO(), daemonSet); err != nil {
+				if err := client.Create(ctx, daemonSet); err != nil {
 					return err //nolint:wrapcheck // No need to wrap here
 				}
 
@@ -90,13 +90,13 @@ func DaemonSet(owner metav1.Object, daemonSet *appsv1.DaemonSet, reqLogger logr.
 
 	// Update the status from the server
 	if err == nil {
-		err = client.Get(context.TODO(), types.NamespacedName{Namespace: daemonSet.Namespace, Name: daemonSet.Name}, daemonSet)
+		err = client.Get(ctx, types.NamespacedName{Namespace: daemonSet.Namespace, Name: daemonSet.Name}, daemonSet)
 	}
 
 	return daemonSet, errors.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
 }
 
-func Deployment(owner metav1.Object, deployment *appsv1.Deployment, reqLogger logr.Logger,
+func Deployment(ctx context.Context, owner metav1.Object, deployment *appsv1.Deployment, reqLogger logr.Logger,
 	client controllerClient.Client, scheme *runtime.Scheme,
 ) (*appsv1.Deployment, error) {
 	var err error
@@ -135,13 +135,13 @@ func Deployment(owner metav1.Object, deployment *appsv1.Deployment, reqLogger lo
 
 	// Update the status from the server
 	if err == nil {
-		err = client.Get(context.TODO(), types.NamespacedName{Namespace: deployment.Namespace, Name: deployment.Name}, deployment)
+		err = client.Get(ctx, types.NamespacedName{Namespace: deployment.Namespace, Name: deployment.Name}, deployment)
 	}
 
 	return deployment, errors.WithMessagef(err, "error creating or updating Deployment %s/%s", deployment.Namespace, deployment.Name)
 }
 
-func ConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLogger logr.Logger,
+func ConfigMap(ctx context.Context, owner metav1.Object, configMap *corev1.ConfigMap, reqLogger logr.Logger,
 	client controllerClient.Client, scheme *runtime.Scheme,
 ) (*corev1.ConfigMap, error) {
 	var err error
@@ -180,13 +180,13 @@ func ConfigMap(owner metav1.Object, configMap *corev1.ConfigMap, reqLogger logr.
 
 	// Update the status from the server
 	if err == nil {
-		err = client.Get(context.TODO(), types.NamespacedName{Namespace: configMap.Namespace, Name: configMap.Name}, configMap)
+		err = client.Get(ctx, types.NamespacedName{Namespace: configMap.Namespace, Name: configMap.Name}, configMap)
 	}
 
 	return configMap, errors.WithMessagef(err, "error creating or updating ConfigMap %s/%s", configMap.Namespace, configMap.Name)
 }
 
-func Service(owner metav1.Object, service *corev1.Service, reqLogger logr.Logger,
+func Service(ctx context.Context, owner metav1.Object, service *corev1.Service, reqLogger logr.Logger,
 	client controllerClient.Client, scheme *runtime.Scheme,
 ) (*corev1.Service, error) {
 	var err error
@@ -206,7 +206,7 @@ func Service(owner metav1.Object, service *corev1.Service, reqLogger logr.Logger
 			Annotations: map[string]string{},
 		}}
 
-		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
+		result, err := controllerutil.CreateOrUpdate(ctx, client, toUpdate, func() error {
 			if toUpdate.Spec.Type == corev1.ServiceTypeClusterIP || toUpdate.Spec.Type == corev1.ServiceTypeLoadBalancer {
 				// Make sure we don't lose the ClusterIP, see https://github.com/kubernetes/kubectl/issues/798
 				service.Spec.ClusterIP = toUpdate.Spec.ClusterIP
@@ -244,7 +244,7 @@ func Service(owner metav1.Object, service *corev1.Service, reqLogger logr.Logger
 
 	// Update the status from the server
 	if err == nil {
-		err = client.Get(context.TODO(), types.NamespacedName{Namespace: service.Namespace, Name: service.Name}, service)
+		err = client.Get(ctx, types.NamespacedName{Namespace: service.Namespace, Name: service.Name}, service)
 	}
 
 	return service, errors.WithMessagef(err, "error creating or updating Service %s/%s", service.Namespace, service.Name)

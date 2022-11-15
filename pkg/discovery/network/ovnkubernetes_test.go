@@ -19,6 +19,7 @@ limitations under the License.
 package network_test
 
 import (
+	"context"
 	"fmt"
 
 	. "github.com/onsi/ginkgo"
@@ -82,7 +83,7 @@ var _ = Describe("OvnKubernetes Network", func() {
 
 func testOvnKubernetesDiscoveryWith(objects ...controllerClient.Object) (*network.ClusterNetwork, error) {
 	client := newTestClient(objects...)
-	return network.Discover(client, "")
+	return network.Discover(context.TODO(), client, "")
 }
 
 func ovnFakeConfigMap(namespace, name string) *v1.ConfigMap {

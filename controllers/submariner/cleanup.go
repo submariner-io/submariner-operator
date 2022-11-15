@@ -47,7 +47,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 	}
 
 	// This has the side effect of setting the CIDRs in the Submariner instance.
-	clusterNetwork, err := r.discoverNetwork(instance, log)
+	clusterNetwork, err := r.discoverNetwork(ctx, instance, log)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

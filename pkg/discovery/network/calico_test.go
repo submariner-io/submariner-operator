@@ -19,6 +19,8 @@ limitations under the License.
 package network_test
 
 import (
+	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -50,7 +52,7 @@ var _ = Describe("Calico Network", func() {
 
 	JustBeforeEach(func() {
 		client := fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(initObjs...).Build()
-		clusterNet, err = network.Discover(client, "")
+		clusterNet, err = network.Discover(context.TODO(), client, "")
 	})
 
 	When("no kube pod information is available", func() {
@@ -60,7 +62,7 @@ var _ = Describe("Calico Network", func() {
 			}
 
 			client := newTestClient(initObjs...)
-			clusterNet, err = network.Discover(client, "")
+			clusterNet, err = network.Discover(context.TODO(), client, "")
 		})
 
 		It("should return a ClusterNetwork with only service CIDRs", func() {
@@ -81,7 +83,7 @@ var _ = Describe("Calico Network", func() {
 			}
 
 			client := newTestClient(initObjs...)
-			clusterNet, err = network.Discover(client, "")
+			clusterNet, err = network.Discover(context.TODO(), client, "")
 		})
 		It("should return a ClusterNetwork with pod and service CIDRs", func() {
 			Expect(err).NotTo(HaveOccurred())

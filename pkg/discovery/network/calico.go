@@ -33,10 +33,10 @@ func init() {
 }
 
 //nolint:nilnil // Intentional as the purpose is to discover.
-func discoverCalicoNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
+func discoverCalicoNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	cmList := &corev1.ConfigMapList{}
 
-	err := client.List(context.TODO(), cmList, controllerClient.InNamespace(metav1.NamespaceAll))
+	err := client.List(ctx, cmList, controllerClient.InNamespace(metav1.NamespaceAll))
 	if err != nil {
 		return nil, errors.Wrapf(err, "error listing ConfigMaps")
 	}
@@ -54,7 +54,7 @@ func discoverCalicoNetwork(client controllerClient.Client) (*ClusterNetwork, err
 		return nil, nil
 	}
 
-	clusterNetwork, err := discoverNetwork(client)
+	clusterNetwork, err := discoverNetwork(ctx, client)
 	if err != nil {
 		return nil, err
 	}

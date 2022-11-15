@@ -19,6 +19,8 @@ limitations under the License.
 package network
 
 import (
+	"context"
+
 	"github.com/submariner-io/submariner/pkg/cni"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -27,8 +29,8 @@ func init() {
 	registerNetworkPluginDiscoveryFunction(discoverWeaveNetwork)
 }
 
-func discoverWeaveNetwork(client controllerClient.Client) (*ClusterNetwork, error) {
-	weaveNetPod, err := FindPod(client, "name=weave-net")
+func discoverWeaveNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
+	weaveNetPod, err := FindPod(ctx, client, "name=weave-net")
 
 	if err != nil || weaveNetPod == nil {
 		return nil, err
@@ -47,7 +49,7 @@ func discoverWeaveNetwork(client controllerClient.Client) (*ClusterNetwork, erro
 		}
 	}
 
-	clusterIPRange, err := findClusterIPRange(client)
+	clusterIPRange, err := findClusterIPRange(ctx, client)
 	if err == nil && clusterIPRange != "" {
 		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
 	}

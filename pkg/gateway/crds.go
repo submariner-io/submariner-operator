@@ -29,38 +29,38 @@ import (
 
 // Ensure ensures that the required resources are deployed on the target system.
 // The resources handled here are the gateway CRDs: Cluster and Endpoint.
-func Ensure(crdUpdater crd.Updater) error {
-	_, err := crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
+func Ensure(ctx context.Context, crdUpdater crd.Updater) error {
+	_, err := crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error provisioning the Cluster CRD")
 	}
 
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
+	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_submariner_crds_submariner_io_endpoints_yaml)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error provisioning the Endpoint CRD")
 	}
 
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
+	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_submariner_crds_submariner_io_gateways_yaml)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error provisioning the Gateway CRD")
 	}
 
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
+	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_submariner_crds_submariner_io_clusterglobalegressips_yaml)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error provisioning the ClusterGlobalEgressIP CRD")
 	}
 
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
+	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_submariner_crds_submariner_io_globalegressips_yaml)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error provisioning the GlobalEgressIP CRD")
 	}
 
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(context.TODO(),
+	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_submariner_crds_submariner_io_globalingressips_yaml)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error provisioning the GlobalIngressIP CRD")

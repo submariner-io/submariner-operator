@@ -19,6 +19,8 @@ limitations under the License.
 package submariner
 
 import (
+	"context"
+
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
@@ -39,9 +41,9 @@ const (
 
 //nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileLoadBalancer(
-	instance *v1alpha1.Submariner, reqLogger logr.Logger,
+	ctx context.Context, instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*corev1.Service, error) {
-	return apply.Service(instance, newLoadBalancerService(instance), reqLogger, r.config.ScopedClient, r.config.Scheme)
+	return apply.Service(ctx, instance, newLoadBalancerService(instance), reqLogger, r.config.ScopedClient, r.config.Scheme)
 }
 
 func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {
