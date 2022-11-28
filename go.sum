@@ -1137,8 +1137,8 @@ github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMT
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/submariner-io/admiral v0.13.1 h1:s/BVreou45x4UNqEkr9rj/DdrYZ4I5GY2m3JQuVvWlo=
 github.com/submariner-io/admiral v0.13.1/go.mod h1:n6m50q38aDO6t07AGOAFjm1/+bf9+/+q9hDTj7ex5UE=
-github.com/submariner-io/shipyard v0.13.1 h1:h5Qjlb14uAHjyIiJhuKpPkW9dAUpXZzBey4ICJNkNxc=
-github.com/submariner-io/shipyard v0.13.1/go.mod h1:f7+5soL//qKdoK/0vUvLgto/3JFPYtpXJu4e2iWAicM=
+github.com/submariner-io/shipyard v0.13.2 h1:It7XdowisyHO3FfGNq7RdfxJkpZ769zctbGEKAgAhC8=
+github.com/submariner-io/shipyard v0.13.2/go.mod h1:ht4eXvPKlBTUvPy/9hHdxKj2ZwAoyJ6EnsVEVsU+fI8=
 github.com/submariner-io/submariner v0.13.0 h1:4ezPyOC0ldaTFIya+W6oqWHSUR6L64ZSRTJkUEPj19U=
 github.com/submariner-io/submariner v0.13.0/go.mod h1:NRYeNN1tJXXIJIqPqyU3CuYCg8nfpwyNc+tVcP5Eox0=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
@@ -1945,8 +1945,9 @@ k8s.io/utils v0.0.0-20191114184206-e782cd3c129f/go.mod h1:sZAwmy6armz5eXlNoLmJcl
 k8s.io/utils v0.0.0-20191114200735-6ca3b61696b6/go.mod h1:sZAwmy6armz5eXlNoLmJcl4F1QuKu7sr+mFQ0byX7Ew=
 k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89/go.mod h1:sZAwmy6armz5eXlNoLmJcl4F1QuKu7sr+mFQ0byX7Ew=
 k8s.io/utils v0.0.0-20210802155522-efc7438f0176/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
-k8s.io/utils v0.0.0-20211116205334-6203023598ed h1:ck1fRPWPJWsMd8ZRFsWc6mh/zHp5fZ/shhbrgPUxDAE=
 k8s.io/utils v0.0.0-20211116205334-6203023598ed/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
+k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed h1:jAne/RjBTyawwAy0utX5eqigAwz/lQhTmy+Hr/Cpue4=
+k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed/go.mod h1:Xkxe497xwlCKkIaQYRfC7CSLworTXY9RMqwhhCm+8Nc=
 mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b/go.mod h1:2odslEg/xrtNQqCYg2/jCoyKnw3vv5biOc3JnIcYfL4=
 mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f/go.mod h1:4G1h5nDURzA3bwVMZIVpwbkw+04kSxk3rAtzlimaUJw=

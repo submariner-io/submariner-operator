@@ -15,7 +15,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/submariner-io/admiral v0.13.1
-	github.com/submariner-io/shipyard v0.13.1
+	github.com/submariner-io/shipyard v0.13.2
 	github.com/submariner-io/submariner v0.13.0
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.3.8-0.20220509174342-b4bca84b0361
@@ -23,7 +23,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.23.5
 	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/utils v0.0.0-20211116205334-6203023598ed
+	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
 	sigs.k8s.io/controller-runtime v0.11.2
 	sigs.k8s.io/controller-tools v0.4.1
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
