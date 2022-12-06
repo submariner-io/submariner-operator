@@ -1,6 +1,6 @@
 module github.com/submariner-io/submariner-operator
 
-go 1.18
+go 1.19
 
 require (
 	github.com/coreos/go-semver v0.3.0
@@ -14,9 +14,9 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.61.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.61.1
 	github.com/prometheus/client_golang v1.14.0
-	github.com/submariner-io/admiral v0.14.0-m2.0.20221115113052-628f41a96853
-	github.com/submariner-io/shipyard v0.14.0-m2.0.20221115104012-5716e33e79e2
-	github.com/submariner-io/submariner v0.14.0-m2.0.20221114100718-07c2409b8638
+	github.com/submariner-io/admiral v0.14.0-m2.0.20221205202623-9302655ce3f5
+	github.com/submariner-io/shipyard v0.14.0-m2.0.20221206131737-bffa84c30345
+	github.com/submariner-io/submariner v0.14.0-m2.0.20221206121617-c043e60b8c83
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.4.0
 	k8s.io/api v0.25.4
@@ -114,7 +114,7 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.2.0 // indirect
 	golang.org/x/oauth2 v0.2.0 // indirect
-	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/time v0.2.0 // indirect
 	golang.org/x/tools v0.1.12 // indirect
