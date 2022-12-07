@@ -82,7 +82,7 @@ jobs:
         uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
 
       - name: Run markdown-link-check
-        uses: gaurav-nelson/github-action-markdown-link-check@228fbf4ffb2a86a65314866e9b2322b519fd885f
+        uses: gaurav-nelson/github-action-markdown-link-check@4d97ad89bbb0de4be573a9d7a2fc0ce900afc519
         with:
           config-file: ".markdownlinkcheck.json"
           check-modified-files-only: "yes"
@@ -122,11 +122,11 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@c3b6fce4ee2ca25bc1066aa3bf73962fda0e8898
+        uses: github/codeql-action/init@b2a92eb56d8cb930006a1c6ed86b0782dd8a4297
         with:
           languages: go
       - name: Run CodeQL variant analysis
-        uses: github/codeql-action/analyze@c3b6fce4ee2ca25bc1066aa3bf73962fda0e8898
+        uses: github/codeql-action/analyze@b2a92eb56d8cb930006a1c6ed86b0782dd8a4297
       - name: Show CodeQL scan SARIF report
         if: always()
         run: cat ../results/go.sarif
@@ -149,7 +149,7 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Upload Anchore scan SARIF report
         if: always()
-        uses: github/codeql-action/upload-sarif@c3b6fce4ee2ca25bc1066aa3bf73962fda0e8898
+        uses: github/codeql-action/upload-sarif@b2a92eb56d8cb930006a1c6ed86b0782dd8a4297
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
