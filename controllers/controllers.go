@@ -19,12 +19,12 @@ limitations under the License.
 package controllers
 
 import (
-	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	"github.com/submariner-io/submariner-operator/controllers/submariner"
 	submarinerclientset "github.com/submariner-io/submariner-operator/pkg/client/clientset/versioned"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -32,7 +32,7 @@ import (
 // nolint:wrapcheck // No need to wrap errors here.
 func AddToManager(mgr manager.Manager) error {
 	kubeClient := kubernetes.NewForConfigOrDie(mgr.GetConfig())
-	operatorClient, _ := operatorclient.NewClient(mgr.GetConfig())
+	operatorClient, _ := client.New(mgr.GetConfig(), client.Options{})
 
 	if err := submariner.NewReconciler(&submariner.Config{
 		Client:     mgr.GetClient(),
