@@ -25,7 +25,6 @@ import (
 	"os"
 	"runtime"
 
-	operatorclient "github.com/openshift/cluster-dns-operator/pkg/operator/client"
 	"github.com/operator-framework/operator-lib/leader"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
@@ -191,7 +190,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	generalClient, _ := operatorclient.NewClient(mgr.GetConfig())
+	generalClient, _ := client.New(mgr.GetConfig(), client.Options{})
 
 	if err = submariner.NewReconciler(&submariner.Config{
 		ScopedClient:  mgr.GetClient(),
