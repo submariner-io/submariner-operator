@@ -21,8 +21,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
-	github.com/openshift/cluster-dns-operator v0.0.0-20200529200012-f9e4dfc90c57
-	github.com/operator-framework/operator-lib v0.4.0
+	github.com/operator-framework/operator-lib v0.4.0 // indirect
 	github.com/operator-framework/operator-sdk v0.19.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
