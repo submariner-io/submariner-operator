@@ -31,7 +31,7 @@ jobs:
           # This should match minK8sMajor.minK8sMinor in subctl/pkg/version/version.go.
           # If this breaks, we may advance the minimum K8s version instead of fixing it. See:
           # https://submariner.io/development/building-testing/ci-maintenance/
-          - k8s_version: '1.17'
+          - k8s_version: '1.19'
           # Run default E2E against all supported K8s versions
           - k8s_version: '1.22'
           - k8s_version: '1.23'
