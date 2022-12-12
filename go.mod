@@ -21,7 +21,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.18.1
 	github.com/openshift/api v0.0.0-20200324173355-9b3bdf846ea1
-	github.com/operator-framework/operator-lib v0.4.0 // indirect
+	github.com/operator-framework/operator-lib v0.4.0
 	github.com/operator-framework/operator-sdk v0.19.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
@@ -29,7 +29,7 @@ require (
 	github.com/submariner-io/admiral v0.12.2
 	github.com/submariner-io/cloud-prepare v0.12.2
 	github.com/submariner-io/lighthouse v0.12.2
-	github.com/submariner-io/shipyard v0.12.2
+	github.com/submariner-io/shipyard v0.12.3
 	github.com/submariner-io/submariner v0.12.2
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.5
