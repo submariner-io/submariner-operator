@@ -27,16 +27,15 @@ require (
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.3.0
 	github.com/submariner-io/admiral v0.12.3
-	github.com/submariner-io/cloud-prepare v0.12.2
-	github.com/submariner-io/lighthouse v0.12.2
+	github.com/submariner-io/cloud-prepare v0.12.3
+	github.com/submariner-io/lighthouse v0.12.3
 	github.com/submariner-io/shipyard v0.12.3
-	github.com/submariner-io/submariner v0.12.2
+	github.com/submariner-io/submariner v0.12.3
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/uw-labs/lichen v0.1.5
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
-	golang.org/x/text v0.3.8-0.20220509174342-b4bca84b0361 // indirect
 	google.golang.org/api v0.70.0
 	k8s.io/api v0.21.0
 	k8s.io/apiextensions-apiserver v0.20.1
