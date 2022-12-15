@@ -25,15 +25,16 @@ import (
 
 	apis "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func GetImagePath(repo, version, image, component string, imageOverrides map[string]string) string {
 	if override, ok := imageOverrides[component]; ok {
-		return override
+		return logIfChanged(repo, version, image, component, override, "Image is overridden")
 	}
 
 	if relatedImage, present := os.LookupEnv("RELATED_IMAGE_" + image); present {
-		return relatedImage
+		return logIfChanged(repo, version, image, component, relatedImage, "Related image in the environment")
 	}
 
 	path := image
@@ -47,7 +48,38 @@ func GetImagePath(repo, version, image, component string, imageOverrides map[str
 
 	path = fmt.Sprintf("%s:%s", path, version)
 
-	return path
+	return logIfChanged(repo, version, image, component, path, "Calculated path")
+}
+
+type imageParameters struct {
+	repo      string
+	version   string
+	image     string
+	component string
+}
+
+var (
+	log          = logf.Log.WithName("images")
+	loggedImages = make(map[imageParameters]string)
+)
+
+func logIfChanged(repo, version, image, component, result, explanation string) string {
+	imageParams := imageParameters{
+		repo:      repo,
+		version:   version,
+		image:     image,
+		component: component,
+	}
+	previous, ok := loggedImages[imageParams]
+
+	if !ok || result != previous {
+		log.Info("New GetImagePath result", "repo", repo, "version", version, "image", image, "component", component,
+			"previous", previous, "result", result, "explanation", explanation)
+	}
+
+	loggedImages[imageParams] = result
+
+	return result
 }
 
 func GetPullPolicy(version, override string) v1.PullPolicy {
