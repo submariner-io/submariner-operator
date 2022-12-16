@@ -29,9 +29,6 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-// Until controller-runtime releases with v0.26 support
-replace sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.13.1-0.20221213002533-ca4b4def4fb3
-
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
