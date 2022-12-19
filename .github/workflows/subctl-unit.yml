@@ -21,6 +21,7 @@ jobs:
         with:
           repository: submariner-io/subctl
           path: subctl
+          ref: ${{ github.base_ref }}
 
       - name: Check out the shipyard repository
         # This is required so that we can run a build involving multiple
@@ -29,6 +30,7 @@ jobs:
         with:
           repository: submariner-io/shipyard
           path: shipyard
+          ref: ${{ github.base_ref }}
 
       - name: Set up Go
         uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568
