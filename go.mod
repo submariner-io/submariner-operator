@@ -6,7 +6,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/go-logr/logr v1.2.3
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.24.1
+	github.com/onsi/gomega v1.24.2
 	github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46
 	github.com/operator-framework/operator-lib v0.11.0
 	github.com/pkg/errors v0.9.1
@@ -105,7 +105,7 @@ require (
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/mod v0.6.0 // indirect
-	golang.org/x/net v0.3.1-0.20221206200815-1e63c2f08a10 // indirect
+	golang.org/x/net v0.4.0 // indirect
 	golang.org/x/oauth2 v0.2.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
