@@ -34,7 +34,6 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
-	"github.com/submariner-io/submariner-operator/pkg/version"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
@@ -58,15 +57,16 @@ var (
 )
 
 var (
-	scheme = apiruntime.NewScheme()
-	log    = logf.Log.WithName("cmd")
-	help   = false
+	scheme  = apiruntime.NewScheme()
+	log     = logf.Log.WithName("cmd")
+	help    = false
+	version = "devel"
 )
 
 func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("Submariner operator version: %v", version.Version))
+	log.Info(fmt.Sprintf("Submariner operator version: %v", version))
 }
 
 func init() {
