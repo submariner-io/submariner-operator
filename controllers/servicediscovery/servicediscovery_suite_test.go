@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
