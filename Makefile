@@ -130,7 +130,7 @@ $(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submarin
 
 bin/%/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
 	GOARCH=$(call dockertogoarch,$(patsubst bin/linux/%/,%,$(dir $@))) \
-	LDFLAGS="-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
+	LDFLAGS="-X=main.version=$(VERSION)" \
 	${SCRIPTS_DIR}/compile.sh $@ .
 
 ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
