@@ -14,7 +14,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.61.1
 	github.com/prometheus/client_golang v1.14.0
 	github.com/submariner-io/admiral v0.15.0-m0
-	github.com/submariner-io/shipyard v0.15.0-m0
+	github.com/submariner-io/shipyard v0.15.0-m1
 	github.com/submariner-io/submariner v0.15.0-m0
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.5.0
