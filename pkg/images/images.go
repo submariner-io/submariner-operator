@@ -33,7 +33,7 @@ func GetImagePath(repo, version, image, component string, imageOverrides map[str
 		return logIfChanged(repo, version, image, component, override, "Image is overridden")
 	}
 
-	if relatedImage, present := os.LookupEnv("RELATED_IMAGE_" + image); present {
+	if relatedImage, present := os.LookupEnv("RELATED_IMAGE_" + component); present {
 		return logIfChanged(repo, version, image, component, relatedImage, "Related image in the environment")
 	}
 
