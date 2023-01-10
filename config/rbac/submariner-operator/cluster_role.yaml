@@ -69,3 +69,9 @@ rules:
     verbs:
       - get
       - create
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+    verbs:
+      - list
