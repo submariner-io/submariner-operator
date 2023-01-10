@@ -37,7 +37,7 @@ func discoverFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, er
 
 	err := client.List(context.TODO(), daemonsets, controllerClient.InNamespace(metav1.NamespaceSystem))
 	if err != nil {
-		return nil, errors.WithMessage(err, "error listing the Daemonsets")
+		return nil, errors.WithMessage(err, "error listing the Daemonsets for flannel discovery")
 	}
 
 	volumes := make([]corev1.Volume, 0)
@@ -78,7 +78,7 @@ func discoverFlannelNetwork(client controllerClient.Client) (*ClusterNetwork, er
 			return nil, nil
 		}
 
-		return nil, errors.WithMessage(err, "error listing the Daemonsets")
+		return nil, errors.WithMessagef(err, "error retrieving the flannel ConfigMap %q", flannelConfigMap)
 	}
 
 	podCIDR := extractPodCIDRFromNetConfigJSON(cm)
