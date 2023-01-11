@@ -32,10 +32,6 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func init() {
-	registerNetworkPluginDiscoveryFunction(discoverOpenShift4Network)
-}
-
 //nolint:nilnil // Intentional as the purpose is to discover.
 func discoverOpenShift4Network(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	network := &unstructured.Unstructured{}

@@ -30,10 +30,6 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func init() {
-	registerNetworkPluginDiscoveryFunction(discoverCanalFlannelNetwork)
-}
-
 //nolint:nilnil // Intentional as the purpose is to discover.
 func discoverCanalFlannelNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	// TODO: this must be smarter, looking for the canal daemonset, with labels k8s-app=canal
