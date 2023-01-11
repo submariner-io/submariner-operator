@@ -2205,6 +2205,12 @@ rules:
     verbs:
       - get
       - create
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+    verbs:
+      - list
 `
 	Config_rbac_submariner_operator_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
