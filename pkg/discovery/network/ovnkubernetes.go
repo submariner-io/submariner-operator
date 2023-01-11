@@ -37,10 +37,6 @@ const (
 	OvnSBDBDefaultPort = 6642
 )
 
-func init() {
-	registerNetworkPluginDiscoveryFunction(discoverOvnKubernetesNetwork)
-}
-
 func discoverOvnKubernetesNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	ovnDBPod, err := FindPod(ctx, client, "name=ovnkube-db")
 
