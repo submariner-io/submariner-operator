@@ -33,7 +33,6 @@ const (
 	SubmarinerCrName             = "submariner"
 	MetricsProxyComponent        = "submariner-metrics-proxy"
 	NettestComponent             = "submariner-nettest"
-	BrokerCrName                 = "broker"
 )
 
 /* These values are used by downstream distributions to override the component default image name. */
