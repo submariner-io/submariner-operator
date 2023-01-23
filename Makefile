@@ -100,7 +100,7 @@ export PATH := $(CURDIR)/bin:$(PATH)
 
 build: $(BINARIES)
 
-e2e: $(VENDOR_MODULES)
+e2e:
 	scripts/test/e2e.sh cluster1 cluster2
 
 # [system-test] runs system level tests that validate the operator is properly deployed
@@ -114,21 +114,21 @@ licensecheck: export BUILD_UPX = false
 licensecheck: $(BINARIES) | bin/lichen
 	bin/lichen -c .lichen.yaml $(BINARIES)
 
-bin/lichen: $(VENDOR_MODULES)
+bin/lichen:
 	mkdir -p $(@D)
 	$(GO) build -o $@ github.com/uw-labs/lichen
 
 # Generate deep-copy code
 CONTROLLER_DEEPCOPY := api/v1alpha1/zz_generated.deepcopy.go
-$(CONTROLLER_DEEPCOPY): $(VENDOR_MODULES) | $(CONTROLLER_GEN)
+$(CONTROLLER_DEEPCOPY): | $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="$(CURDIR)/hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
 
 # Generate embedded YAMLs
 EMBEDDED_YAMLS := pkg/embeddedyamls/yamls.go
-$(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(VENDOR_MODULES) $(CONTROLLER_DEEPCOPY)
+$(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(CONTROLLER_DEEPCOPY)
 	$(GO) generate pkg/embeddedyamls/generate.go
 
-bin/%/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
+bin/%/submariner-operator: main.go $(EMBEDDED_YAMLS)
 	GOARCH=$(call dockertogoarch,$(patsubst bin/linux/%/,%,$(dir $@))) \
 	LDFLAGS="-X=main.version=$(VERSION)" \
 	${SCRIPTS_DIR}/compile.sh $@ .
@@ -143,21 +143,21 @@ $(CONTROLLER_GEN):
 controller-gen: $(CONTROLLER_GEN)
 
 # Operator CRDs
-deploy/crds/submariner.io_servicediscoveries.yaml: ./api/v1alpha1/servicediscovery_types.go $(VENDOR_MODULES) | $(CONTROLLER_GEN)
+deploy/crds/submariner.io_servicediscoveries.yaml: ./api/v1alpha1/servicediscovery_types.go | $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
 	test -f $@
 
-deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: ./api/v1alpha1/submariner_types.go $(VENDOR_MODULES) | $(CONTROLLER_GEN)
+deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: ./api/v1alpha1/submariner_types.go | $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
 	test -f $@
 
 # Submariner CRDs
-deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: $(VENDOR_MODULES) | $(CONTROLLER_GEN)
-	cd vendor/github.com/submariner-io/submariner && $(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=../../../../deploy/submariner/crds
+deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: | $(CONTROLLER_GEN)
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="github.com/submariner-io/submariner/pkg/apis/..." output:crd:artifacts:config=deploy/submariner/crds
 	test -f $@
 
 # Generate manifests e.g. CRD, RBAC etc
-manifests: $(CONTROLLER_DEEPCOPY) $(CONTROLLER_GEN) $(VENDOR_MODULES)
+manifests: $(CONTROLLER_DEEPCOPY) $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # test if VERSION matches the semantic versioning rule
