@@ -655,8 +655,8 @@ github.com/submariner-io/admiral v0.15.0-m2 h1:5xyFwjyd/1aCkAEd+E0sZIZdD9Z3L1uIk
 github.com/submariner-io/admiral v0.15.0-m2/go.mod h1:A939fnN3wDeKfrRSL+68mlUjRFvDj40bfGA+YQNlKSQ=
 github.com/submariner-io/shipyard v0.15.0-m2 h1:hua4aZq9bVKXSQ1M94wHlj8fWe0gFp7VI1xE8F1hCYE=
 github.com/submariner-io/shipyard v0.15.0-m2/go.mod h1:T5VGOaZPGE4/vtCScEcnRDB1RaglrOGGt/5d4MlWFJ8=
-github.com/submariner-io/submariner v0.15.0-m1.0.20230110143615-4ce887a6c8a9 h1:97i9GYdmCqNJiga67FiBY4ohoSeaQ2rqTJldwneNABk=
-github.com/submariner-io/submariner v0.15.0-m1.0.20230110143615-4ce887a6c8a9/go.mod h1:xziD0qCho8q/efXB11w5Gc9HBoelnok7cL5JSPd3AEg=
+github.com/submariner-io/submariner v0.15.0-m2 h1:W03Fehr1Nk73HbtLyRP+fqTi71TcQpIxEq7bD8qjGD4=
+github.com/submariner-io/submariner v0.15.0-m2/go.mod h1:IWzAIPhrfVcB7Dq8x/kYHj7lCSSSiKE2lj+hZBrkpcI=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/timakin/bodyclose v0.0.0-20190930140734-f7f2e9bca95e/go.mod h1:Qimiffbc6q9tBWlVV6x0P9sat/ao1xEkREYPPj9hphk=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
@@ -825,8 +825,8 @@ golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6/go.mod h1:gOpvHmFTYa4Iltr
 golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=
 golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b/go.mod h1:DAh4E804XQdzx2j+YRIaUnCqCV2RuMz24cGBJ5QYIrc=
-golang.org/x/oauth2 v0.2.0 h1:GtQkldQ9m7yvzCL1V+LrYow3Khe0eJH0w7RbX/VbaIU=
-golang.org/x/oauth2 v0.2.0/go.mod h1:Cwn6afJ8jrQwYMxQDTpISoXmXW9I6qF6vDeuuoX3Ibs=
+golang.org/x/oauth2 v0.4.0 h1:NF0gk8LVPg1Ml7SSbGyySuoxdsXitj7TvgvuRxIMc/M=
+golang.org/x/oauth2 v0.4.0/go.mod h1:RznEsdpjGAINPTOF0UH/t+xJ75L18YO3Ho6Pyn+uRec=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
