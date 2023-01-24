@@ -15,7 +15,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/submariner-io/admiral v0.15.0-m2
 	github.com/submariner-io/shipyard v0.15.0-m2
-	github.com/submariner-io/submariner v0.15.0-m1.0.20230110143615-4ce887a6c8a9
+	github.com/submariner-io/submariner v0.15.0-m2
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.6.0
 	k8s.io/api v0.26.1
@@ -102,7 +102,7 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/oauth2 v0.2.0 // indirect
+	golang.org/x/oauth2 v0.4.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/term v0.4.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
