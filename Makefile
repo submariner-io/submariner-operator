@@ -17,12 +17,8 @@ endif
 
 ifneq (,$(DAPPER_HOST_ARCH))
 
-OPERATOR_SDK_VERSION := 1.23.0
 OPERATOR_SDK := $(CURDIR)/bin/operator-sdk
-
-KUSTOMIZE_VERSION := 3.10.0
 KUSTOMIZE := $(CURDIR)/bin/kustomize
-
 CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
 
 # Running in Dapper
@@ -140,12 +136,9 @@ bin/%/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
 ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
 
 # Download controller-gen locally if not already downloaded.
-CONTROLLER_TOOLS_VERSION := 0.9.2
 $(CONTROLLER_GEN):
 	mkdir -p $(@D)
 	$(GO) build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
-	## TODO (Jaanki) Use go install instead
-	# $(GO) install sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION)
 
 controller-gen: $(CONTROLLER_GEN)
 
@@ -175,6 +168,7 @@ is-semantic-version:
 
 ## Download kustomize locally if not already downloaded.
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+KUSTOMIZE_VERSION := $(shell $(GO) list -m -f {{.Version}} sigs.k8s.io/kustomize/kustomize/v3)
 $(KUSTOMIZE):
 	mkdir -p $(@D)
 	{ curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(@D); }
@@ -226,12 +220,14 @@ unit: $(EMBEDDED_YAMLS)
 #     gpg --no-options -q --batch --no-default-keyring \
 #     --output scripts/operator-sdk-signing-keyring.gpg \
 #     --dearmor scripts/operator-sdk-signing-key.asc
+OPERATOR_SDK_VERSION := $(shell $(GO) list -m -f {{.Version}} github.com/operator-framework/operator-sdk)
+OPERATOR_SDK_REPO := github.com/operator-framework/operator-sdk
 $(OPERATOR_SDK):
 	mkdir -p $(@D) && \
 	cd $(@D) && \
-	curl -LO "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk_linux_amd64" && \
-	curl -Lo checksums.txt.asc "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/checksums.txt.asc" && \
-	curl -Lo checksums.txt "https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/checksums.txt" && \
+	curl -LO "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_linux_amd64" \
+	      -O "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/checksums.txt.asc" \
+	      -O "https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/checksums.txt" && \
 	sha256sum -c --ignore-missing --quiet checksums.txt
 	gpgv --keyring scripts/operator-sdk-signing-keyring.gpg bin/checksums.txt.asc bin/checksums.txt
 	mv bin/operator-sdk_linux_amd64 "$@"
