@@ -83,7 +83,11 @@ func prepareAws(cmd *cobra.Command, args []string) {
 				}
 			}
 
-			return cloud.PrepareForSubmariner(input, reporter)
+			if len(input.InternalPorts) > 0 {
+				return cloud.PrepareForSubmariner(input, reporter)
+			}
+
+			return nil
 		})
 
 	exit.OnErrorWithMessage(err, "Failed to prepare AWS cloud")
