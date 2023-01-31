@@ -122,11 +122,11 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@515828d97454b8354517688ddc5b48402b723750
+        uses: github/codeql-action/init@3ebbd71c74ef574dbc558c82f70e52732c8b44fe
         with:
           languages: go
       - name: Run CodeQL variant analysis
-        uses: github/codeql-action/analyze@515828d97454b8354517688ddc5b48402b723750
+        uses: github/codeql-action/analyze@3ebbd71c74ef574dbc558c82f70e52732c8b44fe
       - name: Show CodeQL scan SARIF report
         if: always()
         run: cat ../results/go.sarif
@@ -138,7 +138,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
       - name: Run Anchore vulnerability scanner
-        uses: anchore/scan-action@9a22e4caae42db0d4c687ab5431e1c3699d0def1
+        uses: anchore/scan-action@84aa2c1d0eba986ed2274869c27f1e35a625449f
         id: scan
         with:
           path: "."
@@ -149,7 +149,7 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Upload Anchore scan SARIF report
         if: always()
-        uses: github/codeql-action/upload-sarif@515828d97454b8354517688ddc5b48402b723750
+        uses: github/codeql-action/upload-sarif@3ebbd71c74ef574dbc558c82f70e52732c8b44fe
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 

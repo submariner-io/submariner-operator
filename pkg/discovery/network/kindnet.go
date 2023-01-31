@@ -25,10 +25,6 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func init() {
-	registerNetworkPluginDiscoveryFunction(discoverKindNetwork)
-}
-
 func discoverKindNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	kindNetPod, err := FindPod(ctx, client, "app=kindnet")
 

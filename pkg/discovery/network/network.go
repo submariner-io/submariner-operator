@@ -105,10 +105,14 @@ func Discover(ctx context.Context, client controllerClient.Client, operatorNames
 
 type pluginDiscoveryFn func(context.Context, controllerClient.Client) (*ClusterNetwork, error)
 
-var discoverFunctions = []pluginDiscoveryFn{}
-
-func registerNetworkPluginDiscoveryFunction(function pluginDiscoveryFn) {
-	discoverFunctions = append(discoverFunctions, function)
+var discoverFunctions = []pluginDiscoveryFn{
+	discoverOpenShift4Network,
+	discoverOvnKubernetesNetwork,
+	discoverWeaveNetwork,
+	discoverCanalFlannelNetwork,
+	discoverCalicoNetwork,
+	discoverFlannelNetwork,
+	discoverKindNetwork,
 }
 
 //nolint:nilnil // Intentional as the purpose is to discover.
@@ -118,11 +122,6 @@ func networkPluginsDiscovery(ctx context.Context, client controllerClient.Client
 		if err != nil || network != nil {
 			return network, err
 		}
-	}
-
-	flanelNet, err := discoverFlannelNetwork(ctx, client)
-	if err != nil || flanelNet != nil {
-		return flanelNet, err
 	}
 
 	return nil, nil
