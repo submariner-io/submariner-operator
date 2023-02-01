@@ -54,6 +54,8 @@ GOARCH = $(shell $(GO) env GOARCH)
 GOEXE = $(shell $(GO) env GOEXE)
 GOOS = $(shell $(GO) env GOOS)
 
+BINARIES := bin/$(GOOS)/$(GOARCH)/submariner-operator
+
 # Options for 'submariner-operator-bundle' image
 ifeq ($(IS_SEMANTIC_VERSION),true)
 BUNDLE_VERSION := $(VERSION)
@@ -100,6 +102,8 @@ export PATH := $(CURDIR)/bin:$(PATH)
 
 # Targets to make
 
+build: $(BINARIES)
+
 e2e: $(VENDOR_MODULES)
 	scripts/test/e2e.sh cluster1 cluster2
 
@@ -108,11 +112,11 @@ system-test:
 	scripts/test/system.sh
 
 clean:
-	rm -f bin/submariner-operator
+	rm -f $(BINARIES)
 
 licensecheck: export BUILD_UPX = false
-licensecheck: build bin/linux/amd64/submariner-operator | bin/lichen
-	bin/lichen -c .lichen.yaml bin/linux/amd64/submariner-operator
+licensecheck: $(BINARIES) | bin/lichen
+	bin/lichen -c .lichen.yaml $(BINARIES)
 
 bin/lichen: $(VENDOR_MODULES)
 	mkdir -p $(@D)
