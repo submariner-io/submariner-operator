@@ -29,7 +29,6 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	"github.com/submariner-io/submariner-operator/controllers/test"
 	"github.com/submariner-io/submariner-operator/pkg/names"
@@ -105,7 +104,7 @@ func newTestDriver() *testDriver {
 }
 
 func (t *testDriver) awaitFinalizer() {
-	t.AwaitFinalizer(t.serviceDiscovery, constants.CleanupFinalizer)
+	t.AwaitFinalizer(t.serviceDiscovery, names.CleanupFinalizer)
 }
 
 func (t *testDriver) awaitServiceDiscoveryDeleted() {
