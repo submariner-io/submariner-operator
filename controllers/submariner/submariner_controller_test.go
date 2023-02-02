@@ -26,7 +26,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/fake"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/test"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/names"
@@ -255,7 +254,7 @@ func testDeletion() {
 	t := newTestDriver()
 
 	BeforeEach(func() {
-		t.submariner.SetFinalizers([]string{constants.CleanupFinalizer})
+		t.submariner.SetFinalizers([]string{names.CleanupFinalizer})
 
 		now := metav1.Now()
 		t.submariner.SetDeletionTimestamp(&now)

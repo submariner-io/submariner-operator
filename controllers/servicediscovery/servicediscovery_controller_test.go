@@ -25,7 +25,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -201,7 +200,7 @@ func testCoreDNSCleanup() {
 	t := newTestDriver()
 
 	BeforeEach(func() {
-		t.serviceDiscovery.SetFinalizers([]string{constants.CleanupFinalizer})
+		t.serviceDiscovery.SetFinalizers([]string{names.CleanupFinalizer})
 
 		now := metav1.Now()
 		t.serviceDiscovery.SetDeletionTimestamp(&now)
@@ -282,7 +281,7 @@ func testDeploymentUninstall() {
 	t := newTestDriver()
 
 	BeforeEach(func() {
-		t.serviceDiscovery.SetFinalizers([]string{constants.CleanupFinalizer})
+		t.serviceDiscovery.SetFinalizers([]string{names.CleanupFinalizer})
 
 		now := metav1.Now()
 		t.serviceDiscovery.SetDeletionTimestamp(&now)
