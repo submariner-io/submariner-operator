@@ -32,7 +32,6 @@ import (
 	"github.com/submariner-io/admiral/pkg/syncer"
 	"github.com/submariner-io/admiral/pkg/util"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
-	resourceiface "github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
@@ -273,7 +272,7 @@ func (r *Reconciler) getSubmariner(ctx context.Context, key types.NamespacedName
 }
 
 func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Submariner) (*submopv1a1.Submariner, error) {
-	added, err := finalizer.Add(ctx, resourceiface.ForControllerClient(r.config.ScopedClient, instance.Namespace, &submopv1a1.Submariner{}),
+	added, err := finalizer.Add(ctx, resource.ForControllerClient(r.config.ScopedClient, instance.Namespace, &submopv1a1.Submariner{}),
 		instance, names.CleanupFinalizer)
 	if err != nil {
 		return nil, err //nolint:wrapcheck // No need to wrap
