@@ -27,7 +27,6 @@ import (
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/constants"
 	ctrlresource "github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/images"
@@ -41,7 +40,7 @@ import (
 )
 
 func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) (reconcile.Result, error) {
-	if !finalizer.IsPresent(instance, constants.CleanupFinalizer) {
+	if !finalizer.IsPresent(instance, names.CleanupFinalizer) {
 		return reconcile.Result{}, nil
 	}
 
@@ -105,7 +104,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 //nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) error {
 	return finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.ScopedClient, instance.Namespace, instance),
-		instance, constants.CleanupFinalizer)
+		instance, names.CleanupFinalizer)
 }
 
 func (r *Reconciler) removeLighthouseConfigFromCustomDNSConfigMap(ctx context.Context,

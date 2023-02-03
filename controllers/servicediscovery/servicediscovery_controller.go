@@ -36,7 +36,6 @@ import (
 	"github.com/submariner-io/admiral/pkg/util"
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
-	"github.com/submariner-io/submariner-operator/controllers/constants"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/pkg/images"
@@ -182,7 +181,7 @@ func (r *Reconciler) addFinalizer(ctx context.Context,
 	instance *submarinerv1alpha1.ServiceDiscovery,
 ) (*submarinerv1alpha1.ServiceDiscovery, error) {
 	added, err := finalizer.Add(ctx, resource.ForControllerClient(r.ScopedClient, instance.Namespace,
-		&submarinerv1alpha1.ServiceDiscovery{}), instance, constants.CleanupFinalizer)
+		&submarinerv1alpha1.ServiceDiscovery{}), instance, names.CleanupFinalizer)
 	if err != nil {
 		return nil, err //nolint:wrapcheck // No need to wrap
 	}

@@ -29,7 +29,6 @@ import (
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/constants"
 	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/controllers/test"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -99,7 +98,7 @@ func newTestDriver() *testDriver {
 }
 
 func (t *testDriver) awaitFinalizer() {
-	t.AwaitFinalizer(t.submariner, constants.CleanupFinalizer)
+	t.AwaitFinalizer(t.submariner, names.CleanupFinalizer)
 }
 
 func (t *testDriver) awaitSubmarinerDeleted() {
