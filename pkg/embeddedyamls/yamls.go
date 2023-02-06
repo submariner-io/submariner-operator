@@ -3112,6 +3112,7 @@ rules:
       - submariner.io
     resources:
       - "gateways"
+      - "submariners"
     verbs:
       - get
       - list
