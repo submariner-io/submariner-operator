@@ -1151,10 +1151,10 @@ github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46 h1:/EZ9QZVWoh4ygjZOG
 github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46/go.mod h1:RsQCVJu4qhUawxxDP7pGlwU3IA4F01wYm3qKEu29Su8=
 github.com/openshift/build-machinery-go v0.0.0-20210712174854-1bb7fd1518d3/go.mod h1:b1BuldmJlbA/xYtdZvKi+7j5YGB44qJUJDZ9zwiNCfE=
 github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJc5AZX7/PBEpw=
-github.com/operator-framework/api v0.17.2-0.20221028193825-b611f6cef49c h1:aQPFE1Oc7qh02FniuUrAeUemv01wfisfUHGL1aQOxEc=
-github.com/operator-framework/api v0.17.2-0.20221028193825-b611f6cef49c/go.mod h1:34tb98EwTN5SZLkgoxwvRkhMJKLHUWHOrrcv1ZwvEeA=
-github.com/operator-framework/helm-operator-plugins v0.0.12-0.20221014213227-6f6106714f0d h1:xPqV1TH9ZCbo/fNIp1CVMYlKkD28wmIMrwuwibXaXo4=
-github.com/operator-framework/helm-operator-plugins v0.0.12-0.20221014213227-6f6106714f0d/go.mod h1:zaxx1ikQMg/sm/j5WDG2aJHK4phIti5TkeKH8EePt0M=
+github.com/operator-framework/api v0.17.4-0.20221221181915-f1b729684854 h1:/EFqPU6baS6MzfLvIeGlfVV0bDLehlA1jwSxHxL0D9s=
+github.com/operator-framework/api v0.17.4-0.20221221181915-f1b729684854/go.mod h1:34tb98EwTN5SZLkgoxwvRkhMJKLHUWHOrrcv1ZwvEeA=
+github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230109213218-ebfbea851192 h1:s7nLCTlcogFSoG97qjehPKdz7h7OA8UWRFnFPOvjL4g=
+github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230109213218-ebfbea851192/go.mod h1:qPilKwZ47jjA8kioD9Yr84jQt6NVzb5iK56H5tkh0rQ=
 github.com/operator-framework/java-operator-plugins v0.7.1-0.20221007075838-2e24140314fb h1:lHKsuPfcDwgFFvwwh4OdA9MUyZ+xY82Q/xztJkotUKI=
 github.com/operator-framework/java-operator-plugins v0.7.1-0.20221007075838-2e24140314fb/go.mod h1:OpTW9khbip8t1urqW1siXHIaq397P1aOAi/4BbWdgXo=
 github.com/operator-framework/operator-lib v0.11.1-0.20220921174810-791cc547e6c5 h1:j5gsormB+r0rc/aH+VNVIBOb39VAy7TGvJz2MXAWrQQ=
@@ -1163,8 +1163,8 @@ github.com/operator-framework/operator-manifest-tools v0.2.3-0.20220901033859-2a
 github.com/operator-framework/operator-manifest-tools v0.2.3-0.20220901033859-2a7ce32ef673/go.mod h1:pYXBtryqeokM8MiCtSsGxQUI/vZgcFLMhEI0gkt9KFI=
 github.com/operator-framework/operator-registry v1.26.3-0.20220930210947-614d6a955dc0 h1:dOC9sDcQwAxMk9BnL9uacOAE+7LpdrOruckovzlzVj0=
 github.com/operator-framework/operator-registry v1.26.3-0.20220930210947-614d6a955dc0/go.mod h1:yCJaYiwRDd+Vi+ACtN1QlwRfJB/moStJvtlW+VOyx9o=
-github.com/operator-framework/operator-sdk v1.26.0 h1:VMj48BRU0UFbWEsjJm9Ekw4EZ2LCBUvakkGdKtJyuBE=
-github.com/operator-framework/operator-sdk v1.26.0/go.mod h1:DqjcLDv5PqA3X7heQWlt7GjlFz/UbTeNKVBe3g2w570=
+github.com/operator-framework/operator-sdk v1.27.0 h1:Uhnhi88U2jWkagWB2G60qNbTv2ETeIuDUswohEbcfIQ=
+github.com/operator-framework/operator-sdk v1.27.0/go.mod h1:DhJvT5akOZNilQu7OVUd8I+LLzaXv+S8VZktElQCtOs=
 github.com/otiai10/copy v1.2.0 h1:HvG945u96iNadPoG2/Ja2+AUJeW5YuFQMixq9yirC+k=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
