@@ -27,7 +27,6 @@ import (
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
-	ctrlresource "github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
@@ -103,7 +102,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 
 //nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) error {
-	return finalizer.Remove(ctx, ctrlresource.ForControllerClient(r.ScopedClient, instance.Namespace, instance),
+	return finalizer.Remove(ctx, resource.ForControllerClient(r.ScopedClient, instance.Namespace, instance),
 		instance, names.CleanupFinalizer)
 }
 

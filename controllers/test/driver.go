@@ -22,8 +22,8 @@ import (
 	"context"
 
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/admiral/pkg/resource"
 	admtest "github.com/submariner-io/admiral/pkg/test"
-	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

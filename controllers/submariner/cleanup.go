@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/submariner-io/admiral/pkg/finalizer"
+	"github.com/submariner-io/admiral/pkg/resource"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/resource"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
