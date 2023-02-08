@@ -9,7 +9,7 @@ require (
 	github.com/onsi/gomega v1.26.0
 	github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46
 	github.com/operator-framework/operator-lib v0.11.1-0.20220921174810-791cc547e6c5
-	github.com/operator-framework/operator-sdk v1.26.0
+	github.com/operator-framework/operator-sdk v1.27.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.62.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.62.0
@@ -24,8 +24,8 @@ require (
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448
-	sigs.k8s.io/controller-runtime v0.14.2
-	sigs.k8s.io/controller-tools v0.11.2
+	sigs.k8s.io/controller-runtime v0.14.4
+	sigs.k8s.io/controller-tools v0.11.3
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
 	sigs.k8s.io/yaml v1.3.0
 )
@@ -150,8 +150,8 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
-	github.com/operator-framework/api v0.17.2-0.20221028193825-b611f6cef49c // indirect
-	github.com/operator-framework/helm-operator-plugins v0.0.12-0.20221014213227-6f6106714f0d // indirect
+	github.com/operator-framework/api v0.17.4-0.20221221181915-f1b729684854 // indirect
+	github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230109213218-ebfbea851192 // indirect
 	github.com/operator-framework/java-operator-plugins v0.7.1-0.20221007075838-2e24140314fb // indirect
 	github.com/operator-framework/operator-manifest-tools v0.2.3-0.20220901033859-2a7ce32ef673 // indirect
 	github.com/operator-framework/operator-registry v1.26.3-0.20220930210947-614d6a955dc0 // indirect
