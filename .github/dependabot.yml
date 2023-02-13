@@ -31,3 +31,5 @@ updates:
       - dependency-name: k8s.io/api
       - dependency-name: k8s.io/apimachinery
       - dependency-name: k8s.io/client-go
+      # Included with prometheus-operator/pkg/client
+      - dependency-name: github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
