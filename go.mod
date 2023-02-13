@@ -11,7 +11,7 @@ require (
 	github.com/operator-framework/operator-lib v0.11.1-0.20220921174810-791cc547e6c5
 	github.com/operator-framework/operator-sdk v1.27.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.62.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.63.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.62.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/submariner-io/admiral v0.15.0-m2
@@ -23,7 +23,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.26.1
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
-	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448
+	k8s.io/utils v0.0.0-20230202215443-34013725500c
 	sigs.k8s.io/controller-runtime v0.14.4
 	sigs.k8s.io/controller-tools v0.11.3
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
@@ -221,13 +221,13 @@ require (
 	k8s.io/cli-runtime v0.26.0 // indirect
 	k8s.io/component-base v0.26.1 // indirect
 	k8s.io/klog v1.0.0 // indirect
-	k8s.io/klog/v2 v2.80.1 // indirect
+	k8s.io/klog/v2 v2.90.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20221110221610-a28e98eb7c70 // indirect
 	k8s.io/kubectl v0.26.0 // indirect
 	oras.land/oras-go v1.2.2 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.35 // indirect
-	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
+	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kubebuilder/v3 v3.7.1-0.20221011212440-eff842a46496 // indirect
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect
 	sigs.k8s.io/kustomize/cmd/config v0.9.11 // indirect
