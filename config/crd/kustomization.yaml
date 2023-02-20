@@ -3,7 +3,7 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-  # - bases/submariner.io_servicediscoveries.yaml
+  - bases/submariner.io_servicediscoveries.yaml
   - bases/submariner.io_submariners.yaml
   - bases/submariner.io_brokers.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
