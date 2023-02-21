@@ -22,6 +22,7 @@ import (
 	"context"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -120,7 +121,6 @@ func NewReconciler(config *Config) *Reconciler {
 //nolint:gocyclo // Refactoring would yield functions with a lot of params which isn't ideal either.
 func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.V(2).WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling Submariner")
 
 	// Fetch the Submariner instance
 	instance, err := r.getSubmariner(ctx, request.NamespacedName)
@@ -133,6 +133,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+
+	reqLogger.Info("Reconciling Submariner", "ResourceVersion", instance.ResourceVersion)
 
 	instance, err = r.addFinalizer(ctx, instance)
 	if err != nil {
@@ -243,12 +245,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	if !reflect.DeepEqual(instance.Status, initialStatus) {
 		err := r.config.ScopedClient.Status().Update(ctx, instance)
+		if apierrors.IsConflict(err) {
+			reqLogger.Info("conflict occurred on status update - requeuing")
+
+			return reconcile.Result{RequeueAfter: time.Millisecond * 100}, nil
+		}
+
 		if err != nil {
-			// Log the error, but indicate success, to avoid reconciliation storms
-			// TODO skitt determine what we should really be doing for concurrent updates to the Submariner CR
-			// Updates fail here because the instance is updated between the .Update() at the start of the function
-			// and the status update here
-			reqLogger.Error(err, "failed to update the Submariner status")
+			return reconcile.Result{}, errors.Wrap(err, "failed to update the Submariner status")
 		}
 	}
 
