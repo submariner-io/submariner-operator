@@ -166,12 +166,13 @@ is-semantic-version:
 	    $(error 'ERROR: VERSION "$(BUNDLE_VERSION)" does not match the format required by operator-sdk.')
     endif
 
-## Download kustomize locally if not already downloaded.
+# Download kustomize locally if not already downloaded.
+# We clear GITHUB_TOKEN to ensure that the installation script won't try to use it (and fail)
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 KUSTOMIZE_VERSION := $(shell $(GO) list -m -f {{.Version}} sigs.k8s.io/kustomize/kustomize/v3)
 $(KUSTOMIZE):
 	mkdir -p $(@D)
-	{ curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(@D); }
+	{ curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | GITHUB_TOKEN= bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(@D); }
 
 kustomize: $(KUSTOMIZE)
 
