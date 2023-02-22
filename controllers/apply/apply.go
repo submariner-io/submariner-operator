@@ -90,7 +90,7 @@ func DaemonSet(ctx context.Context, owner metav1.Object, daemonSet *appsv1.Daemo
 
 	// Update the status from the server
 	if err == nil {
-		err = client.Get(ctx, types.NamespacedName{Namespace: daemonSet.Namespace, Name: daemonSet.Name}, daemonSet)
+		err = awaitResource(ctx, client, daemonSet)
 	}
 
 	return daemonSet, errors.WithMessagef(err, "error creating or updating DaemonSet %s/%s", daemonSet.Namespace, daemonSet.Name)
@@ -135,7 +135,7 @@ func Deployment(ctx context.Context, owner metav1.Object, deployment *appsv1.Dep
 
 	// Update the status from the server
 	if err == nil {
-		err = client.Get(ctx, types.NamespacedName{Namespace: deployment.Namespace, Name: deployment.Name}, deployment)
+		err = awaitResource(ctx, client, deployment)
 	}
 
 	return deployment, errors.WithMessagef(err, "error creating or updating Deployment %s/%s", deployment.Namespace, deployment.Name)
@@ -180,7 +180,7 @@ func ConfigMap(ctx context.Context, owner metav1.Object, configMap *corev1.Confi
 
 	// Update the status from the server
 	if err == nil {
-		err = client.Get(ctx, types.NamespacedName{Namespace: configMap.Namespace, Name: configMap.Name}, configMap)
+		err = awaitResource(ctx, client, configMap)
 	}
 
 	return configMap, errors.WithMessagef(err, "error creating or updating ConfigMap %s/%s", configMap.Namespace, configMap.Name)
@@ -244,10 +244,17 @@ func Service(ctx context.Context, owner metav1.Object, service *corev1.Service, 
 
 	// Update the status from the server
 	if err == nil {
-		err = client.Get(ctx, types.NamespacedName{Namespace: service.Namespace, Name: service.Name}, service)
+		err = awaitResource(ctx, client, service)
 	}
 
 	return service, errors.WithMessagef(err, "error creating or updating Service %s/%s", service.Namespace, service.Name)
+}
+
+func awaitResource(ctx context.Context, client controllerClient.Client, resource controllerClient.Object) error {
+	return errors.Wrap(retry.OnError(retry.DefaultRetry, apierrors.IsNotFound, func() error {
+		//nolint:wrapcheck // No need to wrap here
+		return client.Get(ctx, types.NamespacedName{Namespace: resource.GetNamespace(), Name: resource.GetName()}, resource)
+	}), "error retrieving resource")
 }
 
 func isImmutableError(err error) bool {
