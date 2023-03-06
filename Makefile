@@ -156,9 +156,9 @@ deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submar
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="github.com/submariner-io/submariner/pkg/apis/..." output:crd:artifacts:config=deploy/submariner/crds
 	test -f $@
 
-# Generate manifests e.g. CRD, RBAC etc
+# Generate manifests e.g. CRD etc.
 manifests: $(CONTROLLER_DEEPCOPY) $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=config/crd/bases
 
 # test if VERSION matches the semantic versioning rule
 is-semantic-version:
