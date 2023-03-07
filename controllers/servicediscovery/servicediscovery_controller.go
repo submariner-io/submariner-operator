@@ -50,6 +50,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -194,7 +195,6 @@ func (r *Reconciler) addFinalizer(ctx context.Context,
 }
 
 func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *appsv1.Deployment {
-	replicas := int32(1)
 	labels := map[string]string{
 		"app":       name,
 		"component": componentName,
@@ -202,8 +202,6 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 	matchLabels := map[string]string{
 		"app": name,
 	}
-
-	terminationGracePeriodSeconds := int64(0)
 
 	volumeMounts := []corev1.VolumeMount{}
 	volumes := []corev1.Volume{}
@@ -232,7 +230,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 			Selector: &metav1.LabelSelector{
 				MatchLabels: matchLabels,
 			},
-			Replicas: &replicas,
+			Replicas: pointer.Int32(1),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -261,7 +259,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 					},
 
 					ServiceAccountName:            "submariner-lighthouse-agent",
-					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					TerminationGracePeriodSeconds: pointer.Int64(0),
 					Volumes:                       volumes,
 				},
 			},
@@ -309,7 +307,6 @@ func newCoreDNSCustomConfigMap(config *submarinerv1alpha1.CoreDNSCustomConfig) *
 }
 
 func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *appsv1.Deployment {
-	replicas := int32(2)
 	labels := map[string]string{
 		"app":       names.LighthouseCoreDNSComponent,
 		"component": componentName,
@@ -317,11 +314,6 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 	matchLabels := map[string]string{
 		"app": names.LighthouseCoreDNSComponent,
 	}
-
-	terminationGracePeriodSeconds := int64(0)
-	defaultMode := int32(420)
-	allowPrivilegeEscalation := false
-	readOnlyRootFilesystem := true
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -333,7 +325,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 			Selector: &metav1.LabelSelector{
 				MatchLabels: matchLabels,
 			},
-			Replicas: &replicas,
+			Replicas: pointer.Int32(2),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -359,21 +351,21 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 									Add:  []corev1.Capability{"net_bind_service"},
 									Drop: []corev1.Capability{"all"},
 								},
-								AllowPrivilegeEscalation: &allowPrivilegeEscalation,
-								ReadOnlyRootFilesystem:   &readOnlyRootFilesystem,
+								AllowPrivilegeEscalation: pointer.Bool(false),
+								ReadOnlyRootFilesystem:   pointer.Bool(true),
 							},
 						},
 					},
 
 					ServiceAccountName:            "submariner-lighthouse-coredns",
-					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+					TerminationGracePeriodSeconds: pointer.Int64(0),
 					Volumes: []corev1.Volume{
 						{Name: "config-volume", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
 							LocalObjectReference: corev1.LocalObjectReference{Name: names.LighthouseCoreDNSComponent},
 							Items: []corev1.KeyToPath{
 								{Key: "Corefile", Path: "Corefile"},
 							},
-							DefaultMode: &defaultMode,
+							DefaultMode: pointer.Int32(420),
 						}}},
 					},
 				},
