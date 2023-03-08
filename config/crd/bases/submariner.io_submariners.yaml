@@ -38,44 +38,63 @@ spec:
               airGappedDeployment:
                 type: boolean
               broker:
+                description: Type of broker (must be "k8s").
                 type: string
               brokerK8sApiServer:
+                description: The broker API URL.
                 type: string
               brokerK8sApiServerToken:
+                description: The broker API Token.
                 type: string
               brokerK8sCA:
+                description: The broker certificate authority.
                 type: string
               brokerK8sInsecure:
                 type: boolean
               brokerK8sRemoteNamespace:
+                description: The Broker namespace.
                 type: string
               brokerK8sSecret:
                 type: string
               cableDriver:
+                description: Cable driver implementation - any of [libreswan, wireguard,
+                  vxlan].
                 type: string
               ceIPSecDebug:
+                description: Enable logging IPsec debugging information.
                 type: boolean
               ceIPSecForceUDPEncaps:
+                description: Force UDP encapsulation for IPsec.
                 type: boolean
               ceIPSecIKEPort:
+                description: The IPsec IKE port (500 usually).
                 type: integer
               ceIPSecNATTPort:
+                description: The IPsec NAT traversal port (4500 usually).
                 type: integer
               ceIPSecPSK:
+                description: The IPsec Pre-Shared Key which must be identical in all
+                  route agents across the cluster.
                 type: string
               ceIPSecPSKSecret:
                 type: string
               ceIPSecPreferredServer:
+                description: Enable this cluster as a preferred server for data-plane
+                  connections.
                 type: boolean
               clusterCIDR:
+                description: The cluster CIDR.
                 type: string
               clusterID:
+                description: The cluster ID used to identify the tunnels.
                 type: string
               colorCodes:
                 type: string
               connectionHealthCheck:
+                description: The gateway connection health check.
                 properties:
                   enabled:
+                    description: Enable the connection health check.
                     type: boolean
                   intervalSeconds:
                     description: The interval at which health check pings are sent.
@@ -88,40 +107,56 @@ spec:
                     type: integer
                 type: object
               coreDNSCustomConfig:
+                description: Name of the custom CoreDNS configmap to configure forwarding
+                  to Lighthouse. It should be in <namespace>/<name> format where <namespace>
+                  is optional and defaults to kube-system.
                 properties:
                   configMapName:
+                    description: Name of the custom CoreDNS configmap.
                     type: string
                   namespace:
+                    description: Namespace of the custom CoreDNS configmap.
                     type: string
                 type: object
               customDomains:
+                description: List of domains to use for multi-cluster service discovery.
                 items:
                   type: string
                 type: array
                 x-kubernetes-list-type: set
               debug:
+                description: Enable operator debugging.
                 type: boolean
               globalCIDR:
+                description: The Global CIDR super-net range for allocating GlobalCIDRs
+                  to each cluster.
                 type: string
               imageOverrides:
                 additionalProperties:
                   type: string
+                description: Override component images.
                 type: object
               loadBalancerEnabled:
+                description: Enable automatic Load Balancer in front of the gateways.
                 type: boolean
               namespace:
+                description: The namespace in which to deploy the submariner operator.
                 type: string
               natEnabled:
+                description: Enable NAT between clusters.
                 type: boolean
               nodeSelector:
                 additionalProperties:
                   type: string
                 type: object
               repository:
+                description: The image repository.
                 type: string
               serviceCIDR:
+                description: The service CIDR.
                 type: string
               serviceDiscoveryEnabled:
+                description: Enable support for Service Discovery (Lighthouse).
                 type: boolean
               tolerations:
                 items:
@@ -163,6 +198,7 @@ spec:
                   type: object
                 type: array
               version:
+                description: The image tag.
                 type: string
             required:
             - broker
@@ -182,12 +218,15 @@ spec:
               airGappedDeployment:
                 type: boolean
               clusterCIDR:
+                description: The current cluster CIDR.
                 type: string
               clusterID:
+                description: The current cluster ID.
                 type: string
               colorCodes:
                 type: string
               deploymentInfo:
+                description: Information about the deployment.
                 properties:
                   cloudProvider:
                     type: string
@@ -199,6 +238,7 @@ spec:
                     type: string
                 type: object
               gatewayDaemonSetStatus:
+                description: The status of the gateway DaemonSet.
                 properties:
                   lastResourceVersion:
                     type: string
@@ -366,6 +406,7 @@ spec:
                 - mismatchedContainerImages
                 type: object
               gateways:
+                description: Status of the gateways in the cluster.
                 items:
                   properties:
                     connections:
@@ -492,8 +533,10 @@ spec:
                   type: object
                 type: array
               globalCIDR:
+                description: The current global CIDR.
                 type: string
               globalnetDaemonSetStatus:
+                description: The status of the Globalnet DaemonSet.
                 properties:
                   lastResourceVersion:
                     type: string
@@ -661,6 +704,7 @@ spec:
                 - mismatchedContainerImages
                 type: object
               loadBalancerStatus:
+                description: The status of the load balancer DaemonSet.
                 properties:
                   status:
                     description: LoadBalancerStatus represents the status of a load-balancer.
@@ -722,10 +766,13 @@ spec:
                     type: object
                 type: object
               natEnabled:
+                description: The current NAT status.
                 type: boolean
               networkPlugin:
+                description: The current network plugin.
                 type: string
               routeAgentDaemonSetStatus:
+                description: The status of the route agent DaemonSet.
                 properties:
                   lastResourceVersion:
                     type: string
@@ -893,6 +940,7 @@ spec:
                 - mismatchedContainerImages
                 type: object
               serviceCIDR:
+                description: The current service CIDR.
                 type: string
             required:
             - clusterID

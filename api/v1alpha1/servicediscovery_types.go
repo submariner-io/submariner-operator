@@ -89,8 +89,15 @@ func init() {
 }
 
 type CoreDNSCustomConfig struct {
+	// Name of the custom CoreDNS configmap.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="CoreDNS Custom Config Name"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	ConfigMapName string `json:"configMapName,omitempty"`
-	Namespace     string `json:"namespace,omitempty"`
+
+	// Namespace of the custom CoreDNS configmap.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="CoreDNS Custom Config Namespace"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	Namespace string `json:"namespace,omitempty"`
 }
 
 func (sd *ServiceDiscovery) UnmarshalJSON(data []byte) error {
