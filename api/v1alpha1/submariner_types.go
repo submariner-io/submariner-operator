@@ -35,38 +35,161 @@ type SubmarinerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Broker                   string               `json:"broker"`
-	BrokerK8sApiServer       string               `json:"brokerK8sApiServer"`
-	BrokerK8sApiServerToken  string               `json:"brokerK8sApiServerToken,omitempty"`
-	BrokerK8sCA              string               `json:"brokerK8sCA,omitempty"`
-	BrokerK8sSecret          string               `json:"brokerK8sSecret,omitempty"`
-	BrokerK8sRemoteNamespace string               `json:"brokerK8sRemoteNamespace"`
-	CableDriver              string               `json:"cableDriver,omitempty"`
-	CeIPSecPSK               string               `json:"ceIPSecPSK,omitempty"`
-	CeIPSecPSKSecret         string               `json:"ceIPSecPSKSecret,omitempty"`
-	ClusterCIDR              string               `json:"clusterCIDR"`
-	ClusterID                string               `json:"clusterID"`
-	ColorCodes               string               `json:"colorCodes,omitempty"`
-	Repository               string               `json:"repository,omitempty"`
-	ServiceCIDR              string               `json:"serviceCIDR"`
-	GlobalCIDR               string               `json:"globalCIDR,omitempty"`
-	Namespace                string               `json:"namespace"`
-	Version                  string               `json:"version,omitempty"`
-	CeIPSecIKEPort           int                  `json:"ceIPSecIKEPort,omitempty"`
-	CeIPSecNATTPort          int                  `json:"ceIPSecNATTPort,omitempty"`
-	CeIPSecDebug             bool                 `json:"ceIPSecDebug"`
-	CeIPSecPreferredServer   bool                 `json:"ceIPSecPreferredServer,omitempty"`
-	CeIPSecForceUDPEncaps    bool                 `json:"ceIPSecForceUDPEncaps,omitempty"`
-	Debug                    bool                 `json:"debug"`
-	NatEnabled               bool                 `json:"natEnabled"`
-	AirGappedDeployment      bool                 `json:"airGappedDeployment,omitempty"`
-	LoadBalancerEnabled      bool                 `json:"loadBalancerEnabled,omitempty"`
-	ServiceDiscoveryEnabled  bool                 `json:"serviceDiscoveryEnabled,omitempty"`
-	BrokerK8sInsecure        bool                 `json:"brokerK8sInsecure,omitempty"`
-	CoreDNSCustomConfig      *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
+	// Type of broker (must be "k8s").
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Broker"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden"}
+	Broker string `json:"broker"`
+
+	// The broker API URL.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Broker API Server"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	BrokerK8sApiServer string `json:"brokerK8sApiServer"`
+
+	// The broker API Token.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Broker API Token"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:password"}
+	BrokerK8sApiServerToken string `json:"brokerK8sApiServerToken,omitempty"`
+
+	// The broker certificate authority.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Broker API CA"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:password"}
+	BrokerK8sCA string `json:"brokerK8sCA,omitempty"`
+
+	BrokerK8sSecret string `json:"brokerK8sSecret,omitempty"`
+
+	// The Broker namespace.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Broker Remote Namespace"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	BrokerK8sRemoteNamespace string `json:"brokerK8sRemoteNamespace"`
+
+	// Cable driver implementation - any of [libreswan, wireguard, vxlan].
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Cable Driver"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:libreswan","urn:alm:descriptor:com.tectonic.ui:select:vxlan","urn:alm:descriptor:com.tectonic.ui:select:wireguard"}
+	CableDriver string `json:"cableDriver,omitempty"`
+
+	// The IPsec Pre-Shared Key which must be identical in all route agents across the cluster.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="IPsec Pre-Shared Key"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:password"}
+	CeIPSecPSK string `json:"ceIPSecPSK,omitempty"`
+
+	CeIPSecPSKSecret string `json:"ceIPSecPSKSecret,omitempty"`
+
+	// The cluster CIDR.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Cluster CIDR"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	ClusterCIDR string `json:"clusterCIDR"`
+
+	// The cluster ID used to identify the tunnels.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Cluster ID"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	ClusterID string `json:"clusterID"`
+
+	ColorCodes string `json:"colorCodes,omitempty"`
+
+	// The image repository.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Repository"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	Repository string `json:"repository,omitempty"`
+
+	// The service CIDR.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Service CIDR"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	ServiceCIDR string `json:"serviceCIDR"`
+
+	// The Global CIDR super-net range for allocating GlobalCIDRs to each cluster.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Global CIDR"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	GlobalCIDR string `json:"globalCIDR,omitempty"`
+
+	// The namespace in which to deploy the submariner operator.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Namespace"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	Namespace string `json:"namespace"`
+
+	// The image tag.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Version"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	Version string `json:"version,omitempty"`
+
+	// The IPsec IKE port (500 usually).
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="IPsec IKE Port"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number"}
+	CeIPSecIKEPort int `json:"ceIPSecIKEPort,omitempty"`
+
+	// The IPsec NAT traversal port (4500 usually).
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="IPsec NATT Port"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number","urn:alm:descriptor:com.tectonic.ui:fieldDependency:natEnabled:true"}
+	CeIPSecNATTPort int `json:"ceIPSecNATTPort,omitempty"`
+
+	// Enable logging IPsec debugging information.
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="IPsec Debug"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	CeIPSecDebug bool `json:"ceIPSecDebug"`
+
+	// Enable this cluster as a preferred server for data-plane connections.
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="IPsec Preferred Server"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	CeIPSecPreferredServer bool `json:"ceIPSecPreferredServer,omitempty"`
+
+	// Force UDP encapsulation for IPsec.
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="IPsec Force UDP Encapsulation"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	CeIPSecForceUDPEncaps bool `json:"ceIPSecForceUDPEncaps,omitempty"`
+
+	// Enable operator debugging.
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Debug"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	Debug bool `json:"debug"`
+
+	// Enable NAT between clusters.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable NAT"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	NatEnabled bool `json:"natEnabled"`
+
+	AirGappedDeployment bool `json:"airGappedDeployment,omitempty"`
+
+	// Enable automatic Load Balancer in front of the gateways.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable Load Balancer"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	LoadBalancerEnabled bool `json:"loadBalancerEnabled,omitempty"`
+
+	// Enable support for Service Discovery (Lighthouse).
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable Service Discovery"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	ServiceDiscoveryEnabled bool `json:"serviceDiscoveryEnabled,omitempty"`
+
+	BrokerK8sInsecure bool `json:"brokerK8sInsecure,omitempty"`
+
+	// Name of the custom CoreDNS configmap to configure forwarding to Lighthouse.
+	// It should be in <namespace>/<name> format where <namespace> is optional and defaults to kube-system.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="CoreDNS Custom Config"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced"}
+	CoreDNSCustomConfig *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
+
+	// List of domains to use for multi-cluster service discovery.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Custom Domains"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced"}
 	// +listType=set
-	CustomDomains  []string          `json:"customDomains,omitempty"`
+	CustomDomains []string `json:"customDomains,omitempty"`
+
+	// Override component images.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Image Overrides"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden","urn:alm:descriptor:com.tectonic.ui:advanced"}
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
+
+	// The gateway connection health check.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Connection Health Check"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced"}
 	// +optional
 	ConnectionHealthCheck *HealthCheckSpec `json:"connectionHealthCheck,omitempty"`
 }
@@ -76,20 +199,63 @@ type SubmarinerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	NatEnabled                bool                      `json:"natEnabled"`
-	AirGappedDeployment       bool                      `json:"airGappedDeployment,omitempty"`
-	ColorCodes                string                    `json:"colorCodes,omitempty"`
-	ClusterID                 string                    `json:"clusterID"`
-	ServiceCIDR               string                    `json:"serviceCIDR,omitempty"`
-	ClusterCIDR               string                    `json:"clusterCIDR,omitempty"`
-	GlobalCIDR                string                    `json:"globalCIDR,omitempty"`
-	NetworkPlugin             string                    `json:"networkPlugin,omitempty"`
-	GatewayDaemonSetStatus    DaemonSetStatusWrapper    `json:"gatewayDaemonSetStatus,omitempty"`
-	RouteAgentDaemonSetStatus DaemonSetStatusWrapper    `json:"routeAgentDaemonSetStatus,omitempty"`
-	GlobalnetDaemonSetStatus  DaemonSetStatusWrapper    `json:"globalnetDaemonSetStatus,omitempty"`
-	LoadBalancerStatus        LoadBalancerStatusWrapper `json:"loadBalancerStatus,omitempty"`
-	Gateways                  *[]submv1.GatewayStatus   `json:"gateways,omitempty"`
-	DeploymentInfo            DeploymentInfo            `json:"deploymentInfo,omitempty"`
+	// The current NAT status.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="NAT Enabled"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	NatEnabled bool `json:"natEnabled"`
+
+	AirGappedDeployment bool `json:"airGappedDeployment,omitempty"`
+
+	ColorCodes string `json:"colorCodes,omitempty"`
+
+	// The current cluster ID.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Cluster ID"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	ClusterID string `json:"clusterID"`
+
+	// The current service CIDR.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Service CIDR"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	ServiceCIDR string `json:"serviceCIDR,omitempty"`
+
+	// The current cluster CIDR.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Cluster CIDR"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	ClusterCIDR string `json:"clusterCIDR,omitempty"`
+
+	// The current global CIDR.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Global CIDR"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	GlobalCIDR string `json:"globalCIDR,omitempty"`
+
+	// The current network plugin.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Network Plugin"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	NetworkPlugin string `json:"networkPlugin,omitempty"`
+
+	// The status of the gateway DaemonSet.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Gateway DaemonSet Status"
+	GatewayDaemonSetStatus DaemonSetStatusWrapper `json:"gatewayDaemonSetStatus,omitempty"`
+
+	// The status of the route agent DaemonSet.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Route Agent DaemonSet Status"
+	RouteAgentDaemonSetStatus DaemonSetStatusWrapper `json:"routeAgentDaemonSetStatus,omitempty"`
+
+	// The status of the Globalnet DaemonSet.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Globalnet DaemonSet Status"
+	GlobalnetDaemonSetStatus DaemonSetStatusWrapper `json:"globalnetDaemonSetStatus,omitempty"`
+
+	// The status of the load balancer DaemonSet.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Load Balancer DaemonSet Status"
+	LoadBalancerStatus LoadBalancerStatusWrapper `json:"loadBalancerStatus,omitempty"`
+
+	// Status of the gateways in the cluster.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Gateways"
+	Gateways *[]submv1.GatewayStatus `json:"gateways,omitempty"`
+
+	// Information about the deployment.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Deployment Information"
+	DeploymentInfo DeploymentInfo `json:"deploymentInfo,omitempty"`
 }
 
 //+kubebuilder:object:root=true
@@ -97,6 +263,7 @@ type SubmarinerStatus struct {
 //+kubebuilder:resource:path=submariners,scope=Namespaced
 
 // Submariner is the Schema for the submariners API.
+// +operator-sdk:csv:customresourcedefinitions:displayName="Submariner",resources={{Deployment,v1,submariner-operator}}
 type Submariner struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -137,10 +304,21 @@ type DeploymentInfo struct {
 }
 
 type HealthCheckSpec struct {
+	// Enable the connection health check.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable Connection Health Checks"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
 	Enabled bool `json:"enabled,omitempty"`
+
 	// The interval at which health check pings are sent.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Connection Health Check Interval"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number","urn:alm:descriptor:com.tectonic.ui:fieldDependency:connectionHealthCheck.enabled:true"}
 	IntervalSeconds uint64 `json:"intervalSeconds,omitempty"`
+
 	// The maximum number of packets lost at which the health checker will mark the connection as down.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Maximum Packet Loss"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number","urn:alm:descriptor:com.tectonic.ui:fieldDependency:connectionHealthCheck.enabled:true"}
 	MaxPacketLossCount uint64 `json:"maxPacketLossCount,omitempty"`
 }
 

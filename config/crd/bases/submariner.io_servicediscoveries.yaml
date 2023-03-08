@@ -52,8 +52,10 @@ spec:
               coreDNSCustomConfig:
                 properties:
                   configMapName:
+                    description: Name of the custom CoreDNS configmap.
                     type: string
                   namespace:
+                    description: Namespace of the custom CoreDNS configmap.
                     type: string
                 type: object
               customDomains:
