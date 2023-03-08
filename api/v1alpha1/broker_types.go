@@ -30,11 +30,33 @@ type BrokerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	Components                  []string `json:"components,omitempty"`
-	DefaultCustomDomains        []string `json:"defaultCustomDomains,omitempty"`
-	GlobalnetCIDRRange          string   `json:"globalnetCIDRRange,omitempty"`
-	DefaultGlobalnetClusterSize uint     `json:"defaultGlobalnetClusterSize,omitempty"`
-	GlobalnetEnabled            bool     `json:"globalnetEnabled,omitempty"`
+	// List of the components to be installed - any of [service-discovery, connectivity].
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Components"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	Components []string `json:"components,omitempty"`
+
+	// List of domains to use for multi-cluster service discovery.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Default Custom Domains"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	DefaultCustomDomains []string `json:"defaultCustomDomains,omitempty"`
+
+	// GlobalCIDR supernet range for allocating GlobalCIDRs to each cluster.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Globalnet CIDR Range"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:fieldDependency:globalnetEnabled:true","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	GlobalnetCIDRRange string `json:"globalnetCIDRRange,omitempty"`
+
+	// Default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs).
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Default Globalnet Cluster Size"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number","urn:alm:descriptor:com.tectonic.ui:fieldDependency:globalnetEnabled:true","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	DefaultGlobalnetClusterSize uint `json:"defaultGlobalnetClusterSize,omitempty"`
+
+	// Enable support for Overlapping CIDRs in connecting clusters.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable Globalnet"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	GlobalnetEnabled bool `json:"globalnetEnabled,omitempty"`
 }
 
 // BrokerStatus defines the observed state of Broker.
@@ -48,6 +70,7 @@ type BrokerStatus struct {
 //+kubebuilder:resource:path=brokers,scope=Namespaced
 
 // Broker is the Schema for the brokers API.
+// +operator-sdk:csv:customresourcedefinitions:displayName="Submariner Broker",resources={{Deployment,v1,submariner-operator}}
 type Broker struct { //nolint:govet // we want to keep the traditional order
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

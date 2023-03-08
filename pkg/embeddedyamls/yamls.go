@@ -58,18 +58,26 @@ spec:
             description: BrokerSpec defines the desired state of Broker.
             properties:
               components:
+                description: List of the components to be installed - any of [service-discovery,
+                  connectivity].
                 items:
                   type: string
                 type: array
               defaultCustomDomains:
+                description: List of domains to use for multi-cluster service discovery.
                 items:
                   type: string
                 type: array
               defaultGlobalnetClusterSize:
+                description: Default cluster size for GlobalCIDR allocated to each
+                  cluster (amount of global IPs).
                 type: integer
               globalnetCIDRRange:
+                description: GlobalCIDR supernet range for allocating GlobalCIDRs
+                  to each cluster.
                 type: string
               globalnetEnabled:
+                description: Enable support for Overlapping CIDRs in connecting clusters.
                 type: boolean
             type: object
           status:
