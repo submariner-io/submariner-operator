@@ -21,6 +21,7 @@ package v1alpha1
 import (
 	"encoding/json"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -47,6 +48,10 @@ type ServiceDiscoverySpec struct {
 	// +listType=set
 	CustomDomains  []string          `json:"customDomains,omitempty"`
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
+	// +optional
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// +optional
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // ServiceDiscoveryStatus defines the observed state of ServiceDiscovery.
