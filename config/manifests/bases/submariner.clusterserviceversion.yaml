@@ -469,6 +469,7 @@ spec:
   - email: submariner-dev@googlegroups.com
     name: Submariner project
   maturity: alpha
+  minKubeVersion: 1.22.0
   provider:
     name: submariner.io
   replaces: submariner.v0.0.0
