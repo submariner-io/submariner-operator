@@ -21,6 +21,25 @@ metadata:
         },
         {
           "apiVersion": "submariner.io/v1alpha1",
+          "kind": "ServiceDiscovery",
+          "metadata": {
+            "name": "servicediscovery"
+          },
+          "spec": {
+            "brokerK8sApiServer": "192.168.67.110:8443",
+            "brokerK8sApiServerToken": "$(BROKER_K8S_API_TOKEN)",
+            "brokerK8sCA": "$(BROKER_K8S_CA)",
+            "brokerK8sRemoteNamespace": "submariner-k8s-broker",
+            "clusterID": "cluster1",
+            "debug": false,
+            "globalnetEnabled": false,
+            "namespace": "submariner-operator",
+            "repository": "quay.io/submariner",
+            "version": "devel-18cbf8f2cbb5"
+          }
+        },
+        {
+          "apiVersion": "submariner.io/v1alpha1",
           "kind": "Submariner",
           "metadata": {
             "name": "submariner"
