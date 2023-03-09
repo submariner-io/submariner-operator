@@ -33,6 +33,15 @@ jobs:
           flags: 'i'
           error: 'Fixup commits should be squashed into the commits under review'
 
+  bundle:
+    name: Bundle validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+      - name: Create the bundle and validate it
+        run: make bundle
+
   crds:
     name: CRDs up-to-date
     runs-on: ubuntu-latest
