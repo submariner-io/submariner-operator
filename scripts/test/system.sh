@@ -32,7 +32,6 @@ function create_subm_vars() {
     subm_gateway_image_repo=$(git grep DefaultRepo api/v1alpha1/versions.go | cut -f2 -d'"')
 
     subm_debug=false
-    subm_broker=k8s
     ce_ipsec_debug=false
     ce_ipsec_nattport=4500
 
@@ -202,7 +201,6 @@ function verify_subm_cr() {
   validate_equals '.spec.ceIPSecNATTPort' "$ce_ipsec_nattport"
   validate_equals '.spec.repository' "$subm_gateway_image_repo"
   validate_equals '.spec.version' "$subm_gateway_image_tag"
-  validate_equals '.spec.broker' "$subm_broker"
   echo "Generated cluster id: $(jq -r '.spec.clusterID' "$json_file")"
   validate_equals '.spec.debug' "$subm_debug"
   validate_equals '.spec.namespace' "$subm_ns"
@@ -272,7 +270,6 @@ function verify_subm_gateway_pod() {
   validate_pod_container_env 'SUBMARINER_CLUSTERCIDR' "${cluster_CIDRs[$cluster]}"
   validate_pod_container_env 'SUBMARINER_DEBUG' "$subm_debug"
   validate_pod_container_env 'SUBMARINER_NATENABLED' "$natEnabled"
-  validate_pod_container_env 'SUBMARINER_BROKER' "$subm_broker"
   validate_pod_container_env 'BROKER_K8S_APISERVER' "$SUBMARINER_BROKER_URL"
   validate_pod_container_env 'BROKER_K8S_REMOTENAMESPACE' "$SUBMARINER_BROKER_NS"
   validate_pod_container_env 'BROKER_K8S_CA' "$SUBMARINER_BROKER_CA"
@@ -355,7 +352,6 @@ function verify_subm_gateway_container() {
   # Verify SubM Gateway pod environment variables
   grep "BROKER_K8S_APISERVER=$SUBMARINER_BROKER_URL" "$env_file"
   grep "SUBMARINER_NAMESPACE=$subm_ns" "$env_file"
-  grep "SUBMARINER_BROKER=$subm_broker" "$env_file"
   grep "BROKER_K8S_CA=$SUBMARINER_BROKER_CA" "$env_file"
   grep "CE_IPSEC_DEBUG=$ce_ipsec_debug" "$env_file"
   grep "SUBMARINER_DEBUG=$subm_debug" "$env_file"
