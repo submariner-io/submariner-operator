@@ -15,7 +15,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.63.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/submariner-io/admiral v0.15.0-m3
-	github.com/submariner-io/shipyard v0.15.0-m3
+	github.com/submariner-io/shipyard v0.15.0-m4
 	github.com/submariner-io/submariner v0.15.0-m3
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.8.0
@@ -164,7 +164,7 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
-	github.com/rivo/uniseg v0.4.2 // indirect
+	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/rubenv/sql-migrate v1.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -223,7 +223,7 @@ require (
 	k8s.io/cli-runtime v0.26.0 // indirect
 	k8s.io/component-base v0.26.2 // indirect
 	k8s.io/klog v1.0.0 // indirect
-	k8s.io/klog/v2 v2.90.0 // indirect
+	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230202010329-39b3636cbaa3 // indirect
 	k8s.io/kubectl v0.26.0 // indirect
 	oras.land/oras-go v1.2.2 // indirect
