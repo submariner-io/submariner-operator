@@ -69,6 +69,10 @@ type SubmarinerSpec struct {
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
 	// +optional
 	ConnectionHealthCheck *HealthCheckSpec `json:"connectionHealthCheck,omitempty"`
+	// +optional
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// +optional
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // SubmarinerStatus defines the observed state of Submariner.
