@@ -192,6 +192,10 @@ type SubmarinerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced"}
 	// +optional
 	ConnectionHealthCheck *HealthCheckSpec `json:"connectionHealthCheck,omitempty"`
+	// +optional
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+	// +optional
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // SubmarinerStatus defines the observed state of Submariner.
