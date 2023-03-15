@@ -8,8 +8,8 @@ require (
 	github.com/onsi/ginkgo/v2 v2.9.1
 	github.com/onsi/gomega v1.27.4
 	github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46
-	github.com/operator-framework/operator-lib v0.11.1-0.20220921174810-791cc547e6c5
-	github.com/operator-framework/operator-sdk v1.27.0
+	github.com/operator-framework/operator-lib v0.11.1-0.20230306195046-28cadc6b6055
+	github.com/operator-framework/operator-sdk v1.28.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.63.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.63.0
@@ -23,7 +23,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.26.2
 	k8s.io/apimachinery v0.26.2
 	k8s.io/client-go v0.26.2
-	k8s.io/utils v0.0.0-20230202215443-34013725500c
+	k8s.io/utils v0.0.0-20230220204549-a5ecb0141aa5
 	sigs.k8s.io/controller-runtime v0.14.5
 	sigs.k8s.io/controller-tools v0.11.3
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
@@ -83,7 +83,7 @@ require (
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/gobuffalo/envy v1.6.5 // indirect
-	github.com/gobuffalo/flect v0.3.0 // indirect
+	github.com/gobuffalo/flect v1.0.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-migrate/migrate/v4 v4.6.2 // indirect
@@ -152,11 +152,11 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
-	github.com/operator-framework/api v0.17.4-0.20221221181915-f1b729684854 // indirect
-	github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230109213218-ebfbea851192 // indirect
-	github.com/operator-framework/java-operator-plugins v0.7.1-0.20221007075838-2e24140314fb // indirect
-	github.com/operator-framework/operator-manifest-tools v0.2.3-0.20220901033859-2a7ce32ef673 // indirect
-	github.com/operator-framework/operator-registry v1.26.3-0.20220930210947-614d6a955dc0 // indirect
+	github.com/operator-framework/api v0.17.4-0.20230223191600-0131a6301e42 // indirect
+	github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230307164205-6e30bde28688 // indirect
+	github.com/operator-framework/java-operator-plugins v0.7.1-0.20230306190439-0eed476d2b75 // indirect
+	github.com/operator-framework/operator-manifest-tools v0.2.3-0.20230227155221-caa8b9e1ab12 // indirect
+	github.com/operator-framework/operator-registry v1.26.5-0.20230307160312-3bfcb23fa7d0 // indirect
 	github.com/otiai10/copy v1.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
@@ -171,7 +171,7 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/spf13/afero v1.9.2 // indirect
+	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -220,17 +220,17 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.11.1 // indirect
 	k8s.io/apiserver v0.26.2 // indirect
-	k8s.io/cli-runtime v0.26.0 // indirect
+	k8s.io/cli-runtime v0.26.2 // indirect
 	k8s.io/component-base v0.26.2 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230202010329-39b3636cbaa3 // indirect
-	k8s.io/kubectl v0.26.0 // indirect
+	k8s.io/kubectl v0.26.2 // indirect
 	oras.land/oras-go v1.2.2 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.35 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/kubebuilder/v3 v3.7.1-0.20221011212440-eff842a46496 // indirect
+	sigs.k8s.io/kubebuilder/v3 v3.9.1 // indirect
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect
 	sigs.k8s.io/kustomize/cmd/config v0.9.11 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.13.9 // indirect
