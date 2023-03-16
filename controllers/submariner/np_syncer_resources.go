@@ -55,6 +55,12 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 		"component": "networkplugin-syncer",
 	}
 
+	tolerations := cr.Spec.Tolerations
+
+	if len(tolerations) == 0 {
+		tolerations = append(tolerations, corev1.Toleration{Operator: corev1.TolerationOpExists})
+	}
+
 	networkPluginSyncerDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
@@ -98,7 +104,8 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 						},
 					},
 					ServiceAccountName: names.NetworkPluginSyncerComponent,
-					Tolerations:        []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
+					NodeSelector:       cr.Spec.NodeSelector,
+					Tolerations:        tolerations,
 				},
 			},
 		},

@@ -259,6 +259,8 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 					},
 
 					ServiceAccountName:            "submariner-lighthouse-agent",
+					Tolerations:                   cr.Spec.Tolerations,
+					NodeSelector:                  cr.Spec.NodeSelector,
 					TerminationGracePeriodSeconds: pointer.Int64(0),
 					Volumes:                       volumes,
 				},
@@ -359,6 +361,8 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 
 					ServiceAccountName:            "submariner-lighthouse-coredns",
 					TerminationGracePeriodSeconds: pointer.Int64(0),
+					Tolerations:                   cr.Spec.Tolerations,
+					NodeSelector:                  cr.Spec.NodeSelector,
 					Volumes: []corev1.Volume{
 						{Name: "config-volume", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
 							LocalObjectReference: corev1.LocalObjectReference{Name: names.LighthouseCoreDNSComponent},

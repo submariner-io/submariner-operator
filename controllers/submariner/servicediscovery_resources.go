@@ -53,6 +53,8 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
 					ImageOverrides:           submariner.Spec.ImageOverrides,
 					CoreDNSCustomConfig:      submariner.Spec.CoreDNSCustomConfig,
+					NodeSelector:             submariner.Spec.NodeSelector,
+					Tolerations:              submariner.Spec.Tolerations,
 				}
 
 				if len(submariner.Spec.CustomDomains) > 0 {
