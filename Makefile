@@ -72,6 +72,22 @@ ifneq ($(origin DEFAULT_CHANNEL), undefined)
 BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
+IS_CHANNEL_DEFAULT ?= 1
+ifneq ($(origin FROM_VERSION), undefined)
+ifneq ($(FROM_VERSION), 0.0.0)
+PKG_FROM_VERSION := --from-version=$(FROM_VERSION)
+REPLACES_OP := add
+else
+REPLACES_OP := remove
+endif
+endif
+ifneq ($(origin CHANNEL), undefined)
+PKG_CHANNELS := --channel=$(CHANNEL)
+endif
+ifeq ($(IS_CHANNEL_DEFAULT), 1)
+PKG_IS_DEFAULT_CHANNEL := --default-channel
+endif
+PKG_MAN_OPTS ?= $(PKG_FROM_VERSION) $(PKG_CHANNELS) $(PKG_IS_DEFAULT_CHANNEL)
 
 # Set the kustomize base path
 ifeq ($(IS_OCP), true)
