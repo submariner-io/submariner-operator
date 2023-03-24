@@ -18,6 +18,13 @@ rules:
       - update
       - delete
   - apiGroups:
+      - submariner.io
+    resources:
+      - brokers
+    verbs:
+      - get
+      - list
+  - apiGroups:
       - multicluster.x-k8s.io
     resources:
       - '*'
