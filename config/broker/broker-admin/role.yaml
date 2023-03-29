@@ -18,6 +18,13 @@ rules:
       - update
       - delete
   - apiGroups:
+      - submariner.io
+    resources:
+      - brokers
+    verbs:
+      - get
+      - list
+  - apiGroups:
       - ""
     resources:
       - serviceaccounts
@@ -27,6 +34,7 @@ rules:
       - create
       - get
       - list
+      - watch
       - update
       - delete
   - apiGroups:
