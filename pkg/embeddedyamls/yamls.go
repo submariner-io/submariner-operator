@@ -3069,7 +3069,9 @@ rules:
       - multicluster.x-k8s.io
     resources:
       - "serviceexports"
+      - "serviceimports"
     verbs:
+      - get
       - list
 `
 	Config_rbac_submariner_diagnose_cluster_role_binding_yaml = `---
