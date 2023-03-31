@@ -2897,8 +2897,11 @@ rules:
       - submariner.io
     resources:
       - clusterglobalegressips
+      - clusterglobalegressips/status
       - globalegressips
+      - globalegressips/status
       - globalingressips
+      - globalingressips/status
     verbs:
       - create
       - get
