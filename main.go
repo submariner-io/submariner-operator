@@ -123,6 +123,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	utilruntime.Must(apiextensions.AddToScheme(clientgoscheme.Scheme))
+
 	log.Info("Creating the Lighthouse CRDs")
 
 	if _, err = lighthouse.Ensure(ctx, crdUpdater, lighthouse.DataCluster); err != nil {
@@ -145,6 +147,10 @@ func main() {
 	// These are required so that we can retrieve Gateway objects using the dynamic client
 	utilruntime.Must(submv1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
+
+	// Admiral also needs the default scheme to be updated
+	utilruntime.Must(v1alpha1.AddToScheme(clientgoscheme.Scheme))
+	utilruntime.Must(submv1.AddToScheme(clientgoscheme.Scheme))
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
