@@ -1635,6 +1635,8 @@ spec:
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}
 `
 	Deploy_submariner_crds_submariner_io_globalegressips_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
@@ -1815,6 +1817,8 @@ spec:
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}
 `
 	Deploy_submariner_crds_submariner_io_globalingressips_yaml = `---
 apiVersion: apiextensions.k8s.io/v1
@@ -1964,7 +1968,8 @@ spec:
         type: object
     served: true
     storage: true
-    subresources: {}
+    subresources:
+      status: {}
 `
 	Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml = `apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
