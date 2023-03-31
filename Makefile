@@ -1,4 +1,4 @@
-BASE_BRANCH ?= devel
+BASE_BRANCH ?= release-0.15
 # Denotes the default operator image version, exposed as a variable for the automated release
 DEFAULT_IMAGE_VERSION ?= $(BASE_BRANCH)
 export BASE_BRANCH
