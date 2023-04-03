@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/coreos/go-semver v0.3.1
-	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/logr v1.2.4
 	github.com/onsi/ginkgo/v2 v2.9.2
 	github.com/onsi/gomega v1.27.6
 	github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46
