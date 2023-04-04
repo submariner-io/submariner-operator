@@ -96,7 +96,7 @@ func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string
 }
 
 func (c *controllerClientCreator) Create(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
-	options metav1.CreateOptions, //nolint:gocritic // hugeParam - match K8s API
+	_ metav1.CreateOptions, //nolint:gocritic // hugeParam - match K8s API
 ) (*apiextensions.CustomResourceDefinition, error) {
 	// TODO skitt handle options
 	err := c.client.Create(ctx, crd)
@@ -104,7 +104,7 @@ func (c *controllerClientCreator) Create(ctx context.Context, crd *apiextensions
 }
 
 func (c *controllerClientCreator) Update(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
-	options metav1.UpdateOptions, //nolint:gocritic // hugeParam - match K8s API
+	_ metav1.UpdateOptions, //nolint:gocritic // hugeParam - match K8s API
 ) (*apiextensions.CustomResourceDefinition, error) {
 	// TODO skitt handle options
 	err := c.client.Update(ctx, crd)
@@ -112,7 +112,7 @@ func (c *controllerClientCreator) Update(ctx context.Context, crd *apiextensions
 }
 
 func (c *controllerClientCreator) Get(ctx context.Context, name string,
-	options metav1.GetOptions,
+	_ metav1.GetOptions,
 ) (*apiextensions.CustomResourceDefinition, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
 	// TODO skitt handle options
@@ -125,7 +125,7 @@ func (c *controllerClientCreator) Get(ctx context.Context, name string,
 }
 
 func (c *controllerClientCreator) Delete(ctx context.Context, name string,
-	options metav1.DeleteOptions, //nolint:gocritic // Match K8s API
+	_ metav1.DeleteOptions, //nolint:gocritic // Match K8s API
 ) error {
 	crd, err := c.Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
