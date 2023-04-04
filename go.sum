@@ -1210,10 +1210,10 @@ github.com/posener/complete v1.2.3/go.mod h1:WZIdtGGp+qx0sLrYKtIRAruyNpv6hFCicSg
 github.com/poy/onpar v0.0.0-20190519213022-ee068f8ea4d1 h1:oL4IBbcqwhhNWh31bjOX8C/OCy0zs9906d/VUru+bqg=
 github.com/poy/onpar v0.0.0-20190519213022-ee068f8ea4d1/go.mod h1:nSbFQvMj97ZyhFRSJYtut+msi4sOY6zJDGCdSc+/rZU=
 github.com/pquerna/cachecontrol v0.0.0-20171018203845-0dec1b30a021/go.mod h1:prYjPmNq4d1NPVmpShWobRqXY3q7Vp+80DqgxxUrUIA=
-github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.63.0 h1:efsW3CfymG5bZUpeIsYfdihB33YItCn7uHBOEbnHQG8=
-github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.63.0/go.mod h1:/UtstAaWVaS3Z9GK9jo8+4SN9T+RMSq7VlOcQMmiEsc=
-github.com/prometheus-operator/prometheus-operator/pkg/client v0.63.0 h1:8Au9x/807lcDRCmypzfWvr9haO5eF/eX7hiMQCy1k4A=
-github.com/prometheus-operator/prometheus-operator/pkg/client v0.63.0/go.mod h1:sjCnCbwVFVTO90iChFOK0eUat70C4Q11EVik0Rk3EeU=
+github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.64.0 h1:bqFOzWYCuSZEcuFx/ez8DFW+fqGiUEATrgezynCjpP4=
+github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.64.0/go.mod h1:cfNgxpCPGyIydmt3HcwDqKDt0nYdlGRhzftl+DZH7WA=
+github.com/prometheus-operator/prometheus-operator/pkg/client v0.64.0 h1:bMvSvfmfL9NAuWnUyZoFSyb0jzzcTI3LCMs5vVnBfZ4=
+github.com/prometheus-operator/prometheus-operator/pkg/client v0.64.0/go.mod h1:J51EiS4fKYZkSHLWo1t8Ad0iEw8RhhC6LLvYarM/+30=
 github.com/prometheus/client_golang v0.0.0-20180209125602-c332b6f63c06/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829/go.mod h1:p2iRAGwDERtqlqzRXnrOVns+ignqQo//hLXqYxZYVNs=
