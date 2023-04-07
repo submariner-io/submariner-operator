@@ -315,7 +315,7 @@ func (m *podMonitor) assertUninstallPodsCompleted() {
 	m.Lock()
 	defer m.Unlock()
 
-	Expect(len(m.pods)).ToNot(BeZero(), fmt.Sprintf("No uninstall pods were created for component %q", m.name))
+	Expect(m.pods).ToNot(BeEmpty(), fmt.Sprintf("No uninstall pods were created for component %q", m.name))
 
 	for name, info := range m.pods {
 		if info.status.Phase == corev1.PodRunning {
