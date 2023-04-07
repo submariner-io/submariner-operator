@@ -60,7 +60,7 @@ var _ = Describe("OvnKubernetes Network", func() {
 			connectionStr := fmt.Sprintf("tcp:%s.%s", ovnKubeSvcTest, ovnKubeNamespace)
 			Expect(clusterNet.PluginSettings["OVN_NBDB"]).To(Equal(connectionStr + ":6641"))
 			Expect(clusterNet.PluginSettings["OVN_SBDB"]).To(Equal(connectionStr + ":6642"))
-			Expect(clusterNet.PodCIDRs).To(HaveLen(0))
+			Expect(clusterNet.PodCIDRs).To(BeEmpty())
 			Expect(clusterNet.ServiceCIDRs).To(HaveLen(1))
 		})
 	})
