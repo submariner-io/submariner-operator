@@ -38,13 +38,13 @@ func FindPodCommandParameter(ctx context.Context, client controllerClient.Client
 	for i := range pod.Spec.Containers {
 		for _, arg := range pod.Spec.Containers[i].Command {
 			if strings.HasPrefix(arg, parameter) {
-				return strings.Split(arg, "=")[1], nil
+				return strings.SplitN(arg, "=", 2)[1], nil
 			}
 			// Handling the case where the command is in the form of /bin/sh -c exec ....
 			if strings.Contains(arg, " ") {
 				for _, subArg := range strings.Split(arg, " ") {
 					if strings.HasPrefix(subArg, parameter) {
-						return strings.Split(subArg, "=")[1], nil
+						return strings.SplitN(subArg, "=", 2)[1], nil
 					}
 				}
 			}
