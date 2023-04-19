@@ -13,7 +13,7 @@ function verify_subm_gateway_label() {
 
 function broker_vars() {
     SUBMARINER_BROKER_URL=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
-    SUBMARINER_BROKER_CA=$(kubectl -n "${SUBMARINER_BROKER_NS}" get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
+    SUBMARINER_BROKER_CA=$(kubectl -n "${SUBMARINER_BROKER_NS}" get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-admin')].data['ca\.crt']}")
     #SUBMARINER_BROKER_TOKEN=$(kubectl -n "${SUBMARINER_BROKER_NS}" get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
 }
 
@@ -22,7 +22,6 @@ function create_subm_vars() {
     operator_deployment_name=submariner-operator
     gateway_deployment_name=submariner-gateway
     routeagent_deployment_name=submariner-routeagent
-    broker_deployment_name=submariner-k8s-broker
 
     declare_cidrs
     natEnabled=false
@@ -452,7 +451,7 @@ function verify_secrets() {
 }
 
 function verify_subm_broker_secrets() {
-  verify_secrets "$SUBMARINER_BROKER_NS" "$broker_deployment_name-client" "$SUBMARINER_BROKER_CA"
+  verify_secrets "$SUBMARINER_BROKER_NS" "cluster-$cluster" "$SUBMARINER_BROKER_CA"
 }
 
 function verify_subm_gateway_secrets() {
