@@ -9,7 +9,7 @@ require (
 	github.com/onsi/gomega v1.27.6
 	github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46
 	github.com/operator-framework/operator-lib v0.11.1-0.20230306195046-28cadc6b6055
-	github.com/operator-framework/operator-sdk v1.28.0
+	github.com/operator-framework/operator-sdk v1.28.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.64.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.64.1
