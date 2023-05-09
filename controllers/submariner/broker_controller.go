@@ -87,8 +87,8 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
-	err = globalnet.CreateConfigMap(ctx, r.Client, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
-		instance.Spec.DefaultGlobalnetClusterSize, request.Namespace)
+	err = globalnet.CreateConfigMap(ctx, r.Client, globalnet.NewGlobalnetConfigMap(instance.Spec.GlobalnetEnabled,
+		instance.Spec.GlobalnetCIDRRange, instance.Spec.DefaultGlobalnetClusterSize, request.Namespace))
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}

@@ -28,6 +28,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -46,15 +47,8 @@ type clusterInfo struct {
 	GlobalCidr []string `json:"global_cidr"`
 }
 
-func CreateConfigMap(ctx context.Context, client controllerClient.Client, globalnetEnabled bool, defaultGlobalCidrRange string,
-	defaultGlobalClusterSize uint, namespace string,
-) error {
-	gnConfigMap, err := NewGlobalnetConfigMap(globalnetEnabled, defaultGlobalCidrRange, defaultGlobalClusterSize, namespace)
-	if err != nil {
-		return errors.Wrap(err, "error creating config map")
-	}
-
-	err = client.Create(ctx, gnConfigMap)
+func CreateConfigMap(ctx context.Context, client controllerClient.Client, configMap *corev1.ConfigMap) error {
+	err := client.Create(ctx, configMap)
 	if err == nil || apierrors.IsAlreadyExists(err) {
 		return nil
 	}
@@ -64,15 +58,13 @@ func CreateConfigMap(ctx context.Context, client controllerClient.Client, global
 
 func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 	defaultGlobalClusterSize uint, namespace string,
-) (*corev1.ConfigMap, error) {
+) *corev1.ConfigMap {
 	labels := map[string]string{
 		"component": "submariner-globalnet",
 	}
 
 	cidrRange, err := json.Marshal(defaultGlobalCidrRange)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error marshalling CIDR range")
-	}
+	utilruntime.Must(err)
 
 	var data map[string]string
 	if globalnetEnabled {
@@ -98,7 +90,7 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 		Data: data,
 	}
 
-	return cm, nil
+	return cm
 }
 
 func updateConfigMap(ctx context.Context, client controllerClient.Client, configMap *corev1.ConfigMap, newCluster clusterInfo,
