@@ -158,6 +158,7 @@ function verify_clusters_crd() {
 # retries are necessary for the status field, which can take some seconds to fill up
 # properly by the operator
 function verify_subm_cr_status_with_retries() {
+  # shellcheck disable=SC2317 # this function is called through with_retries
   function verify_subm_cr_status_() {
     if ! verify_subm_cr_status; then
       sleep 5 && return 1
