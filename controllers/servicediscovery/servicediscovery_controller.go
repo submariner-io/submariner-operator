@@ -244,7 +244,6 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
-								{Name: "SUBMARINER_EXCLUDENS", Value: "submariner,kube-system,operators"},
 								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
 								{Name: "SUBMARINER_GLOBALNET_ENABLED", Value: strconv.FormatBool(cr.Spec.GlobalnetEnabled)},
 								{Name: broker.EnvironmentVariable("ApiServer"), Value: cr.Spec.BrokerK8sApiServer},
