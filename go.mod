@@ -14,7 +14,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/submariner-io/admiral v0.13.4
-	github.com/submariner-io/shipyard v0.13.4
+	github.com/submariner-io/shipyard v0.13.5
 	github.com/submariner-io/submariner v0.13.3
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.7.0
