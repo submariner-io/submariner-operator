@@ -24,6 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/resource"
 	admtest "github.com/submariner-io/admiral/pkg/test"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -35,6 +36,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -43,6 +45,7 @@ type Driver struct {
 	ScopedClient          client.Client
 	InitGeneralClientObjs []client.Object
 	GeneralClient         client.Client
+	InterceptorFuncs      interceptor.Funcs
 	Controller            reconcile.Reconciler
 	Namespace             string
 	ResourceName          string
@@ -67,11 +70,13 @@ func (d *Driver) JustBeforeEach() {
 }
 
 func (d *Driver) NewScopedClient() client.Client {
-	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(d.InitScopedClientObjs...).Build()
+	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(d.InitScopedClientObjs...).
+		WithStatusSubresource(&v1alpha1.Submariner{}).WithInterceptorFuncs(d.InterceptorFuncs).Build()
 }
 
 func (d *Driver) NewGeneralClient() client.Client {
-	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(d.InitGeneralClientObjs...).Build()
+	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(d.InitGeneralClientObjs...).
+		WithStatusSubresource(&v1alpha1.Submariner{}).WithInterceptorFuncs(d.InterceptorFuncs).Build()
 }
 
 func (d *Driver) DoReconcile() (reconcile.Result, error) {
@@ -164,27 +169,32 @@ func (d *Driver) AssertUninstallInitContainer(template *corev1.PodTemplateSpec, 
 
 func (d *Driver) UpdateDaemonSetToReady(daemonSet *appsv1.DaemonSet) {
 	d.UpdateDaemonSetToScheduled(daemonSet)
+
 	daemonSet.Status.NumberReady = daemonSet.Status.DesiredNumberScheduled
-	Expect(d.ScopedClient.Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Status().Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
 func (d *Driver) UpdateDaemonSetToObserved(daemonSet *appsv1.DaemonSet) {
 	daemonSet.Generation = 1
-	daemonSet.Status.ObservedGeneration = daemonSet.Generation
 	Expect(d.ScopedClient.Update(context.TODO(), daemonSet)).To(Succeed())
+
+	daemonSet.Status.ObservedGeneration = daemonSet.Generation
+	Expect(d.ScopedClient.Status().Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
 func (d *Driver) UpdateDaemonSetToScheduled(daemonSet *appsv1.DaemonSet) {
 	daemonSet.Generation = 1
+	Expect(d.ScopedClient.Update(context.TODO(), daemonSet)).To(Succeed())
+
 	daemonSet.Status.ObservedGeneration = daemonSet.Generation
 	daemonSet.Status.DesiredNumberScheduled = 1
-	Expect(d.ScopedClient.Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Status().Update(context.TODO(), daemonSet)).To(Succeed())
 }
 
 func (d *Driver) UpdateDeploymentToReady(deployment *appsv1.Deployment) {
 	deployment.Status.ReadyReplicas = *deployment.Spec.Replicas
 	deployment.Status.AvailableReplicas = *deployment.Spec.Replicas
-	Expect(d.ScopedClient.Update(context.TODO(), deployment)).To(Succeed())
+	Expect(d.ScopedClient.Status().Update(context.TODO(), deployment)).To(Succeed())
 }
 
 func (d *Driver) NewDaemonSet(name string) *appsv1.DaemonSet {

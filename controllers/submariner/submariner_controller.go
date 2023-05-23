@@ -50,7 +50,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -294,7 +293,7 @@ func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Subm
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Watch for changes to the gateway status in the same namespace
 	mapFn := handler.MapFunc(
-		func(object client.Object) []reconcile.Request {
+		func(ctx context.Context, object client.Object) []reconcile.Request {
 			return []reconcile.Request{
 				{NamespacedName: types.NamespacedName{
 					Name:      "submariner",
@@ -310,7 +309,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&submopv1a1.Submariner{}).
 		// Watch for changes to secondary resource DaemonSets and requeue the owner Submariner
 		Owns(&appsv1.DaemonSet{}).
-		Watches(&source.Kind{Type: &submv1.Gateway{}}, handler.EnqueueRequestsFromMapFunc(mapFn)).
+		Watches(&submv1.Gateway{}, handler.EnqueueRequestsFromMapFunc(mapFn)).
 		Complete(r)
 }
 
