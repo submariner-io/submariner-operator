@@ -23,9 +23,8 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/submariner/pkg/cni"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -43,7 +42,7 @@ func discoverOpenShift4Network(ctx context.Context, client controllerClient.Clie
 
 	err := client.Get(ctx, types.NamespacedName{Name: "cluster"}, network)
 	if err != nil {
-		if apierrors.IsNotFound(err) || meta.IsNoMatchError(err) {
+		if resource.IsNotFoundErr(err) {
 			return nil, nil
 		}
 

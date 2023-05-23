@@ -35,6 +35,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -253,11 +254,13 @@ func testReconciliation() {
 func testDeletion() {
 	t := newTestDriver()
 
+	var deletionTimestamp metav1.Time
+
 	BeforeEach(func() {
 		t.submariner.SetFinalizers([]string{names.CleanupFinalizer})
 
-		now := metav1.Now()
-		t.submariner.SetDeletionTimestamp(&now)
+		deletionTimestamp = metav1.Now()
+		t.submariner.SetDeletionTimestamp(&deletionTimestamp)
 	})
 
 	Context("", func() {
@@ -352,6 +355,31 @@ func testDeletion() {
 	Context("and an uninstall DaemonSet does not complete in time", func() {
 		BeforeEach(func() {
 			t.submariner.Spec.GlobalCIDR = ""
+
+			t.InterceptorFuncs.Get = func(ctx context.Context, c client.WithWatch, key client.ObjectKey, obj client.Object,
+				opts ...client.GetOption,
+			) error {
+				err := c.Get(ctx, key, obj, opts...)
+				if err != nil {
+					return err
+				}
+
+				if _, ok := obj.(*v1alpha1.Submariner); ok {
+					obj.SetDeletionTimestamp(t.submariner.GetDeletionTimestamp())
+				}
+
+				return nil
+			}
+
+			t.InterceptorFuncs.Update = func(ctx context.Context, c client.WithWatch, obj client.Object,
+				opts ...client.UpdateOption,
+			) error {
+				if _, ok := obj.(*v1alpha1.Submariner); ok {
+					obj.SetDeletionTimestamp(&deletionTimestamp)
+				}
+
+				return c.Update(ctx, obj, opts...)
+			}
 		})
 
 		It("should delete it", func() {
@@ -362,7 +390,6 @@ func testDeletion() {
 
 			ts := metav1.NewTime(time.Now().Add(-(uninstall.ComponentReadyTimeout + 10)))
 			t.submariner.SetDeletionTimestamp(&ts)
-			Expect(t.ScopedClient.Update(context.TODO(), t.submariner)).To(Succeed())
 
 			t.AssertReconcileSuccess()
 
