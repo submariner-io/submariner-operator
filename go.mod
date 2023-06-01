@@ -14,9 +14,9 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.64.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.64.1
 	github.com/prometheus/client_golang v1.15.1
-	github.com/submariner-io/admiral v0.15.0-m4.0.20230524144245-6f983e305274
+	github.com/submariner-io/admiral v0.16.0-m0
 	github.com/submariner-io/shipyard v0.16.0-m0
-	github.com/submariner-io/submariner v0.15.0-m4.0.20230331190215-45739cc79971
+	github.com/submariner-io/submariner v0.16.0-m0
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.9.0
 	k8s.io/api v0.27.2
@@ -45,7 +45,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
-	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
+	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
