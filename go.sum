@@ -1153,8 +1153,8 @@ github.com/openshift/build-machinery-go v0.0.0-20210712174854-1bb7fd1518d3/go.mo
 github.com/openzipkin/zipkin-go v0.1.6/go.mod h1:QgAqvLzwWbR/WpD4A3cGpPtJrZXNIiJc5AZX7/PBEpw=
 github.com/operator-framework/api v0.17.4-0.20230223191600-0131a6301e42 h1:d/Pnr19TnmIq3zQ6ebewC+5jt5zqYbRkvYd37YZENQY=
 github.com/operator-framework/api v0.17.4-0.20230223191600-0131a6301e42/go.mod h1:l/cuwtPxkVUY7fzYgdust2m9tlmb8I4pOvbsUufRb24=
-github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230307164205-6e30bde28688 h1:cT4lGfZjYupUkxzieyfC/7RadF7Vk1FybgWCnViutnM=
-github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230307164205-6e30bde28688/go.mod h1:QpVyiSOKGbWADyNRl7LvMlRuuMGrWXJQdEYyHPQWMUg=
+github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230413193425-4632388adc61 h1:FPO2hS4HNIU2pzWeX2KusKxqDFeGIURRMkxRtn/i570=
+github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230413193425-4632388adc61/go.mod h1:QpVyiSOKGbWADyNRl7LvMlRuuMGrWXJQdEYyHPQWMUg=
 github.com/operator-framework/java-operator-plugins v0.7.1-0.20230306190439-0eed476d2b75 h1:mjMid39qs1lEXpIldVmj7sa1wtuZvYge8oHkT0qOY0Y=
 github.com/operator-framework/java-operator-plugins v0.7.1-0.20230306190439-0eed476d2b75/go.mod h1:oQTt35EEUrDY8ca/kRWYz5omWsVhk9Sj78vKlHFqxjM=
 github.com/operator-framework/operator-lib v0.11.1-0.20230306195046-28cadc6b6055 h1:G9N8wEf9qDZ/4Fj5cbIejKUoFOYta0v72Yg8tPAdvc0=
@@ -1163,8 +1163,8 @@ github.com/operator-framework/operator-manifest-tools v0.2.3-0.20230227155221-ca
 github.com/operator-framework/operator-manifest-tools v0.2.3-0.20230227155221-caa8b9e1ab12/go.mod h1:5OAMYmIkFCiiHfS1r3HcIYu3F/sum38pofSoLZy7Cbw=
 github.com/operator-framework/operator-registry v1.26.5-0.20230307160312-3bfcb23fa7d0 h1:TMYB8U+0F5MJJ6x6CGnri0bH/ea/wvJZ9dZzT5salfo=
 github.com/operator-framework/operator-registry v1.26.5-0.20230307160312-3bfcb23fa7d0/go.mod h1:ChLO6+eQ6RMeVJ0K9DlJPjeP4iX+T5BwdxVYzuOdcMc=
-github.com/operator-framework/operator-sdk v1.28.1 h1:ZML0ResKeiMn2JgrENL+JN2fl7IFoC5ajN9Yfo+xKzo=
-github.com/operator-framework/operator-sdk v1.28.1/go.mod h1:Kn9W/rqT/UJExTWFzCkN5laGkxew1L6cr7Vt5dQIVVA=
+github.com/operator-framework/operator-sdk v1.29.0 h1:fHHJd6JkIUWMtQCGfokLZBWYBV7xqFv3JHNSRZzNnjQ=
+github.com/operator-framework/operator-sdk v1.29.0/go.mod h1:QO8gE736UilYLC61lOsUJYc190x2PCgW5TD13DBgONg=
 github.com/otiai10/copy v1.2.0 h1:HvG945u96iNadPoG2/Ja2+AUJeW5YuFQMixq9yirC+k=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
