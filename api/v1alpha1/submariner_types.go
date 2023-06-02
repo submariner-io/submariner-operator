@@ -260,6 +260,10 @@ type SubmarinerStatus struct {
 	// Information about the deployment.
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Deployment Information"
 	DeploymentInfo DeploymentInfo `json:"deploymentInfo,omitempty"`
+
+	// The image version in use by the various Submariner DaemonSets and Deployments.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Version"
+	Version string `json:"version,omitempty"`
 }
 
 //+kubebuilder:object:root=true
