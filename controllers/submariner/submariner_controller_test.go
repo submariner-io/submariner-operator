@@ -62,6 +62,25 @@ func testReconciliation() {
 		t.awaitFinalizer()
 	})
 
+	Context("", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.NatEnabled = true
+			t.submariner.Spec.AirGappedDeployment = true
+		})
+
+		It("should populate general Submariner resource Status fields from the Spec", func() {
+			t.AssertReconcileSuccess()
+
+			updated := t.getSubmariner()
+			Expect(updated.Status.NatEnabled).To(BeTrue())
+			Expect(updated.Status.AirGappedDeployment).To(BeTrue())
+			Expect(updated.Status.ClusterID).To(Equal(t.submariner.Spec.ClusterID))
+			Expect(updated.Status.GlobalCIDR).To(Equal(t.submariner.Spec.GlobalCIDR))
+			Expect(updated.Status.NetworkPlugin).To(Equal(t.clusterNetwork.NetworkPlugin))
+			Expect(updated.Status.Version).To(Equal(t.submariner.Spec.Version))
+		})
+	})
+
 	When("the network details are not provided", func() {
 		It("should use the detected network", func() {
 			t.AssertReconcileSuccess()
