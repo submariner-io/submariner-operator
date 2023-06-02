@@ -942,6 +942,10 @@ spec:
               serviceCIDR:
                 description: The current service CIDR.
                 type: string
+              version:
+                description: The image version in use by the various Submariner DaemonSets
+                  and Deployments.
+                type: string
             required:
             - clusterID
             - natEnabled
