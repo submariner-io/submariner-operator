@@ -728,8 +728,8 @@ github.com/submariner-io/admiral v0.14.5 h1:vGtGVJPg1Wap/nKzkE4S56QNK6TEjsnk11EZ
 github.com/submariner-io/admiral v0.14.5/go.mod h1:LkpESKH3BOS9bL206BMMyFIvAblqPC03WXFNMutAaRQ=
 github.com/submariner-io/shipyard v0.14.5 h1:ojSNM6xOlGgyaZ7YQL/6Jrzs08mn3dXKEuFgJw7/hY0=
 github.com/submariner-io/shipyard v0.14.5/go.mod h1:v71szzcgslSBHx9V6kVggxNUljtqNPHq+z/NT2rejYA=
-github.com/submariner-io/submariner v0.14.3 h1:3RDakyqXzeCiAM+GDnuCyfyNuTIpNAN6LlmsCoTNowE=
-github.com/submariner-io/submariner v0.14.3/go.mod h1:gVj2sZlxDUTC1VV2zdbyFPwJr/MpmXfO5Ca/a/eMbHo=
+github.com/submariner-io/submariner v0.14.5 h1:3Vse2PcRKdn69CxgUuSpOQcr3IpeoP+pBermJcX14uk=
+github.com/submariner-io/submariner v0.14.5/go.mod h1:Mqybp6G7ObbosX/1rsuYxu3ZijKHLaaJyszNKGBdf9c=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/timakin/bodyclose v0.0.0-20190930140734-f7f2e9bca95e/go.mod h1:Qimiffbc6q9tBWlVV6x0P9sat/ao1xEkREYPPj9hphk=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
