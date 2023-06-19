@@ -29,6 +29,8 @@ import (
 
 // Ensure ensures that the required resources are deployed on the target system.
 // The resources handled here are the gateway CRDs: Cluster and Endpoint.
+//
+//nolint:gocyclo // No further refactors necessary
 func Ensure(ctx context.Context, crdUpdater crd.Updater) error {
 	_, err := crdUpdater.CreateOrUpdateFromEmbedded(ctx,
 		embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml)
@@ -64,6 +66,18 @@ func Ensure(ctx context.Context, crdUpdater crd.Updater) error {
 		embeddedyamls.Deploy_submariner_crds_submariner_io_globalingressips_yaml)
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return errors.Wrap(err, "error provisioning the GlobalIngressIP CRD")
+	}
+
+	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
+		embeddedyamls.Deploy_submariner_crds_submariner_io_gatewayroutes_yaml)
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		return errors.Wrap(err, "error getting Gateway routes")
+	}
+
+	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
+		embeddedyamls.Deploy_submariner_crds_submariner_io_nongatewayroutes_yaml)
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		return errors.Wrap(err, "error getting non-Gateway routes")
 	}
 
 	return nil
