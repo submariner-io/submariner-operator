@@ -13,7 +13,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.65.2
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.65.2
-	github.com/prometheus/client_golang v1.15.1
+	github.com/prometheus/client_golang v1.16.0
 	github.com/submariner-io/admiral v0.16.0-m0
 	github.com/submariner-io/shipyard v0.16.0-m0
 	github.com/submariner-io/submariner v0.16.0-m0
@@ -163,7 +163,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
-	github.com/prometheus/procfs v0.9.0 // indirect
+	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/rs/zerolog v1.29.1 // indirect
 	github.com/rubenv/sql-migrate v1.2.0 // indirect
