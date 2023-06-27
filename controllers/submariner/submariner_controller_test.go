@@ -206,6 +206,47 @@ func testReconciliation() {
 		})
 	})
 
+	When("ServiceDiscovery is enabled", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.ServiceDiscoveryEnabled = true
+		})
+
+		It("should create the ServiceDiscovery resource", func() {
+			t.AssertReconcileSuccess()
+
+			serviceDiscovery := &v1alpha1.ServiceDiscovery{}
+			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: names.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
+				serviceDiscovery)
+			Expect(err).To(Succeed())
+
+			Expect(serviceDiscovery.Spec.Version).To(Equal(t.submariner.Spec.Version))
+			Expect(serviceDiscovery.Spec.Repository).To(Equal(t.submariner.Spec.Repository))
+			Expect(serviceDiscovery.Spec.BrokerK8sCA).To(Equal(t.submariner.Spec.BrokerK8sCA))
+			Expect(serviceDiscovery.Spec.BrokerK8sRemoteNamespace).To(Equal(t.submariner.Spec.BrokerK8sRemoteNamespace))
+			Expect(serviceDiscovery.Spec.BrokerK8sApiServerToken).To(Equal(t.submariner.Spec.BrokerK8sApiServerToken))
+			Expect(serviceDiscovery.Spec.BrokerK8sApiServer).To(Equal(t.submariner.Spec.BrokerK8sApiServer))
+			Expect(serviceDiscovery.Spec.ClusterID).To(Equal(t.submariner.Spec.ClusterID))
+			Expect(serviceDiscovery.Spec.Namespace).To(Equal(t.submariner.Spec.Namespace))
+			Expect(serviceDiscovery.Spec.GlobalnetEnabled).To(BeTrue())
+		})
+	})
+
+	When("load balancer is enabled", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.LoadBalancerEnabled = true
+		})
+
+		It("should create the load balancer service", func() {
+			t.AssertReconcileSuccess()
+
+			service := &corev1.Service{}
+			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: "submariner-gateway", Namespace: submarinerNamespace},
+				service)
+			Expect(err).To(Succeed())
+			Expect(service.Spec.Type).To(Equal(corev1.ServiceTypeLoadBalancer))
+		})
+	})
+
 	When("the Submariner resource doesn't exist", func() {
 		BeforeEach(func() {
 			t.InitScopedClientObjs = nil
