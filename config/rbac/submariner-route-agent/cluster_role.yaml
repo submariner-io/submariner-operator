@@ -57,3 +57,11 @@ rules:
       - update
     resources:
       - nodes
+  - apiGroups:
+      - projectcalico.org
+    resources:
+      - ippools
+    verbs:
+      - create
+      - delete
+      - update
