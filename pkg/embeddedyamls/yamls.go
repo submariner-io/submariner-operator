@@ -3021,6 +3021,14 @@ rules:
       - update
     resources:
       - nodes
+  - apiGroups:
+      - projectcalico.org
+    resources:
+      - ippools
+    verbs:
+      - create
+      - delete
+      - update
 `
 	Config_rbac_submariner_route_agent_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
