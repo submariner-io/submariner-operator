@@ -12,3 +12,9 @@ rules:
       - securitycontextconstraints
     verbs:
       - use
+  - apiGroups:
+      - config.openshift.io
+    resources:
+      - infrastructures
+    verbs:
+      - get
