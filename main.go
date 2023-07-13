@@ -25,6 +25,7 @@ import (
 	"os"
 	"runtime"
 
+	configv1 "github.com/openshift/api/config/v1"
 	"github.com/operator-framework/operator-lib/leader"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
@@ -144,6 +145,8 @@ func main() {
 	utilruntime.Must(apiextensions.AddToScheme(scheme))
 	// These are required so that we can retrieve Gateway objects using the dynamic client
 	utilruntime.Must(submv1.AddToScheme(scheme))
+	// These are required so that we can retrieve OCP infrastructure objects using the dynamic client
+	utilruntime.Must(configv1.Install(scheme))
 	// +kubebuilder:scaffold:scheme
 
 	// Create a new Cmd to provide shared dependencies and start components
@@ -190,7 +193,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	generalClient, _ := client.New(mgr.GetConfig(), client.Options{})
+	generalClient, _ := client.New(mgr.GetConfig(), client.Options{
+		Scheme: scheme,
+	})
 
 	if err = submariner.NewReconciler(&submariner.Config{
 		ScopedClient:  mgr.GetClient(),

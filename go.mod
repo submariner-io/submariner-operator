@@ -7,7 +7,7 @@ require (
 	github.com/go-logr/logr v1.2.4
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.8
-	github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46
+	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
 	github.com/operator-framework/operator-lib v0.11.1-0.20230306195046-28cadc6b6055
 	github.com/operator-framework/operator-sdk v1.30.0
 	github.com/pkg/errors v0.9.1
@@ -155,6 +155,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
+	github.com/openshift/client-go v0.0.0-20230705133330-7f808ad59404 // indirect
 	github.com/operator-framework/api v0.17.4-0.20230223191600-0131a6301e42 // indirect
 	github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230413193425-4632388adc61 // indirect
 	github.com/operator-framework/java-operator-plugins v0.7.1-0.20230306190439-0eed476d2b75 // indirect
