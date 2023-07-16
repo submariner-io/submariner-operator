@@ -2493,6 +2493,7 @@ rules:
       - pods
       - services
       - nodes
+      - endpoints
     verbs:
       - get
       - list
