@@ -91,7 +91,7 @@ func metricProxyContainer(cr *v1alpha1.Submariner, name, hostPort, podPort strin
 				},
 			}},
 		},
-		Command: []string{"/usr/bin/nc"},
-		Args:    []string{"-v", "-lk", "-p", hostPort, "-e", "nc", "$(NODE_IP)", podPort},
+		Command: []string{"/app/metricsproxy"},
+		Args:    []string{hostPort, "$(NODE_IP)", podPort},
 	}
 }
