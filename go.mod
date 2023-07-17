@@ -14,7 +14,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.66.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.66.0
 	github.com/prometheus/client_golang v1.16.0
-	github.com/submariner-io/admiral v0.16.0-m1
+	github.com/submariner-io/admiral v0.16.0-m2
 	github.com/submariner-io/shipyard v0.16.0-m2
 	github.com/submariner-io/submariner v0.16.0-m1
 	github.com/uw-labs/lichen v0.1.7
@@ -23,7 +23,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.27.3
 	k8s.io/apimachinery v0.27.3
 	k8s.io/client-go v0.27.3
-	k8s.io/utils v0.0.0-20230505201702-9f6742963106
+	k8s.io/utils v0.0.0-20230711102312-30195339c3c7
 	sigs.k8s.io/controller-runtime v0.15.0
 	sigs.k8s.io/controller-tools v0.12.0
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
