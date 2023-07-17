@@ -2,39 +2,50 @@
 version: 2
 updates:
   - package-ecosystem: github-actions
-    directory: '/'
+    directory: /
     schedule:
       interval: monthly
   - package-ecosystem: github-actions
-    directory: '/'
-    target-branch: "release-0.12"
+    directory: /
+    target-branch: release-0.12
     schedule:
       interval: monthly
   - package-ecosystem: github-actions
-    directory: '/'
-    target-branch: "release-0.13"
+    directory: /
+    target-branch: release-0.13
     schedule:
       interval: monthly
   - package-ecosystem: github-actions
-    directory: '/'
-    target-branch: "release-0.14"
+    directory: /
+    target-branch: release-0.14
     schedule:
       interval: monthly
   - package-ecosystem: github-actions
-    directory: '/'
-    target-branch: "release-0.15"
+    directory: /
+    target-branch: release-0.15
     schedule:
       interval: monthly
   - package-ecosystem: gomod
-    directory: "/"
+    directory: /
     schedule:
       interval: weekly
     ignore:
-      # Our internal dependencies
+      # Included with prometheus-operator/pkg/client
+      - dependency-name: github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+      # Our own dependencies are handled during releases
       - dependency-name: github.com/submariner-io/*
-      # These are included by k8s.io/apiextensions-apiserver
+      # Managed in admiral
+      - dependency-name: github.com/go-logr/logr
+      - dependency-name: github.com/onsi/ginkgo/v2
+      - dependency-name: github.com/onsi/gomega
+      - dependency-name: github.com/pkg/errors
+      - dependency-name: github.com/prometheus/client_golang
       - dependency-name: k8s.io/api
       - dependency-name: k8s.io/apimachinery
       - dependency-name: k8s.io/client-go
-      # Included with prometheus-operator/pkg/client
-      - dependency-name: github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
+      - dependency-name: sigs.k8s.io/controller-runtime
+      - dependency-name: sigs.k8s.io/yaml
+      # Managed in shipyard
+      - dependency-name: k8s.io/utils
+      # Managed in submariner
+      - dependency-name: github.com/uw-labs/lichen

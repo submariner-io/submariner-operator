@@ -278,7 +278,7 @@ func newSubmariner() *v1alpha1.Submariner {
 			ClusterCIDR:              "",
 			GlobalCIDR:               "169.254.0.0/16",
 			ColorCodes:               "red",
-			Namespace:                "submariner_ns",
+			Namespace:                submarinerNamespace,
 			Debug:                    true,
 		},
 	}

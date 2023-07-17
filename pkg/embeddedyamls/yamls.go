@@ -1966,6 +1966,118 @@ spec:
     subresources:
       status: {}
 `
+	Deploy_submariner_crds_submariner_io_gatewayroutes_yaml = `---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.12.0
+  name: gatewayroutes.submariner.io
+spec:
+  group: submariner.io
+  names:
+    kind: GatewayRoute
+    listKind: GatewayRouteList
+    plural: gatewayroutes
+    shortNames:
+    - gwrt
+    singular: gatewayroute
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              nextHops:
+                description: Specifies the next hops to reach the remote CIDRs
+                items:
+                  type: string
+                type: array
+              remoteCIDRs:
+                description: Specifies the remote CIDRs available via the next hop
+                items:
+                  type: string
+                type: array
+            required:
+            - nextHops
+            - remoteCIDRs
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+`
+	Deploy_submariner_crds_submariner_io_nongatewayroutes_yaml = `---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.12.0
+  name: nongatewayroutes.submariner.io
+spec:
+  group: submariner.io
+  names:
+    kind: NonGatewayRoute
+    listKind: NonGatewayRouteList
+    plural: nongatewayroutes
+    shortNames:
+    - ngwrt
+    singular: nongatewayroute
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              nextHops:
+                description: Specifies the next hops to reach the remote CIDRs
+                items:
+                  type: string
+                type: array
+              remoteCIDRs:
+                description: Specifies the remote CIDRs available via the next hop
+                items:
+                  type: string
+                type: array
+            required:
+            - nextHops
+            - remoteCIDRs
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+`
 	Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml = `apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -2910,6 +3022,14 @@ rules:
       - update
     resources:
       - nodes
+  - apiGroups:
+      - projectcalico.org
+    resources:
+      - ippools
+    verbs:
+      - create
+      - delete
+      - update
 `
 	Config_rbac_submariner_route_agent_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
