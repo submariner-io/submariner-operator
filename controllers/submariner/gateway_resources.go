@@ -38,7 +38,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -69,7 +69,7 @@ func newGatewayDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet
 				},
 				Type: appsv1.RollingUpdateDaemonSetStrategyType,
 			},
-			RevisionHistoryLimit: pointer.Int32(5),
+			RevisionHistoryLimit: ptr.To(int32(5)),
 		},
 	}
 
@@ -157,11 +157,11 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 							Drop: []corev1.Capability{"all"},
 						},
 						// The gateway needs to be privileged so it can write to /proc/sys
-						AllowPrivilegeEscalation: pointer.Bool(true),
-						Privileged:               pointer.Bool(true),
-						RunAsNonRoot:             pointer.Bool(false),
+						AllowPrivilegeEscalation: ptr.To(true),
+						Privileged:               ptr.To(true),
+						RunAsNonRoot:             ptr.To(false),
 						// We need to be able to update /var/lib/alternatives (for iptables)
-						ReadOnlyRootFilesystem: pointer.Bool(false),
+						ReadOnlyRootFilesystem: ptr.To(false),
 					},
 					Ports: []corev1.ContainerPort{
 						{
@@ -219,7 +219,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 			ServiceAccountName:            names.GatewayComponent,
 			HostNetwork:                   true,
 			DNSPolicy:                     corev1.DNSClusterFirstWithHostNet,
-			TerminationGracePeriodSeconds: pointer.Int64(1),
+			TerminationGracePeriodSeconds: ptr.To(int64(1)),
 			RestartPolicy:                 corev1.RestartPolicyAlways,
 			// The gateway engine must be able to run on any flagged node, regardless of existing taints
 			Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
