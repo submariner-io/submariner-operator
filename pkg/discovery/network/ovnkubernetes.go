@@ -88,7 +88,7 @@ func discoverOvnNodeClusterNetwork(ctx context.Context, client controllerClient.
 		return nil, err
 	}
 
-	endpointList, err := FindEndpoint(ctx, client, ovnPod.Namespace)
+	endpointList, err := findEndpoint(ctx, client, ovnPod.Namespace)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error retrieving the endpoints from namespace %q", ovnPod.Namespace)
 	}
@@ -113,32 +113,27 @@ func discoverOvnNodeClusterNetwork(ctx context.Context, client controllerClient.
 func createLocalClusterNetwork() *ClusterNetwork {
 	return &ClusterNetwork{
 		PluginSettings: map[string]string{
-			OvnNBDB: "local",
-			OvnSBDB: "local",
+			OvnNBDB: "unix:/var/run/openvswitch/ovnnb_db.sock",
 		},
 	}
 }
 
 func createClusterNetworkWithEndpoints(endPoints []corev1.Endpoints) *ClusterNetwork {
 	pluginSettings := map[string]string{}
-	var OvnNBDBIPs, OVNSBDBIps string
+	var northboundDBIPs string
 
 	for index := 0; index < len(endPoints); index++ {
 		for _, subset := range endPoints[index].Subsets {
 			for _, port := range subset.Ports {
 				if strings.Contains(port.Name, "north") {
-					OvnNBDBIPs += fmt.Sprintf("%s:%s:%s:%s:%d,",
-						"IC:", endPoints[index].Name, port.Protocol, subset.Addresses[0].IP, OvnNBDBDefaultPort)
-				} else if strings.Contains(port.Name, "south") {
-					OVNSBDBIps += fmt.Sprintf("%s:%s:%s:%s:%d,",
-						"IC:", endPoints[index].Name, port.Protocol, subset.Addresses[0].IP, OvnSBDBDefaultPort)
+					northboundDBIPs += fmt.Sprintf("IC:%s:%s:%s:%d,",
+						endPoints[index].Name, port.Protocol, subset.Addresses[0].IP, OvnNBDBDefaultPort)
 				}
 			}
 		}
 	}
 
-	pluginSettings[OvnNBDB] = OvnNBDBIPs
-	pluginSettings[OvnSBDB] = OVNSBDBIps
+	pluginSettings[OvnNBDB] = northboundDBIPs
 
 	return &ClusterNetwork{
 		PluginSettings: pluginSettings,
@@ -162,7 +157,7 @@ func updateClusterNetworkFromConfigMap(ctx context.Context, client controllerCli
 	}
 }
 
-func FindEndpoint(ctx context.Context, client controllerClient.Client, endpointNameSpace string) (*corev1.EndpointsList, error) {
+func findEndpoint(ctx context.Context, client controllerClient.Client, endpointNameSpace string) (*corev1.EndpointsList, error) {
 	endpointsList := &corev1.EndpointsList{}
 	listOptions := &controllerClient.ListOptions{
 		Namespace: endpointNameSpace,
