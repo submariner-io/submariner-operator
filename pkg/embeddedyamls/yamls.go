@@ -2675,6 +2675,12 @@ rules:
       - securitycontextconstraints
     verbs:
       - use
+  - apiGroups:
+      - config.openshift.io
+    resources:
+      - infrastructures
+    verbs:
+      - get
 `
 	Config_rbac_submariner_operator_ocp_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1

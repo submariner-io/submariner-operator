@@ -24,6 +24,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	v1config "github.com/openshift/api/config/v1"
 	"github.com/submariner-io/admiral/pkg/fake"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/test"
@@ -238,12 +239,34 @@ func testReconciliation() {
 
 		It("should create the load balancer service", func() {
 			t.AssertReconcileSuccess()
+			t.assertLoadBalancerService()
+		})
 
-			service := &corev1.Service{}
-			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: "submariner-gateway", Namespace: submarinerNamespace},
-				service)
-			Expect(err).To(Succeed())
-			Expect(service.Spec.Type).To(Equal(corev1.ServiceTypeLoadBalancer))
+		Context("and the Openshift platform type is AWS", func() {
+			BeforeEach(func() {
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newInfrastructureCluster(v1config.AWSPlatformType))
+			})
+
+			It("should create the correct load balancer service", func() {
+				t.AssertReconcileSuccess()
+
+				service := t.assertLoadBalancerService()
+				Expect(service.Annotations).To(HaveKeyWithValue("service.beta.kubernetes.io/aws-load-balancer-type", "nlb"))
+			})
+		})
+
+		Context("and the Openshift platform type is IBMCloud", func() {
+			BeforeEach(func() {
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newInfrastructureCluster(v1config.IBMCloudPlatformType))
+			})
+
+			It("should create the correct load balancer service", func() {
+				t.AssertReconcileSuccess()
+
+				service := t.assertLoadBalancerService()
+				Expect(service.Annotations).To(HaveKeyWithValue(
+					"service.kubernetes.io/ibm-load-balancer-cloud-provider-enable-features", "nlb"))
+			})
 		})
 	})
 
@@ -309,6 +332,16 @@ func testReconciliation() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+}
+
+func (t *testDriver) assertLoadBalancerService() *corev1.Service {
+	service := &corev1.Service{}
+	err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: "submariner-gateway", Namespace: submarinerNamespace},
+		service)
+	Expect(err).To(Succeed())
+	Expect(service.Spec.Type).To(Equal(corev1.ServiceTypeLoadBalancer))
+
+	return service
 }
 
 func testDeletion() {
@@ -510,4 +543,17 @@ func testDeletion() {
 			t.awaitSubmarinerDeleted()
 		})
 	})
+}
+
+func newInfrastructureCluster(platformType v1config.PlatformType) *v1config.Infrastructure {
+	return &v1config.Infrastructure{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "cluster",
+		},
+		Status: v1config.InfrastructureStatus{
+			PlatformStatus: &v1config.PlatformStatus{
+				Type: platformType,
+			},
+		},
+	}
 }

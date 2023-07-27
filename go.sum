@@ -812,7 +812,13 @@ github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b/go
 github.com/opencontainers/runtime-spec v1.1.0-rc.1 h1:wHa9jroFfKGQqFHj0I1fMRKLl0pfj+ynAqBxo3v6u9w=
 github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46 h1:/EZ9QZVWoh4ygjZOGvw88yef3UjDNm0+JkGAy4ddJ+Q=
 github.com/openshift/api v0.0.0-20211201215911-5a82bae32e46/go.mod h1:RsQCVJu4qhUawxxDP7pGlwU3IA4F01wYm3qKEu29Su8=
+github.com/openshift/api v0.0.0-20230703134140-1c2204a0195c h1:b1aPWPgW3MyK4BEKFjKBIHTV2LrdwGwErITEUw//xl4=
+github.com/openshift/api v0.0.0-20230703134140-1c2204a0195c/go.mod h1:4VWG+W22wrB4HfBL88P40DxLEpSOaiBVxUnfalfJo9k=
+github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00 h1:sYXq/GVWN0Un+6eEGd3vft4dY+M3i0RSL3GJhvQBOGY=
+github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00/go.mod h1:yimSGmjsI+XF1mr+AKBs2//fSXIOhhetHGbMlBEfXbs=
 github.com/openshift/build-machinery-go v0.0.0-20210712174854-1bb7fd1518d3/go.mod h1:b1BuldmJlbA/xYtdZvKi+7j5YGB44qJUJDZ9zwiNCfE=
+github.com/openshift/client-go v0.0.0-20230705133330-7f808ad59404 h1:7Q/RkeK4UHpB25nu7z03tSFlWgWjcnAUbjwI1Ud22H4=
+github.com/openshift/client-go v0.0.0-20230705133330-7f808ad59404/go.mod h1:8Hq3t7Ba02Z0sjDGtTCARPXylxbOyzFrbwiqb1ViWMA=
 github.com/operator-framework/api v0.17.4-0.20230223191600-0131a6301e42 h1:d/Pnr19TnmIq3zQ6ebewC+5jt5zqYbRkvYd37YZENQY=
 github.com/operator-framework/api v0.17.4-0.20230223191600-0131a6301e42/go.mod h1:l/cuwtPxkVUY7fzYgdust2m9tlmb8I4pOvbsUufRb24=
 github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230413193425-4632388adc61 h1:FPO2hS4HNIU2pzWeX2KusKxqDFeGIURRMkxRtn/i570=
