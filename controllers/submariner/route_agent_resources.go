@@ -135,20 +135,18 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.Clu
 		},
 	}
 
-	if clusterNetwork.PluginSettings != nil {
-		if ovndb, ok := clusterNetwork.PluginSettings[network.OvnNBDB]; ok {
-			ds.Spec.Template.Spec.Containers[0].Env = append(
-				ds.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name: network.OvnNBDB, Value: ovndb,
-				})
-		}
+	if ovndb, ok := clusterNetwork.PluginSettings[network.OvnNBDB]; ok {
+		ds.Spec.Template.Spec.Containers[0].Env = append(
+			ds.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name: network.OvnNBDB, Value: ovndb,
+			})
+	}
 
-		if ovnsb, ok := clusterNetwork.PluginSettings[network.OvnSBDB]; ok {
-			ds.Spec.Template.Spec.Containers[0].Env = append(
-				ds.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name: network.OvnSBDB, Value: ovnsb,
-				})
-		}
+	if ovnsb, ok := clusterNetwork.PluginSettings[network.OvnSBDB]; ok {
+		ds.Spec.Template.Spec.Containers[0].Env = append(
+			ds.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name: network.OvnSBDB, Value: ovnsb,
+			})
 	}
 
 	return ds

@@ -90,19 +90,15 @@ func discoverOvnNodeClusterNetwork(ctx context.Context, client controllerClient.
 
 	endpointList, err := findEndpoint(ctx, client, ovnPod.Namespace)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error retrieving the endpoints from namespace %q", ovnPod.Namespace)
+		return nil, errors.Wrapf(err, "error retrieving the endpoints from namespace %q", ovnPod.Namespace)
 	}
 
 	var clusterNetwork *ClusterNetwork
 
 	if endpointList == nil || len(endpointList.Items) == 0 {
-		clusterNetwork, err = createLocalClusterNetwork(), nil
+		clusterNetwork = createLocalClusterNetwork()
 	} else {
-		clusterNetwork, err = createClusterNetworkWithEndpoints(endpointList.Items), nil
-	}
-
-	if err != nil {
-		return nil, err
+		clusterNetwork = createClusterNetworkWithEndpoints(endpointList.Items)
 	}
 
 	updateClusterNetworkFromConfigMap(ctx, client, ovnPod.Namespace, clusterNetwork)
@@ -119,24 +115,21 @@ func createLocalClusterNetwork() *ClusterNetwork {
 }
 
 func createClusterNetworkWithEndpoints(endPoints []corev1.Endpoints) *ClusterNetwork {
-	pluginSettings := map[string]string{}
-	var northboundDBIPs string
+	var northboundDBIPs []string
 
-	for index := 0; index < len(endPoints); index++ {
+	for index := range endPoints {
 		for _, subset := range endPoints[index].Subsets {
 			for _, port := range subset.Ports {
 				if strings.Contains(port.Name, "north") {
-					northboundDBIPs += fmt.Sprintf("IC:%s:%s:%s:%d,",
-						endPoints[index].Name, port.Protocol, subset.Addresses[0].IP, OvnNBDBDefaultPort)
+					northboundDBIPs = append(northboundDBIPs, fmt.Sprintf("IC:%s:%s:%s:%d",
+						endPoints[index].Name, port.Protocol, subset.Addresses[0].IP, OvnNBDBDefaultPort))
 				}
 			}
 		}
 	}
 
-	pluginSettings[OvnNBDB] = northboundDBIPs
-
 	return &ClusterNetwork{
-		PluginSettings: pluginSettings,
+		PluginSettings: map[string]string{OvnNBDB: strings.Join(northboundDBIPs, ",")},
 	}
 }
 
