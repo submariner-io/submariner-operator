@@ -11,8 +11,8 @@ require (
 	github.com/operator-framework/operator-lib v0.11.1-0.20230306195046-28cadc6b6055
 	github.com/operator-framework/operator-sdk v1.30.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.66.0
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.66.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.67.0
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.67.0
 	github.com/prometheus/client_golang v1.16.0
 	github.com/submariner-io/admiral v0.16.0-m2
 	github.com/submariner-io/shipyard v0.16.0-m2
@@ -155,7 +155,6 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b // indirect
-	github.com/openshift/client-go v0.0.0-20230705133330-7f808ad59404 // indirect
 	github.com/operator-framework/api v0.17.4-0.20230223191600-0131a6301e42 // indirect
 	github.com/operator-framework/helm-operator-plugins v0.0.12-0.20230413193425-4632388adc61 // indirect
 	github.com/operator-framework/java-operator-plugins v0.7.1-0.20230306190439-0eed476d2b75 // indirect
