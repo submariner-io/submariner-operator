@@ -20,15 +20,20 @@ package submariner
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
+	configv1 "github.com/openshift/api/config/v1"
+	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"github.com/submariner-io/submariner/pkg/port"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -43,18 +48,74 @@ const (
 func (r *Reconciler) reconcileLoadBalancer(
 	ctx context.Context, instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*corev1.Service, error) {
-	return apply.Service(ctx, instance, newLoadBalancerService(instance), reqLogger, r.config.ScopedClient, r.config.Scheme)
+	var err error
+
+	platformTypeOCP, err := r.getOCPPlatformType(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	svc := newLoadBalancerService(instance, platformTypeOCP)
+	svc, err = apply.Service(ctx, instance, svc, reqLogger, r.config.ScopedClient, r.config.Scheme)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// For IBM cloud also needs to annotate the allocated health check node port
+	if platformTypeOCP == string(configv1.IBMCloudPlatformType) {
+		healthPortStr := fmt.Sprintf("%d", svc.Spec.HealthCheckNodePort)
+		svc.ObjectMeta.Annotations = map[string]string{
+			"service.kubernetes.io/ibm-load-balancer-cloud-provider-vpc-health-check-port": healthPortStr,
+		}
+		svc, err = apply.Service(ctx, instance, svc, reqLogger, r.config.ScopedClient, r.config.Scheme)
+	}
+
+	return svc, err
 }
 
-func newLoadBalancerService(instance *v1alpha1.Submariner) *corev1.Service {
+func (r *Reconciler) getOCPPlatformType(ctx context.Context) (string, error) {
+	clusterInfra := &configv1.Infrastructure{}
+	err := r.config.GeneralClient.Get(ctx, types.NamespacedName{Name: "cluster"}, clusterInfra)
+
+	if apierrors.IsNotFound(err) {
+		return "", nil
+	}
+
+	if err != nil {
+		return "", errors.Wrap(err, "error retrieving cluster Infrastructure resource")
+	}
+
+	if clusterInfra.Status.PlatformStatus == nil {
+		return string(clusterInfra.Status.Platform), nil //nolint:staticcheck //Purposely using deprecated field for backwards compatibility
+	}
+
+	return string(clusterInfra.Status.PlatformStatus.Type), nil
+}
+
+func newLoadBalancerService(instance *v1alpha1.Submariner, platformTypeOCP string) *corev1.Service {
+	var svcAnnotations map[string]string
+
+	switch platformTypeOCP {
+	case string(configv1.AWSPlatformType):
+		svcAnnotations = map[string]string{
+			"service.beta.kubernetes.io/aws-load-balancer-type": "nlb",
+		}
+	case string(configv1.IBMCloudPlatformType):
+		svcAnnotations = map[string]string{
+			"service.kubernetes.io/ibm-load-balancer-cloud-provider-enable-features":           "nlb",
+			"service.kubernetes.io/ibm-load-balancer-cloud-provider-ip-type":                   "public",
+			"service.kubernetes.io/ibm-load-balancer-cloud-provider-vpc-health-check-protocol": "http",
+		}
+	default:
+		svcAnnotations = map[string]string{}
+	}
+
 	return &corev1.Service{
 		ObjectMeta: v1meta.ObjectMeta{
-			Name:      loadBalancerName,
-			Namespace: instance.Spec.Namespace,
-			Annotations: map[string]string{
-				// AWS requires nlb Load Balancer for UDP
-				"service.beta.kubernetes.io/aws-load-balancer-type": "nlb",
-			},
+			Name:        loadBalancerName,
+			Namespace:   instance.Spec.Namespace,
+			Annotations: svcAnnotations,
 		},
 		Spec: corev1.ServiceSpec{
 			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyTypeLocal,

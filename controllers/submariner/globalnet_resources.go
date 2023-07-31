@@ -30,7 +30,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 //nolint:wrapcheck // No need to wrap errors here.
@@ -81,10 +81,10 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GlobalnetComponent]),
 							SecurityContext: &corev1.SecurityContext{
 								Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
-								AllowPrivilegeEscalation: pointer.Bool(true),
-								Privileged:               pointer.Bool(true),
-								ReadOnlyRootFilesystem:   pointer.Bool(false),
-								RunAsNonRoot:             pointer.Bool(false),
+								AllowPrivilegeEscalation: ptr.To(true),
+								Privileged:               ptr.To(true),
+								ReadOnlyRootFilesystem:   ptr.To(false),
+								RunAsNonRoot:             ptr.To(false),
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
@@ -102,7 +102,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 						},
 					},
 					ServiceAccountName:            names.GlobalnetComponent,
-					TerminationGracePeriodSeconds: pointer.Int64(2),
+					TerminationGracePeriodSeconds: ptr.To(int64(2)),
 					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
 					HostNetwork:                   true,
 					DNSPolicy:                     corev1.DNSClusterFirstWithHostNet,

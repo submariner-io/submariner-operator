@@ -30,7 +30,7 @@ import (
 	"k8s.io/client-go/discovery"
 	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -110,8 +110,8 @@ func GenerateServiceMonitor(ns string, s *v1.Service) *monitoringv1.ServiceMonit
 		ownerReferences = []metav1.OwnerReference{
 			{
 				APIVersion:         "v1",
-				BlockOwnerDeletion: pointer.Bool(true),
-				Controller:         pointer.Bool(true),
+				BlockOwnerDeletion: ptr.To(true),
+				Controller:         ptr.To(true),
 				Kind:               "Service",
 				Name:               s.Name,
 				UID:                s.UID,

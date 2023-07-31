@@ -31,7 +31,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 //nolint:wrapcheck // No need to wrap errors here.
@@ -70,7 +70,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: pointer.Int64(1),
+					TerminationGracePeriodSeconds: ptr.To(int64(1)),
 					Volumes: []corev1.Volume{
 						// We need to share /run/xtables.lock with the host for iptables
 						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
@@ -93,10 +93,10 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 							Command: []string{"submariner-route-agent.sh"},
 							SecurityContext: &corev1.SecurityContext{
 								Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
-								AllowPrivilegeEscalation: pointer.Bool(true),
-								Privileged:               pointer.Bool(true),
-								ReadOnlyRootFilesystem:   pointer.Bool(false),
-								RunAsNonRoot:             pointer.Bool(false),
+								AllowPrivilegeEscalation: ptr.To(true),
+								Privileged:               ptr.To(true),
+								ReadOnlyRootFilesystem:   ptr.To(false),
+								RunAsNonRoot:             ptr.To(false),
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
