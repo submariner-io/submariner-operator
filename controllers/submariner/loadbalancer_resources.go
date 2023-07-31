@@ -25,13 +25,13 @@ import (
 	"github.com/go-logr/logr"
 	configv1 "github.com/openshift/api/config/v1"
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"github.com/submariner-io/submariner/pkg/port"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -78,7 +78,7 @@ func (r *Reconciler) getOCPPlatformType(ctx context.Context) (string, error) {
 	clusterInfra := &configv1.Infrastructure{}
 	err := r.config.GeneralClient.Get(ctx, types.NamespacedName{Name: "cluster"}, clusterInfra)
 
-	if apierrors.IsNotFound(err) {
+	if resource.IsNotFoundErr(err) {
 		return "", nil
 	}
 
