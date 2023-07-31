@@ -172,7 +172,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 	}
 
-	routeagentDaemonSet, err := r.reconcileRouteagentDaemonSet(ctx, instance, reqLogger)
+	routeagentDaemonSet, err := r.reconcileRouteagentDaemonSet(ctx, instance, clusterNetwork, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

@@ -58,7 +58,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 		},
 		{
 			Resource:          newDaemonSet(names.RouteAgentComponent, instance.Namespace),
-			UninstallResource: newRouteAgentDaemonSet(instance, names.AppendUninstall(names.RouteAgentComponent)),
+			UninstallResource: newRouteAgentDaemonSet(instance, clusterNetwork, names.AppendUninstall(names.RouteAgentComponent)),
 		},
 		{
 			Resource:          newDaemonSet(names.GlobalnetComponent, instance.Namespace),

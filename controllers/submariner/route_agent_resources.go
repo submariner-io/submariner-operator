@@ -25,6 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	"github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
@@ -35,13 +36,14 @@ import (
 )
 
 //nolint:wrapcheck // No need to wrap errors here.
-func (r *Reconciler) reconcileRouteagentDaemonSet(ctx context.Context, instance *v1alpha1.Submariner, reqLogger logr.Logger,
+func (r *Reconciler) reconcileRouteagentDaemonSet(ctx context.Context, instance *v1alpha1.Submariner,
+	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger,
 ) (*appsv1.DaemonSet, error) {
-	return apply.DaemonSet(ctx, instance, newRouteAgentDaemonSet(instance, names.RouteAgentComponent), reqLogger, r.config.ScopedClient,
-		r.config.Scheme)
+	return apply.DaemonSet(ctx, instance, newRouteAgentDaemonSet(instance, clusterNetwork, names.RouteAgentComponent),
+		reqLogger, r.config.ScopedClient, r.config.Scheme)
 }
 
-func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet {
+func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork, name string) *appsv1.DaemonSet {
 	labels := map[string]string{
 		"app":       name,
 		"component": "routeagent",
@@ -49,7 +51,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 
 	maxUnavailable := intstr.FromString("100%")
 
-	return &appsv1.DaemonSet{
+	ds := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
 			Name:      name,
@@ -83,6 +85,9 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 						{Name: "host-sys", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
 							Path: "/sys",
 						}}},
+						{Name: "host-var-run-openvswitch-nbdb-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+							Path: "/var/run/openvswitch/ovnnb_db.sock",
+						}}},
 					},
 					Containers: []corev1.Container{
 						{
@@ -102,6 +107,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
 								{Name: "host-run-openvswitch-db-sock", MountPath: "/run/openvswitch/db.sock"},
+								{Name: "host-var-run-openvswitch-nbdb-sock", MountPath: "/var/run/openvswitch/ovnnb_db.sock"},
 							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
@@ -128,4 +134,20 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 			},
 		},
 	}
+
+	if ovndb, ok := clusterNetwork.PluginSettings[network.OvnNBDB]; ok {
+		ds.Spec.Template.Spec.Containers[0].Env = append(
+			ds.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name: network.OvnNBDB, Value: ovndb,
+			})
+	}
+
+	if ovnsb, ok := clusterNetwork.PluginSettings[network.OvnSBDB]; ok {
+		ds.Spec.Template.Spec.Containers[0].Env = append(
+			ds.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
+				Name: network.OvnSBDB, Value: ovnsb,
+			})
+	}
+
+	return ds
 }
