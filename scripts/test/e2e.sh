@@ -20,7 +20,7 @@ subm_ns=submariner-operator
 # Check that we're testing the version we expect
 function check_operator_version() {
     local opv
-    opv=$(kubectl --context="$cluster" logs -n submariner-operator -l name=submariner-operator --tail=-1 | awk '/Submariner operator version/ { print $NF }')
+    opv=$(kubectl --context="$cluster" logs -n submariner-operator -l name=submariner-operator --tail=-1 | awk '/submariner-operator version/ { print $NF }')
     printf "Cluster %s is running operator version %s\n" "$cluster" "$opv"
     if [ "$opv" != "$VERSION" ]; then
         printf "Operator version mismatch: expected %s, got %s\n" "$VERSION" "$opv"
