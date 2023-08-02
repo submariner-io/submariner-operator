@@ -6,7 +6,7 @@ require (
 	github.com/coreos/go-semver v0.3.1
 	github.com/go-logr/logr v1.2.4
 	github.com/onsi/ginkgo/v2 v2.11.0
-	github.com/onsi/gomega v1.27.8
+	github.com/onsi/gomega v1.27.10
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
 	github.com/operator-framework/operator-lib v0.11.1-0.20230306195046-28cadc6b6055
 	github.com/operator-framework/operator-sdk v1.31.0
@@ -15,14 +15,14 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.67.0
 	github.com/prometheus/client_golang v1.16.0
 	github.com/submariner-io/admiral v0.16.0-m2
-	github.com/submariner-io/shipyard v0.16.0-m2
+	github.com/submariner-io/shipyard v0.16.0-m3
 	github.com/submariner-io/submariner v0.16.0-m2
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.11.0
-	k8s.io/api v0.27.3
+	k8s.io/api v0.27.4
 	k8s.io/apiextensions-apiserver v0.27.3
-	k8s.io/apimachinery v0.27.3
-	k8s.io/client-go v0.27.3
+	k8s.io/apimachinery v0.27.4
+	k8s.io/client-go v0.27.4
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/controller-runtime v0.15.0
 	sigs.k8s.io/controller-tools v0.12.1
@@ -202,13 +202,13 @@ require (
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.starlark.net v0.0.0-20221010140840-6bf6f0955179 // indirect
-	golang.org/x/crypto v0.10.0 // indirect
+	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/term v0.9.0 // indirect
+	golang.org/x/term v0.10.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.9.3 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.3.0 // indirect
