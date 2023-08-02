@@ -14,7 +14,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.67.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.67.0
 	github.com/prometheus/client_golang v1.16.0
-	github.com/submariner-io/admiral v0.16.0-m2
+	github.com/submariner-io/admiral v0.16.0-m3
 	github.com/submariner-io/shipyard v0.16.0-m3
 	github.com/submariner-io/submariner v0.16.0-m2
 	github.com/uw-labs/lichen v0.1.7
@@ -168,7 +168,7 @@ require (
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
-	github.com/rs/zerolog v1.29.1 // indirect
+	github.com/rs/zerolog v1.30.0 // indirect
 	github.com/rubenv/sql-migrate v1.3.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
