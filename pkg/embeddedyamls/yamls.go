@@ -2999,6 +2999,7 @@ rules:
     resources:
       - pods
       - services
+      - secrets
     verbs:
       - get
       - list
