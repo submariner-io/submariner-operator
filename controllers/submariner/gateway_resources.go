@@ -25,12 +25,13 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	"github.com/submariner-io/submariner/pkg/port"
 	appsv1 "k8s.io/api/apps/v1"
@@ -148,7 +149,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 			Containers: []corev1.Container{
 				{
 					Name:            name,
-					Image:           getImagePath(cr, names.GatewayImage, names.GatewayComponent),
+					Image:           getImagePath(cr, opnames.GatewayImage, names.GatewayComponent),
 					ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayComponent]),
 					Command:         []string{"submariner.sh"},
 					SecurityContext: &corev1.SecurityContext{

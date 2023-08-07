@@ -26,7 +26,8 @@ import (
 	"github.com/coreos/go-semver/semver"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	"github.com/submariner-io/admiral/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -318,7 +319,7 @@ func (i *Info) convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
 	podSpec.InitContainers = podSpec.Containers
 	podSpec.InitContainers[0].Env = append(podSpec.InitContainers[0].Env, corev1.EnvVar{Name: ContainerEnvVar, Value: "true"})
 
-	image, pullPolicy := i.GetImageInfo(names.NettestImage, names.NettestComponent)
+	image, pullPolicy := i.GetImageInfo(opnames.NettestImage, names.NettestComponent)
 
 	podSpec.Containers = []corev1.Container{
 		{

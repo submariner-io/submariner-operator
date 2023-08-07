@@ -28,10 +28,11 @@ import (
 	. "github.com/onsi/gomega"
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	"github.com/submariner-io/submariner-operator/controllers/test"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -104,7 +105,7 @@ func newTestDriver() *testDriver {
 }
 
 func (t *testDriver) awaitFinalizer() {
-	t.AwaitFinalizer(t.serviceDiscovery, names.CleanupFinalizer)
+	t.AwaitFinalizer(t.serviceDiscovery, opnames.CleanupFinalizer)
 }
 
 func (t *testDriver) awaitServiceDiscoveryDeleted() {
@@ -112,10 +113,10 @@ func (t *testDriver) awaitServiceDiscoveryDeleted() {
 }
 
 func (t *testDriver) assertUninstallServiceDiscoveryDeployment() *appsv1.Deployment {
-	deployment := t.AssertDeployment(names.AppendUninstall(names.ServiceDiscoveryComponent))
+	deployment := t.AssertDeployment(opnames.AppendUninstall(names.ServiceDiscoveryComponent))
 
 	t.AssertUninstallInitContainer(&deployment.Spec.Template,
-		fmt.Sprintf("%s/%s:%s", t.serviceDiscovery.Spec.Repository, names.ServiceDiscoveryImage, t.serviceDiscovery.Spec.Version))
+		fmt.Sprintf("%s/%s:%s", t.serviceDiscovery.Spec.Repository, opnames.ServiceDiscoveryImage, t.serviceDiscovery.Spec.Version))
 
 	return deployment
 }

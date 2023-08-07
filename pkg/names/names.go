@@ -20,20 +20,11 @@ package names
 
 import "fmt"
 
-/* Component names and other constants. */
+/* CR names and other constants. */
 const (
-	NetworkPluginSyncerComponent = "submariner-networkplugin-syncer"
-	RouteAgentComponent          = "submariner-routeagent"
-	GatewayComponent             = "submariner-gateway"
-	GlobalnetComponent           = "submariner-globalnet"
-	ServiceDiscoveryComponent    = "submariner-lighthouse-agent"
-	LighthouseCoreDNSComponent   = "submariner-lighthouse-coredns"
-	OperatorComponent            = "submariner-operator"
-	ServiceDiscoveryCrName       = "service-discovery"
-	SubmarinerCrName             = "submariner"
-	MetricsProxyComponent        = "submariner-metrics-proxy"
-	NettestComponent             = "submariner-nettest"
-	CleanupFinalizer             = "controllers.submariner.io/cleanup"
+	ServiceDiscoveryCrName = "service-discovery"
+	SubmarinerCrName       = "submariner"
+	CleanupFinalizer       = "controllers.submariner.io/cleanup"
 )
 
 /* These values are used by downstream distributions to override the component default image name. */

@@ -23,10 +23,11 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,7 +83,7 @@ func newMetricsProxyDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 func metricProxyContainer(cr *v1alpha1.Submariner, name, hostPort, podPort string) *corev1.Container {
 	return &corev1.Container{
 		Name:            name,
-		Image:           getImagePath(cr, names.MetricsProxyImage, names.MetricsProxyComponent),
+		Image:           getImagePath(cr, opnames.MetricsProxyImage, names.MetricsProxyComponent),
 		ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.MetricsProxyComponent]),
 		Env: []corev1.EnvVar{
 			{Name: "NODE_IP", ValueFrom: &corev1.EnvVarSource{
