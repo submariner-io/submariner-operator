@@ -24,12 +24,13 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/finalizer"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -39,7 +40,7 @@ import (
 )
 
 func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) (reconcile.Result, error) {
-	if !finalizer.IsPresent(instance, names.CleanupFinalizer) {
+	if !finalizer.IsPresent(instance, opnames.CleanupFinalizer) {
 		return reconcile.Result{}, nil
 	}
 
@@ -73,7 +74,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 					Namespace: instance.Namespace,
 				},
 			},
-			UninstallResource: newLighthouseAgent(instance, names.AppendUninstall(names.ServiceDiscoveryComponent)),
+			UninstallResource: newLighthouseAgent(instance, opnames.AppendUninstall(names.ServiceDiscoveryComponent)),
 		},
 	}
 
@@ -103,7 +104,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 //nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) error {
 	return finalizer.Remove(ctx, resource.ForControllerClient(r.ScopedClient, instance.Namespace, instance),
-		instance, names.CleanupFinalizer)
+		instance, opnames.CleanupFinalizer)
 }
 
 func (r *Reconciler) removeLighthouseConfigFromCustomDNSConfigMap(ctx context.Context,

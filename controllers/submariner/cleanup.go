@@ -23,11 +23,12 @@ import (
 	"time"
 
 	"github.com/submariner-io/admiral/pkg/finalizer"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/admiral/pkg/resource"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -36,7 +37,7 @@ import (
 )
 
 func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operatorv1alpha1.Submariner) (reconcile.Result, error) {
-	if !finalizer.IsPresent(instance, names.CleanupFinalizer) {
+	if !finalizer.IsPresent(instance, opnames.CleanupFinalizer) {
 		return reconcile.Result{}, nil
 	}
 
@@ -54,15 +55,15 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 	components := []*uninstall.Component{
 		{
 			Resource:          newDaemonSet(names.GatewayComponent, instance.Namespace),
-			UninstallResource: newGatewayDaemonSet(instance, names.AppendUninstall(names.GatewayComponent)),
+			UninstallResource: newGatewayDaemonSet(instance, opnames.AppendUninstall(names.GatewayComponent)),
 		},
 		{
 			Resource:          newDaemonSet(names.RouteAgentComponent, instance.Namespace),
-			UninstallResource: newRouteAgentDaemonSet(instance, clusterNetwork, names.AppendUninstall(names.RouteAgentComponent)),
+			UninstallResource: newRouteAgentDaemonSet(instance, clusterNetwork, opnames.AppendUninstall(names.RouteAgentComponent)),
 		},
 		{
 			Resource:          newDaemonSet(names.GlobalnetComponent, instance.Namespace),
-			UninstallResource: newGlobalnetDaemonSet(instance, names.AppendUninstall(names.GlobalnetComponent)),
+			UninstallResource: newGlobalnetDaemonSet(instance, opnames.AppendUninstall(names.GlobalnetComponent)),
 			CheckInstalled: func() bool {
 				return instance.Spec.GlobalCIDR != ""
 			},
@@ -70,7 +71,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 		{
 			Resource: newDeployment(names.NetworkPluginSyncerComponent, instance.Namespace),
 			UninstallResource: newNetworkPluginSyncerDeployment(instance, clusterNetwork,
-				names.AppendUninstall(names.NetworkPluginSyncerComponent)),
+				opnames.AppendUninstall(names.NetworkPluginSyncerComponent)),
 			CheckInstalled: func() bool {
 				return needsNetworkPluginSyncer(instance)
 			},
@@ -107,7 +108,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 //nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.Submariner) error {
 	return finalizer.Remove(ctx, resource.ForControllerClient(r.config.ScopedClient, instance.Namespace, &operatorv1alpha1.Submariner{}),
-		instance, names.CleanupFinalizer)
+		instance, opnames.CleanupFinalizer)
 }
 
 func (r *Reconciler) ensureServiceDiscoveryDeleted(ctx context.Context, namespace string) bool {

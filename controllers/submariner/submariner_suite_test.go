@@ -28,12 +28,13 @@ import (
 	. "github.com/onsi/gomega"
 	configv1 "github.com/openshift/api/config/v1"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	submarinerController "github.com/submariner-io/submariner-operator/controllers/submariner"
 	"github.com/submariner-io/submariner-operator/controllers/test"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -100,7 +101,7 @@ func newTestDriver() *testDriver {
 }
 
 func (t *testDriver) awaitFinalizer() {
-	t.AwaitFinalizer(t.submariner, names.CleanupFinalizer)
+	t.AwaitFinalizer(t.submariner, opnames.CleanupFinalizer)
 }
 
 func (t *testDriver) awaitSubmarinerDeleted() {
@@ -120,16 +121,16 @@ func (t *testDriver) assertRouteAgentDaemonSet() {
 
 	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
 	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
-		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.RouteAgentImage, t.submariner.Spec.Version)))
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.RouteAgentImage, t.submariner.Spec.Version)))
 
 	t.assertRouteAgentDaemonSetEnv(t.withNetworkDiscovery(), test.EnvMapFrom(daemonSet))
 }
 
 func (t *testDriver) assertUninstallRouteAgentDaemonSet() *appsv1.DaemonSet {
-	daemonSet := t.AssertDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+	daemonSet := t.AssertDaemonSet(opnames.AppendUninstall(names.RouteAgentComponent))
 
 	envMap := t.AssertUninstallInitContainer(&daemonSet.Spec.Template,
-		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.RouteAgentImage, t.submariner.Spec.Version))
+		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.RouteAgentImage, t.submariner.Spec.Version))
 	t.assertRouteAgentDaemonSetEnv(t.withNetworkDiscovery(), envMap)
 
 	return daemonSet
@@ -150,17 +151,17 @@ func (t *testDriver) assertGatewayDaemonSet() {
 
 	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
 	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
-		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GatewayImage, t.submariner.Spec.Version)))
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.GatewayImage, t.submariner.Spec.Version)))
 
 	t.assertGatewayDaemonSetEnv(t.withNetworkDiscovery(), test.EnvMapFrom(daemonSet))
 }
 
 func (t *testDriver) assertUninstallGatewayDaemonSet() *appsv1.DaemonSet {
-	daemonSet := t.AssertDaemonSet(names.AppendUninstall(names.GatewayComponent))
+	daemonSet := t.AssertDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
 	assertGatewayNodeSelector(daemonSet)
 
 	envMap := t.AssertUninstallInitContainer(&daemonSet.Spec.Template,
-		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GatewayImage, t.submariner.Spec.Version))
+		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.GatewayImage, t.submariner.Spec.Version))
 	t.assertGatewayDaemonSetEnv(t.withNetworkDiscovery(), envMap)
 
 	return daemonSet
@@ -192,17 +193,17 @@ func (t *testDriver) assertGlobalnetDaemonSet() {
 
 	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
 	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
-		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GlobalnetImage, t.submariner.Spec.Version)))
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.GlobalnetImage, t.submariner.Spec.Version)))
 
 	t.assertGlobalnetDaemonSetEnv(t.withNetworkDiscovery(), test.EnvMapFrom(daemonSet))
 }
 
 func (t *testDriver) assertUninstallGlobalnetDaemonSet() *appsv1.DaemonSet {
-	daemonSet := t.AssertDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
+	daemonSet := t.AssertDaemonSet(opnames.AppendUninstall(names.GlobalnetComponent))
 	assertGatewayNodeSelector(daemonSet)
 
 	envMap := t.AssertUninstallInitContainer(&daemonSet.Spec.Template,
-		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.GlobalnetImage, t.submariner.Spec.Version))
+		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.GlobalnetImage, t.submariner.Spec.Version))
 	t.assertGlobalnetDaemonSetEnv(t.withNetworkDiscovery(), envMap)
 
 	return daemonSet
@@ -218,17 +219,17 @@ func (t *testDriver) assertNetworkPluginSyncerDeployment() {
 
 	Expect(deployment.Spec.Template.Spec.Containers).To(HaveLen(1))
 	Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(
-		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.NetworkPluginSyncerImage, t.submariner.Spec.Version)))
+		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.NetworkPluginSyncerImage, t.submariner.Spec.Version)))
 
 	t.assertNetworkPluginSyncerDeploymentEnv(t.withNetworkDiscovery(),
 		test.EnvMapFromVars(deployment.Spec.Template.Spec.Containers[0].Env))
 }
 
 func (t *testDriver) assertUninstallNetworkPluginSyncerDeployment() *appsv1.Deployment {
-	deployment := t.AssertDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
+	deployment := t.AssertDeployment(opnames.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 	envMap := t.AssertUninstallInitContainer(&deployment.Spec.Template,
-		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, names.NetworkPluginSyncerImage, t.submariner.Spec.Version))
+		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.NetworkPluginSyncerImage, t.submariner.Spec.Version))
 	t.assertNetworkPluginSyncerDeploymentEnv(t.withNetworkDiscovery(), envMap)
 
 	return deployment
