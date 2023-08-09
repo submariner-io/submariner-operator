@@ -26,10 +26,11 @@ import (
 	. "github.com/onsi/gomega"
 	v1config "github.com/openshift/api/config/v1"
 	"github.com/submariner-io/admiral/pkg/fake"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/test"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner/pkg/cni"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -216,7 +217,7 @@ func testReconciliation() {
 			t.AssertReconcileSuccess()
 
 			serviceDiscovery := &v1alpha1.ServiceDiscovery{}
-			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: names.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
+			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: opnames.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
 				serviceDiscovery)
 			Expect(err).To(Succeed())
 
@@ -350,7 +351,7 @@ func testDeletion() {
 	var deletionTimestamp metav1.Time
 
 	BeforeEach(func() {
-		t.submariner.SetFinalizers([]string{names.CleanupFinalizer})
+		t.submariner.SetFinalizers([]string{opnames.CleanupFinalizer})
 
 		deletionTimestamp = metav1.Now()
 		t.submariner.SetDeletionTimestamp(&deletionTimestamp)
@@ -405,15 +406,15 @@ func testDeletion() {
 			// Finally, the controller should delete the uninstall DaemonSets/Deployments and remove the finalizer.
 			t.AssertReconcileSuccess()
 
-			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
-			t.AssertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
-			t.AssertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
-			t.AssertNoDeployment(names.AppendUninstall(names.NetworkPluginSyncerComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.RouteAgentComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GlobalnetComponent))
+			t.AssertNoDeployment(opnames.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 			t.awaitSubmarinerDeleted()
 
 			t.AssertReconcileSuccess()
-			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
 		})
 	})
 
@@ -433,13 +434,13 @@ func testDeletion() {
 			t.UpdateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
 			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
 
-			t.AssertNoDaemonSet(names.AppendUninstall(names.GlobalnetComponent))
-			t.AssertNoDaemonSet(names.AppendUninstall(names.NetworkPluginSyncerComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GlobalnetComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 			t.AssertReconcileSuccess()
 
-			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
-			t.AssertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.RouteAgentComponent))
 
 			t.awaitSubmarinerDeleted()
 		})
@@ -486,8 +487,8 @@ func testDeletion() {
 
 			t.AssertReconcileSuccess()
 
-			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
-			t.AssertNoDaemonSet(names.AppendUninstall(names.RouteAgentComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.RouteAgentComponent))
 
 			t.awaitSubmarinerDeleted()
 		})
@@ -507,7 +508,7 @@ func testDeletion() {
 			_, err := t.GetDaemonSet(names.GatewayComponent)
 			Expect(err).To(Succeed())
 
-			t.AssertNoDaemonSet(names.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
 
 			t.awaitSubmarinerDeleted()
 		})
@@ -522,7 +523,7 @@ func testDeletion() {
 				&v1alpha1.ServiceDiscovery{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: submarinerNamespace,
-						Name:      names.ServiceDiscoveryCrName,
+						Name:      opnames.ServiceDiscoveryCrName,
 					},
 				})
 		})
@@ -536,7 +537,7 @@ func testDeletion() {
 			t.AssertReconcileSuccess()
 
 			serviceDiscovery := &v1alpha1.ServiceDiscovery{}
-			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: names.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
+			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: opnames.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
 				serviceDiscovery)
 			Expect(errors.IsNotFound(err)).To(BeTrue(), "ServiceDiscovery still exists")
 

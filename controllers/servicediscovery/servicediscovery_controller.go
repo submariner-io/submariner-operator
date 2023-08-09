@@ -32,6 +32,7 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/finalizer"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	"github.com/submariner-io/admiral/pkg/util"
@@ -39,7 +40,7 @@ import (
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -181,7 +182,7 @@ func (r *Reconciler) addFinalizer(ctx context.Context,
 	instance *submarinerv1alpha1.ServiceDiscovery,
 ) (*submarinerv1alpha1.ServiceDiscovery, error) {
 	added, err := finalizer.Add(ctx, resource.ForControllerClient(r.ScopedClient, instance.Namespace,
-		&submarinerv1alpha1.ServiceDiscovery{}), instance, names.CleanupFinalizer)
+		&submarinerv1alpha1.ServiceDiscovery{}), instance, opnames.CleanupFinalizer)
 	if err != nil {
 		return nil, err //nolint:wrapcheck // No need to wrap
 	}
@@ -238,7 +239,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 					Containers: []corev1.Container{
 						{
 							Name:            name,
-							Image:           getImagePath(cr, names.ServiceDiscoveryImage, names.ServiceDiscoveryComponent),
+							Image:           getImagePath(cr, opnames.ServiceDiscoveryImage, names.ServiceDiscoveryComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.ServiceDiscoveryComponent]),
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
@@ -334,7 +335,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 					Containers: []corev1.Container{
 						{
 							Name:            names.LighthouseCoreDNSComponent,
-							Image:           getImagePath(cr, names.LighthouseCoreDNSImage, names.LighthouseCoreDNSComponent),
+							Image:           getImagePath(cr, opnames.LighthouseCoreDNSImage, names.LighthouseCoreDNSComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.LighthouseCoreDNSComponent]),
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},

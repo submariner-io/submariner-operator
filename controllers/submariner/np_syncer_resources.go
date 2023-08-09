@@ -23,11 +23,12 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner/pkg/cni"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -84,7 +85,7 @@ func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *n
 					Containers: []corev1.Container{
 						{
 							Name:            name,
-							Image:           getImagePath(cr, names.NetworkPluginSyncerImage, names.NetworkPluginSyncerComponent),
+							Image:           getImagePath(cr, opnames.NetworkPluginSyncerImage, names.NetworkPluginSyncerComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.NetworkPluginSyncerComponent]),
 							Command:         []string{"submariner-networkplugin-syncer.sh"},
 							Env: []corev1.EnvVar{

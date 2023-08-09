@@ -28,6 +28,8 @@ import (
 	configv1 "github.com/openshift/api/config/v1"
 	"github.com/operator-framework/operator-lib/leader"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
+	"github.com/submariner-io/admiral/pkg/names"
+	admversion "github.com/submariner-io/admiral/pkg/version"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
 	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
@@ -58,20 +60,21 @@ var (
 )
 
 var (
-	scheme  = apiruntime.NewScheme()
-	log     = logf.Log.WithName("cmd")
-	help    = false
-	version = "devel"
+	scheme      = apiruntime.NewScheme()
+	log         = logf.Log.WithName("cmd")
+	help        = false
+	version     = "devel"
+	showVersion = false
 )
 
 func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("Submariner operator version: %v", version))
 }
 
 func init() {
 	flag.BoolVar(&help, "help", help, "Print usage options")
+	flag.BoolVar(&showVersion, "version", showVersion, "Show version")
 }
 
 //nolint:gocyclo // No further refactors necessary
@@ -88,6 +91,12 @@ func main() {
 
 	if help {
 		flag.PrintDefaults()
+		return
+	}
+
+	admversion.Print(names.OperatorComponent, version)
+
+	if showVersion {
 		return
 	}
 

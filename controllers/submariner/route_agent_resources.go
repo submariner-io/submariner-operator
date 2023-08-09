@@ -23,11 +23,12 @@ import (
 	"strconv"
 
 	"github.com/go-logr/logr"
+	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
-	"github.com/submariner-io/submariner-operator/pkg/names"
+	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -92,7 +93,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.Clu
 					Containers: []corev1.Container{
 						{
 							Name:            name,
-							Image:           getImagePath(cr, names.RouteAgentImage, names.RouteAgentComponent),
+							Image:           getImagePath(cr, opnames.RouteAgentImage, names.RouteAgentComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
 							// FIXME: Should be entrypoint script, find/use correct file for routeagent
 							Command: []string{"submariner-route-agent.sh"},
