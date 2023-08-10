@@ -214,37 +214,6 @@ func (t *testDriver) assertGlobalnetDaemonSetEnv(submariner *v1alpha1.Submariner
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
 }
 
-func (t *testDriver) assertNetworkPluginSyncerDeployment() {
-	deployment := t.AssertDeployment(names.NetworkPluginSyncerComponent)
-
-	Expect(deployment.Spec.Template.Spec.Containers).To(HaveLen(1))
-	Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(
-		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.NetworkPluginSyncerImage, t.submariner.Spec.Version)))
-
-	t.assertNetworkPluginSyncerDeploymentEnv(t.withNetworkDiscovery(),
-		test.EnvMapFromVars(deployment.Spec.Template.Spec.Containers[0].Env))
-}
-
-func (t *testDriver) assertUninstallNetworkPluginSyncerDeployment() *appsv1.Deployment {
-	deployment := t.AssertDeployment(opnames.AppendUninstall(names.NetworkPluginSyncerComponent))
-
-	envMap := t.AssertUninstallInitContainer(&deployment.Spec.Template,
-		fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.NetworkPluginSyncerImage, t.submariner.Spec.Version))
-	t.assertNetworkPluginSyncerDeploymentEnv(t.withNetworkDiscovery(), envMap)
-
-	return deployment
-}
-
-func (t *testDriver) assertNetworkPluginSyncerDeploymentEnv(submariner *v1alpha1.Submariner, envMap map[string]string) {
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", submariner.Spec.ClusterID))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", submariner.Status.ClusterCIDR))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Status.ServiceCIDR))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_GLOBALCIDR", submariner.Status.GlobalCIDR))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NETWORKPLUGIN", submariner.Status.NetworkPlugin))
-	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
-}
-
 func assertGatewayNodeSelector(daemonSet *appsv1.DaemonSet) {
 	Expect(daemonSet.Spec.Template.Spec.NodeSelector["submariner.io/gateway"]).To(Equal("true"))
 }

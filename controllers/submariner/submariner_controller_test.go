@@ -197,17 +197,6 @@ func testReconciliation() {
 		})
 	})
 
-	When("the submariner network plugin syncer Deployment doesn't exist", func() {
-		BeforeEach(func() {
-			t.clusterNetwork.NetworkPlugin = cni.OVNKubernetes
-		})
-
-		It("should create it", func() {
-			t.AssertReconcileSuccess()
-			t.assertNetworkPluginSyncerDeployment()
-		})
-	})
-
 	When("ServiceDiscovery is enabled", func() {
 		BeforeEach(func() {
 			t.submariner.Spec.ServiceDiscoveryEnabled = true
@@ -365,8 +354,7 @@ func testDeletion() {
 				t.NewDaemonSet(names.GatewayComponent),
 				t.NewPodWithLabel("app", names.GatewayComponent),
 				t.NewDaemonSet(names.RouteAgentComponent),
-				t.NewDaemonSet(names.GlobalnetComponent),
-				t.NewDeployment(names.NetworkPluginSyncerComponent))
+				t.NewDaemonSet(names.GlobalnetComponent))
 		})
 
 		It("should run DaemonSets/Deployments to uninstall components", func() {
@@ -376,7 +364,6 @@ func testDeletion() {
 			t.AssertNoDaemonSet(names.GatewayComponent)
 			t.AssertNoDaemonSet(names.RouteAgentComponent)
 			t.AssertNoDaemonSet(names.GlobalnetComponent)
-			t.AssertNoDeployment(names.NetworkPluginSyncerComponent)
 
 			// Simulate the gateway DaemonSet controller cleaning up its pods.
 			t.DeletePods("app", names.GatewayComponent)
@@ -392,7 +379,6 @@ func testDeletion() {
 			t.UpdateDaemonSetToObserved(t.assertUninstallGatewayDaemonSet())
 
 			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
-			t.UpdateDeploymentToReady(t.assertUninstallNetworkPluginSyncerDeployment())
 
 			// Next, the controller should again requeue b/c the gateway DaemonSet isn't ready yet.
 			t.AssertReconcileRequeue()
@@ -409,7 +395,6 @@ func testDeletion() {
 			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
 			t.AssertNoDaemonSet(opnames.AppendUninstall(names.RouteAgentComponent))
 			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GlobalnetComponent))
-			t.AssertNoDeployment(opnames.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 			t.awaitSubmarinerDeleted()
 
@@ -435,7 +420,6 @@ func testDeletion() {
 			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
 
 			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GlobalnetComponent))
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 			t.AssertReconcileSuccess()
 
