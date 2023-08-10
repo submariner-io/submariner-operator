@@ -20,117 +20,78 @@ package submariner
 
 import (
 	"context"
-	"strconv"
 
-	"github.com/go-logr/logr"
-	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/apply"
-	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
-	"github.com/submariner-io/submariner-operator/pkg/images"
-	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner/pkg/cni"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const NetworkPluginSyncerComponent = "submariner-networkplugin-syncer"
+
 //nolint:wrapcheck // No need to wrap errors here.
-func (r *Reconciler) reconcileNetworkPluginSyncerDeployment(ctx context.Context, instance *v1alpha1.Submariner,
-	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger,
-) error {
-	// Only OVNKubernetes needs networkplugin-syncer so far
-	if needsNetworkPluginSyncer(instance) {
-		_, err := apply.Deployment(ctx, instance, newNetworkPluginSyncerDeployment(instance,
-			clusterNetwork, names.NetworkPluginSyncerComponent), reqLogger, r.config.ScopedClient, r.config.Scheme)
-		return err
+func (r *Reconciler) removeNetworkPluginSyncerDeployment(ctx context.Context, instance *v1alpha1.Submariner) error {
+	if instance.Status.NetworkPlugin != cni.OVNKubernetes || r.networkPluginSyncerRemoved {
+		return nil
 	}
 
-	return nil
-}
+	r.networkPluginSyncerRemoved = true
 
-func newNetworkPluginSyncerDeployment(cr *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork, name string) *appsv1.Deployment {
-	labels := map[string]string{
-		"app":       name,
-		"component": "networkplugin-syncer",
-	}
+	deleteAll := func(objs ...client.Object) error {
+		for _, obj := range objs {
+			obj.SetName(NetworkPluginSyncerComponent)
+			obj.SetNamespace(instance.Namespace)
 
-	tolerations := cr.Spec.Tolerations
-
-	if len(tolerations) == 0 {
-		tolerations = append(tolerations, corev1.Toleration{Operator: corev1.TolerationOpExists})
-	}
-
-	networkPluginSyncerDeployment := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: cr.Namespace,
-			Name:      name,
-			Labels:    labels,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{
-				"app": name,
-			}},
-			Strategy: appsv1.DeploymentStrategy{
-				Type: appsv1.RecreateDeploymentStrategyType,
-			},
-			Replicas: ptr.To(int32(1)),
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: ptr.To(int64(1)),
-					Containers: []corev1.Container{
-						{
-							Name:            name,
-							Image:           getImagePath(cr, opnames.NetworkPluginSyncerImage, names.NetworkPluginSyncerComponent),
-							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.NetworkPluginSyncerComponent]),
-							Command:         []string{"submariner-networkplugin-syncer.sh"},
-							Env: []corev1.EnvVar{
-								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
-								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
-								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
-								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
-								{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
-								{Name: "SUBMARINER_GLOBALCIDR", Value: cr.Spec.GlobalCIDR},
-								{Name: "SUBMARINER_NETWORKPLUGIN", Value: cr.Status.NetworkPlugin},
-								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
-									FieldRef: &corev1.ObjectFieldSelector{
-										FieldPath: "spec.nodeName",
-									},
-								}},
-							},
-						},
-					},
-					ServiceAccountName: names.NetworkPluginSyncerComponent,
-					NodeSelector:       cr.Spec.NodeSelector,
-					Tolerations:        tolerations,
-				},
-			},
-		},
-	}
-
-	if clusterNetwork.PluginSettings != nil {
-		if ovndb, ok := clusterNetwork.PluginSettings[network.OvnNBDB]; ok {
-			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env = append(
-				networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name: network.OvnNBDB, Value: ovndb,
-				})
+			err := r.config.ScopedClient.Delete(ctx, obj)
+			if err != nil && !apierrors.IsNotFound(err) {
+				r.networkPluginSyncerRemoved = false
+				return err
+			}
 		}
 
-		if ovnsb, ok := clusterNetwork.PluginSettings[network.OvnSBDB]; ok {
-			networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env = append(
-				networkPluginSyncerDeployment.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-					Name: network.OvnSBDB, Value: ovnsb,
-				})
-		}
+		return nil
 	}
 
-	return networkPluginSyncerDeployment
-}
-
-func needsNetworkPluginSyncer(submariner *v1alpha1.Submariner) bool {
-	return submariner.Status.NetworkPlugin == cni.OVNKubernetes
+	return deleteAll(
+		&appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: instance.Namespace,
+				Name:      NetworkPluginSyncerComponent,
+			},
+		},
+		&rbacv1.ClusterRole{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: instance.Namespace,
+				Name:      NetworkPluginSyncerComponent,
+			},
+		},
+		&rbacv1.ClusterRoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: instance.Namespace,
+				Name:      NetworkPluginSyncerComponent,
+			},
+		},
+		&rbacv1.ClusterRole{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: instance.Namespace,
+				Name:      "ocp-submariner-networkplugin-syncer",
+			},
+		},
+		&rbacv1.ClusterRoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: instance.Namespace,
+				Name:      "ocp-submariner-networkplugin-syncer",
+			},
+		},
+		&corev1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: instance.Namespace,
+				Name:      NetworkPluginSyncerComponent,
+			},
+		},
+	)
 }
