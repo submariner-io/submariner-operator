@@ -21,11 +21,15 @@ jobs:
         globalnet: ['', 'globalnet']
         k8s_version: ['1.19', '1.24', '1.25', '1.26', '1.27']
         lighthouse: ['', 'lighthouse']
-        ovn: ['', 'ovn']
+        ovn: ['', 'ovn', 'ovn-ic']
         exclude:
           - ovn: 'ovn'
             lighthouse: 'lighthouse'
           - ovn: 'ovn'
+            globalnet: 'globalnet'
+          - ovn: 'ovn-ic'
+            lighthouse: 'lighthouse'
+          - ovn: 'ovn-ic'
             globalnet: 'globalnet'
     steps:
       - name: Check out the repository

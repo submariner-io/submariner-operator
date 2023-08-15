@@ -20,11 +20,15 @@ jobs:
         # Run most tests against the latest K8s version
         k8s_version: ['1.27']
         lighthouse: ['', 'lighthouse']
-        ovn: ['', 'ovn']
+        ovn: ['', 'ovn', 'ovn-ic']
         exclude:
           - ovn: 'ovn'
             lighthouse: 'lighthouse'
           - ovn: 'ovn'
+            globalnet: 'globalnet'
+          - ovn: 'ovn-ic'
+            lighthouse: 'lighthouse'
+          - ovn: 'ovn-ic'
             globalnet: 'globalnet'
         include:
           # Oldest Kubernetes version thought to work with SubM.
