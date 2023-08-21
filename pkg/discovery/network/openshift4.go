@@ -49,7 +49,27 @@ func discoverOpenShift4Network(ctx context.Context, client controllerClient.Clie
 		return nil, errors.WithMessage(err, "error obtaining the default 'cluster' OpenShift4 Network config resource")
 	}
 
-	return parseOS4Network(network)
+	clusterNetwork, err := parseOS4Network(network)
+	if err != nil {
+		return nil, err
+	}
+
+	if clusterNetwork.NetworkPlugin == cni.OVNKubernetes {
+		ovnDBPod, err := FindPod(ctx, client, "name=ovnkube-db")
+		if err != nil {
+			return nil, err
+		}
+
+		if ovnDBPod == nil {
+			// IC is enabled and Openshift uses zone per node and to connect to OVN DB using
+			// socket connection we need to use this path.
+			clusterNetwork.PluginSettings = map[string]string{
+				OvnNBDB: "unix:/var/run/ovn-ic/ovnnb_db.sock",
+			}
+		}
+	}
+
+	return clusterNetwork, err
 }
 
 func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {

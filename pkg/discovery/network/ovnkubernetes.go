@@ -34,6 +34,7 @@ const (
 	ovnKubeService     = "ovnkube-db"
 	OvnNBDB            = "OVN_NBDB"
 	OvnSBDB            = "OVN_SBDB"
+	DefaultOvnNBDB     = "/var/run/openvswitch/ovnnb_db.sock"
 	OvnNBDBDefaultPort = 6641
 	OvnSBDBDefaultPort = 6642
 )
@@ -109,7 +110,7 @@ func discoverOvnNodeClusterNetwork(ctx context.Context, client controllerClient.
 func createLocalClusterNetwork() *ClusterNetwork {
 	return &ClusterNetwork{
 		PluginSettings: map[string]string{
-			OvnNBDB: "unix:/var/run/openvswitch/ovnnb_db.sock",
+			OvnNBDB: "unix:" + DefaultOvnNBDB,
 		},
 	}
 }

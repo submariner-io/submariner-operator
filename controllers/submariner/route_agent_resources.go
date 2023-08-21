@@ -21,6 +21,7 @@ package submariner
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/admiral/pkg/names"
@@ -48,6 +49,15 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.Clu
 	labels := map[string]string{
 		"app":       name,
 		"component": "routeagent",
+	}
+	ovnNBDBPath := network.DefaultOvnNBDB
+
+	configurePath, ok := clusterNetwork.PluginSettings[network.OvnNBDB]
+	if ok {
+		parts := strings.Split(configurePath, ":")
+		if len(parts) == 2 && parts[0] == "unix" {
+			ovnNBDBPath = parts[1]
+		}
 	}
 
 	maxUnavailable := intstr.FromString("100%")
@@ -87,7 +97,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.Clu
 							Path: "/sys",
 						}}},
 						{Name: "host-var-run-openvswitch-nbdb-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/var/run/openvswitch/ovnnb_db.sock",
+							Path: ovnNBDBPath,
 						}}},
 					},
 					Containers: []corev1.Container{
@@ -108,7 +118,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.Clu
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
 								{Name: "host-run-openvswitch-db-sock", MountPath: "/run/openvswitch/db.sock"},
-								{Name: "host-var-run-openvswitch-nbdb-sock", MountPath: "/var/run/openvswitch/ovnnb_db.sock"},
+								{Name: "host-var-run-openvswitch-nbdb-sock", MountPath: ovnNBDBPath},
 							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
