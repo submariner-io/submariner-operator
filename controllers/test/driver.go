@@ -157,6 +157,12 @@ func (d *Driver) AssertNoDeployment(name string) {
 	Expect(err).To(HaveOccurred())
 }
 
+func (d *Driver) AssertNoResource(obj client.Object) {
+	err := d.ScopedClient.Get(context.Background(), types.NamespacedName{Name: obj.GetName(), Namespace: d.Namespace}, obj)
+	Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
+	Expect(err).To(HaveOccurred())
+}
+
 func (d *Driver) AssertUninstallInitContainer(template *corev1.PodTemplateSpec, image string) map[string]string {
 	Expect(template.Spec.InitContainers).To(HaveLen(1))
 	Expect(template.Spec.InitContainers[0].Image).To(Equal(image))

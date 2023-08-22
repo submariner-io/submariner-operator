@@ -68,14 +68,6 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 				return instance.Spec.GlobalCIDR != ""
 			},
 		},
-		{
-			Resource: newDeployment(names.NetworkPluginSyncerComponent, instance.Namespace),
-			UninstallResource: newNetworkPluginSyncerDeployment(instance, clusterNetwork,
-				opnames.AppendUninstall(names.NetworkPluginSyncerComponent)),
-			CheckInstalled: func() bool {
-				return needsNetworkPluginSyncer(instance)
-			},
-		},
 	}
 
 	uninstallInfo := &uninstall.Info{
@@ -128,15 +120,6 @@ func (r *Reconciler) ensureServiceDiscoveryDeleted(ctx context.Context, namespac
 
 func newDaemonSet(name, namespace string) *appsv1.DaemonSet {
 	return &appsv1.DaemonSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-	}
-}
-
-func newDeployment(name, namespace string) *appsv1.Deployment {
-	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,

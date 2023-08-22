@@ -49,15 +49,14 @@ var _ = Describe("Submariner cleanup", func() {
 
 func testSubmarinerCleanup() {
 	var (
-		crClient                      client.Client
-		submariner                    *operatorv1alpha1.Submariner
-		routeAgentPodMonitor          *podMonitor
-		gatewayPodMonitor             *podMonitor
-		globalnetPodMonitor           *podMonitor
-		networkPluginSyncerPodMonitor *podMonitor
-		lhAgentAgentPodMonitor        *podMonitor
-		brokerRestConfig              *rest.Config
-		stopCh                        chan struct{}
+		crClient               client.Client
+		submariner             *operatorv1alpha1.Submariner
+		routeAgentPodMonitor   *podMonitor
+		gatewayPodMonitor      *podMonitor
+		globalnetPodMonitor    *podMonitor
+		lhAgentAgentPodMonitor *podMonitor
+		brokerRestConfig       *rest.Config
+		stopCh                 chan struct{}
 	)
 
 	BeforeEach(func() {
@@ -89,12 +88,6 @@ func testSubmarinerCleanup() {
 
 		if framework.TestContext.GlobalnetEnabled {
 			globalnetPodMonitor = startPodMonitor(opnames.AppendUninstall(names.GlobalnetComponent), stopCh)
-		}
-
-		_, err = framework.KubeClients[framework.ClusterA].AppsV1().Deployments(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
-			names.NetworkPluginSyncerComponent, metav1.GetOptions{})
-		if err == nil {
-			networkPluginSyncerPodMonitor = startPodMonitor(opnames.AppendUninstall(names.NetworkPluginSyncerComponent), stopCh)
 		}
 
 		if submariner.Spec.ServiceDiscoveryEnabled {
@@ -156,7 +149,6 @@ func testSubmarinerCleanup() {
 		routeAgentPodMonitor.assertUninstallPodsCompleted()
 		gatewayPodMonitor.assertUninstallPodsCompleted()
 		globalnetPodMonitor.assertUninstallPodsCompleted()
-		networkPluginSyncerPodMonitor.assertUninstallPodsCompleted()
 
 		_, err = framework.KubeClients[framework.ClusterA].AppsV1().DaemonSets(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
 			opnames.AppendUninstall(names.GatewayComponent), metav1.GetOptions{})
@@ -169,10 +161,6 @@ func testSubmarinerCleanup() {
 		_, err = framework.KubeClients[framework.ClusterA].AppsV1().DaemonSets(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
 			opnames.AppendUninstall(names.GlobalnetComponent), metav1.GetOptions{})
 		assertIsNotFound(err, "DaemonSet", opnames.AppendUninstall(names.GlobalnetComponent))
-
-		_, err = framework.KubeClients[framework.ClusterA].AppsV1().Deployments(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
-			opnames.AppendUninstall(names.NetworkPluginSyncerComponent), metav1.GetOptions{})
-		assertIsNotFound(err, "Deployment", opnames.AppendUninstall(names.NetworkPluginSyncerComponent))
 
 		_, err = framework.KubeClients[framework.ClusterA].AppsV1().Deployments(framework.TestContext.SubmarinerNamespace).Get(context.TODO(),
 			opnames.AppendUninstall(names.ServiceDiscoveryComponent), metav1.GetOptions{})

@@ -95,11 +95,6 @@ var files = []string{
 	"config/rbac/lighthouse-coredns/cluster_role_binding.yaml",
 	"config/rbac/lighthouse-coredns/ocp_cluster_role.yaml",
 	"config/rbac/lighthouse-coredns/ocp_cluster_role_binding.yaml",
-	"config/rbac/networkplugin_syncer/service_account.yaml",
-	"config/rbac/networkplugin_syncer/cluster_role.yaml",
-	"config/rbac/networkplugin_syncer/cluster_role_binding.yaml",
-	"config/rbac/networkplugin_syncer/ocp_cluster_role.yaml",
-	"config/rbac/networkplugin_syncer/ocp_cluster_role_binding.yaml",
 	"config/openshift/rbac/submariner-metrics-reader/role.yaml",
 	"config/openshift/rbac/submariner-metrics-reader/role_binding.yaml",
 }

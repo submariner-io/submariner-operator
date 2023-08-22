@@ -94,6 +94,8 @@ type Reconciler struct {
 	// We don't keep track of the secret syncers themselves, just their cancel functions.
 	secretSyncCancelFuncs map[string]context.CancelFunc
 	syncerMutex           sync.Mutex
+
+	networkPluginSyncerRemoved bool
 }
 
 // blank assignment to verify that Reconciler implements reconcile.Reconciler.
@@ -189,7 +191,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
-	if err := r.reconcileNetworkPluginSyncerDeployment(ctx, instance, clusterNetwork, reqLogger); err != nil {
+	if err := r.removeNetworkPluginSyncerDeployment(ctx, instance); err != nil {
 		return reconcile.Result{}, err
 	}
 

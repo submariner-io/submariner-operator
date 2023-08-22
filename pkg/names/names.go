@@ -29,15 +29,14 @@ const (
 
 /* These values are used by downstream distributions to override the component default image name. */
 var (
-	NetworkPluginSyncerImage = "submariner-networkplugin-syncer"
-	RouteAgentImage          = "submariner-route-agent"
-	GatewayImage             = "submariner-gateway"
-	GlobalnetImage           = "submariner-globalnet"
-	ServiceDiscoveryImage    = "lighthouse-agent"
-	LighthouseCoreDNSImage   = "lighthouse-coredns"
-	OperatorImage            = "submariner-operator"
-	MetricsProxyImage        = "nettest"
-	NettestImage             = "nettest"
+	RouteAgentImage        = "submariner-route-agent"
+	GatewayImage           = "submariner-gateway"
+	GlobalnetImage         = "submariner-globalnet"
+	ServiceDiscoveryImage  = "lighthouse-agent"
+	LighthouseCoreDNSImage = "lighthouse-coredns"
+	OperatorImage          = "submariner-operator"
+	MetricsProxyImage      = "nettest"
+	NettestImage           = "nettest"
 )
 
 func AppendUninstall(name string) string {
