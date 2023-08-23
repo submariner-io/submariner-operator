@@ -2514,6 +2514,19 @@ rules:
     verbs:
       - '*'
   - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - delete
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterroles
+      - clusterrolebindings
+    verbs:
+      - delete
+  - apiGroups:
       - apps
     resources:
       - deployments
