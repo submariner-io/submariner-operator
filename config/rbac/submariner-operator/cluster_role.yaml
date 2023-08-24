@@ -76,3 +76,10 @@ rules:
       - daemonsets
     verbs:
       - list
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterroles
+      - clusterrolebindings
+    verbs:
+      - delete
