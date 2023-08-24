@@ -2520,13 +2520,6 @@ rules:
     verbs:
       - delete
   - apiGroups:
-      - rbac.authorization.k8s.io
-    resources:
-      - clusterroles
-      - clusterrolebindings
-    verbs:
-      - delete
-  - apiGroups:
       - apps
     resources:
       - deployments
@@ -2660,6 +2653,13 @@ rules:
       - daemonsets
     verbs:
       - list
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterroles
+      - clusterrolebindings
+    verbs:
+      - delete
 `
 	Config_rbac_submariner_operator_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
