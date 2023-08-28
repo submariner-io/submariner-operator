@@ -99,8 +99,6 @@ function verify_subm_deployed() {
     if [[ "$GLOBALNET" == true ]]; then
         verify_daemonset submariner-globalnet
     fi
-
-    verify_network_plugin_syncer
 }
 
 # Uses `jq` to extract the content using the filter given, and matches it to the expected value
@@ -458,17 +456,6 @@ function verify_subm_broker_secrets() {
 function verify_subm_gateway_secrets() {
   # FIXME: There seems to be a strange error where the CA substantially match, but eventually actually are different
   verify_secrets "$subm_ns" "$operator_deployment_name" "${SUBMARINER_BROKER_CA:0:50}"
-}
-
-function verify_network_plugin_syncer {
-   # Verify service account
-  kubectl get sa --namespace=$subm_ns submariner-networkplugin-syncer
-
-  # Verify cluster reole
-  kubectl get clusterrole submariner-networkplugin-syncer
-
-  # Verify cluster role binding
-  kubectl get clusterrolebinding submariner-networkplugin-syncer
 }
 
 function deploy_env_once() {
