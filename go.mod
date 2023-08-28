@@ -19,10 +19,10 @@ require (
 	github.com/submariner-io/submariner v0.15.2
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.8.0
-	k8s.io/api v0.26.7
-	k8s.io/apiextensions-apiserver v0.26.7
-	k8s.io/apimachinery v0.26.7
-	k8s.io/client-go v0.26.7
+	k8s.io/api v0.26.8
+	k8s.io/apiextensions-apiserver v0.26.8
+	k8s.io/apimachinery v0.26.8
+	k8s.io/client-go v0.26.8
 	k8s.io/utils v0.0.0-20230220204549-a5ecb0141aa5
 	sigs.k8s.io/controller-runtime v0.14.5
 	sigs.k8s.io/controller-tools v0.11.3
@@ -219,9 +219,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.11.1 // indirect
-	k8s.io/apiserver v0.26.7 // indirect
+	k8s.io/apiserver v0.26.8 // indirect
 	k8s.io/cli-runtime v0.26.2 // indirect
-	k8s.io/component-base v0.26.7 // indirect
+	k8s.io/component-base v0.26.8 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230202010329-39b3636cbaa3 // indirect
