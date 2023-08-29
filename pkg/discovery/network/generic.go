@@ -191,10 +191,11 @@ func findPodIPRangeFromNodeSpec(ctx context.Context, client controllerClient.Cli
 }
 
 func parseToPodCidr(nodes []corev1.Node) (string, error) {
-	for i := range nodes {
-		if nodes[i].Spec.PodCIDR != "" {
-			return nodes[i].Spec.PodCIDR, nil
-		}
+	// In K8s, each node is typically assigned a unique PodCIDR range for the pods that run on that node.
+	// Each node's PodCIDR is used to allocate IP addresses to the pods scheduled on that node. Only if
+	// the cluster is a single node deployment, we should rely on the node.Spec.PodCIDR as podCIDR of the cluster.
+	if len(nodes) == 1 {
+		return nodes[0].Spec.PodCIDR, nil
 	}
 
 	return "", nil
