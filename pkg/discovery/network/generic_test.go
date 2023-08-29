@@ -222,13 +222,12 @@ var _ = Describe("Generic Network", func() {
 		})
 	})
 
-	When("Pod CIDR information exists on a node", func() {
+	When("Pod CIDR information exists on a single node cluster", func() {
 		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakeNode("node1", ""),
-				fakeNode("node2", testPodCIDR),
+				fakeNode("node1", testPodCIDR),
 			)
 		})
 
@@ -242,6 +241,21 @@ var _ = Describe("Generic Network", func() {
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
+		})
+	})
+
+	When("Pod CIDR information exists on a multi node cluster", func() {
+		var clusterNet *network.ClusterNetwork
+
+		BeforeEach(func() {
+			clusterNet = testDiscoverGenericWith(
+				fakeNode("node1", testPodCIDR),
+				fakeNode("node2", testPodCIDR),
+			)
+		})
+
+		It("Should return an empty ClusterNetwork structure with the pod CIDR", func() {
+			Expect(clusterNet.PodCIDRs).To(BeEmpty())
 		})
 	})
 
