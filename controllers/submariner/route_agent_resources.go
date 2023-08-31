@@ -21,7 +21,6 @@ package submariner
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/admiral/pkg/names"
@@ -50,16 +49,6 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.Clu
 		"app":       name,
 		"component": "routeagent",
 	}
-	ovnNBDBPath := network.DefaultOvnNBDB
-
-	configurePath, ok := clusterNetwork.PluginSettings[network.OvnNBDB]
-	if ok {
-		parts := strings.Split(configurePath, ":")
-		if len(parts) == 2 && parts[0] == "unix" {
-			ovnNBDBPath = parts[1]
-		}
-	}
-
 	maxUnavailable := intstr.FromString("100%")
 
 	ds := &appsv1.DaemonSet{
@@ -97,7 +86,11 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.Clu
 							Path: "/sys",
 						}}},
 						{Name: "host-var-run-openvswitch-nbdb-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: ovnNBDBPath,
+							Path: "/var/run/openvswitch/ovnnb_db.sock",
+						}}},
+						// Path used by Openshift
+						{Name: "host-var-run-ovn-ic-nbdb-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+							Path: "/var/run/ovn-ic/ovnnb_db.sock",
 						}}},
 					},
 					Containers: []corev1.Container{
@@ -118,7 +111,9 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.Clu
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
 								{Name: "host-run-openvswitch-db-sock", MountPath: "/run/openvswitch/db.sock"},
-								{Name: "host-var-run-openvswitch-nbdb-sock", MountPath: ovnNBDBPath},
+								{Name: "host-var-run-openvswitch-nbdb-sock", MountPath: "/var/run/openvswitch/ovnnb_db.sock"},
+								// Path used by Openshift
+								{Name: "host-var-run-ovn-ic-nbdb-sock", MountPath: "/var/run/ovn-ic/ovnnb_db.sock"},
 							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
