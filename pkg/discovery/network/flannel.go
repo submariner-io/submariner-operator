@@ -62,28 +62,35 @@ func discoverFlannelNetwork(ctx context.Context, client controllerClient.Client)
 		}
 	}
 
+	var podCIDR *string
+
 	if flannelConfigMap == "" {
-		return nil, nil
-	}
-
-	// look for the configmap details using the configmap name discovered from the daemonset
-	cm := &corev1.ConfigMap{}
-
-	err = client.Get(ctx, controllerClient.ObjectKey{
-		Namespace: metav1.NamespaceSystem,
-		Name:      flannelConfigMap,
-	}, cm)
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
+		podIPRange, err := findPodIPRange(ctx, client)
+		if err != nil {
+			return nil, err
 		}
 
-		return nil, errors.WithMessagef(err, "error retrieving the flannel ConfigMap %q", flannelConfigMap)
-	}
+		podCIDR = &podIPRange
+	} else {
+		// look for the configmap details using the configmap name discovered from the daemonset
+		cm := &corev1.ConfigMap{}
 
-	podCIDR := extractPodCIDRFromNetConfigJSON(cm)
-	if podCIDR == nil {
-		return nil, nil
+		err = client.Get(ctx, controllerClient.ObjectKey{
+			Namespace: metav1.NamespaceSystem,
+			Name:      flannelConfigMap,
+		}, cm)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return nil, nil
+			}
+
+			return nil, errors.WithMessagef(err, "error retrieving the flannel ConfigMap %q", flannelConfigMap)
+		}
+
+		podCIDR = extractPodCIDRFromNetConfigJSON(cm)
+		if podCIDR == nil {
+			return nil, nil
+		}
 	}
 
 	clusterNetwork := &ClusterNetwork{
