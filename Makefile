@@ -205,7 +205,7 @@ kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 
 # Generate bundle manifests and metadata, then validate generated files
 bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
-	($(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
+	(set -o pipefail; $(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
 	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS))
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml)
 	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml
