@@ -3018,6 +3018,12 @@ rules:
       - list
       - watch
   - apiGroups:
+      - ""
+    resources:
+      - endpoints
+    verbs:
+      - list
+  - apiGroups:
       - operator.openshift.io
     resources:
       - dnses
