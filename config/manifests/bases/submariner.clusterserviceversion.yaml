@@ -314,6 +314,10 @@ spec:
         path: serviceCIDR
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: The image version in use by the various Submariner DaemonSets
+          and Deployments.
+        displayName: Version
+        path: version
       version: v1alpha1
   description: |
     [Submariner](https://submariner.io) enables direct networking between Pods and Services in different Kubernetes
