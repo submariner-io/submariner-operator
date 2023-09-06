@@ -20,7 +20,6 @@ package network_test
 
 import (
 	"context"
-	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -34,18 +33,7 @@ import (
 const ovnKubeNamespace = "ovn-kubernetes"
 
 var _ = Describe("OvnKubernetes Network", func() {
-	const ovnKubeSvcTest = "ovnkube-db"
-
-	When("ovn-kubernetes database is found, but no database service", func() {
-		It("Should return error", func() {
-			clusterNet, err := testOvnKubernetesDiscoveryWith(
-				fakePodWithNamespace(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest, []string{}, []v1.EnvVar{}),
-			)
-
-			Expect(err).To(HaveOccurred())
-			Expect(clusterNet).To(BeNil())
-		})
-	})
+	const ovnKubeSvcTest = "ovnkube-node"
 
 	When("ovn-kubernetes database and service found, no configmap", func() {
 		It("Should return cluster network with default CIDRs", func() {
@@ -57,9 +45,6 @@ var _ = Describe("OvnKubernetes Network", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.OVNKubernetes))
-			connectionStr := fmt.Sprintf("tcp:%s.%s", ovnKubeSvcTest, ovnKubeNamespace)
-			Expect(clusterNet.PluginSettings["OVN_NBDB"]).To(Equal(connectionStr + ":6641"))
-			Expect(clusterNet.PluginSettings["OVN_SBDB"]).To(Equal(connectionStr + ":6642"))
 			Expect(clusterNet.PodCIDRs).To(BeEmpty())
 			Expect(clusterNet.ServiceCIDRs).To(HaveLen(1))
 		})

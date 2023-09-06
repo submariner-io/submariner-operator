@@ -20,118 +20,24 @@ package network
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/cni"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const (
-	ovnKubeService     = "ovnkube-db"
-	OvnNBDB            = "OVN_NBDB"
-	OvnSBDB            = "OVN_SBDB"
-	DefaultOvnNBDB     = "/var/run/openvswitch/ovnnb_db.sock"
-	OvnNBDBDefaultPort = 6641
-	OvnSBDBDefaultPort = 6642
-)
-
 func discoverOvnKubernetesNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
-	ovnDBPod, err := FindPod(ctx, client, "name=ovnkube-db")
-	if err != nil {
-		return nil, err
-	}
-
-	var clusterNetwork *ClusterNetwork
-
-	if ovnDBPod != nil {
-		clusterNetwork, err = discoverOvnDBClusterNetwork(ctx, client, ovnDBPod)
-	} else {
-		clusterNetwork, err = discoverOvnNodeClusterNetwork(ctx, client)
-	}
-
-	if err != nil || clusterNetwork == nil {
-		return nil, err
-	}
-
-	clusterNetwork.NetworkPlugin = cni.OVNKubernetes
-
-	return clusterNetwork, nil
-}
-
-func discoverOvnDBClusterNetwork(ctx context.Context, client controllerClient.Client, ovnDBPod *corev1.Pod) (*ClusterNetwork, error) {
-	err := client.Get(ctx, types.NamespacedName{Namespace: ovnDBPod.Namespace, Name: ovnKubeService}, &corev1.Service{})
-	if err != nil {
-		return nil, fmt.Errorf("error finding %q service in %q namespace", ovnKubeService, ovnDBPod.Namespace)
-	}
-
-	dbConnectionProtocol := findProtocol(ovnDBPod)
-
-	clusterNetwork := &ClusterNetwork{
-		PluginSettings: map[string]string{
-			OvnNBDB: fmt.Sprintf("%s:%s.%s:%d", dbConnectionProtocol, ovnKubeService, ovnDBPod.Namespace, OvnNBDBDefaultPort),
-			OvnSBDB: fmt.Sprintf("%s:%s.%s:%d", dbConnectionProtocol, ovnKubeService, ovnDBPod.Namespace, OvnSBDBDefaultPort),
-		},
-	}
-
-	updateClusterNetworkFromConfigMap(ctx, client, ovnDBPod.Namespace, clusterNetwork)
-
-	return clusterNetwork, nil
-}
-
-func discoverOvnNodeClusterNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
-	// In OVN IC deployments, the ovn DB will be a part of ovnkube-node
-	ovnPod, err := FindPod(ctx, client, "name=ovnkube-node")
+	ovnPod, err := FindPod(ctx, client, "app=ovnkube-node")
 	if err != nil || ovnPod == nil {
 		return nil, err
 	}
 
-	endpointList, err := findEndpoint(ctx, client, ovnPod.Namespace)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error retrieving the endpoints from namespace %q", ovnPod.Namespace)
-	}
-
-	var clusterNetwork *ClusterNetwork
-
-	if endpointList == nil || len(endpointList.Items) == 0 {
-		clusterNetwork = createLocalClusterNetwork()
-	} else {
-		clusterNetwork = createClusterNetworkWithEndpoints(endpointList.Items)
-	}
+	clusterNetwork := &ClusterNetwork{NetworkPlugin: cni.OVNKubernetes}
 
 	updateClusterNetworkFromConfigMap(ctx, client, ovnPod.Namespace, clusterNetwork)
 
 	return clusterNetwork, nil
-}
-
-func createLocalClusterNetwork() *ClusterNetwork {
-	return &ClusterNetwork{
-		PluginSettings: map[string]string{
-			OvnNBDB: "unix:" + DefaultOvnNBDB,
-		},
-	}
-}
-
-func createClusterNetworkWithEndpoints(endPoints []corev1.Endpoints) *ClusterNetwork {
-	var northboundDBIPs []string
-
-	for index := range endPoints {
-		for _, subset := range endPoints[index].Subsets {
-			for _, port := range subset.Ports {
-				if strings.Contains(port.Name, "north") {
-					northboundDBIPs = append(northboundDBIPs, fmt.Sprintf("IC:%s:%s:%s:%d",
-						endPoints[index].Name, port.Protocol, subset.Addresses[0].IP, OvnNBDBDefaultPort))
-				}
-			}
-		}
-	}
-
-	return &ClusterNetwork{
-		PluginSettings: map[string]string{OvnNBDB: strings.Join(northboundDBIPs, ",")},
-	}
 }
 
 func updateClusterNetworkFromConfigMap(ctx context.Context, client controllerClient.Client, ovnPodNamespace string,
@@ -149,31 +55,4 @@ func updateClusterNetworkFromConfigMap(ctx context.Context, client controllerCli
 			clusterNetwork.ServiceCIDRs = []string{svcCidr}
 		}
 	}
-}
-
-func findEndpoint(ctx context.Context, client controllerClient.Client, endpointNameSpace string) (*corev1.EndpointsList, error) {
-	endpointsList := &corev1.EndpointsList{}
-	listOptions := &controllerClient.ListOptions{
-		Namespace: endpointNameSpace,
-	}
-
-	err := client.List(ctx, endpointsList, listOptions)
-
-	return endpointsList, errors.WithMessagef(err, "error listing endpoints in namespace %q", endpointNameSpace)
-}
-
-func findProtocol(pod *corev1.Pod) string {
-	dbConnectionProtocol := "tcp"
-
-	for i := range pod.Spec.Containers {
-		for _, envVar := range pod.Spec.Containers[i].Env {
-			if envVar.Name == "OVN_SSL_ENABLE" {
-				if !strings.EqualFold(envVar.Value, "NO") {
-					dbConnectionProtocol = "ssl"
-				}
-			}
-		}
-	}
-
-	return dbConnectionProtocol
 }

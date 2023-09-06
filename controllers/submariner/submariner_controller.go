@@ -156,7 +156,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 
 	initialStatus := instance.Status.DeepCopy()
 
-	clusterNetwork, err := r.discoverNetwork(ctx, instance, reqLogger)
+	// This has the side effect of setting the CIDRs in the Submariner instance.
+	_, err = r.discoverNetwork(ctx, instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -174,7 +175,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 	}
 
-	routeagentDaemonSet, err := r.reconcileRouteagentDaemonSet(ctx, instance, clusterNetwork, reqLogger)
+	routeagentDaemonSet, err := r.reconcileRouteagentDaemonSet(ctx, instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
