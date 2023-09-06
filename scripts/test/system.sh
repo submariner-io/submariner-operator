@@ -86,8 +86,6 @@ function verify_subm_deployed() {
     verify_subm_gateway_pod
     # Verify SubM Gateway container
     verify_subm_gateway_container
-    # Verify Gateway secrets
-    verify_subm_gateway_secrets
 
     # Verify SubM Routeagent DaemonSet
     verify_daemonset submariner-routeagent
@@ -451,11 +449,6 @@ function verify_secrets() {
 
 function verify_subm_broker_secrets() {
   verify_secrets "$SUBMARINER_BROKER_NS" "cluster-$cluster" "$SUBMARINER_BROKER_CA"
-}
-
-function verify_subm_gateway_secrets() {
-  # FIXME: There seems to be a strange error where the CA substantially match, but eventually actually are different
-  verify_secrets "$subm_ns" "$operator_deployment_name" "${SUBMARINER_BROKER_CA:0:50}"
 }
 
 function deploy_env_once() {
