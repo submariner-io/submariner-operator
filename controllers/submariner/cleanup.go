@@ -47,7 +47,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 	}
 
 	// This has the side effect of setting the CIDRs in the Submariner instance.
-	clusterNetwork, err := r.discoverNetwork(ctx, instance, log)
+	_, err := r.discoverNetwork(ctx, instance, log)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -59,7 +59,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 		},
 		{
 			Resource:          newDaemonSet(names.RouteAgentComponent, instance.Namespace),
-			UninstallResource: newRouteAgentDaemonSet(instance, clusterNetwork, opnames.AppendUninstall(names.RouteAgentComponent)),
+			UninstallResource: newRouteAgentDaemonSet(instance, opnames.AppendUninstall(names.RouteAgentComponent)),
 		},
 		{
 			Resource:          newDaemonSet(names.GlobalnetComponent, instance.Namespace),
