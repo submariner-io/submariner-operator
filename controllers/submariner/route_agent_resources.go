@@ -26,7 +26,6 @@ import (
 	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
-	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
@@ -38,13 +37,13 @@ import (
 
 //nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileRouteagentDaemonSet(ctx context.Context, instance *v1alpha1.Submariner,
-	clusterNetwork *network.ClusterNetwork, reqLogger logr.Logger,
+	reqLogger logr.Logger,
 ) (*appsv1.DaemonSet, error) {
-	return apply.DaemonSet(ctx, instance, newRouteAgentDaemonSet(instance, clusterNetwork, names.RouteAgentComponent),
+	return apply.DaemonSet(ctx, instance, newRouteAgentDaemonSet(instance, names.RouteAgentComponent),
 		reqLogger, r.config.ScopedClient, r.config.Scheme)
 }
 
-func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork, name string) *appsv1.DaemonSet {
+func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet {
 	labels := map[string]string{
 		"app":       name,
 		"component": "routeagent",
@@ -139,20 +138,6 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, clusterNetwork *network.Clu
 				},
 			},
 		},
-	}
-
-	if ovndb, ok := clusterNetwork.PluginSettings[network.OvnNBDB]; ok {
-		ds.Spec.Template.Spec.Containers[0].Env = append(
-			ds.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-				Name: network.OvnNBDB, Value: ovndb,
-			})
-	}
-
-	if ovnsb, ok := clusterNetwork.PluginSettings[network.OvnSBDB]; ok {
-		ds.Spec.Template.Spec.Containers[0].Env = append(
-			ds.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{
-				Name: network.OvnSBDB, Value: ovnsb,
-			})
 	}
 
 	return ds
