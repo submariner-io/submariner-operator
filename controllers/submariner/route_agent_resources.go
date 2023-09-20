@@ -34,6 +34,8 @@ import (
 	"k8s.io/utils/pointer"
 )
 
+var hostPathFileOrCreate = corev1.HostPathFileOrCreate
+
 //nolint:wrapcheck // No need to wrap errors here.
 func (r *Reconciler) reconcileRouteagentDaemonSet(ctx context.Context, instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*appsv1.DaemonSet, error) {
@@ -74,7 +76,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 					Volumes: []corev1.Volume{
 						// We need to share /run/xtables.lock with the host for iptables
 						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/run/xtables.lock",
+							Path: "/run/xtables.lock", Type: &hostPathFileOrCreate,
 						}}},
 						// We need to share /run/openvswitch/db.sock with the host for OVS
 						{Name: "host-run-openvswitch-db-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
