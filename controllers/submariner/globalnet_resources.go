@@ -71,7 +71,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 				Spec: corev1.PodSpec{
 					Volumes: []corev1.Volume{
 						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/run/xtables.lock",
+							Path: "/run/xtables.lock", Type: &hostPathFileOrCreate,
 						}}},
 					},
 					Containers: []corev1.Container{
