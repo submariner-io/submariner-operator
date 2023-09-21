@@ -92,6 +92,24 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 							Path: "/var/run/ovn-ic/ovnnb_db.sock",
 						}}},
 					},
+					// The route agent needs to wait for the node to be ready before starting,
+					// to avoid racing with the CNI for socket setup; this init container takes care of that
+					InitContainers: []corev1.Container{
+						{
+							Name:            name + "-init",
+							Image:           getImagePath(cr, opnames.RouteAgentImage, names.RouteAgentComponent),
+							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
+							Command:         []string{"submariner-route-agent.sh"},
+							Env: []corev1.EnvVar{
+								{Name: "SUBMARINER_WAITFORNODE", Value: "true"},
+								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "spec.nodeName",
+									},
+								}},
+							},
+						},
+					},
 					Containers: []corev1.Container{
 						{
 							Name:            name,
