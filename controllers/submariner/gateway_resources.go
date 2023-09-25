@@ -99,7 +99,9 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 	volumes := []corev1.Volume{
 		{Name: "ipsecd", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
 		{Name: "ipsecnss", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}},
-		{Name: "libmodules", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/lib/modules"}}},
+		{Name: "libmodules", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+			Path: "/lib/modules", Type: ptr.To(corev1.HostPathDirectoryOrCreate),
+		}}},
 	}
 
 	if cr.Spec.BrokerK8sSecret != "" {
