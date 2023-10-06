@@ -3165,6 +3165,17 @@ rules:
       - '*'
     verbs:
       - '*'
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
 `
 	Config_rbac_submariner_globalnet_role_binding_yaml = `---
 kind: RoleBinding
