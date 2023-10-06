@@ -181,10 +181,10 @@ func (r *Reconciler) getServiceDiscovery(ctx context.Context, key types.Namespac
 func (r *Reconciler) addFinalizer(ctx context.Context,
 	instance *submarinerv1alpha1.ServiceDiscovery,
 ) (*submarinerv1alpha1.ServiceDiscovery, error) {
-	added, err := finalizer.Add(ctx, resource.ForControllerClient(r.ScopedClient, instance.Namespace,
+	added, err := finalizer.Add[*submarinerv1alpha1.ServiceDiscovery](ctx, resource.ForControllerClient(r.ScopedClient, instance.Namespace,
 		&submarinerv1alpha1.ServiceDiscovery{}), instance, opnames.CleanupFinalizer)
 	if err != nil {
-		return nil, err //nolint:wrapcheck // No need to wrap
+		return nil, err
 	}
 
 	if !added {
@@ -475,10 +475,8 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 	configMapNamespace, configMapName, clusterIP string,
 ) error {
 	configMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: configMapNamespace, Name: configMapName}}
-	err := util.MustUpdate(ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
-		func(obj runtime.Object) (runtime.Object, error) {
-			existing := obj.(*corev1.ConfigMap)
-
+	err := util.MustUpdate[*corev1.ConfigMap](ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
+		func(existing *corev1.ConfigMap) (*corev1.ConfigMap, error) {
 			coreFile := existing.Data["Corefile"]
 			if strings.Contains(coreFile, "lighthouse-start") {
 				// Assume this means we've already set the ConfigMap up, first remove existing lighthouse config

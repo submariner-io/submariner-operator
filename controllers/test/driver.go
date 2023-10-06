@@ -240,11 +240,12 @@ func (d *Driver) DeletePods(label, value string) {
 }
 
 func (d *Driver) AwaitFinalizer(obj client.Object, finalizer string) {
-	admtest.AwaitFinalizer(resource.ForControllerClient(d.ScopedClient, d.Namespace, obj), obj.GetName(), finalizer)
+	admtest.AwaitFinalizer[client.Object](resource.ForControllerClient[client.Object](d.ScopedClient, d.Namespace, obj), obj.GetName(),
+		finalizer)
 }
 
 func (d *Driver) AwaitNoResource(obj client.Object) {
-	admtest.AwaitNoResource(resource.ForControllerClient(d.ScopedClient, d.Namespace, obj), obj.GetName())
+	admtest.AwaitNoResource[client.Object](resource.ForControllerClient[client.Object](d.ScopedClient, d.Namespace, obj), obj.GetName())
 }
 
 func EnvMapFrom(daemonSet *appsv1.DaemonSet) map[string]string {

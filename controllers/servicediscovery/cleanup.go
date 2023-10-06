@@ -35,7 +35,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -101,9 +100,9 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 	return reconcile.Result{}, r.removeFinalizer(ctx, instance)
 }
 
-//nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.ServiceDiscovery) error {
-	return finalizer.Remove(ctx, resource.ForControllerClient(r.ScopedClient, instance.Namespace, instance),
+	return finalizer.Remove[*operatorv1alpha1.ServiceDiscovery](ctx, resource.ForControllerClient(
+		r.ScopedClient, instance.Namespace, instance),
 		instance, opnames.CleanupFinalizer)
 }
 
@@ -114,9 +113,9 @@ func (r *Reconciler) removeLighthouseConfigFromCustomDNSConfigMap(ctx context.Co
 
 	log.Info("Removing lighthouse config from custom DNS ConfigMap", "Name", configMap.Name, "Namespace", configMap.Namespace)
 
-	err := util.Update(ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
-		func(existing runtime.Object) (runtime.Object, error) {
-			delete(existing.(*corev1.ConfigMap).Data, "lighthouse.server")
+	err := util.Update[*corev1.ConfigMap](ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
+		func(existing *corev1.ConfigMap) (*corev1.ConfigMap, error) {
+			delete(existing.Data, "lighthouse.server")
 			return existing, nil
 		})
 
