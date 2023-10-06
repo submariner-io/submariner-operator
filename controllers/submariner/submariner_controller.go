@@ -279,10 +279,11 @@ func (r *Reconciler) getSubmariner(ctx context.Context, key types.NamespacedName
 }
 
 func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Submariner) (*submopv1a1.Submariner, error) {
-	added, err := finalizer.Add(ctx, resource.ForControllerClient(r.config.ScopedClient, instance.Namespace, &submopv1a1.Submariner{}),
+	added, err := finalizer.Add[*submopv1a1.Submariner](ctx, resource.ForControllerClient(
+		r.config.ScopedClient, instance.Namespace, &submopv1a1.Submariner{}),
 		instance, names.CleanupFinalizer)
 	if err != nil {
-		return nil, err //nolint:wrapcheck // No need to wrap
+		return nil, err
 	}
 
 	if !added {

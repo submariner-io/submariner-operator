@@ -29,7 +29,6 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -80,17 +79,12 @@ func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string
 		return false, errors.Wrap(err, "error extracting embedded CRD")
 	}
 
-	result, err := util.CreateOrUpdate(ctx, &resource.InterfaceFuncs{
-		GetFunc: func(ctx context.Context, name string, options metav1.GetOptions) (runtime.Object, error) {
-			return u.Get(ctx, name, options)
-		},
-		CreateFunc: func(ctx context.Context, obj runtime.Object, options metav1.CreateOptions) (runtime.Object, error) {
-			return u.Create(ctx, obj.(*apiextensions.CustomResourceDefinition), options)
-		},
-		UpdateFunc: func(ctx context.Context, obj runtime.Object, options metav1.UpdateOptions) (runtime.Object, error) {
-			return u.Update(ctx, obj.(*apiextensions.CustomResourceDefinition), options)
-		},
-	}, crd, util.Replace(crd))
+	result, err := util.CreateOrUpdate[*apiextensions.CustomResourceDefinition](
+		ctx, &resource.InterfaceFuncs[*apiextensions.CustomResourceDefinition]{
+			GetFunc:    u.Get,
+			CreateFunc: u.Create,
+			UpdateFunc: u.Update,
+		}, crd, util.Replace(crd))
 
 	return result == util.OperationResultCreated, err
 }

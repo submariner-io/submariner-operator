@@ -97,9 +97,9 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 	return reconcile.Result{}, r.removeFinalizer(ctx, instance)
 }
 
-//nolint:wrapcheck // No need to wrap
 func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1alpha1.Submariner) error {
-	return finalizer.Remove(ctx, resource.ForControllerClient(r.config.ScopedClient, instance.Namespace, &operatorv1alpha1.Submariner{}),
+	return finalizer.Remove[*operatorv1alpha1.Submariner](ctx, resource.ForControllerClient(
+		r.config.ScopedClient, instance.Namespace, &operatorv1alpha1.Submariner{}),
 		instance, opnames.CleanupFinalizer)
 }
 
