@@ -89,7 +89,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 						}}},
 						// Path used by Openshift
 						{Name: "host-var-run-ovn-ic-nbdb-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/var/run/ovn-ic/ovnnb_db.sock",
+							Path: "/var/run/ovn-ic/ovnnb_db.sock", Type: ptr.To(corev1.HostPathFileOrCreate),
 						}}},
 					},
 					// The route agent needs to wait for the node to be ready before starting,
