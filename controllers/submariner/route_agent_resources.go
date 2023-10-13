@@ -73,23 +73,21 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 				Spec: corev1.PodSpec{
 					TerminationGracePeriodSeconds: ptr.To(int64(1)),
 					Volumes: []corev1.Volume{
-						// We need to share /run/xtables.lock with the host for iptables
+						// Share /run/xtables.lock with the host for iptables
 						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
 							Path: "/run/xtables.lock", Type: ptr.To(corev1.HostPathFileOrCreate),
 						}}},
-						// We need to share /run/openvswitch/db.sock with the host for OVS
-						{Name: "host-run-openvswitch-db-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/run/openvswitch/db.sock",
+						// Share /run/openvswitch/db.sock and /run/openvswitch/ovnnb_db.sock with the host for OVS/OVN
+						{Name: "host-run-openvswitch", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+							Path: "/run/openvswitch", Type: ptr.To(corev1.HostPathDirectoryOrCreate),
 						}}},
+						// Share /sys with the host for OVS/OVN
 						{Name: "host-sys", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
 							Path: "/sys",
 						}}},
-						{Name: "host-var-run-openvswitch-nbdb-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/var/run/openvswitch/ovnnb_db.sock",
-						}}},
-						// Path used by Openshift
-						{Name: "host-var-run-ovn-ic-nbdb-sock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/var/run/ovn-ic/ovnnb_db.sock",
+						// Share /run/ovn-ic with the host for OVN (this is a transitional path used by OpenShift for upgrades)
+						{Name: "host-run-ovn-ic", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+							Path: "/run/ovn-ic", Type: ptr.To(corev1.HostPathDirectoryOrCreate),
 						}}},
 					},
 					// The route agent needs to wait for the node to be ready before starting,
@@ -127,10 +125,8 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
-								{Name: "host-run-openvswitch-db-sock", MountPath: "/run/openvswitch/db.sock"},
-								{Name: "host-var-run-openvswitch-nbdb-sock", MountPath: "/var/run/openvswitch/ovnnb_db.sock"},
-								// Path used by Openshift
-								{Name: "host-var-run-ovn-ic-nbdb-sock", MountPath: "/var/run/ovn-ic/ovnnb_db.sock"},
+								{Name: "host-run-openvswitch", MountPath: "/run/openvswitch"},
+								{Name: "host-run-ovn-ic", MountPath: "/run/ovn-ic"},
 							},
 							Env: []corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
