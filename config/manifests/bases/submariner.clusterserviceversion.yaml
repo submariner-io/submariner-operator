@@ -222,6 +222,11 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
         - urn:alm:descriptor:com.tectonic.ui:advanced
+      - description: Halt on certificate error (so the pod gets restarted).
+        displayName: Halt (and restart) on certificate error
+        path: haltOnCertificateError
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: Override component images.
         displayName: Image Overrides
         path: imageOverrides
