@@ -66,6 +66,8 @@ spec:
                 type: boolean
               globalnetEnabled:
                 type: boolean
+              haltOnCertificateError:
+                type: boolean
               imageOverrides:
                 additionalProperties:
                   type: string
