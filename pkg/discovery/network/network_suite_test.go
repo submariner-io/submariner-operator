@@ -59,6 +59,18 @@ func fakePodWithNamespace(namespace, name, component string, command []string, e
 	}
 }
 
+func fakeKubeAPIServerPod() *v1.Pod {
+	return fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{})
+}
+
+func fakeKubeControllerManagerPod() *v1.Pod {
+	return fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-cidr=" + testPodCIDR}, []v1.EnvVar{})
+}
+
+func fakeKubeProxyPod() *v1.Pod {
+	return fakePod("kube-proxy", []string{"kube-proxy", "--cluster-cidr=" + testPodCIDR}, []v1.EnvVar{})
+}
+
 func fakeService(namespace, name, component string) *v1.Service {
 	return &v1.Service{
 		ObjectMeta: v1meta.ObjectMeta{

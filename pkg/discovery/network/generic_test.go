@@ -114,7 +114,7 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-cidr=" + testPodCIDR}, []corev1.EnvVar{}),
+				fakeKubeControllerManagerPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -137,7 +137,7 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-proxy", []string{"kube-proxy", "--cluster-cidr=" + testPodCIDR}, []corev1.EnvVar{}),
+				fakeKubeProxyPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -160,7 +160,7 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []corev1.EnvVar{}),
+				fakeKubeAPIServerPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -183,8 +183,8 @@ var _ = Describe("Generic Network", func() {
 
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
-				fakePod("kube-proxy", []string{"kube-proxy", "--cluster-cidr=" + testPodCIDR}, []corev1.EnvVar{}),
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []corev1.EnvVar{}),
+				fakeKubeProxyPod(),
+				fakeKubeAPIServerPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
@@ -265,7 +265,7 @@ var _ = Describe("Generic Network", func() {
 		BeforeEach(func() {
 			clusterNet = testDiscoverGenericWith(
 				fakeNode("node1", testPodCIDR),
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []corev1.EnvVar{}),
+				fakeKubeAPIServerPod(),
 			)
 		})
 
