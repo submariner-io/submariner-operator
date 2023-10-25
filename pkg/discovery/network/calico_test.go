@@ -78,8 +78,8 @@ var _ = Describe("Calico Network", func() {
 		JustBeforeEach(func() {
 			initObjs = []client.Object{
 				calicoCfgMap,
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
-				fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-cidr=" + testPodCIDR}, []v1.EnvVar{}),
+				fakeKubeAPIServerPod(),
+				fakeKubeControllerManagerPod(),
 			}
 
 			client := newTestClient(initObjs...)
