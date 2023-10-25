@@ -72,3 +72,4 @@ rules:
       - create
       - delete
       - update
+      - deletecollection
