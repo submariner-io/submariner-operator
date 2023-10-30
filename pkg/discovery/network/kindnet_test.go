@@ -53,7 +53,7 @@ var _ = Describe("Kindnet CNI", func() {
 		BeforeEach(func() {
 			clusterNet = testDiscoverNetwork(
 				fakePod("kindnet", []string{"kindnet"}, []v1.EnvVar{{Name: "POD_SUBNET", Value: testPodCIDR}}),
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
+				fakeKubeAPIServerPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})

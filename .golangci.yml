@@ -191,3 +191,8 @@ issues:
     - path: pkg/metrics/service-monitor.go
       linters:
         - goheader
+
+    # Ignore duplicate strings in generated code
+    - path: pkg/embeddedyamls/yamls.go
+      linters:
+        - goconst

@@ -45,7 +45,7 @@ var _ = Describe("Canal Flannel Network", func() {
 		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			clusterNet := testDiscoverWith(
 				&canalFlannelCfgMap,
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
+				fakeKubeAPIServerPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.CanalFlannel))

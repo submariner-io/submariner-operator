@@ -220,6 +220,9 @@ spec:
                 description: The Global CIDR super-net range for allocating GlobalCIDRs
                   to each cluster.
                 type: string
+              haltOnCertificateError:
+                description: Halt on certificate error (so the pod gets restarted).
+                type: boolean
               imageOverrides:
                 additionalProperties:
                   type: string
@@ -297,6 +300,7 @@ spec:
             - clusterCIDR
             - clusterID
             - debug
+            - haltOnCertificateError
             - namespace
             - natEnabled
             - serviceCIDR
@@ -1112,6 +1116,8 @@ spec:
               debug:
                 type: boolean
               globalnetEnabled:
+                type: boolean
+              haltOnCertificateError:
                 type: boolean
               imageOverrides:
                 additionalProperties:

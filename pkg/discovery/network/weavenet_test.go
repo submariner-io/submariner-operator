@@ -55,7 +55,7 @@ var _ = Describe("Weave Network", func() {
 		BeforeEach(func() {
 			clusterNet = testDiscoverNetwork(
 				fakePod("weave-net", []string{"weave-net"}, []v1.EnvVar{{Name: "IPALLOC_RANGE", Value: testPodCIDR}}),
-				fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{}),
+				fakeKubeAPIServerPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
