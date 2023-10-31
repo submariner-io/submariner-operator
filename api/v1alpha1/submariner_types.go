@@ -172,7 +172,7 @@ type SubmarinerSpec struct {
 	// Halt on certificate error (so the pod gets restarted).
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Halt (and restart) on certificate error"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
-	HaltOnCertificateError bool `json:"haltOnCertificateError"`
+	HaltOnCertificateError bool `json:"haltOnCertificateError,omitempty"`
 
 	// Name of the custom CoreDNS configmap to configure forwarding to Lighthouse.
 	// It should be in <namespace>/<name> format where <namespace> is optional and defaults to kube-system.

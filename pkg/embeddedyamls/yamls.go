@@ -300,7 +300,6 @@ spec:
             - clusterCIDR
             - clusterID
             - debug
-            - haltOnCertificateError
             - namespace
             - natEnabled
             - serviceCIDR
