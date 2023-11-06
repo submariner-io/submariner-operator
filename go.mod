@@ -18,7 +18,7 @@ require (
 	github.com/submariner-io/shipyard v0.16.0-m4
 	github.com/submariner-io/submariner v0.16.0-m4.0.20231010141121-3d3cc9ce23cc
 	github.com/uw-labs/lichen v0.1.7
-	golang.org/x/text v0.13.0
+	golang.org/x/text v0.14.0
 	k8s.io/api v0.28.2
 	k8s.io/apiextensions-apiserver v0.28.1
 	k8s.io/apimachinery v0.28.2
