@@ -4,9 +4,9 @@ go 1.20
 
 require (
 	github.com/coreos/go-semver v0.3.1
-	github.com/go-logr/logr v1.2.4
-	github.com/onsi/ginkgo/v2 v2.12.0
-	github.com/onsi/gomega v1.27.10
+	github.com/go-logr/logr v1.3.0
+	github.com/onsi/ginkgo/v2 v2.13.0
+	github.com/onsi/gomega v1.29.0
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
 	github.com/operator-framework/operator-lib v0.11.1-0.20230306195046-28cadc6b6055
 	github.com/operator-framework/operator-sdk v1.32.0
@@ -14,20 +14,20 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.68.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.68.0
 	github.com/prometheus/client_golang v1.17.0
-	github.com/submariner-io/admiral v0.16.0-m4.0.20231010063642-6d040ab176ec
-	github.com/submariner-io/shipyard v0.16.0-m4
-	github.com/submariner-io/submariner v0.16.0-m4.0.20231010141121-3d3cc9ce23cc
+	github.com/submariner-io/admiral v0.17.0-m0
+	github.com/submariner-io/shipyard v0.17.0-m0
+	github.com/submariner-io/submariner v0.17.0-m0
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.14.0
-	k8s.io/api v0.28.2
-	k8s.io/apiextensions-apiserver v0.28.1
-	k8s.io/apimachinery v0.28.2
-	k8s.io/client-go v0.28.2
+	k8s.io/api v0.28.3
+	k8s.io/apiextensions-apiserver v0.28.3
+	k8s.io/apimachinery v0.28.3
+	k8s.io/client-go v0.28.3
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
-	sigs.k8s.io/controller-runtime v0.16.2
+	sigs.k8s.io/controller-runtime v0.16.3
 	sigs.k8s.io/controller-tools v0.13.0
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
@@ -92,10 +92,10 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/cel-go v0.16.0 // indirect
+	github.com/google/cel-go v0.16.1 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-containerregistry v0.13.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/licenseclassifier v0.0.0-20201113175434-78a70215ca36 // indirect
@@ -211,7 +211,7 @@ require (
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
-	golang.org/x/time v0.3.0 // indirect
+	golang.org/x/time v0.4.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
@@ -226,11 +226,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.11.3 // indirect
-	k8s.io/apiserver v0.28.1 // indirect
+	k8s.io/apiserver v0.28.3 // indirect
 	k8s.io/cli-runtime v0.27.5 // indirect
-	k8s.io/component-base v0.28.1 // indirect
-	k8s.io/klog v1.0.0 // indirect
-	k8s.io/klog/v2 v2.100.1 // indirect
+	k8s.io/component-base v0.28.3 // indirect
+	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230905202853-d090da108d2f // indirect
 	k8s.io/kubectl v0.27.5 // indirect
 	oras.land/oras-go v1.2.2 // indirect
