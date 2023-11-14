@@ -75,7 +75,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 					Volumes: []corev1.Volume{
 						// Share /run/xtables.lock with the host for iptables
 						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/run/xtables.lock", Type: ptr.To(corev1.HostPathFileOrCreate),
+							Path: "/run/xtables.lock",
 						}}},
 						// Share /run/openvswitch/db.sock and /run/openvswitch/ovnnb_db.sock with the host for OVS/OVN
 						{Name: "host-run-openvswitch", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
