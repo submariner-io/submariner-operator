@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/coreos/go-semver v0.3.1
 	github.com/go-logr/logr v1.3.0
-	github.com/onsi/ginkgo/v2 v2.13.1
+	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
 	github.com/operator-framework/operator-lib v0.11.1-0.20230306195046-28cadc6b6055
@@ -14,9 +14,9 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.70.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.70.0
 	github.com/prometheus/client_golang v1.17.0
-	github.com/submariner-io/admiral v0.17.0-m1
-	github.com/submariner-io/shipyard v0.17.0-m1
-	github.com/submariner-io/submariner v0.17.0-m1
+	github.com/submariner-io/admiral v0.17.0-m2
+	github.com/submariner-io/shipyard v0.17.0-m2
+	github.com/submariner-io/submariner v0.17.0-m2
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.14.0
 	k8s.io/api v0.28.4
