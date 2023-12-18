@@ -5,31 +5,55 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: /
     target-branch: release-0.13
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: /
     target-branch: release-0.14
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: /
     target-branch: release-0.15
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: /
     target-branch: release-0.16
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: gomod
     target-branch: "release-0.14"
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      gomod:
+        patterns:
+          - "*"
     allow:
       # Pick up k8s.io updates
       - dependency-name: k8s.io/apiextensions-apiserver
