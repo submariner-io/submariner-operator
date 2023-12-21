@@ -19,10 +19,10 @@ require (
 	github.com/submariner-io/submariner v0.16.2
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.14.0
-	k8s.io/api v0.27.7
-	k8s.io/apiextensions-apiserver v0.27.5
-	k8s.io/apimachinery v0.27.7
-	k8s.io/client-go v0.27.7
+	k8s.io/api v0.27.9
+	k8s.io/apiextensions-apiserver v0.27.9
+	k8s.io/apimachinery v0.27.9
+	k8s.io/client-go v0.27.9
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/controller-runtime v0.15.2
 	sigs.k8s.io/controller-tools v0.12.1
@@ -93,7 +93,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/cel-go v0.12.6 // indirect
+	github.com/google/cel-go v0.12.7 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-containerregistry v0.14.0 // indirect
@@ -224,9 +224,9 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.11.3 // indirect
-	k8s.io/apiserver v0.27.5 // indirect
+	k8s.io/apiserver v0.27.9 // indirect
 	k8s.io/cli-runtime v0.27.5 // indirect
-	k8s.io/component-base v0.27.5 // indirect
+	k8s.io/component-base v0.27.9 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
