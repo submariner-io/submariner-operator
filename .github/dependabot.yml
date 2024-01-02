@@ -98,5 +98,7 @@ updates:
       - dependency-name: sigs.k8s.io/yaml
       # Managed in shipyard
       - dependency-name: k8s.io/utils
-      # Managed in submariner
-      - dependency-name: github.com/uw-labs/lichen
+  - package-ecosystem: gomod
+    directory: /tools
+    schedule:
+      interval: weekly
