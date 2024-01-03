@@ -132,7 +132,7 @@ licensecheck: $(BINARIES) | bin/lichen
 
 bin/lichen:
 	mkdir -p $(@D)
-	$(GO) build -o $@ github.com/uw-labs/lichen
+	cd tools && $(GO) build -o $(CURDIR)/$@ github.com/uw-labs/lichen
 
 # Generate deep-copy code
 CONTROLLER_DEEPCOPY := api/v1alpha1/zz_generated.deepcopy.go
@@ -154,7 +154,7 @@ ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
 # Download controller-gen locally if not already downloaded.
 $(CONTROLLER_GEN):
 	mkdir -p $(@D)
-	$(GO) build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
+	cd tools && $(GO) build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
 
 controller-gen: $(CONTROLLER_GEN)
 
@@ -185,7 +185,7 @@ is-semantic-version:
 # Download kustomize locally if not already downloaded.
 # We clear GITHUB_TOKEN to ensure that the installation script won't try to use it (and fail)
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
-KUSTOMIZE_VERSION := $(shell $(GO) list -m -f {{.Version}} sigs.k8s.io/kustomize/kustomize/v3)
+KUSTOMIZE_VERSION := $(shell cd tools && $(GO) list -m -f {{.Version}} sigs.k8s.io/kustomize/kustomize/v3)
 $(KUSTOMIZE):
 	mkdir -p $(@D)
 	{ curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | GITHUB_TOKEN= bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(@D); }
@@ -237,7 +237,7 @@ unit: $(EMBEDDED_YAMLS)
 #     gpg --no-options -q --batch --no-default-keyring \
 #     --output scripts/operator-sdk-signing-keyring.gpg \
 #     --dearmor scripts/operator-sdk-signing-key.asc
-OPERATOR_SDK_VERSION := $(shell $(GO) list -m -f {{.Version}} github.com/operator-framework/operator-sdk)
+OPERATOR_SDK_VERSION := $(shell cd tools && $(GO) list -m -f {{.Version}} github.com/operator-framework/operator-sdk)
 OPERATOR_SDK_REPO := github.com/operator-framework/operator-sdk
 $(OPERATOR_SDK):
 	mkdir -p $(@D) && \
