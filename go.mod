@@ -17,7 +17,7 @@ require (
 	github.com/submariner-io/shipyard v0.14.7
 	github.com/submariner-io/submariner v0.14.7
 	github.com/uw-labs/lichen v0.1.7
-	golang.org/x/text v0.13.0
+	golang.org/x/text v0.14.0
 	k8s.io/api v0.25.16
 	k8s.io/apiextensions-apiserver v0.25.16
 	k8s.io/apimachinery v0.25.16
@@ -108,12 +108,12 @@ require (
 	github.com/yujunz/go-getter v1.5.1-lite.0.20201201013212-6d9c071adddf // indirect
 	go.starlark.net v0.0.0-20210506034541-84642328b1f0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/term v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
