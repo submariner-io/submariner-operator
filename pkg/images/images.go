@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	apis "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
@@ -60,7 +61,7 @@ type imageParameters struct {
 
 var (
 	log          = logf.Log.WithName("images")
-	loggedImages = make(map[imageParameters]string)
+	loggedImages = sync.Map{}
 )
 
 func logIfChanged(repo, version, image, component, result, explanation string) string {
@@ -70,14 +71,12 @@ func logIfChanged(repo, version, image, component, result, explanation string) s
 		image:     image,
 		component: component,
 	}
-	previous, ok := loggedImages[imageParams]
 
+	previous, ok := loggedImages.Swap(imageParams, result)
 	if !ok || result != previous {
 		log.Info("New GetImagePath result", "repo", repo, "version", version, "image", image, "component", component,
 			"previous", previous, "result", result, "explanation", explanation)
 	}
-
-	loggedImages[imageParams] = result
 
 	return result
 }
