@@ -25,7 +25,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: brokers.submariner.io
 spec:
   group: submariner.io
@@ -42,14 +42,19 @@ spec:
         description: Broker is the Schema for the brokers API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -93,7 +98,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: submariners.submariner.io
 spec:
   group: submariner.io
@@ -110,14 +115,19 @@ spec:
         description: Submariner is the Schema for the submariners API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -196,9 +206,9 @@ spec:
                     type: integer
                 type: object
               coreDNSCustomConfig:
-                description: Name of the custom CoreDNS configmap to configure forwarding
-                  to Lighthouse. It should be in <namespace>/<name> format where <namespace>
-                  is optional and defaults to kube-system.
+                description: |-
+                  Name of the custom CoreDNS configmap to configure forwarding to Lighthouse.
+                  It should be in <namespace>/<name> format where <namespace> is optional and defaults to kube-system.
                 properties:
                   configMapName:
                     description: Name of the custom CoreDNS configmap.
@@ -252,40 +262,39 @@ spec:
                 type: boolean
               tolerations:
                 items:
-                  description: The pod this Toleration is attached to tolerates any
-                    taint that matches the triple <key,value,effect> using the matching
-                    operator <operator>.
+                  description: |-
+                    The pod this Toleration is attached to tolerates any taint that matches
+                    the triple <key,value,effect> using the matching operator <operator>.
                   properties:
                     effect:
-                      description: Effect indicates the taint effect to match. Empty
-                        means match all taint effects. When specified, allowed values
-                        are NoSchedule, PreferNoSchedule and NoExecute.
+                      description: |-
+                        Effect indicates the taint effect to match. Empty means match all taint effects.
+                        When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
                       type: string
                     key:
-                      description: Key is the taint key that the toleration applies
-                        to. Empty means match all taint keys. If the key is empty,
-                        operator must be Exists; this combination means to match all
-                        values and all keys.
+                      description: |-
+                        Key is the taint key that the toleration applies to. Empty means match all taint keys.
+                        If the key is empty, operator must be Exists; this combination means to match all values and all keys.
                       type: string
                     operator:
-                      description: Operator represents a key's relationship to the
-                        value. Valid operators are Exists and Equal. Defaults to Equal.
-                        Exists is equivalent to wildcard for value, so that a pod
-                        can tolerate all taints of a particular category.
+                      description: |-
+                        Operator represents a key's relationship to the value.
+                        Valid operators are Exists and Equal. Defaults to Equal.
+                        Exists is equivalent to wildcard for value, so that a pod can
+                        tolerate all taints of a particular category.
                       type: string
                     tolerationSeconds:
-                      description: TolerationSeconds represents the period of time
-                        the toleration (which must be of effect NoExecute, otherwise
-                        this field is ignored) tolerates the taint. By default, it
-                        is not set, which means tolerate the taint forever (do not
-                        evict). Zero and negative values will be treated as 0 (evict
-                        immediately) by the system.
+                      description: |-
+                        TolerationSeconds represents the period of time the toleration (which must be
+                        of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
+                        it is not set, which means tolerate the taint forever (do not evict). Zero and
+                        negative values will be treated as 0 (evict immediately) by the system.
                       format: int64
                       type: integer
                     value:
-                      description: Value is the taint value the toleration matches
-                        to. If the operator is Exists, the value should be empty,
-                        otherwise just a regular string.
+                      description: |-
+                        Value is the taint value the toleration matches to.
+                        If the operator is Exists, the value should be empty, otherwise just a regular string.
                       type: string
                   type: object
                 type: array
@@ -338,9 +347,10 @@ spec:
                     type: boolean
                   nonReadyContainerStates:
                     items:
-                      description: ContainerState holds a possible state of container.
-                        Only one of its members may be specified. If none of them
-                        is specified, the default one is ContainerStateWaiting.
+                      description: |-
+                        ContainerState holds a possible state of container.
+                        Only one of its members may be specified.
+                        If none of them is specified, the default one is ContainerStateWaiting.
                       properties:
                         running:
                           description: Details about a running container
@@ -405,10 +415,10 @@ spec:
                       a daemon set.
                     properties:
                       collisionCount:
-                        description: Count of hash collisions for the DaemonSet. The
-                          DaemonSet controller uses this field as a collision avoidance
-                          mechanism when it needs to create the name for the newest
-                          ControllerRevision.
+                        description: |-
+                          Count of hash collisions for the DaemonSet. The DaemonSet controller
+                          uses this field as a collision avoidance mechanism when it needs to
+                          create the name for the newest ControllerRevision.
                         format: int32
                         type: integer
                       conditions:
@@ -443,37 +453,42 @@ spec:
                           type: object
                         type: array
                       currentNumberScheduled:
-                        description: 'The number of nodes that are running at least
-                          1 daemon pod and are supposed to run the daemon pod. More
-                          info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: |-
+                          The number of nodes that are running at least 1
+                          daemon pod and are supposed to run the daemon pod.
+                          More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
                         format: int32
                         type: integer
                       desiredNumberScheduled:
-                        description: 'The total number of nodes that should be running
-                          the daemon pod (including nodes correctly running the daemon
-                          pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: |-
+                          The total number of nodes that should be running the daemon
+                          pod (including nodes correctly running the daemon pod).
+                          More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
                         format: int32
                         type: integer
                       numberAvailable:
-                        description: The number of nodes that should be running the
-                          daemon pod and have one or more of the daemon pod running
-                          and available (ready for at least spec.minReadySeconds)
+                        description: |-
+                          The number of nodes that should be running the
+                          daemon pod and have one or more of the daemon pod running and
+                          available (ready for at least spec.minReadySeconds)
                         format: int32
                         type: integer
                       numberMisscheduled:
-                        description: 'The number of nodes that are running the daemon
-                          pod, but are not supposed to run the daemon pod. More info:
-                          https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: |-
+                          The number of nodes that are running the daemon pod, but are
+                          not supposed to run the daemon pod.
+                          More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
                         format: int32
                         type: integer
                       numberReady:
-                        description: numberReady is the number of nodes that should
-                          be running the daemon pod and have one or more of the daemon
-                          pod running with a Ready Condition.
+                        description: |-
+                          numberReady is the number of nodes that should be running the daemon pod and have one
+                          or more of the daemon pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
-                        description: The number of nodes that should be running the
+                        description: |-
+                          The number of nodes that should be running the
                           daemon pod and have none of the daemon pod running and available
                           (ready for at least spec.minReadySeconds)
                         format: int32
@@ -543,9 +558,9 @@ spec:
                             - subnets
                             type: object
                           latencyRTT:
-                            description: LatencySpec describes the round trip time
-                              information for a packet between the gateway pods of
-                              two clusters.
+                            description: |-
+                              LatencySpec describes the round trip time information for a packet
+                              between the gateway pods of two clusters.
                             properties:
                               average:
                                 type: string
@@ -636,9 +651,10 @@ spec:
                     type: boolean
                   nonReadyContainerStates:
                     items:
-                      description: ContainerState holds a possible state of container.
-                        Only one of its members may be specified. If none of them
-                        is specified, the default one is ContainerStateWaiting.
+                      description: |-
+                        ContainerState holds a possible state of container.
+                        Only one of its members may be specified.
+                        If none of them is specified, the default one is ContainerStateWaiting.
                       properties:
                         running:
                           description: Details about a running container
@@ -703,10 +719,10 @@ spec:
                       a daemon set.
                     properties:
                       collisionCount:
-                        description: Count of hash collisions for the DaemonSet. The
-                          DaemonSet controller uses this field as a collision avoidance
-                          mechanism when it needs to create the name for the newest
-                          ControllerRevision.
+                        description: |-
+                          Count of hash collisions for the DaemonSet. The DaemonSet controller
+                          uses this field as a collision avoidance mechanism when it needs to
+                          create the name for the newest ControllerRevision.
                         format: int32
                         type: integer
                       conditions:
@@ -741,37 +757,42 @@ spec:
                           type: object
                         type: array
                       currentNumberScheduled:
-                        description: 'The number of nodes that are running at least
-                          1 daemon pod and are supposed to run the daemon pod. More
-                          info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: |-
+                          The number of nodes that are running at least 1
+                          daemon pod and are supposed to run the daemon pod.
+                          More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
                         format: int32
                         type: integer
                       desiredNumberScheduled:
-                        description: 'The total number of nodes that should be running
-                          the daemon pod (including nodes correctly running the daemon
-                          pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: |-
+                          The total number of nodes that should be running the daemon
+                          pod (including nodes correctly running the daemon pod).
+                          More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
                         format: int32
                         type: integer
                       numberAvailable:
-                        description: The number of nodes that should be running the
-                          daemon pod and have one or more of the daemon pod running
-                          and available (ready for at least spec.minReadySeconds)
+                        description: |-
+                          The number of nodes that should be running the
+                          daemon pod and have one or more of the daemon pod running and
+                          available (ready for at least spec.minReadySeconds)
                         format: int32
                         type: integer
                       numberMisscheduled:
-                        description: 'The number of nodes that are running the daemon
-                          pod, but are not supposed to run the daemon pod. More info:
-                          https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: |-
+                          The number of nodes that are running the daemon pod, but are
+                          not supposed to run the daemon pod.
+                          More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
                         format: int32
                         type: integer
                       numberReady:
-                        description: numberReady is the number of nodes that should
-                          be running the daemon pod and have one or more of the daemon
-                          pod running with a Ready Condition.
+                        description: |-
+                          numberReady is the number of nodes that should be running the daemon pod and have one
+                          or more of the daemon pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
-                        description: The number of nodes that should be running the
+                        description: |-
+                          The number of nodes that should be running the
                           daemon pod and have none of the daemon pod running and available
                           (ready for at least spec.minReadySeconds)
                         format: int32
@@ -802,49 +823,49 @@ spec:
                     description: LoadBalancerStatus represents the status of a load-balancer.
                     properties:
                       ingress:
-                        description: Ingress is a list containing ingress points for
-                          the load-balancer. Traffic intended for the service should
-                          be sent to these ingress points.
+                        description: |-
+                          Ingress is a list containing ingress points for the load-balancer.
+                          Traffic intended for the service should be sent to these ingress points.
                         items:
-                          description: 'LoadBalancerIngress represents the status
-                            of a load-balancer ingress point: traffic intended for
-                            the service should be sent to an ingress point.'
+                          description: |-
+                            LoadBalancerIngress represents the status of a load-balancer ingress point:
+                            traffic intended for the service should be sent to an ingress point.
                           properties:
                             hostname:
-                              description: Hostname is set for load-balancer ingress
-                                points that are DNS based (typically AWS load-balancers)
+                              description: |-
+                                Hostname is set for load-balancer ingress points that are DNS based
+                                (typically AWS load-balancers)
                               type: string
                             ip:
-                              description: IP is set for load-balancer ingress points
-                                that are IP based (typically GCE or OpenStack load-balancers)
+                              description: |-
+                                IP is set for load-balancer ingress points that are IP based
+                                (typically GCE or OpenStack load-balancers)
                               type: string
                             ipMode:
-                              description: IPMode specifies how the load-balancer
-                                IP behaves, and may only be specified when the ip
-                                field is specified. Setting this to "VIP" indicates
-                                that traffic is delivered to the node with the destination
-                                set to the load-balancer's IP and port. Setting this
-                                to "Proxy" indicates that traffic is delivered to
-                                the node or pod with the destination set to the node's
-                                IP and node port or the pod's IP and port. Service
-                                implementations may use this information to adjust
-                                traffic routing.
+                              description: |-
+                                IPMode specifies how the load-balancer IP behaves, and may only be specified when the ip field is specified.
+                                Setting this to "VIP" indicates that traffic is delivered to the node with
+                                the destination set to the load-balancer's IP and port.
+                                Setting this to "Proxy" indicates that traffic is delivered to the node or pod with
+                                the destination set to the node's IP and node port or the pod's IP and port.
+                                Service implementations may use this information to adjust traffic routing.
                               type: string
                             ports:
-                              description: Ports is a list of records of service ports
-                                If used, every port defined in the service should
-                                have an entry in it
+                              description: |-
+                                Ports is a list of records of service ports
+                                If used, every port defined in the service should have an entry in it
                               items:
                                 properties:
                                   error:
-                                    description: 'Error is to record the problem with
-                                      the service port The format of the error shall
-                                      comply with the following rules: - built-in
-                                      error values shall be specified in this file
-                                      and those shall use CamelCase names - cloud
-                                      provider specific error values must have names
-                                      that comply with the format foo.example.com/CamelCase.
-                                      --- The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)'
+                                    description: |-
+                                      Error is to record the problem with the service port
+                                      The format of the error shall comply with the following rules:
+                                      - built-in error values shall be specified in this file and those shall use
+                                        CamelCase names
+                                      - cloud provider specific error values must have names that comply with the
+                                        format foo.example.com/CamelCase.
+                                      ---
+                                      The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                                     maxLength: 316
                                     pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                                     type: string
@@ -855,9 +876,9 @@ spec:
                                     type: integer
                                   protocol:
                                     default: TCP
-                                    description: 'Protocol is the protocol of the
-                                      service port of which status is recorded here
-                                      The supported values are: "TCP", "UDP", "SCTP"'
+                                    description: |-
+                                      Protocol is the protocol of the service port of which status is recorded here
+                                      The supported values are: "TCP", "UDP", "SCTP"
                                     type: string
                                 required:
                                 - port
@@ -884,9 +905,10 @@ spec:
                     type: boolean
                   nonReadyContainerStates:
                     items:
-                      description: ContainerState holds a possible state of container.
-                        Only one of its members may be specified. If none of them
-                        is specified, the default one is ContainerStateWaiting.
+                      description: |-
+                        ContainerState holds a possible state of container.
+                        Only one of its members may be specified.
+                        If none of them is specified, the default one is ContainerStateWaiting.
                       properties:
                         running:
                           description: Details about a running container
@@ -951,10 +973,10 @@ spec:
                       a daemon set.
                     properties:
                       collisionCount:
-                        description: Count of hash collisions for the DaemonSet. The
-                          DaemonSet controller uses this field as a collision avoidance
-                          mechanism when it needs to create the name for the newest
-                          ControllerRevision.
+                        description: |-
+                          Count of hash collisions for the DaemonSet. The DaemonSet controller
+                          uses this field as a collision avoidance mechanism when it needs to
+                          create the name for the newest ControllerRevision.
                         format: int32
                         type: integer
                       conditions:
@@ -989,37 +1011,42 @@ spec:
                           type: object
                         type: array
                       currentNumberScheduled:
-                        description: 'The number of nodes that are running at least
-                          1 daemon pod and are supposed to run the daemon pod. More
-                          info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: |-
+                          The number of nodes that are running at least 1
+                          daemon pod and are supposed to run the daemon pod.
+                          More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
                         format: int32
                         type: integer
                       desiredNumberScheduled:
-                        description: 'The total number of nodes that should be running
-                          the daemon pod (including nodes correctly running the daemon
-                          pod). More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: |-
+                          The total number of nodes that should be running the daemon
+                          pod (including nodes correctly running the daemon pod).
+                          More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
                         format: int32
                         type: integer
                       numberAvailable:
-                        description: The number of nodes that should be running the
-                          daemon pod and have one or more of the daemon pod running
-                          and available (ready for at least spec.minReadySeconds)
+                        description: |-
+                          The number of nodes that should be running the
+                          daemon pod and have one or more of the daemon pod running and
+                          available (ready for at least spec.minReadySeconds)
                         format: int32
                         type: integer
                       numberMisscheduled:
-                        description: 'The number of nodes that are running the daemon
-                          pod, but are not supposed to run the daemon pod. More info:
-                          https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/'
+                        description: |-
+                          The number of nodes that are running the daemon pod, but are
+                          not supposed to run the daemon pod.
+                          More info: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
                         format: int32
                         type: integer
                       numberReady:
-                        description: numberReady is the number of nodes that should
-                          be running the daemon pod and have one or more of the daemon
-                          pod running with a Ready Condition.
+                        description: |-
+                          numberReady is the number of nodes that should be running the daemon pod and have one
+                          or more of the daemon pod running with a Ready Condition.
                         format: int32
                         type: integer
                       numberUnavailable:
-                        description: The number of nodes that should be running the
+                        description: |-
+                          The number of nodes that should be running the
                           daemon pod and have none of the daemon pod running and available
                           (ready for at least spec.minReadySeconds)
                         format: int32
@@ -1065,7 +1092,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: servicediscoveries.submariner.io
 spec:
   group: submariner.io
@@ -1082,14 +1109,19 @@ spec:
         description: ServiceDiscovery is the Schema for the servicediscoveries API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -1144,40 +1176,39 @@ spec:
                 type: string
               tolerations:
                 items:
-                  description: The pod this Toleration is attached to tolerates any
-                    taint that matches the triple <key,value,effect> using the matching
-                    operator <operator>.
+                  description: |-
+                    The pod this Toleration is attached to tolerates any taint that matches
+                    the triple <key,value,effect> using the matching operator <operator>.
                   properties:
                     effect:
-                      description: Effect indicates the taint effect to match. Empty
-                        means match all taint effects. When specified, allowed values
-                        are NoSchedule, PreferNoSchedule and NoExecute.
+                      description: |-
+                        Effect indicates the taint effect to match. Empty means match all taint effects.
+                        When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
                       type: string
                     key:
-                      description: Key is the taint key that the toleration applies
-                        to. Empty means match all taint keys. If the key is empty,
-                        operator must be Exists; this combination means to match all
-                        values and all keys.
+                      description: |-
+                        Key is the taint key that the toleration applies to. Empty means match all taint keys.
+                        If the key is empty, operator must be Exists; this combination means to match all values and all keys.
                       type: string
                     operator:
-                      description: Operator represents a key's relationship to the
-                        value. Valid operators are Exists and Equal. Defaults to Equal.
-                        Exists is equivalent to wildcard for value, so that a pod
-                        can tolerate all taints of a particular category.
+                      description: |-
+                        Operator represents a key's relationship to the value.
+                        Valid operators are Exists and Equal. Defaults to Equal.
+                        Exists is equivalent to wildcard for value, so that a pod can
+                        tolerate all taints of a particular category.
                       type: string
                     tolerationSeconds:
-                      description: TolerationSeconds represents the period of time
-                        the toleration (which must be of effect NoExecute, otherwise
-                        this field is ignored) tolerates the taint. By default, it
-                        is not set, which means tolerate the taint forever (do not
-                        evict). Zero and negative values will be treated as 0 (evict
-                        immediately) by the system.
+                      description: |-
+                        TolerationSeconds represents the period of time the toleration (which must be
+                        of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
+                        it is not set, which means tolerate the taint forever (do not evict). Zero and
+                        negative values will be treated as 0 (evict immediately) by the system.
                       format: int64
                       type: integer
                     value:
-                      description: Value is the taint value the toleration matches
-                        to. If the operator is Exists, the value should be empty,
-                        otherwise just a regular string.
+                      description: |-
+                        Value is the taint value the toleration matches to.
+                        If the operator is Exists, the value should be empty, otherwise just a regular string.
                       type: string
                   type: object
                 type: array
@@ -1216,7 +1247,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: clusters.submariner.io
 spec:
   group: submariner.io
@@ -1232,14 +1263,19 @@ spec:
       openAPIV3Schema:
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -1282,7 +1318,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: endpoints.submariner.io
 spec:
   group: submariner.io
@@ -1298,14 +1334,19 @@ spec:
       openAPIV3Schema:
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -1358,7 +1399,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: gateways.submariner.io
 spec:
   group: submariner.io
@@ -1379,14 +1420,19 @@ spec:
       openAPIV3Schema:
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -1434,8 +1480,9 @@ spec:
                       - subnets
                       type: object
                     latencyRTT:
-                      description: LatencySpec describes the round trip time information
-                        for a packet between the gateway pods of two clusters.
+                      description: |-
+                        LatencySpec describes the round trip time information for a packet
+                        between the gateway pods of two clusters.
                       properties:
                         average:
                           type: string
@@ -1525,7 +1572,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: clusterglobalegressips.submariner.io
 spec:
   group: submariner.io
@@ -1541,18 +1588,24 @@ spec:
   - name: v1
     schema:
       openAPIV3Schema:
-        description: ClusterGlobalEgressIP defines a policy for allocating GlobalIPs
-          at the cluster level to be used when no GlobalEgressIP applies.
+        description: |-
+          ClusterGlobalEgressIP defines a policy for allocating GlobalIPs at the cluster level to be used when no GlobalEgressIP
+          applies.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -1560,9 +1613,9 @@ spec:
             description: Spec is the specification of desired behavior.
             properties:
               numGlobalIPs:
-                description: The requested number of contiguous GlobalIPs to allocate
-                  from the Globalnet CIDR assigned to the cluster. If not specified,
-                  defaults to 1.
+                description: |-
+                  The requested number of contiguous GlobalIPs to allocate from the Globalnet CIDR assigned to the cluster.
+                  If not specified, defaults to 1.
                 maximum: 20
                 minimum: 0
                 type: integer
@@ -1578,42 +1631,42 @@ spec:
               conditions:
                 items:
                   description: "Condition contains details for one aspect of the current
-                    state of this API Resource. --- This struct is intended for direct
-                    use as an array at the field path .status.conditions.  For example,
-                    \n type FooStatus struct{ // Represents the observations of a
-                    foo's current state. // Known .status.conditions.type are: \"Available\",
-                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
-                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
-                    ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
-                    protobuf:\"bytes,1,rep,name=conditions\"` + "``" + ` \n // other fields }"
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition ` + "``" + `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` + "``" + `\n\n\n\t
+                    \   // other fields\n\t}"
                   properties:
                     lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition
-                        transitioned from one status to another. This should be when
-                        the underlying condition changed.  If that is not known, then
-                        using the time when the API field changed is acceptable.
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: message is a human readable message indicating
-                        details about the transition. This may be an empty string.
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
                       maxLength: 32768
                       type: string
                     observedGeneration:
-                      description: observedGeneration represents the .metadata.generation
-                        that the condition was set based upon. For instance, if .metadata.generation
-                        is currently 12, but the .status.conditions[x].observedGeneration
-                        is 9, the condition is out of date with respect to the current
-                        state of the instance.
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
                       format: int64
                       minimum: 0
                       type: integer
                     reason:
-                      description: reason contains a programmatic identifier indicating
-                        the reason for the condition's last transition. Producers
-                        of specific condition types may define expected values and
-                        meanings for this field, and whether the values are considered
-                        a guaranteed API. The value should be a CamelCase string.
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
                         This field may not be empty.
                       maxLength: 1024
                       minLength: 1
@@ -1627,11 +1680,12 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                        --- Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        ---
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+                        useful (see .node.status.conditions), the ability to deconflict is important.
+                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
@@ -1657,7 +1711,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: globalegressips.submariner.io
 spec:
   group: submariner.io
@@ -1677,14 +1731,19 @@ spec:
           selected pods in the namespace of the GlobalEgressIP object.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -1692,41 +1751,41 @@ spec:
             description: Spec is the specification of the desired behavior.
             properties:
               numberOfIPs:
-                description: The requested number of contiguous GlobalIPs to allocate
-                  from the Globalnet CIDR assigned to the cluster. If not specified,
-                  defaults to 1.
+                description: |-
+                  The requested number of contiguous GlobalIPs to allocate from the Globalnet CIDR assigned to the cluster.
+                  If not specified, defaults to 1.
                 maximum: 20
                 minimum: 0
                 type: integer
               podSelector:
-                description: Selects specific pods in the namespace of this GlobalEgressIP
-                  to which this GlobalEgressIP applies. If not specified, all pods
-                  in the namespace are selected. If a pod matches multiple GlobalEgressIP
-                  objects, there is no guarantee from which GlobalEgressIP its GlobalIP
-                  will be assigned.
+                description: |-
+                  Selects specific pods in the namespace of this GlobalEgressIP to which this GlobalEgressIP applies. If not specified,
+                  all pods in the namespace are selected.
+                  If a pod matches multiple GlobalEgressIP objects, there is no guarantee from which GlobalEgressIP its
+                  GlobalIP will be assigned.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
                       The requirements are ANDed.
                     items:
-                      description: A label selector requirement is a selector that
-                        contains values, a key, and an operator that relates the key
-                        and values.
+                      description: |-
+                        A label selector requirement is a selector that contains values, a key, and an operator that
+                        relates the key and values.
                       properties:
                         key:
                           description: key is the label key that the selector applies
                             to.
                           type: string
                         operator:
-                          description: operator represents a key's relationship to
-                            a set of values. Valid operators are In, NotIn, Exists
-                            and DoesNotExist.
+                          description: |-
+                            operator represents a key's relationship to a set of values.
+                            Valid operators are In, NotIn, Exists and DoesNotExist.
                           type: string
                         values:
-                          description: values is an array of string values. If the
-                            operator is In or NotIn, the values array must be non-empty.
-                            If the operator is Exists or DoesNotExist, the values
-                            array must be empty. This array is replaced during a strategic
+                          description: |-
+                            values is an array of string values. If the operator is In or NotIn,
+                            the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                            the values array must be empty. This array is replaced during a strategic
                             merge patch.
                           items:
                             type: string
@@ -1739,11 +1798,10 @@ spec:
                   matchLabels:
                     additionalProperties:
                       type: string
-                    description: matchLabels is a map of {key,value} pairs. A single
-                      {key,value} in the matchLabels map is equivalent to an element
-                      of matchExpressions, whose key field is "key", the operator
-                      is "In", and the values array contains only "value". The requirements
-                      are ANDed.
+                    description: |-
+                      matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                      map is equivalent to an element of matchExpressions, whose key field is "key", the
+                      operator is "In", and the values array contains only "value". The requirements are ANDed.
                     type: object
                 type: object
                 x-kubernetes-map-type: atomic
@@ -1759,42 +1817,42 @@ spec:
               conditions:
                 items:
                   description: "Condition contains details for one aspect of the current
-                    state of this API Resource. --- This struct is intended for direct
-                    use as an array at the field path .status.conditions.  For example,
-                    \n type FooStatus struct{ // Represents the observations of a
-                    foo's current state. // Known .status.conditions.type are: \"Available\",
-                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
-                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
-                    ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
-                    protobuf:\"bytes,1,rep,name=conditions\"` + "``" + ` \n // other fields }"
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition ` + "``" + `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` + "``" + `\n\n\n\t
+                    \   // other fields\n\t}"
                   properties:
                     lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition
-                        transitioned from one status to another. This should be when
-                        the underlying condition changed.  If that is not known, then
-                        using the time when the API field changed is acceptable.
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: message is a human readable message indicating
-                        details about the transition. This may be an empty string.
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
                       maxLength: 32768
                       type: string
                     observedGeneration:
-                      description: observedGeneration represents the .metadata.generation
-                        that the condition was set based upon. For instance, if .metadata.generation
-                        is currently 12, but the .status.conditions[x].observedGeneration
-                        is 9, the condition is out of date with respect to the current
-                        state of the instance.
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
                       format: int64
                       minimum: 0
                       type: integer
                     reason:
-                      description: reason contains a programmatic identifier indicating
-                        the reason for the condition's last transition. Producers
-                        of specific condition types may define expected values and
-                        meanings for this field, and whether the values are considered
-                        a guaranteed API. The value should be a CamelCase string.
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
                         This field may not be empty.
                       maxLength: 1024
                       minLength: 1
@@ -1808,11 +1866,12 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                        --- Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        ---
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+                        useful (see .node.status.conditions), the ability to deconflict is important.
+                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
@@ -1838,7 +1897,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: globalingressips.submariner.io
 spec:
   group: submariner.io
@@ -1861,14 +1920,19 @@ spec:
       openAPIV3Schema:
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -1880,8 +1944,10 @@ spec:
                 description: The reference to a targeted Pod, if applicable.
                 properties:
                   name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
@@ -1889,8 +1955,10 @@ spec:
                 description: The reference to a targeted Service, if applicable.
                 properties:
                   name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    description: |-
+                      Name of the referent.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?
                     type: string
                 type: object
                 x-kubernetes-map-type: atomic
@@ -1909,42 +1977,42 @@ spec:
               conditions:
                 items:
                   description: "Condition contains details for one aspect of the current
-                    state of this API Resource. --- This struct is intended for direct
-                    use as an array at the field path .status.conditions.  For example,
-                    \n type FooStatus struct{ // Represents the observations of a
-                    foo's current state. // Known .status.conditions.type are: \"Available\",
-                    \"Progressing\", and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
-                    // +listType=map // +listMapKey=type Conditions []metav1.Condition
-                    ` + "``" + `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"
-                    protobuf:\"bytes,1,rep,name=conditions\"` + "``" + ` \n // other fields }"
+                    state of this API Resource.\n---\nThis struct is intended for
+                    direct use as an array at the field path .status.conditions.  For
+                    example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the
+                    observations of a foo's current state.\n\t    // Known .status.conditions.type
+                    are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    //
+                    +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t
+                    \   // +listMapKey=type\n\t    Conditions []metav1.Condition ` + "``" + `json:\"conditions,omitempty\"
+                    patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"` + "``" + `\n\n\n\t
+                    \   // other fields\n\t}"
                   properties:
                     lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition
-                        transitioned from one status to another. This should be when
-                        the underlying condition changed.  If that is not known, then
-                        using the time when the API field changed is acceptable.
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: message is a human readable message indicating
-                        details about the transition. This may be an empty string.
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
                       maxLength: 32768
                       type: string
                     observedGeneration:
-                      description: observedGeneration represents the .metadata.generation
-                        that the condition was set based upon. For instance, if .metadata.generation
-                        is currently 12, but the .status.conditions[x].observedGeneration
-                        is 9, the condition is out of date with respect to the current
-                        state of the instance.
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
                       format: int64
                       minimum: 0
                       type: integer
                     reason:
-                      description: reason contains a programmatic identifier indicating
-                        the reason for the condition's last transition. Producers
-                        of specific condition types may define expected values and
-                        meanings for this field, and whether the values are considered
-                        a guaranteed API. The value should be a CamelCase string.
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
                         This field may not be empty.
                       maxLength: 1024
                       minLength: 1
@@ -1958,11 +2026,12 @@ spec:
                       - Unknown
                       type: string
                     type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                        --- Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                      description: |-
+                        type of condition in CamelCase or in foo.example.com/CamelCase.
+                        ---
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions can be
+                        useful (see .node.status.conditions), the ability to deconflict is important.
+                        The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
                       maxLength: 316
                       pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
                       type: string
@@ -1988,7 +2057,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: gatewayroutes.submariner.io
 spec:
   group: submariner.io
@@ -2006,14 +2075,19 @@ spec:
       openAPIV3Schema:
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -2044,7 +2118,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: nongatewayroutes.submariner.io
 spec:
   group: submariner.io
@@ -2062,14 +2136,19 @@ spec:
       openAPIV3Schema:
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
