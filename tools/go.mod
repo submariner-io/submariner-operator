@@ -1,6 +1,6 @@
 module github.com/submariner-io/submariner-operator/tools
 
-go 1.21.4
+go 1.21
 
 require (
 	github.com/operator-framework/operator-sdk v1.33.0
