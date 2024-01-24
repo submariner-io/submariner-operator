@@ -4,14 +4,14 @@ name: Upgrade
 on:
   pull_request:
     types: [ready_for_review, opened, reopened, synchronize, converted_to_draft, labeled]
-    branches: [devel]
+    branches: [release-0.17]
 
 permissions: {}
 
 jobs:
   upgrade-e2e:
     name: Latest Release to Latest Version
-    if: ${{ github.base_ref == 'devel' }}
+    if: ${{ github.base_ref == 'release-0.17' }}
       && (github.event.pull_request.draft == false || contains(github.event.pull_request.labels.*.name, 'test-draft'))
     timeout-minutes: 30
     runs-on: ubuntu-latest
@@ -22,8 +22,8 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Install an old cluster, upgrade it and check it
-        uses: submariner-io/shipyard/gh-actions/upgrade-e2e@devel
+        uses: submariner-io/shipyard/gh-actions/upgrade-e2e@release-0.17
 
       - name: Post mortem
         if: failure()
-        uses: submariner-io/shipyard/gh-actions/post-mortem@devel
+        uses: submariner-io/shipyard/gh-actions/post-mortem@release-0.17
