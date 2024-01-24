@@ -173,7 +173,7 @@ func main() {
 		Cache: cache.Options{
 			DefaultNamespaces: map[string]cache.Config{namespace: {}},
 		},
-		MapperProvider: apiutil.NewDiscoveryRESTMapper,
+		MapperProvider: apiutil.NewDynamicRESTMapper,
 	})
 	if err != nil {
 		log.Error(err, "unable to start manager")
