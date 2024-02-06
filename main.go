@@ -83,7 +83,9 @@ func init() {
 func main() {
 	var enableLeaderElection bool
 	var probeAddr string
+	var pprofAddr string
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.StringVar(&pprofAddr, "pprof-bind-address", ":8082", "The address the profiling endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -173,7 +175,8 @@ func main() {
 		Cache: cache.Options{
 			DefaultNamespaces: map[string]cache.Config{namespace: {}},
 		},
-		MapperProvider: apiutil.NewDynamicRESTMapper,
+		MapperProvider:   apiutil.NewDynamicRESTMapper,
+		PprofBindAddress: pprofAddr,
 	})
 	if err != nil {
 		log.Error(err, "unable to start manager")
