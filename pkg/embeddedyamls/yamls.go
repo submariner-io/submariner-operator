@@ -3148,6 +3148,7 @@ rules:
     resources:
       - ippools
     verbs:
+      - get
       - create
       - delete
       - update
