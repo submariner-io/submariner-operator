@@ -1,7 +1,10 @@
-@dfarrell07 *.md
+@aswinsuryan go.mod go.sum api/v1alpha1/versions.go
+@dfarrell07 *.md go.mod go.sum api/v1alpha1/versions.go
+@maayanf24 go.mod go.sum api/v1alpha1/versions.go
 @mkolesnik /.github/workflows/ /scripts/ Makefile* Dockerfile.dapper build/*
 @Oats87 *
 @skitt *
 @sridhargaddam *
 @tpantelis *
 @vthapar *
+@yboaron go.mod go.sum api/v1alpha1/versions.go
