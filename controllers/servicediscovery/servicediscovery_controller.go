@@ -426,6 +426,7 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 		err := r.ScopedClient.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: cr.Namespace},
 			lighthouseDNSService)
 		lighthouseClusterIP := lighthouseDNSService.Spec.ClusterIP
+
 		if err != nil || lighthouseClusterIP == "" {
 			return goerrors.New("lighthouseDNSService ClusterIp should be available")
 		}
@@ -483,7 +484,9 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 				// Assume this means we've already set the ConfigMap up, first remove existing lighthouse config
 				newCoreStr := ""
 				skip := false
+
 				log.Info("coredns configmap has lighthouse configuration hence updating")
+
 				lines := strings.Split(coreFile, "\n")
 				for _, line := range lines {
 					if strings.Contains(line, "lighthouse-start") {
@@ -492,11 +495,14 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 						skip = false
 						continue
 					}
+
 					if skip {
 						continue
 					}
+
 					newCoreStr = newCoreStr + line + "\n"
 				}
+
 				coreFile = newCoreStr
 			} else {
 				log.Info("coredns configmap does not have lighthouse configuration hence creating")
@@ -585,12 +591,14 @@ func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Co
 			for k, v := range dnsOperator.Labels {
 				toUpdate.Labels[k] = v
 			}
+
 			return nil
 		})
 
 		if result == controllerutil.OperationResultUpdated {
 			log.Info("Updated Cluster DNS Operator", "DnsOperator.Name", dnsOperator.Name)
 		}
+
 		return err
 	})
 

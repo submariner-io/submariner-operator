@@ -76,6 +76,7 @@ func DaemonSet(ctx context.Context, owner metav1.Object, daemonSet *appsv1.Daemo
 
 				return nil
 			}
+
 			return err //nolint:wrapcheck // No need to wrap here
 		}
 
@@ -213,6 +214,7 @@ func Service(ctx context.Context, owner metav1.Object, service *corev1.Service, 
 				// We also need to copy the existing healthCheckNodePort which can't change
 				service.Spec.HealthCheckNodePort = toUpdate.Spec.HealthCheckNodePort
 			}
+
 			toUpdate.Spec = service.Spec
 			copyLabels(service, toUpdate)
 
@@ -223,10 +225,12 @@ func Service(ctx context.Context, owner metav1.Object, service *corev1.Service, 
 			for k, v := range service.Annotations {
 				toUpdate.Annotations[k] = v
 			}
+
 			if owner != nil {
 				// Set the owner and controller
 				return controllerutil.SetControllerReference(owner, toUpdate, scheme) //nolint:wrapcheck // No need to wrap here
 			}
+
 			return nil
 		})
 		if err != nil {

@@ -47,8 +47,9 @@ func (r *Reconciler) getClusterNetwork(ctx context.Context, submariner *submopv1
 		r.config.ClusterNetwork = clusterNetwork
 		clusterNetwork.Log(log)
 	} else {
-		r.config.ClusterNetwork = &network.ClusterNetwork{NetworkPlugin: UnknownPlugin}
 		log.Info("No cluster network discovered")
+
+		r.config.ClusterNetwork = &network.ClusterNetwork{NetworkPlugin: UnknownPlugin}
 	}
 
 	return r.config.ClusterNetwork, errors.Wrap(err, "error discovering cluster network")

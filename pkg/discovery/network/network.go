@@ -45,6 +45,7 @@ func (cn *ClusterNetwork) Show() {
 		fmt.Printf("        Network plugin:  %s\n", cn.NetworkPlugin)
 		fmt.Printf("        Service CIDRs:   %v\n", cn.ServiceCIDRs)
 		fmt.Printf("        Cluster CIDRs:   %v\n", cn.PodCIDRs)
+
 		if cn.GlobalCIDR != "" {
 			fmt.Printf("        Global CIDR:     %v\n", cn.GlobalCIDR)
 		}
