@@ -48,16 +48,13 @@ const (
 func (r *Reconciler) reconcileLoadBalancer(
 	ctx context.Context, instance *v1alpha1.Submariner, reqLogger logr.Logger,
 ) (*corev1.Service, error) {
-	var err error
-
 	platformTypeOCP, err := r.getOCPPlatformType(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := newLoadBalancerService(instance, platformTypeOCP)
-	svc, err = apply.Service(ctx, instance, svc, reqLogger, r.config.ScopedClient, r.config.Scheme)
-
+	svc, err := apply.Service(ctx, instance, newLoadBalancerService(instance, platformTypeOCP),
+		reqLogger, r.config.ScopedClient, r.config.Scheme)
 	if err != nil {
 		return nil, err
 	}
