@@ -298,7 +298,7 @@ func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Subm
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Watch for changes to the gateway status in the same namespace
 	mapFn := handler.MapFunc(
-		func(ctx context.Context, object client.Object) []reconcile.Request {
+		func(_ context.Context, object client.Object) []reconcile.Request {
 			return []reconcile.Request{
 				{NamespacedName: types.NamespacedName{
 					Name:      "submariner",
@@ -356,7 +356,7 @@ func (r *Reconciler) setupSecretSyncer(instance *submopv1a1.Submariner, logger l
 					Scheme:          r.config.Scheme,
 					Federator: federate.NewCreateOrUpdateFederator(
 						r.config.DynClient, r.config.ScopedClient.RESTMapper(), namespace, ""),
-					Transform: func(from runtime.Object, numRequeues int, op syncer.Operation) (runtime.Object, bool) {
+					Transform: func(from runtime.Object, _ int, _ syncer.Operation) (runtime.Object, bool) {
 						secret := from.(*corev1.Secret)
 						logger.V(level.TRACE).Info("Transforming secret", "secret", secret)
 						if saName, ok := secret.ObjectMeta.Annotations["kubernetes.io/service-account.name"]; ok &&
