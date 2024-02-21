@@ -37,6 +37,7 @@ var (
 	OperatorImage          = "submariner-operator"
 	MetricsProxyImage      = "nettest"
 	NettestImage           = "nettest"
+	SubctlImage            = "subctl"
 )
 
 func AppendUninstall(name string) string {
