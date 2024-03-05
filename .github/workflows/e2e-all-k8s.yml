@@ -19,9 +19,9 @@ jobs:
       fail-fast: false
       matrix:
         globalnet: ['', 'globalnet']
-        # Top/bottom of supported version range. For details:
+        # All non-EOL K8s versions not tested in E2E-full
         # https://submariner.io/development/building-testing/ci-maintenance/
-        k8s_version: ['1.26', '1.27', '1.28', '1.29']
+        k8s_version: ['1.27', '1.28']
         lighthouse: ['', 'lighthouse']
         ovn: ['', 'ovn']
         exclude:
