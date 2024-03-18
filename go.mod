@@ -19,10 +19,10 @@ require (
 	github.com/submariner-io/submariner v0.16.3
 	github.com/uw-labs/lichen v0.1.7
 	golang.org/x/text v0.14.0
-	k8s.io/api v0.27.11
-	k8s.io/apiextensions-apiserver v0.27.11
-	k8s.io/apimachinery v0.27.11
-	k8s.io/client-go v0.27.11
+	k8s.io/api v0.27.12
+	k8s.io/apiextensions-apiserver v0.27.12
+	k8s.io/apimachinery v0.27.12
+	k8s.io/client-go v0.27.12
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/controller-runtime v0.15.2
 	sigs.k8s.io/controller-tools v0.12.1
@@ -91,7 +91,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-migrate/migrate/v4 v4.16.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/cel-go v0.12.7 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
@@ -217,16 +217,16 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231106174013-bbf56f31fb17 // indirect
 	google.golang.org/grpc v1.59.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	helm.sh/helm/v3 v3.11.3 // indirect
-	k8s.io/apiserver v0.27.11 // indirect
+	k8s.io/apiserver v0.27.12 // indirect
 	k8s.io/cli-runtime v0.27.5 // indirect
-	k8s.io/component-base v0.27.11 // indirect
+	k8s.io/component-base v0.27.12 // indirect
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
