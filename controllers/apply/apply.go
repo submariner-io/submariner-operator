@@ -59,7 +59,7 @@ func DaemonSet(ctx context.Context, owner metav1.Object, daemonSet *appsv1.Daemo
 			copyLabels(daemonSet, toUpdate)
 
 			// Set the owner and controller.
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme) //nolint:wrapcheck // No need to wrap here
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
 		if err != nil {
 			if isImmutableError(err) {
@@ -119,7 +119,7 @@ func Deployment(ctx context.Context, owner metav1.Object, deployment *appsv1.Dep
 			copyLabels(deployment, toUpdate)
 
 			// Set the owner and controller
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme) //nolint:wrapcheck // No need to wrap here
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
 		if err != nil {
 			return err //nolint:wrapcheck // No need to wrap here
@@ -164,7 +164,7 @@ func ConfigMap(ctx context.Context, owner metav1.Object, configMap *corev1.Confi
 			copyLabels(configMap, toUpdate)
 
 			// Set the owner and controller
-			return controllerutil.SetControllerReference(owner, toUpdate, scheme) //nolint:wrapcheck // No need to wrap here
+			return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 		})
 		if err != nil {
 			return err //nolint:wrapcheck // No need to wrap here
@@ -228,7 +228,7 @@ func Service(ctx context.Context, owner metav1.Object, service *corev1.Service, 
 
 			if owner != nil {
 				// Set the owner and controller
-				return controllerutil.SetControllerReference(owner, toUpdate, scheme) //nolint:wrapcheck // No need to wrap here
+				return controllerutil.SetControllerReference(owner, toUpdate, scheme)
 			}
 
 			return nil
@@ -256,7 +256,6 @@ func Service(ctx context.Context, owner metav1.Object, service *corev1.Service, 
 
 func awaitResource(ctx context.Context, client controllerClient.Client, resource controllerClient.Object) error {
 	return errors.Wrap(retry.OnError(retry.DefaultRetry, apierrors.IsNotFound, func() error {
-		//nolint:wrapcheck // No need to wrap here
 		return client.Get(ctx, types.NamespacedName{Namespace: resource.GetNamespace(), Name: resource.GetName()}, resource)
 	}), "error retrieving resource")
 }
