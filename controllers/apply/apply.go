@@ -114,7 +114,7 @@ func Deployment(ctx context.Context, owner metav1.Object, deployment *appsv1.Dep
 			Labels:    map[string]string{},
 		}}
 
-		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
+		result, err := controllerutil.CreateOrUpdate(ctx, client, toUpdate, func() error {
 			toUpdate.Spec = deployment.Spec
 			copyLabels(deployment, toUpdate)
 
@@ -159,7 +159,7 @@ func ConfigMap(ctx context.Context, owner metav1.Object, configMap *corev1.Confi
 			Labels:    map[string]string{},
 		}}
 
-		result, err := controllerutil.CreateOrUpdate(context.TODO(), client, toUpdate, func() error {
+		result, err := controllerutil.CreateOrUpdate(ctx, client, toUpdate, func() error {
 			toUpdate.Data = configMap.Data
 			copyLabels(configMap, toUpdate)
 
