@@ -85,13 +85,13 @@ func metricProxyContainer(cr *v1alpha1.Submariner, name, hostPort, podPort strin
 		Name:            name,
 		Image:           getImagePath(cr, opnames.MetricsProxyImage, names.MetricsProxyComponent),
 		ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.MetricsProxyComponent]),
-		Env: []corev1.EnvVar{
+		Env: addHTTPProxyEnvVars([]corev1.EnvVar{
 			{Name: "NODE_IP", ValueFrom: &corev1.EnvVarSource{
 				FieldRef: &corev1.ObjectFieldSelector{
 					FieldPath: "status.hostIP",
 				},
 			}},
-		},
+		}),
 		Command: []string{"/app/metricsproxy"},
 		Args:    []string{hostPort, "$(NODE_IP)", podPort},
 	}

@@ -90,7 +90,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
 							},
-							Env: []corev1.EnvVar{
+							Env: addHTTPProxyEnvVars([]corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_METRICSPORT", Value: globalnetMetricsServerPort},
@@ -99,7 +99,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 										FieldPath: "spec.nodeName",
 									},
 								}},
-							},
+							}),
 						},
 					},
 					ServiceAccountName:            names.GlobalnetComponent,
