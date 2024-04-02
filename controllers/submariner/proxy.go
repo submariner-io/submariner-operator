@@ -16,11 +16,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package submariner
 
-var (
-	DefaultRepo                      = "quay.io/submariner"
-	DefaultSubmarinerOperatorVersion = "0.18.0-m2"
-	DefaultSubmarinerVersion         = "0.18.0-m2"
-	DefaultLighthouseVersion         = "0.18.0-m2"
+import (
+	"golang.org/x/net/http/httpproxy"
+	corev1 "k8s.io/api/core/v1"
 )
+
+func addHTTPProxyEnvVars(vars []corev1.EnvVar) []corev1.EnvVar {
+	proxyEnv := httpproxy.FromEnvironment()
+	vars = appendEnvVarIfValue(vars, "HTTP_PROXY", proxyEnv.HTTPProxy)
+	vars = appendEnvVarIfValue(vars, "HTTPS_PROXY", proxyEnv.HTTPSProxy)
+	vars = appendEnvVarIfValue(vars, "NO_PROXY", proxyEnv.NoProxy)
+
+	return vars
+}
+
+func appendEnvVarIfValue(vars []corev1.EnvVar, name, value string) []corev1.EnvVar {
+	if value != "" {
+		vars = append(vars, corev1.EnvVar{Name: name, Value: value})
+	}
+
+	return vars
+}

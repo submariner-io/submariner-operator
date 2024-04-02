@@ -5,17 +5,17 @@ go 1.21
 require (
 	github.com/coreos/go-semver v0.3.1
 	github.com/go-logr/logr v1.4.1
-	github.com/onsi/ginkgo/v2 v2.15.0
-	github.com/onsi/gomega v1.31.1
+	github.com/onsi/ginkgo/v2 v2.17.1
+	github.com/onsi/gomega v1.32.0
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
 	github.com/operator-framework/operator-lib v0.12.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.72.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.72.0
 	github.com/prometheus/client_golang v1.19.0
-	github.com/submariner-io/admiral v0.18.0-m1
-	github.com/submariner-io/shipyard v0.18.0-m1
-	github.com/submariner-io/submariner v0.18.0-m1
+	github.com/submariner-io/admiral v0.18.0-m2
+	github.com/submariner-io/shipyard v0.18.0-m2
+	github.com/submariner-io/submariner v0.18.0-m2
 	golang.org/x/text v0.14.0
 	k8s.io/api v0.29.3
 	k8s.io/apiextensions-apiserver v0.29.3
@@ -70,7 +70,7 @@ require (
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.17.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.16.1 // indirect
+	golang.org/x/tools v0.17.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

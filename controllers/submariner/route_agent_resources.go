@@ -98,14 +98,14 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 							Image:           getImagePath(cr, opnames.RouteAgentImage, names.RouteAgentComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
 							Command:         []string{"submariner-route-agent.sh"},
-							Env: []corev1.EnvVar{
+							Env: addHTTPProxyEnvVars([]corev1.EnvVar{
 								{Name: "SUBMARINER_WAITFORNODE", Value: "true"},
 								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										FieldPath: "spec.nodeName",
 									},
 								}},
-							},
+							}),
 						},
 					},
 					Containers: []corev1.Container{
@@ -128,7 +128,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 								{Name: "host-run-openvswitch", MountPath: "/run/openvswitch"},
 								{Name: "host-run-ovn-ic", MountPath: "/run/ovn-ic"},
 							},
-							Env: []corev1.EnvVar{
+							Env: addHTTPProxyEnvVars([]corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
@@ -141,7 +141,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 										FieldPath: "spec.nodeName",
 									},
 								}},
-							},
+							}),
 						},
 					},
 					ServiceAccountName: names.RouteAgentComponent,

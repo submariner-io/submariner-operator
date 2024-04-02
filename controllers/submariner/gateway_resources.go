@@ -180,7 +180,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 							Protocol:      corev1.ProtocolUDP,
 						},
 					},
-					Env: []corev1.EnvVar{
+					Env: addHTTPProxyEnvVars([]corev1.EnvVar{
 						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
 						{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
@@ -216,7 +216,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 								FieldPath: "metadata.name",
 							},
 						}},
-					},
+					}),
 					VolumeMounts: volumeMounts,
 				},
 			},

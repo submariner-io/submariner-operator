@@ -20,6 +20,7 @@ package submariner_test
 
 import (
 	"context"
+	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -322,6 +323,52 @@ func testReconciliation() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+
+	When("proxy environment variables are set", func() {
+		var httpProxy, httpsProxy, noProxy string
+		var httpProxySet, httpsProxySet, noProxySet bool
+		const testHTTPSProxy = "https://proxy.example.com"
+		const testHTTPProxy = "http://proxy.example.com"
+		const testNoProxy = "127.0.0.1"
+
+		BeforeEach(func() {
+			// We know we only write the all-caps versions
+			httpProxy, httpProxySet = os.LookupEnv("HTTP_PROXY")
+			httpsProxy, httpsProxySet = os.LookupEnv("HTTPS_PROXY")
+			noProxy, noProxySet = os.LookupEnv("NO_PROXY")
+			os.Setenv("HTTPS_PROXY", testHTTPSProxy)
+			os.Setenv("HTTP_PROXY", testHTTPProxy)
+			os.Setenv("NO_PROXY", testNoProxy)
+		})
+
+		AfterEach(func() {
+			restoreOrUnsetEnv("HTTPS_PROXY", httpsProxySet, httpsProxy)
+			restoreOrUnsetEnv("HTTP_PROXY", httpProxySet, httpProxy)
+			restoreOrUnsetEnv("NO_PROXY", noProxySet, noProxy)
+		})
+
+		It("should populate them in generated container specs", func() {
+			t.AssertReconcileSuccess()
+
+			for _, component := range []string{
+				names.GatewayComponent, names.GlobalnetComponent, names.MetricsProxyComponent, names.RouteAgentComponent,
+			} {
+				daemonSet := t.AssertDaemonSet(component)
+				envMap := test.EnvMapFrom(daemonSet)
+				Expect(envMap).To(HaveKeyWithValue("HTTPS_PROXY", testHTTPSProxy))
+				Expect(envMap).To(HaveKeyWithValue("HTTP_PROXY", testHTTPProxy))
+				Expect(envMap).To(HaveKeyWithValue("NO_PROXY", testNoProxy))
+			}
+		})
+	})
+}
+
+func restoreOrUnsetEnv(envVar string, wasSet bool, value string) {
+	if wasSet {
+		os.Setenv(envVar, value)
+	} else {
+		os.Unsetenv(envVar)
+	}
 }
 
 func (t *testDriver) assertLoadBalancerService() *corev1.Service {
