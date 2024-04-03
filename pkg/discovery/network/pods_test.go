@@ -19,8 +19,6 @@ limitations under the License.
 package network_test
 
 import (
-	"context"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
@@ -48,24 +46,24 @@ var _ = Describe("findPod", func() {
 	})
 
 	When("There are no pods to be found", func() {
-		It("Should return nil", func() {
-			pod, err := network.FindPod(context.TODO(), client, "component=not-to-be-found")
+		It("Should return nil", func(ctx SpecContext) {
+			pod, err := network.FindPod(ctx, client, "component=not-to-be-found")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pod).To(BeNil())
 		})
 	})
 
 	When("A pod is found", func() {
-		It("Should return the pod", func() {
-			pod, err := network.FindPod(context.TODO(), client, componentLabel(testComponent1))
+		It("Should return the pod", func(ctx SpecContext) {
+			pod, err := network.FindPod(ctx, client, componentLabel(testComponent1))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pod.Name).To(Equal(testFirstPod))
 		})
 	})
 
 	When("Multiple pods are found", func() {
-		It("Should return the first pod", func() {
-			pod, err := network.FindPod(context.TODO(), client, componentLabel(testComponent2))
+		It("Should return the first pod", func(ctx SpecContext) {
+			pod, err := network.FindPod(ctx, client, componentLabel(testComponent2))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pod.Name).To(Equal(testSecondPod))
 		})
@@ -92,32 +90,32 @@ var _ = Describe("findPodCommandParameter", func() {
 	})
 
 	When("There are no pods to be found", func() {
-		It("Should return empty string", func() {
-			param, err := network.FindPodCommandParameter(context.TODO(), client, componentLabel("not-to-be-found"), testParameter1)
+		It("Should return empty string", func(ctx SpecContext) {
+			param, err := network.FindPodCommandParameter(ctx, client, componentLabel("not-to-be-found"), testParameter1)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(param).To(BeEmpty())
 		})
 	})
 
 	When("A pod is found, but does not contain the parameter", func() {
-		It("Should return an empty string", func() {
-			param, err := network.FindPodCommandParameter(context.TODO(), client, componentLabel(testComponent1), "unknown-parameter")
+		It("Should return an empty string", func(ctx SpecContext) {
+			param, err := network.FindPodCommandParameter(ctx, client, componentLabel(testComponent1), "unknown-parameter")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(param).To(BeEmpty())
 		})
 	})
 
 	When("A pod is found, and contains the parameter", func() {
-		It("Should return the parameter value", func() {
-			param, err := network.FindPodCommandParameter(context.TODO(), client, componentLabel(testComponent2), testParameter1)
+		It("Should return the parameter value", func(ctx SpecContext) {
+			param, err := network.FindPodCommandParameter(ctx, client, componentLabel(testComponent2), testParameter1)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(param).To(Equal(testValue1))
 		})
 	})
 
 	When("A pod is found, and the parameter is wrapped in a sh call", func() {
-		It("Should return the parameter value", func() {
-			param, err := network.FindPodCommandParameter(context.TODO(), client, componentLabel(testComponent3), testParameter1)
+		It("Should return the parameter value", func(ctx SpecContext) {
+			param, err := network.FindPodCommandParameter(ctx, client, componentLabel(testComponent3), testParameter1)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(param).To(Equal(testValue1))
 		})

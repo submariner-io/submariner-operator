@@ -19,7 +19,6 @@ limitations under the License.
 package servicediscovery_test
 
 import (
-	"context"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -42,8 +41,8 @@ var _ = Describe("Service discovery controller", func() {
 func testReconciliation() {
 	t := newTestDriver()
 
-	It("should add a finalizer to the ServiceDiscovery resource", func() {
-		_, _ = t.DoReconcile()
+	It("should add a finalizer to the ServiceDiscovery resource", func(ctx SpecContext) {
+		_, _ = t.DoReconcile(ctx)
 		t.awaitFinalizer()
 	})
 
@@ -53,10 +52,10 @@ func testReconciliation() {
 				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(""), newDNSService(clusterIP))
 			})
 
-			It("should add it", func() {
-				t.AssertReconcileSuccess()
+			It("should add it", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 
-				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(clusterIP))
+				assertDNSConfigServers(t.assertDNSConfig(ctx), newDNSConfig(clusterIP))
 			})
 		})
 
@@ -67,10 +66,10 @@ func testReconciliation() {
 				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(clusterIP), newDNSService(updatedClusterIP))
 			})
 
-			It("should update the lighthouse config", func() {
-				t.AssertReconcileSuccess()
+			It("should update the lighthouse config", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 
-				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(updatedClusterIP))
+				assertDNSConfigServers(t.assertDNSConfig(ctx), newDNSConfig(updatedClusterIP))
 			})
 		})
 
@@ -79,14 +78,14 @@ func testReconciliation() {
 				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(""))
 			})
 
-			It("should create the service and add the lighthouse config", func() {
-				t.AssertReconcileError()
+			It("should create the service and add the lighthouse config", func(ctx SpecContext) {
+				t.AssertReconcileError(ctx)
 
-				t.setLighthouseCoreDNSServiceIP()
+				t.setLighthouseCoreDNSServiceIP(ctx)
 
-				t.AssertReconcileSuccess()
+				t.AssertReconcileSuccess(ctx)
 
-				assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(clusterIP))
+				assertDNSConfigServers(t.assertDNSConfig(ctx), newDNSConfig(clusterIP))
 			})
 		})
 	})
@@ -98,10 +97,10 @@ func testReconciliation() {
 				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newCoreDNSConfigMap(coreDNSCorefileData("")))
 			})
 
-			It("should add it", func() {
-				t.AssertReconcileSuccess()
+			It("should add it", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
 			})
 		})
 
@@ -113,10 +112,10 @@ func testReconciliation() {
 				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
 			})
 
-			It("should update the lighthouse config", func() {
-				t.AssertReconcileSuccess()
+			It("should update the lighthouse config", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(updatedClusterIP)))
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData(updatedClusterIP)))
 			})
 		})
 
@@ -125,14 +124,14 @@ func testReconciliation() {
 				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newCoreDNSConfigMap(coreDNSCorefileData("")))
 			})
 
-			It("should create the service and add the lighthouse config", func() {
-				t.AssertReconcileError()
+			It("should create the service and add the lighthouse config", func(ctx SpecContext) {
+				t.AssertReconcileError(ctx)
 
-				t.setLighthouseCoreDNSServiceIP()
+				t.setLighthouseCoreDNSServiceIP(ctx)
 
-				t.AssertReconcileSuccess()
+				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
 			})
 		})
 	})
@@ -158,10 +157,10 @@ func testReconciliation() {
 				})
 			})
 
-			It("should update it", func() {
-				t.AssertReconcileSuccess()
+			It("should update it", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+				Expect(strings.TrimSpace(t.assertConfigMap(ctx, t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
 					strings.ReplaceAll(lighthouseDNSConfigFormat, "$IP", clusterIP)))
 			})
@@ -172,24 +171,24 @@ func testReconciliation() {
 				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
 			})
 
-			It("should create it", func() {
-				t.AssertReconcileSuccess()
+			It("should create it", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+				Expect(strings.TrimSpace(t.assertConfigMap(ctx, t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
 					strings.ReplaceAll(lighthouseDNSConfigFormat, "$IP", clusterIP)))
 			})
 		})
 
 		Context("and the lighthouse DNS service doesn't exist", func() {
-			It("should create the service and the custom coredns ConfigMap", func() {
-				t.AssertReconcileError()
+			It("should create the service and the custom coredns ConfigMap", func(ctx SpecContext) {
+				t.AssertReconcileError(ctx)
 
-				t.setLighthouseCoreDNSServiceIP()
+				t.setLighthouseCoreDNSServiceIP(ctx)
 
-				t.AssertReconcileSuccess()
+				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+				Expect(strings.TrimSpace(t.assertConfigMap(ctx, t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data["lighthouse.server"])).To(Equal(
 					strings.ReplaceAll(lighthouseDNSConfigFormat, "$IP", clusterIP)))
 			})
@@ -207,16 +206,16 @@ func testCoreDNSCleanup() {
 		t.serviceDiscovery.SetDeletionTimestamp(&now)
 	})
 
-	JustBeforeEach(func() {
+	JustBeforeEach(func(ctx SpecContext) {
 		deployment := t.NewDeployment(opnames.AppendUninstall(names.ServiceDiscoveryComponent))
 
 		var one int32 = 1
 		deployment.Spec.Replicas = &one
 
-		Expect(t.ScopedClient.Create(context.TODO(), deployment)).To(Succeed())
-		t.UpdateDeploymentToReady(deployment)
+		Expect(t.ScopedClient.Create(ctx, deployment)).To(Succeed())
+		t.UpdateDeploymentToReady(ctx, deployment)
 
-		t.AssertReconcileSuccess()
+		t.AssertReconcileSuccess(ctx)
 	})
 
 	When("the coredns ConfigMap exists", func() {
@@ -224,8 +223,8 @@ func testCoreDNSCleanup() {
 			t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newCoreDNSConfigMap(coreDNSCorefileData(clusterIP)))
 		})
 
-		It("should remove the lighthouse config section", func() {
-			Expect(strings.TrimSpace(t.assertCoreDNSConfigMap().Data["Corefile"])).To(Equal(coreDNSCorefileData("")))
+		It("should remove the lighthouse config section", func(ctx SpecContext) {
+			Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData("")))
 		})
 
 		t.testServiceDiscoveryDeleted()
@@ -236,8 +235,8 @@ func testCoreDNSCleanup() {
 			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(clusterIP))
 		})
 
-		It("should remove the lighthouse config", func() {
-			assertDNSConfigServers(t.assertDNSConfig(), newDNSConfig(""))
+		It("should remove the lighthouse config", func(ctx SpecContext) {
+			assertDNSConfigServers(t.assertDNSConfig(ctx), newDNSConfig(""))
 		})
 
 		t.testServiceDiscoveryDeleted()
@@ -264,8 +263,8 @@ func testCoreDNSCleanup() {
 				})
 			})
 
-			It("should remove the lighthouse config section", func() {
-				Expect(t.assertConfigMap(t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+			It("should remove the lighthouse config section", func(ctx SpecContext) {
+				Expect(t.assertConfigMap(ctx, t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
 					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data).ToNot(HaveKey("lighthouse.server"))
 			})
 
@@ -294,23 +293,23 @@ func testDeploymentUninstall() {
 				t.NewDeployment(names.ServiceDiscoveryComponent))
 		})
 
-		It("should run a Deployment to uninstall the service discovery component", func() {
-			t.AssertReconcileRequeue()
+		It("should run a Deployment to uninstall the service discovery component", func(ctx SpecContext) {
+			t.AssertReconcileRequeue(ctx)
 
-			t.AssertNoDeployment(names.ServiceDiscoveryComponent)
+			t.AssertNoDeployment(ctx, names.ServiceDiscoveryComponent)
 
-			t.UpdateDeploymentToReady(t.assertUninstallServiceDiscoveryDeployment())
+			t.UpdateDeploymentToReady(ctx, t.assertUninstallServiceDiscoveryDeployment(ctx))
 
 			t.awaitFinalizer()
 
-			t.AssertReconcileSuccess()
+			t.AssertReconcileSuccess(ctx)
 
-			t.AssertNoDeployment(opnames.AppendUninstall(names.ServiceDiscoveryComponent))
+			t.AssertNoDeployment(ctx, opnames.AppendUninstall(names.ServiceDiscoveryComponent))
 
 			t.awaitServiceDiscoveryDeleted()
 
-			t.AssertReconcileSuccess()
-			t.AssertNoDeployment(opnames.AppendUninstall(names.ServiceDiscoveryComponent))
+			t.AssertReconcileSuccess(ctx)
+			t.AssertNoDeployment(ctx, opnames.AppendUninstall(names.ServiceDiscoveryComponent))
 		})
 	})
 
@@ -321,13 +320,13 @@ func testDeploymentUninstall() {
 			t.InitScopedClientObjs = append(t.InitScopedClientObjs, t.NewDeployment(names.ServiceDiscoveryComponent))
 		})
 
-		It("should not perform uninstall", func() {
-			t.AssertReconcileSuccess()
+		It("should not perform uninstall", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
-			_, err := t.GetDeployment(names.ServiceDiscoveryComponent)
+			_, err := t.GetDeployment(ctx, names.ServiceDiscoveryComponent)
 			Expect(err).To(Succeed())
 
-			t.AssertNoDeployment(opnames.AppendUninstall(names.ServiceDiscoveryComponent))
+			t.AssertNoDeployment(ctx, opnames.AppendUninstall(names.ServiceDiscoveryComponent))
 
 			t.awaitServiceDiscoveryDeleted()
 		})

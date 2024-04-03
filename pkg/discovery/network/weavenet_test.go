@@ -33,8 +33,9 @@ var _ = Describe("Weave Network", func() {
 	When("There are weave pods but no kube api", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverNetwork(
+				ctx,
 				fakePod("weave-net", []string{"weave-net"}, []v1.EnvVar{{Name: "IPALLOC_RANGE", Value: testPodCIDR}}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
@@ -52,8 +53,9 @@ var _ = Describe("Weave Network", func() {
 	When("There are weave and kube api pods", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverNetwork(
+				ctx,
 				fakePod("weave-net", []string{"weave-net"}, []v1.EnvVar{{Name: "IPALLOC_RANGE", Value: testPodCIDR}}),
 				fakeKubeAPIServerPod(),
 			)
@@ -71,9 +73,9 @@ var _ = Describe("Weave Network", func() {
 	})
 })
 
-func testDiscoverNetwork(objects ...controllerClient.Object) *network.ClusterNetwork {
+func testDiscoverNetwork(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
 	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(context.TODO(), client, "")
+	clusterNet, err := network.Discover(ctx, client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet

@@ -19,8 +19,6 @@ limitations under the License.
 package globalnet_test
 
 import (
-	"context"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/reporter"
@@ -298,25 +296,25 @@ var _ = Describe("IsValidCidr", func() {
 var _ = Describe("AllocateAndUpdateGlobalCIDRConfigMap", func() {
 	var client controllerClient.Client
 
-	BeforeEach(func() {
+	BeforeEach(func(ctx SpecContext) {
 		client = fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
-		Expect(globalnet.CreateConfigMap(context.Background(), client, true, "168.254.0.0/16",
+		Expect(globalnet.CreateConfigMap(ctx, client, true, "168.254.0.0/16",
 			8192, namespace)).To(Succeed())
 	})
 
 	When("the globalnet CIDR is not specified", func() {
 		const expGlobalCIDR = "168.254.0.0/19"
 
-		It("should allocate a new one", func() {
+		It("should allocate a new one", func(ctx SpecContext) {
 			netconfig := &globalnet.Config{
 				ClusterID: "east",
 			}
 
-			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(context.Background(), client, namespace,
+			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(ctx, client, namespace,
 				netconfig, reporter.Klog())).To(Succeed())
 			Expect(netconfig.GlobalCIDR).To(Equal(expGlobalCIDR))
 
-			globalnetInfo, _, err := globalnet.GetGlobalNetworks(context.Background(), client, namespace)
+			globalnetInfo, _, err := globalnet.GetGlobalNetworks(ctx, client, namespace)
 			Expect(err).To(Succeed())
 			Expect(globalnetInfo.CidrInfo).To(HaveKeyWithValue(netconfig.ClusterID, &globalnet.GlobalNetwork{
 				GlobalCIDRs: []string{expGlobalCIDR},
@@ -324,7 +322,7 @@ var _ = Describe("AllocateAndUpdateGlobalCIDRConfigMap", func() {
 			}))
 
 			netconfig.GlobalCIDR = ""
-			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(context.Background(), client, namespace,
+			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(ctx, client, namespace,
 				netconfig, reporter.Klog())).To(Succeed())
 			Expect(netconfig.GlobalCIDR).To(Equal(expGlobalCIDR))
 		})
@@ -333,17 +331,17 @@ var _ = Describe("AllocateAndUpdateGlobalCIDRConfigMap", func() {
 	When("the globalnet CIDR is specified", func() {
 		const expGlobalCIDR = "168.254.0.0/15"
 
-		It("should not allocate a new one", func() {
+		It("should not allocate a new one", func(ctx SpecContext) {
 			netconfig := &globalnet.Config{
 				ClusterID:  "east",
 				GlobalCIDR: expGlobalCIDR,
 			}
 
-			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(context.Background(), client, namespace,
+			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(ctx, client, namespace,
 				netconfig, reporter.Klog())).To(Succeed())
 			Expect(netconfig.GlobalCIDR).To(Equal(expGlobalCIDR))
 
-			globalnetInfo, _, err := globalnet.GetGlobalNetworks(context.Background(), client, namespace)
+			globalnetInfo, _, err := globalnet.GetGlobalNetworks(ctx, client, namespace)
 			Expect(err).To(Succeed())
 			Expect(globalnetInfo.CidrInfo).To(HaveKeyWithValue(netconfig.ClusterID, &globalnet.GlobalNetwork{
 				GlobalCIDRs: []string{expGlobalCIDR},
@@ -351,20 +349,20 @@ var _ = Describe("AllocateAndUpdateGlobalCIDRConfigMap", func() {
 			}))
 
 			netconfig.GlobalCIDR = ""
-			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(context.Background(), client, namespace,
+			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(ctx, client, namespace,
 				netconfig, reporter.Klog())).To(Succeed())
 			Expect(netconfig.GlobalCIDR).To(Equal(expGlobalCIDR))
 		})
 	})
 
 	When("the globalnet cluster size is specified", func() {
-		It("should allocate a CIDR", func() {
+		It("should allocate a CIDR", func(ctx SpecContext) {
 			netconfig := &globalnet.Config{
 				ClusterID:   "east",
 				ClusterSize: 4096,
 			}
 
-			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(context.Background(), client, namespace,
+			Expect(globalnet.AllocateAndUpdateGlobalCIDRConfigMap(ctx, client, namespace,
 				netconfig, reporter.Klog())).To(Succeed())
 			Expect(netconfig.GlobalCIDR).To(Equal("168.254.0.0/20"))
 		})
@@ -379,26 +377,26 @@ var _ = Describe("ValidateExistingGlobalNetworks", func() {
 	})
 
 	When("the existing globalnet config is valid", func() {
-		It("should succeed", func() {
-			Expect(globalnet.CreateConfigMap(context.Background(), client, true, globalnet.DefaultGlobalnetCIDR,
+		It("should succeed", func(ctx SpecContext) {
+			Expect(globalnet.CreateConfigMap(ctx, client, true, globalnet.DefaultGlobalnetCIDR,
 				globalnet.DefaultGlobalnetClusterSize, namespace)).To(Succeed())
 
-			Expect(globalnet.ValidateExistingGlobalNetworks(context.Background(), client, namespace)).To(Succeed())
+			Expect(globalnet.ValidateExistingGlobalNetworks(ctx, client, namespace)).To(Succeed())
 		})
 	})
 
 	When("the globalnet config does not exist", func() {
-		It("should succeed", func() {
-			Expect(globalnet.ValidateExistingGlobalNetworks(context.Background(), client, namespace)).To(Succeed())
+		It("should succeed", func(ctx SpecContext) {
+			Expect(globalnet.ValidateExistingGlobalNetworks(ctx, client, namespace)).To(Succeed())
 		})
 	})
 
 	When("the existing globalnet CIDR is invalid", func() {
-		It("should return an error", func() {
-			Expect(globalnet.CreateConfigMap(context.Background(), client, true, "169.254.0.0/16",
+		It("should return an error", func(ctx SpecContext) {
+			Expect(globalnet.CreateConfigMap(ctx, client, true, "169.254.0.0/16",
 				globalnet.DefaultGlobalnetClusterSize, namespace)).To(Succeed())
 
-			Expect(globalnet.ValidateExistingGlobalNetworks(context.Background(), client, namespace)).ToNot(Succeed())
+			Expect(globalnet.ValidateExistingGlobalNetworks(ctx, client, namespace)).ToNot(Succeed())
 		})
 	})
 })

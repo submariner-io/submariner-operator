@@ -61,8 +61,8 @@ const (
 func testReconciliation() {
 	t := newTestDriver()
 
-	It("should add a finalizer to the Submariner resource", func() {
-		t.AssertReconcileSuccess()
+	It("should add a finalizer to the Submariner resource", func(ctx SpecContext) {
+		t.AssertReconcileSuccess(ctx)
 		t.awaitFinalizer()
 	})
 
@@ -72,10 +72,10 @@ func testReconciliation() {
 			t.submariner.Spec.AirGappedDeployment = true
 		})
 
-		It("should populate general Submariner resource Status fields from the Spec", func() {
-			t.AssertReconcileSuccess()
+		It("should populate general Submariner resource Status fields from the Spec", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
-			updated := t.getSubmariner()
+			updated := t.getSubmariner(ctx)
 			Expect(updated.Status.NatEnabled).To(BeTrue())
 			Expect(updated.Status.AirGappedDeployment).To(BeTrue())
 			Expect(updated.Status.ClusterID).To(Equal(t.submariner.Spec.ClusterID))
@@ -86,37 +86,37 @@ func testReconciliation() {
 	})
 
 	When("the network details are not provided", func() {
-		It("should use the detected network", func() {
-			t.AssertReconcileSuccess()
+		It("should use the detected network", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
-			updated := t.getSubmariner()
+			updated := t.getSubmariner(ctx)
 			Expect(updated.Status.ServiceCIDR).To(Equal(testDetectedServiceCIDR))
 			Expect(updated.Status.ClusterCIDR).To(Equal(testDetectedClusterCIDR))
 		})
 	})
 
 	When("the network details are provided", func() {
-		It("should use the provided ones instead of the detected ones", func() {
-			t.AssertReconcileSuccess()
+		It("should use the provided ones instead of the detected ones", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
-			initial := t.getSubmariner()
+			initial := t.getSubmariner(ctx)
 			initial.Spec.ServiceCIDR = testConfiguredServiceCIDR
 			initial.Spec.ClusterCIDR = testConfiguredClusterCIDR
 
-			Expect(t.ScopedClient.Update(context.TODO(), initial)).To(Succeed())
+			Expect(t.ScopedClient.Update(ctx, initial)).To(Succeed())
 
-			t.AssertReconcileSuccess()
+			t.AssertReconcileSuccess(ctx)
 
-			updated := t.getSubmariner()
+			updated := t.getSubmariner(ctx)
 			Expect(updated.Status.ServiceCIDR).To(Equal(testConfiguredServiceCIDR))
 			Expect(updated.Status.ClusterCIDR).To(Equal(testConfiguredClusterCIDR))
 		})
 	})
 
 	When("the submariner gateway DaemonSet doesn't exist", func() {
-		It("should create it", func() {
-			t.AssertReconcileSuccess()
-			t.assertGatewayDaemonSet()
+		It("should create it", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+			t.assertGatewayDaemonSet(ctx)
 		})
 	})
 
@@ -125,24 +125,24 @@ func testReconciliation() {
 			t.InitScopedClientObjs = append(t.InitScopedClientObjs, t.NewDaemonSet(names.GatewayComponent))
 		})
 
-		It("should update it", func() {
-			t.AssertReconcileSuccess()
+		It("should update it", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
-			initial := t.getSubmariner()
+			initial := t.getSubmariner(ctx)
 			initial.Spec.ServiceCIDR = "101.96.1.0/16"
-			Expect(t.ScopedClient.Update(context.TODO(), initial)).To(Succeed())
+			Expect(t.ScopedClient.Update(ctx, initial)).To(Succeed())
 
-			t.AssertReconcileSuccess()
+			t.AssertReconcileSuccess(ctx)
 
-			updatedDaemonSet := t.AssertDaemonSet(names.GatewayComponent)
+			updatedDaemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
 			Expect(test.EnvMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", initial.Spec.ServiceCIDR))
 		})
 	})
 
 	When("the submariner route-agent DaemonSet doesn't exist", func() {
-		It("should create it", func() {
-			t.AssertReconcileSuccess()
-			t.assertRouteAgentDaemonSet()
+		It("should create it", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+			t.assertRouteAgentDaemonSet(ctx)
 		})
 	})
 
@@ -151,16 +151,16 @@ func testReconciliation() {
 			t.InitScopedClientObjs = append(t.InitScopedClientObjs, t.NewDaemonSet(names.RouteAgentComponent))
 		})
 
-		It("should update it", func() {
-			t.AssertReconcileSuccess()
+		It("should update it", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
-			initial := t.getSubmariner()
+			initial := t.getSubmariner(ctx)
 			initial.Spec.ClusterCIDR = "11.245.1.0/16"
-			Expect(t.ScopedClient.Update(context.TODO(), initial)).To(Succeed())
+			Expect(t.ScopedClient.Update(ctx, initial)).To(Succeed())
 
-			t.AssertReconcileSuccess()
+			t.AssertReconcileSuccess(ctx)
 
-			updatedDaemonSet := t.AssertDaemonSet(names.RouteAgentComponent)
+			updatedDaemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
 			Expect(test.EnvMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", initial.Spec.ClusterCIDR))
 		})
 
@@ -185,16 +185,16 @@ func testReconciliation() {
 				})
 			})
 
-			It("should not crash", func() {
-				t.AssertReconcileSuccess()
+			It("should not crash", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 			})
 		})
 	})
 
 	When("the submariner globalnet DaemonSet doesn't exist", func() {
-		It("should create it", func() {
-			t.AssertReconcileSuccess()
-			t.assertGlobalnetDaemonSet()
+		It("should create it", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+			t.assertGlobalnetDaemonSet(ctx)
 		})
 	})
 
@@ -203,11 +203,11 @@ func testReconciliation() {
 			t.submariner.Spec.ServiceDiscoveryEnabled = true
 		})
 
-		It("should create the ServiceDiscovery resource", func() {
-			t.AssertReconcileSuccess()
+		It("should create the ServiceDiscovery resource", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
 			serviceDiscovery := &v1alpha1.ServiceDiscovery{}
-			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: opnames.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
+			err := t.ScopedClient.Get(ctx, types.NamespacedName{Name: opnames.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
 				serviceDiscovery)
 			Expect(err).To(Succeed())
 
@@ -228,9 +228,9 @@ func testReconciliation() {
 			t.submariner.Spec.LoadBalancerEnabled = true
 		})
 
-		It("should create the load balancer service", func() {
-			t.AssertReconcileSuccess()
-			t.assertLoadBalancerService()
+		It("should create the load balancer service", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+			t.assertLoadBalancerService(ctx)
 		})
 
 		Context("and the Openshift platform type is AWS", func() {
@@ -238,10 +238,10 @@ func testReconciliation() {
 				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newInfrastructureCluster(v1config.AWSPlatformType))
 			})
 
-			It("should create the correct load balancer service", func() {
-				t.AssertReconcileSuccess()
+			It("should create the correct load balancer service", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 
-				service := t.assertLoadBalancerService()
+				service := t.assertLoadBalancerService(ctx)
 				Expect(service.Annotations).To(HaveKeyWithValue("service.beta.kubernetes.io/aws-load-balancer-type", "nlb"))
 			})
 		})
@@ -251,10 +251,10 @@ func testReconciliation() {
 				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newInfrastructureCluster(v1config.IBMCloudPlatformType))
 			})
 
-			It("should create the correct load balancer service", func() {
-				t.AssertReconcileSuccess()
+			It("should create the correct load balancer service", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 
-				service := t.assertLoadBalancerService()
+				service := t.assertLoadBalancerService(ctx)
 				Expect(service.Annotations).To(HaveKeyWithValue(
 					"service.kubernetes.io/ibm-load-balancer-cloud-provider-enable-features", "nlb"))
 			})
@@ -266,10 +266,10 @@ func testReconciliation() {
 			t.InitScopedClientObjs = nil
 		})
 
-		It("should return success without creating any resources", func() {
-			t.AssertReconcileSuccess()
-			t.AssertNoDaemonSet(names.GatewayComponent)
-			t.AssertNoDaemonSet(names.RouteAgentComponent)
+		It("should return success without creating any resources", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+			t.AssertNoDaemonSet(ctx, names.GatewayComponent)
+			t.AssertNoDaemonSet(ctx, names.RouteAgentComponent)
 		})
 	})
 
@@ -279,10 +279,10 @@ func testReconciliation() {
 			t.submariner.Spec.Version = ""
 		})
 
-		It("should update the resource with defaults", func() {
-			t.AssertReconcileSuccess()
+		It("should update the resource with defaults", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
-			updated := t.getSubmariner()
+			updated := t.getSubmariner(ctx)
 			Expect(updated.Spec.Repository).To(Equal(v1alpha1.DefaultRepo))
 			Expect(updated.Spec.Version).To(Equal(v1alpha1.DefaultSubmarinerVersion))
 		})
@@ -294,8 +294,8 @@ func testReconciliation() {
 				fake.FailingReaction(nil))
 		})
 
-		It("should return an error", func() {
-			_, err := t.DoReconcile()
+		It("should return an error", func(ctx SpecContext) {
+			_, err := t.DoReconcile(ctx)
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -306,8 +306,8 @@ func testReconciliation() {
 				fake.FailingReaction(nil))
 		})
 
-		It("should return an error", func() {
-			_, err := t.DoReconcile()
+		It("should return an error", func(ctx SpecContext) {
+			_, err := t.DoReconcile(ctx)
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -318,8 +318,8 @@ func testReconciliation() {
 				fake.FailingReaction(nil))
 		})
 
-		It("should return an error", func() {
-			_, err := t.DoReconcile()
+		It("should return an error", func(ctx SpecContext) {
+			_, err := t.DoReconcile(ctx)
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -347,13 +347,13 @@ func testReconciliation() {
 			restoreOrUnsetEnv("NO_PROXY", noProxySet, noProxy)
 		})
 
-		It("should populate them in generated container specs", func() {
-			t.AssertReconcileSuccess()
+		It("should populate them in generated container specs", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
 			for _, component := range []string{
 				names.GatewayComponent, names.GlobalnetComponent, names.MetricsProxyComponent, names.RouteAgentComponent,
 			} {
-				daemonSet := t.AssertDaemonSet(component)
+				daemonSet := t.AssertDaemonSet(ctx, component)
 				envMap := test.EnvMapFrom(daemonSet)
 				Expect(envMap).To(HaveKeyWithValue("HTTPS_PROXY", testHTTPSProxy))
 				Expect(envMap).To(HaveKeyWithValue("HTTP_PROXY", testHTTPProxy))
@@ -371,9 +371,9 @@ func restoreOrUnsetEnv(envVar string, wasSet bool, value string) {
 	}
 }
 
-func (t *testDriver) assertLoadBalancerService() *corev1.Service {
+func (t *testDriver) assertLoadBalancerService(ctx context.Context) *corev1.Service {
 	service := &corev1.Service{}
-	err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: "submariner-gateway", Namespace: submarinerNamespace},
+	err := t.ScopedClient.Get(ctx, types.NamespacedName{Name: "submariner-gateway", Namespace: submarinerNamespace},
 		service)
 	Expect(err).To(Succeed())
 	Expect(service.Spec.Type).To(Equal(corev1.ServiceTypeLoadBalancer))
@@ -404,49 +404,49 @@ func testDeletion() {
 				t.NewDaemonSet(names.GlobalnetComponent))
 		})
 
-		It("should run DaemonSets/Deployments to uninstall components", func() {
+		It("should run DaemonSets/Deployments to uninstall components", func(ctx SpecContext) {
 			// The first reconcile invocation should delete the regular DaemonSets/Deployments.
-			t.AssertReconcileRequeue()
+			t.AssertReconcileRequeue(ctx)
 
-			t.AssertNoDaemonSet(names.GatewayComponent)
-			t.AssertNoDaemonSet(names.RouteAgentComponent)
-			t.AssertNoDaemonSet(names.GlobalnetComponent)
+			t.AssertNoDaemonSet(ctx, names.GatewayComponent)
+			t.AssertNoDaemonSet(ctx, names.RouteAgentComponent)
+			t.AssertNoDaemonSet(ctx, names.GlobalnetComponent)
 
 			// Simulate the gateway DaemonSet controller cleaning up its pods.
-			t.DeletePods("app", names.GatewayComponent)
+			t.DeletePods(ctx, "app", names.GatewayComponent)
 
 			// Next, the controller should create the corresponding uninstall DaemonSets/Deployments.
-			t.AssertReconcileRequeue()
+			t.AssertReconcileRequeue(ctx)
 
 			// For the globalnet DaemonSet, we'll only update it to nodes available but not yet ready at this point.
-			globalnetDS := t.assertUninstallGlobalnetDaemonSet()
-			t.UpdateDaemonSetToScheduled(globalnetDS)
+			globalnetDS := t.assertUninstallGlobalnetDaemonSet(ctx)
+			t.UpdateDaemonSetToScheduled(ctx, globalnetDS)
 
 			// For the gateway DaemonSet, we'll update it to observed but no nodes available - this will cause it to be deleted.
-			t.UpdateDaemonSetToObserved(t.assertUninstallGatewayDaemonSet())
+			t.UpdateDaemonSetToObserved(ctx, t.assertUninstallGatewayDaemonSet(ctx))
 
-			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
+			t.UpdateDaemonSetToReady(ctx, t.assertUninstallRouteAgentDaemonSet(ctx))
 
 			// Next, the controller should again requeue b/c the gateway DaemonSet isn't ready yet.
-			t.AssertReconcileRequeue()
+			t.AssertReconcileRequeue(ctx)
 
 			// Now update the globalnet DaemonSet to ready.
-			t.UpdateDaemonSetToReady(globalnetDS)
+			t.UpdateDaemonSetToReady(ctx, globalnetDS)
 
 			// Ensure the finalizer is still present.
 			t.awaitFinalizer()
 
 			// Finally, the controller should delete the uninstall DaemonSets/Deployments and remove the finalizer.
-			t.AssertReconcileSuccess()
+			t.AssertReconcileSuccess(ctx)
 
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.RouteAgentComponent))
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GlobalnetComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.RouteAgentComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GlobalnetComponent))
 
 			t.awaitSubmarinerDeleted()
 
-			t.AssertReconcileSuccess()
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
+			t.AssertReconcileSuccess(ctx)
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
 		})
 	})
 
@@ -460,18 +460,18 @@ func testDeletion() {
 				t.NewDaemonSet(names.RouteAgentComponent))
 		})
 
-		It("should only create uninstall DaemonSets/Deployments for installed components", func() {
-			t.AssertReconcileRequeue()
+		It("should only create uninstall DaemonSets/Deployments for installed components", func(ctx SpecContext) {
+			t.AssertReconcileRequeue(ctx)
 
-			t.UpdateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
-			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
+			t.UpdateDaemonSetToReady(ctx, t.assertUninstallGatewayDaemonSet(ctx))
+			t.UpdateDaemonSetToReady(ctx, t.assertUninstallRouteAgentDaemonSet(ctx))
 
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GlobalnetComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GlobalnetComponent))
 
-			t.AssertReconcileSuccess()
+			t.AssertReconcileSuccess(ctx)
 
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.RouteAgentComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.RouteAgentComponent))
 
 			t.awaitSubmarinerDeleted()
 		})
@@ -507,19 +507,19 @@ func testDeletion() {
 			}
 		})
 
-		It("should delete it", func() {
-			t.AssertReconcileRequeue()
+		It("should delete it", func(ctx SpecContext) {
+			t.AssertReconcileRequeue(ctx)
 
-			t.UpdateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
-			t.UpdateDaemonSetToScheduled(t.assertUninstallRouteAgentDaemonSet())
+			t.UpdateDaemonSetToReady(ctx, t.assertUninstallGatewayDaemonSet(ctx))
+			t.UpdateDaemonSetToScheduled(ctx, t.assertUninstallRouteAgentDaemonSet(ctx))
 
 			ts := metav1.NewTime(time.Now().Add(-(uninstall.ComponentReadyTimeout + 10)))
 			t.submariner.SetDeletionTimestamp(&ts)
 
-			t.AssertReconcileSuccess()
+			t.AssertReconcileSuccess(ctx)
 
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.RouteAgentComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.RouteAgentComponent))
 
 			t.awaitSubmarinerDeleted()
 		})
@@ -533,13 +533,13 @@ func testDeletion() {
 				t.NewDaemonSet(names.GatewayComponent))
 		})
 
-		It("should not perform uninstall", func() {
-			t.AssertReconcileSuccess()
+		It("should not perform uninstall", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 
-			_, err := t.GetDaemonSet(names.GatewayComponent)
+			_, err := t.GetDaemonSet(ctx, names.GatewayComponent)
 			Expect(err).To(Succeed())
 
-			t.AssertNoDaemonSet(opnames.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
 
 			t.awaitSubmarinerDeleted()
 		})
@@ -559,16 +559,16 @@ func testDeletion() {
 				})
 		})
 
-		It("should delete the ServiceDiscovery resource", func() {
-			t.AssertReconcileRequeue()
+		It("should delete the ServiceDiscovery resource", func(ctx SpecContext) {
+			t.AssertReconcileRequeue(ctx)
 
-			t.UpdateDaemonSetToReady(t.assertUninstallGatewayDaemonSet())
-			t.UpdateDaemonSetToReady(t.assertUninstallRouteAgentDaemonSet())
+			t.UpdateDaemonSetToReady(ctx, t.assertUninstallGatewayDaemonSet(ctx))
+			t.UpdateDaemonSetToReady(ctx, t.assertUninstallRouteAgentDaemonSet(ctx))
 
-			t.AssertReconcileSuccess()
+			t.AssertReconcileSuccess(ctx)
 
 			serviceDiscovery := &v1alpha1.ServiceDiscovery{}
-			err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: opnames.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
+			err := t.ScopedClient.Get(ctx, types.NamespacedName{Name: opnames.ServiceDiscoveryCrName, Namespace: submarinerNamespace},
 				serviceDiscovery)
 			Expect(errors.IsNotFound(err)).To(BeTrue(), "ServiceDiscovery still exists")
 

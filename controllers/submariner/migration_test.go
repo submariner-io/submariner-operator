@@ -35,9 +35,9 @@ var _ = Describe("Migration tests", func() {
 			t.clusterNetwork.NetworkPlugin = cni.OVNKubernetes
 		})
 
-		JustBeforeEach(func() {
-			t.AssertReconcileSuccess()
-			t.AssertNoDeployment(submariner.NetworkPluginSyncerComponent)
+		JustBeforeEach(func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+			t.AssertNoDeployment(ctx, submariner.NetworkPluginSyncerComponent)
 		})
 
 		When("the Deployment doesn't exist", func() {

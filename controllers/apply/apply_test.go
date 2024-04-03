@@ -19,7 +19,6 @@ limitations under the License.
 package apply_test
 
 import (
-	"context"
 	"net/http"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -69,14 +68,14 @@ func testDaemonSet() {
 	})
 
 	When("the DaemonSet doesn't exist", func() {
-		It("should create it", func() {
-			actual, err := apply.DaemonSet(context.Background(), t.owner, daemonSet, log, t.client, scheme.Scheme)
+		It("should create it", func(ctx SpecContext) {
+			actual, err := apply.DaemonSet(ctx, t.owner, daemonSet, log, t.client, scheme.Scheme)
 			Expect(err).To(Succeed())
 			Expect(actual).To(Equal(daemonSet))
 			t.verifyOwnerRef(actual)
 
 			actual = &appsv1.DaemonSet{}
-			Expect(t.client.Get(context.Background(), types.NamespacedName{
+			Expect(t.client.Get(ctx, types.NamespacedName{
 				Namespace: daemonSet.Namespace, Name: daemonSet.Name,
 			}, actual)).To(Succeed())
 			Expect(actual).To(Equal(daemonSet))
@@ -90,8 +89,8 @@ func testDaemonSet() {
 			daemonSet.Labels = map[string]string{"foo": "bar"}
 		})
 
-		It("should update it", func() {
-			actual, err := apply.DaemonSet(context.Background(), t.owner, daemonSet, log, t.client, scheme.Scheme)
+		It("should update it", func(ctx SpecContext) {
+			actual, err := apply.DaemonSet(ctx, t.owner, daemonSet, log, t.client, scheme.Scheme)
 			Expect(err).To(Succeed())
 			Expect(actual).To(Equal(daemonSet))
 		})
@@ -107,8 +106,8 @@ func testDaemonSet() {
 					}}))
 			})
 
-			It("should re-create it", func() {
-				actual, err := apply.DaemonSet(context.Background(), t.owner, daemonSet, log, t.client, scheme.Scheme)
+			It("should re-create it", func(ctx SpecContext) {
+				actual, err := apply.DaemonSet(ctx, t.owner, daemonSet, log, t.client, scheme.Scheme)
 				Expect(err).To(Succeed())
 				Expect(actual).To(Equal(daemonSet))
 			})
@@ -144,14 +143,14 @@ func testDeployment() {
 	})
 
 	When("the Deployment doesn't exist", func() {
-		It("should create it", func() {
-			actual, err := apply.Deployment(context.Background(), t.owner, deployment, log, t.client, scheme.Scheme)
+		It("should create it", func(ctx SpecContext) {
+			actual, err := apply.Deployment(ctx, t.owner, deployment, log, t.client, scheme.Scheme)
 			Expect(err).To(Succeed())
 			Expect(actual).To(Equal(deployment))
 			t.verifyOwnerRef(actual)
 
 			actual = &appsv1.Deployment{}
-			Expect(t.client.Get(context.Background(), types.NamespacedName{
+			Expect(t.client.Get(ctx, types.NamespacedName{
 				Namespace: deployment.Namespace, Name: deployment.Name,
 			}, actual)).To(Succeed())
 			Expect(actual).To(Equal(deployment))
@@ -164,8 +163,8 @@ func testDeployment() {
 			deployment.Spec.MinReadySeconds = 20
 		})
 
-		It("should update it", func() {
-			actual, err := apply.Deployment(context.Background(), t.owner, deployment, log, t.client, scheme.Scheme)
+		It("should update it", func(ctx SpecContext) {
+			actual, err := apply.Deployment(ctx, t.owner, deployment, log, t.client, scheme.Scheme)
 			Expect(err).To(Succeed())
 			Expect(actual).To(Equal(deployment))
 		})
@@ -188,14 +187,14 @@ func testConfigMap() {
 	})
 
 	When("the ConfigMap doesn't exist", func() {
-		It("should create it", func() {
-			actual, err := apply.ConfigMap(context.Background(), t.owner, configMap, log, t.client, scheme.Scheme)
+		It("should create it", func(ctx SpecContext) {
+			actual, err := apply.ConfigMap(ctx, t.owner, configMap, log, t.client, scheme.Scheme)
 			Expect(err).To(Succeed())
 			Expect(actual).To(Equal(configMap))
 			t.verifyOwnerRef(actual)
 
 			actual = &corev1.ConfigMap{}
-			Expect(t.client.Get(context.Background(), types.NamespacedName{
+			Expect(t.client.Get(ctx, types.NamespacedName{
 				Namespace: configMap.Namespace, Name: configMap.Name,
 			}, actual)).To(Succeed())
 			Expect(actual).To(Equal(configMap))
@@ -208,8 +207,8 @@ func testConfigMap() {
 			configMap.Data = map[string]string{"key2": "value2"}
 		})
 
-		It("should update it", func() {
-			actual, err := apply.ConfigMap(context.Background(), t.owner, configMap, log, t.client, scheme.Scheme)
+		It("should update it", func(ctx SpecContext) {
+			actual, err := apply.ConfigMap(ctx, t.owner, configMap, log, t.client, scheme.Scheme)
 			Expect(err).To(Succeed())
 			Expect(actual).To(Equal(configMap))
 		})
@@ -235,14 +234,14 @@ func testService() {
 	})
 
 	When("the Service doesn't exist", func() {
-		It("should create it", func() {
-			actual, err := apply.Service(context.Background(), t.owner, service, log, t.client, scheme.Scheme)
+		It("should create it", func(ctx SpecContext) {
+			actual, err := apply.Service(ctx, t.owner, service, log, t.client, scheme.Scheme)
 			Expect(err).To(Succeed())
 			Expect(actual).To(Equal(service))
 			t.verifyOwnerRef(actual)
 
 			actual = &corev1.Service{}
-			Expect(t.client.Get(context.Background(), types.NamespacedName{Namespace: service.Namespace, Name: service.Name}, actual)).To(Succeed())
+			Expect(t.client.Get(ctx, types.NamespacedName{Namespace: service.Namespace, Name: service.Name}, actual)).To(Succeed())
 			Expect(actual).To(Equal(service))
 		})
 	})
@@ -254,8 +253,8 @@ func testService() {
 			service.Annotations = map[string]string{"foo1": "bar1"}
 		})
 
-		It("should update it", func() {
-			actual, err := apply.Service(context.Background(), t.owner, service, log, t.client, scheme.Scheme)
+		It("should update it", func(ctx SpecContext) {
+			actual, err := apply.Service(ctx, t.owner, service, log, t.client, scheme.Scheme)
 			Expect(err).To(Succeed())
 			Expect(actual).To(Equal(service))
 		})

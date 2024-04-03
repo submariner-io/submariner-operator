@@ -36,8 +36,9 @@ var _ = Describe("OvnKubernetes Network", func() {
 	const ovnKubeSvcTest = "ovnkube-node"
 
 	When("ovn-kubernetes database and service found, no configmap", func() {
-		It("Should return cluster network with default CIDRs", func() {
+		It("Should return cluster network with default CIDRs", func(ctx SpecContext) {
 			clusterNet, err := testOvnKubernetesDiscoveryWith(
+				ctx,
 				fakePodWithNamespace(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest, []string{}, []v1.EnvVar{}),
 				fakeService(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest),
 			)
@@ -51,8 +52,9 @@ var _ = Describe("OvnKubernetes Network", func() {
 	})
 
 	When("ovn-kubernetes database, configmap and service found", func() {
-		It("Should return cluster network with correct CIDRs", func() {
+		It("Should return cluster network with correct CIDRs", func(ctx SpecContext) {
 			clusterNet, err := testOvnKubernetesDiscoveryWith(
+				ctx,
 				fakePodWithNamespace(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest, []string{}, []v1.EnvVar{}),
 				fakeService(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest),
 				ovnFakeConfigMap(ovnKubeNamespace, "ovn-config"),
@@ -66,9 +68,9 @@ var _ = Describe("OvnKubernetes Network", func() {
 	})
 })
 
-func testOvnKubernetesDiscoveryWith(objects ...controllerClient.Object) (*network.ClusterNetwork, error) {
+func testOvnKubernetesDiscoveryWith(ctx context.Context, objects ...controllerClient.Object) (*network.ClusterNetwork, error) {
 	client := newTestClient(objects...)
-	return network.Discover(context.TODO(), client, "")
+	return network.Discover(ctx, client, "")
 }
 
 func ovnFakeConfigMap(namespace, name string) *v1.ConfigMap {

@@ -53,8 +53,8 @@ var _ = Describe("Updater", func() {
 		updater = crd.UpdaterFromClientSet(client)
 	})
 
-	assertCRDExists := func(name string) {
-		crd, err := updater.Get(context.TODO(), name, metav1.GetOptions{})
+	assertCRDExists := func(ctx context.Context, name string) {
+		crd, err := updater.Get(ctx, name, metav1.GetOptions{})
 		Expect(err).To(Succeed())
 		Expect(crd.Spec.Names.Kind).Should(Equal("Submariner"))
 	}
@@ -77,21 +77,21 @@ var _ = Describe("Updater", func() {
 		}
 
 		When("the CRD doesn't exist", func() {
-			It("should create it", func() {
-				created, err := updater.CreateOrUpdateFromEmbedded(context.TODO(), crdYAML)
+			It("should create it", func(ctx SpecContext) {
+				created, err := updater.CreateOrUpdateFromEmbedded(ctx, crdYAML)
 				Expect(created).To(BeTrue())
 				Expect(err).To(Succeed())
-				assertCRDExists(crd.Name)
+				assertCRDExists(ctx, crd.Name)
 			})
 		})
 
 		When("the CRD already exists", func() {
-			It("should not update it", func() {
-				_, err := updater.Create(context.TODO(), crd, metav1.CreateOptions{})
+			It("should not update it", func(ctx SpecContext) {
+				_, err := updater.Create(ctx, crd, metav1.CreateOptions{})
 				Expect(err).To(Succeed())
-				assertCRDExists(crd.Name)
+				assertCRDExists(ctx, crd.Name)
 
-				created, err := updater.CreateOrUpdateFromEmbedded(context.TODO(), crdYAML)
+				created, err := updater.CreateOrUpdateFromEmbedded(ctx, crdYAML)
 				Expect(created).To(BeFalse())
 				Expect(err).To(Succeed())
 

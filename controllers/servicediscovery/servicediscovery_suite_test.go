@@ -112,8 +112,8 @@ func (t *testDriver) awaitServiceDiscoveryDeleted() {
 	t.AwaitNoResource(t.serviceDiscovery)
 }
 
-func (t *testDriver) assertUninstallServiceDiscoveryDeployment() *appsv1.Deployment {
-	deployment := t.AssertDeployment(opnames.AppendUninstall(names.ServiceDiscoveryComponent))
+func (t *testDriver) assertUninstallServiceDiscoveryDeployment(ctx context.Context) *appsv1.Deployment {
+	deployment := t.AssertDeployment(ctx, opnames.AppendUninstall(names.ServiceDiscoveryComponent))
 
 	t.AssertUninstallInitContainer(&deployment.Spec.Template,
 		fmt.Sprintf("%s/%s:%s", t.serviceDiscovery.Spec.Repository, opnames.ServiceDiscoveryImage, t.serviceDiscovery.Spec.Version))
@@ -121,27 +121,27 @@ func (t *testDriver) assertUninstallServiceDiscoveryDeployment() *appsv1.Deploym
 	return deployment
 }
 
-func (t *testDriver) getDNSConfig() (*operatorv1.DNS, error) {
+func (t *testDriver) getDNSConfig(ctx context.Context) (*operatorv1.DNS, error) {
 	foundDNSConfig := &operatorv1.DNS{}
-	err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
+	err := t.ScopedClient.Get(ctx, types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
 
 	return foundDNSConfig, err
 }
 
-func (t *testDriver) assertDNSConfig() *operatorv1.DNS {
-	foundDNSConfig, err := t.getDNSConfig()
+func (t *testDriver) assertDNSConfig(ctx context.Context) *operatorv1.DNS {
+	foundDNSConfig, err := t.getDNSConfig(ctx)
 	Expect(err).To(Succeed())
 
 	return foundDNSConfig
 }
 
-func (t *testDriver) assertCoreDNSConfigMap() *corev1.ConfigMap {
-	return t.assertConfigMap("coredns", "kube-system")
+func (t *testDriver) assertCoreDNSConfigMap(ctx context.Context) *corev1.ConfigMap {
+	return t.assertConfigMap(ctx, "coredns", "kube-system")
 }
 
-func (t *testDriver) assertConfigMap(name, namespace string) *corev1.ConfigMap {
+func (t *testDriver) assertConfigMap(ctx context.Context, name, namespace string) *corev1.ConfigMap {
 	foundCoreMap := &corev1.ConfigMap{}
-	err := t.GeneralClient.Get(context.TODO(), controllerClient.ObjectKey{Namespace: namespace, Name: name}, foundCoreMap)
+	err := t.GeneralClient.Get(ctx, controllerClient.ObjectKey{Namespace: namespace, Name: name}, foundCoreMap)
 	Expect(err).To(Succeed())
 
 	return foundCoreMap
@@ -228,9 +228,9 @@ func newDNSService(clusterIP string) *corev1.Service {
 	}
 }
 
-func (t *testDriver) assertLighthouseCoreDNSService() *corev1.Service {
+func (t *testDriver) assertLighthouseCoreDNSService(ctx context.Context) *corev1.Service {
 	service := &corev1.Service{}
-	Expect(t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: lighthouseDNSServiceName, Namespace: submarinerNamespace},
+	Expect(t.ScopedClient.Get(ctx, types.NamespacedName{Name: lighthouseDNSServiceName, Namespace: submarinerNamespace},
 		service)).To(Succeed())
 
 	Expect(service.Labels).To(HaveKeyWithValue("app", lighthouseDNSServiceName))
@@ -242,10 +242,10 @@ func (t *testDriver) assertLighthouseCoreDNSService() *corev1.Service {
 	return service
 }
 
-func (t *testDriver) setLighthouseCoreDNSServiceIP() {
-	service := t.assertLighthouseCoreDNSService()
+func (t *testDriver) setLighthouseCoreDNSServiceIP(ctx context.Context) {
+	service := t.assertLighthouseCoreDNSService(ctx)
 	service.Spec.ClusterIP = clusterIP
-	Expect(t.ScopedClient.Update(context.TODO(), service)).To(Succeed())
+	Expect(t.ScopedClient.Update(ctx, service)).To(Succeed())
 }
 
 func (t *testDriver) testServiceDiscoveryDeleted() {

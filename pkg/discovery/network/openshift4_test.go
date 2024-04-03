@@ -32,8 +32,8 @@ import (
 
 var _ = Describe("OpenShift4 Network", func() {
 	When("JSON contains a pod network", func() {
-		It("Should parse properly pod and service networks", func() {
-			cn, err := testOS4DiscoveryWith(getNetworkJSON())
+		It("Should parse properly pod and service networks", func(ctx SpecContext) {
+			cn, err := testOS4DiscoveryWith(ctx, getNetworkJSON())
 			Expect(err).NotTo(HaveOccurred())
 			Expect(cn.PodCIDRs).To(HaveLen(2))
 			Expect(cn.ServiceCIDRs).To(HaveLen(1))
@@ -44,26 +44,26 @@ var _ = Describe("OpenShift4 Network", func() {
 	})
 
 	When("JSON is missing the clusterNetworks list", func() {
-		It("Should return error", func() {
-			_, err := testOS4DiscoveryWith(getNetworkJSONMissingCN())
+		It("Should return error", func(ctx SpecContext) {
+			_, err := testOS4DiscoveryWith(ctx, getNetworkJSONMissingCN())
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
 	When("JSON is missing the serviceNetwork field", func() {
-		It("Should return error", func() {
-			_, err := testOS4DiscoveryWith(getNetworkJSONMissingSN())
+		It("Should return error", func(ctx SpecContext) {
+			_, err := testOS4DiscoveryWith(ctx, getNetworkJSONMissingSN())
 			Expect(err).To(HaveOccurred())
 		})
 	})
 })
 
-func testOS4DiscoveryWith(json []byte) (*network.ClusterNetwork, error) {
+func testOS4DiscoveryWith(ctx context.Context, json []byte) (*network.ClusterNetwork, error) {
 	obj := &unstructured.Unstructured{}
 	err := obj.UnmarshalJSON(json)
 	Expect(err).NotTo(HaveOccurred())
 
-	return network.Discover(context.TODO(), fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(obj).Build(), "")
+	return network.Discover(ctx, fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(obj).Build(), "")
 }
 
 func getNetworkJSON() []byte {

@@ -32,8 +32,8 @@ import (
 
 var _ = Describe("Canal Flannel Network", func() {
 	When("There are no generic k8s pods to look at", func() {
-		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
-			clusterNet := testDiscoverCanalFlannelWith(&canalFlannelCfgMap)
+		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func(ctx SpecContext) {
+			clusterNet := testDiscoverCanalFlannelWith(ctx, &canalFlannelCfgMap)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.CanalFlannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testCannalFlannelPodCIDR}))
@@ -42,8 +42,9 @@ var _ = Describe("Canal Flannel Network", func() {
 	})
 
 	When("There is a kube-api pod", func() {
-		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
+		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func(ctx SpecContext) {
 			clusterNet := testDiscoverWith(
+				ctx,
 				&canalFlannelCfgMap,
 				fakeKubeAPIServerPod(),
 			)
@@ -55,17 +56,17 @@ var _ = Describe("Canal Flannel Network", func() {
 	})
 })
 
-func testDiscoverCanalFlannelWith(objects ...controllerClient.Object) *network.ClusterNetwork {
+func testDiscoverCanalFlannelWith(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
 	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(context.TODO(), client, "")
+	clusterNet, err := network.Discover(ctx, client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet
 }
 
-func testDiscoverWith(objects ...controllerClient.Object) *network.ClusterNetwork {
+func testDiscoverWith(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
 	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(context.TODO(), client, "")
+	clusterNet, err := network.Discover(ctx, client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet

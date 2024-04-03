@@ -30,8 +30,9 @@ var _ = Describe("Kindnet CNI", func() {
 	When("There are kindnet pods but there are no kube-api pods", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverNetwork(
+				ctx,
 				fakePod("kindnet", []string{"kindnet"}, []v1.EnvVar{{Name: "POD_SUBNET", Value: testPodCIDR}}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
@@ -50,8 +51,9 @@ var _ = Describe("Kindnet CNI", func() {
 	When("There are kindnet and kube-api pods", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverNetwork(
+				ctx,
 				fakePod("kindnet", []string{"kindnet"}, []v1.EnvVar{{Name: "POD_SUBNET", Value: testPodCIDR}}),
 				fakeKubeAPIServerPod(),
 			)
