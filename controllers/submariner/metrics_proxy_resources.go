@@ -26,6 +26,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
+	"github.com/submariner-io/submariner-operator/pkg/httpproxy"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
@@ -85,7 +86,7 @@ func metricProxyContainer(cr *v1alpha1.Submariner, name, hostPort, podPort strin
 		Name:            name,
 		Image:           getImagePath(cr, opnames.MetricsProxyImage, names.MetricsProxyComponent),
 		ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.MetricsProxyComponent]),
-		Env: addHTTPProxyEnvVars([]corev1.EnvVar{
+		Env: httpproxy.AddEnvVars([]corev1.EnvVar{
 			{Name: "NODE_IP", ValueFrom: &corev1.EnvVarSource{
 				FieldRef: &corev1.ObjectFieldSelector{
 					FieldPath: "status.hostIP",

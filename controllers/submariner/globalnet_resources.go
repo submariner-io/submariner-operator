@@ -26,6 +26,7 @@ import (
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
+	"github.com/submariner-io/submariner-operator/pkg/httpproxy"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
@@ -90,7 +91,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
 							},
-							Env: addHTTPProxyEnvVars([]corev1.EnvVar{
+							Env: httpproxy.AddEnvVars([]corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_METRICSPORT", Value: globalnetMetricsServerPort},

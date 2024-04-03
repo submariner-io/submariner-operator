@@ -16,14 +16,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package submariner
+package httpproxy
 
 import (
 	"golang.org/x/net/http/httpproxy"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func addHTTPProxyEnvVars(vars []corev1.EnvVar) []corev1.EnvVar {
+func AddEnvVars(vars []corev1.EnvVar) []corev1.EnvVar {
 	proxyEnv := httpproxy.FromEnvironment()
 	vars = appendEnvVarIfValue(vars, "HTTP_PROXY", proxyEnv.HTTPProxy)
 	vars = appendEnvVarIfValue(vars, "HTTPS_PROXY", proxyEnv.HTTPSProxy)
