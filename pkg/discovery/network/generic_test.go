@@ -43,8 +43,9 @@ var _ = Describe("Generic Network", func() {
 	When("There is a kube-proxy with no expected parameters", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakePod("kube-proxy", []string{"kube-proxy", "--cluster-ABCD=1.2.3.4"}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
@@ -66,8 +67,9 @@ var _ = Describe("Generic Network", func() {
 	When("There is a kube-controller with no expected parameters", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-ABCD=1.2.3.4"}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
@@ -89,8 +91,9 @@ var _ = Describe("Generic Network", func() {
 	When("There is a kube-api with no expected parameters", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakePod("kube-apiserver", []string{"kube-apiserver", "--cluster-ABCD=1.2.3.4"}, []corev1.EnvVar{}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
@@ -112,8 +115,9 @@ var _ = Describe("Generic Network", func() {
 	When("There is a kube-controller pod with the right parameter", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakeKubeControllerManagerPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
@@ -135,8 +139,9 @@ var _ = Describe("Generic Network", func() {
 	When("There is a kube-proxy pod but no kube-controller", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakeKubeProxyPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
@@ -158,8 +163,9 @@ var _ = Describe("Generic Network", func() {
 	When("There is a kubeapi pod", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakeKubeAPIServerPod(),
 			)
 			Expect(clusterNet).NotTo(BeNil())
@@ -181,8 +187,9 @@ var _ = Describe("Generic Network", func() {
 	When("There is a kube-proxy and api pods", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakeKubeProxyPod(),
 				fakeKubeAPIServerPod(),
 			)
@@ -202,8 +209,9 @@ var _ = Describe("Generic Network", func() {
 	When("No pod CIDR information exists on any node", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakeNode("node1", ""),
 				fakeNode("node2", ""),
 			)
@@ -225,8 +233,9 @@ var _ = Describe("Generic Network", func() {
 	When("Pod CIDR information exists on a single node cluster", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakeNode("node1", testPodCIDR),
 			)
 		})
@@ -247,8 +256,9 @@ var _ = Describe("Generic Network", func() {
 	When("Pod CIDR information exists on a multi node cluster", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakeNode("node1", testPodCIDR),
 				fakeNode("node2", testPodCIDR),
 			)
@@ -262,8 +272,9 @@ var _ = Describe("Generic Network", func() {
 	When("Both pod and service CIDR information exists", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
+				ctx,
 				fakeNode("node1", testPodCIDR),
 				fakeKubeAPIServerPod(),
 			)
@@ -280,21 +291,21 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("No kube-api pod exists and invalid service creation returns no error", func() {
-		It("Should return error and nil cluster network", func() {
+		It("Should return error and nil cluster network", func(ctx SpecContext) {
 			client := fakeClient.NewClientBuilder().WithScheme(scheme.Scheme).Build()
-			clusterNet, err := network.Discover(context.TODO(), client, "")
+			clusterNet, err := network.Discover(ctx, client, "")
 			Expect(err).To(HaveOccurred())
 			Expect(clusterNet).To(BeNil())
 		})
 	})
 
 	When("No kube-api pod exists and invalid service creation returns an unexpected error", func() {
-		It("Should return error and nil cluster network", func() {
+		It("Should return error and nil cluster network", func(ctx SpecContext) {
 			// Inject error for create services to return expectedErr
 			client := fake.NewReactingClient(nil).AddReactor(fake.Create, &corev1.Service{},
 				fake.FailingReaction(fmt.Errorf("%s", testServiceCIDR)))
 
-			clusterNet, err := network.Discover(context.TODO(), client, "")
+			clusterNet, err := network.Discover(ctx, client, "")
 			Expect(err).To(HaveOccurred())
 			Expect(clusterNet).To(BeNil())
 		})
@@ -303,8 +314,8 @@ var _ = Describe("Generic Network", func() {
 	When("No kube-api pod exists and invalid service creation returns the expected error", func() {
 		var clusterNet *network.ClusterNetwork
 
-		BeforeEach(func() {
-			clusterNet = testDiscoverGenericWith()
+		BeforeEach(func(ctx SpecContext) {
+			clusterNet = testDiscoverGenericWith(ctx)
 		})
 
 		It("Should return the ClusterNetwork structure with empty pod CIDR", func() {
@@ -321,9 +332,9 @@ var _ = Describe("Generic Network", func() {
 	})
 })
 
-func testDiscoverGenericWith(objects ...controllerClient.Object) *network.ClusterNetwork {
+func testDiscoverGenericWith(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
 	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(context.TODO(), client, "")
+	clusterNet, err := network.Discover(ctx, client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet

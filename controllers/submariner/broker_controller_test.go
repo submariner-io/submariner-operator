@@ -19,8 +19,6 @@ limitations under the License.
 package submariner_test
 
 import (
-	"context"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
@@ -67,23 +65,23 @@ var _ = Describe("Broker controller tests", func() {
 		}
 	})
 
-	It("should create the globalnet ConfigMap", func() {
-		t.AssertReconcileSuccess()
+	It("should create the globalnet ConfigMap", func(ctx SpecContext) {
+		t.AssertReconcileSuccess(ctx)
 
-		globalnetInfo, _, err := globalnet.GetGlobalNetworks(context.Background(), t.ScopedClient, submarinerNamespace)
+		globalnetInfo, _, err := globalnet.GetGlobalNetworks(ctx, t.ScopedClient, submarinerNamespace)
 		Expect(err).To(Succeed())
 		Expect(globalnetInfo.CidrRange).To(Equal(broker.Spec.GlobalnetCIDRRange))
 		Expect(globalnetInfo.ClusterSize).To(Equal(broker.Spec.DefaultGlobalnetClusterSize))
 	})
 
-	It("should create the CRDs", func() {
-		t.AssertReconcileSuccess()
+	It("should create the CRDs", func(ctx SpecContext) {
+		t.AssertReconcileSuccess(ctx)
 
 		crd := &apiextensions.CustomResourceDefinition{}
-		Expect(t.ScopedClient.Get(context.Background(), client.ObjectKey{Name: "clusters.submariner.io"}, crd)).To(Succeed())
-		Expect(t.ScopedClient.Get(context.Background(), client.ObjectKey{Name: "endpoints.submariner.io"}, crd)).To(Succeed())
-		Expect(t.ScopedClient.Get(context.Background(), client.ObjectKey{Name: "gateways.submariner.io"}, crd)).To(Succeed())
-		Expect(t.ScopedClient.Get(context.Background(), client.ObjectKey{Name: "serviceimports.multicluster.x-k8s.io"}, crd)).To(Succeed())
+		Expect(t.ScopedClient.Get(ctx, client.ObjectKey{Name: "clusters.submariner.io"}, crd)).To(Succeed())
+		Expect(t.ScopedClient.Get(ctx, client.ObjectKey{Name: "endpoints.submariner.io"}, crd)).To(Succeed())
+		Expect(t.ScopedClient.Get(ctx, client.ObjectKey{Name: "gateways.submariner.io"}, crd)).To(Succeed())
+		Expect(t.ScopedClient.Get(ctx, client.ObjectKey{Name: "serviceimports.multicluster.x-k8s.io"}, crd)).To(Succeed())
 	})
 
 	When("the Broker resource doesn't exist", func() {
@@ -91,8 +89,8 @@ var _ = Describe("Broker controller tests", func() {
 			t.InitScopedClientObjs = nil
 		})
 
-		It("should return success", func() {
-			t.AssertReconcileSuccess()
+		It("should return success", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
 		})
 	})
 })

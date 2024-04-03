@@ -79,41 +79,41 @@ func (d *Driver) NewGeneralClient() client.Client {
 		WithStatusSubresource(&v1alpha1.Submariner{}).WithInterceptorFuncs(d.InterceptorFuncs).Build()
 }
 
-func (d *Driver) DoReconcile() (reconcile.Result, error) {
-	return d.Controller.Reconcile(context.TODO(), reconcile.Request{NamespacedName: types.NamespacedName{
+func (d *Driver) DoReconcile(ctx context.Context) (reconcile.Result, error) {
+	return d.Controller.Reconcile(ctx, reconcile.Request{NamespacedName: types.NamespacedName{
 		Namespace: d.Namespace,
 		Name:      d.ResourceName,
 	}})
 }
 
-func (d *Driver) AssertReconcileSuccess() {
-	r, err := d.DoReconcile()
+func (d *Driver) AssertReconcileSuccess(ctx context.Context) {
+	r, err := d.DoReconcile(ctx)
 	Expect(err).To(Succeed())
 	Expect(r.Requeue).To(BeFalse())
 	Expect(r.RequeueAfter).To(BeNumerically("==", 0))
 }
 
-func (d *Driver) AssertReconcileRequeue() {
-	r, err := d.DoReconcile()
+func (d *Driver) AssertReconcileRequeue(ctx context.Context) {
+	r, err := d.DoReconcile(ctx)
 	Expect(err).To(Succeed())
 	Expect(r.RequeueAfter).To(BeNumerically(">", 0), "Expected requeue after")
 	Expect(r.Requeue).To(BeFalse())
 }
 
-func (d *Driver) AssertReconcileError() {
-	_, err := d.DoReconcile()
+func (d *Driver) AssertReconcileError(ctx context.Context) {
+	_, err := d.DoReconcile(ctx)
 	Expect(err).ToNot(Succeed())
 }
 
-func (d *Driver) GetDaemonSet(name string) (*appsv1.DaemonSet, error) {
+func (d *Driver) GetDaemonSet(ctx context.Context, name string) (*appsv1.DaemonSet, error) {
 	foundDaemonSet := &appsv1.DaemonSet{}
-	err := d.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: d.Namespace}, foundDaemonSet)
+	err := d.ScopedClient.Get(ctx, types.NamespacedName{Name: name, Namespace: d.Namespace}, foundDaemonSet)
 
 	return foundDaemonSet, err
 }
 
-func (d *Driver) AssertDaemonSet(name string) *appsv1.DaemonSet {
-	daemonSet, err := d.GetDaemonSet(name)
+func (d *Driver) AssertDaemonSet(ctx context.Context, name string) *appsv1.DaemonSet {
+	daemonSet, err := d.GetDaemonSet(ctx, name)
 	Expect(err).To(Succeed())
 
 	Expect(daemonSet.ObjectMeta.Labels).To(HaveKeyWithValue("app", name))
@@ -126,21 +126,21 @@ func (d *Driver) AssertDaemonSet(name string) *appsv1.DaemonSet {
 	return daemonSet
 }
 
-func (d *Driver) AssertNoDaemonSet(name string) {
-	_, err := d.GetDaemonSet(name)
+func (d *Driver) AssertNoDaemonSet(ctx context.Context, name string) {
+	_, err := d.GetDaemonSet(ctx, name)
 	Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
 	Expect(err).To(HaveOccurred())
 }
 
-func (d *Driver) GetDeployment(name string) (*appsv1.Deployment, error) {
+func (d *Driver) GetDeployment(ctx context.Context, name string) (*appsv1.Deployment, error) {
 	found := &appsv1.Deployment{}
-	err := d.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: d.Namespace}, found)
+	err := d.ScopedClient.Get(ctx, types.NamespacedName{Name: name, Namespace: d.Namespace}, found)
 
 	return found, err
 }
 
-func (d *Driver) AssertDeployment(name string) *appsv1.Deployment {
-	deployment, err := d.GetDeployment(name)
+func (d *Driver) AssertDeployment(ctx context.Context, name string) *appsv1.Deployment {
+	deployment, err := d.GetDeployment(ctx, name)
 	Expect(err).To(Succeed())
 
 	Expect(deployment.ObjectMeta.Labels).To(HaveKeyWithValue("app", name))
@@ -151,8 +151,8 @@ func (d *Driver) AssertDeployment(name string) *appsv1.Deployment {
 	return deployment
 }
 
-func (d *Driver) AssertNoDeployment(name string) {
-	_, err := d.GetDeployment(name)
+func (d *Driver) AssertNoDeployment(ctx context.Context, name string) {
+	_, err := d.GetDeployment(ctx, name)
 	Expect(errors.IsNotFound(err)).To(BeTrue(), "IsNotFound error")
 	Expect(err).To(HaveOccurred())
 }
@@ -173,34 +173,34 @@ func (d *Driver) AssertUninstallInitContainer(template *corev1.PodTemplateSpec, 
 	return envMap
 }
 
-func (d *Driver) UpdateDaemonSetToReady(daemonSet *appsv1.DaemonSet) {
-	d.UpdateDaemonSetToScheduled(daemonSet)
+func (d *Driver) UpdateDaemonSetToReady(ctx context.Context, daemonSet *appsv1.DaemonSet) {
+	d.UpdateDaemonSetToScheduled(ctx, daemonSet)
 
 	daemonSet.Status.NumberReady = daemonSet.Status.DesiredNumberScheduled
-	Expect(d.ScopedClient.Status().Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Status().Update(ctx, daemonSet)).To(Succeed())
 }
 
-func (d *Driver) UpdateDaemonSetToObserved(daemonSet *appsv1.DaemonSet) {
+func (d *Driver) UpdateDaemonSetToObserved(ctx context.Context, daemonSet *appsv1.DaemonSet) {
 	daemonSet.Generation = 1
-	Expect(d.ScopedClient.Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Update(ctx, daemonSet)).To(Succeed())
 
 	daemonSet.Status.ObservedGeneration = daemonSet.Generation
-	Expect(d.ScopedClient.Status().Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Status().Update(ctx, daemonSet)).To(Succeed())
 }
 
-func (d *Driver) UpdateDaemonSetToScheduled(daemonSet *appsv1.DaemonSet) {
+func (d *Driver) UpdateDaemonSetToScheduled(ctx context.Context, daemonSet *appsv1.DaemonSet) {
 	daemonSet.Generation = 1
-	Expect(d.ScopedClient.Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Update(ctx, daemonSet)).To(Succeed())
 
 	daemonSet.Status.ObservedGeneration = daemonSet.Generation
 	daemonSet.Status.DesiredNumberScheduled = 1
-	Expect(d.ScopedClient.Status().Update(context.TODO(), daemonSet)).To(Succeed())
+	Expect(d.ScopedClient.Status().Update(ctx, daemonSet)).To(Succeed())
 }
 
-func (d *Driver) UpdateDeploymentToReady(deployment *appsv1.Deployment) {
+func (d *Driver) UpdateDeploymentToReady(ctx context.Context, deployment *appsv1.Deployment) {
 	deployment.Status.ReadyReplicas = *deployment.Spec.Replicas
 	deployment.Status.AvailableReplicas = *deployment.Spec.Replicas
-	Expect(d.ScopedClient.Status().Update(context.TODO(), deployment)).To(Succeed())
+	Expect(d.ScopedClient.Status().Update(ctx, deployment)).To(Succeed())
 }
 
 func (d *Driver) NewDaemonSet(name string) *appsv1.DaemonSet {
@@ -233,8 +233,8 @@ func (d *Driver) NewPodWithLabel(label, value string) *corev1.Pod {
 	}
 }
 
-func (d *Driver) DeletePods(label, value string) {
-	err := d.ScopedClient.DeleteAllOf(context.TODO(), &corev1.Pod{}, client.InNamespace(d.Namespace),
+func (d *Driver) DeletePods(ctx context.Context, label, value string) {
+	err := d.ScopedClient.DeleteAllOf(ctx, &corev1.Pod{}, client.InNamespace(d.Namespace),
 		client.MatchingLabelsSelector{Selector: labels.SelectorFromSet(map[string]string{label: value})})
 	Expect(err).To(Succeed())
 }

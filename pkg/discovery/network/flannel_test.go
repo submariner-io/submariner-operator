@@ -37,8 +37,8 @@ const (
 
 var _ = Describe("Flannel Network", func() {
 	When("the flannel DaemonSet and ConfigMap exist", func() {
-		It("should return a ClusterNetwork with the plugin name and CIDRs set correctly", func() {
-			clusterNet := testDiscoverFlannelWith(&flannelDaemonSet, &flannelCfgMap)
+		It("should return a ClusterNetwork with the plugin name and CIDRs set correctly", func(ctx SpecContext) {
+			clusterNet := testDiscoverFlannelWith(ctx, &flannelDaemonSet, &flannelCfgMap)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Flannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testFlannelPodCIDR}))
@@ -47,25 +47,25 @@ var _ = Describe("Flannel Network", func() {
 	})
 
 	When("the flannel DaemonSet does not exist", func() {
-		It("should return a ClusterNetwork with the generic plugin", func() {
-			clusterNet := testDiscoverFlannelWith()
+		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
+			clusterNet := testDiscoverFlannelWith(ctx)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
 		})
 	})
 
 	When("the flannel ConfigMap does not exist", func() {
-		It("should return a ClusterNetwork with the generic plugin", func() {
-			clusterNet := testDiscoverFlannelWith(&flannelDaemonSet)
+		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
+			clusterNet := testDiscoverFlannelWith(ctx, &flannelDaemonSet)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
 		})
 	})
 })
 
-func testDiscoverFlannelWith(objects ...controllerClient.Object) *network.ClusterNetwork {
+func testDiscoverFlannelWith(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
 	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(context.TODO(), client, "")
+	clusterNet, err := network.Discover(ctx, client, "")
 	Expect(err).NotTo(HaveOccurred())
 
 	return clusterNet
