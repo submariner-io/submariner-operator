@@ -30,6 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
+	"github.com/submariner-io/submariner-operator/pkg/httpproxy"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
@@ -180,7 +181,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 							Protocol:      corev1.ProtocolUDP,
 						},
 					},
-					Env: addHTTPProxyEnvVars([]corev1.EnvVar{
+					Env: httpproxy.AddEnvVars([]corev1.EnvVar{
 						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
 						{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
