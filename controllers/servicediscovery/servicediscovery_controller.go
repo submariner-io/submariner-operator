@@ -39,6 +39,7 @@ import (
 	submarinerv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
 	"github.com/submariner-io/submariner-operator/controllers/metrics"
+	"github.com/submariner-io/submariner-operator/pkg/httpproxy"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	appsv1 "k8s.io/api/apps/v1"
@@ -241,7 +242,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 							Name:            name,
 							Image:           getImagePath(cr, opnames.ServiceDiscoveryImage, names.ServiceDiscoveryComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.ServiceDiscoveryComponent]),
-							Env: []corev1.EnvVar{
+							Env: httpproxy.AddEnvVars([]corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
@@ -253,7 +254,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 								{Name: broker.EnvironmentVariable("CA"), Value: cr.Spec.BrokerK8sCA},
 								{Name: broker.EnvironmentVariable("Insecure"), Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
 								{Name: broker.EnvironmentVariable("Secret"), Value: cr.Spec.BrokerK8sSecret},
-							},
+							}),
 							VolumeMounts: volumeMounts,
 						},
 					},
@@ -338,9 +339,9 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 							Name:            names.LighthouseCoreDNSComponent,
 							Image:           getImagePath(cr, opnames.LighthouseCoreDNSImage, names.LighthouseCoreDNSComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.LighthouseCoreDNSComponent]),
-							Env: []corev1.EnvVar{
+							Env: httpproxy.AddEnvVars([]corev1.EnvVar{
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
-							},
+							}),
 							Args: []string{
 								"-conf",
 								"/etc/coredns/Corefile",
