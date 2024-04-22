@@ -452,6 +452,9 @@ spec:
                           - type
                           type: object
                         type: array
+                        x-kubernetes-list-map-keys:
+                        - type
+                        x-kubernetes-list-type: map
                       currentNumberScheduled:
                         description: |-
                           The number of nodes that are running at least 1
@@ -756,6 +759,9 @@ spec:
                           - type
                           type: object
                         type: array
+                        x-kubernetes-list-map-keys:
+                        - type
+                        x-kubernetes-list-type: map
                       currentNumberScheduled:
                         description: |-
                           The number of nodes that are running at least 1
@@ -888,6 +894,7 @@ spec:
                               x-kubernetes-list-type: atomic
                           type: object
                         type: array
+                        x-kubernetes-list-type: atomic
                     type: object
                 type: object
               natEnabled:
@@ -1010,6 +1017,9 @@ spec:
                           - type
                           type: object
                         type: array
+                        x-kubernetes-list-map-keys:
+                        - type
+                        x-kubernetes-list-type: map
                       currentNumberScheduled:
                         description: |-
                           The number of nodes that are running at least 1
@@ -1790,11 +1800,13 @@ spec:
                           items:
                             type: string
                           type: array
+                          x-kubernetes-list-type: atomic
                       required:
                       - key
                       - operator
                       type: object
                     type: array
+                    x-kubernetes-list-type: atomic
                   matchLabels:
                     additionalProperties:
                       type: string
