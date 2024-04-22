@@ -10,8 +10,8 @@ require (
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
 	github.com/operator-framework/operator-lib v0.12.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.73.1
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.73.1
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.73.2
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.73.2
 	github.com/prometheus/client_golang v1.19.0
 	github.com/submariner-io/admiral v0.18.0-m2
 	github.com/submariner-io/shipyard v0.18.0-m2
