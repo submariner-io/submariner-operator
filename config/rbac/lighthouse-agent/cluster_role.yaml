@@ -15,7 +15,6 @@ rules:
       - get
       - list
       - watch
-      - update
   - apiGroups:
       - discovery.k8s.io
     resources:
@@ -32,8 +31,8 @@ rules:
   - apiGroups:
       - submariner.io
     resources:
-      - "gateways"
-      - "globalingressips"
+      - gateways
+      - globalingressips
     verbs:
       - get
       - list
@@ -41,7 +40,8 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - "*"
+      - serviceimports
+      - serviceimports/status
     verbs:
       - create
       - get
@@ -49,3 +49,17 @@ rules:
       - watch
       - update
       - delete
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - serviceexports
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - serviceexports/status
+    verbs:
+      - update
