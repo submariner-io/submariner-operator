@@ -28,9 +28,10 @@ rules:
       - update
       - delete
       - watch
-  - apiGroups:  # pods, services and nodes are looked up to figure out network settings
+  - apiGroups:
       - ""
     resources:
+      # Needed for network settings discovery
       - pods
       - services
       - nodes
@@ -44,12 +45,11 @@ rules:
       - dnses
     verbs:
       - get
-      - list
-      - watch
       - update
   - apiGroups:
       - config.openshift.io
     resources:
+      # Needed for network settings discovery
       - networks
     verbs:
       - get
@@ -57,6 +57,7 @@ rules:
   - apiGroups:
       - ""
     resources:
+      # Needed for openshift monitoring
       - namespaces
     verbs:
       - get
@@ -65,6 +66,7 @@ rules:
   - apiGroups:
       - monitoring.coreos.com
     resources:
+      # Needed for openshift monitoring
       - servicemonitors
     verbs:
       - get
@@ -72,6 +74,7 @@ rules:
   - apiGroups:
       - apps
     resources:
+      # Needed for Flannel CNI discovery
       - daemonsets
     verbs:
       - list
