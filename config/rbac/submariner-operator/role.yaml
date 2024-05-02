@@ -8,28 +8,39 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - pods
+      # For metrics
       - services
-      - services/finalizers
-      - endpoints
-      - persistentvolumeclaims
-      - events
-      - configmaps
+    verbs:
+      - get
+      - create
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      # For syncing Secrets from the broker
       - secrets
     verbs:
-      - '*'
+      - get
+      - create
+      - update
+      - delete
   - apiGroups:
       - apps
     resources:
       - deployments
       - daemonsets
-      - replicasets
-      - statefulsets
     verbs:
-      - '*'
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
   - apiGroups:
       - monitoring.coreos.com
     resources:
+      # Needed for openshift monitoring
       - servicemonitors
     verbs:
       - get
@@ -43,21 +54,26 @@ rules:
     verbs:
       - update
   - apiGroups:
-      - ""
+      - submariner.io
     resources:
-      - pods
+      - brokers
+      - brokers/status
+      - submariners
+      - submariners/status
+      - servicediscoveries
+      - servicediscoveries/status
     verbs:
       - get
-  - apiGroups:
-      - apps
-    resources:
-      - replicasets
-    verbs:
-      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
   - apiGroups:
       - submariner.io
     resources:
-      - '*'
-      - servicediscoveries
+      - gateways
     verbs:
-      - '*'
+      - get
+      - list
+      - watch

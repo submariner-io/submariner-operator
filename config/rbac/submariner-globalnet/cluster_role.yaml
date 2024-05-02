@@ -8,14 +8,20 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - pods
-      - namespaces
       - nodes
     verbs:
       - get
       - list
       - watch
       - update
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
   - apiGroups:
       - ""
     resources:
@@ -31,8 +37,8 @@ rules:
   - apiGroups:
       - submariner.io
     resources:
-      - endpoints
       - clusters
+      - endpoints
     verbs:
       - get
       - list
@@ -54,7 +60,7 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - "serviceexports"
+      - serviceexports
     verbs:
       - get
       - list
