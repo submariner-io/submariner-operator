@@ -7,47 +7,14 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
-      - update
-  - apiGroups:
-      - apiextensions.k8s.io
-    resources:
-      - customresourcedefinitions
-    verbs:
-      - get
-      - list
-      - create
-      - update
-      - delete
-  - apiGroups:  # pods and services are looked up to figure out network settings
-      - ""
-    resources:
       - pods
       - services
       - secrets
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
+      - configmaps
       - endpoints
     verbs:
-      - list
-  - apiGroups:
-      - operator.openshift.io
-    resources:
-      - dnses
-    verbs:
       - get
       - list
-      - watch
-      - update
   - apiGroups:
       - config.openshift.io
     resources:
@@ -57,13 +24,13 @@ rules:
       - list
   - apiGroups:
       - ""
+    resources:
+      - nodes
     verbs:
       - get
       - list
       - watch
       - update
-    resources:
-      - nodes
   - apiGroups:
       - projectcalico.org
     resources:
