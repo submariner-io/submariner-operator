@@ -2611,19 +2611,16 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - pods
+      # For metrics
       - services
-      - services/finalizers
-      - endpoints
-      - persistentvolumeclaims
-      - events
-      - configmaps
-      - secrets
     verbs:
-      - '*'
+      - get
+      - create
+      - update
   - apiGroups:
       - ""
     resources:
+      # Temporarily needed for network-plugin syncer removal
       - serviceaccounts
     verbs:
       - delete
@@ -2632,13 +2629,18 @@ rules:
     resources:
       - deployments
       - daemonsets
-      - replicasets
-      - statefulsets
     verbs:
-      - '*'
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
   - apiGroups:
       - monitoring.coreos.com
     resources:
+      # Needed for openshift monitoring
       - servicemonitors
     verbs:
       - get
@@ -2652,23 +2654,29 @@ rules:
     verbs:
       - update
   - apiGroups:
-      - ""
+      - submariner.io
     resources:
-      - pods
+      - brokers
+      - brokers/status
+      - submariners
+      - submariners/status
+      - servicediscoveries
+      - servicediscoveries/status
     verbs:
       - get
-  - apiGroups:
-      - apps
-    resources:
-      - replicasets
-    verbs:
-      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
   - apiGroups:
       - submariner.io
     resources:
-      - '*'
+      - gateways
     verbs:
-      - '*'
+      - get
+      - list
+      - watch
 `
 	Config_rbac_submariner_operator_role_binding_yaml = `---
 kind: RoleBinding
@@ -2713,9 +2721,10 @@ rules:
       - update
       - delete
       - watch
-  - apiGroups:  # pods, services and nodes are looked up to figure out network settings
+  - apiGroups:
       - ""
     resources:
+      # Needed for network settings discovery
       - pods
       - services
       - nodes
@@ -2729,12 +2738,11 @@ rules:
       - dnses
     verbs:
       - get
-      - list
-      - watch
       - update
   - apiGroups:
       - config.openshift.io
     resources:
+      # Needed for network settings discovery
       - networks
     verbs:
       - get
@@ -2742,6 +2750,7 @@ rules:
   - apiGroups:
       - ""
     resources:
+      # Needed for openshift monitoring
       - namespaces
     verbs:
       - get
@@ -2750,6 +2759,7 @@ rules:
   - apiGroups:
       - monitoring.coreos.com
     resources:
+      # Needed for openshift monitoring
       - servicemonitors
     verbs:
       - get
@@ -2757,12 +2767,14 @@ rules:
   - apiGroups:
       - apps
     resources:
+      # Needed for Flannel CNI discovery
       - daemonsets
     verbs:
       - list
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:
+      # Temporarily needed for network-plugin syncer removal
       - clusterroles
       - clusterrolebindings
     verbs:
@@ -2832,55 +2844,23 @@ rules:
       - ""
     resources:
       - pods
-      - services
-      - services/finalizers
-      - endpoints
-      - events
-      - configmaps
-    verbs:
-      - '*'
-  - apiGroups:
-      - apps
-    resources:
-      - deployments
-      - daemonsets
-      - replicasets
-      - statefulsets
-    verbs:
-      - '*'
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - servicemonitors
     verbs:
       - get
-      - create
-  - apiGroups:
-      - apps
-    resourceNames:
-      - submariner-operator
-    resources:
-      - deployments/finalizers
-    verbs:
       - update
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
-      - apps
-    resources:
-      - replicasets
-    verbs:
-      - get
+      - patch
   - apiGroups:
       - submariner.io
     resources:
-      - '*'
+      - clusters
+      - endpoints
+      - gateways
     verbs:
-      - '*'
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
   - apiGroups:
       - coordination.k8s.io
     resources:
@@ -2918,52 +2898,12 @@ rules:
       - configmaps
     verbs:
       - get
-      - list
-      - watch
-      - create
-      - update
   - apiGroups:
-      - apiextensions.k8s.io
-    resources:
-      - customresourcedefinitions
-    verbs:
-      - get
-      - list
-      - create
-      - update
-      - delete
-  - apiGroups:  # pods and services are looked up to figure out network settings
       - ""
     resources:
       - pods
       - services
       - nodes
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - operator.openshift.io
-    resources:
-      - dnses
-    verbs:
-      - get
-      - list
-      - watch
-      - update
-  - apiGroups:
-      - config.openshift.io
-    resources:
-      - networks
-    verbs:
-      - get
-      - list
-  - apiGroups:
-      - submariner.io
-    resources:
-      - endpoints
-      - gateways
-      - clusters
     verbs:
       - get
       - list
@@ -3024,57 +2964,25 @@ metadata:
   name: submariner-routeagent
 rules:
   - apiGroups:
-      - ""
+      - submariner.io
     resources:
-      - services
-      - services/finalizers
       - endpoints
-      - events
-      - configmaps
-    verbs:
-      - '*'
-  - apiGroups:
-      - apps
-    resources:
-      - deployments
-      - daemonsets
-      - replicasets
-      - statefulsets
-    verbs:
-      - '*'
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - servicemonitors
     verbs:
       - get
-      - create
-  - apiGroups:
-      - apps
-    resourceNames:
-      - submariner-operator
-    resources:
-      - deployments/finalizers
-    verbs:
-      - update
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
-      - apps
-    resources:
-      - replicasets
-    verbs:
-      - get
+      - list
+      - watch
   - apiGroups:
       - submariner.io
     resources:
-      - '*'
+      - gatewayroutes
+      - nongatewayroutes
     verbs:
-      - '*'
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
 `
 	Config_rbac_submariner_route_agent_role_binding_yaml = `---
 kind: RoleBinding
@@ -3098,47 +3006,14 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
-      - update
-  - apiGroups:
-      - apiextensions.k8s.io
-    resources:
-      - customresourcedefinitions
-    verbs:
-      - get
-      - list
-      - create
-      - update
-      - delete
-  - apiGroups:  # pods and services are looked up to figure out network settings
-      - ""
-    resources:
       - pods
       - services
       - secrets
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
+      - configmaps
       - endpoints
     verbs:
-      - list
-  - apiGroups:
-      - operator.openshift.io
-    resources:
-      - dnses
-    verbs:
       - get
       - list
-      - watch
-      - update
   - apiGroups:
       - config.openshift.io
     resources:
@@ -3148,13 +3023,13 @@ rules:
       - list
   - apiGroups:
       - ""
+    resources:
+      - nodes
     verbs:
       - get
       - list
       - watch
       - update
-    resources:
-      - nodes
   - apiGroups:
       - projectcalico.org
     resources:
@@ -3221,61 +3096,6 @@ metadata:
   name: submariner-globalnet
 rules:
   - apiGroups:
-      - ""
-    resources:
-      - pods
-      - services
-      - services/finalizers
-      - endpoints
-      - persistentvolumeclaims
-      - events
-      - configmaps
-      - secrets
-    verbs:
-      - '*'
-  - apiGroups:
-      - apps
-    resources:
-      - deployments
-      - daemonsets
-      - replicasets
-      - statefulsets
-    verbs:
-      - '*'
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - servicemonitors
-    verbs:
-      - get
-      - create
-  - apiGroups:
-      - apps
-    resourceNames:
-      - submariner-operator
-    resources:
-      - deployments/finalizers
-    verbs:
-      - update
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
-      - apps
-    resources:
-      - replicasets
-    verbs:
-      - get
-  - apiGroups:
-      - submariner.io
-    resources:
-      - '*'
-    verbs:
-      - '*'
-  - apiGroups:
       - coordination.k8s.io
     resources:
       - leases
@@ -3310,14 +3130,20 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - pods
-      - namespaces
       - nodes
     verbs:
       - get
       - list
       - watch
       - update
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
   - apiGroups:
       - ""
     resources:
@@ -3333,8 +3159,8 @@ rules:
   - apiGroups:
       - submariner.io
     resources:
-      - endpoints
       - clusters
+      - endpoints
     verbs:
       - get
       - list
@@ -3359,7 +3185,7 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - "serviceexports"
+      - serviceexports
     verbs:
       - get
       - list
@@ -3587,7 +3413,6 @@ rules:
       - get
       - list
       - watch
-      - update
   - apiGroups:
       - discovery.k8s.io
     resources:
@@ -3604,8 +3429,8 @@ rules:
   - apiGroups:
       - submariner.io
     resources:
-      - "gateways"
-      - "globalingressips"
+      - gateways
+      - globalingressips
     verbs:
       - get
       - list
@@ -3613,7 +3438,8 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - "*"
+      - serviceimports
+      - serviceimports/status
     verbs:
       - create
       - get
@@ -3621,6 +3447,20 @@ rules:
       - watch
       - update
       - delete
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - serviceexports
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - multicluster.x-k8s.io
+    resources:
+      - serviceexports/status
+    verbs:
+      - update
 `
 	Config_rbac_lighthouse_agent_cluster_role_binding_yaml = `---
 kind: ClusterRoleBinding
@@ -3677,33 +3517,18 @@ metadata:
   name: submariner-lighthouse-coredns
 rules:
   - apiGroups:
-      - ""
-    resources:
-      - services
-      - namespaces
-      - endpoints
-    verbs:
-      - get
-      - list
-      - watch
-      - update
-  - apiGroups:
       - discovery.k8s.io
     resources:
       - endpointslices
     verbs:
-      - create
       - get
       - list
       - watch
-      - update
-      - delete
-      - deletecollection
   - apiGroups:
       - submariner.io
     resources:
-      - "gateways"
-      - "submariners"
+      - gateways
+      - submariners
     verbs:
       - get
       - list
@@ -3711,14 +3536,11 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - "*"
+      - serviceimports
     verbs:
-      - create
       - get
       - list
       - watch
-      - update
-      - delete
 `
 	Config_rbac_lighthouse_coredns_cluster_role_binding_yaml = `---
 kind: ClusterRoleBinding
