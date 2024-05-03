@@ -9,7 +9,6 @@ rules:
     resources:
       - pods
       - services
-      - secrets
       - configmaps
       - endpoints
     verbs:
