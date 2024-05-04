@@ -55,10 +55,22 @@ var _ = Describe("Migration tests", func() {
 							Name:      submariner.NetworkPluginSyncerComponent,
 						},
 					},
+					&rbacv1.ClusterRole{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: t.Namespace,
+							Name:      "ocp-submariner-networkplugin-syncer",
+						},
+					},
 					&rbacv1.ClusterRoleBinding{
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: t.Namespace,
 							Name:      submariner.NetworkPluginSyncerComponent,
+						},
+					},
+					&rbacv1.ClusterRoleBinding{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: t.Namespace,
+							Name:      "ocp-submariner-networkplugin-syncer",
 						},
 					},
 					&corev1.ServiceAccount{
@@ -80,6 +92,18 @@ var _ = Describe("Migration tests", func() {
 				t.AssertNoResource(&rbacv1.ClusterRoleBinding{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: submariner.NetworkPluginSyncerComponent,
+					},
+				})
+
+				t.AssertNoResource(&rbacv1.ClusterRole{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "ocp-submariner-networkplugin-syncer",
+					},
+				})
+
+				t.AssertNoResource(&rbacv1.ClusterRoleBinding{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "ocp-submariner-networkplugin-syncer",
 					},
 				})
 
