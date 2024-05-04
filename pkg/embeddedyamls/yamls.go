@@ -2610,6 +2610,8 @@ rules:
     resources:
       # Temporarily needed for network-plugin syncer removal
       - serviceaccounts
+    resourceNames:
+      - submariner-networkplugin-syncer
     verbs:
       - delete
   - apiGroups:
@@ -2757,6 +2759,9 @@ rules:
       # Temporarily needed for network-plugin syncer removal
       - clusterroles
       - clusterrolebindings
+    resourceNames:
+      - ocp-submariner-networkplugin-syncer
+      - submariner-networkplugin-syncer
     verbs:
       - delete
 `

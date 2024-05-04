@@ -43,7 +43,6 @@ func (r *Reconciler) removeNetworkPluginSyncerDeployment(ctx context.Context, in
 
 	deleteAll := func(objs ...client.Object) error {
 		for _, obj := range objs {
-			obj.SetName(NetworkPluginSyncerComponent)
 			obj.SetNamespace(instance.Namespace)
 
 			err := r.config.ScopedClient.Delete(ctx, obj)
@@ -59,38 +58,32 @@ func (r *Reconciler) removeNetworkPluginSyncerDeployment(ctx context.Context, in
 	return deleteAll(
 		&appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: instance.Namespace,
-				Name:      NetworkPluginSyncerComponent,
+				Name: NetworkPluginSyncerComponent,
 			},
 		},
 		&rbacv1.ClusterRole{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: instance.Namespace,
-				Name:      NetworkPluginSyncerComponent,
+				Name: NetworkPluginSyncerComponent,
 			},
 		},
 		&rbacv1.ClusterRoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: instance.Namespace,
-				Name:      NetworkPluginSyncerComponent,
+				Name: NetworkPluginSyncerComponent,
 			},
 		},
 		&rbacv1.ClusterRole{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: instance.Namespace,
-				Name:      "ocp-submariner-networkplugin-syncer",
+				Name: "ocp-submariner-networkplugin-syncer",
 			},
 		},
 		&rbacv1.ClusterRoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: instance.Namespace,
-				Name:      "ocp-submariner-networkplugin-syncer",
+				Name: "ocp-submariner-networkplugin-syncer",
 			},
 		},
 		&corev1.ServiceAccount{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace: instance.Namespace,
-				Name:      NetworkPluginSyncerComponent,
+				Name: NetworkPluginSyncerComponent,
 			},
 		},
 	)
