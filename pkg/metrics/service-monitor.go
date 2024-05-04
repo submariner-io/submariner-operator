@@ -24,20 +24,15 @@ import (
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monclientv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
+	"github.com/submariner-io/admiral/pkg/resource"
 	v1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
-	clientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/pointer"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-var (
-	log                         = logf.Log.WithName("metrics")
-	ErrServiceMonitorNotPresent = fmt.Errorf("no ServiceMonitor registered with the API")
-)
+var ErrServiceMonitorNotPresent = fmt.Errorf("no ServiceMonitor registered with the API")
 
 const openshiftMonitoringNS = "openshift-monitoring"
 
@@ -57,20 +52,6 @@ func CreateServiceMonitors(ctx context.Context, config *rest.Config, ns string, 
 		return nil, ErrServiceMonitorNotPresent
 	}
 
-	// On OpenShift, we need to create the service monitors in the OpenShift monitoring namespace, not the
-	// services; we need our own clientset rather than the manager's since the latter hasn't started yet
-	// (so its caching infrastructure isn't available, and reads fail)
-	cs, err := clientset.NewForConfig(config)
-	if err != nil {
-		return nil, errors.Wrap(err, "error getting kube client")
-	}
-
-	if _, err := cs.CoreV1().Namespaces().Get(ctx, openshiftMonitoringNS, metav1.GetOptions{}); err == nil {
-		ns = openshiftMonitoringNS
-	} else if !apierrors.IsNotFound(err) {
-		log.Error(err, "Error checking for the OpenShift monitoring namespace")
-	}
-
 	serviceMonitors := make([]*monitoringv1.ServiceMonitor, len(services))
 	mclient := monclientv1.NewForConfigOrDie(config)
 
@@ -79,9 +60,15 @@ func CreateServiceMonitors(ctx context.Context, config *rest.Config, ns string, 
 			continue
 		}
 
-		sm := GenerateServiceMonitor(ns, s)
+		// On OpenShift, we need to create the service monitors in the OpenShift monitoring namespace, not the
+		// service's. If that namespace doesn't exist then create in the provided namespace.
+		smc, err := mclient.ServiceMonitors(ns).Create(ctx, GenerateServiceMonitor(openshiftMonitoringNS, s), metav1.CreateOptions{})
 
-		smc, err := mclient.ServiceMonitors(ns).Create(ctx, sm, metav1.CreateOptions{})
+		missingNS, _ := resource.IsMissingNamespaceErr(err)
+		if missingNS {
+			smc, err = mclient.ServiceMonitors(ns).Create(ctx, GenerateServiceMonitor(ns, s), metav1.CreateOptions{})
+		}
+
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating ServiceMonitor")
 		}
