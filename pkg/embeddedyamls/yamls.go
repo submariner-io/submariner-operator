@@ -2645,15 +2645,6 @@ rules:
       - get
       - list
   - apiGroups:
-      - ""
-    resources:
-      # Needed for openshift monitoring
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
       - monitoring.coreos.com
     resources:
       # Needed for openshift monitoring
