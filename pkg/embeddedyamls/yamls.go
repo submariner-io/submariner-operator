@@ -2744,9 +2744,10 @@ rules:
     resources:
       # Needed for network settings discovery
       - networks
+    resourceNames:
+      - cluster
     verbs:
       - get
-      - list
   - apiGroups:
       - monitoring.coreos.com
     resources:
@@ -3009,9 +3010,10 @@ rules:
       - config.openshift.io
     resources:
       - networks
+    resourceNames:
+      - cluster
     verbs:
       - get
-      - list
   - apiGroups:
       - ""
     resources:
