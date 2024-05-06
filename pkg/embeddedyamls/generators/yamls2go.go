@@ -71,6 +71,8 @@ var files = []string{
 	"config/rbac/submariner-route-agent/cluster_role_binding.yaml",
 	"config/rbac/submariner-route-agent/ocp_cluster_role.yaml",
 	"config/rbac/submariner-route-agent/ocp_cluster_role_binding.yaml",
+	"config/rbac/submariner-route-agent/ovn_cluster_role.yaml",
+	"config/rbac/submariner-route-agent/ovn_role_binding.yaml",
 	"config/rbac/submariner-globalnet/service_account.yaml",
 	"config/rbac/submariner-globalnet/role.yaml",
 	"config/rbac/submariner-globalnet/role_binding.yaml",
@@ -154,6 +156,7 @@ const (
 
 	re := regexp.MustCompile("`([^`]*)`")
 	reNS := regexp.MustCompile(`(?s)\s*namespace:\s*placeholder\s*`)
+	reDoc := regexp.MustCompile("(^|\n+)---\n")
 	reTilde := regexp.MustCompile("`")
 
 	for _, f := range files {
@@ -163,6 +166,13 @@ const (
 		fmt.Println(f)
 		contents, err := os.ReadFile(path.Join(yamlsDirectory, f))
 		panicOnErr(err)
+
+		for _, index := range reDoc.FindAllIndex(contents, 2) {
+			if index[0] > 0 {
+				// Document starting inside the contents
+				panic(fmt.Sprintf("%s contains more than one document, use one file per document", f))
+			}
+		}
 
 		_, err = out.Write(
 			re.ReplaceAll(
