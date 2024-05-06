@@ -62,7 +62,8 @@ func CreateServiceMonitors(ctx context.Context, config *rest.Config, ns string, 
 
 		// On OpenShift, we need to create the service monitors in the OpenShift monitoring namespace, not the
 		// service's. If that namespace doesn't exist then create in the provided namespace.
-		smc, err := mclient.ServiceMonitors(ns).Create(ctx, GenerateServiceMonitor(openshiftMonitoringNS, s), metav1.CreateOptions{})
+		smc, err := mclient.ServiceMonitors(openshiftMonitoringNS).Create(ctx, GenerateServiceMonitor(openshiftMonitoringNS, s),
+			metav1.CreateOptions{})
 
 		missingNS, _ := resource.IsMissingNamespaceErr(err)
 		if missingNS {
