@@ -2608,6 +2608,16 @@ rules:
   - apiGroups:
       - ""
     resources:
+      # For syncing Secrets from the broker
+      - secrets
+    verbs:
+      - get
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - ""
+    resources:
       # Temporarily needed for network-plugin syncer removal
       - serviceaccounts
     resourceNames:
