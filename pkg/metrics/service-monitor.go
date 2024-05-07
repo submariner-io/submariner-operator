@@ -65,8 +65,7 @@ func CreateServiceMonitors(ctx context.Context, config *rest.Config, ns string, 
 		smc, err := mclient.ServiceMonitors(openshiftMonitoringNS).Create(ctx, GenerateServiceMonitor(openshiftMonitoringNS, s),
 			metav1.CreateOptions{})
 
-		missingNS, _ := resource.IsMissingNamespaceErr(err)
-		if missingNS {
+		if resource.IsMissingNamespaceErr(err) {
 			smc, err = mclient.ServiceMonitors(ns).Create(ctx, GenerateServiceMonitor(ns, s), metav1.CreateOptions{})
 		}
 
