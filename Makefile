@@ -32,7 +32,7 @@ gotodockerarch = $(patsubst arm,arm/v7,$(1))
 dockertogoarch = $(patsubst arm/v7,arm,$(1))
 
 PLATFORMS ?= linux/amd64,linux/arm64
-IMAGES = submariner-operator submariner-operator-index
+IMAGES = submariner-operator
 MULTIARCH_IMAGES := submariner-operator
 
 ifneq (,$(filter ovn,$(USING)))
