@@ -34,8 +34,8 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - "serviceexports"
-      - "serviceimports"
+      - serviceexports
+      - serviceimports
     verbs:
       - get
       - list

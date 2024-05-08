@@ -49,7 +49,7 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - '*'
+      - serviceimports
     verbs:
       - create
       - get

@@ -2473,7 +2473,7 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - '*'
+      - serviceimports
     verbs:
       - create
       - get
@@ -2544,7 +2544,7 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - '*'
+      - serviceimports
     verbs:
       - create
       - get
@@ -3317,14 +3317,19 @@ rules:
   - apiGroups:
       - submariner.io
     resources:
-      - '*'
+      - clusters
+      - endpoints
+      - gateways
+      - gatewayroutes
+      - nongatewayroutes
     verbs:
       - get
       - list
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - "*"
+      - serviceexports
+      - serviceimports
     verbs:
       - get
       - list
@@ -3378,8 +3383,8 @@ rules:
   - apiGroups:
       - multicluster.x-k8s.io
     resources:
-      - "serviceexports"
-      - "serviceimports"
+      - serviceexports
+      - serviceimports
     verbs:
       - get
       - list
