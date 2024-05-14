@@ -25,7 +25,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: brokers.submariner.io
 spec:
   group: submariner.io
@@ -98,7 +98,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: submariners.submariner.io
 spec:
   group: submariner.io
@@ -1102,7 +1102,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: servicediscoveries.submariner.io
 spec:
   group: submariner.io
@@ -1257,7 +1257,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: clusters.submariner.io
 spec:
   group: submariner.io
@@ -1328,7 +1328,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: endpoints.submariner.io
 spec:
   group: submariner.io
@@ -1409,7 +1409,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: gateways.submariner.io
 spec:
   group: submariner.io
@@ -1582,7 +1582,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: clusterglobalegressips.submariner.io
 spec:
   group: submariner.io
@@ -1721,7 +1721,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: globalegressips.submariner.io
 spec:
   group: submariner.io
@@ -1909,7 +1909,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: globalingressips.submariner.io
 spec:
   group: submariner.io
@@ -2069,7 +2069,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: gatewayroutes.submariner.io
 spec:
   group: submariner.io
@@ -2130,7 +2130,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.15.0
   name: nongatewayroutes.submariner.io
 spec:
   group: submariner.io
@@ -2600,6 +2600,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: submariner-operator
+  annotations:
+    kubernetes.io/enforce-mountable-secrets: "true"
 `
 	Config_rbac_submariner_operator_role_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2839,6 +2841,11 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: submariner-gateway
+  annotations:
+    kubernetes.io/enforce-mountable-secrets: "true"
+secrets:
+  - name: submariner-broker-secret
+  - name: submariner-ipsec-psk
 `
 	Config_rbac_submariner_gateway_role_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2962,6 +2969,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: submariner-routeagent
+  annotations:
+    kubernetes.io/enforce-mountable-secrets: "true"
 `
 	Config_rbac_submariner_route_agent_role_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3122,6 +3131,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: submariner-globalnet
+  annotations:
+    kubernetes.io/enforce-mountable-secrets: "true"
 `
 	Config_rbac_submariner_globalnet_role_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3281,6 +3292,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: submariner-diagnose
+  annotations:
+    kubernetes.io/enforce-mountable-secrets: "true"
 `
 	Config_rbac_submariner_diagnose_role_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3435,6 +3448,10 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: submariner-lighthouse-agent
+  annotations:
+    kubernetes.io/enforce-mountable-secrets: "true"
+secrets:
+  - name: submariner-broker-secret
 `
 	Config_rbac_lighthouse_agent_cluster_role_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3548,6 +3565,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: submariner-lighthouse-coredns
+  annotations:
+    kubernetes.io/enforce-mountable-secrets: "true"
 `
 	Config_rbac_lighthouse_coredns_cluster_role_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
