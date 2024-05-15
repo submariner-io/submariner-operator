@@ -47,7 +47,6 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       terminationGracePeriodSeconds: 10
-      automountServiceAccountToken: false
       serviceAccountName: submariner-operator
       containers:
         - name: submariner-operator
