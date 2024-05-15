@@ -2474,6 +2474,7 @@ rules:
       - multicluster.x-k8s.io
     resources:
       - serviceimports
+      - serviceimports/status
     verbs:
       - create
       - get
