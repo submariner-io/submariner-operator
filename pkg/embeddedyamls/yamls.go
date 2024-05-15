@@ -2545,6 +2545,7 @@ rules:
       - multicluster.x-k8s.io
     resources:
       - serviceimports
+      - serviceimports/status
     verbs:
       - create
       - get
@@ -3330,11 +3331,14 @@ rules:
   - apiGroups:
       - submariner.io
     resources:
+      - brokers
       - clusters
       - endpoints
       - gateways
       - gatewayroutes
       - nongatewayroutes
+      - servicediscoveries
+      - submariners
     verbs:
       - get
       - list
