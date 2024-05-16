@@ -65,8 +65,6 @@ type Config struct {
 	ClusterSize uint
 }
 
-var globalCidr = GlobalCIDR{allocatedCount: 0}
-
 func isOverlappingCIDR(cidrList []string, cidr string) (bool, error) {
 	_, newNet, err := net.ParseCIDR(cidr)
 	if err != nil {
@@ -110,7 +108,7 @@ func LastIP(network *net.IPNet) uint {
 	return lastIPUint
 }
 
-func allocateByCidr(cidr string) (uint, error) {
+func allocateByCidr(cidr string, globalCidr *GlobalCIDR) (uint, error) {
 	requestedIP, requestedNetwork, err := net.ParseCIDR(cidr)
 	if err != nil || !globalCidr.net.Contains(requestedIP) {
 		return 0, fmt.Errorf("%s not a valid subnet of %v", cidr, globalCidr.net)
@@ -145,7 +143,7 @@ func allocateByCidr(cidr string) (uint, error) {
 	return 0, nil
 }
 
-func allocateByClusterSize(numSize uint) (string, error) {
+func allocateByClusterSize(numSize uint, globalCidr *GlobalCIDR) (string, error) {
 	bitSize := bits.LeadingZeros(0) - bits.LeadingZeros(numSize-1)
 	_, totalbits := globalCidr.net.Mask.Size()
 	clusterPrefix := totalbits - bitSize
@@ -153,7 +151,7 @@ func allocateByClusterSize(numSize uint) (string, error) {
 
 	cidr := fmt.Sprintf("%s/%d", globalCidr.net.IP, clusterPrefix)
 
-	last, err := allocateByCidr(cidr)
+	last, err := allocateByCidr(cidr, globalCidr)
 	if err != nil && last == 0 {
 		return "", err
 	}
@@ -165,7 +163,7 @@ func allocateByClusterSize(numSize uint) (string, error) {
 		}
 		cidr = nextNet.String()
 
-		last, err = allocateByCidr(cidr)
+		last, err = allocateByCidr(cidr, globalCidr)
 		if err != nil && last == 0 {
 			return "", fmt.Errorf("allocation not available")
 		}
@@ -175,7 +173,7 @@ func allocateByClusterSize(numSize uint) (string, error) {
 }
 
 func AllocateGlobalCIDR(globalnetInfo *Info) (string, error) {
-	globalCidr = GlobalCIDR{allocatedCount: 0, cidr: globalnetInfo.CidrRange}
+	globalCidr := &GlobalCIDR{allocatedCount: 0, cidr: globalnetInfo.CidrRange}
 
 	_, network, err := net.ParseCIDR(globalCidr.cidr)
 	if err != nil {
@@ -196,7 +194,7 @@ func AllocateGlobalCIDR(globalnetInfo *Info) (string, error) {
 		}
 	}
 
-	return allocateByClusterSize(globalnetInfo.ClusterSize)
+	return allocateByClusterSize(globalnetInfo.ClusterSize, globalCidr)
 }
 
 func ipToUint(ip net.IP) uint {
