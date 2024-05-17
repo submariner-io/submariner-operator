@@ -3063,7 +3063,6 @@ rules:
       - get
       - list
       - watch
-      - update
   - apiGroups:
       - projectcalico.org
     resources:
