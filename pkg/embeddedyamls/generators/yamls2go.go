@@ -71,8 +71,6 @@ var files = []string{
 	"config/rbac/submariner-route-agent/cluster_role_binding.yaml",
 	"config/rbac/submariner-route-agent/ocp_cluster_role.yaml",
 	"config/rbac/submariner-route-agent/ocp_cluster_role_binding.yaml",
-	"config/rbac/submariner-route-agent/ovn_cluster_role.yaml",
-	"config/rbac/submariner-route-agent/ovn_role_binding.yaml",
 	"config/rbac/submariner-globalnet/service_account.yaml",
 	"config/rbac/submariner-globalnet/role.yaml",
 	"config/rbac/submariner-globalnet/role_binding.yaml",
