@@ -3,7 +3,7 @@ module github.com/submariner-io/submariner-operator/tools
 go 1.22.0
 
 require (
-	github.com/operator-framework/operator-sdk v1.34.1
+	github.com/operator-framework/operator-sdk v1.34.2
 	github.com/uw-labs/lichen v0.1.7
 	sigs.k8s.io/controller-tools v0.15.0
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0

@@ -625,8 +625,8 @@ github.com/operator-framework/operator-manifest-tools v0.2.3-0.20230525225330-52
 github.com/operator-framework/operator-manifest-tools v0.2.3-0.20230525225330-523bad646f89/go.mod h1:PT1D+dEbD9TCoo62TkRP4BHYXA+h+zC0i3Ql7WZW9os=
 github.com/operator-framework/operator-registry v1.35.0 h1:BvytqLwhgb0QiAkEODEKXq3vc2vWiHQq0IlofvFA+OI=
 github.com/operator-framework/operator-registry v1.35.0/go.mod h1:foC+NO1V9JuDIOk3pjjlrPE0KVkq09m8oDVRz/a/nFA=
-github.com/operator-framework/operator-sdk v1.34.1 h1:grKzW8v+LfQYX0eqd7NDvZeKE5ZTIfWbaeJ6YsGC/Wo=
-github.com/operator-framework/operator-sdk v1.34.1/go.mod h1:2zrCdmaGoh0lMz0n4g9Qk8djD5+9yRVPU82lYIHWga0=
+github.com/operator-framework/operator-sdk v1.34.2 h1:chRaTC8CNxo6Q63f+mBMjP5XTUxhnaftESUkxZHiYhg=
+github.com/operator-framework/operator-sdk v1.34.2/go.mod h1:2zrCdmaGoh0lMz0n4g9Qk8djD5+9yRVPU82lYIHWga0=
 github.com/otiai10/copy v1.14.0 h1:dCI/t1iTdYGtkvCuBG2BgR6KZa83PTclw4U5n2wAllU=
 github.com/otiai10/copy v1.14.0/go.mod h1:ECfuL02W+/FkTWZWgQqXPWZgW9oeKCSQ5qVfSc4qc4w=
 github.com/otiai10/mint v1.5.1 h1:XaPLeE+9vGbuyEHem1JNk3bYc7KKqyI/na0/mLd/Kks=
