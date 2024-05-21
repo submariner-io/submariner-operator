@@ -3039,6 +3039,15 @@ rules:
       - get
       - list
   - apiGroups:
+      - ""
+    resources:
+      - secrets
+    resourceNames:
+      # the route agent needs access to the ovn secret
+      - ovn-cert
+    verbs:
+      - get
+  - apiGroups:
       - config.openshift.io
     resources:
       - networks
@@ -3106,34 +3115,6 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: submariner-routeagent
-`
-	Config_rbac_submariner_route_agent_ovn_cluster_role_yaml = `---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: submariner-routeagent-ovn
-rules:
-  - apiGroups:  # the route agent needs access to ovn secrets
-      - ""
-    resources:
-      - secrets
-    verbs:
-      - get
-      - list
-`
-	Config_rbac_submariner_route_agent_ovn_role_binding_yaml = `---
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: submariner-routeagent-ovn
-  namespace: openshift-ovn-kubernetes
-subjects:
-  - kind: ServiceAccount
-    name: submariner-routeagent
-roleRef:
-  kind: ClusterRole
-  name: submariner-routeagent-ovn
-  apiGroup: rbac.authorization.k8s.io
 `
 	Config_rbac_submariner_globalnet_service_account_yaml = `---
 apiVersion: v1
