@@ -2677,6 +2677,13 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - submariner.io
+    resources:
+      - submariners/finalizers
+      - servicediscoveries/finalizers
+    verbs:
+      - update
 `
 	Config_rbac_submariner_operator_role_binding_yaml = `---
 kind: RoleBinding
