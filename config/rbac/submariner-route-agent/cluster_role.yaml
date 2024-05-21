@@ -15,6 +15,15 @@ rules:
       - get
       - list
   - apiGroups:
+      - ""
+    resources:
+      - secrets
+    resourceNames:
+      # the route agent needs access to the ovn secret
+      - ovn-cert
+    verbs:
+      - get
+  - apiGroups:
       - config.openshift.io
     resources:
       - networks
@@ -30,7 +39,6 @@ rules:
       - get
       - list
       - watch
-      - update
   - apiGroups:
       - projectcalico.org
     resources:
