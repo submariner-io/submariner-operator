@@ -554,10 +554,9 @@ func (r *Reconciler) configureOpenshiftClusterDNSOperator(ctx context.Context, i
 func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
 	clusterIP string,
 ) error {
-	//nolint:wrapcheck // No need to wrap errors here
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		dnsOperator := &operatorv1.DNS{}
-		if err := r.ScopedClient.Get(ctx, types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
+		if err := r.GeneralClient.Get(ctx, types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
 			// microshift uses the coredns image, but the DNS operator and CRDs are off
 			if resource.IsNotFoundErr(err) {
 				err = r.configureDNSConfigMap(ctx, instance, microshiftDNSNamespace, microshiftDNSConfigMap)
@@ -575,20 +574,17 @@ func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Co
 
 		dnsOperator.Spec.Servers = updatedForwardServers
 
-		toUpdate := &operatorv1.DNS{ObjectMeta: metav1.ObjectMeta{
-			Name:   dnsOperator.Name,
-			Labels: dnsOperator.Labels,
-		}}
+		err := util.MustUpdate[*operatorv1.DNS](ctx, resource.ForControllerClient(r.GeneralClient, "", dnsOperator), dnsOperator,
+			func(existing *operatorv1.DNS) (*operatorv1.DNS, error) {
+				existing.Spec = dnsOperator.Spec
+				for k, v := range dnsOperator.Labels {
+					existing.Labels[k] = v
+				}
 
-		result, err := controllerutil.CreateOrUpdate(ctx, r.ScopedClient, toUpdate, func() error {
-			toUpdate.Spec = dnsOperator.Spec
-			for k, v := range dnsOperator.Labels {
-				toUpdate.Labels[k] = v
-			}
-			return nil
-		})
+				return existing, nil
+			})
 
-		if result == controllerutil.OperationResultUpdated {
+		if err == nil {
 			log.Info("Updated Cluster DNS Operator", "DnsOperator.Name", dnsOperator.Name)
 		}
 		return err
