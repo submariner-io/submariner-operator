@@ -49,7 +49,8 @@ func testReconciliation() {
 	When("the openshift DNS config exists", func() {
 		Context("and the lighthouse config isn't present", func() {
 			BeforeEach(func() {
-				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(""), newDNSService(clusterIP))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfig(""))
 			})
 
 			It("should add it", func(ctx SpecContext) {
@@ -63,7 +64,8 @@ func testReconciliation() {
 			updatedClusterIP := "10.10.10.11"
 
 			BeforeEach(func() {
-				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(clusterIP), newDNSService(updatedClusterIP))
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(updatedClusterIP))
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfig(clusterIP))
 			})
 
 			It("should update the lighthouse config", func(ctx SpecContext) {
@@ -75,7 +77,7 @@ func testReconciliation() {
 
 		Context("and the lighthouse DNS service doesn't exist", func() {
 			BeforeEach(func() {
-				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(""))
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfig(""))
 			})
 
 			It("should create the service and add the lighthouse config", func(ctx SpecContext) {
@@ -232,7 +234,7 @@ func testCoreDNSCleanup() {
 
 	When("the openshift DNS config exists", func() {
 		BeforeEach(func() {
-			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSConfig(clusterIP))
+			t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfig(clusterIP))
 		})
 
 		It("should remove the lighthouse config", func(ctx SpecContext) {
