@@ -122,7 +122,7 @@ func (t *testDriver) assertUninstallServiceDiscoveryDeployment() *appsv1.Deploym
 
 func (t *testDriver) getDNSConfig() (*operatorv1.DNS, error) {
 	foundDNSConfig := &operatorv1.DNS{}
-	err := t.ScopedClient.Get(context.TODO(), types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
+	err := t.GeneralClient.Get(context.TODO(), types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
 
 	return foundDNSConfig, err
 }
