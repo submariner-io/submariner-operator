@@ -3141,6 +3141,15 @@ metadata:
   name: submariner-globalnet
 rules:
   - apiGroups:
+      - submariner.io
+    resources:
+      - gateways
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+  - apiGroups:
       - coordination.k8s.io
     resources:
       - leases
