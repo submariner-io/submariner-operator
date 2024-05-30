@@ -98,6 +98,18 @@ updates:
       - dependency-name: k8s.io/*
         versions: ">= 0.30.0-alpha.0"
   - package-ecosystem: gomod
+    target-branch: "release-0.18"
+    directory: "/"
+    schedule:
+      interval: weekly
+    allow:
+      # Pick up k8s.io updates
+      - dependency-name: k8s.io/apiextensions-apiserver
+    ignore:
+      # 0.18 tracks the 0.29 branch
+      - dependency-name: k8s.io/*
+        versions: ">= 0.30.0-alpha.0"
+  - package-ecosystem: gomod
     directory: /
     schedule:
       interval: weekly
