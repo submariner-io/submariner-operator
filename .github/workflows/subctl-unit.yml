@@ -12,12 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the submariner-operator repository
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           path: submariner-operator
 
       - name: Check out the subctl repository
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           repository: submariner-io/subctl
           path: subctl
@@ -26,14 +26,14 @@ jobs:
       - name: Check out the shipyard repository
         # This is required so that we can run a build involving multiple
         # repositories (using LOCAL_BUILD=1)
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           repository: submariner-io/shipyard
           path: shipyard
           ref: ${{ github.base_ref }}
 
       - name: Set up Go
-        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7
         with:
           go-version: '1.22'
           check-latest: true
