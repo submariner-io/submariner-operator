@@ -3184,15 +3184,6 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - nodes
-    verbs:
-      - get
-      - list
-      - watch
-      - update
-  - apiGroups:
-      - ""
-    resources:
       - pods
     verbs:
       - get
