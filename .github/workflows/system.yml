@@ -20,11 +20,11 @@ jobs:
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
 
       - name: Deploy the environment and run the tests
-        uses: submariner-io/shipyard/gh-actions/e2e@devel
+        uses: submariner-io/shipyard/gh-actions/e2e@release-0.18
         with:
           target: system-test
           using: ${{ matrix.globalnet }}
 
       - name: Post mortem
         if: failure()
-        uses: submariner-io/shipyard/gh-actions/post-mortem@devel
+        uses: submariner-io/shipyard/gh-actions/post-mortem@release-0.18
