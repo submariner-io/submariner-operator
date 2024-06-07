@@ -20,7 +20,9 @@ package submariner_test
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"reflect"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -28,6 +30,9 @@ import (
 	v1config "github.com/openshift/api/config/v1"
 	"github.com/submariner-io/admiral/pkg/fake"
 	"github.com/submariner-io/admiral/pkg/names"
+	"github.com/submariner-io/admiral/pkg/resource"
+	syncertest "github.com/submariner-io/admiral/pkg/syncer/test"
+	testutil "github.com/submariner-io/admiral/pkg/test"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/test"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
@@ -37,6 +42,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -217,6 +223,7 @@ func testReconciliation() {
 			Expect(serviceDiscovery.Spec.BrokerK8sRemoteNamespace).To(Equal(t.submariner.Spec.BrokerK8sRemoteNamespace))
 			Expect(serviceDiscovery.Spec.BrokerK8sApiServerToken).To(Equal(t.submariner.Spec.BrokerK8sApiServerToken))
 			Expect(serviceDiscovery.Spec.BrokerK8sApiServer).To(Equal(t.submariner.Spec.BrokerK8sApiServer))
+			Expect(serviceDiscovery.Spec.BrokerK8sSecret).To(Equal(t.submariner.Spec.BrokerK8sSecret))
 			Expect(serviceDiscovery.Spec.ClusterID).To(Equal(t.submariner.Spec.ClusterID))
 			Expect(serviceDiscovery.Spec.Namespace).To(Equal(t.submariner.Spec.Namespace))
 			Expect(serviceDiscovery.Spec.GlobalnetEnabled).To(BeTrue())
@@ -257,6 +264,45 @@ func testReconciliation() {
 				service := t.assertLoadBalancerService(ctx)
 				Expect(service.Annotations).To(HaveKeyWithValue(
 					"service.kubernetes.io/ibm-load-balancer-cloud-provider-enable-features", "nlb"))
+			})
+		})
+	})
+
+	When("the broker secret is created/updated", func() {
+		var brokerSecret *corev1.Secret
+
+		BeforeEach(func() {
+			saName := opnames.ForClusterSA(t.submariner.Spec.ClusterID)
+			brokerSecret = &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      fmt.Sprintf("%s-token", saName),
+					Namespace: t.submariner.Spec.BrokerK8sRemoteNamespace,
+					Annotations: map[string]string{
+						corev1.ServiceAccountNameKey: saName,
+					},
+				},
+				Type: corev1.SecretTypeServiceAccountToken,
+				Data: map[string][]byte{"data": {1, 2, 3}},
+			}
+
+			syncertest.CreateResource(t.secrets.Namespace(brokerSecret.Namespace), brokerSecret)
+		})
+
+		It("should update the local secret", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+
+			ri := resource.ForDynamic(t.secrets.Namespace(t.submariner.Spec.Namespace))
+
+			obj := testutil.AwaitResource(ri, t.submariner.Spec.BrokerK8sSecret)
+			secret := resource.MustFromUnstructured(obj, &corev1.Secret{})
+			Expect(secret.Data).To(Equal(brokerSecret.Data))
+			Expect(secret.Type).To(Equal(corev1.SecretTypeOpaque))
+
+			brokerSecret.Data = map[string][]byte{"data": {40, 50, 60}}
+			syncertest.UpdateResource(t.secrets.Namespace(brokerSecret.Namespace), brokerSecret)
+
+			testutil.AwaitAndVerifyResource(ri, t.submariner.Spec.BrokerK8sSecret, func(obj *unstructured.Unstructured) bool {
+				return reflect.DeepEqual(resource.MustFromUnstructured(obj, &corev1.Secret{}).Data, brokerSecret.Data)
 			})
 		})
 	})

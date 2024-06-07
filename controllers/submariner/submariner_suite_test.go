@@ -39,7 +39,10 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/dynamic"
+	dynamicfake "k8s.io/client-go/dynamic/fake"
 	"k8s.io/client-go/kubernetes/scheme"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -64,6 +67,8 @@ type testDriver struct {
 	test.Driver
 	submariner     *v1alpha1.Submariner
 	clusterNetwork *network.ClusterNetwork
+	dynClient      *dynamicfake.FakeDynamicClient
+	secrets        dynamic.NamespaceableResourceInterface
 }
 
 func newTestDriver() *testDriver {
@@ -84,6 +89,12 @@ func newTestDriver() *testDriver {
 			ServiceCIDRs:  []string{testDetectedServiceCIDR},
 			PodCIDRs:      []string{testDetectedClusterCIDR},
 		}
+
+		t.dynClient = dynamicfake.NewSimpleDynamicClient(scheme.Scheme)
+		t.secrets = t.dynClient.Resource(schema.GroupVersionResource{
+			Version:  "v1",
+			Resource: "secrets",
+		})
 	})
 
 	JustBeforeEach(func() {
@@ -92,8 +103,12 @@ func newTestDriver() *testDriver {
 		t.Controller = submarinerController.NewReconciler(&submarinerController.Config{
 			ScopedClient:   t.ScopedClient,
 			GeneralClient:  t.GeneralClient,
+			DynClient:      t.dynClient,
 			Scheme:         scheme.Scheme,
 			ClusterNetwork: t.clusterNetwork,
+			GetAuthorizedBrokerClientFor: func(_ *v1alpha1.SubmarinerSpec, _ schema.GroupVersionResource) (dynamic.Interface, error) {
+				return t.dynClient, nil
+			},
 		})
 	})
 
@@ -243,6 +258,7 @@ func newSubmariner() *v1alpha1.Submariner {
 			BrokerK8sApiServer:       "https://192.168.99.110:8443",
 			BrokerK8sApiServerToken:  "MIIDADCCAeigAw",
 			BrokerK8sCA:              "client.crt",
+			BrokerK8sSecret:          "submariner-broker-secret",
 			Broker:                   "k8s",
 			NatEnabled:               true,
 			ClusterID:                "east",
