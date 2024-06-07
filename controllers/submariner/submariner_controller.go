@@ -42,6 +42,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
@@ -66,11 +67,12 @@ type Config struct {
 	// controller. Also it's a split client that reads objects from the cache and writes to the apiserver.
 	ScopedClient client.Client
 	// This client can be used to access any other resource not in the operator namespace.
-	GeneralClient  client.Client
-	RestConfig     *rest.Config
-	Scheme         *runtime.Scheme
-	DynClient      dynamic.Interface
-	ClusterNetwork *network.ClusterNetwork
+	GeneralClient                client.Client
+	RestConfig                   *rest.Config
+	Scheme                       *runtime.Scheme
+	DynClient                    dynamic.Interface
+	ClusterNetwork               *network.ClusterNetwork
+	GetAuthorizedBrokerClientFor func(spec *submopv1a1.SubmarinerSpec, gvr schema.GroupVersionResource) (dynamic.Interface, error)
 }
 
 // Reconciler reconciles a Submariner object.
@@ -103,11 +105,17 @@ var _ reconcile.Reconciler = &Reconciler{}
 
 // NewReconciler returns a new Reconciler.
 func NewReconciler(config *Config) *Reconciler {
-	return &Reconciler{
+	r := &Reconciler{
 		config:                *config,
 		log:                   ctrl.Log.WithName("controllers").WithName("Submariner"),
 		secretSyncCancelFuncs: make(map[string]context.CancelFunc),
 	}
+
+	if r.config.GetAuthorizedBrokerClientFor == nil {
+		r.config.GetAuthorizedBrokerClientFor = r.getAuthorizedBrokerClientFor
+	}
+
+	return r
 }
 
 // Reconcile reads that state of the cluster for a Submariner object and makes changes based on the state read
@@ -328,22 +336,14 @@ func (r *Reconciler) setupSecretSyncer(instance *submopv1a1.Submariner, logger l
 			if err != nil {
 				return errors.Wrap(err, "error calculating the GVR for the Secret type")
 			}
-			// We can't use files here, we don't have a mounted secret
-			brokerConfig, _, err := resource.GetAuthorizedRestConfigFromData(
-				instance.Spec.BrokerK8sApiServer,
-				instance.Spec.BrokerK8sApiServerToken, // TODO Read the secret
-				instance.Spec.BrokerK8sCA,
-				&rest.TLSClientConfig{Insecure: instance.Spec.BrokerK8sInsecure},
-				*gvr,
-				instance.Spec.BrokerK8sRemoteNamespace)
+
+			brokerClient, err := r.config.GetAuthorizedBrokerClientFor(&instance.Spec, *gvr)
 			if err != nil {
-				return errors.Wrap(err, "error building an authorized RestConfig for the broker")
+				return err
 			}
 
-			brokerClient, err := dynamic.NewForConfig(brokerConfig)
-			if err != nil {
-				return errors.Wrap(err, "error building a dynamic client for the broker")
-			}
+			clusterID := instance.Spec.ClusterID
+			transformedSecretName := instance.Spec.BrokerK8sSecret
 
 			secretSyncer, err := syncer.NewResourceSyncer(
 				&syncer.ResourceSyncerConfig{
@@ -359,11 +359,11 @@ func (r *Reconciler) setupSecretSyncer(instance *submopv1a1.Submariner, logger l
 					Transform: func(from runtime.Object, _ int, _ syncer.Operation) (runtime.Object, bool) {
 						secret := from.(*corev1.Secret)
 						logger.V(level.TRACE).Info("Transforming secret", "secret", secret)
-						if saName, ok := secret.ObjectMeta.Annotations["kubernetes.io/service-account.name"]; ok &&
-							saName == names.ForClusterSA(instance.Spec.ClusterID) {
+						if saName, ok := secret.ObjectMeta.Annotations[corev1.ServiceAccountNameKey]; ok &&
+							saName == names.ForClusterSA(clusterID) {
 							transformedSecret := &corev1.Secret{
 								ObjectMeta: metav1.ObjectMeta{
-									Name: instance.Spec.BrokerK8sSecret,
+									Name: transformedSecretName,
 								},
 								Type: corev1.SecretTypeOpaque,
 								Data: secret.Data,
@@ -401,4 +401,23 @@ func (r *Reconciler) cancelSecretSyncer(instance *submopv1a1.Submariner) {
 			delete(r.secretSyncCancelFuncs, instance.Spec.BrokerK8sSecret)
 		}
 	}
+}
+
+func (r *Reconciler) getAuthorizedBrokerClientFor(spec *submopv1a1.SubmarinerSpec, gvr schema.GroupVersionResource,
+) (dynamic.Interface, error) {
+	// We can't use files here, we don't have a mounted secret
+	brokerConfig, _, err := resource.GetAuthorizedRestConfigFromData(
+		spec.BrokerK8sApiServer,
+		spec.BrokerK8sApiServerToken, // TODO Read the secret
+		spec.BrokerK8sCA,
+		&rest.TLSClientConfig{Insecure: spec.BrokerK8sInsecure},
+		gvr,
+		spec.BrokerK8sRemoteNamespace)
+	if err != nil {
+		return nil, errors.Wrap(err, "error building an authorized RestConfig for the broker")
+	}
+
+	brokerClient, err := dynamic.NewForConfig(brokerConfig)
+
+	return brokerClient, errors.Wrap(err, "error building a dynamic client for the broker")
 }
