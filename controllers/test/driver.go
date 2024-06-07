@@ -23,6 +23,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/admiral/pkg/syncer/test"
 	admtest "github.com/submariner-io/admiral/pkg/test"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/controllers/uninstall"
@@ -71,7 +72,8 @@ func (d *Driver) JustBeforeEach() {
 
 func (d *Driver) NewScopedClient() client.Client {
 	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(d.InitScopedClientObjs...).
-		WithStatusSubresource(&v1alpha1.Submariner{}).WithInterceptorFuncs(d.InterceptorFuncs).Build()
+		WithStatusSubresource(&v1alpha1.Submariner{}).WithInterceptorFuncs(d.InterceptorFuncs).
+		WithRESTMapper(test.GetRESTMapperFor(&corev1.Secret{})).Build()
 }
 
 func (d *Driver) NewGeneralClient() client.Client {

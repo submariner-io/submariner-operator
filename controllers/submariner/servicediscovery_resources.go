@@ -48,6 +48,7 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 					BrokerK8sApiServerToken:  submariner.Spec.BrokerK8sApiServerToken,
 					BrokerK8sApiServer:       submariner.Spec.BrokerK8sApiServer,
 					BrokerK8sInsecure:        submariner.Spec.BrokerK8sInsecure,
+					BrokerK8sSecret:          submariner.Spec.BrokerK8sSecret,
 					HaltOnCertificateError:   submariner.Spec.HaltOnCertificateError,
 					Debug:                    submariner.Spec.Debug,
 					ClusterID:                submariner.Spec.ClusterID,
