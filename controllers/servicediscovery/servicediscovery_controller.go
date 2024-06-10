@@ -103,14 +103,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		// Request object not found, could have been deleted after reconcile request.
 		// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 		// Return and don't requeue
-		deployment := &appsv1.Deployment{}
-		opts := []controllerClient.DeleteAllOfOption{
-			controllerClient.InNamespace(request.NamespacedName.Namespace),
-			controllerClient.MatchingLabels{"app": names.ServiceDiscoveryComponent},
-		}
-		err := r.ScopedClient.DeleteAllOf(ctx, deployment, opts...)
-
-		return reconcile.Result{}, errors.Wrap(err, "error deleting resource")
+		return reconcile.Result{}, nil
 	}
 
 	if err != nil {
