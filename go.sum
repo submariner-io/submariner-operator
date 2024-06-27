@@ -1387,8 +1387,8 @@ github.com/submariner-io/admiral v0.15.4 h1:sFiT5UASJGPrUOefVkfKiqFOe+QdsGAXBOG/
 github.com/submariner-io/admiral v0.15.4/go.mod h1:gIYny+EW5dCly5FFzgxYUEkIQ8wNSym3tYO3M0Tjjxg=
 github.com/submariner-io/shipyard v0.15.4 h1:el/zX0PYjNKbYmH4v92EVR0iVfSlbDfmbvbA40D4PaU=
 github.com/submariner-io/shipyard v0.15.4/go.mod h1:72E6aQJOe2adcYaezXLJc4ObHbnZgQxEvmmoKh5CsZ4=
-github.com/submariner-io/submariner v0.15.3 h1:XgzKlJhf9puQEQMxdohbO9Hub8kkz6lrbTJgm/d/l/U=
-github.com/submariner-io/submariner v0.15.3/go.mod h1:dPgmkd0s3K/o+OjcolG8o6w1bF6tK0iN8mLwrZdQWmc=
+github.com/submariner-io/submariner v0.15.4 h1:2L42hnMhwmQqVsBXE232OeDAYNMLs8NzMRypgZwYW60=
+github.com/submariner-io/submariner v0.15.4/go.mod h1:7Cz+KmknFd9jQx7wGvrT8QEL/pdheuOOwfObUKGDa0w=
 github.com/subosito/gotenv v1.2.0 h1:Slr1R9HxAlEKefgq5jn9U+DnETlIUa6HfgEzj0g5d7s=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
