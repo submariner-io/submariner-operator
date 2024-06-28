@@ -175,7 +175,7 @@ github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:Htrtb
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustmop/soup v1.1.2-0.20190516214245-38228baa104e/go.mod h1:CgNC6SGbT+Xb8wGGvzilttZL1mc5sQ/5KkcxsZttMIk=
 github.com/elazarl/goproxy v0.0.0-20180725130230-947c36da3153/go.mod h1:/Zj4wYkgs4iZTTu3o/KG3Itv/qCCa8VVMlb3i9OVuzc=
-github.com/elazarl/goproxy v0.0.0-20200426045556-49ad98f6dac1 h1:TEmChtx8+IeOghiySC8kQIr0JZOdKUmRmmkuRDuYs3E=
+github.com/elazarl/goproxy v0.0.0-20231031074852-3ec07828be7a h1:r72lWG/xCv9MLpRTss5BQVHDURXaaD6OwS2HkI5/+Ls=
 github.com/emicklei/go-restful v0.0.0-20170410110728-ff4f55a20633/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=
 github.com/emicklei/go-restful v2.9.5+incompatible/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=
 github.com/emicklei/go-restful/v3 v3.9.0 h1:XwGDlfxEnQZzuopoqxwSEllNcCOM9DhhFyhFIIGKwxE=
@@ -726,8 +726,8 @@ github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PK
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/submariner-io/admiral v0.14.7 h1:F7HOZ7QU0y387SrcV3kkcMBis6e/MzmAePQtUY1tgsw=
 github.com/submariner-io/admiral v0.14.7/go.mod h1:ovdgoPkunqzpgrwjV6CoV5sNhREJiOQFSq+wfUzy0/g=
-github.com/submariner-io/shipyard v0.14.7 h1:cInosH/cqus30JCusOH5FHFaYDi037WbmPPETaA5QjY=
-github.com/submariner-io/shipyard v0.14.7/go.mod h1:K1C+7V0FMc5GwkHBNIumO+hRejXkgMGLMtVK/bHgg8U=
+github.com/submariner-io/shipyard v0.14.8 h1:dLYT8nA00AO1Jhav9plMSjDKnGFSM3Mvi80ecJPAO9E=
+github.com/submariner-io/shipyard v0.14.8/go.mod h1:PqFvt8JldkoWEnILzAxxOhpknZluvo7WwL7pwA+8UDg=
 github.com/submariner-io/submariner v0.14.7 h1:5bmdgFNdPKPIWHgP17D5PcJbthtbOo5uX8YLbg8mo+I=
 github.com/submariner-io/submariner v0.14.7/go.mod h1:4TcqUzQDfpmdXTVtA3IseJnFX6nnjqZP6Wb4pYHrQL8=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
