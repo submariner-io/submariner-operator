@@ -45,6 +45,18 @@ func (r *Reconciler) reconcileRouteagentDaemonSet(ctx context.Context, instance 
 }
 
 func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet {
+	// Default healthCheck Values
+	healthCheckEnabled := true
+	// The values are in seconds
+	healthCheckInterval := uint64(1)
+	healthCheckMaxPacketLossCount := uint64(5)
+
+	if cr.Spec.ConnectionHealthCheck != nil {
+		healthCheckEnabled = cr.Spec.ConnectionHealthCheck.Enabled
+		healthCheckInterval = cr.Spec.ConnectionHealthCheck.IntervalSeconds
+		healthCheckMaxPacketLossCount = cr.Spec.ConnectionHealthCheck.MaxPacketLossCount
+	}
+
 	labels := map[string]string{
 		"app":       name,
 		"component": "routeagent",
@@ -142,6 +154,9 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 										FieldPath: "spec.nodeName",
 									},
 								}},
+								{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
+								{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
+								{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
 							}),
 						},
 					},

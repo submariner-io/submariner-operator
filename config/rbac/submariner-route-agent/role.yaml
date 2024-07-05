@@ -25,3 +25,13 @@ rules:
       - create
       - update
       - delete
+  - apiGroups:
+      - submariner.io
+    resources:
+      - routeagents
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete

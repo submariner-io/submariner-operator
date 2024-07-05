@@ -2196,6 +2196,127 @@ spec:
     served: true
     storage: true
 `
+	Deploy_submariner_crds_submariner_io_routeagents_yaml = `---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.15.0
+  name: routeagents.submariner.io
+spec:
+  group: submariner.io
+  names:
+    kind: RouteAgent
+    listKind: RouteAgentList
+    plural: routeagents
+    singular: routeagent
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          status:
+            properties:
+              remoteEndpoints:
+                items:
+                  properties:
+                    latencyRTT:
+                      description: |-
+                        LatencySpec describes the round trip time information for a packet
+                        between the gateway pods of two clusters.
+                      properties:
+                        average:
+                          type: string
+                        last:
+                          type: string
+                        max:
+                          type: string
+                        min:
+                          type: string
+                        stdDev:
+                          type: string
+                      type: object
+                    spec:
+                      properties:
+                        backend:
+                          type: string
+                        backend_config:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        cable_name:
+                          type: string
+                        cluster_id:
+                          maxLength: 63
+                          minLength: 1
+                          type: string
+                        healthCheckIP:
+                          type: string
+                        hostname:
+                          type: string
+                        nat_enabled:
+                          type: boolean
+                        private_ip:
+                          type: string
+                        public_ip:
+                          type: string
+                        subnets:
+                          items:
+                            type: string
+                          type: array
+                      required:
+                      - backend
+                      - cable_name
+                      - cluster_id
+                      - hostname
+                      - nat_enabled
+                      - private_ip
+                      - public_ip
+                      - subnets
+                      type: object
+                    status:
+                      type: string
+                    statusMessage:
+                      type: string
+                  required:
+                  - spec
+                  - status
+                  - statusMessage
+                  type: object
+                type: array
+              statusFailure:
+                type: string
+              version:
+                type: string
+            required:
+            - remoteEndpoints
+            - statusFailure
+            - version
+            type: object
+        required:
+        - status
+        type: object
+    served: true
+    storage: true
+`
 	Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml = `apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -3018,6 +3139,16 @@ rules:
       - create
       - update
       - delete
+  - apiGroups:
+      - submariner.io
+    resources:
+      - routeagents
+    verbs:
+      - get
+      - list
+      - create
+      - update
+      - delete
 `
 	Config_rbac_submariner_route_agent_role_binding_yaml = `---
 kind: RoleBinding
@@ -3337,6 +3468,7 @@ rules:
       - nongatewayroutes
       - servicediscoveries
       - submariners
+      - routeagents
     verbs:
       - get
       - list
