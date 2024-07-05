@@ -80,5 +80,11 @@ func Ensure(ctx context.Context, crdUpdater crd.Updater) error {
 		return errors.Wrap(err, "error getting non-Gateway routes")
 	}
 
+	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
+		embeddedyamls.Deploy_submariner_crds_submariner_io_routeagents_yaml)
+	if err != nil && !apierrors.IsAlreadyExists(err) {
+		return errors.Wrap(err, "error getting Route Agent")
+	}
+
 	return nil
 }
