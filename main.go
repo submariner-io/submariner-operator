@@ -196,7 +196,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	generalClient, _ := client.New(mgr.GetConfig(), client.Options{})
+	generalClient, _ := client.New(mgr.GetConfig(), client.Options{
+		Scheme: scheme,
+	})
 
 	if err = submariner.NewReconciler(&submariner.Config{
 		ScopedClient:  mgr.GetClient(),
