@@ -72,9 +72,6 @@ func (r *Reconciler) discoverNetwork(ctx context.Context, submariner *submopv1a1
 
 	submariner.Status.NetworkPlugin = clusterNetwork.NetworkPlugin
 
-	// TODO: globalCIDR allocation if no global CIDR is assigned and enabled.
-	//      currently the clusterNetwork discovers any existing operator setting,
-	//      but that's not really helpful here
 	return clusterNetwork, err
 }
 
