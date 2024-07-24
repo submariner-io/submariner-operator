@@ -65,27 +65,13 @@ func (cn *ClusterNetwork) IsComplete() bool {
 
 func Discover(ctx context.Context, client controllerClient.Client, operatorNamespace string) (*ClusterNetwork, error) {
 	discovery, err := networkPluginsDiscovery(ctx, client)
-	if err != nil {
-		return nil, err
-	}
-
 	if discovery != nil {
-		// TODO: The other branch of this if will not try to find the globalCIDRs
-		globalCIDR, _ := getGlobalCIDRs(ctx, client, operatorNamespace)
-		discovery.GlobalCIDR = globalCIDR
-
-		if discovery.IsComplete() {
-			return discovery, nil
-		}
-
 		// If the info we got from the non-generic plugins is incomplete
 		// try to complete with the generic discovery mechanisms
-		if len(discovery.ServiceCIDRs) == 0 || len(discovery.PodCIDRs) == 0 {
-			genericNet, err := discoverGenericNetwork(ctx, client)
-			if err != nil {
-				return nil, err
-			}
+		if !discovery.IsComplete() {
+			var genericNet *ClusterNetwork
 
+			genericNet, err = discoverGenericNetwork(ctx, client)
 			if genericNet != nil {
 				if len(discovery.ServiceCIDRs) == 0 {
 					discovery.ServiceCIDRs = genericNet.ServiceCIDRs
@@ -96,12 +82,17 @@ func Discover(ctx context.Context, client controllerClient.Client, operatorNames
 				}
 			}
 		}
-
-		return discovery, nil
+	} else {
+		// If nothing specific was discovered, use the generic discovery
+		discovery, err = discoverGenericNetwork(ctx, client)
 	}
 
-	// If nothing specific was discovered, use the generic discovery
-	return discoverGenericNetwork(ctx, client)
+	if discovery != nil {
+		globalCIDR, _ := getGlobalCIDRs(ctx, client, operatorNamespace)
+		discovery.GlobalCIDR = globalCIDR
+	}
+
+	return discovery, err
 }
 
 type pluginDiscoveryFn func(context.Context, controllerClient.Client) (*ClusterNetwork, error)

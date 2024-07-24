@@ -25,9 +25,12 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/fake"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
+	"github.com/submariner-io/submariner-operator/pkg/names"
 	"github.com/submariner-io/submariner/pkg/cni"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	fakeClient "sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -40,9 +43,9 @@ const (
 )
 
 var _ = Describe("Generic Network", func() {
-	When("There is a kube-proxy with no expected parameters", func() {
-		var clusterNet *network.ClusterNetwork
+	var clusterNet *network.ClusterNetwork
 
+	When("There is a kube-proxy with no expected parameters", func() {
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -65,8 +68,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("There is a kube-controller with no expected parameters", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -89,8 +90,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("There is a kube-api with no expected parameters", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -113,8 +112,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("There is a kube-controller pod with the right parameter", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -137,8 +134,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("There is a kube-proxy pod but no kube-controller", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -161,8 +156,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("There is a kubeapi pod", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -185,8 +178,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("There is a kube-proxy and api pods", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -207,8 +198,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("No pod CIDR information exists on any node", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -231,8 +220,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("Pod CIDR information exists on a single node cluster", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -254,8 +241,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("Pod CIDR information exists on a multi node cluster", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -270,8 +255,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("Both pod and service CIDR information exists", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -312,8 +295,6 @@ var _ = Describe("Generic Network", func() {
 	})
 
 	When("No kube-api pod exists and invalid service creation returns the expected error", func() {
-		var clusterNet *network.ClusterNetwork
-
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(ctx)
 		})
@@ -328,6 +309,26 @@ var _ = Describe("Generic Network", func() {
 
 		It("Should return the ClusterNetwork structure with the service CIDR", func() {
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
+		})
+	})
+
+	When("the Submariner resource exists", func() {
+		const globalCIDR = "242.112.0.0/24"
+
+		BeforeEach(func(ctx SpecContext) {
+			clusterNet = testDiscoverGenericWith(ctx, &v1alpha1.Submariner{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: names.SubmarinerCrName,
+				},
+				Spec: v1alpha1.SubmarinerSpec{
+					GlobalCIDR: globalCIDR,
+				},
+			})
+		})
+
+		It("should return the ClusterNetwork structure with the global CIDR", func() {
+			Expect(clusterNet.GlobalCIDR).To(Equal(globalCIDR))
+			clusterNet.Show()
 		})
 	})
 })
