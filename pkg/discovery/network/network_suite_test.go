@@ -23,9 +23,16 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
 )
+
+func init() {
+	utilruntime.Must(v1alpha1.AddToScheme(scheme.Scheme))
+}
 
 func TestOpenShift4NetworkDiscovery(t *testing.T) {
 	RegisterFailHandler(Fail)
