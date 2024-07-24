@@ -65,10 +65,11 @@ func TestSubmariner(t *testing.T) {
 
 type testDriver struct {
 	test.Driver
-	submariner     *v1alpha1.Submariner
-	clusterNetwork *network.ClusterNetwork
-	dynClient      *dynamicfake.FakeDynamicClient
-	secrets        dynamic.NamespaceableResourceInterface
+	submariner                   *v1alpha1.Submariner
+	clusterNetwork               *network.ClusterNetwork
+	dynClient                    *dynamicfake.FakeDynamicClient
+	secrets                      dynamic.NamespaceableResourceInterface
+	getAuthorizedBrokerClientFor func(*v1alpha1.SubmarinerSpec, string, string, schema.GroupVersionResource) (dynamic.Interface, error)
 }
 
 func newTestDriver() *testDriver {
@@ -101,14 +102,12 @@ func newTestDriver() *testDriver {
 		t.JustBeforeEach()
 
 		t.Controller = submarinerController.NewReconciler(&submarinerController.Config{
-			ScopedClient:   t.ScopedClient,
-			GeneralClient:  t.GeneralClient,
-			DynClient:      t.dynClient,
-			Scheme:         scheme.Scheme,
-			ClusterNetwork: t.clusterNetwork,
-			GetAuthorizedBrokerClientFor: func(_ *v1alpha1.SubmarinerSpec, _ schema.GroupVersionResource) (dynamic.Interface, error) {
-				return t.dynClient, nil
-			},
+			ScopedClient:                 t.ScopedClient,
+			GeneralClient:                t.GeneralClient,
+			DynClient:                    t.dynClient,
+			Scheme:                       scheme.Scheme,
+			ClusterNetwork:               t.clusterNetwork,
+			GetAuthorizedBrokerClientFor: t.getAuthorizedBrokerClientFor,
 		})
 	})
 
@@ -258,7 +257,6 @@ func newSubmariner() *v1alpha1.Submariner {
 			BrokerK8sApiServer:       "https://192.168.99.110:8443",
 			BrokerK8sApiServerToken:  "MIIDADCCAeigAw",
 			BrokerK8sCA:              "client.crt",
-			BrokerK8sSecret:          "submariner-broker-secret",
 			Broker:                   "k8s",
 			NatEnabled:               true,
 			ClusterID:                "east",

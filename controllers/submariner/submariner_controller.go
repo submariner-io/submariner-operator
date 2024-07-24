@@ -20,6 +20,7 @@ package submariner
 
 import (
 	"context"
+	"encoding/base64"
 	"reflect"
 	"sync"
 	"time"
@@ -72,7 +73,8 @@ type Config struct {
 	Scheme                       *runtime.Scheme
 	DynClient                    dynamic.Interface
 	ClusterNetwork               *network.ClusterNetwork
-	GetAuthorizedBrokerClientFor func(spec *submopv1a1.SubmarinerSpec, gvr schema.GroupVersionResource) (dynamic.Interface, error)
+	GetAuthorizedBrokerClientFor func(spec *submopv1a1.SubmarinerSpec, brokerToken, brokerCA string,
+		secretGVR schema.GroupVersionResource) (dynamic.Interface, error)
 }
 
 // Reconciler reconciles a Submariner object.
@@ -112,7 +114,7 @@ func NewReconciler(config *Config) *Reconciler {
 	}
 
 	if r.config.GetAuthorizedBrokerClientFor == nil {
-		r.config.GetAuthorizedBrokerClientFor = r.getAuthorizedBrokerClientFor
+		r.config.GetAuthorizedBrokerClientFor = getAuthorizedBrokerClientFor
 	}
 
 	return r
@@ -158,7 +160,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	}
 
 	// Ensure we have a secret syncer
-	if err := r.setupSecretSyncer(instance, reqLogger, request.Namespace); err != nil {
+	if err := r.setupSecretSyncer(ctx, instance, reqLogger, request.Namespace); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -326,18 +328,13 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *Reconciler) setupSecretSyncer(instance *submopv1a1.Submariner, logger logr.Logger, namespace string) error {
+func (r *Reconciler) setupSecretSyncer(ctx context.Context, instance *submopv1a1.Submariner, logger logr.Logger, namespace string) error {
 	r.syncerMutex.Lock()
 	defer r.syncerMutex.Unlock()
 
 	if instance.Spec.BrokerK8sSecret != "" {
 		if _, ok := r.secretSyncCancelFuncs[instance.Spec.BrokerK8sSecret]; !ok {
-			_, gvr, err := util.ToUnstructuredResource(&corev1.Secret{}, r.config.ScopedClient.RESTMapper())
-			if err != nil {
-				return errors.Wrap(err, "error calculating the GVR for the Secret type")
-			}
-
-			brokerClient, err := r.config.GetAuthorizedBrokerClientFor(&instance.Spec, *gvr)
+			brokerClient, err := r.getBrokerClient(ctx, instance)
 			if err != nil {
 				return err
 			}
@@ -403,15 +400,39 @@ func (r *Reconciler) cancelSecretSyncer(instance *submopv1a1.Submariner) {
 	}
 }
 
-func (r *Reconciler) getAuthorizedBrokerClientFor(spec *submopv1a1.SubmarinerSpec, gvr schema.GroupVersionResource,
+func (r *Reconciler) getBrokerClient(ctx context.Context, instance *submopv1a1.Submariner) (dynamic.Interface, error) {
+	spec := &instance.Spec
+
+	_, secretGVR, err := util.ToUnstructuredResource(&corev1.Secret{}, r.config.ScopedClient.RESTMapper())
+	if err != nil {
+		return nil, errors.Wrap(err, "error calculating the GVR for the Secret type")
+	}
+
+	// We can't use files here since we don't have a mounted secret so read the broker Secret CR.
+
+	brokerToken := spec.BrokerK8sApiServerToken
+	brokerCA := spec.BrokerK8sCA
+
+	obj, err := r.config.DynClient.Resource(*secretGVR).Namespace(instance.Namespace).Get(ctx, spec.BrokerK8sSecret, metav1.GetOptions{})
+	if err == nil {
+		brokerSecret := resource.MustFromUnstructured(obj, &corev1.Secret{})
+		brokerToken = string(brokerSecret.Data["token"])
+		brokerCA = base64.StdEncoding.EncodeToString(brokerSecret.Data["ca.crt"])
+	} else if !apierrors.IsNotFound(err) {
+		return nil, errors.Wrapf(err, "error retrieving broker secret %q", spec.BrokerK8sSecret)
+	}
+
+	return r.config.GetAuthorizedBrokerClientFor(spec, brokerToken, brokerCA, *secretGVR)
+}
+
+func getAuthorizedBrokerClientFor(spec *submopv1a1.SubmarinerSpec, brokerToken, brokerCA string, secretGVR schema.GroupVersionResource,
 ) (dynamic.Interface, error) {
-	// We can't use files here, we don't have a mounted secret
 	brokerConfig, _, err := resource.GetAuthorizedRestConfigFromData(
 		spec.BrokerK8sApiServer,
-		spec.BrokerK8sApiServerToken, // TODO Read the secret
-		spec.BrokerK8sCA,
+		brokerToken,
+		brokerCA,
 		&rest.TLSClientConfig{Insecure: spec.BrokerK8sInsecure},
-		gvr,
+		secretGVR,
 		spec.BrokerK8sRemoteNamespace)
 	if err != nil {
 		return nil, errors.Wrap(err, "error building an authorized RestConfig for the broker")

@@ -43,7 +43,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -272,6 +274,16 @@ func testReconciliation() {
 		var brokerSecret *corev1.Secret
 
 		BeforeEach(func() {
+			t.submariner.Spec.BrokerK8sSecret = "submariner-broker-secret"
+
+			t.getAuthorizedBrokerClientFor = func(_ *v1alpha1.SubmarinerSpec, brokerToken, brokerCA string, _ schema.GroupVersionResource,
+			) (dynamic.Interface, error) {
+				Expect(brokerToken).To(Equal(t.submariner.Spec.BrokerK8sApiServerToken))
+				Expect(brokerCA).To(Equal(t.submariner.Spec.BrokerK8sCA))
+
+				return t.dynClient, nil
+			}
+
 			saName := opnames.ForClusterSA(t.submariner.Spec.ClusterID)
 			brokerSecret = &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
@@ -303,6 +315,36 @@ func testReconciliation() {
 
 			testutil.AwaitAndVerifyResource(ri, t.submariner.Spec.BrokerK8sSecret, func(obj *unstructured.Unstructured) bool {
 				return reflect.DeepEqual(resource.MustFromUnstructured(obj, &corev1.Secret{}).Data, brokerSecret.Data)
+			})
+		})
+
+		Context("and the local secret already exists", func() {
+			BeforeEach(func() {
+				t.submariner.Spec.BrokerK8sSecret = "submariner-broker-secret"
+
+				localSecret := &corev1.Secret{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      t.submariner.Spec.BrokerK8sSecret,
+						Namespace: t.Namespace,
+					},
+					Type: corev1.SecretTypeServiceAccountToken,
+					Data: map[string][]byte{
+						"token":  {11, 22, 33, 44},
+						"ca.crt": {5, 6},
+					},
+				}
+
+				syncertest.CreateResource(t.secrets.Namespace(t.Namespace), localSecret)
+
+				t.getAuthorizedBrokerClientFor = func(_ *v1alpha1.SubmarinerSpec, brokerToken, _ string, _ schema.GroupVersionResource,
+				) (dynamic.Interface, error) {
+					Expect(brokerToken).To(Equal(string(localSecret.Data["token"])))
+					return t.dynClient, nil
+				}
+			})
+
+			It("should use the local secret's credentials to access the broker", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
 			})
 		})
 	})
