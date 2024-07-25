@@ -44,8 +44,15 @@ func (r *Reconciler) reconcileGlobalnetDaemonSet(ctx context.Context, instance *
 		return nil, err
 	}
 
-	err = metrics.Setup(ctx, names.GlobalnetComponent, instance.Namespace, "app", names.MetricsProxyComponent,
-		instance, globalnetMetricsServicePort, r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
+	err = metrics.Setup(ctx, r.config.ScopedClient, r.config.RestConfig, r.config.Scheme,
+		&metrics.ServiceInfo{
+			Name:            names.GlobalnetComponent,
+			Namespace:       instance.Namespace,
+			ApplicationKey:  "app",
+			ApplicationName: names.MetricsProxyComponent,
+			Owner:           instance,
+			Port:            globalnetMetricsServicePort,
+		}, reqLogger)
 
 	return daemonSet, err
 }

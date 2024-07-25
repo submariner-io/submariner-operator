@@ -260,8 +260,15 @@ func (r *Reconciler) reconcileGatewayDaemonSet(
 		return nil, err
 	}
 
-	err = metrics.Setup(ctx, names.GatewayComponent, instance.Namespace, "app", names.MetricsProxyComponent, instance,
-		gatewayMetricsServicePort, r.config.ScopedClient, r.config.RestConfig, r.config.Scheme, reqLogger)
+	err = metrics.Setup(ctx, r.config.ScopedClient, r.config.RestConfig, r.config.Scheme,
+		&metrics.ServiceInfo{
+			Name:            names.GatewayComponent,
+			Namespace:       instance.Namespace,
+			ApplicationKey:  "app",
+			ApplicationName: names.MetricsProxyComponent,
+			Owner:           instance,
+			Port:            gatewayMetricsServicePort,
+		}, reqLogger)
 
 	return daemonSet, err
 }
