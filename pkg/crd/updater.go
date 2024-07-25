@@ -90,27 +90,35 @@ func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string
 }
 
 func (c *controllerClientCreator) Create(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
-	_ metav1.CreateOptions, //nolint:gocritic // hugeParam - match K8s API
+	opts metav1.CreateOptions, //nolint:gocritic // hugeParam - match K8s API
 ) (*apiextensions.CustomResourceDefinition, error) {
-	// TODO skitt handle options
-	err := c.client.Create(ctx, crd)
+	err := c.client.Create(ctx, crd, &client.CreateOptions{
+		DryRun:       opts.DryRun,
+		FieldManager: opts.FieldManager,
+		Raw:          &opts,
+	})
+
 	return crd, err
 }
 
 func (c *controllerClientCreator) Update(ctx context.Context, crd *apiextensions.CustomResourceDefinition,
-	_ metav1.UpdateOptions, //nolint:gocritic // hugeParam - match K8s API
+	opts metav1.UpdateOptions, //nolint:gocritic // hugeParam - match K8s API
 ) (*apiextensions.CustomResourceDefinition, error) {
-	// TODO skitt handle options
-	err := c.client.Update(ctx, crd)
+	err := c.client.Update(ctx, crd, &client.UpdateOptions{
+		DryRun:       opts.DryRun,
+		FieldManager: opts.FieldManager,
+		Raw:          &opts,
+	})
+
 	return crd, err
 }
 
 func (c *controllerClientCreator) Get(ctx context.Context, name string,
-	_ metav1.GetOptions,
+	opts metav1.GetOptions,
 ) (*apiextensions.CustomResourceDefinition, error) {
 	crd := &apiextensions.CustomResourceDefinition{}
-	// TODO skitt handle options
-	err := c.client.Get(ctx, client.ObjectKey{Name: name}, crd)
+
+	err := c.client.Get(ctx, client.ObjectKey{Name: name}, crd, &client.GetOptions{Raw: &opts})
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +127,7 @@ func (c *controllerClientCreator) Get(ctx context.Context, name string,
 }
 
 func (c *controllerClientCreator) Delete(ctx context.Context, name string,
-	_ metav1.DeleteOptions, //nolint:gocritic // Match K8s API
+	opts metav1.DeleteOptions, //nolint:gocritic // Match K8s API
 ) error {
 	crd, err := c.Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -130,6 +138,11 @@ func (c *controllerClientCreator) Delete(ctx context.Context, name string,
 		return nil
 	}
 
-	// TODO skitt handle options
-	return c.client.Delete(ctx, crd)
+	return c.client.Delete(ctx, crd, &client.DeleteOptions{
+		DryRun:             opts.DryRun,
+		GracePeriodSeconds: opts.GracePeriodSeconds,
+		Preconditions:      opts.Preconditions,
+		PropagationPolicy:  opts.PropagationPolicy,
+		Raw:                &opts,
+	})
 }
