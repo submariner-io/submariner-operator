@@ -35,11 +35,21 @@ import (
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func Setup(ctx context.Context, serviceName, namespace, applicationKey, applicationName string, owner metav1.Object, port int32,
-	client controllerClient.Client, config *rest.Config, scheme *runtime.Scheme, reqLogger logr.Logger,
+type ServiceInfo struct {
+	Name            string
+	Namespace       string
+	ApplicationKey  string
+	ApplicationName string
+	Owner           metav1.Object
+	Port            int32
+}
+
+func Setup(ctx context.Context, client controllerClient.Client, config *rest.Config, scheme *runtime.Scheme,
+	serviceInfo *ServiceInfo, reqLogger logr.Logger,
 ) error {
-	metricsService, err := apply.Service(ctx, owner, newMetricsService(serviceName, namespace, applicationKey,
-		applicationName, port), reqLogger, client, scheme)
+	metricsService, err := apply.Service(ctx, serviceInfo.Owner,
+		newMetricsService(serviceInfo.Name, serviceInfo.Namespace, serviceInfo.ApplicationKey,
+			serviceInfo.ApplicationName, serviceInfo.Port), reqLogger, client, scheme)
 	if err != nil {
 		return err //nolint:wrapcheck // No need to wrap here
 	}
@@ -47,7 +57,7 @@ func Setup(ctx context.Context, serviceName, namespace, applicationKey, applicat
 	if config != nil {
 		services := []*corev1.Service{metricsService}
 
-		_, err = metrics.CreateServiceMonitors(ctx, config, namespace, services)
+		_, err = metrics.CreateServiceMonitors(ctx, config, serviceInfo.Namespace, services)
 		if err != nil {
 			// If this operator is deployed to a cluster without the prometheus-operator running, it will return
 			// ErrServiceMonitorNotPresent, which can be used to safely skip ServiceMonitor creation.
