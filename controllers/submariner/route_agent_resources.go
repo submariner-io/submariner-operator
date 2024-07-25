@@ -126,8 +126,6 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 							Name:            name,
 							Image:           getImagePath(cr, opnames.RouteAgentImage, names.RouteAgentComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
-							// FIXME: Should be entrypoint script, find/use correct file for routeagent
-							Command: []string{"submariner-route-agent.sh"},
 							SecurityContext: &corev1.SecurityContext{
 								Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
 								AllowPrivilegeEscalation: ptr.To(true),
