@@ -277,7 +277,7 @@ prometheus :9153
 }`
 	expectedCorefile := ""
 
-	for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
+	for _, domain := range buildDomains(cr) {
 		expectedCorefile = fmt.Sprintf("%s%s:53 %s\n", expectedCorefile, domain, config)
 	}
 
@@ -435,7 +435,7 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 		}
 
 		coreFile := ""
-		for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
+		for _, domain := range buildDomains(cr) {
 			coreFile = fmt.Sprintf("%s%s:53 {\n    forward . %s\n}\n",
 				coreFile, domain, lighthouseClusterIP)
 		}
@@ -506,7 +506,7 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 				coreDNSPort := findCoreDNSListeningPort(coreFile)
 
 				expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
-				for _, domain := range append([]string{"clusterset.local"}, cr.Spec.CustomDomains...) {
+				for _, domain := range buildDomains(cr) {
 					expectedCorefile = fmt.Sprintf("%s%s:%s {\n    forward . %s\n}\n",
 						expectedCorefile, domain, coreDNSPort, clusterIP)
 				}
@@ -602,7 +602,7 @@ func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dns
 	containsLighthouse := false
 	existingDomains := make([]string, 0)
 
-	lighthouseDomains := append([]string{"clusterset.local"}, instance.Spec.CustomDomains...)
+	lighthouseDomains := buildDomains(instance)
 
 	for _, forwardServer := range dnsOperator.Spec.Servers {
 		if forwardServer.Name == lighthouseForwardPluginName {
@@ -683,8 +683,15 @@ func (r *Reconciler) ensureLightHouseAgent(ctx context.Context, instance *submar
 		return errors.Wrap(err, "error reconciling agent deployment")
 	}
 
-	err := metrics.Setup(ctx, names.ServiceDiscoveryComponent, instance.Namespace, "app", names.ServiceDiscoveryComponent,
-		instance, 8082, r.ScopedClient, r.RestConfig, r.Scheme, reqLogger)
+	err := metrics.Setup(ctx, r.ScopedClient, r.RestConfig, r.Scheme,
+		&metrics.ServiceInfo{
+			Name:            names.ServiceDiscoveryComponent,
+			Namespace:       instance.Namespace,
+			ApplicationKey:  "app",
+			ApplicationName: names.ServiceDiscoveryComponent,
+			Owner:           instance,
+			Port:            8082,
+		}, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "error setting up metrics")
 	}
@@ -702,8 +709,15 @@ func (r *Reconciler) ensureLighthouseCoreDNSDeployment(ctx context.Context, inst
 		return errors.Wrap(err, "error reconciling coredns deployment")
 	}
 
-	err := metrics.Setup(ctx, names.LighthouseCoreDNSComponent, instance.Namespace, "app", names.LighthouseCoreDNSComponent, instance,
-		9153, r.ScopedClient, r.RestConfig, r.Scheme, reqLogger)
+	err := metrics.Setup(ctx, r.ScopedClient, r.RestConfig, r.Scheme,
+		&metrics.ServiceInfo{
+			Name:            names.LighthouseCoreDNSComponent,
+			Namespace:       instance.Namespace,
+			ApplicationKey:  "app",
+			ApplicationName: names.LighthouseCoreDNSComponent,
+			Owner:           instance,
+			Port:            9153,
+		}, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "error setting up coredns metrics")
 	}
@@ -729,4 +743,8 @@ func (r *Reconciler) ensureLighthouseCoreDNSService(ctx context.Context, instanc
 	}
 
 	return nil
+}
+
+func buildDomains(s *submarinerv1alpha1.ServiceDiscovery) []string {
+	return append([]string{"clusterset.local"}, s.Spec.CustomDomains...)
 }
