@@ -19,16 +19,12 @@ limitations under the License.
 package network_test
 
 import (
-	"context"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/cni"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -38,7 +34,7 @@ const (
 var _ = Describe("Flannel Network", func() {
 	When("the flannel DaemonSet and ConfigMap exist", func() {
 		It("should return a ClusterNetwork with the plugin name and CIDRs set correctly", func(ctx SpecContext) {
-			clusterNet := testDiscoverFlannelWith(ctx, &flannelDaemonSet, &flannelCfgMap)
+			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelDaemonSet, &flannelCfgMap)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Flannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testFlannelPodCIDR}))
@@ -48,7 +44,7 @@ var _ = Describe("Flannel Network", func() {
 
 	When("the flannel DaemonSet does not exist", func() {
 		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
-			clusterNet := testDiscoverFlannelWith(ctx)
+			clusterNet := testDiscoverNetworkSuccess(ctx)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
 		})
@@ -56,20 +52,12 @@ var _ = Describe("Flannel Network", func() {
 
 	When("the flannel ConfigMap does not exist", func() {
 		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
-			clusterNet := testDiscoverFlannelWith(ctx, &flannelDaemonSet)
+			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelDaemonSet)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
 		})
 	})
 })
-
-func testDiscoverFlannelWith(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
-	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(ctx, client, "")
-	Expect(err).NotTo(HaveOccurred())
-
-	return clusterNet
-}
 
 var flannelDaemonSet = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{

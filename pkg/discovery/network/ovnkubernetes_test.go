@@ -19,15 +19,11 @@ limitations under the License.
 package network_test
 
 import (
-	"context"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const ovnKubeNamespace = "ovn-kubernetes"
@@ -37,13 +33,12 @@ var _ = Describe("OvnKubernetes Network", func() {
 
 	When("ovn-kubernetes database and service found, no configmap", func() {
 		It("Should return cluster network with default CIDRs", func(ctx SpecContext) {
-			clusterNet, err := testOvnKubernetesDiscoveryWith(
+			clusterNet := testDiscoverNetworkSuccess(
 				ctx,
 				fakePodWithNamespace(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest, []string{}, []v1.EnvVar{}),
 				fakeService(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest),
 			)
 
-			Expect(err).NotTo(HaveOccurred())
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.OVNKubernetes))
 			Expect(clusterNet.PodCIDRs).To(BeEmpty())
@@ -53,7 +48,7 @@ var _ = Describe("OvnKubernetes Network", func() {
 
 	When("ovn-kubernetes database, configmap and service found", func() {
 		It("Should return cluster network with correct CIDRs", func(ctx SpecContext) {
-			clusterNet, err := testOvnKubernetesDiscoveryWith(
+			clusterNet, err := testDiscoverNetwork(
 				ctx,
 				fakePodWithNamespace(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest, []string{}, []v1.EnvVar{}),
 				fakeService(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest),
@@ -67,11 +62,6 @@ var _ = Describe("OvnKubernetes Network", func() {
 		})
 	})
 })
-
-func testOvnKubernetesDiscoveryWith(ctx context.Context, objects ...controllerClient.Object) (*network.ClusterNetwork, error) {
-	client := newTestClient(objects...)
-	return network.Discover(ctx, client, "")
-}
 
 func ovnFakeConfigMap(namespace, name string) *v1.ConfigMap {
 	return &v1.ConfigMap{

@@ -16,17 +16,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//nolint:dupl // Lines are roughly duplicated with weavenet_test.go - ignore.
 package network_test
 
 import (
-	"context"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/cni"
 	v1 "k8s.io/api/core/v1"
-	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Weave Network", func() {
@@ -34,7 +32,7 @@ var _ = Describe("Weave Network", func() {
 		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func(ctx SpecContext) {
-			clusterNet = testDiscoverNetwork(
+			clusterNet = testDiscoverNetworkSuccess(
 				ctx,
 				fakePod("weave-net", []string{"weave-net"}, []v1.EnvVar{{Name: "IPALLOC_RANGE", Value: testPodCIDR}}),
 			)
@@ -54,7 +52,7 @@ var _ = Describe("Weave Network", func() {
 		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func(ctx SpecContext) {
-			clusterNet = testDiscoverNetwork(
+			clusterNet = testDiscoverNetworkSuccess(
 				ctx,
 				fakePod("weave-net", []string{"weave-net"}, []v1.EnvVar{{Name: "IPALLOC_RANGE", Value: testPodCIDR}}),
 				fakeKubeAPIServerPod(),
@@ -72,11 +70,3 @@ var _ = Describe("Weave Network", func() {
 		})
 	})
 })
-
-func testDiscoverNetwork(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
-	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(ctx, client, "")
-	Expect(err).NotTo(HaveOccurred())
-
-	return clusterNet
-}
