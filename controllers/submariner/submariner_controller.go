@@ -248,8 +248,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
-	// TODO: vthapar Add metrics-proxy status to Submariner CR so we can update it with daemonset status
-
 	if loadBalancer != nil {
 		instance.Status.LoadBalancerStatus.Status = &loadBalancer.Status.LoadBalancer
 	} else {
