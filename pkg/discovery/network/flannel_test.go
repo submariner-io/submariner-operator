@@ -68,19 +68,17 @@ var flannelDaemonSet = appsv1.DaemonSet{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{},
 			Spec: corev1.PodSpec{
-				Volumes: volumes,
+				Volumes: []corev1.Volume{flannelCfgVolume},
 			},
 		},
 	},
 }
 
-var volumes = []corev1.Volume{
-	{
-		Name: "flannel-cfg",
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: "kube-flannel-cfg"},
-			},
+var flannelCfgVolume = corev1.Volume{
+	Name: "flannel-cfg",
+	VolumeSource: corev1.VolumeSource{
+		ConfigMap: &corev1.ConfigMapVolumeSource{
+			LocalObjectReference: corev1.LocalObjectReference{Name: "kube-flannel-cfg"},
 		},
 	},
 }
