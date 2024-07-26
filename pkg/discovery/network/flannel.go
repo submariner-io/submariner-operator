@@ -20,6 +20,7 @@ package network
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -52,19 +53,21 @@ func discoverFlannelNetwork(ctx context.Context, client controllerClient.Client)
 		return nil, nil
 	}
 
-	var flannelConfigMap string
-	// look for the associated confimap to the flannel daemonset
-	for k := range volumes {
-		if strings.Contains(volumes[k].Name, "flannel") {
-			if volumes[k].ConfigMap.Name != "" {
-				flannelConfigMap = volumes[k].ConfigMap.Name
-			}
-		}
+	clusterNetwork, err := extractCIDRsFromFlannelConfigMap(ctx, client, findFlannelConfigMapName(volumes))
+	if err != nil || clusterNetwork == nil {
+		return nil, err
 	}
 
+	clusterNetwork.NetworkPlugin = cni.Flannel
+
+	return clusterNetwork, nil
+}
+
+//nolint:nilnil // Intentional as the purpose is to discover.
+func extractCIDRsFromFlannelConfigMap(ctx context.Context, client controllerClient.Client, configMapName string) (*ClusterNetwork, error) {
 	var podCIDR *string
 
-	if flannelConfigMap == "" {
+	if configMapName == "" {
 		podIPRange, err := findPodIPRange(ctx, client)
 		if err != nil {
 			return nil, err
@@ -75,16 +78,16 @@ func discoverFlannelNetwork(ctx context.Context, client controllerClient.Client)
 		// look for the configmap details using the configmap name discovered from the daemonset
 		cm := &corev1.ConfigMap{}
 
-		err = client.Get(ctx, controllerClient.ObjectKey{
+		err := client.Get(ctx, controllerClient.ObjectKey{
 			Namespace: metav1.NamespaceSystem,
-			Name:      flannelConfigMap,
+			Name:      configMapName,
 		}, cm)
 		if err != nil {
 			if apierrors.IsNotFound(err) {
 				return nil, nil
 			}
 
-			return nil, errors.WithMessagef(err, "error retrieving the flannel ConfigMap %q", flannelConfigMap)
+			return nil, errors.WithMessagef(err, "error retrieving the flannel ConfigMap %q", configMapName)
 		}
 
 		podCIDR = extractPodCIDRFromNetConfigJSON(cm)
@@ -94,8 +97,7 @@ func discoverFlannelNetwork(ctx context.Context, client controllerClient.Client)
 	}
 
 	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: cni.Flannel,
-		PodCIDRs:      []string{*podCIDR},
+		PodCIDRs: []string{*podCIDR},
 	}
 
 	// Try to detect the service CIDRs using the generic functions
@@ -109,4 +111,32 @@ func discoverFlannelNetwork(ctx context.Context, client controllerClient.Client)
 	}
 
 	return clusterNetwork, nil
+}
+
+func findFlannelConfigMapName(volumes []corev1.Volume) string {
+	for i := range volumes {
+		if strings.Contains(volumes[i].Name, "flannel") && volumes[i].ConfigMap != nil &&
+			volumes[i].ConfigMap.Name != "" {
+			return volumes[i].ConfigMap.Name
+		}
+	}
+
+	return ""
+}
+
+func extractPodCIDRFromNetConfigJSON(cm *corev1.ConfigMap) *string {
+	netConfJSON := cm.Data["net-conf.json"]
+	if netConfJSON == "" {
+		return nil
+	}
+	var netConf struct {
+		Network string `json:"Network"`
+		// All the other fields are ignored by Unmarshal
+	}
+
+	if err := json.Unmarshal([]byte(netConfJSON), &netConf); err == nil {
+		return &netConf.Network
+	}
+
+	return nil
 }
