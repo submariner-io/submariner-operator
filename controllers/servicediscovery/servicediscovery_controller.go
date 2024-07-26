@@ -683,8 +683,15 @@ func (r *Reconciler) ensureLightHouseAgent(ctx context.Context, instance *submar
 		return errors.Wrap(err, "error reconciling agent deployment")
 	}
 
-	err := metrics.Setup(ctx, names.ServiceDiscoveryComponent, instance.Namespace, "app", names.ServiceDiscoveryComponent,
-		instance, 8082, r.ScopedClient, r.RestConfig, r.Scheme, reqLogger)
+	err := metrics.Setup(ctx, r.ScopedClient, r.RestConfig, r.Scheme,
+		&metrics.ServiceInfo{
+			Name:            names.ServiceDiscoveryComponent,
+			Namespace:       instance.Namespace,
+			ApplicationKey:  "app",
+			ApplicationName: names.ServiceDiscoveryComponent,
+			Owner:           instance,
+			Port:            8082,
+		}, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "error setting up metrics")
 	}
@@ -702,8 +709,15 @@ func (r *Reconciler) ensureLighthouseCoreDNSDeployment(ctx context.Context, inst
 		return errors.Wrap(err, "error reconciling coredns deployment")
 	}
 
-	err := metrics.Setup(ctx, names.LighthouseCoreDNSComponent, instance.Namespace, "app", names.LighthouseCoreDNSComponent, instance,
-		9153, r.ScopedClient, r.RestConfig, r.Scheme, reqLogger)
+	err := metrics.Setup(ctx, r.ScopedClient, r.RestConfig, r.Scheme,
+		&metrics.ServiceInfo{
+			Name:            names.LighthouseCoreDNSComponent,
+			Namespace:       instance.Namespace,
+			ApplicationKey:  "app",
+			ApplicationName: names.LighthouseCoreDNSComponent,
+			Owner:           instance,
+			Port:            9153,
+		}, reqLogger)
 	if err != nil {
 		return errors.Wrap(err, "error setting up coredns metrics")
 	}

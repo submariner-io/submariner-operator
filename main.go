@@ -196,7 +196,14 @@ func main() {
 		log.Error(err, "Error obtaining a Kubernetes client")
 	}
 
-	if err := metrics.Setup(ctx, name, namespace, "name", name, nil, metricsPort, metricsClient, cfg, scheme, log); err != nil {
+	if err := metrics.Setup(ctx, metricsClient, cfg, scheme,
+		&metrics.ServiceInfo{
+			Name:            name,
+			Namespace:       namespace,
+			ApplicationKey:  "name",
+			ApplicationName: name,
+			Port:            metricsPort,
+		}, log); err != nil {
 		log.Error(err, "Error setting up metrics services and monitors")
 	}
 
