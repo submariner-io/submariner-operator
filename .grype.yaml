@@ -10,10 +10,13 @@ ignore:
   - vulnerability: CVE-2021-22570
     package:
       name: google.golang.org/protobuf
-  # Fixing this CVE requires updating K8s et al to incompatible versions.
+  # Fixing these CVEs requires updating K8s et al to incompatible versions.
   - vulnerability: GHSA-r53h-jv2g-vpx6
     package:
       name: helm.sh/helm/v3
   - vulnerability: GHSA-v53g-5gjp-272r
+    package:
+      name: helm.sh/helm/v3
+  - vulnerability: GHSA-jw44-4f3j-q396
     package:
       name: helm.sh/helm/v3
