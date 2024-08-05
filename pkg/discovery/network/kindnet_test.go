@@ -16,6 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//nolint:dupl // Lines are roughly duplicated with kindnet_test.go - ignore.
 package network_test
 
 import (
@@ -31,7 +32,7 @@ var _ = Describe("Kindnet CNI", func() {
 		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func(ctx SpecContext) {
-			clusterNet = testDiscoverNetwork(
+			clusterNet = testDiscoverNetworkSuccess(
 				ctx,
 				fakePod("kindnet", []string{"kindnet"}, []v1.EnvVar{{Name: "POD_SUBNET", Value: testPodCIDR}}),
 			)
@@ -52,7 +53,7 @@ var _ = Describe("Kindnet CNI", func() {
 		var clusterNet *network.ClusterNetwork
 
 		BeforeEach(func(ctx SpecContext) {
-			clusterNet = testDiscoverNetwork(
+			clusterNet = testDiscoverNetworkSuccess(
 				ctx,
 				fakePod("kindnet", []string{"kindnet"}, []v1.EnvVar{{Name: "POD_SUBNET", Value: testPodCIDR}}),
 				fakeKubeAPIServerPod(),

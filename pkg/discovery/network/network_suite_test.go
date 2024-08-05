@@ -19,22 +19,25 @@ limitations under the License.
 package network_test
 
 import (
+	"context"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	v1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
+	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func init() {
 	utilruntime.Must(v1alpha1.AddToScheme(scheme.Scheme))
 }
 
-func TestOpenShift4NetworkDiscovery(t *testing.T) {
+func TestNetworkDiscovery(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Network Discovery")
 }
@@ -98,4 +101,16 @@ func fakeNode(name, podCIDR string) *v1.Node {
 			PodCIDR: podCIDR,
 		},
 	}
+}
+
+func testDiscoverNetworkSuccess(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
+	clusterNet, err := testDiscoverNetwork(ctx, objects...)
+	Expect(err).NotTo(HaveOccurred())
+
+	return clusterNet
+}
+
+func testDiscoverNetwork(ctx context.Context, objects ...controllerClient.Object) (*network.ClusterNetwork, error) {
+	client := newTestClient(objects...)
+	return network.Discover(ctx, client, "")
 }

@@ -19,76 +19,64 @@ limitations under the License.
 package network_test
 
 import (
-	"context"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 	"github.com/submariner-io/submariner/pkg/cni"
-	v1 "k8s.io/api/core/v1"
-	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("Canal Flannel Network", func() {
-	When("There are no generic k8s pods to look at", func() {
-		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func(ctx SpecContext) {
-			clusterNet := testDiscoverCanalFlannelWith(ctx, &canalFlannelCfgMap)
+	canalDaemonSet := appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "canal",
+			Namespace: metav1.NamespaceSystem,
+			Labels:    map[string]string{"k8s-app": "canal"},
+		},
+		Spec: appsv1.DaemonSetSpec{
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{},
+				Spec: corev1.PodSpec{
+					Volumes: []corev1.Volume{flannelCfgVolume},
+				},
+			},
+		},
+	}
+
+	When("the canal DaemonSet and ConfigMap exist", func() {
+		It("should return a ClusterNetwork with the plugin name and CIDRs set correctly", func(ctx SpecContext) {
+			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelCfgMap, &canalDaemonSet)
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.CanalFlannel))
-			Expect(clusterNet.PodCIDRs).To(Equal([]string{testCannalFlannelPodCIDR}))
+			Expect(clusterNet.PodCIDRs).To(Equal([]string{testFlannelPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
 		})
 	})
 
-	When("There is a kube-api pod", func() {
-		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func(ctx SpecContext) {
-			clusterNet := testDiscoverWith(
-				ctx,
-				&canalFlannelCfgMap,
-				fakeKubeAPIServerPod(),
-			)
+	When("a K8s API server pod exists", func() {
+		It("should return a ClusterNetwork with the plugin name and CIDRs set correctly", func(ctx SpecContext) {
+			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelCfgMap, &canalDaemonSet, fakeKubeAPIServerPod())
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.CanalFlannel))
-			Expect(clusterNet.PodCIDRs).To(Equal([]string{testCannalFlannelPodCIDR}))
+			Expect(clusterNet.PodCIDRs).To(Equal([]string{testFlannelPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})
 	})
+
+	When("the flannel DaemonSet does not exist", func() {
+		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
+			clusterNet := testDiscoverNetworkSuccess(ctx)
+			Expect(clusterNet).NotTo(BeNil())
+			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
+		})
+	})
+
+	When("the flannel ConfigMap does not exist", func() {
+		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
+			clusterNet := testDiscoverNetworkSuccess(ctx, &canalDaemonSet)
+			Expect(clusterNet).NotTo(BeNil())
+			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
+		})
+	})
 })
-
-func testDiscoverCanalFlannelWith(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
-	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(ctx, client, "")
-	Expect(err).NotTo(HaveOccurred())
-
-	return clusterNet
-}
-
-func testDiscoverWith(ctx context.Context, objects ...controllerClient.Object) *network.ClusterNetwork {
-	client := newTestClient(objects...)
-	clusterNet, err := network.Discover(ctx, client, "")
-	Expect(err).NotTo(HaveOccurred())
-
-	return clusterNet
-}
-
-var canalFlannelCfgMap v1.ConfigMap = v1.ConfigMap{
-	ObjectMeta: v1meta.ObjectMeta{
-		Name:      "canal-config",
-		Namespace: "kube-system",
-	},
-	Data: map[string]string{
-		"net-conf.json": `{
-			"Network": "10.0.0.0/8",
-			"SubnetLen": 20,
-			"SubnetMin": "10.10.0.0",
-			"SubnetMax": "10.99.0.0",
-			"Backend": {
-				"Type": "udp",
-				"Port": 7890
-			}
-		}`,
-	},
-}
-
-const testCannalFlannelPodCIDR = "10.0.0.0/8"

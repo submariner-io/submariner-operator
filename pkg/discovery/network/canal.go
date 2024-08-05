@@ -20,72 +20,36 @@ package network
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner/pkg/cni"
-	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
+	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 //nolint:nilnil // Intentional as the purpose is to discover.
 func discoverCanalFlannelNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
-	// TODO: this must be smarter, looking for the canal daemonset, with labels k8s-app=canal
-	//  and then the reference on the container volumes:
-	//   - configMap:
-	//          defaultMode: 420
-	//          name: canal-config
-	//        name: flannel-cfg
-	cm := &corev1.ConfigMap{}
+	daemonsets := &appsv1.DaemonSetList{}
 
-	err := client.Get(ctx, types.NamespacedName{Namespace: "kube-system", Name: "canal-config"}, cm)
+	err := client.List(ctx, daemonsets, controllerClient.InNamespace(metav1.NamespaceSystem),
+		controllerClient.MatchingLabelsSelector{Selector: labels.Set{"k8s-app": "canal"}.AsSelector()})
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-
-		return nil, errors.WithMessage(err, "error obtaining the \"canal-config\" ConfigMap")
+		return nil, errors.WithMessage(err, "error listing Daemonsets for canal discovery")
 	}
 
-	podCIDR := extractPodCIDRFromNetConfigJSON(cm)
-
-	if podCIDR == nil {
+	if len(daemonsets.Items) == 0 {
 		return nil, nil
 	}
 
-	clusterNetwork := &ClusterNetwork{
-		NetworkPlugin: cni.CanalFlannel,
-		PodCIDRs:      []string{*podCIDR},
-	}
-
-	// Try to detect the service CIDRs using the generic functions
-	clusterIPRange, err := findClusterIPRange(ctx, client)
-	if err != nil {
+	clusterNetwork, err := extractCIDRsFromFlannelConfigMap(ctx, client, findFlannelConfigMapName(
+		daemonsets.Items[0].Spec.Template.Spec.Volumes))
+	if err != nil || clusterNetwork == nil {
 		return nil, err
 	}
 
-	if clusterIPRange != "" {
-		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
-	}
+	clusterNetwork.NetworkPlugin = cni.CanalFlannel
 
 	return clusterNetwork, nil
-}
-
-func extractPodCIDRFromNetConfigJSON(cm *corev1.ConfigMap) *string {
-	netConfJSON := cm.Data["net-conf.json"]
-	if netConfJSON == "" {
-		return nil
-	}
-	var netConf struct {
-		Network string `json:"Network"`
-		// All the other fields are ignored by Unmarshal
-	}
-
-	if err := json.Unmarshal([]byte(netConfJSON), &netConf); err == nil {
-		return &netConf.Network
-	}
-
-	return nil
 }
