@@ -3,7 +3,7 @@ module github.com/submariner-io/submariner-operator/tools
 go 1.22.0
 
 require (
-	github.com/operator-framework/operator-sdk v1.36.0
+	github.com/operator-framework/operator-sdk v1.36.1
 	github.com/uw-labs/lichen v0.1.7
 	sigs.k8s.io/controller-tools v0.15.0
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
@@ -232,7 +232,7 @@ require (
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e // indirect
 	oras.land/oras-go v1.2.5 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.29.0 // indirect
-	sigs.k8s.io/controller-runtime v0.17.3 // indirect
+	sigs.k8s.io/controller-runtime v0.17.4 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kubebuilder/v3 v3.14.2 // indirect
 	sigs.k8s.io/kustomize/api v0.13.5-0.20230601165947-6ce0bf390ce3 // indirect
