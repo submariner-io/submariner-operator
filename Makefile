@@ -141,7 +141,7 @@ $(CONTROLLER_DEEPCOPY): | $(CONTROLLER_GEN)
 
 # Generate embedded YAMLs
 EMBEDDED_YAMLS := pkg/embeddedyamls/yamls.go
-$(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(CONTROLLER_DEEPCOPY)
+$(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusterglobalegressips.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gatewayroutes.yaml deploy/submariner/crds/submariner.io_gateways.yaml deploy/submariner/crds/submariner.io_globalegressips.yaml deploy/submariner/crds/submariner.io_globalingressips.yaml deploy/submariner/crds/submariner.io_nongatewayroutes.yaml deploy/submariner/crds/submariner.io_routeagents.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(CONTROLLER_DEEPCOPY)
 	$(GO) generate pkg/embeddedyamls/generate.go
 
 bin/%/submariner-operator: main.go $(EMBEDDED_YAMLS)
@@ -168,7 +168,7 @@ deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yam
 	test -f $@
 
 # Submariner CRDs
-deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml: | $(CONTROLLER_GEN)
+deploy/submariner/crds/submariner.io_clusterglobalegressips.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gatewayroutes.yaml deploy/submariner/crds/submariner.io_gateways.yaml deploy/submariner/crds/submariner.io_globalegressips.yaml deploy/submariner/crds/submariner.io_globalingressips.yaml deploy/submariner/crds/submariner.io_nongatewayroutes.yaml deploy/submariner/crds/submariner.io_routeagents.yaml: | $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="github.com/submariner-io/submariner/pkg/apis/..." output:crd:artifacts:config=deploy/submariner/crds
 	test -f $@
 
