@@ -49,7 +49,7 @@ var _ = Describe("Updater", func() {
 	)
 
 	BeforeEach(func() {
-		client = extendedfakeclientset.NewSimpleClientset()
+		client = extendedfakeclientset.NewClientset()
 		updater = crd.UpdaterFromClientSet(client)
 	})
 
