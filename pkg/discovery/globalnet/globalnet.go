@@ -56,7 +56,7 @@ type GlobalCIDR struct {
 type CIDR struct {
 	network *net.IPNet
 	size    int
-	lastIP  uint
+	lastIP  uint32
 }
 
 type Config struct {
@@ -99,16 +99,16 @@ func NewCIDR(cidr string) (CIDR, error) {
 	return clusterCidr, nil
 }
 
-func LastIP(network *net.IPNet) uint {
+func LastIP(network *net.IPNet) uint32 {
 	ones, total := network.Mask.Size()
-	clusterSize := uint(total - ones)
+	clusterSize := total - ones
 	firstIPInt := ipToUint(network.IP)
 	lastIPUint := firstIPInt + 1<<clusterSize - 1
 
 	return lastIPUint
 }
 
-func allocateByCidr(cidr string, globalCidr *GlobalCIDR) (uint, error) {
+func allocateByCidr(cidr string, globalCidr *GlobalCIDR) (uint32, error) {
 	requestedIP, requestedNetwork, err := net.ParseCIDR(cidr)
 	if err != nil || !globalCidr.net.Contains(requestedIP) {
 		return 0, fmt.Errorf("%s not a valid subnet of %v", cidr, globalCidr.net)
@@ -197,18 +197,18 @@ func AllocateGlobalCIDR(globalnetInfo *Info) (string, error) {
 	return allocateByClusterSize(globalnetInfo.ClusterSize, globalCidr)
 }
 
-func ipToUint(ip net.IP) uint {
+func ipToUint(ip net.IP) uint32 {
 	intIP := ip
 	if len(ip) == 16 {
 		intIP = ip[12:16]
 	}
 
-	return uint(binary.BigEndian.Uint32(intIP))
+	return binary.BigEndian.Uint32(intIP)
 }
 
-func uintToIP(ip uint) net.IP {
+func uintToIP(ip uint32) net.IP {
 	netIP := make(net.IP, 4)
-	binary.BigEndian.PutUint32(netIP, uint32(ip))
+	binary.BigEndian.PutUint32(netIP, ip)
 
 	return netIP
 }
@@ -222,7 +222,7 @@ func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
 	ones, totalbits := network.Mask.Size()
 	availableSize := 1 << uint(totalbits-ones)
 	userClusterSize := clusterSize
-	clusterSize = nextPowerOf2(uint32(clusterSize))
+	clusterSize = nextPowerOf2(clusterSize)
 
 	if clusterSize > uint(availableSize/2) {
 		return 0, fmt.Errorf("cluster size %d, should be <= %d", userClusterSize, availableSize/2)
@@ -236,7 +236,7 @@ func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
 }
 
 // Refer: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-func nextPowerOf2(n uint32) uint {
+func nextPowerOf2(n uint) uint {
 	n--
 	n |= n >> 1
 	n |= n >> 2
@@ -245,7 +245,7 @@ func nextPowerOf2(n uint32) uint {
 	n |= n >> 16
 	n++
 
-	return uint(n)
+	return n
 }
 
 func CheckOverlappingCidrs(globalnetInfo *Info, netconfig Config) error {
