@@ -125,8 +125,8 @@ func newLoadBalancerService(instance *v1alpha1.Submariner, platformTypeOCP strin
 			Ports: []corev1.ServicePort{
 				{
 					Name:       encapsPortName,
-					Port:       int32(instance.Spec.CeIPSecNATTPort),
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(instance.Spec.CeIPSecNATTPort)},
+					Port:       toInt32(instance.Spec.CeIPSecNATTPort),
+					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: toInt32(instance.Spec.CeIPSecNATTPort)},
 					Protocol:   corev1.ProtocolUDP,
 				},
 				{

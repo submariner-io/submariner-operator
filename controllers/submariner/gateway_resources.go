@@ -169,8 +169,8 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 					Ports: []corev1.ContainerPort{
 						{
 							Name:          encapsPortName,
-							HostPort:      int32(cr.Spec.CeIPSecNATTPort),
-							ContainerPort: int32(cr.Spec.CeIPSecNATTPort),
+							HostPort:      toInt32(cr.Spec.CeIPSecNATTPort),
+							ContainerPort: toInt32(cr.Spec.CeIPSecNATTPort),
 							Protocol:      corev1.ProtocolUDP,
 						},
 						{
@@ -324,4 +324,8 @@ func (r *Reconciler) retrieveGateways(ctx context.Context, owner metav1.Object,
 	}
 
 	return foundGateways.Items, nil
+}
+
+func toInt32(from int) int32 {
+	return int32(from) //nolint:gosec // Need to ignore reported integer overflow conversion
 }

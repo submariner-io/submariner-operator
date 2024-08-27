@@ -303,8 +303,8 @@ github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+W
 github.com/onsi/ginkgo v1.11.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.12.1/go.mod h1:zj2OWP4+oCPe1qIXoGWkgMRwljMUYCdkwsT2108oapk=
 github.com/onsi/ginkgo v1.14.0/go.mod h1:iSB4RoI2tjJc9BBv4NKIKWKya62Rps+oPG/Lv9klQyY=
-github.com/onsi/ginkgo/v2 v2.20.0 h1:PE84V2mHqoT1sglvHc8ZdQtPcwmvvt29WLEEO3xmdZw=
-github.com/onsi/ginkgo/v2 v2.20.0/go.mod h1:lG9ey2Z29hR41WMVthyJBGUBcBhGOtoPF2VFMvBXFCI=
+github.com/onsi/ginkgo/v2 v2.20.1 h1:YlVIbqct+ZmnEph770q9Q7NVAz4wwIiVNahee6JyUzo=
+github.com/onsi/ginkgo/v2 v2.20.1/go.mod h1:lG9ey2Z29hR41WMVthyJBGUBcBhGOtoPF2VFMvBXFCI=
 github.com/onsi/gomega v0.0.0-20170829124025-dcabb60a477c/go.mod h1:C1qb7wdrVGGVU+Z6iS04AVkA3Q65CEZX59MT0QO5uiA=
 github.com/onsi/gomega v1.7.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
@@ -393,8 +393,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/submariner-io/admiral v0.19.0-m2.0.20240820215844-1487e5c4b941 h1:E504VAAKuggnzhTGOFr3X5/beHOKLYS3tqJIIffRpbg=
 github.com/submariner-io/admiral v0.19.0-m2.0.20240820215844-1487e5c4b941/go.mod h1:f4xzFML4SRqETWcyZ32iTy8DH0gLUt2+jrYu6VGXL4Q=
-github.com/submariner-io/shipyard v0.19.0-m2 h1:vOVbz4p+391s6H9lO6JL4t+gNoRdhmbESbx2vzmcGQg=
-github.com/submariner-io/shipyard v0.19.0-m2/go.mod h1:91eQ4sF5XgbJxJUrXvY7u33gGGjaz5ofjLYaZyYXEls=
+github.com/submariner-io/shipyard v0.19.0-m2.0.20240828133900-3d3c2316f606 h1:0C59+84WEc0n8yuFCL4xNKmDhAZ5o/cGLiIzZy1It/s=
+github.com/submariner-io/shipyard v0.19.0-m2.0.20240828133900-3d3c2316f606/go.mod h1:Ith3HTqWhsEMmq26xw66OFYlGWO0p9Id86Cw0MIFbqQ=
 github.com/submariner-io/submariner v0.19.0-m2 h1:qCNV17T55gIYtgDyMGJevrmUlr+nO4YA5GIlnkJTzLg=
 github.com/submariner-io/submariner v0.19.0-m2/go.mod h1:+agj3FglAMfAzOM0d4c/ZTjwBIdvFJjJedMlwJxHboc=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
