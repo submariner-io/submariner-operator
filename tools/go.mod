@@ -5,7 +5,7 @@ go 1.22.0
 require (
 	github.com/operator-framework/operator-sdk v1.36.1
 	github.com/uw-labs/lichen v0.1.7
-	sigs.k8s.io/controller-tools v0.16.1
+	sigs.k8s.io/controller-tools v0.16.2
 	sigs.k8s.io/kustomize/kustomize/v3 v3.10.0
 )
 
