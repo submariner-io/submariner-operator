@@ -8,11 +8,11 @@ require (
 	github.com/onsi/ginkgo/v2 v2.20.1
 	github.com/onsi/gomega v1.34.1
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
-	github.com/operator-framework/operator-lib v0.14.0
+	github.com/operator-framework/operator-lib v0.15.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.76.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.76.0
-	github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/client_golang v1.20.2
 	github.com/submariner-io/admiral v0.19.0-m2.0.20240820215844-1487e5c4b941
 	github.com/submariner-io/shipyard v0.19.0-m2.0.20240828133900-3d3c2316f606
 	github.com/submariner-io/submariner v0.19.0-m2
@@ -52,6 +52,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
