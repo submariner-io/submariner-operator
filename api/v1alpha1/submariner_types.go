@@ -104,6 +104,13 @@ type SubmarinerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:advanced"}
 	GlobalCIDR string `json:"globalCIDR,omitempty"`
 
+	// ClustersetIP CIDR for allocating ClustersetIPs to exported services.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="ClustersetIP CIDR"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	// +optional
+	ClustersetIPCIDR string `json:"clustersetIPCIDR,omitempty"`
+
 	// The namespace in which to deploy the submariner operator.
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Namespace"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
@@ -174,6 +181,12 @@ type SubmarinerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
 	HaltOnCertificateError bool `json:"haltOnCertificateError,omitempty"`
 
+	// Enable ClustersetIP default for services exported on this cluster.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable ClustersetIP default"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +optional
+	ClustersetIPEnabled bool `json:"clustersetIPEnabled,omitempty"`
+
 	// Name of the custom CoreDNS configmap to configure forwarding to Lighthouse.
 	// It should be in <namespace>/<name> format where <namespace> is optional and defaults to kube-system.
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="CoreDNS Custom Config"
@@ -236,6 +249,11 @@ type SubmarinerStatus struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Global CIDR"
 	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	GlobalCIDR string `json:"globalCIDR,omitempty"`
+
+	// The current clustersetIP CIDR.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="ClustersetIP CIDR"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	ClustersetIPCIDR string `json:"clustersetIPCIDR,omitempty"`
 
 	// The current network plugin.
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Network Plugin"

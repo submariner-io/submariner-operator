@@ -48,6 +48,8 @@ spec:
                 type: string
               clusterID:
                 type: string
+              clustersetIPCIDR:
+                type: string
               coreDNSCustomConfig:
                 properties:
                   configMapName:
@@ -67,6 +69,8 @@ spec:
               globalnetEnabled:
                 type: boolean
               haltOnCertificateError:
+                type: boolean
+              clustersetIPEnabled:
                 type: boolean
               imageOverrides:
                 additionalProperties:

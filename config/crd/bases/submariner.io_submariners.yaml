@@ -87,6 +87,10 @@ spec:
               clusterID:
                 description: The cluster ID used to identify the tunnels.
                 type: string
+              clustersetIPCIDR:
+                description:  ClustersetIP CIDR for allocating ClustersetIPs to exported
+                  services.
+                type: string
               colorCodes:
                 type: string
               connectionHealthCheck:
@@ -160,6 +164,10 @@ spec:
               serviceDiscoveryEnabled:
                 description: Enable support for Service Discovery (Lighthouse).
                 type: boolean
+              clustersetIPEnabled:
+                description: Enable ClustersetIP default for services exported on this
+                  cluster.
+                type: boolean
               tolerations:
                 items:
                   description: The pod this Toleration is attached to tolerates any
@@ -224,6 +232,9 @@ spec:
                 type: string
               clusterID:
                 description: The current cluster ID.
+                type: string
+              clustersetIPCIDR:
+                description: The current clustersetIP CIDR.
                 type: string
               colorCodes:
                 type: string

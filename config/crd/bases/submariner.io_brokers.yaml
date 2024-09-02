@@ -34,6 +34,10 @@ spec:
           spec:
             description: BrokerSpec defines the desired state of Broker.
             properties:
+              clustersetIPCIDRRange:
+                description: ClustersetIP supernet range for allocating ClustersetIPCIDRs
+                  to each cluster.
+                type: string
               components:
                 description: List of the components to be installed - any of [service-discovery,
                   connectivity].
@@ -55,6 +59,9 @@ spec:
                 type: string
               globalnetEnabled:
                 description: Enable support for Overlapping CIDRs in connecting clusters.
+                type: boolean
+              clustersetIPEnabled:
+                description: Enable ClustersetIP default for connecting clusters.
                 type: boolean
             type: object
           status:

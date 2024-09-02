@@ -47,6 +47,13 @@ type BrokerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:fieldDependency:globalnetEnabled:true","urn:alm:descriptor:com.tectonic.ui:advanced"}
 	GlobalnetCIDRRange string `json:"globalnetCIDRRange,omitempty"`
 
+	// ClustersetIP supernet range for allocating ClustersetIPCIDRs to each cluster.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="ClustersetIP CIDR Range"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	// +optional
+	ClustersetIPCIDRRange string `json:"clustersetIPCIDRRange,omitempty"`
+
 	// Default cluster size for GlobalCIDR allocated to each cluster (amount of global IPs).
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Default Globalnet Cluster Size"
 	//nolint:lll // Markers can't be wrapped
@@ -57,6 +64,12 @@ type BrokerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable Globalnet"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
 	GlobalnetEnabled bool `json:"globalnetEnabled,omitempty"`
+
+	// Enable ClustersetIP default for connecting clusters.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable ClustersetIP"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +optional
+	ClustersetIPEnabled bool `json:"clustersetIPEnabled,omitempty"`
 }
 
 // BrokerStatus defines the observed state of Broker.
