@@ -32,20 +32,24 @@ type ServiceDiscoverySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	BrokerK8sApiServer       string               `json:"brokerK8sApiServer"`
-	BrokerK8sApiServerToken  string               `json:"brokerK8sApiServerToken,omitempty"`
-	BrokerK8sCA              string               `json:"brokerK8sCA,omitempty"`
-	BrokerK8sSecret          string               `json:"brokerK8sSecret,omitempty"`
-	BrokerK8sRemoteNamespace string               `json:"brokerK8sRemoteNamespace"`
-	ClusterID                string               `json:"clusterID"`
-	Namespace                string               `json:"namespace"`
-	Repository               string               `json:"repository,omitempty"`
-	Version                  string               `json:"version,omitempty"`
-	Debug                    bool                 `json:"debug"`
-	GlobalnetEnabled         bool                 `json:"globalnetEnabled,omitempty"`
-	BrokerK8sInsecure        bool                 `json:"brokerK8sInsecure,omitempty"`
-	HaltOnCertificateError   bool                 `json:"haltOnCertificateError,omitempty"`
-	CoreDNSCustomConfig      *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
+	BrokerK8sApiServer       string `json:"brokerK8sApiServer"`
+	BrokerK8sApiServerToken  string `json:"brokerK8sApiServerToken,omitempty"`
+	BrokerK8sCA              string `json:"brokerK8sCA,omitempty"`
+	BrokerK8sSecret          string `json:"brokerK8sSecret,omitempty"`
+	BrokerK8sRemoteNamespace string `json:"brokerK8sRemoteNamespace"`
+	ClusterID                string `json:"clusterID"`
+	Namespace                string `json:"namespace"`
+	Repository               string `json:"repository,omitempty"`
+	Version                  string `json:"version,omitempty"`
+	// +optional
+	ClustersetIPCIDR       string `json:"clustersetIPCIDR,omitempty"`
+	Debug                  bool   `json:"debug"`
+	GlobalnetEnabled       bool   `json:"globalnetEnabled,omitempty"`
+	BrokerK8sInsecure      bool   `json:"brokerK8sInsecure,omitempty"`
+	HaltOnCertificateError bool   `json:"haltOnCertificateError,omitempty"`
+	// +optional
+	ClustersetIPEnabled bool                 `json:"clustersetIPEnabled,omitempty"`
+	CoreDNSCustomConfig *CoreDNSCustomConfig `json:"coreDNSCustomConfig,omitempty"`
 	// +listType=set
 	CustomDomains  []string          `json:"customDomains,omitempty"`
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`

@@ -61,6 +61,13 @@ spec:
           spec:
             description: BrokerSpec defines the desired state of Broker.
             properties:
+              clustersetIPCIDRRange:
+                description: ClustersetIP supernet range for allocating ClustersetIPCIDRs
+                  to each cluster.
+                type: string
+              clustersetIPEnabled:
+                description: Enable ClustersetIP default for connecting clusters.
+                type: boolean
               components:
                 description: List of the components to be installed - any of [service-discovery,
                   connectivity].
@@ -187,6 +194,14 @@ spec:
               clusterID:
                 description: The cluster ID used to identify the tunnels.
                 type: string
+              clustersetIPCIDR:
+                description: ClustersetIP CIDR for allocating ClustersetIPs to exported
+                  services.
+                type: string
+              clustersetIPEnabled:
+                description: Enable ClustersetIP default for services exported on
+                  this cluster.
+                type: boolean
               colorCodes:
                 type: string
               connectionHealthCheck:
@@ -323,6 +338,9 @@ spec:
                 type: string
               clusterID:
                 description: The current cluster ID.
+                type: string
+              clustersetIPCIDR:
+                description: The current clustersetIP CIDR.
                 type: string
               colorCodes:
                 type: string
@@ -1150,6 +1168,10 @@ spec:
                 type: string
               clusterID:
                 type: string
+              clustersetIPCIDR:
+                type: string
+              clustersetIPEnabled:
+                type: boolean
               coreDNSCustomConfig:
                 properties:
                   configMapName:
