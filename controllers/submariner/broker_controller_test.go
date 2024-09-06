@@ -70,8 +70,8 @@ var _ = Describe("Broker controller tests", func() {
 
 		globalnetInfo, _, err := globalnet.GetGlobalNetworks(ctx, t.ScopedClient, submarinerNamespace)
 		Expect(err).To(Succeed())
-		Expect(globalnetInfo.CidrRange).To(Equal(broker.Spec.GlobalnetCIDRRange))
-		Expect(globalnetInfo.ClusterSize).To(Equal(broker.Spec.DefaultGlobalnetClusterSize))
+		Expect(globalnetInfo.CIDR).To(Equal(broker.Spec.GlobalnetCIDRRange))
+		Expect(globalnetInfo.AllocationSize).To(Equal(broker.Spec.DefaultGlobalnetClusterSize))
 	})
 
 	It("should create the CRDs", func(ctx SpecContext) {

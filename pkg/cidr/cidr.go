@@ -77,20 +77,13 @@ func ExtractClusterInfo(fromConfigMap *corev1.ConfigMap) (map[string]*ClusterInf
 }
 
 func AddClusterInfoData(toConfigMap *corev1.ConfigMap, newCluster ClusterInfo) error {
-	var existingInfo []ClusterInfo
+	existingInfo, err := unmarshalClusterInfo(toConfigMap)
+	if err != nil {
+		return err
+	}
 
 	if toConfigMap.Data == nil {
 		toConfigMap.Data = map[string]string{}
-	}
-
-	existingData := toConfigMap.Data[ClusterInfoKey]
-	if existingData == "" {
-		existingData = "[]"
-	}
-
-	err := json.Unmarshal([]byte(existingData), &existingInfo)
-	if err != nil {
-		return errors.Wrapf(err, "error unmarshalling ClusterInfo")
 	}
 
 	exists := false
