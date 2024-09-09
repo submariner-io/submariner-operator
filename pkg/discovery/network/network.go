@@ -31,11 +31,12 @@ import (
 )
 
 type ClusterNetwork struct {
-	PodCIDRs       []string
-	ServiceCIDRs   []string
-	NetworkPlugin  string
-	GlobalCIDR     string
-	PluginSettings map[string]string
+	PodCIDRs         []string
+	ServiceCIDRs     []string
+	NetworkPlugin    string
+	GlobalCIDR       string
+	ClustersetIPCIDR string
+	PluginSettings   map[string]string
 }
 
 func (cn *ClusterNetwork) Show() {
@@ -48,6 +49,10 @@ func (cn *ClusterNetwork) Show() {
 
 		if cn.GlobalCIDR != "" {
 			fmt.Printf("        Global CIDR:     %v\n", cn.GlobalCIDR)
+		}
+
+		if cn.ClustersetIPCIDR != "" {
+			fmt.Printf("        ClustersetIP CIDR:     %v\n", cn.ClustersetIPCIDR)
 		}
 	}
 }
@@ -88,8 +93,9 @@ func Discover(ctx context.Context, client controllerClient.Client, operatorNames
 	}
 
 	if discovery != nil {
-		globalCIDR, _ := getGlobalCIDRs(ctx, client, operatorNamespace)
+		globalCIDR, clustersetIPCIDR, _ := getCIDRs(ctx, client, operatorNamespace)
 		discovery.GlobalCIDR = globalCIDR
+		discovery.ClustersetIPCIDR = clustersetIPCIDR
 	}
 
 	return discovery, err
@@ -119,19 +125,20 @@ func networkPluginsDiscovery(ctx context.Context, client controllerClient.Client
 	return nil, nil
 }
 
-func getGlobalCIDRs(ctx context.Context, operatorClient controllerClient.Client, operatorNamespace string) (string, error) {
+func getCIDRs(ctx context.Context, operatorClient controllerClient.Client, operatorNamespace string) (string, string, error) {
 	if operatorClient == nil {
-		return "", nil
+		return "", "", nil
 	}
 
 	existingCfg := v1alpha1.Submariner{}
 
 	err := operatorClient.Get(ctx, types.NamespacedName{Namespace: operatorNamespace, Name: names.SubmarinerCrName}, &existingCfg)
 	if err != nil {
-		return "", errors.Wrap(err, "error retrieving Submariner resource")
+		return "", "", errors.Wrap(err, "error retrieving Submariner resource")
 	}
 
 	globalCIDR := existingCfg.Spec.GlobalCIDR
+	clustersetIPCIDR := existingCfg.Spec.ClustersetIPCIDR
 
-	return globalCIDR, nil
+	return globalCIDR, clustersetIPCIDR, nil
 }
