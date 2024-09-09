@@ -236,6 +236,7 @@ func (t *testDriver) withNetworkDiscovery() *v1alpha1.Submariner {
 	t.submariner.Status.ClusterCIDR = getClusterCIDR(t.submariner, t.clusterNetwork)
 	t.submariner.Status.ServiceCIDR = getServiceCIDR(t.submariner, t.clusterNetwork)
 	t.submariner.Status.GlobalCIDR = getGlobalCIDR(t.submariner, t.clusterNetwork)
+	t.submariner.Status.ClustersetIPCIDR = getClustersetIPCIDR(t.submariner, t.clusterNetwork)
 	t.submariner.Status.NetworkPlugin = t.clusterNetwork.NetworkPlugin
 
 	return t.submariner
@@ -292,4 +293,12 @@ func getGlobalCIDR(submariner *v1alpha1.Submariner, clusterNetwork *network.Clus
 	}
 
 	return clusterNetwork.GlobalCIDR
+}
+
+func getClustersetIPCIDR(submariner *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork) string {
+	if submariner.Spec.ClustersetIPCIDR != "" {
+		return submariner.Spec.ClustersetIPCIDR
+	}
+
+	return clusterNetwork.ClustersetIPCIDR
 }

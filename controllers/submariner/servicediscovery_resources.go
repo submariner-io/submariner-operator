@@ -54,6 +54,8 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 					ClusterID:                submariner.Spec.ClusterID,
 					Namespace:                submariner.Spec.Namespace,
 					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
+					ClustersetIPEnabled:      submariner.Spec.ClustersetIPEnabled,
+					ClustersetIPCIDR:         submariner.Spec.ClustersetIPCIDR,
 					ImageOverrides:           submariner.Spec.ImageOverrides,
 					CoreDNSCustomConfig:      submariner.Spec.CoreDNSCustomConfig,
 					NodeSelector:             submariner.Spec.NodeSelector,

@@ -314,6 +314,7 @@ var _ = Describe("Generic Network", func() {
 
 	When("the Submariner resource exists", func() {
 		const globalCIDR = "242.112.0.0/24"
+		const clustersetIPCIDR = "243.110.0.0/20"
 
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(ctx, &v1alpha1.Submariner{
@@ -321,13 +322,19 @@ var _ = Describe("Generic Network", func() {
 					Name: names.SubmarinerCrName,
 				},
 				Spec: v1alpha1.SubmarinerSpec{
-					GlobalCIDR: globalCIDR,
+					GlobalCIDR:       globalCIDR,
+					ClustersetIPCIDR: clustersetIPCIDR,
 				},
 			})
 		})
 
 		It("should return the ClusterNetwork structure with the global CIDR", func() {
 			Expect(clusterNet.GlobalCIDR).To(Equal(globalCIDR))
+			clusterNet.Show()
+		})
+
+		It("should return the ClusterNetwork structure with the clustersetIP CIDR", func() {
+			Expect(clusterNet.ClustersetIPCIDR).To(Equal(clustersetIPCIDR))
 			clusterNet.Show()
 		})
 	})

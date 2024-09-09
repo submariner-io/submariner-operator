@@ -225,6 +225,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	instance.Status.ColorCodes = instance.Spec.ColorCodes
 	instance.Status.ClusterID = instance.Spec.ClusterID
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR
+	instance.Status.ClustersetIPCIDR = instance.Spec.ClustersetIPCIDR
 	instance.Status.Gateways = &gatewayStatuses
 
 	err = updateDaemonSetStatus(ctx, r.config.ScopedClient, gatewayDaemonSet, &instance.Status.GatewayDaemonSetStatus, request.Namespace)
