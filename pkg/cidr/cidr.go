@@ -272,3 +272,49 @@ func uintToIP(ip uint32) net.IP {
 
 	return netIP
 }
+
+func GetValidAllocationSize(cidrRange string, allocationSize uint) (uint, error) {
+	_, network, err := net.ParseCIDR(cidrRange)
+	if err != nil {
+		return 0, err //nolint:wrapcheck // No need to wrap here
+	}
+
+	ones, totalbits := network.Mask.Size()
+	availableSize := uint(1) << uint(totalbits-ones) //nolint:gosec // Ignore overflow conversion int -> uint
+	userClusterSize := allocationSize
+	allocationSize = nextPowerOf2(allocationSize)
+
+	if allocationSize > (availableSize / 2) {
+		return 0, fmt.Errorf("cluster size %d, should be <= %d", userClusterSize, availableSize/2)
+	}
+
+	if allocationSize == 0 {
+		return 0, errors.New("cluster size must be > 0")
+	}
+
+	return allocationSize, nil
+}
+
+// Refer: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+func nextPowerOf2(n uint) uint {
+	n--
+	n |= n >> 1
+	n |= n >> 2
+	n |= n >> 4
+	n |= n >> 8
+	n |= n >> 16
+	n++
+
+	return n
+}
+
+func IsCIDRPreConfigured(clusterID string, clustersetIPNetworks map[string]*ClusterInfo) bool {
+	// ClustersetIPCIDR is not pre-configured
+	if clustersetIPNetworks[clusterID] == nil || clustersetIPNetworks[clusterID].CIDRs == nil ||
+		len(clustersetIPNetworks[clusterID].CIDRs) == 0 {
+		return false
+	}
+
+	// ClustersetIPCIDR is pre-configured
+	return true
+}

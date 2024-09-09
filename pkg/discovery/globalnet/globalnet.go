@@ -22,7 +22,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/reporter"
@@ -48,41 +47,6 @@ func AllocateGlobalCIDR(globalnetInfo *Info) (string, error) {
 	return cidr.Allocate(&globalnetInfo.Info) //nolint:wrapcheck // No need to wrap
 }
 
-func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
-	_, network, err := net.ParseCIDR(cidrRange)
-	if err != nil {
-		return 0, err //nolint:wrapcheck // No need to wrap here
-	}
-
-	ones, totalbits := network.Mask.Size()
-	availableSize := uint(1) << uint(totalbits-ones) //nolint:gosec // Ignore overflow conversion int -> uint
-	userClusterSize := clusterSize
-	clusterSize = nextPowerOf2(clusterSize)
-
-	if clusterSize > (availableSize / 2) {
-		return 0, fmt.Errorf("cluster size %d, should be <= %d", userClusterSize, availableSize/2)
-	}
-
-	if clusterSize == 0 {
-		return 0, errors.New("cluster size must be > 0")
-	}
-
-	return clusterSize, nil
-}
-
-// Refer: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-func nextPowerOf2(n uint) uint {
-	n--
-	n |= n >> 1
-	n |= n >> 2
-	n |= n >> 4
-	n |= n >> 8
-	n |= n >> 16
-	n++
-
-	return n
-}
-
 func isCIDRPreConfigured(clusterID string, globalNetworks map[string]*cidr.ClusterInfo) bool {
 	// GlobalCIDR is not pre-configured
 	if globalNetworks[clusterID] == nil || globalNetworks[clusterID].CIDRs == nil || len(globalNetworks[clusterID].CIDRs) == 0 {
@@ -101,7 +65,7 @@ func ValidateGlobalnetConfiguration(globalnetInfo *Info, netconfig Config, statu
 	globalnetCIDR := netconfig.GlobalCIDR
 
 	if globalnetInfo.Enabled && globalnetClusterSize != 0 && globalnetClusterSize != globalnetInfo.AllocationSize {
-		clusterSize, err := GetValidClusterSize(globalnetInfo.CIDR, globalnetClusterSize)
+		clusterSize, err := cidr.GetValidAllocationSize(globalnetInfo.CIDR, globalnetClusterSize)
 		if err != nil {
 			return "", status.Error(err, "invalid cluster size")
 		}
@@ -192,7 +156,7 @@ func AssignGlobalnetIPs(globalnetInfo *Info, netconfig Config, status reporter.I
 		}
 	} else {
 		// Globalnet enabled, globalnetCIDR specified by user
-		if isCIDRPreConfigured(clusterID, globalnetInfo.Clusters) {
+		if cidr.IsCIDRPreConfigured(clusterID, globalnetInfo.Clusters) {
 			// globalCidr pre-configured on this cluster
 			globalnetCIDR = globalnetInfo.Clusters[clusterID].CIDRs[0]
 			status.Warning("A pre-configured global CIDR %s was detected - not using the specified CIDR %s",
