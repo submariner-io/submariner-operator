@@ -24,6 +24,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/pkg/cidr"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,17 +35,11 @@ import (
 const (
 	globalCIDRConfigMapName     = "submariner-globalnet-info"
 	globalnetEnabledKey         = "globalnetEnabled"
-	clusterInfoKey              = "clusterinfo"
 	globalnetCidrRange          = "globalnetCidrRange"
 	globalnetClusterSize        = "globalnetClusterSize"
 	DefaultGlobalnetCIDR        = "242.0.0.0/8"
 	DefaultGlobalnetClusterSize = 65536 // i.e., x.x.x.x/16 subnet mask
 )
-
-type clusterInfo struct {
-	ClusterID  string   `json:"cluster_id"`
-	GlobalCidr []string `json:"global_cidr"`
-}
 
 func CreateConfigMap(ctx context.Context, client controllerClient.Client, globalnetEnabled bool, defaultGlobalCidrRange string,
 	defaultGlobalClusterSize uint, namespace string,
@@ -80,12 +75,10 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 			globalnetEnabledKey:  "true",
 			globalnetCidrRange:   string(cidrRange),
 			globalnetClusterSize: fmt.Sprint(defaultGlobalClusterSize),
-			clusterInfoKey:       "[]",
 		}
 	} else {
 		data = map[string]string{
 			globalnetEnabledKey: "false",
-			clusterInfoKey:      "[]",
 		}
 	}
 
@@ -101,34 +94,13 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 	return cm, nil
 }
 
-func updateConfigMap(ctx context.Context, client controllerClient.Client, configMap *corev1.ConfigMap, newCluster clusterInfo,
+func updateConfigMap(ctx context.Context, client controllerClient.Client, configMap *corev1.ConfigMap, newCluster cidr.ClusterInfo,
 ) error {
-	var existingInfo []clusterInfo
-
-	err := json.Unmarshal([]byte(configMap.Data[clusterInfoKey]), &existingInfo)
+	err := cidr.AddClusterInfoData(configMap, newCluster)
 	if err != nil {
-		return errors.Wrapf(err, "error unmarshalling ClusterInfo")
+		return errors.Wrapf(err, "error adding ClusterInfo")
 	}
 
-	exists := false
-
-	for k, value := range existingInfo {
-		if value.ClusterID == newCluster.ClusterID {
-			existingInfo[k].GlobalCidr = newCluster.GlobalCidr
-			exists = true
-		}
-	}
-
-	if !exists {
-		existingInfo = append(existingInfo, newCluster)
-	}
-
-	data, err := json.MarshalIndent(existingInfo, "", "\t")
-	if err != nil {
-		return errors.Wrapf(err, "error marshalling ClusterInfo")
-	}
-
-	configMap.Data[clusterInfoKey] = string(data)
 	err = client.Update(ctx, configMap)
 
 	return errors.Wrapf(err, "error updating ConfigMap")
