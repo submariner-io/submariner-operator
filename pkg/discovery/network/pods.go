@@ -20,6 +20,7 @@ package network
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -39,7 +40,12 @@ func FindPodCommandParameter(ctx context.Context, client controllerClient.Client
 		for _, arg := range pod.Spec.Containers[i].Command {
 			if strings.HasPrefix(arg, parameter) {
 				return strings.SplitN(arg, "=", 2)[1], nil
+			} else if index := slices.IndexFunc(pod.Spec.Containers[i].Args, func(s string) bool {
+				return strings.HasPrefix(s, parameter)
+			}); index >= 0 {
+				return strings.SplitN(pod.Spec.Containers[i].Args[index], "=", 2)[1], nil
 			}
+
 			// Handling the case where the command is in the form of /bin/sh -c exec ....
 			if strings.Contains(arg, " ") {
 				for _, subArg := range strings.Split(arg, " ") {
