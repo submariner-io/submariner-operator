@@ -36,6 +36,13 @@ func fakePod(component string, command []string, env []v1.EnvVar) *v1.Pod {
 	return fakePodWithName(component, component, command, env)
 }
 
+func fakePodWithArg(component string, command []string, arg string, env ...v1.EnvVar) *v1.Pod {
+	pod := fakePodWithName(component, component, command, env)
+	pod.Spec.Containers[0].Args = []string{arg}
+
+	return pod
+}
+
 func fakePodWithName(name, component string, command []string, env []v1.EnvVar) *v1.Pod {
 	return fakePodWithNamespace("default", name, component, command, env)
 }
