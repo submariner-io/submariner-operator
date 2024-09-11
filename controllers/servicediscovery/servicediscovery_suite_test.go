@@ -234,10 +234,13 @@ func (t *testDriver) assertLighthouseCoreDNSService(ctx context.Context) *corev1
 		service)).To(Succeed())
 
 	Expect(service.Labels).To(HaveKeyWithValue("app", lighthouseDNSServiceName))
-	Expect(service.Spec.Ports).To(HaveLen(1))
+	Expect(service.Spec.Ports).To(HaveLen(2))
 	Expect(service.Spec.Ports[0].Protocol).To(Equal(corev1.Protocol("UDP")))
 	Expect(service.Spec.Ports[0].Port).To(Equal(int32(53)))
 	Expect(service.Spec.Ports[0].TargetPort.IntVal).To(Equal(int32(53)))
+	Expect(service.Spec.Ports[1].Protocol).To(Equal(corev1.Protocol("TCP")))
+	Expect(service.Spec.Ports[1].Port).To(Equal(int32(53)))
+	Expect(service.Spec.Ports[1].TargetPort.IntVal).To(Equal(int32(53)))
 
 	return service
 }
