@@ -133,6 +133,20 @@ var _ = Describe("Generic Network", func() {
 		})
 	})
 
+	When("There is a kube-controller pod with the right parameter passed as an Arg", func() {
+		BeforeEach(func(ctx SpecContext) {
+			clusterNet = testDiscoverGenericWith(
+				ctx,
+				fakePodWithArg("kube-controller-manager", []string{"kube-controller-manager"}, "--cluster-cidr="+testPodCIDR),
+			)
+			Expect(clusterNet).NotTo(BeNil())
+		})
+
+		It("Should return the ClusterNetwork structure with pod CIDR", func() {
+			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
+		})
+	})
+
 	When("There is a kube-proxy pod but no kube-controller", func() {
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
