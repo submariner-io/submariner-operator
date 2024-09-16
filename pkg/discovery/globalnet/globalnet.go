@@ -55,11 +55,11 @@ func GetValidClusterSize(cidrRange string, clusterSize uint) (uint, error) {
 	}
 
 	ones, totalbits := network.Mask.Size()
-	availableSize := 1 << uint(totalbits-ones)
+	availableSize := uint(1) << uint(totalbits-ones) //nolint:gosec // Ignore overflow conversion int -> uint
 	userClusterSize := clusterSize
 	clusterSize = nextPowerOf2(clusterSize)
 
-	if clusterSize > uint(availableSize/2) {
+	if clusterSize > (availableSize / 2) {
 		return 0, fmt.Errorf("cluster size %d, should be <= %d", userClusterSize, availableSize/2)
 	}
 
