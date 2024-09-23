@@ -63,12 +63,6 @@ func ValidateClustersetIPConfiguration(clustersetIPInfo *Info, netconfig Config,
 		clustersetIPInfo.AllocationSize = clusterSize
 	}
 
-	if clustersetIPCIDR != "" && clustersetIPClusterSize != 0 {
-		status.Failure("Only one of cluster size and clustersetip CIDR can be specified")
-
-		return "", errors.New("only one of cluster size and clustersetip CIDR can be specified")
-	}
-
 	if clustersetIPCIDR != "" {
 		err := cidr.IsValid(clustersetIPCIDR)
 		if err != nil {
@@ -178,6 +172,7 @@ func AllocateCIDRFromConfigMap(ctx context.Context, brokerAdminClient controller
 		netconfig.AllocationSize = DefaultAllocationSize
 	}
 
+	userClustersetIPCIDR := netconfig.ClustersetIPCIDR
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		status.Start("Retrieving ClustersetIP information from the Broker")
 		defer status.End()
@@ -209,6 +204,8 @@ func AllocateCIDRFromConfigMap(ctx context.Context, brokerAdminClient controller
 			err = updateConfigMap(ctx, brokerAdminClient, clustersetIPConfigMap, newClusterInfo)
 			if apierrors.IsConflict(err) {
 				status.Warning("Conflict occurred updating the ClustersetIP ConfigMap - retrying")
+				// Conflict with allocation, retry with user given CIDR to try reallocation
+				netconfig.ClustersetIPCIDR = userClustersetIPCIDR
 			} else {
 				return status.Error(err, "error updating the ClustersetIP ConfigMap")
 			}
