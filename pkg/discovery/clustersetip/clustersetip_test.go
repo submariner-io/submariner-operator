@@ -49,7 +49,7 @@ var _ = Describe("AllocateCIDRFromConfigMap", func() {
 			}
 
 			Expect(clustersetip.AllocateCIDRFromConfigMap(ctx, client, namespace,
-				netconfig, reporter.Klog())).To(Succeed())
+				netconfig, reporter.Klog())).To(BeTrue())
 			Expect(netconfig.ClustersetIPCIDR).To(Equal(expClustersetIPCIDR))
 
 			clustersetipInfo, _, err := clustersetip.GetClustersetIPNetworks(ctx, client, namespace)
@@ -61,7 +61,7 @@ var _ = Describe("AllocateCIDRFromConfigMap", func() {
 
 			netconfig.ClustersetIPCIDR = ""
 			Expect(clustersetip.AllocateCIDRFromConfigMap(ctx, client, namespace,
-				netconfig, reporter.Klog())).To(Succeed())
+				netconfig, reporter.Klog())).To(BeTrue())
 			Expect(netconfig.ClustersetIPCIDR).To(Equal(expClustersetIPCIDR))
 		})
 	})
@@ -76,7 +76,7 @@ var _ = Describe("AllocateCIDRFromConfigMap", func() {
 			}
 
 			Expect(clustersetip.AllocateCIDRFromConfigMap(ctx, client, namespace,
-				netconfig, reporter.Klog())).To(Succeed())
+				netconfig, reporter.Klog())).To(BeTrue())
 			Expect(netconfig.ClustersetIPCIDR).To(Equal(expClustersetIPCIDR))
 
 			clustersetipInfo, _, err := clustersetip.GetClustersetIPNetworks(ctx, client, namespace)
@@ -88,7 +88,7 @@ var _ = Describe("AllocateCIDRFromConfigMap", func() {
 
 			netconfig.ClustersetIPCIDR = ""
 			Expect(clustersetip.AllocateCIDRFromConfigMap(ctx, client, namespace,
-				netconfig, reporter.Klog())).To(Succeed())
+				netconfig, reporter.Klog())).To(BeTrue())
 			Expect(netconfig.ClustersetIPCIDR).To(Equal(expClustersetIPCIDR))
 		})
 	})
@@ -101,7 +101,7 @@ var _ = Describe("AllocateCIDRFromConfigMap", func() {
 			}
 
 			Expect(clustersetip.AllocateCIDRFromConfigMap(ctx, client, namespace,
-				netconfig, reporter.Klog())).To(Succeed())
+				netconfig, reporter.Klog())).To(BeTrue())
 			Expect(netconfig.ClustersetIPCIDR).To(Equal("168.254.0.0/22"))
 		})
 	})
