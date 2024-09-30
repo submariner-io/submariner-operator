@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
+	"github.com/submariner-io/submariner-operator/pkg/discovery/clustersetip"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/globalnet"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
@@ -89,6 +90,18 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 
 	err = globalnet.CreateConfigMap(ctx, r.Client, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
 		instance.Spec.DefaultGlobalnetClusterSize, request.Namespace)
+	if err != nil {
+		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
+	}
+
+	// clustersetip
+	err = clustersetip.ValidateExistingClustersetIPNetworks(ctx, r.Client, request.Namespace)
+	if err != nil {
+		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
+	}
+
+	err = clustersetip.CreateConfigMap(ctx, r.Client, instance.Spec.ClustersetIPEnabled,
+		instance.Spec.ClustersetIPCIDRRange, 0, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
