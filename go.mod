@@ -17,7 +17,7 @@ require (
 	github.com/submariner-io/shipyard v0.20.0-m0
 	github.com/submariner-io/submariner v0.20.0-m0
 	golang.org/x/net v0.30.0
-	golang.org/x/text v0.19.0
+	golang.org/x/text v0.20.0
 	k8s.io/api v0.31.2
 	k8s.io/apiextensions-apiserver v0.31.2
 	k8s.io/apimachinery v0.31.2
