@@ -28,7 +28,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -36,26 +35,41 @@ import (
 func discoverFlannelNetwork(ctx context.Context, client controllerClient.Client) (*ClusterNetwork, error) {
 	daemonsets := &appsv1.DaemonSetList{}
 
-	err := client.List(ctx, daemonsets, controllerClient.InNamespace(metav1.NamespaceSystem))
+	// List all DaemonSets across all namespaces that have the label "k8s-app=flannel"
+	// This is used to identify if the cluster is running Flannel as its CNI plugin.
+	err := client.List(ctx, daemonsets, controllerClient.MatchingLabels{"k8s-app": "flannel"})
 	if err != nil {
 		return nil, errors.WithMessage(err, "error listing the Daemonsets for flannel discovery")
 	}
 
+	var flannelDaemonSet *appsv1.DaemonSet
 	volumes := make([]corev1.Volume, 0)
-	// look for a daemonset matching "flannel"
-	for k := range daemonsets.Items {
-		if strings.Contains(daemonsets.Items[k].Name, "flannel") {
-			volumes = daemonsets.Items[k].Spec.Template.Spec.Volumes
+
+	// Find the first DaemonSet with "flannel" in its name and store its reference and volumes.
+	for i := range daemonsets.Items {
+		ds := &daemonsets.Items[i]
+		if strings.Contains(ds.Name, "flannel") {
+			flannelDaemonSet = ds
+			volumes = ds.Spec.Template.Spec.Volumes
+
+			break
 		}
 	}
 
-	if len(volumes) < 1 {
+	if flannelDaemonSet == nil || len(volumes) < 1 {
 		return nil, nil
 	}
 
-	clusterNetwork, err := extractCIDRsFromFlannelConfigMap(ctx, client, findFlannelConfigMapName(volumes))
-	if err != nil || clusterNetwork == nil {
+	// Extract the ConfigMap name from the DaemonSet's volumes and check in the same namespace
+	configMapName := findFlannelConfigMapName(volumes)
+
+	clusterNetwork, err := extractCIDRsFromFlannelConfigMap(ctx, client, configMapName, flannelDaemonSet.Namespace)
+	if err != nil {
 		return nil, err
+	}
+
+	if clusterNetwork == nil {
+		return nil, errors.New("cluster network is nil")
 	}
 
 	clusterNetwork.NetworkPlugin = cni.Flannel
@@ -64,7 +78,8 @@ func discoverFlannelNetwork(ctx context.Context, client controllerClient.Client)
 }
 
 //nolint:nilnil // Intentional as the purpose is to discover.
-func extractCIDRsFromFlannelConfigMap(ctx context.Context, client controllerClient.Client, configMapName string) (*ClusterNetwork, error) {
+func extractCIDRsFromFlannelConfigMap(ctx context.Context, client controllerClient.Client, configMapName, namespace string,
+) (*ClusterNetwork, error) {
 	var podCIDR *string
 
 	if configMapName == "" {
@@ -75,11 +90,11 @@ func extractCIDRsFromFlannelConfigMap(ctx context.Context, client controllerClie
 
 		podCIDR = &podIPRange
 	} else {
-		// look for the configmap details using the configmap name discovered from the daemonset
+		// Look for the ConfigMap in the specified namespace
 		cm := &corev1.ConfigMap{}
 
 		err := client.Get(ctx, controllerClient.ObjectKey{
-			Namespace: metav1.NamespaceSystem,
+			Namespace: namespace,
 			Name:      configMapName,
 		}, cm)
 		if err != nil {
