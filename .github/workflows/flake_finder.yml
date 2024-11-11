@@ -26,7 +26,7 @@ jobs:
           - k8s_version: '1.26'
     steps:
       - name: Check out the repository
-        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Run E2E deployment and tests
         uses: submariner-io/shipyard/gh-actions/e2e@devel
@@ -46,7 +46,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Check out the repository
-        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Install an old cluster, upgrade it and check it
         uses: submariner-io/shipyard/gh-actions/upgrade-e2e@devel
