@@ -43,8 +43,9 @@ func discoverCanalFlannelNetwork(ctx context.Context, client controllerClient.Cl
 		return nil, nil
 	}
 
+	// Pass the namespace to the function call
 	clusterNetwork, err := extractCIDRsFromFlannelConfigMap(ctx, client, findFlannelConfigMapName(
-		daemonsets.Items[0].Spec.Template.Spec.Volumes))
+		daemonsets.Items[0].Spec.Template.Spec.Volumes), metav1.NamespaceSystem)
 	if err != nil || clusterNetwork == nil {
 		return nil, err
 	}

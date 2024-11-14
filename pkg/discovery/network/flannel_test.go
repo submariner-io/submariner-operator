@@ -50,6 +50,32 @@ var _ = Describe("Flannel Network", func() {
 		})
 	})
 
+	When("a DaemonSet exists without the flannel label", func() {
+		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
+			nonFlannelDaemonSet := appsv1.DaemonSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "non-flannel-ds",
+					Namespace: metav1.NamespaceSystem,
+					Labels:    map[string]string{"k8s-app": "non-flannel"},
+				},
+				Spec: appsv1.DaemonSetSpec{
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"k8s-app": "non-flannel"},
+						},
+						Spec: corev1.PodSpec{
+							Volumes: []corev1.Volume{flannelCfgVolume},
+						},
+					},
+				},
+			}
+
+			clusterNet := testDiscoverNetworkSuccess(ctx, &nonFlannelDaemonSet)
+			Expect(clusterNet).NotTo(BeNil())
+			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
+		})
+	})
+
 	When("the flannel ConfigMap does not exist", func() {
 		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
 			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelDaemonSet)
@@ -63,10 +89,13 @@ var flannelDaemonSet = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "kube-flannel-ds",
 		Namespace: metav1.NamespaceSystem,
+		Labels:    map[string]string{"k8s-app": "flannel"},
 	},
 	Spec: appsv1.DaemonSetSpec{
 		Template: corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{},
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{"k8s-app": "flannel"},
+			},
 			Spec: corev1.PodSpec{
 				Volumes: []corev1.Volume{flannelCfgVolume},
 			},
