@@ -133,6 +133,19 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 		})
 	}
 
+	securityContext := &corev1.SecurityContext{
+		Capabilities: &corev1.Capabilities{
+			Add:  []corev1.Capability{"net_admin"},
+			Drop: []corev1.Capability{"all"},
+		},
+		// The gateway needs to be privileged so it can write to /proc/sys
+		AllowPrivilegeEscalation: ptr.To(true),
+		Privileged:               ptr.To(true),
+		RunAsNonRoot:             ptr.To(false),
+		// We need to be able to update /var/lib/alternatives (for iptables)
+		ReadOnlyRootFilesystem: ptr.To(false),
+	}
+
 	podTemplate := corev1.PodTemplateSpec{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: podSelectorLabels,
@@ -149,23 +162,29 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 				},
 			},
 			NodeSelector: map[string]string{"submariner.io/gateway": "true"},
+			// Wait for the node to be ready before starting the gateway.
+			InitContainers: []corev1.Container{
+				{
+					Name:            name + "-init",
+					Image:           getImagePath(cr, opnames.GatewayImage, names.GatewayComponent),
+					ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayComponent]),
+					SecurityContext: securityContext,
+					Env: httpproxy.AddEnvVars([]corev1.EnvVar{
+						{Name: "SUBMARINER_WAITFORNODE", Value: "true"},
+						{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "spec.nodeName",
+							},
+						}},
+					}),
+				},
+			},
 			Containers: []corev1.Container{
 				{
 					Name:            name,
 					Image:           getImagePath(cr, opnames.GatewayImage, names.GatewayComponent),
 					ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayComponent]),
-					SecurityContext: &corev1.SecurityContext{
-						Capabilities: &corev1.Capabilities{
-							Add:  []corev1.Capability{"net_admin"},
-							Drop: []corev1.Capability{"all"},
-						},
-						// The gateway needs to be privileged so it can write to /proc/sys
-						AllowPrivilegeEscalation: ptr.To(true),
-						Privileged:               ptr.To(true),
-						RunAsNonRoot:             ptr.To(false),
-						// We need to be able to update /var/lib/alternatives (for iptables)
-						ReadOnlyRootFilesystem: ptr.To(false),
-					},
+					SecurityContext: securityContext,
 					Ports: []corev1.ContainerPort{
 						{
 							Name:          encapsPortName,
