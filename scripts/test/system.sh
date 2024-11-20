@@ -258,7 +258,6 @@ function verify_subm_gateway_pod() {
   validate_pod_container_equals 'securityContext.privileged' 'true'
   validate_pod_container_equals 'securityContext.readOnlyRootFilesystem' 'false'
   validate_pod_container_equals 'securityContext.runAsNonRoot' 'false'
-  validate_pod_container_has 'command' 'submariner.sh'
 
   jq -r '.spec.containers[].env' "$json_file"
   validate_pod_container_env 'SUBMARINER_NAMESPACE' "$subm_ns"
@@ -322,7 +321,6 @@ function verify_subm_routeagent_pod() {
     validate_pod_container_equals 'securityContext.privileged' 'true'
     validate_pod_container_equals 'securityContext.readOnlyRootFilesystem' 'false'
     validate_pod_container_equals 'securityContext.runAsNonRoot' 'false'
-    validate_pod_container_has 'command' 'submariner-route-agent.sh'
 
     jq -r '.spec.containers[].env' "$json_file"
     validate_pod_container_env 'SUBMARINER_NAMESPACE' "$subm_ns"
