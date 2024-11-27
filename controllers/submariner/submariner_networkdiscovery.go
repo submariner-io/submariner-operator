@@ -20,7 +20,6 @@ package submariner
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -90,7 +89,7 @@ func getCIDR(log logr.Logger, cidrType, currentCIDR string, detectedCIDRs []stri
 
 	if detected != "" && detected != currentCIDR {
 		log.Error(
-			fmt.Errorf("there is a mismatch between the detected and configured CIDRs"),
+			errors.New("there is a mismatch between the detected and configured CIDRs"),
 			"The configured CIDR will take precedence",
 			"type", cidrType, "configured", currentCIDR, "detected", detected)
 	}
@@ -102,7 +101,7 @@ func getFirstCIDR(detectedCIDRs []string) string {
 	CIDRlen := len(detectedCIDRs)
 
 	if CIDRlen > 1 {
-		log.Error(fmt.Errorf("detected > 1 CIDRs"),
+		log.Error(errors.New("detected > 1 CIDRs"),
 			"we currently support only one", "detectedCIDRs", detectedCIDRs)
 	}
 

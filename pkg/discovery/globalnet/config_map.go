@@ -21,7 +21,7 @@ package globalnet
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/cidr"
@@ -74,7 +74,7 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 		data = map[string]string{
 			globalnetEnabledKey:  "true",
 			globalnetCidrRange:   string(cidrRange),
-			globalnetClusterSize: fmt.Sprint(defaultGlobalClusterSize),
+			globalnetClusterSize: strconv.FormatUint(uint64(defaultGlobalClusterSize), 10),
 		}
 	} else {
 		data = map[string]string{

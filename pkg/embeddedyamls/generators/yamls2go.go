@@ -169,7 +169,7 @@ const (
 		for _, index := range reDoc.FindAllIndex(contents, 2) {
 			if index[0] > 0 {
 				// Document starting inside the contents
-				panic(fmt.Sprintf("%s contains more than one document, use one file per document", f))
+				panic(f + " contains more than one document, use one file per document")
 			}
 		}
 

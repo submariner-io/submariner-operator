@@ -18,8 +18,6 @@ limitations under the License.
 
 package names
 
-import "fmt"
-
 /* CR names and other constants. */
 const (
 	ServiceDiscoveryCrName = "service-discovery"
@@ -45,5 +43,5 @@ func AppendUninstall(name string) string {
 }
 
 func ForClusterSA(clusterID string) string {
-	return fmt.Sprintf("cluster-%s", clusterID)
+	return "cluster-" + clusterID
 }

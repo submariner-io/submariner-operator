@@ -19,7 +19,6 @@ package metrics
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -32,7 +31,7 @@ import (
 	"k8s.io/utils/ptr"
 )
 
-var ErrServiceMonitorNotPresent = fmt.Errorf("no ServiceMonitor registered with the API")
+var ErrServiceMonitorNotPresent = errors.New("no ServiceMonitor registered with the API")
 
 const openshiftMonitoringNS = "openshift-monitoring"
 

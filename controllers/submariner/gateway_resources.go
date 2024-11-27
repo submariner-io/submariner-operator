@@ -20,7 +20,6 @@ package submariner
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -123,7 +122,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 		// We've got a PSK secret, mount it where the gateway expects it
 		volumeMounts = append(volumeMounts, corev1.VolumeMount{
 			Name:      "psksecret",
-			MountPath: fmt.Sprintf("/var/run/secrets/submariner.io/%s", cr.Spec.CeIPSecPSKSecret),
+			MountPath: "/var/run/secrets/submariner.io/" + cr.Spec.CeIPSecPSKSecret,
 			ReadOnly:  true,
 		})
 

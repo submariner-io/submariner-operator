@@ -21,7 +21,6 @@ package metrics
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/submariner-operator/controllers/apply"
@@ -94,7 +93,7 @@ func newMetricsService(name, namespace, appKey, appName string, port int32) *cor
 		ObjectMeta: metav1.ObjectMeta{
 			Labels:    labels,
 			Namespace: namespace,
-			Name:      fmt.Sprintf("%s-metrics", name),
+			Name:      name + "-metrics",
 		},
 		Spec: corev1.ServiceSpec{
 			Ports:    servicePorts,

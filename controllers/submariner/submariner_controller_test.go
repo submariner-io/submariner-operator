@@ -20,7 +20,6 @@ package submariner_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"reflect"
 	"time"
@@ -287,7 +286,7 @@ func testReconciliation() {
 			saName := opnames.ForClusterSA(t.submariner.Spec.ClusterID)
 			brokerSecret = &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      fmt.Sprintf("%s-token", saName),
+					Name:      saName + "-token",
 					Namespace: t.submariner.Spec.BrokerK8sRemoteNamespace,
 					Annotations: map[string]string{
 						corev1.ServiceAccountNameKey: saName,

@@ -20,7 +20,7 @@ package submariner
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/admiral/pkg/names"
@@ -63,7 +63,8 @@ func newMetricsProxyDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						*metricProxyContainer(cr, "gateway-metrics-proxy", fmt.Sprint(gatewayMetricsServicePort), gatewayMetricsServerPort),
+						*metricProxyContainer(cr, "gateway-metrics-proxy", strconv.Itoa(gatewayMetricsServicePort),
+							gatewayMetricsServerPort),
 					},
 					NodeSelector: map[string]string{"submariner.io/gateway": "true"},
 					// The MetricsProxy Pod must be able to run on any flagged node, regardless of existing taints
@@ -75,7 +76,7 @@ func newMetricsProxyDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 
 	if cr.Spec.GlobalCIDR != "" {
 		daemonSet.Spec.Template.Spec.Containers = append(daemonSet.Spec.Template.Spec.Containers,
-			*metricProxyContainer(cr, "globalnet-metrics-proxy", fmt.Sprint(globalnetMetricsServicePort), globalnetMetricsServerPort))
+			*metricProxyContainer(cr, "globalnet-metrics-proxy", strconv.Itoa(globalnetMetricsServicePort), globalnetMetricsServerPort))
 	}
 
 	return daemonSet

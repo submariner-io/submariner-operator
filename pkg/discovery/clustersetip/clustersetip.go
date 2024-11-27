@@ -21,7 +21,6 @@ package clustersetip
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/reporter"
@@ -122,7 +121,7 @@ func assignClustersetIPs(clustersetIPInfo *Info, netconfig Config, status report
 				return "", status.Error(err, "unable to allocate clustersetip CIDR")
 			}
 
-			status.Success(fmt.Sprintf("Allocated clustersetip CIDR %s", clustersetIPCIDR))
+			status.Success("Allocated clustersetip CIDR " + clustersetIPCIDR)
 		}
 	} else {
 		// ClustersetIP enabled, clustersetIPCIDR specified by user

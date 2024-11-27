@@ -21,7 +21,6 @@ package clustersetip
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -70,7 +69,7 @@ func NewClustersetIPConfigMap(clustersetIPEnabled bool, defaultClusteretIPCidrRa
 	data := map[string]string{
 		clustersetIPEnabledKey:  strconv.FormatBool(clustersetIPEnabled),
 		clustersetIPCidrRange:   string(cidrRange),
-		clustersetIPClusterSize: fmt.Sprint(defaultClustersetIPClusterSize),
+		clustersetIPClusterSize: strconv.FormatUint(uint64(defaultClustersetIPClusterSize), 10),
 	}
 
 	cm := &corev1.ConfigMap{

@@ -20,7 +20,7 @@ package submariner
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/go-logr/logr"
 	configv1 "github.com/openshift/api/config/v1"
@@ -61,7 +61,7 @@ func (r *Reconciler) reconcileLoadBalancer(
 
 	// For IBM cloud also needs to annotate the allocated health check node port
 	if platformTypeOCP == string(configv1.IBMCloudPlatformType) {
-		healthPortStr := fmt.Sprintf("%d", svc.Spec.HealthCheckNodePort)
+		healthPortStr := strconv.Itoa(int(svc.Spec.HealthCheckNodePort))
 		svc.ObjectMeta.Annotations = map[string]string{
 			"service.kubernetes.io/ibm-load-balancer-cloud-provider-vpc-health-check-port": healthPortStr,
 		}

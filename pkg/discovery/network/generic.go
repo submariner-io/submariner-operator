@@ -126,7 +126,7 @@ func findClusterIPRangeFromServiceCreation(ctx context.Context, client controlle
 
 	// creating invalid service didn't fail as expected
 	if err == nil {
-		return "", fmt.Errorf("could not determine the service IP range via service creation - " +
+		return "", errors.New("could not determine the service IP range via service creation - " +
 			"expected a specific error but none was returned")
 	}
 
