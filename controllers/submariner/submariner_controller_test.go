@@ -54,7 +54,13 @@ const (
 )
 
 var _ = Describe("Submariner controller tests", func() {
-	Context("Reconciliation", testReconciliation)
+	Context("Reconciliation", func() {
+		testSubmarinerResourceReconciliation()
+		testDaemonSetReconciliation()
+		testServiceDiscoveryReconciliation()
+		testLoadBalancerReconciliation()
+		testBrokerSecretReconciliation()
+	})
 	When("the Submariner resource is being deleted", testDeletion)
 })
 
@@ -65,7 +71,7 @@ const (
 	testConfiguredClusterCIDR = "192.168.67.0/24"
 )
 
-func testReconciliation() {
+func testSubmarinerResourceReconciliation() {
 	t := newTestDriver()
 
 	It("should add a finalizer to the Submariner resource", func(ctx SpecContext) {
@@ -119,6 +125,49 @@ func testReconciliation() {
 			Expect(updated.Status.ClusterCIDR).To(Equal(testConfiguredClusterCIDR))
 		})
 	})
+
+	When("the Submariner resource doesn't exist", func() {
+		BeforeEach(func() {
+			t.InitScopedClientObjs = nil
+		})
+
+		It("should return success without creating any resources", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+			t.AssertNoDaemonSet(ctx, names.GatewayComponent)
+			t.AssertNoDaemonSet(ctx, names.RouteAgentComponent)
+		})
+	})
+
+	When("the Submariner resource is missing values for certain fields", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.Repository = ""
+			t.submariner.Spec.Version = ""
+		})
+
+		It("should update the resource with defaults", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+
+			updated := t.getSubmariner(ctx)
+			Expect(updated.Spec.Repository).To(Equal(v1alpha1.DefaultRepo))
+			Expect(updated.Spec.Version).To(Equal(v1alpha1.DefaultSubmarinerVersion))
+		})
+	})
+
+	When("Submariner resource retrieval fails", func() {
+		BeforeEach(func() {
+			t.ScopedClient = fake.NewReactingClient(t.NewScopedClient()).AddReactor(fake.Get, &v1alpha1.Submariner{},
+				fake.FailingReaction(nil))
+		})
+
+		It("should return an error", func(ctx SpecContext) {
+			_, err := t.DoReconcile(ctx)
+			Expect(err).To(HaveOccurred())
+		})
+	})
+}
+
+func testDaemonSetReconciliation() {
+	t := newTestDriver()
 
 	When("the submariner gateway DaemonSet doesn't exist", func() {
 		It("should create it", func(ctx SpecContext) {
@@ -205,6 +254,72 @@ func testReconciliation() {
 		})
 	})
 
+	When("DaemonSet creation fails", func() {
+		BeforeEach(func() {
+			t.ScopedClient = fake.NewReactingClient(t.NewScopedClient()).AddReactor(fake.Create, &appsv1.DaemonSet{},
+				fake.FailingReaction(nil))
+		})
+
+		It("should return an error", func(ctx SpecContext) {
+			_, err := t.DoReconcile(ctx)
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	When("DaemonSet retrieval fails", func() {
+		BeforeEach(func() {
+			t.ScopedClient = fake.NewReactingClient(t.NewScopedClient()).AddReactor(fake.Get, &appsv1.DaemonSet{},
+				fake.FailingReaction(nil))
+		})
+
+		It("should return an error", func(ctx SpecContext) {
+			_, err := t.DoReconcile(ctx)
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	When("proxy environment variables are set", func() {
+		var httpProxy, httpsProxy, noProxy string
+		var httpProxySet, httpsProxySet, noProxySet bool
+		const testHTTPSProxy = "https://proxy.example.com"
+		const testHTTPProxy = "http://proxy.example.com"
+		const testNoProxy = "127.0.0.1"
+
+		BeforeEach(func() {
+			// We know we only write the all-caps versions
+			httpProxy, httpProxySet = os.LookupEnv("HTTP_PROXY")
+			httpsProxy, httpsProxySet = os.LookupEnv("HTTPS_PROXY")
+			noProxy, noProxySet = os.LookupEnv("NO_PROXY")
+			os.Setenv("HTTPS_PROXY", testHTTPSProxy)
+			os.Setenv("HTTP_PROXY", testHTTPProxy)
+			os.Setenv("NO_PROXY", testNoProxy)
+		})
+
+		AfterEach(func() {
+			restoreOrUnsetEnv("HTTPS_PROXY", httpsProxySet, httpsProxy)
+			restoreOrUnsetEnv("HTTP_PROXY", httpProxySet, httpProxy)
+			restoreOrUnsetEnv("NO_PROXY", noProxySet, noProxy)
+		})
+
+		It("should populate them in generated container specs", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+
+			for _, component := range []string{
+				names.GatewayComponent, names.GlobalnetComponent, names.MetricsProxyComponent, names.RouteAgentComponent,
+			} {
+				daemonSet := t.AssertDaemonSet(ctx, component)
+				envMap := test.EnvMapFrom(daemonSet)
+				Expect(envMap).To(HaveKeyWithValue("HTTPS_PROXY", testHTTPSProxy))
+				Expect(envMap).To(HaveKeyWithValue("HTTP_PROXY", testHTTPProxy))
+				Expect(envMap).To(HaveKeyWithValue("NO_PROXY", testNoProxy))
+			}
+		})
+	})
+}
+
+func testServiceDiscoveryReconciliation() {
+	t := newTestDriver()
+
 	When("ServiceDiscovery is enabled", func() {
 		BeforeEach(func() {
 			t.submariner.Spec.ServiceDiscoveryEnabled = true
@@ -230,6 +345,10 @@ func testReconciliation() {
 			Expect(serviceDiscovery.Spec.GlobalnetEnabled).To(BeTrue())
 		})
 	})
+}
+
+func testLoadBalancerReconciliation() {
+	t := newTestDriver()
 
 	When("load balancer is enabled", func() {
 		BeforeEach(func() {
@@ -268,6 +387,10 @@ func testReconciliation() {
 			})
 		})
 	})
+}
+
+func testBrokerSecretReconciliation() {
+	t := newTestDriver()
 
 	When("the broker secret is created/updated", func() {
 		var brokerSecret *corev1.Secret
@@ -345,107 +468,6 @@ func testReconciliation() {
 			It("should use the local secret's credentials to access the broker", func(ctx SpecContext) {
 				t.AssertReconcileSuccess(ctx)
 			})
-		})
-	})
-
-	When("the Submariner resource doesn't exist", func() {
-		BeforeEach(func() {
-			t.InitScopedClientObjs = nil
-		})
-
-		It("should return success without creating any resources", func(ctx SpecContext) {
-			t.AssertReconcileSuccess(ctx)
-			t.AssertNoDaemonSet(ctx, names.GatewayComponent)
-			t.AssertNoDaemonSet(ctx, names.RouteAgentComponent)
-		})
-	})
-
-	When("the Submariner resource is missing values for certain fields", func() {
-		BeforeEach(func() {
-			t.submariner.Spec.Repository = ""
-			t.submariner.Spec.Version = ""
-		})
-
-		It("should update the resource with defaults", func(ctx SpecContext) {
-			t.AssertReconcileSuccess(ctx)
-
-			updated := t.getSubmariner(ctx)
-			Expect(updated.Spec.Repository).To(Equal(v1alpha1.DefaultRepo))
-			Expect(updated.Spec.Version).To(Equal(v1alpha1.DefaultSubmarinerVersion))
-		})
-	})
-
-	When("DaemonSet creation fails", func() {
-		BeforeEach(func() {
-			t.ScopedClient = fake.NewReactingClient(t.NewScopedClient()).AddReactor(fake.Create, &appsv1.DaemonSet{},
-				fake.FailingReaction(nil))
-		})
-
-		It("should return an error", func(ctx SpecContext) {
-			_, err := t.DoReconcile(ctx)
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
-	When("DaemonSet retrieval fails", func() {
-		BeforeEach(func() {
-			t.ScopedClient = fake.NewReactingClient(t.NewScopedClient()).AddReactor(fake.Get, &appsv1.DaemonSet{},
-				fake.FailingReaction(nil))
-		})
-
-		It("should return an error", func(ctx SpecContext) {
-			_, err := t.DoReconcile(ctx)
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
-	When("Submariner resource retrieval fails", func() {
-		BeforeEach(func() {
-			t.ScopedClient = fake.NewReactingClient(t.NewScopedClient()).AddReactor(fake.Get, &v1alpha1.Submariner{},
-				fake.FailingReaction(nil))
-		})
-
-		It("should return an error", func(ctx SpecContext) {
-			_, err := t.DoReconcile(ctx)
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
-	When("proxy environment variables are set", func() {
-		var httpProxy, httpsProxy, noProxy string
-		var httpProxySet, httpsProxySet, noProxySet bool
-		const testHTTPSProxy = "https://proxy.example.com"
-		const testHTTPProxy = "http://proxy.example.com"
-		const testNoProxy = "127.0.0.1"
-
-		BeforeEach(func() {
-			// We know we only write the all-caps versions
-			httpProxy, httpProxySet = os.LookupEnv("HTTP_PROXY")
-			httpsProxy, httpsProxySet = os.LookupEnv("HTTPS_PROXY")
-			noProxy, noProxySet = os.LookupEnv("NO_PROXY")
-			os.Setenv("HTTPS_PROXY", testHTTPSProxy)
-			os.Setenv("HTTP_PROXY", testHTTPProxy)
-			os.Setenv("NO_PROXY", testNoProxy)
-		})
-
-		AfterEach(func() {
-			restoreOrUnsetEnv("HTTPS_PROXY", httpsProxySet, httpsProxy)
-			restoreOrUnsetEnv("HTTP_PROXY", httpProxySet, httpProxy)
-			restoreOrUnsetEnv("NO_PROXY", noProxySet, noProxy)
-		})
-
-		It("should populate them in generated container specs", func(ctx SpecContext) {
-			t.AssertReconcileSuccess(ctx)
-
-			for _, component := range []string{
-				names.GatewayComponent, names.GlobalnetComponent, names.MetricsProxyComponent, names.RouteAgentComponent,
-			} {
-				daemonSet := t.AssertDaemonSet(ctx, component)
-				envMap := test.EnvMapFrom(daemonSet)
-				Expect(envMap).To(HaveKeyWithValue("HTTPS_PROXY", testHTTPSProxy))
-				Expect(envMap).To(HaveKeyWithValue("HTTP_PROXY", testHTTPProxy))
-				Expect(envMap).To(HaveKeyWithValue("NO_PROXY", testNoProxy))
-			}
 		})
 	})
 }
