@@ -21,7 +21,6 @@ package cleanup
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"sync"
@@ -29,6 +28,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/names"
+	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/watcher"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
@@ -311,14 +311,14 @@ func (m *podMonitor) assertUninstallPodsCompleted() {
 			continue
 		}
 
-		status, _ := json.MarshalIndent(info.status, "", "  ")
+		status := resource.ToJSON(info.status)
 
 		log := info.prevLog
 		if log == "" {
 			log = info.log
 		}
 
-		Fail(fmt.Sprintf("Pod %q did not complete\nSTATUS: %s\n\nLOG\n: %s\n", name, string(status), log))
+		Fail(fmt.Sprintf("Pod %q did not complete\nSTATUS: %s\n\nLOG\n: %s\n", name, status, log))
 	}
 }
 
