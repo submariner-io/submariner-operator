@@ -34,15 +34,17 @@ import (
 )
 
 type baseUpdater interface {
-	Create(context.Context, *apiextensions.CustomResourceDefinition, metav1.CreateOptions) (*apiextensions.CustomResourceDefinition, error)
-	Update(context.Context, *apiextensions.CustomResourceDefinition, metav1.UpdateOptions) (*apiextensions.CustomResourceDefinition, error)
-	Get(context.Context, string, metav1.GetOptions) (*apiextensions.CustomResourceDefinition, error)
-	Delete(context.Context, string, metav1.DeleteOptions) error
+	Create(ctx context.Context, crd *apiextensions.CustomResourceDefinition, options metav1.CreateOptions,
+	) (*apiextensions.CustomResourceDefinition, error)
+	Update(ctx context.Context, crd *apiextensions.CustomResourceDefinition, options metav1.UpdateOptions,
+	) (*apiextensions.CustomResourceDefinition, error)
+	Get(ctx context.Context, name string, options metav1.GetOptions) (*apiextensions.CustomResourceDefinition, error)
+	Delete(ctx context.Context, name string, options metav1.DeleteOptions) error
 }
 
 type Updater interface {
 	baseUpdater
-	CreateOrUpdateFromEmbedded(context.Context, string) (bool, error)
+	CreateOrUpdateFromEmbedded(ctx context.Context, name string) (bool, error)
 }
 
 type updater struct {
