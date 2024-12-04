@@ -32,6 +32,7 @@ import (
 	operatorv1 "github.com/openshift/api/operator/v1"
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/finalizer"
+	logw "github.com/submariner-io/admiral/pkg/log"
 	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/syncer/broker"
@@ -59,7 +60,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var log = logf.Log.WithName("controller_servicediscovery")
+var log = logw.Logger{Logger: logf.Log.WithName("controller_servicediscovery")}
 
 const (
 	componentName                 = "submariner-lighthouse"
@@ -493,7 +494,7 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 				newCoreStr := ""
 				skip := false
 
-				log.Info("coredns configmap has lighthouse configuration hence updating")
+				log.Infof("Coredns ConfigMap \"%s/%s\" has lighthouse configuration - updating it", configMapNamespace, configMapName)
 
 				lines := strings.Split(coreFile, "\n")
 				for _, line := range lines {
@@ -513,7 +514,8 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 
 				coreFile = newCoreStr
 			} else {
-				log.Info("coredns configmap does not have lighthouse configuration hence creating")
+				log.Infof("Coredns ConfigMap \"%s/%s\" does not have lighthouse configuration - adding it",
+					configMapNamespace, configMapName)
 			}
 
 			if clusterIP != "" {
@@ -528,7 +530,8 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 				coreFile = expectedCorefile + "#lighthouse-end\n" + coreFile
 			}
 
-			log.Info("Updated coredns ConfigMap " + coreFile)
+			log.Infof("Updated coredns ConfigMap \"%s/%s\": %s", configMapNamespace, configMapName, coreFile)
+
 			existing.Data[Corefile] = coreFile
 
 			return existing, nil

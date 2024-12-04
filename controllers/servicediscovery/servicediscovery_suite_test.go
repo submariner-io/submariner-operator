@@ -146,6 +146,10 @@ func (t *testDriver) assertConfigMap(ctx context.Context, name, namespace string
 	return foundCoreMap
 }
 
+func getCorefileData(from *corev1.ConfigMap) string {
+	return strings.TrimSpace(from.Data[servicediscovery.Corefile])
+}
+
 func newDNSConfig(clusterIP string) *operatorv1.DNS {
 	dns := &operatorv1.DNS{
 		ObjectMeta: metav1.ObjectMeta{
@@ -306,10 +310,14 @@ func coreDNSCorefileData(clusterIP string) string {
 }
 
 func newCoreDNSConfigMap(corefile string) *corev1.ConfigMap {
+	return newDNSConfigMap(servicediscovery.CoreDNSName, servicediscovery.DefaultCoreDNSNamespace, corefile)
+}
+
+func newDNSConfigMap(name, namespace, corefile string) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      servicediscovery.CoreDNSName,
-			Namespace: servicediscovery.DefaultCoreDNSNamespace,
+			Name:      name,
+			Namespace: namespace,
 		},
 		Data: map[string]string{
 			servicediscovery.Corefile: corefile,

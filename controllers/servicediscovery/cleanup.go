@@ -81,7 +81,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 		Client:     r.ScopedClient,
 		Components: components,
 		StartTime:  instance.DeletionTimestamp.Time,
-		Log:        log,
+		Log:        log.Logger,
 		GetImageInfo: func(imageName, componentName string) (string, corev1.PullPolicy) {
 			return getImagePath(instance, imageName, componentName),
 				images.GetPullPolicy(instance.Spec.Version, instance.Spec.ImageOverrides[componentName])
