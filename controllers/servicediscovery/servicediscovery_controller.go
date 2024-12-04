@@ -63,12 +63,13 @@ var log = logf.Log.WithName("controller_servicediscovery")
 
 const (
 	componentName                 = "submariner-lighthouse"
-	defaultOpenShiftDNSController = "default"
-	lighthouseForwardPluginName   = "lighthouse"
-	defaultCoreDNSNamespace       = "kube-system"
-	coreDNSName                   = "coredns"
-	microshiftDNSNamespace        = "openshift-dns"
-	microshiftDNSConfigMap        = "dns-default"
+	Corefile                      = "Corefile"
+	DefaultOpenShiftDNSController = "default"
+	LighthouseForwardPluginName   = "lighthouse"
+	DefaultCoreDNSNamespace       = "kube-system"
+	CoreDNSName                   = "coredns"
+	MicroshiftDNSNamespace        = "openshift-dns"
+	MicroshiftDNSConfigMap        = "dns-default"
 	coreDNSDefaultPort            = "53"
 )
 
@@ -150,7 +151,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 			return reconcile.Result{}, err
 		}
 	} else {
-		err = r.configureDNSConfigMap(ctx, instance, defaultCoreDNSNamespace, coreDNSName)
+		err = r.configureDNSConfigMap(ctx, instance, DefaultCoreDNSNamespace, CoreDNSName)
 	}
 
 	if apierrors.IsNotFound(err) {
@@ -290,7 +291,7 @@ prometheus :9153
 			Labels:    labels,
 		},
 		Data: map[string]string{
-			"Corefile": expectedCorefile,
+			Corefile: expectedCorefile,
 		},
 	}
 }
@@ -363,7 +364,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 						{Name: "config-volume", VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
 							LocalObjectReference: corev1.LocalObjectReference{Name: names.LighthouseCoreDNSComponent},
 							Items: []corev1.KeyToPath{
-								{Key: "Corefile", Path: "Corefile"},
+								{Key: Corefile, Path: Corefile},
 							},
 							DefaultMode: ptr.To(int32(0o644)),
 						}}},
@@ -420,7 +421,7 @@ func getCustomCoreDNSNamespace(config *submarinerv1alpha1.CoreDNSCustomConfig) s
 		return config.Namespace
 	}
 
-	return defaultCoreDNSNamespace
+	return DefaultCoreDNSNamespace
 }
 
 func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
@@ -486,7 +487,7 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 	configMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: configMapNamespace, Name: configMapName}}
 	err := util.MustUpdate[*corev1.ConfigMap](ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
 		func(existing *corev1.ConfigMap) (*corev1.ConfigMap, error) {
-			coreFile := existing.Data["Corefile"]
+			coreFile := existing.Data[Corefile]
 			if strings.Contains(coreFile, "lighthouse-start") {
 				// Assume this means we've already set the ConfigMap up, first remove existing lighthouse config
 				newCoreStr := ""
@@ -528,7 +529,7 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 			}
 
 			log.Info("Updated coredns ConfigMap " + coreFile)
-			existing.Data["Corefile"] = coreFile
+			existing.Data[Corefile] = coreFile
 
 			return existing, nil
 		})
@@ -569,12 +570,12 @@ func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Co
 ) error {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		dnsOperator := &operatorv1.DNS{}
-		if err := r.GeneralClient.Get(ctx, types.NamespacedName{Name: defaultOpenShiftDNSController}, dnsOperator); err != nil {
+		if err := r.GeneralClient.Get(ctx, types.NamespacedName{Name: DefaultOpenShiftDNSController}, dnsOperator); err != nil {
 			// microshift uses the coredns image, but the DNS operator and CRDs are off
 			if resource.IsNotFoundErr(err) {
-				err = r.configureDNSConfigMap(ctx, instance, microshiftDNSNamespace, microshiftDNSConfigMap)
+				err = r.configureDNSConfigMap(ctx, instance, MicroshiftDNSNamespace, MicroshiftDNSConfigMap)
 				return errors.Wrapf(err, "error trying to update microshift coredns configmap %q in namespace %q",
-					microshiftDNSNamespace, microshiftDNSNamespace)
+					MicroshiftDNSNamespace, MicroshiftDNSNamespace)
 			}
 
 			return err
@@ -618,7 +619,7 @@ func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dns
 	lighthouseDomains := buildDomains(instance)
 
 	for _, forwardServer := range dnsOperator.Spec.Servers {
-		if forwardServer.Name == lighthouseForwardPluginName {
+		if forwardServer.Name == LighthouseForwardPluginName {
 			containsLighthouse = true
 
 			existingDomains = append(existingDomains, forwardServer.Zones...)
@@ -655,7 +656,7 @@ func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dns
 
 	for _, domain := range lighthouseDomains {
 		lighthouseServer := operatorv1.Server{
-			Name:  lighthouseForwardPluginName,
+			Name:  LighthouseForwardPluginName,
 			Zones: []string{domain},
 			ForwardPlugin: operatorv1.ForwardPlugin{
 				Upstreams: []string{clusterIP},

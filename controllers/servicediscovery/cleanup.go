@@ -53,7 +53,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 	if instance.Spec.CoreDNSCustomConfig != nil && instance.Spec.CoreDNSCustomConfig.ConfigMapName != "" {
 		err = r.removeLighthouseConfigFromCustomDNSConfigMap(ctx, instance.Spec.CoreDNSCustomConfig)
 	} else {
-		err = r.updateLighthouseConfigInConfigMap(ctx, instance, defaultCoreDNSNamespace, coreDNSName, "")
+		err = r.updateLighthouseConfigInConfigMap(ctx, instance, DefaultCoreDNSNamespace, CoreDNSName, "")
 	}
 
 	if apierrors.IsNotFound(err) {

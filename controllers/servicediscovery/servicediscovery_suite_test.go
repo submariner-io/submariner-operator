@@ -44,7 +44,6 @@ import (
 const (
 	serviceDiscoveryName     = "test-service-discovery"
 	submarinerNamespace      = "test-ns"
-	openShiftDNSConfigName   = "default"
 	clusterIP                = "10.10.10.10"
 	lighthouseDNSServiceName = "submariner-lighthouse-coredns"
 
@@ -123,7 +122,7 @@ func (t *testDriver) assertUninstallServiceDiscoveryDeployment(ctx context.Conte
 
 func (t *testDriver) getDNSConfig(ctx context.Context) (*operatorv1.DNS, error) {
 	foundDNSConfig := &operatorv1.DNS{}
-	err := t.GeneralClient.Get(ctx, types.NamespacedName{Name: openShiftDNSConfigName}, foundDNSConfig)
+	err := t.GeneralClient.Get(ctx, types.NamespacedName{Name: servicediscovery.DefaultOpenShiftDNSController}, foundDNSConfig)
 
 	return foundDNSConfig, err
 }
@@ -136,7 +135,7 @@ func (t *testDriver) assertDNSConfig(ctx context.Context) *operatorv1.DNS {
 }
 
 func (t *testDriver) assertCoreDNSConfigMap(ctx context.Context) *corev1.ConfigMap {
-	return t.assertConfigMap(ctx, "coredns", "kube-system")
+	return t.assertConfigMap(ctx, servicediscovery.CoreDNSName, servicediscovery.DefaultCoreDNSNamespace)
 }
 
 func (t *testDriver) assertConfigMap(ctx context.Context, name, namespace string) *corev1.ConfigMap {
@@ -150,7 +149,7 @@ func (t *testDriver) assertConfigMap(ctx context.Context, name, namespace string
 func newDNSConfig(clusterIP string) *operatorv1.DNS {
 	dns := &operatorv1.DNS{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: openShiftDNSConfigName,
+			Name: servicediscovery.DefaultOpenShiftDNSController,
 		},
 		Spec: operatorv1.DNSSpec{
 			Servers: []operatorv1.Server{
@@ -168,14 +167,14 @@ func newDNSConfig(clusterIP string) *operatorv1.DNS {
 	if clusterIP != "" {
 		dns.Spec.Servers = append(dns.Spec.Servers,
 			operatorv1.Server{
-				Name:  "lighthouse",
+				Name:  servicediscovery.LighthouseForwardPluginName,
 				Zones: []string{"clusterset.local"},
 				ForwardPlugin: operatorv1.ForwardPlugin{
 					Upstreams: []string{clusterIP},
 				},
 			},
 			operatorv1.Server{
-				Name:  "lighthouse",
+				Name:  servicediscovery.LighthouseForwardPluginName,
 				Zones: []string{"supercluster.local"},
 				ForwardPlugin: operatorv1.ForwardPlugin{
 					Upstreams: []string{clusterIP},
@@ -309,11 +308,11 @@ func coreDNSCorefileData(clusterIP string) string {
 func newCoreDNSConfigMap(corefile string) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "coredns",
-			Namespace: "kube-system",
+			Name:      servicediscovery.CoreDNSName,
+			Namespace: servicediscovery.DefaultCoreDNSNamespace,
 		},
 		Data: map[string]string{
-			"Corefile": corefile,
+			servicediscovery.Corefile: corefile,
 		},
 	}
 }

@@ -25,6 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/names"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -102,7 +103,7 @@ func testReconciliation() {
 			It("should add it", func(ctx SpecContext) {
 				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data[servicediscovery.Corefile])).To(Equal(coreDNSCorefileData(clusterIP)))
 			})
 		})
 
@@ -117,7 +118,8 @@ func testReconciliation() {
 			It("should update the lighthouse config", func(ctx SpecContext) {
 				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData(updatedClusterIP)))
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data[servicediscovery.Corefile])).To(
+					Equal(coreDNSCorefileData(updatedClusterIP)))
 			})
 		})
 
@@ -133,7 +135,8 @@ func testReconciliation() {
 
 				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data[servicediscovery.Corefile])).
+					To(Equal(coreDNSCorefileData(clusterIP)))
 			})
 		})
 	})
@@ -226,7 +229,8 @@ func testCoreDNSCleanup() {
 		})
 
 		It("should remove the lighthouse config section", func(ctx SpecContext) {
-			Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData("")))
+			Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data[servicediscovery.Corefile])).To(
+				Equal(coreDNSCorefileData("")))
 		})
 
 		t.testServiceDiscoveryDeleted()
