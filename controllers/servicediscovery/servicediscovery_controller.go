@@ -152,12 +152,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 			return reconcile.Result{}, err
 		}
 	} else {
-		err = r.configureDNSConfigMap(ctx, instance, DefaultCoreDNSNamespace, CoreDNSName)
-	}
-
-	if apierrors.IsNotFound(err) {
-		// Try to update Openshift-DNS
-		return reconcile.Result{}, r.configureOpenshiftClusterDNSOperator(ctx, instance)
+		err = r.updateDNSConfig(ctx, instance)
 	}
 
 	return reconcile.Result{}, err
@@ -464,9 +459,7 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 	return errors.Wrap(err, "error updating DNS custom ConfigMap")
 }
 
-func (r *Reconciler) configureDNSConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery, configMapNamespace,
-	configMapName string,
-) error {
+func (r *Reconciler) updateDNSConfig(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery) error {
 	lighthouseDNSService := &corev1.Service{}
 
 	err := r.ScopedClient.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: cr.Namespace},
@@ -479,7 +472,35 @@ func (r *Reconciler) configureDNSConfigMap(ctx context.Context, cr *submarinerv1
 		return goerrors.New("the lighthouse DNS Service ClusterIP is not set")
 	}
 
-	return r.updateLighthouseConfigInConfigMap(ctx, cr, configMapNamespace, configMapName, lighthouseDNSService.Spec.ClusterIP)
+	err = r.updateLighthouseConfigInConfigMap(ctx, cr, DefaultCoreDNSNamespace, CoreDNSName, lighthouseDNSService.Spec.ClusterIP)
+
+	if apierrors.IsNotFound(err) {
+		// Some providers may not use the exact "coredns" name but use it as a suffix, eg RKE "rke2-coredns".
+		configMaps := &corev1.ConfigMapList{}
+
+		listErr := r.GeneralClient.List(ctx, configMaps, controllerClient.InNamespace(DefaultCoreDNSNamespace))
+		if listErr != nil {
+			return errors.Wrapf(err, "error listing ConfigMaps in %q", DefaultCoreDNSNamespace)
+		}
+
+		suffix := "-" + CoreDNSName
+
+		for i := range configMaps.Items {
+			cm := &configMaps.Items[i]
+
+			_, hasCorefile := cm.Data[Corefile]
+			if strings.HasSuffix(cm.Name, suffix) && hasCorefile {
+				return r.updateLighthouseConfigInConfigMap(ctx, cr, cm.Namespace, cm.Name, lighthouseDNSService.Spec.ClusterIP)
+			}
+		}
+	}
+
+	if apierrors.IsNotFound(err) {
+		// Try to update Openshift-DNS
+		return r.updateLighthouseConfigInOpenshiftDNSOperator(ctx, cr, lighthouseDNSService.Spec.ClusterIP)
+	}
+
+	return err
 }
 
 func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery,
@@ -552,22 +573,6 @@ func findCoreDNSListeningPort(coreFile string) string {
 	return coreDNSPort
 }
 
-func (r *Reconciler) configureOpenshiftClusterDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery) error {
-	lighthouseDNSService := &corev1.Service{}
-
-	err := r.ScopedClient.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: instance.Namespace},
-		lighthouseDNSService)
-	if err != nil {
-		return errors.Wrap(err, "error retrieving lighthouse DNS Service")
-	}
-
-	if lighthouseDNSService.Spec.ClusterIP == "" {
-		return goerrors.New("the lighthouse DNS Service ClusterIP is not set")
-	}
-
-	return r.updateLighthouseConfigInOpenshiftDNSOperator(ctx, instance, lighthouseDNSService.Spec.ClusterIP)
-}
-
 func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
 	clusterIP string,
 ) error {
@@ -576,7 +581,7 @@ func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Co
 		if err := r.GeneralClient.Get(ctx, types.NamespacedName{Name: DefaultOpenShiftDNSController}, dnsOperator); err != nil {
 			// microshift uses the coredns image, but the DNS operator and CRDs are off
 			if resource.IsNotFoundErr(err) {
-				err = r.configureDNSConfigMap(ctx, instance, MicroshiftDNSNamespace, MicroshiftDNSConfigMap)
+				err = r.updateLighthouseConfigInConfigMap(ctx, instance, MicroshiftDNSNamespace, MicroshiftDNSConfigMap, clusterIP)
 				return errors.Wrapf(err, "error trying to update microshift coredns configmap %q in namespace %q",
 					MicroshiftDNSNamespace, MicroshiftDNSNamespace)
 			}

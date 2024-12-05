@@ -93,7 +93,7 @@ func testReconciliation() {
 		})
 	})
 
-	When("the coredns ConfigMap exists", func() {
+	When("the default coredns ConfigMap exists", func() {
 		Context("and the lighthouse config isn't present", func() {
 			BeforeEach(func() {
 				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
@@ -136,6 +136,23 @@ func testReconciliation() {
 
 				Expect(getCorefileData(t.assertCoreDNSConfigMap(ctx))).To(Equal(coreDNSCorefileData(clusterIP)))
 			})
+		})
+	})
+
+	When("a ConfigMap exists with a non-standard coredns name", func() {
+		nonStandardName := "rke2-coredns-rke2-coredns"
+
+		BeforeEach(func() {
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+			t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfigMap(
+				nonStandardName, servicediscovery.DefaultCoreDNSNamespace, coreDNSCorefileData("")))
+		})
+
+		It("should update it with the lighthouse config", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+
+			Expect(getCorefileData(t.assertConfigMap(ctx, nonStandardName,
+				servicediscovery.DefaultCoreDNSNamespace))).To(Equal(coreDNSCorefileData(clusterIP)))
 		})
 	})
 

@@ -12,7 +12,7 @@ config/bundle/patches/submariner.csv.config.yaml
 package/.image.*
 output/
 vendor/
-*.coverprofile
+*coverprofile*
 .idea
 .shflags
 junit.xml
