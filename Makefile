@@ -185,7 +185,7 @@ is-semantic-version:
 # Download kustomize locally if not already downloaded.
 # We clear GITHUB_TOKEN to ensure that the installation script won't try to use it (and fail)
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
-KUSTOMIZE_VERSION := $(shell cd tools && $(GO) list -m -f {{.Version}} sigs.k8s.io/kustomize/kustomize/v3)
+KUSTOMIZE_VERSION := $(shell cd tools && $(GO) list -m -f {{.Version}} sigs.k8s.io/kustomize/kustomize/v5)
 $(KUSTOMIZE):
 	mkdir -p $(@D)
 	{ curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | GITHUB_TOKEN= bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(@D); }
@@ -208,7 +208,7 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	(set -o pipefail; $(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
 	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS))
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml)
-	$(KUSTOMIZE) build config/bundle/ --load_restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml
+	$(KUSTOMIZE) build config/bundle/ --load-restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate --select-optional suite=operatorframework ./bundle

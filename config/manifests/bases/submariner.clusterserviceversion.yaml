@@ -28,6 +28,18 @@ spec:
         name: submariner-operator
         version: v1
       specDescriptors:
+      - description: ClustersetIP supernet range for allocating ClustersetIPCIDRs
+          to each cluster.
+        displayName: ClustersetIP CIDR Range
+        path: clustersetIPCIDRRange
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+        - urn:alm:descriptor:com.tectonic.ui:advanced
+      - description: Enable ClustersetIP default for connecting clusters.
+        displayName: Enable ClustersetIP
+        path: clustersetIPEnabled
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: List of the components to be installed - any of [service-discovery,
           connectivity].
         displayName: Components
@@ -164,6 +176,17 @@ spec:
         path: clusterID
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: ClustersetIP CIDR for allocating ClustersetIPs to exported services.
+        displayName: ClustersetIP CIDR
+        path: clustersetIPCIDR
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+        - urn:alm:descriptor:com.tectonic.ui:advanced
+      - description: Enable ClustersetIP default for services exported on this cluster.
+        displayName: Enable ClustersetIP default
+        path: clustersetIPEnabled
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
       - description: The gateway connection health check.
         displayName: Connection Health Check
         path: connectionHealthCheck
@@ -187,9 +210,9 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:number
         - urn:alm:descriptor:com.tectonic.ui:fieldDependency:connectionHealthCheck.enabled:true
-      - description: Name of the custom CoreDNS configmap to configure forwarding
-          to Lighthouse. It should be in <namespace>/<name> format where <namespace>
-          is optional and defaults to kube-system.
+      - description: |-
+          Name of the custom CoreDNS configmap to configure forwarding to Lighthouse.
+          It should be in <namespace>/<name> format where <namespace> is optional and defaults to kube-system.
         displayName: CoreDNS Custom Config
         path: coreDNSCustomConfig
         x-descriptors:
@@ -279,6 +302,11 @@ spec:
       - description: The current cluster ID.
         displayName: Cluster ID
         path: clusterID
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: The current clustersetIP CIDR.
+        displayName: ClustersetIP CIDR
+        path: clustersetIPCIDR
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: Information about the deployment.

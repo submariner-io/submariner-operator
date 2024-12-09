@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.12.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: brokers.submariner.io
 spec:
   group: submariner.io
@@ -20,14 +20,19 @@ spec:
         description: Broker is the Schema for the brokers API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -38,6 +43,9 @@ spec:
                 description: ClustersetIP supernet range for allocating ClustersetIPCIDRs
                   to each cluster.
                 type: string
+              clustersetIPEnabled:
+                description: Enable ClustersetIP default for connecting clusters.
+                type: boolean
               components:
                 description: List of the components to be installed - any of [service-discovery,
                   connectivity].
@@ -59,9 +67,6 @@ spec:
                 type: string
               globalnetEnabled:
                 description: Enable support for Overlapping CIDRs in connecting clusters.
-                type: boolean
-              clustersetIPEnabled:
-                description: Enable ClustersetIP default for connecting clusters.
                 type: boolean
             type: object
           status:
