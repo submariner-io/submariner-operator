@@ -32,7 +32,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/watcher"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	operatorv1alpha1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/uninstall"
+	"github.com/submariner-io/submariner-operator/internal/controllers/uninstall"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerclientset "github.com/submariner-io/submariner/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"

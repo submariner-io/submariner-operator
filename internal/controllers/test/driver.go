@@ -26,7 +26,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/syncer/test"
 	admtest "github.com/submariner-io/admiral/pkg/test"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/uninstall"
+	"github.com/submariner-io/submariner-operator/internal/controllers/uninstall"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"

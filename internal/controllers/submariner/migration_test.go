@@ -20,7 +20,7 @@ package submariner_test
 
 import (
 	. "github.com/onsi/ginkgo/v2"
-	"github.com/submariner-io/submariner-operator/controllers/submariner"
+	"github.com/submariner-io/submariner-operator/internal/controllers/submariner"
 	"github.com/submariner-io/submariner/pkg/cni"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"

@@ -23,7 +23,7 @@ import (
 	"errors"
 
 	"github.com/go-logr/logr"
-	"github.com/submariner-io/submariner-operator/controllers/apply"
+	"github.com/submariner-io/submariner-operator/internal/controllers/apply"
 	"github.com/submariner-io/submariner-operator/pkg/metrics"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"

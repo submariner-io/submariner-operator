@@ -25,7 +25,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
-	"github.com/submariner-io/submariner-operator/controllers/apply"
+	"github.com/submariner-io/submariner-operator/internal/controllers/apply"
 	"github.com/submariner-io/submariner-operator/pkg/httpproxy"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
