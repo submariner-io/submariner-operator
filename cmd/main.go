@@ -19,7 +19,6 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -48,10 +47,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
 
@@ -116,13 +113,14 @@ func main() {
 	}
 
 	// Get a config to talk to the apiserver
-	cfg, err := config.GetConfig()
+	cfg, err := ctrl.GetConfig()
 	if err != nil {
-		log.Error(err, "")
+		log.Error(err, "unable to get kubeconfig")
 		os.Exit(1)
 	}
 
-	ctx := context.TODO()
+	ctx := ctrl.SetupSignalHandler()
+
 	// Become the leader before proceeding
 	err = leader.Become(ctx, "submariner-operator-lock")
 	if err != nil {
@@ -163,7 +161,7 @@ func main() {
 	// +kubebuilder:scaffold:scheme
 
 	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme,
 		Metrics: server.Options{
 			BindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
@@ -258,7 +256,7 @@ func main() {
 	// Start the Cmd
 	log.Info("Starting the Cmd.")
 
-	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(ctx); err != nil {
 		log.Error(err, "Manager exited non-zero")
 		os.Exit(1)
 	}
