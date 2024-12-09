@@ -5,7 +5,7 @@
     entrypoint:
       - scorecard-test
       - basic-check-spec
-    image: quay.io/operator-framework/scorecard-test:v1.0.1
+    image: quay.io/operator-framework/scorecard-test:v1.38.0
     labels:
       suite: basic
       test: basic-check-spec-test
