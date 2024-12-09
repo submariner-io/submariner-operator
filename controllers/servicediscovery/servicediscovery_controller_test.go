@@ -25,6 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/names"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
+	"github.com/submariner-io/submariner-operator/controllers/servicediscovery"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -92,7 +93,7 @@ func testReconciliation() {
 		})
 	})
 
-	When("the coredns ConfigMap exists", func() {
+	When("the default coredns ConfigMap exists", func() {
 		Context("and the lighthouse config isn't present", func() {
 			BeforeEach(func() {
 				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
@@ -102,7 +103,7 @@ func testReconciliation() {
 			It("should add it", func(ctx SpecContext) {
 				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+				Expect(getCorefileData(t.assertCoreDNSConfigMap(ctx))).To(Equal(coreDNSCorefileData(clusterIP)))
 			})
 		})
 
@@ -117,7 +118,7 @@ func testReconciliation() {
 			It("should update the lighthouse config", func(ctx SpecContext) {
 				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData(updatedClusterIP)))
+				Expect(getCorefileData(t.assertCoreDNSConfigMap(ctx))).To(Equal(coreDNSCorefileData(updatedClusterIP)))
 			})
 		})
 
@@ -133,8 +134,25 @@ func testReconciliation() {
 
 				t.AssertReconcileSuccess(ctx)
 
-				Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData(clusterIP)))
+				Expect(getCorefileData(t.assertCoreDNSConfigMap(ctx))).To(Equal(coreDNSCorefileData(clusterIP)))
 			})
+		})
+	})
+
+	When("a ConfigMap exists with a non-standard coredns name", func() {
+		nonStandardName := "rke2-coredns-rke2-coredns"
+
+		BeforeEach(func() {
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+			t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfigMap(
+				nonStandardName, servicediscovery.DefaultCoreDNSNamespace, coreDNSCorefileData("")))
+		})
+
+		It("should update it with the lighthouse config", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+
+			Expect(getCorefileData(t.assertConfigMap(ctx, nonStandardName,
+				servicediscovery.DefaultCoreDNSNamespace))).To(Equal(coreDNSCorefileData(clusterIP)))
 		})
 	})
 
@@ -196,6 +214,21 @@ func testReconciliation() {
 			})
 		})
 	})
+
+	When("the microshift DNS ConfigMap exists", func() {
+		BeforeEach(func() {
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+			t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfigMap(
+				servicediscovery.MicroshiftDNSConfigMap, servicediscovery.MicroshiftDNSNamespace, coreDNSCorefileData("")))
+		})
+
+		It("should update it with the lighthouse config", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+
+			Expect(getCorefileData(t.assertConfigMap(ctx, servicediscovery.MicroshiftDNSConfigMap,
+				servicediscovery.MicroshiftDNSNamespace))).To(Equal(coreDNSCorefileData(clusterIP)))
+		})
+	})
 }
 
 func testCoreDNSCleanup() {
@@ -226,7 +259,7 @@ func testCoreDNSCleanup() {
 		})
 
 		It("should remove the lighthouse config section", func(ctx SpecContext) {
-			Expect(strings.TrimSpace(t.assertCoreDNSConfigMap(ctx).Data["Corefile"])).To(Equal(coreDNSCorefileData("")))
+			Expect(getCorefileData(t.assertCoreDNSConfigMap(ctx))).To(Equal(coreDNSCorefileData("")))
 		})
 
 		t.testServiceDiscoveryDeleted()

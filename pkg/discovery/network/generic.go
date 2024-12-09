@@ -82,6 +82,11 @@ func findClusterIPRange(ctx context.Context, client controllerClient.Client) (st
 		return clusterIPRange, err
 	}
 
+	clusterIPRange, err = findClusterIPRangeFromKubeController(ctx, client)
+	if err != nil || clusterIPRange != "" {
+		return clusterIPRange, err
+	}
+
 	clusterIPRange, err = findClusterIPRangeFromServiceCreation(ctx, client)
 	if err != nil || clusterIPRange != "" {
 		return clusterIPRange, err
@@ -92,6 +97,10 @@ func findClusterIPRange(ctx context.Context, client controllerClient.Client) (st
 
 func findClusterIPRangeFromApiserver(ctx context.Context, client controllerClient.Client) (string, error) {
 	return FindPodCommandParameter(ctx, client, "component=kube-apiserver", "--service-cluster-ip-range")
+}
+
+func findClusterIPRangeFromKubeController(ctx context.Context, client controllerClient.Client) (string, error) {
+	return FindPodCommandParameter(ctx, client, "component=kube-controller-manager", "--service-cluster-ip-range")
 }
 
 func findClusterIPRangeFromServiceCreation(ctx context.Context, client controllerClient.Client) (string, error) {
@@ -153,12 +162,12 @@ func parseServiceCIDRFrom(msg string) (string, error) {
 }
 
 func findPodIPRange(ctx context.Context, client controllerClient.Client) (string, error) {
-	podIPRange, err := findPodIPRangeKubeController(ctx, client)
+	podIPRange, err := findPodIPRangeFromKubeController(ctx, client)
 	if err != nil || podIPRange != "" {
 		return podIPRange, err
 	}
 
-	podIPRange, err = findPodIPRangeKubeProxy(ctx, client)
+	podIPRange, err = findPodIPRangeFromKubeProxy(ctx, client)
 	if err != nil || podIPRange != "" {
 		return podIPRange, err
 	}
@@ -171,12 +180,12 @@ func findPodIPRange(ctx context.Context, client controllerClient.Client) (string
 	return "", nil
 }
 
-func findPodIPRangeKubeController(ctx context.Context, client controllerClient.Client) (string, error) {
+func findPodIPRangeFromKubeController(ctx context.Context, client controllerClient.Client) (string, error) {
 	return FindPodCommandParameter(ctx, client, "component=kube-controller-manager", "--cluster-cidr")
 }
 
-func findPodIPRangeKubeProxy(ctx context.Context, client controllerClient.Client) (string, error) {
-	return FindPodCommandParameter(ctx, client, "component=kube-proxy", "--cluster-cidr")
+func findPodIPRangeFromKubeProxy(ctx context.Context, client controllerClient.Client) (string, error) {
+	return FindPodCommandParameter(ctx, client, "k8s-app=kube-proxy", "--cluster-cidr")
 }
 
 func findPodIPRangeFromNodeSpec(ctx context.Context, client controllerClient.Client) (string, error) {
