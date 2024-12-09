@@ -120,16 +120,13 @@ var _ = Describe("Generic Network", func() {
 			Expect(clusterNet).NotTo(BeNil())
 		})
 
-		It("Should return the ClusterNetwork structure with pod CIDR", func() {
+		It("Should return the ClusterNetwork structure with both CIDR", func() {
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})
 
 		It("Should identify the networkplugin as generic", func() {
 			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(cni.Generic))
-		})
-
-		It("Should return the ClusterNetwork structure with the service CIDR", func() {
-			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
 		})
 	})
 
@@ -137,13 +134,19 @@ var _ = Describe("Generic Network", func() {
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
-				fakePodWithArg("kube-controller-manager", []string{"kube-controller-manager"}, "--cluster-cidr="+testPodCIDR),
+				fakePodWithArg("kube-controller-manager", []string{"kube-controller-manager"},
+					[]string{"--cluster-cidr=" + testPodCIDR, "--service-cluster-ip-range=" + testServiceCIDR}),
 			)
 			Expect(clusterNet).NotTo(BeNil())
 		})
 
-		It("Should return the ClusterNetwork structure with pod CIDR", func() {
+		It("Should return the ClusterNetwork structure with both CIDR", func() {
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
+		})
+
+		It("Should identify the networkplugin as generic", func() {
+			Expect(clusterNet.NetworkPlugin).To(BeIdenticalTo(cni.Generic))
 		})
 	})
 
@@ -169,7 +172,7 @@ var _ = Describe("Generic Network", func() {
 		})
 	})
 
-	When("There is a kubeapi pod", func() {
+	When("There is a kube-api pod", func() {
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(
 				ctx,
@@ -296,7 +299,7 @@ var _ = Describe("Generic Network", func() {
 		})
 	})
 
-	When("No kube-api pod exists and invalid service creation returns an unexpected error", func() {
+	When("No kube-api and kube-controller pod exists and invalid service creation returns an unexpected error", func() {
 		It("Should return error and nil cluster network", func(ctx SpecContext) {
 			// Inject error for create services to return expectedErr
 			client := fake.NewReactingClient(nil).AddReactor(fake.Create, &corev1.Service{},
@@ -308,7 +311,7 @@ var _ = Describe("Generic Network", func() {
 		})
 	})
 
-	When("No kube-api pod exists and invalid service creation returns the expected error", func() {
+	When("No kube-api and kube-controller pod exists and invalid service creation returns the expected error", func() {
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(ctx)
 		})

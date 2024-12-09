@@ -110,8 +110,8 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 							Name:            name + "-init",
 							Image:           getImagePath(cr, opnames.RouteAgentImage, names.RouteAgentComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
+							Command:         []string{"await-node-ready.sh"},
 							Env: httpproxy.AddEnvVars([]corev1.EnvVar{
-								{Name: "SUBMARINER_WAITFORNODE", Value: "true"},
 								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										FieldPath: "spec.nodeName",

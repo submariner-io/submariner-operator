@@ -46,9 +46,9 @@ func fakePod(component string, command []string, env []v1.EnvVar) *v1.Pod {
 	return fakePodWithName(component, component, command, env)
 }
 
-func fakePodWithArg(component string, command []string, arg string, env ...v1.EnvVar) *v1.Pod {
+func fakePodWithArg(component string, command, args []string, env ...v1.EnvVar) *v1.Pod {
 	pod := fakePodWithName(component, component, command, env)
-	pod.Spec.Containers[0].Args = []string{arg}
+	pod.Spec.Containers[0].Args = args
 
 	return pod
 }
@@ -62,7 +62,7 @@ func fakePodWithNamespace(namespace, name, component string, command []string, e
 		ObjectMeta: v1meta.ObjectMeta{
 			Namespace: namespace,
 			Name:      name,
-			Labels:    map[string]string{"component": component, "name": component, "app": component},
+			Labels:    map[string]string{"component": component, "name": component, "app": component, "k8s-app": component},
 		},
 
 		Spec: v1.PodSpec{
@@ -81,7 +81,10 @@ func fakeKubeAPIServerPod() *v1.Pod {
 }
 
 func fakeKubeControllerManagerPod() *v1.Pod {
-	return fakePod("kube-controller-manager", []string{"kube-controller-manager", "--cluster-cidr=" + testPodCIDR}, []v1.EnvVar{})
+	return fakePod("kube-controller-manager", []string{
+		"kube-controller-manager", "--cluster-cidr=" + testPodCIDR,
+		"--service-cluster-ip-range=" + testServiceCIDR,
+	}, []v1.EnvVar{})
 }
 
 func fakeKubeProxyPod() *v1.Pod {
