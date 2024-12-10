@@ -54,8 +54,8 @@ spec:
           image: controller:0.0.0
           command:
             - submariner-operator
-          # args:
-          #  - --enable-leader-election
+          args:
+            - --leader-elect
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE

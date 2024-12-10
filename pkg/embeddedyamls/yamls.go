@@ -25,7 +25,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: brokers.submariner.io
 spec:
   group: submariner.io
@@ -105,7 +105,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: submariners.submariner.io
 spec:
   group: submariner.io
@@ -1118,7 +1118,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: servicediscoveries.submariner.io
 spec:
   group: submariner.io
@@ -1277,7 +1277,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: clusters.submariner.io
 spec:
   group: submariner.io
@@ -1348,7 +1348,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: endpoints.submariner.io
 spec:
   group: submariner.io
@@ -1429,7 +1429,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: gateways.submariner.io
 spec:
   group: submariner.io
@@ -1602,7 +1602,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: clusterglobalegressips.submariner.io
 spec:
   group: submariner.io
@@ -1728,7 +1728,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: globalegressips.submariner.io
 spec:
   group: submariner.io
@@ -1903,7 +1903,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: globalingressips.submariner.io
 spec:
   group: submariner.io
@@ -2056,7 +2056,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: gatewayroutes.submariner.io
 spec:
   group: submariner.io
@@ -2117,7 +2117,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: nongatewayroutes.submariner.io
 spec:
   group: submariner.io
@@ -2178,7 +2178,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.1
+    controller-gen.kubebuilder.io/version: v0.16.5
   name: routeagents.submariner.io
 spec:
   group: submariner.io
@@ -2808,6 +2808,17 @@ rules:
       - servicediscoveries/finalizers
     verbs:
       - update
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
 `
 	Config_rbac_submariner_operator_role_binding_yaml = `---
 kind: RoleBinding

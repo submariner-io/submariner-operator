@@ -25,7 +25,6 @@ import (
 	"runtime"
 
 	configv1 "github.com/openshift/api/config/v1"
-	"github.com/operator-framework/operator-lib/leader"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/admiral/pkg/names"
 	admversion "github.com/submariner-io/admiral/pkg/version"
@@ -84,8 +83,7 @@ func main() {
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.StringVar(&pprofAddr, "pprof-bind-address", ":8082", "The address the profiling endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
-		"Enable leader election for controller manager. "+
-			"Enabling this will ensure there is only one active controller manager.")
+		"Enable leader election for the controller manager to ensure there is only one active instance.")
 
 	kzerolog.AddFlags(nil)
 	flag.Parse()
@@ -120,13 +118,6 @@ func main() {
 	}
 
 	ctx := ctrl.SetupSignalHandler()
-
-	// Become the leader before proceeding
-	err = leader.Become(ctx, "submariner-operator-lock")
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
 
 	// Set up the CRDs we need
 	crdUpdater, err := crd.UpdaterFromRestConfig(cfg)
