@@ -25,7 +25,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: brokers.submariner.io
 spec:
   group: submariner.io
@@ -105,7 +105,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: submariners.submariner.io
 spec:
   group: submariner.io
@@ -558,6 +558,8 @@ spec:
                                 minLength: 1
                                 type: string
                               healthCheckIP:
+                                description: 'Deprecated: Get/SetHealthCheckIP() or,
+                                  if necessary, HealthCheckIPs'
                                 type: string
                               healthCheckIPs:
                                 items:
@@ -569,6 +571,8 @@ spec:
                               nat_enabled:
                                 type: boolean
                               private_ip:
+                                description: 'Deprecated: Use Get/SetPrivateIP() or,
+                                  if necessary, PrivateIPs'
                                 type: string
                               privateIPs:
                                 items:
@@ -576,6 +580,8 @@ spec:
                                 maxItems: 2
                                 type: array
                               public_ip:
+                                description: 'Deprecated: Set/SetPublicIP() or, if
+                                  necessary, PublicIPs'
                                 type: string
                               publicIPs:
                                 items:
@@ -641,6 +647,8 @@ spec:
                           minLength: 1
                           type: string
                         healthCheckIP:
+                          description: 'Deprecated: Get/SetHealthCheckIP() or, if
+                            necessary, HealthCheckIPs'
                           type: string
                         healthCheckIPs:
                           items:
@@ -652,6 +660,8 @@ spec:
                         nat_enabled:
                           type: boolean
                         private_ip:
+                          description: 'Deprecated: Use Get/SetPrivateIP() or, if
+                            necessary, PrivateIPs'
                           type: string
                         privateIPs:
                           items:
@@ -659,6 +669,8 @@ spec:
                           maxItems: 2
                           type: array
                         public_ip:
+                          description: 'Deprecated: Set/SetPublicIP() or, if necessary,
+                            PublicIPs'
                           type: string
                         publicIPs:
                           items:
@@ -911,6 +923,8 @@ spec:
                                 Ports is a list of records of service ports
                                 If used, every port defined in the service should have an entry in it
                               items:
+                                description: PortStatus represents the error condition
+                                  of a service port
                                 properties:
                                   error:
                                     description: |-
@@ -1150,7 +1164,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: servicediscoveries.submariner.io
 spec:
   group: submariner.io
@@ -1309,7 +1323,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: clusters.submariner.io
 spec:
   group: submariner.io
@@ -1380,7 +1394,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: endpoints.submariner.io
 spec:
   group: submariner.io
@@ -1427,6 +1441,8 @@ spec:
                 minLength: 1
                 type: string
               healthCheckIP:
+                description: 'Deprecated: Get/SetHealthCheckIP() or, if necessary,
+                  HealthCheckIPs'
                 type: string
               healthCheckIPs:
                 items:
@@ -1438,6 +1454,8 @@ spec:
               nat_enabled:
                 type: boolean
               private_ip:
+                description: 'Deprecated: Use Get/SetPrivateIP() or, if necessary,
+                  PrivateIPs'
                 type: string
               privateIPs:
                 items:
@@ -1445,6 +1463,7 @@ spec:
                 maxItems: 2
                 type: array
               public_ip:
+                description: 'Deprecated: Set/SetPublicIP() or, if necessary, PublicIPs'
                 type: string
               publicIPs:
                 items:
@@ -1474,7 +1493,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: gateways.submariner.io
 spec:
   group: submariner.io
@@ -1531,6 +1550,8 @@ spec:
                           minLength: 1
                           type: string
                         healthCheckIP:
+                          description: 'Deprecated: Get/SetHealthCheckIP() or, if
+                            necessary, HealthCheckIPs'
                           type: string
                         healthCheckIPs:
                           items:
@@ -1542,6 +1563,8 @@ spec:
                         nat_enabled:
                           type: boolean
                         private_ip:
+                          description: 'Deprecated: Use Get/SetPrivateIP() or, if
+                            necessary, PrivateIPs'
                           type: string
                         privateIPs:
                           items:
@@ -1549,6 +1572,8 @@ spec:
                           maxItems: 2
                           type: array
                         public_ip:
+                          description: 'Deprecated: Set/SetPublicIP() or, if necessary,
+                            PublicIPs'
                           type: string
                         publicIPs:
                           items:
@@ -1614,6 +1639,8 @@ spec:
                     minLength: 1
                     type: string
                   healthCheckIP:
+                    description: 'Deprecated: Get/SetHealthCheckIP() or, if necessary,
+                      HealthCheckIPs'
                     type: string
                   healthCheckIPs:
                     items:
@@ -1625,6 +1652,8 @@ spec:
                   nat_enabled:
                     type: boolean
                   private_ip:
+                    description: 'Deprecated: Use Get/SetPrivateIP() or, if necessary,
+                      PrivateIPs'
                     type: string
                   privateIPs:
                     items:
@@ -1632,6 +1661,8 @@ spec:
                     maxItems: 2
                     type: array
                   public_ip:
+                    description: 'Deprecated: Set/SetPublicIP() or, if necessary,
+                      PublicIPs'
                     type: string
                   publicIPs:
                     items:
@@ -1673,7 +1704,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: clusterglobalegressips.submariner.io
 spec:
   group: submariner.io
@@ -1799,7 +1830,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: globalegressips.submariner.io
 spec:
   group: submariner.io
@@ -1974,7 +2005,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: globalingressips.submariner.io
 spec:
   group: submariner.io
@@ -2127,7 +2158,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: gatewayroutes.submariner.io
 spec:
   group: submariner.io
@@ -2188,7 +2219,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: nongatewayroutes.submariner.io
 spec:
   group: submariner.io
@@ -2249,7 +2280,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.5
+    controller-gen.kubebuilder.io/version: v0.17.0
   name: routeagents.submariner.io
 spec:
   group: submariner.io
@@ -2317,6 +2348,8 @@ spec:
                           minLength: 1
                           type: string
                         healthCheckIP:
+                          description: 'Deprecated: Get/SetHealthCheckIP() or, if
+                            necessary, HealthCheckIPs'
                           type: string
                         healthCheckIPs:
                           items:
@@ -2328,6 +2361,8 @@ spec:
                         nat_enabled:
                           type: boolean
                         private_ip:
+                          description: 'Deprecated: Use Get/SetPrivateIP() or, if
+                            necessary, PrivateIPs'
                           type: string
                         privateIPs:
                           items:
@@ -2335,6 +2370,8 @@ spec:
                           maxItems: 2
                           type: array
                         public_ip:
+                          description: 'Deprecated: Set/SetPublicIP() or, if necessary,
+                            PublicIPs'
                           type: string
                         publicIPs:
                           items:
