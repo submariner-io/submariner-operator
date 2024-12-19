@@ -8,22 +8,21 @@ require (
 	github.com/onsi/ginkgo/v2 v2.22.0
 	github.com/onsi/gomega v1.36.0
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
-	github.com/operator-framework/operator-lib v0.15.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.76.2
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.76.2
 	github.com/prometheus/client_golang v1.20.5
-	github.com/submariner-io/admiral v0.20.0-m1
-	github.com/submariner-io/shipyard v0.20.0-m1
-	github.com/submariner-io/submariner v0.20.0-m1
-	golang.org/x/net v0.32.0
+	github.com/submariner-io/admiral v0.20.0-m2
+	github.com/submariner-io/shipyard v0.20.0-m2
+	github.com/submariner-io/submariner v0.20.0-m2
+	golang.org/x/net v0.33.0
 	golang.org/x/text v0.21.0
 	k8s.io/api v0.31.3
 	k8s.io/apiextensions-apiserver v0.31.3
 	k8s.io/apimachinery v0.31.3
 	k8s.io/client-go v0.31.3
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
-	sigs.k8s.io/controller-runtime v0.19.2
+	sigs.k8s.io/controller-runtime v0.19.3
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -33,7 +32,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.0 // indirect
-	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
