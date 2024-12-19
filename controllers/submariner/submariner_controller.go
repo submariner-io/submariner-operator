@@ -222,6 +222,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	instance.Status.Version = instance.Spec.Version
 	instance.Status.NatEnabled = instance.Spec.NatEnabled
 	instance.Status.AirGappedDeployment = instance.Spec.AirGappedDeployment
+	instance.Status.HostedCluster = instance.Spec.HostedCluster
 	instance.Status.ColorCodes = instance.Spec.ColorCodes
 	instance.Status.ClusterID = instance.Spec.ClusterID
 	instance.Status.GlobalCIDR = instance.Spec.GlobalCIDR

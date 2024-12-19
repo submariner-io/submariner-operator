@@ -137,6 +137,8 @@ spec:
               haltOnCertificateError:
                 description: Halt on certificate error (so the pod gets restarted).
                 type: boolean
+              hostedCluster:
+                type: boolean
               imageOverrides:
                 additionalProperties:
                   type: string

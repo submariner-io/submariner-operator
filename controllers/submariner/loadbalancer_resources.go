@@ -91,6 +91,8 @@ func (r *Reconciler) getOCPPlatformType(ctx context.Context) (string, error) {
 }
 
 func newLoadBalancerService(instance *v1alpha1.Submariner, platformTypeOCP string) *corev1.Service {
+	externalTrafficPolicy := corev1.ServiceExternalTrafficPolicyTypeLocal
+
 	var svcAnnotations map[string]string
 
 	switch platformTypeOCP {
@@ -104,6 +106,10 @@ func newLoadBalancerService(instance *v1alpha1.Submariner, platformTypeOCP strin
 			"service.kubernetes.io/ibm-load-balancer-cloud-provider-ip-type":                   "public",
 			"service.kubernetes.io/ibm-load-balancer-cloud-provider-vpc-health-check-protocol": "http",
 		}
+	case string(configv1.KubevirtPlatformType):
+		if instance.Spec.HostedCluster {
+			externalTrafficPolicy = corev1.ServiceExternalTrafficPolicyTypeCluster
+		}
 	default:
 		svcAnnotations = map[string]string{}
 	}
@@ -115,7 +121,7 @@ func newLoadBalancerService(instance *v1alpha1.Submariner, platformTypeOCP strin
 			Annotations: svcAnnotations,
 		},
 		Spec: corev1.ServiceSpec{
-			ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyTypeLocal,
+			ExternalTrafficPolicy: externalTrafficPolicy,
 			Type:                  corev1.ServiceTypeLoadBalancer,
 			Selector: map[string]string{
 				// Traffic is directed to the active gateway

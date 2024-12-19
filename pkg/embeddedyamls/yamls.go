@@ -248,6 +248,9 @@ spec:
               haltOnCertificateError:
                 description: Halt on certificate error (so the pod gets restarted).
                 type: boolean
+              hostedCluster:
+                description: Is the cluster a hosted cluster.
+                type: boolean
               imageOverrides:
                 additionalProperties:
                   type: string
@@ -840,6 +843,9 @@ spec:
                 required:
                 - mismatchedContainerImages
                 type: object
+              hostedCluster:
+                description: Is the cluster a hosted cluster.
+                type: boolean
               loadBalancerStatus:
                 description: The status of the load balancer DaemonSet.
                 properties:

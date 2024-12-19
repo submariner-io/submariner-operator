@@ -78,6 +78,7 @@ func testReconciliation() {
 		BeforeEach(func() {
 			t.submariner.Spec.NatEnabled = true
 			t.submariner.Spec.AirGappedDeployment = true
+			t.submariner.Spec.HostedCluster = true
 		})
 
 		It("should populate general Submariner resource Status fields from the Spec", func(ctx SpecContext) {
@@ -86,6 +87,7 @@ func testReconciliation() {
 			updated := t.getSubmariner(ctx)
 			Expect(updated.Status.NatEnabled).To(BeTrue())
 			Expect(updated.Status.AirGappedDeployment).To(BeTrue())
+			Expect(updated.Status.HostedCluster).To(BeTrue())
 			Expect(updated.Status.ClusterID).To(Equal(t.submariner.Spec.ClusterID))
 			Expect(updated.Status.GlobalCIDR).To(Equal(t.submariner.Spec.GlobalCIDR))
 			Expect(updated.Status.NetworkPlugin).To(Equal(t.clusterNetwork.NetworkPlugin))

@@ -160,9 +160,13 @@ type SubmarinerSpec struct {
 	// Enable NAT between clusters.
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable NAT"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
-	NatEnabled bool `json:"natEnabled"`
-
+	NatEnabled          bool `json:"natEnabled"`
 	AirGappedDeployment bool `json:"airGappedDeployment,omitempty"`
+
+	// Is the cluster a hosted cluster.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Hosted Cluster"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	HostedCluster bool `json:"hostedCluster,omitempty"`
 
 	// Enable automatic Load Balancer in front of the gateways.
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable Load Balancer"
@@ -227,6 +231,11 @@ type SubmarinerStatus struct {
 	NatEnabled bool `json:"natEnabled"`
 
 	AirGappedDeployment bool `json:"airGappedDeployment,omitempty"`
+
+	// Is the cluster a hosted cluster.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Hosted Cluster"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	HostedCluster bool `json:"hostedCluster,omitempty"`
 
 	ColorCodes string `json:"colorCodes,omitempty"`
 
