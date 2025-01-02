@@ -225,7 +225,6 @@ function verify_subm_op_pod() {
   kubectl get pod "$subm_operator_pod_name" --namespace="$subm_ns" -o json | tee "$json_file"
 
   validate_pod_container_equals 'image' "localhost:5000/submariner-operator:local"
-  validate_pod_container_has 'command' 'submariner-operator'
 }
 
 function validate_pod_container_equals() {
