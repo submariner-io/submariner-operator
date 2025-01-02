@@ -2819,6 +2819,12 @@ rules:
       - create
       - update
       - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
 `
 	Config_rbac_submariner_operator_role_binding_yaml = `---
 kind: RoleBinding
