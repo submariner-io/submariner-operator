@@ -70,14 +70,3 @@ rules:
       - daemonsets
     verbs:
       - list
-  - apiGroups:
-      - rbac.authorization.k8s.io
-    resources:
-      # Temporarily needed for network-plugin syncer removal
-      - clusterroles
-      - clusterrolebindings
-    resourceNames:
-      - ocp-submariner-networkplugin-syncer
-      - submariner-networkplugin-syncer
-    verbs:
-      - delete

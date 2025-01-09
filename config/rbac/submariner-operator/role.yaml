@@ -25,15 +25,6 @@ rules:
       - update
       - delete
   - apiGroups:
-      - ""
-    resources:
-      # Temporarily needed for network-plugin syncer removal
-      - serviceaccounts
-    resourceNames:
-      - submariner-networkplugin-syncer
-    verbs:
-      - delete
-  - apiGroups:
       - apps
     resources:
       - deployments

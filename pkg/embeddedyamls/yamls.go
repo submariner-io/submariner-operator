@@ -2861,15 +2861,6 @@ rules:
       - update
       - delete
   - apiGroups:
-      - ""
-    resources:
-      # Temporarily needed for network-plugin syncer removal
-      - serviceaccounts
-    resourceNames:
-      - submariner-networkplugin-syncer
-    verbs:
-      - delete
-  - apiGroups:
       - apps
     resources:
       - deployments
@@ -3032,17 +3023,6 @@ rules:
       - daemonsets
     verbs:
       - list
-  - apiGroups:
-      - rbac.authorization.k8s.io
-    resources:
-      # Temporarily needed for network-plugin syncer removal
-      - clusterroles
-      - clusterrolebindings
-    resourceNames:
-      - ocp-submariner-networkplugin-syncer
-      - submariner-networkplugin-syncer
-    verbs:
-      - delete
 `
 	Config_rbac_submariner_operator_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
