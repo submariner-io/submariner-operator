@@ -45,9 +45,18 @@ updates:
       github-actions:
         patterns:
           - "*"
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: release-0.19
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: gomod
-    target-branch: "release-0.14"
-    directory: "/"
+    target-branch: release-0.14
+    directory: /
     schedule:
       interval: weekly
     groups:
@@ -62,8 +71,8 @@ updates:
       - dependency-name: k8s.io/*
         versions: ">= 0.26.0-alpha.0"
   - package-ecosystem: gomod
-    target-branch: "release-0.15"
-    directory: "/"
+    target-branch: release-0.15
+    directory: /
     schedule:
       interval: weekly
     allow:
@@ -74,8 +83,8 @@ updates:
       - dependency-name: k8s.io/*
         versions: ">= 0.27.0-alpha.0"
   - package-ecosystem: gomod
-    target-branch: "release-0.16"
-    directory: "/"
+    target-branch: release-0.16
+    directory: /
     schedule:
       interval: weekly
     allow:
@@ -86,8 +95,8 @@ updates:
       - dependency-name: k8s.io/*
         versions: ">= 0.28.0-alpha.0"
   - package-ecosystem: gomod
-    target-branch: "release-0.17"
-    directory: "/"
+    target-branch: release-0.17
+    directory: /
     schedule:
       interval: weekly
     allow:
@@ -98,8 +107,8 @@ updates:
       - dependency-name: k8s.io/*
         versions: ">= 0.30.0-alpha.0"
   - package-ecosystem: gomod
-    target-branch: "release-0.18"
-    directory: "/"
+    target-branch: release-0.18
+    directory: /
     schedule:
       interval: weekly
     allow:
@@ -109,6 +118,18 @@ updates:
       # 0.18 tracks the 0.30 branch
       - dependency-name: k8s.io/*
         versions: ">= 0.31.0-alpha.0"
+  - package-ecosystem: gomod
+    target-branch: release-0.19
+    directory: /
+    schedule:
+      interval: weekly
+    allow:
+      # Pick up k8s.io updates
+      - dependency-name: k8s.io/apiextensions-apiserver
+    ignore:
+      # 0.19 tracks the 0.31 branch
+      - dependency-name: k8s.io/*
+        versions: ">= 0.32.0-alpha.0"
   - package-ecosystem: gomod
     directory: /
     schedule:
