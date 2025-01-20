@@ -14,13 +14,13 @@ require (
 	github.com/prometheus/client_golang v1.20.5
 	github.com/submariner-io/admiral v0.20.0-m3
 	github.com/submariner-io/shipyard v0.20.0-m3
-	github.com/submariner-io/submariner v0.20.0-m3
+	github.com/submariner-io/submariner v0.20.0-m3.0.20250117111504-2c0e7b5254bc
 	golang.org/x/net v0.34.0
 	golang.org/x/text v0.21.0
-	k8s.io/api v0.31.4
+	k8s.io/api v0.31.5
 	k8s.io/apiextensions-apiserver v0.31.3
-	k8s.io/apimachinery v0.31.4
-	k8s.io/client-go v0.31.4
+	k8s.io/apimachinery v0.31.5
+	k8s.io/client-go v0.31.5
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
 	sigs.k8s.io/controller-runtime v0.19.3
 	sigs.k8s.io/yaml v1.4.0

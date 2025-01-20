@@ -559,14 +559,29 @@ spec:
                                 type: string
                               healthCheckIP:
                                 type: string
+                              healthCheckIPs:
+                                items:
+                                  type: string
+                                maxItems: 2
+                                type: array
                               hostname:
                                 type: string
                               nat_enabled:
                                 type: boolean
                               private_ip:
                                 type: string
+                              privateIPs:
+                                items:
+                                  type: string
+                                maxItems: 2
+                                type: array
                               public_ip:
                                 type: string
+                              publicIPs:
+                                items:
+                                  type: string
+                                maxItems: 2
+                                type: array
                               subnets:
                                 items:
                                   type: string
@@ -577,8 +592,6 @@ spec:
                             - cluster_id
                             - hostname
                             - nat_enabled
-                            - private_ip
-                            - public_ip
                             - subnets
                             type: object
                           latencyRTT:
@@ -629,14 +642,29 @@ spec:
                           type: string
                         healthCheckIP:
                           type: string
+                        healthCheckIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         hostname:
                           type: string
                         nat_enabled:
                           type: boolean
                         private_ip:
                           type: string
+                        privateIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         public_ip:
                           type: string
+                        publicIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         subnets:
                           items:
                             type: string
@@ -647,8 +675,6 @@ spec:
                       - cluster_id
                       - hostname
                       - nat_enabled
-                      - private_ip
-                      - public_ip
                       - subnets
                       type: object
                     statusFailure:
@@ -1402,14 +1428,29 @@ spec:
                 type: string
               healthCheckIP:
                 type: string
+              healthCheckIPs:
+                items:
+                  type: string
+                maxItems: 2
+                type: array
               hostname:
                 type: string
               nat_enabled:
                 type: boolean
               private_ip:
                 type: string
+              privateIPs:
+                items:
+                  type: string
+                maxItems: 2
+                type: array
               public_ip:
                 type: string
+              publicIPs:
+                items:
+                  type: string
+                maxItems: 2
+                type: array
               subnets:
                 items:
                   type: string
@@ -1420,8 +1461,6 @@ spec:
             - cluster_id
             - hostname
             - nat_enabled
-            - private_ip
-            - public_ip
             - subnets
             type: object
         required:
@@ -1493,14 +1532,29 @@ spec:
                           type: string
                         healthCheckIP:
                           type: string
+                        healthCheckIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         hostname:
                           type: string
                         nat_enabled:
                           type: boolean
                         private_ip:
                           type: string
+                        privateIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         public_ip:
                           type: string
+                        publicIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         subnets:
                           items:
                             type: string
@@ -1511,8 +1565,6 @@ spec:
                       - cluster_id
                       - hostname
                       - nat_enabled
-                      - private_ip
-                      - public_ip
                       - subnets
                       type: object
                     latencyRTT:
@@ -1563,14 +1615,29 @@ spec:
                     type: string
                   healthCheckIP:
                     type: string
+                  healthCheckIPs:
+                    items:
+                      type: string
+                    maxItems: 2
+                    type: array
                   hostname:
                     type: string
                   nat_enabled:
                     type: boolean
                   private_ip:
                     type: string
+                  privateIPs:
+                    items:
+                      type: string
+                    maxItems: 2
+                    type: array
                   public_ip:
                     type: string
+                  publicIPs:
+                    items:
+                      type: string
+                    maxItems: 2
+                    type: array
                   subnets:
                     items:
                       type: string
@@ -1581,8 +1648,6 @@ spec:
                 - cluster_id
                 - hostname
                 - nat_enabled
-                - private_ip
-                - public_ip
                 - subnets
                 type: object
               statusFailure:
@@ -2253,14 +2318,29 @@ spec:
                           type: string
                         healthCheckIP:
                           type: string
+                        healthCheckIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         hostname:
                           type: string
                         nat_enabled:
                           type: boolean
                         private_ip:
                           type: string
+                        privateIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         public_ip:
                           type: string
+                        publicIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         subnets:
                           items:
                             type: string
@@ -2271,8 +2351,6 @@ spec:
                       - cluster_id
                       - hostname
                       - nat_enabled
-                      - private_ip
-                      - public_ip
                       - subnets
                       type: object
                     status:
