@@ -273,6 +273,7 @@ errors
 health
 ready
 prometheus :9153
+loadbalance
 }`
 	expectedCorefile := ""
 
