@@ -326,6 +326,11 @@ spec:
       - description: The status of the Globalnet DaemonSet.
         displayName: Globalnet DaemonSet Status
         path: globalnetDaemonSetStatus
+      - description: Is the cluster a hosted cluster.
+        displayName: Hosted Cluster
+        path: hostedCluster
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       - description: The status of the load balancer DaemonSet.
         displayName: Load Balancer DaemonSet Status
         path: loadBalancerStatus

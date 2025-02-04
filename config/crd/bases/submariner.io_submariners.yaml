@@ -147,6 +147,7 @@ spec:
                 description: Halt on certificate error (so the pod gets restarted).
                 type: boolean
               hostedCluster:
+                description: Is the cluster a hosted cluster.
                 type: boolean
               imageOverrides:
                 additionalProperties:
@@ -456,14 +457,29 @@ spec:
                                 type: string
                               healthCheckIP:
                                 type: string
+                              healthCheckIPs:
+                                items:
+                                  type: string
+                                maxItems: 2
+                                type: array
                               hostname:
                                 type: string
                               nat_enabled:
                                 type: boolean
                               private_ip:
                                 type: string
+                              privateIPs:
+                                items:
+                                  type: string
+                                maxItems: 2
+                                type: array
                               public_ip:
                                 type: string
+                              publicIPs:
+                                items:
+                                  type: string
+                                maxItems: 2
+                                type: array
                               subnets:
                                 items:
                                   type: string
@@ -474,8 +490,6 @@ spec:
                             - cluster_id
                             - hostname
                             - nat_enabled
-                            - private_ip
-                            - public_ip
                             - subnets
                             type: object
                           latencyRTT:
@@ -526,14 +540,29 @@ spec:
                           type: string
                         healthCheckIP:
                           type: string
+                        healthCheckIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         hostname:
                           type: string
                         nat_enabled:
                           type: boolean
                         private_ip:
                           type: string
+                        privateIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         public_ip:
                           type: string
+                        publicIPs:
+                          items:
+                            type: string
+                          maxItems: 2
+                          type: array
                         subnets:
                           items:
                             type: string
@@ -544,8 +573,6 @@ spec:
                       - cluster_id
                       - hostname
                       - nat_enabled
-                      - private_ip
-                      - public_ip
                       - subnets
                       type: object
                     statusFailure:
@@ -740,6 +767,9 @@ spec:
                 required:
                 - mismatchedContainerImages
                 type: object
+              hostedCluster:
+                description: Is the cluster a hosted cluster.
+                type: boolean
               loadBalancerStatus:
                 description: The status of the load balancer DaemonSet.
                 properties:
