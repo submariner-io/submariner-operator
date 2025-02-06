@@ -6,7 +6,6 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: submariner-gateway
-    namespace: placeholder
 roleRef:
   kind: Role
   name: submariner-gateway
