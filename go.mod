@@ -16,7 +16,7 @@ require (
 	github.com/submariner-io/shipyard v0.20.0-m3.0.20250130182730-391836d2402a
 	github.com/submariner-io/submariner v0.20.0-m3.0.20250130210129-cda7f6e0147c
 	golang.org/x/net v0.34.0
-	golang.org/x/text v0.21.0
+	golang.org/x/text v0.22.0
 	k8s.io/api v0.32.1
 	k8s.io/apiextensions-apiserver v0.32.1
 	k8s.io/apimachinery v0.32.1
@@ -66,7 +66,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
