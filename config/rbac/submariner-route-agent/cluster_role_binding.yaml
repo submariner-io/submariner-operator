@@ -6,7 +6,6 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: submariner-routeagent
-    namespace: placeholder
 roleRef:
   kind: ClusterRole
   name: submariner-routeagent
