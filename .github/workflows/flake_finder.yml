@@ -19,11 +19,11 @@ jobs:
         cable_driver: ['libreswan', 'wireguard']
         globalnet: ['', 'globalnet']
         # Run most tests against the latest K8s version
-        k8s_version: ['1.28']
+        k8s_version: ['1.32']
         lighthouse: ['', 'lighthouse']
         include:
           # Bottom of supported K8s version range
-          - k8s_version: '1.26'
+          - k8s_version: '1.29'
     steps:
       - name: Check out the repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
