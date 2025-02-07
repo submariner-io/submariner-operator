@@ -10,4 +10,3 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: submariner-globalnet
-    namespace: placeholder
