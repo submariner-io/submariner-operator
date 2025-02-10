@@ -33,6 +33,7 @@ dockertogoarch = $(patsubst arm/v7,arm,$(1))
 
 PLATFORMS ?= linux/amd64,linux/arm64
 IMAGES = submariner-operator
+export LOCAL_COMPONENTS := submariner-operator
 MULTIARCH_IMAGES := submariner-operator
 
 ifneq (,$(filter ovn,$(USING)))
