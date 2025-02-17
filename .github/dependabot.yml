@@ -136,7 +136,3 @@ updates:
       - dependency-name: sigs.k8s.io/yaml
       # Managed in shipyard
       - dependency-name: k8s.io/utils
-  - package-ecosystem: gomod
-    directory: /tools
-    schedule:
-      interval: weekly
