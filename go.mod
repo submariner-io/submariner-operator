@@ -9,8 +9,8 @@ require (
 	github.com/onsi/gomega v1.36.2
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.80.0
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.80.0
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.80.1
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.80.1
 	github.com/prometheus/client_golang v1.20.5
 	github.com/submariner-io/admiral v0.20.0-m3.0.20250130200921-a919a18a0cdd
 	github.com/submariner-io/shipyard v0.20.0-m3.0.20250130182730-391836d2402a
