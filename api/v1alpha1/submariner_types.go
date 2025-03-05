@@ -168,6 +168,12 @@ type SubmarinerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	HostedCluster bool `json:"hostedCluster,omitempty"`
 
+	// Use nftables for programming IP filter rules.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Use Nftables"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}
+	// +optional
+	UseNftables bool `json:"useNftables,omitempty"`
+
 	// Enable automatic Load Balancer in front of the gateways.
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable Load Balancer"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}

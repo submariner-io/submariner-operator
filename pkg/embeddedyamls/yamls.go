@@ -316,6 +316,9 @@ spec:
                       type: string
                   type: object
                 type: array
+              useNftables:
+                description: Use nftables for programming IP filter rules.
+                type: boolean
               version:
                 description: The image tag.
                 type: string
