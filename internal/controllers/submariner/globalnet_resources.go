@@ -20,6 +20,7 @@ package submariner
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/admiral/pkg/names"
@@ -102,6 +103,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_METRICSPORT", Value: globalnetMetricsServerPort},
+								{Name: "SUBMARINER_USENFTABLES", Value: strconv.FormatBool(cr.Spec.UseNftables)},
 								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										FieldPath: "spec.nodeName",
