@@ -3367,6 +3367,13 @@ metadata:
   name: submariner-globalnet
 rules:
   - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+  - apiGroups:
       - submariner.io
     resources:
       - gateways
