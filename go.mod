@@ -1,6 +1,6 @@
 module github.com/submariner-io/submariner-operator
 
-go 1.22.0
+go 1.23.0
 
 require (
 	github.com/coreos/go-semver v0.3.1
@@ -18,10 +18,10 @@ require (
 	github.com/submariner-io/submariner v0.19.3
 	golang.org/x/net v0.33.0
 	golang.org/x/text v0.21.0
-	k8s.io/api v0.31.6
-	k8s.io/apiextensions-apiserver v0.31.6
-	k8s.io/apimachinery v0.31.6
-	k8s.io/client-go v0.31.6
+	k8s.io/api v0.31.7
+	k8s.io/apiextensions-apiserver v0.31.7
+	k8s.io/apimachinery v0.31.7
+	k8s.io/client-go v0.31.7
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8
 	sigs.k8s.io/controller-runtime v0.19.0
 	sigs.k8s.io/yaml v1.4.0
