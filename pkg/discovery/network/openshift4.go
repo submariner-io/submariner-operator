@@ -63,7 +63,7 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 	}
 
 	for _, clusterNetwork := range clusterNetworks {
-		clusterNetworkMap, _ := clusterNetwork.(map[string]interface{})
+		clusterNetworkMap, _ := clusterNetwork.(map[string]any)
 		cidr, found, err := unstructured.NestedString(clusterNetworkMap, "cidr")
 
 		if err != nil {

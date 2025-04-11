@@ -28,7 +28,7 @@ type IObject struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 }
 
-func GetObject(yamlStr string, obj interface{}) error {
+func GetObject(yamlStr string, obj any) error {
 	doc := []byte(yamlStr)
 
 	if err := yaml.Unmarshal(doc, obj); err != nil {
