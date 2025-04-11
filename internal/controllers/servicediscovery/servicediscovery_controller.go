@@ -22,6 +22,7 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
+	"maps"
 	"reflect"
 	"regexp"
 	"sort"
@@ -600,9 +601,7 @@ func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Co
 		err := util.MustUpdate[*operatorv1.DNS](ctx, resource.ForControllerClient(r.GeneralClient, "", dnsOperator), dnsOperator,
 			func(existing *operatorv1.DNS) (*operatorv1.DNS, error) {
 				existing.Spec = dnsOperator.Spec
-				for k, v := range dnsOperator.Labels {
-					existing.Labels[k] = v
-				}
+				maps.Copy(existing.Labels, dnsOperator.Labels)
 
 				return existing, nil
 			})

@@ -22,6 +22,7 @@ package apply
 import (
 	"context"
 	goerrors "errors"
+	"maps"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -222,9 +223,7 @@ func Service(ctx context.Context, owner metav1.Object, service *corev1.Service, 
 				toUpdate.Annotations = map[string]string{}
 			}
 
-			for k, v := range service.Annotations {
-				toUpdate.Annotations[k] = v
-			}
+			maps.Copy(toUpdate.Annotations, service.Annotations)
 
 			if owner != nil {
 				// Set the owner and controller
@@ -279,7 +278,5 @@ func copyLabels(from, to controllerClient.Object) {
 		to.SetLabels(map[string]string{})
 	}
 
-	for k, v := range from.GetLabels() {
-		to.GetLabels()[k] = v
-	}
+	maps.Copy(to.GetLabels(), from.GetLabels())
 }

@@ -19,6 +19,7 @@ package metrics
 
 import (
 	"context"
+	"maps"
 
 	"github.com/pkg/errors"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -82,9 +83,7 @@ func CreateServiceMonitors(ctx context.Context, config *rest.Config, ns string, 
 // based on the passed Service object.
 func GenerateServiceMonitor(ns string, s *v1.Service) *monitoringv1.ServiceMonitor {
 	labels := make(map[string]string)
-	for k, v := range s.ObjectMeta.Labels {
-		labels[k] = v
-	}
+	maps.Copy(labels, s.ObjectMeta.Labels)
 
 	endpoints := populateEndpointsFromServicePorts(s)
 
