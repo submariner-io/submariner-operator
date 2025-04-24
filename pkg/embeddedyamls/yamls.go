@@ -2556,7 +2556,7 @@ spec:
                   description: ip will be used as the VIP for this service when type
                     is ClusterSetIP.
                   type: array
-                  maxItems: 1
+                  maxItems: 2
                   items:
                     type: string
                 ports:
