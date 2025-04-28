@@ -10,3 +10,11 @@ ignore:
   - vulnerability: CVE-2021-22570
     package:
       name: google.golang.org/protobuf
+  # Update requires K8s major version update. Low severity doesn't justify an update for stable branches.
+  # https://github.com/submariner-io/shipyard/pull/1932#issuecomment-2830451046
+  - vulnerability: GHSA-4hfp-h4cw-hj8p
+    package:
+      name: helm.sh/helm/v3
+  - vulnerability: GHSA-5xqw-8hwv-wg92
+    package:
+      name: helm.sh/helm/v3
