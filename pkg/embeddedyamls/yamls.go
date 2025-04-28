@@ -1212,6 +1212,8 @@ spec:
                 type: string
               brokerK8sSecret:
                 type: string
+              clusterCIDR:
+                type: string
               clusterID:
                 type: string
               clustersetIPCIDR:

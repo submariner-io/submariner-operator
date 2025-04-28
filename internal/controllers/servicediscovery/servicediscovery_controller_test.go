@@ -58,6 +58,7 @@ func testReconciliation() {
 				t.AssertReconcileSuccess(ctx)
 
 				assertDNSConfigServers(t.assertDNSConfig(ctx), newDNSConfig(clusterIP))
+				t.assertCoreDNSDeployment(ctx)
 			})
 		})
 

@@ -42,6 +42,8 @@ type ServiceDiscoverySpec struct {
 	Repository               string `json:"repository,omitempty"`
 	Version                  string `json:"version,omitempty"`
 	// +optional
+	ClusterCIDR string `json:"clusterCIDR,omitempty"`
+	// +optional
 	ClustersetIPCIDR       string `json:"clustersetIPCIDR,omitempty"`
 	Debug                  bool   `json:"debug"`
 	GlobalnetEnabled       bool   `json:"globalnetEnabled,omitempty"`

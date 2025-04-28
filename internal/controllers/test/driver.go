@@ -147,8 +147,6 @@ func (d *Driver) AssertDeployment(ctx context.Context, name string) *appsv1.Depl
 
 	Expect(deployment.ObjectMeta.Labels).To(HaveKeyWithValue("app", name))
 	Expect(deployment.Spec.Selector.MatchLabels).To(HaveKeyWithValue("app", name))
-	Expect(deployment.Spec.Replicas).ToNot(BeNil())
-	Expect(int(*deployment.Spec.Replicas)).To(Equal(1))
 
 	return deployment
 }

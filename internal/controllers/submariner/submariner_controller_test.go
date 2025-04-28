@@ -343,6 +343,7 @@ func testServiceDiscoveryReconciliation() {
 			Expect(serviceDiscovery.Spec.BrokerK8sApiServer).To(Equal(t.submariner.Spec.BrokerK8sApiServer))
 			Expect(serviceDiscovery.Spec.BrokerK8sSecret).To(Equal(t.submariner.Spec.BrokerK8sSecret))
 			Expect(serviceDiscovery.Spec.ClusterID).To(Equal(t.submariner.Spec.ClusterID))
+			Expect(serviceDiscovery.Spec.ClusterCIDR).To(Equal(t.submariner.Spec.ClusterCIDR))
 			Expect(serviceDiscovery.Spec.Namespace).To(Equal(t.submariner.Spec.Namespace))
 			Expect(serviceDiscovery.Spec.GlobalnetEnabled).To(BeTrue())
 		})

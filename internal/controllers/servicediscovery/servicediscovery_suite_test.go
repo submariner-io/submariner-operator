@@ -212,6 +212,7 @@ func newServiceDiscovery() *v1alpha1.ServiceDiscovery {
 			BrokerK8sApiServerToken:  "MIIDADCCAeigAw",
 			BrokerK8sCA:              "client.crt",
 			ClusterID:                "east",
+			ClusterCIDR:              "10.253.1.0/16",
 			Namespace:                "submariner_ns",
 			Debug:                    true,
 			CustomDomains:            []string{"supercluster.local"},
@@ -258,6 +259,22 @@ func (t *testDriver) testServiceDiscoveryDeleted() {
 	It("eventually delete the ServiceDiscovery resource", func() {
 		t.awaitServiceDiscoveryDeleted()
 	})
+}
+
+func (t *testDriver) assertCoreDNSDeployment(ctx context.Context) {
+	d := t.AssertDeployment(ctx, names.LighthouseCoreDNSComponent)
+
+	Expect(d.Spec.Replicas).ToNot(BeNil())
+	Expect(int(*d.Spec.Replicas)).To(Equal(2))
+
+	Expect(d.Spec.Template.Spec.Containers).To(HaveLen(1))
+	Expect(d.Spec.Template.Spec.Containers[0].Image).To(Equal(fmt.Sprintf("%s/%s:%s",
+		t.serviceDiscovery.Spec.Repository, opnames.LighthouseCoreDNSImage, t.serviceDiscovery.Spec.Version)))
+
+	envMap := test.EnvMapFromVars(d.Spec.Template.Spec.Containers[0].Env)
+
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", t.serviceDiscovery.Spec.ClusterID))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", t.serviceDiscovery.Spec.ClusterCIDR))
 }
 
 func assertDNSConfigServers(actual, expected *operatorv1.DNS) {
