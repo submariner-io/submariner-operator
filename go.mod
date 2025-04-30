@@ -11,10 +11,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.81.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.81.0
-	github.com/prometheus/client_golang v1.21.1
-	github.com/submariner-io/admiral v0.21.0-m1
-	github.com/submariner-io/shipyard v0.21.0-m1
-	github.com/submariner-io/submariner v0.21.0-m1
+	github.com/prometheus/client_golang v1.22.0
+	github.com/submariner-io/admiral v0.21.0-m2
+	github.com/submariner-io/shipyard v0.21.0-m2
+	github.com/submariner-io/submariner v0.21.0-m2
 	golang.org/x/net v0.39.0
 	golang.org/x/text v0.24.0
 	k8s.io/api v0.32.3
@@ -50,7 +50,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
@@ -81,5 +80,5 @@ require (
 	k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/mcs-api v0.1.0 // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.6.0 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.7.0 // indirect
 )
