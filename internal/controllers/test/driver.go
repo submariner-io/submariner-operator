@@ -91,7 +91,7 @@ func (d *Driver) DoReconcile(ctx context.Context) (reconcile.Result, error) {
 func (d *Driver) AssertReconcileSuccess(ctx context.Context) {
 	r, err := d.DoReconcile(ctx)
 	Expect(err).To(Succeed())
-	Expect(r.Requeue).To(BeFalse())
+	Expect(r.Requeue).To(BeFalse()) //nolint:staticcheck // Requeue is deprecated but we still want to check it
 	Expect(r.RequeueAfter).To(BeNumerically("==", 0))
 }
 
@@ -99,7 +99,7 @@ func (d *Driver) AssertReconcileRequeue(ctx context.Context) {
 	r, err := d.DoReconcile(ctx)
 	Expect(err).To(Succeed())
 	Expect(r.RequeueAfter).To(BeNumerically(">", 0), "Expected requeue after")
-	Expect(r.Requeue).To(BeFalse())
+	Expect(r.Requeue).To(BeFalse()) //nolint:staticcheck // Requeue is deprecated but we still want to check it
 }
 
 func (d *Driver) AssertReconcileError(ctx context.Context) {
