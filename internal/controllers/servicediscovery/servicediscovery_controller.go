@@ -751,18 +751,8 @@ func (r *Reconciler) ensureLighthouseCoreDNSDeployment(ctx context.Context, inst
 func (r *Reconciler) ensureLighthouseCoreDNSService(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery,
 	reqLogger logr.Logger,
 ) error {
-	lighthouseCoreDNSService := &corev1.Service{}
-
-	err := r.ScopedClient.Get(ctx, types.NamespacedName{Name: names.LighthouseCoreDNSComponent, Namespace: instance.Namespace},
-		lighthouseCoreDNSService)
-	if apierrors.IsNotFound(err) {
-		lighthouseCoreDNSService = newLighthouseCoreDNSService(instance)
-		if _, err = apply.Service(ctx, instance, lighthouseCoreDNSService, reqLogger,
-			r.ScopedClient, r.Scheme); err != nil {
-			log.Error(err, "Error creating the lighthouseCoreDNS service")
-
-			return errors.Wrap(err, "error reconciling coredns Service")
-		}
+	if _, err := apply.Service(ctx, instance, newLighthouseCoreDNSService(instance), reqLogger, r.ScopedClient, r.Scheme); err != nil {
+		return errors.Wrap(err, "error reconciling coredns Service")
 	}
 
 	return nil

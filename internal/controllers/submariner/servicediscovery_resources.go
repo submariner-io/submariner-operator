@@ -52,7 +52,7 @@ func (r *Reconciler) serviceDiscoveryReconciler(ctx context.Context, submariner 
 					HaltOnCertificateError:   submariner.Spec.HaltOnCertificateError,
 					Debug:                    submariner.Spec.Debug,
 					ClusterID:                submariner.Spec.ClusterID,
-					ClusterCIDR:              submariner.Spec.ClusterCIDR,
+					ClusterCIDR:              submariner.Status.ClusterCIDR,
 					Namespace:                submariner.Spec.Namespace,
 					GlobalnetEnabled:         submariner.Spec.GlobalCIDR != "",
 					ClustersetIPEnabled:      submariner.Spec.ClustersetIPEnabled,

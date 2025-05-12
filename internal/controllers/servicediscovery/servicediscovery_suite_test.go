@@ -227,6 +227,7 @@ func newDNSService(clusterIP string) *corev1.Service {
 			Namespace: submarinerNamespace,
 		},
 		Spec: corev1.ServiceSpec{
+			Type:      corev1.ServiceTypeClusterIP,
 			ClusterIP: clusterIP,
 		},
 	}
