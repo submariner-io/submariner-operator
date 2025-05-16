@@ -266,6 +266,29 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	return reconcile.Result{}, nil
 }
 
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// Watch for changes to the gateway status in the same namespace
+	mapFn := handler.MapFunc(
+		func(_ context.Context, object client.Object) []reconcile.Request {
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      "submariner",
+					Namespace: object.GetNamespace(),
+				}},
+			}
+		})
+
+	//nolint:wrapcheck // No need to wrap here
+	return ctrl.NewControllerManagedBy(mgr).
+		Named("submariner-controller").
+		// Watch for changes to primary resource Submariner
+		For(&submopv1a1.Submariner{}).
+		// Watch for changes to secondary resource DaemonSets and requeue the owner Submariner
+		Owns(&appsv1.DaemonSet{}).
+		Watches(&submv1.Gateway{}, handler.EnqueueRequestsFromMapFunc(mapFn)).
+		Complete(r)
+}
+
 func getImagePath(submariner *submopv1a1.Submariner, imageName, componentName string) string {
 	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, imageName, componentName,
 		submariner.Spec.ImageOverrides)
@@ -297,29 +320,6 @@ func (r *Reconciler) addFinalizer(ctx context.Context, instance *submopv1a1.Subm
 	log.Info("Added finalizer")
 
 	return r.getSubmariner(ctx, types.NamespacedName{Namespace: instance.Namespace, Name: instance.Name})
-}
-
-func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	// Watch for changes to the gateway status in the same namespace
-	mapFn := handler.MapFunc(
-		func(_ context.Context, object client.Object) []reconcile.Request {
-			return []reconcile.Request{
-				{NamespacedName: types.NamespacedName{
-					Name:      "submariner",
-					Namespace: object.GetNamespace(),
-				}},
-			}
-		})
-
-	//nolint:wrapcheck // No need to wrap here
-	return ctrl.NewControllerManagedBy(mgr).
-		Named("submariner-controller").
-		// Watch for changes to primary resource Submariner
-		For(&submopv1a1.Submariner{}).
-		// Watch for changes to secondary resource DaemonSets and requeue the owner Submariner
-		Owns(&appsv1.DaemonSet{}).
-		Watches(&submv1.Gateway{}, handler.EnqueueRequestsFromMapFunc(mapFn)).
-		Complete(r)
 }
 
 func (r *Reconciler) setupSecretSyncer(ctx context.Context, instance *submopv1a1.Submariner, logger logr.Logger, namespace string) error {

@@ -159,6 +159,22 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 	return reconcile.Result{}, err
 }
 
+//nolint:wrapcheck // No need to wrap errors here.
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// These are required so that we can manipulate DNS ConfigMap
+	if err := operatorv1.Install(mgr.GetScheme()); err != nil {
+		return err
+	}
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named("servicediscovery-controller").
+		// Watch for changes to primary resource ServiceDiscovery
+		For(&submarinerv1alpha1.ServiceDiscovery{}).
+		// Watch for changes to secondary resource Deployment and requeue the owner ServiceDiscovery
+		Owns(&appsv1.Deployment{}).
+		Complete(r)
+}
+
 func (r *Reconciler) getServiceDiscovery(ctx context.Context, key types.NamespacedName) (*submarinerv1alpha1.ServiceDiscovery, error) {
 	instance := &submarinerv1alpha1.ServiceDiscovery{}
 
@@ -680,22 +696,6 @@ func getUpdatedForwardServers(instance *submarinerv1alpha1.ServiceDiscovery, dns
 func getImagePath(submariner *submarinerv1alpha1.ServiceDiscovery, imageName, componentName string) string {
 	return images.GetImagePath(submariner.Spec.Repository, submariner.Spec.Version, imageName, componentName,
 		submariner.Spec.ImageOverrides)
-}
-
-//nolint:wrapcheck // No need to wrap errors here.
-func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
-	// These are required so that we can manipulate DNS ConfigMap
-	if err := operatorv1.Install(mgr.GetScheme()); err != nil {
-		return err
-	}
-
-	return ctrl.NewControllerManagedBy(mgr).
-		Named("servicediscovery-controller").
-		// Watch for changes to primary resource ServiceDiscovery
-		For(&submarinerv1alpha1.ServiceDiscovery{}).
-		// Watch for changes to secondary resource Deployment and requeue the owner ServiceDiscovery
-		Owns(&appsv1.Deployment{}).
-		Complete(r)
 }
 
 func (r *Reconciler) ensureLightHouseAgent(ctx context.Context, instance *submarinerv1alpha1.ServiceDiscovery, reqLogger logr.Logger,
