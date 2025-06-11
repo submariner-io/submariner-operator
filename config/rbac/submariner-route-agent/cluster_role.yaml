@@ -39,6 +39,8 @@ rules:
       - get
       - list
       - watch
+      # route agent needs to annotate nodes to prevent OVNK SNAT
+      - update
   - apiGroups:
       - projectcalico.org
     resources:
