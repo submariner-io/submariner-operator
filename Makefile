@@ -239,7 +239,6 @@ unit: $(EMBEDDED_YAMLS)
 #     --output scripts/operator-sdk-signing-keyring.gpg \
 #     --dearmor scripts/operator-sdk-signing-key.asc
 OPERATOR_SDK_VERSION := $(shell $(GO) -C tools list -m -f {{.Version}} github.com/operator-framework/operator-sdk)
-OPERATOR_SDK_REPO := github.com/operator-framework/operator-sdk
 $(OPERATOR_SDK):
 	mkdir -p $(@D) && \
 	cd $(@D) && \
