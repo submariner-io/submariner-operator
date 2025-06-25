@@ -229,6 +229,61 @@ spec:
         - name: kind
           value: task
         resolver: bundles
+    - name: customize-bundle-rh
+      params:
+        - name: ociStorage
+          value: $(params.output-image).script
+        - name: ociArtifactExpiresAfter
+          value: $(params.image-expires-after)
+        - name: SCRIPT_RUNNER_IMAGE
+          value: registry.access.redhat.com/ubi9/ubi-minimal:latest
+        - name: SCRIPT
+          value: |
+            #!/bin/bash
+            echo "Before edit bundle.Dockerfile:"
+            cat bundle.Dockerfile
+
+            cat <<'EOF' >> bundle.Dockerfile
+
+# General labels.
+# TODO OCI-format?
+# https://github.com/opencontainers/image-spec/blob/main/annotations.md
+LABEL com.github.url="https://github.com/submariner-io/submariner-operator" \
+      description="Submariner enables multicluster networking and service discovery across Kubernetes clusters, following Kubernetes KEP-1645." \
+      io.k8s.description="Implements Kubernetes multicluster networking and service discovery (KEP-1645)" \
+      io.k8s.display-name="Submariner Operator" \
+      name="submariner-operator-bundle" \
+      summary="Multicluster networking operator based on Submariner" \
+      url="https://github.com/submariner-io/submariner-operator"
+
+# Red Hat labels.
+LABEL com.redhat.component="submariner-operator-bundle-container" \
+      com.redhat.delivery.operator.bundle=true \
+      io.openshift.expose-services="" \
+      io.openshift.non-scalable="true" \
+      io.openshift.tags="submariner,acm,networking,multicluster,rhel9" \
+      io.openshift.wants="submariner-operator" \
+      maintainer="['multi-cluster-networking@redhat.com']" \
+      vendor="Red Hat, Inc."
+EOF
+
+            echo "After edit bundle.Dockerfile:"
+            cat bundle.Dockerfile
+        - name: HERMETIC
+          value: $(params.hermetic)
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+      runAfter:
+      - generate-bundle
+      taskRef:
+        params:
+        - name: name
+          value: run-script-oci-ta
+        - name: bundle
+          value: quay.io/konflux-ci/tekton-catalog/task-run-script-oci-ta:0.1@sha256:049b5a8dfb7639ec23238218e116eae48c4112ea364d94d92295a27a4b200400
+        - name: kind
+          value: task
+        resolver: bundles
     - name: build-container
       params:
       - name: IMAGE
@@ -253,14 +308,15 @@ spec:
       - name: PRIVILEGED_NESTED
         value: $(params.privileged-nested)
       - name: SOURCE_ARTIFACT
-        value: $(tasks.generate-bundle.results.SCRIPT_ARTIFACT)
+        value: $(tasks.customize-bundle-rh.results.SCRIPT_ARTIFACT)
       - name: ADDITIONAL_BASE_IMAGES
         value:
+          - $(tasks.customize-bundle-rh.results.SCRIPT_RUNNER_IMAGE_REFERENCE)
           - $(tasks.generate-bundle.results.SCRIPT_RUNNER_IMAGE_REFERENCE)
       - name: CACHI2_ARTIFACT
         value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
       runAfter:
-      - generate-bundle
+      - customize-bundle-rh
       taskRef:
         params:
         - name: name
@@ -590,7 +646,7 @@ spec:
       - name: CONTEXT
         value: $(params.path-context)
       - name: SOURCE_ARTIFACT
-        value: $(tasks.generate-bundle.results.SCRIPT_ARTIFACT)
+        value: $(tasks.customize-bundle-rh.results.SCRIPT_ARTIFACT)
       runAfter:
       - build-image-index
       taskRef:
