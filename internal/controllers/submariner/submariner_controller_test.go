@@ -22,6 +22,8 @@ import (
 	"context"
 	"os"
 	"reflect"
+	goslices "slices"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -64,13 +66,6 @@ var _ = Describe("Submariner controller tests", func() {
 	When("the Submariner resource is being deleted", testDeletion)
 })
 
-const (
-	testDetectedServiceCIDR   = "100.94.0.0/16"
-	testDetectedClusterCIDR   = "10.244.0.0/16"
-	testConfiguredServiceCIDR = "192.168.66.0/24"
-	testConfiguredClusterCIDR = "192.168.67.0/24"
-)
-
 func testSubmarinerResourceReconciliation() {
 	t := newTestDriver()
 
@@ -100,31 +95,37 @@ func testSubmarinerResourceReconciliation() {
 		})
 	})
 
-	When("the network details are not provided", func() {
-		It("should use the detected network", func(ctx SpecContext) {
+	When("the network CIDRs are not provided", func() {
+		It("should use the detected network CIDRs", func(ctx SpecContext) {
 			t.AssertReconcileSuccess(ctx)
 
 			updated := t.getSubmariner(ctx)
-			Expect(updated.Status.ServiceCIDR).To(Equal(testDetectedServiceCIDR))
-			Expect(updated.Status.ClusterCIDR).To(Equal(testDetectedClusterCIDR))
+			Expect(updated.Status.ServiceCIDR).To(Equal(strings.Join(t.clusterNetwork.ServiceCIDRs, ",")))
+			Expect(updated.Status.ClusterCIDR).To(Equal(strings.Join(t.clusterNetwork.PodCIDRs, ",")))
 		})
 	})
 
-	When("the network details are provided", func() {
+	When("the network CIDRs are provided", func() {
 		It("should use the provided ones instead of the detected ones", func(ctx SpecContext) {
+			configuredServiceCIDR := "192.168.66.0/24,193.168.66.0/24"
+
+			podCIDRs := goslices.Clone(t.clusterNetwork.PodCIDRs)
+			goslices.Reverse(podCIDRs)
+			configuredClusterCIDR := strings.Join(podCIDRs, ",")
+
 			t.AssertReconcileSuccess(ctx)
 
 			initial := t.getSubmariner(ctx)
-			initial.Spec.ServiceCIDR = testConfiguredServiceCIDR
-			initial.Spec.ClusterCIDR = testConfiguredClusterCIDR
+			initial.Spec.ServiceCIDR = configuredServiceCIDR
+			initial.Spec.ClusterCIDR = configuredClusterCIDR
 
 			Expect(t.ScopedClient.Update(ctx, initial)).To(Succeed())
 
 			t.AssertReconcileSuccess(ctx)
 
 			updated := t.getSubmariner(ctx)
-			Expect(updated.Status.ServiceCIDR).To(Equal(testConfiguredServiceCIDR))
-			Expect(updated.Status.ClusterCIDR).To(Equal(testConfiguredClusterCIDR))
+			Expect(updated.Status.ServiceCIDR).To(Equal(configuredServiceCIDR))
+			Expect(updated.Status.ClusterCIDR).To(Equal(configuredClusterCIDR))
 		})
 	})
 
@@ -343,7 +344,7 @@ func testServiceDiscoveryReconciliation() {
 			Expect(serviceDiscovery.Spec.BrokerK8sApiServer).To(Equal(t.submariner.Spec.BrokerK8sApiServer))
 			Expect(serviceDiscovery.Spec.BrokerK8sSecret).To(Equal(t.submariner.Spec.BrokerK8sSecret))
 			Expect(serviceDiscovery.Spec.ClusterID).To(Equal(t.submariner.Spec.ClusterID))
-			Expect(serviceDiscovery.Spec.ClusterCIDR).To(Equal(testDetectedClusterCIDR))
+			Expect(serviceDiscovery.Spec.ClusterCIDR).To(Equal(strings.Join(t.clusterNetwork.PodCIDRs, ",")))
 			Expect(serviceDiscovery.Spec.Namespace).To(Equal(t.submariner.Spec.Namespace))
 			Expect(serviceDiscovery.Spec.GlobalnetEnabled).To(BeTrue())
 		})

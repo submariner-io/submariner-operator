@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -87,8 +88,8 @@ func newTestDriver() *testDriver {
 
 		t.clusterNetwork = &network.ClusterNetwork{
 			NetworkPlugin: "fake",
-			ServiceCIDRs:  []string{testDetectedServiceCIDR},
-			PodCIDRs:      []string{testDetectedClusterCIDR},
+			ServiceCIDRs:  []string{"100.94.0.0/16"},
+			PodCIDRs:      []string{"10.244.0.0/16", "11.244.0.0/16"},
 		}
 
 		t.dynClient = dynamicfake.NewSimpleDynamicClient(scheme.Scheme)
@@ -276,7 +277,7 @@ func getClusterCIDR(submariner *v1alpha1.Submariner, clusterNetwork *network.Clu
 		return submariner.Spec.ClusterCIDR
 	}
 
-	return clusterNetwork.PodCIDRs[0]
+	return strings.Join(clusterNetwork.PodCIDRs, ",")
 }
 
 func getServiceCIDR(submariner *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork) string {
@@ -284,7 +285,7 @@ func getServiceCIDR(submariner *v1alpha1.Submariner, clusterNetwork *network.Clu
 		return submariner.Spec.ServiceCIDR
 	}
 
-	return clusterNetwork.ServiceCIDRs[0]
+	return strings.Join(clusterNetwork.ServiceCIDRs, ",")
 }
 
 func getGlobalCIDR(submariner *v1alpha1.Submariner, clusterNetwork *network.ClusterNetwork) string {

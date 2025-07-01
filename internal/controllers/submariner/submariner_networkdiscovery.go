@@ -20,9 +20,11 @@ package submariner
 
 import (
 	"context"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/slices"
 	submopv1a1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/pkg/discovery/network"
 )
@@ -75,39 +77,23 @@ func (r *Reconciler) discoverNetwork(ctx context.Context, submariner *submopv1a1
 }
 
 func getCIDR(log logr.Logger, cidrType, currentCIDR string, detectedCIDRs []string) string {
-	detected := getFirstCIDR(detectedCIDRs)
-
 	if currentCIDR == "" {
-		if detected != "" {
-			log.Info("Using detected CIDR", "type", cidrType, "CIDR", detected)
+		if len(detectedCIDRs) > 0 {
+			log.Info("Using detected CIDRs", "type", cidrType, "CIDRs", detectedCIDRs)
 		} else {
-			log.Info("No detected CIDR", "type", cidrType)
+			log.Info("No detected CIDRs", "type", cidrType)
 		}
 
-		return detected
+		return strings.Join(detectedCIDRs, ",")
 	}
 
-	if detected != "" && detected != currentCIDR {
+	currentCIDRs := strings.Split(currentCIDR, ",")
+	if len(detectedCIDRs) > 0 && !slices.Equivalent(detectedCIDRs, currentCIDRs, slices.Key[string]) {
 		log.Error(
 			errors.New("there is a mismatch between the detected and configured CIDRs"),
-			"The configured CIDR will take precedence",
-			"type", cidrType, "configured", currentCIDR, "detected", detected)
+			"The configured CIDRs will take precedence",
+			"type", cidrType, "configured", currentCIDR, "detected", strings.Join(detectedCIDRs, ","))
 	}
 
 	return currentCIDR
-}
-
-func getFirstCIDR(detectedCIDRs []string) string {
-	CIDRlen := len(detectedCIDRs)
-
-	if CIDRlen > 1 {
-		log.Error(errors.New("detected > 1 CIDRs"),
-			"we currently support only one", "detectedCIDRs", detectedCIDRs)
-	}
-
-	if CIDRlen > 0 {
-		return detectedCIDRs[0]
-	}
-
-	return ""
 }
