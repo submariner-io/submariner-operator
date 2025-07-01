@@ -21,6 +21,7 @@ package network
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -96,6 +97,9 @@ func Discover(ctx context.Context, client controllerClient.Client, operatorNames
 		globalCIDR, clustersetIPCIDR, _ := getCIDRs(ctx, client, operatorNamespace)
 		discovery.GlobalCIDR = globalCIDR
 		discovery.ClustersetIPCIDR = clustersetIPCIDR
+
+		discovery.PodCIDRs = splitCommaSeparatedCIDRs(discovery.PodCIDRs)
+		discovery.ServiceCIDRs = splitCommaSeparatedCIDRs(discovery.ServiceCIDRs)
 	}
 
 	return discovery, err
@@ -141,4 +145,13 @@ func getCIDRs(ctx context.Context, operatorClient controllerClient.Client, opera
 	clustersetIPCIDR := existingCfg.Spec.ClustersetIPCIDR
 
 	return globalCIDR, clustersetIPCIDR, nil
+}
+
+func splitCommaSeparatedCIDRs(cidrs []string) []string {
+	var newCIDRs []string
+	for _, c := range cidrs {
+		newCIDRs = append(newCIDRs, strings.Split(c, ",")...)
+	}
+
+	return newCIDRs
 }

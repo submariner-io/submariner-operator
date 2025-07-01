@@ -150,6 +150,22 @@ var _ = Describe("Generic Network", func() {
 		})
 	})
 
+	When("A pod parameter has comma-separated CIDRs", func() {
+		const testPodCIDR2 = "5.6.7.8/16"
+
+		BeforeEach(func(ctx SpecContext) {
+			clusterNet = testDiscoverGenericWith(
+				ctx, fakeKubeControllerManagerPod(testPodCIDR+","+testPodCIDR2),
+			)
+			Expect(clusterNet).NotTo(BeNil())
+		})
+
+		It("Should return the ClusterNetwork structure with multiple CIDRs", func() {
+			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR, testPodCIDR2}))
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
+		})
+	})
+
 	When("There is a kube-proxy pod but no kube-controller", func() {
 		BeforeEach(func(ctx SpecContext) {
 			clusterNet = testDiscoverGenericWith(

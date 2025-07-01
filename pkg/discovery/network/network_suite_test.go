@@ -80,10 +80,21 @@ func fakeKubeAPIServerPod() *v1.Pod {
 	return fakePod("kube-apiserver", []string{"kube-apiserver", "--service-cluster-ip-range=" + testServiceCIDR}, []v1.EnvVar{})
 }
 
-func fakeKubeControllerManagerPod() *v1.Pod {
+func fakeKubeControllerManagerPod(cidrs ...string) *v1.Pod {
+	podCIDR := testPodCIDR
+	serviceCIDR := testServiceCIDR
+
+	if len(cidrs) > 0 {
+		podCIDR = cidrs[0]
+	}
+
+	if len(cidrs) > 1 {
+		podCIDR = cidrs[1]
+	}
+
 	return fakePod("kube-controller-manager", []string{
-		"kube-controller-manager", "--cluster-cidr=" + testPodCIDR,
-		"--service-cluster-ip-range=" + testServiceCIDR,
+		"kube-controller-manager", "--cluster-cidr=" + podCIDR,
+		"--service-cluster-ip-range=" + serviceCIDR,
 	}, []v1.EnvVar{})
 }
 
