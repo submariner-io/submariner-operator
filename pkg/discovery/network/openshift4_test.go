@@ -35,9 +35,9 @@ var _ = Describe("OpenShift4 Network", func() {
 		It("Should parse properly pod and service networks", func(ctx SpecContext) {
 			cn, err := testOS4DiscoveryWith(ctx, getNetworkJSON())
 			Expect(err).NotTo(HaveOccurred())
-			Expect(cn.PodCIDRs).To(HaveLen(2))
+			Expect(cn.PodCIDRs).To(HaveLen(1))
 			Expect(cn.ServiceCIDRs).To(HaveLen(1))
-			Expect(cn.PodCIDRs).To(Equal([]string{"10.128.0.0/14", "10.132.0.0/14"}))
+			Expect(cn.PodCIDRs).To(Equal([]string{"10.128.0.0/14,10.132.0.0/14"}))
 			Expect(cn.ServiceCIDRs).To(Equal([]string{"172.30.0.0/16"}))
 			Expect(cn.NetworkPlugin).To(Equal(cni.OpenShiftSDN))
 		})

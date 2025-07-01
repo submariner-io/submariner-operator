@@ -21,6 +21,7 @@ package network
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
@@ -62,6 +63,9 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 		return nil, fmt.Errorf("field .spec.clusterNetwork expected, but not found in Network resource: %v", cr.Object)
 	}
 
+	// For Dual-Stack case, store CIDRs as single comma-separated string
+	podCIDRs := []string{}
+
 	for _, clusterNetwork := range clusterNetworks {
 		clusterNetworkMap, _ := clusterNetwork.(map[string]any)
 		cidr, found, err := unstructured.NestedString(clusterNetworkMap, "cidr")
@@ -72,8 +76,10 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 			return nil, fmt.Errorf("field cidr expected, but not found in clusterNetwork: %v", clusterNetworkMap)
 		}
 
-		result.PodCIDRs = append(result.PodCIDRs, cidr)
+		podCIDRs = append(podCIDRs, cidr)
 	}
+
+	result.PodCIDRs = append(result.PodCIDRs, strings.Join(podCIDRs, ","))
 
 	serviceNetworks, found, err := unstructured.NestedSlice(cr.Object, "spec", "serviceNetwork")
 	if err != nil {
@@ -82,9 +88,12 @@ func parseOS4Network(cr *unstructured.Unstructured) (*ClusterNetwork, error) {
 		return nil, fmt.Errorf("field .spec.serviceNetwork expected, but not found in Network resource: %v", cr.Object)
 	}
 
+	serviceCIDRs := []string{}
 	for _, serviceNetwork := range serviceNetworks {
-		result.ServiceCIDRs = append(result.ServiceCIDRs, serviceNetwork.(string))
+		serviceCIDRs = append(serviceCIDRs, serviceNetwork.(string))
 	}
+
+	result.ServiceCIDRs = append(result.ServiceCIDRs, strings.Join(serviceCIDRs, ","))
 
 	ocpNetworkType, found, err := unstructured.NestedString(cr.Object, "spec", "networkType")
 	if err != nil {
