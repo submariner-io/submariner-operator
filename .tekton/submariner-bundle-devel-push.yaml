@@ -206,11 +206,46 @@ spec:
         - name: SCRIPT
           value: |
             #!/bin/bash
+            set -e -o pipefail
+
             make bundle
+
             echo "bundle.Dockerfile:"
             cat bundle.Dockerfile
+
             echo "Full bundle tree:"
             ls -R bundle
+
+            LABELS_TO_ADD='
+            # General labels.
+            # TODO OCI-format?
+            # https://github.com/opencontainers/image-spec/blob/main/annotations.md
+            LABEL com.github.url="https://github.com/submariner-io/submariner-operator" \
+                  description="Submariner enables multicluster networking and service discovery across Kubernetes clusters, following Kubernetes KEP-1645." \
+                  io.k8s.description="Implements Kubernetes multicluster networking and service discovery (KEP-1645)" \
+                  io.k8s.display-name="Submariner Operator" \
+                  name="submariner-operator-bundle" \
+                  summary="Multicluster networking operator based on Submariner" \
+                  url="https://github.com/submariner-io/submariner-operator"
+
+            # Red Hat labels.
+            LABEL com.redhat.component="submariner-operator-bundle-container" \
+                  com.redhat.delivery.operator.bundle=true \
+                  io.openshift.expose-services="" \
+                  io.openshift.non-scalable="true" \
+                  io.openshift.tags="submariner,acm,networking,multicluster,rhel9" \
+                  io.openshift.wants="submariner-operator" \
+                  maintainer="multi-cluster-networking@redhat.com" \
+                  vendor="Red Hat, Inc."
+            '
+
+            echo "Before editing bundle.Dockerfile:"
+            cat bundle.Dockerfile
+
+            echo "${LABELS_TO_ADD}" >> bundle.Dockerfile
+
+            echo "After editing bundle.Dockerfile:"
+            cat bundle.Dockerfile
         - name: HERMETIC
           value: $(params.hermetic)
         - name: SOURCE_ARTIFACT
