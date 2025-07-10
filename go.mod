@@ -12,9 +12,9 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.83.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.83.0
 	github.com/prometheus/client_golang v1.22.0
-	github.com/submariner-io/admiral v0.21.0-m3.0.20250710145849-09921dd45e54
-	github.com/submariner-io/shipyard v0.21.0-m3.0.20250710134254-66f43f32f7f5
-	github.com/submariner-io/submariner v0.21.0-m3.0.20250710162431-27c69f7f1ff3
+	github.com/submariner-io/admiral v0.22.0-m0
+	github.com/submariner-io/shipyard v0.22.0-m0
+	github.com/submariner-io/submariner v0.22.0-m0
 	golang.org/x/net v0.41.0
 	golang.org/x/text v0.26.0
 	k8s.io/api v0.33.2
