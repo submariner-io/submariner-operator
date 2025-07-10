@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/operator-framework/operator-sdk v1.40.0
 	github.com/uw-labs/lichen v0.1.7
-	sigs.k8s.io/controller-tools v0.17.2
+	sigs.k8s.io/controller-tools v0.18.0
 	sigs.k8s.io/kustomize/kustomize/v5 v5.7.0
 )
 
@@ -251,7 +251,9 @@ require (
 	k8s.io/apiserver v0.33.2 // indirect
 	k8s.io/cli-runtime v0.33.2 // indirect
 	k8s.io/client-go v0.33.2 // indirect
+	k8s.io/code-generator v0.33.2 // indirect
 	k8s.io/component-base v0.33.2 // indirect
+	k8s.io/gengo/v2 v2.0.0-20250207200755-1244d31929d7 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
 	k8s.io/kubectl v0.33.2 // indirect
