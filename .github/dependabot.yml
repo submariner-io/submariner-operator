@@ -45,6 +45,15 @@ updates:
       github-actions:
         patterns:
           - "*"
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: release-0.21
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: gomod
     target-branch: release-0.17
     directory: /
@@ -93,6 +102,18 @@ updates:
       # 0.20 tracks the 0.32 branch
       - dependency-name: k8s.io/*
         versions: ">= 0.33.0-alpha.0"
+  - package-ecosystem: gomod
+    target-branch: release-0.21
+    directory: /
+    schedule:
+      interval: weekly
+    allow:
+      # Pick up k8s.io updates
+      - dependency-name: k8s.io/apiextensions-apiserver
+    ignore:
+      # 0.21 tracks the 0.33 branch
+      - dependency-name: k8s.io/*
+        versions: ">= 0.34.0-alpha.0"
   - package-ecosystem: gomod
     directory: /
     schedule:
