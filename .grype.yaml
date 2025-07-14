@@ -10,3 +10,8 @@ ignore:
   - vulnerability: CVE-2021-22570
     package:
       name: google.golang.org/protobuf
+  # The fixed helm version also pulls in K8s 1.33 et al so ignore the vulnerability
+  # as it's only in the tools module.
+  - vulnerability: GHSA-557j-xg8c-q2mm
+    package:
+      name: helm.sh/helm/v3
