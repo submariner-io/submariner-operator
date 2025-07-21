@@ -17,10 +17,10 @@ require (
 	github.com/submariner-io/submariner v0.22.0-m0
 	golang.org/x/net v0.42.0
 	golang.org/x/text v0.27.0
-	k8s.io/api v0.33.2
-	k8s.io/apiextensions-apiserver v0.33.2
-	k8s.io/apimachinery v0.33.2
-	k8s.io/client-go v0.33.2
+	k8s.io/api v0.33.3
+	k8s.io/apiextensions-apiserver v0.33.3
+	k8s.io/apimachinery v0.33.3
+	k8s.io/client-go v0.33.3
 	k8s.io/utils v0.0.0-20250502105355-0f33e8f1c979
 	sigs.k8s.io/controller-runtime v0.21.0
 	sigs.k8s.io/yaml v1.4.0
