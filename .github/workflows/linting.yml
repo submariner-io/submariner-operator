@@ -39,8 +39,10 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
       - name: Create the bundle and validate it
-        run: make bundle
+        run: make bundle LOCAL_BUILD=1
 
   check-branch-dependencies:
     name: Check branch dependencies

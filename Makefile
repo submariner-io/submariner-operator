@@ -1,3 +1,5 @@
+SHELL = /bin/bash
+
 BASE_BRANCH ?= devel
 # Denotes the default operator image version, exposed as a variable for the automated release
 DEFAULT_IMAGE_VERSION ?= $(BASE_BRANCH)
@@ -42,7 +44,13 @@ else
 SETTINGS = $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
-include $(SHIPYARD_DIR)/Makefile.inc
+-include $(SHIPYARD_DIR)/Makefile.inc
+# Version calculation from Shipyard Makefile.versions
+# These are used by the bundle construction and copied here
+# to allow "make bundle" to run without Shipyard
+override CALCULATED_VERSION := $(BASE_BRANCH)-$(shell git rev-parse --short=12 HEAD)
+VERSION ?= $(CALCULATED_VERSION)
+export VERSION
 
 override UNIT_TEST_ARGS += test internal/env
 
