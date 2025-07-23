@@ -22,6 +22,7 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/submariner-operator/deploy/crds"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	mcscrd "sigs.k8s.io/mcs-api/config/crd"
 )
@@ -49,8 +50,7 @@ func Ensure(ctx context.Context, crdUpdater crd.Updater, isBroker bool) (bool, e
 		return installedMCSSI || installedMCSSE, errors.Wrap(err, "error creating the MCS ServiceExport CRD")
 	}
 
-	installedSD, err := crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_crds_submariner_io_servicediscoveries_yaml)
+	installedSD, err := crdUpdater.CreateOrUpdateFromBytes(ctx, crds.ServiceDiscoveryCRD)
 	if err != nil {
 		return installedMCSSI || installedMCSSE || installedSD, errors.Wrap(err, "error creating the ServiceDiscovery CRD")
 	}

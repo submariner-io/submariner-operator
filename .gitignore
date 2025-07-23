@@ -2,7 +2,6 @@
 bin/
 build/_output/
 dist/
-deploy/crds
 deploy/submariner/crds
 deploy/lighthouse/crds
 config/bundle/kustomization.yaml

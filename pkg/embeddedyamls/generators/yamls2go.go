@@ -30,11 +30,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-var files = []string{
-	"deploy/crds/submariner.io_brokers.yaml",
-	"deploy/crds/submariner.io_submariners.yaml",
-	"deploy/crds/submariner.io_servicediscoveries.yaml",
-}
+var files = []string{}
 
 // Reads all .yaml files in the crdDirectory and encodes them as constants in yamls.go.
 func main() {
