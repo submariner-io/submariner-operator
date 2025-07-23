@@ -26,6 +26,8 @@ spec:
     value: quay.io/redhat-user-workloads/submariner-tenant/submariner-bundle-0-21:{{revision}}
   - name: dockerfile
     value: bundle.Dockerfile
+  - name: build-source-image
+    value: "true"
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
