@@ -35,7 +35,7 @@ metadata:
             "globalnetEnabled": false,
             "namespace": "submariner-operator",
             "repository": "quay.io/submariner",
-            "version": "release-0.21-b7990746a745"
+            "version": "release-0.21-7a0f64e98720"
           }
         },
         {
@@ -69,7 +69,7 @@ metadata:
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "release-0.21-b7990746a745"
+            "version": "release-0.21-7a0f64e98720"
           }
         }
       ]
@@ -77,9 +77,17 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
-    createdAt: "2025-07-23 02:04:25"
+    createdAt: "2025-07-24 00:12:45"
     description: Creates and manages Submariner deployments.
+    features.operators.openshift.io/disconnected: "false"
+    features.operators.openshift.io/fips-compliant: "false"
+    features.operators.openshift.io/proxy-aware: "false"
+    features.operators.openshift.io/tls-profiles: "false"
+    features.operators.openshift.io/token-auth-aws: "false"
+    features.operators.openshift.io/token-auth-azure: "false"
+    features.operators.openshift.io/token-auth-gcp: "false"
     operatorframework.io/suggested-namespace: submariner-operator
+    operators.openshift.io/valid-subscription: '["TODO", "foo"]'
     operators.operatorframework.io/builder: operator-sdk-v1.40.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/submariner-io/submariner-operator
@@ -665,18 +673,18 @@ spec:
                 - name: OPERATOR_NAME
                   value: submariner-operator
                 - name: RELATED_IMAGE_submariner-operator
-                  value: quay.io/submariner/submariner-operator:release-0.21-b7990746a745
+                  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:9bd4cce195d28beee61f1adf9144b16c4de4c14bb5b5c4046921b730d758ae93
                 - name: RELATED_IMAGE_submariner-gateway
-                  value: quay.io/submariner/submariner-gateway:release-0.21-b7990746a745
+                  value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:5e822b12b5aadaa08a2f95b879be911455607a9c04922a641625515f955dc9ca
                 - name: RELATED_IMAGE_submariner-route-agent
-                  value: quay.io/submariner/submariner-route-agent:release-0.21-b7990746a745
+                  value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:2e18b858f09e7595a89c4dc6ea5a85f8c5952f581b769093bfaab8156bab0813
                 - name: RELATED_IMAGE_submariner-globalnet
-                  value: quay.io/submariner/submariner-globalnet:release-0.21-b7990746a745
+                  value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:2217d9128fe50d61d1dff48b588113b5267002f72d025b1b6fbf87a1c2e670d1
                 - name: RELATED_IMAGE_lighthouse-agent
-                  value: quay.io/submariner/lighthouse-agent:release-0.21-b7990746a745
+                  value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:6b4d34e7a40b21cf464e2f42cef21ef72a69ae8a3f4e7600a7bd85aa689117d9
                 - name: RELATED_IMAGE_lighthouse-coredns
-                  value: quay.io/submariner/lighthouse-coredns:release-0.21-b7990746a745
-                image: quay.io/submariner/submariner-operator:release-0.21-b7990746a745
+                  value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:0885c82cd09105a078d4308b4ec1047b96f3cbf1fd555a1c90a8b053befee27e
+                image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:9bd4cce195d28beee61f1adf9144b16c4de4c14bb5b5c4046921b730d758ae93
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources:
@@ -829,17 +837,17 @@ spec:
   provider:
     name: submariner.io
   relatedImages:
-  - image: quay.io/submariner/submariner-operator:release-0.21-b7990746a745
+  - image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:9bd4cce195d28beee61f1adf9144b16c4de4c14bb5b5c4046921b730d758ae93
     name: submariner-operator
-  - image: quay.io/submariner/submariner-gateway:release-0.21-b7990746a745
+  - image: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:5e822b12b5aadaa08a2f95b879be911455607a9c04922a641625515f955dc9ca
     name: submariner-gateway
-  - image: quay.io/submariner/submariner-route-agent:release-0.21-b7990746a745
+  - image: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:2e18b858f09e7595a89c4dc6ea5a85f8c5952f581b769093bfaab8156bab0813
     name: submariner-route-agent
-  - image: quay.io/submariner/submariner-globalnet:release-0.21-b7990746a745
+  - image: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:2217d9128fe50d61d1dff48b588113b5267002f72d025b1b6fbf87a1c2e670d1
     name: submariner-globalnet
-  - image: quay.io/submariner/lighthouse-agent:release-0.21-b7990746a745
+  - image: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:6b4d34e7a40b21cf464e2f42cef21ef72a69ae8a3f4e7600a7bd85aa689117d9
     name: lighthouse-agent
-  - image: quay.io/submariner/lighthouse-coredns:release-0.21-b7990746a745
+  - image: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:0885c82cd09105a078d4308b4ec1047b96f3cbf1fd555a1c90a8b053befee27e
     name: lighthouse-coredns
   selector:
     matchLabels:
