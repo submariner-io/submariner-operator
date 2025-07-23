@@ -29,6 +29,8 @@ spec:
     value: 5d
   - name: dockerfile
     value: bundle.Dockerfile
+  - name: hermetic
+    value: "true"
   - name: build-source-image
     value: "true"
   pipelineSpec:
