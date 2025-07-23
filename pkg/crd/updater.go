@@ -44,7 +44,8 @@ type baseUpdater interface {
 
 type Updater interface {
 	baseUpdater
-	CreateOrUpdateFromEmbedded(ctx context.Context, name string) (bool, error)
+	CreateOrUpdateFromBytes(ctx context.Context, crdYaml []byte) (bool, error)
+	CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string) (bool, error)
 }
 
 type updater struct {
@@ -72,6 +73,22 @@ func UpdaterFromControllerClient(controllerClient client.Client) Updater {
 	return &updater{baseUpdater: &controllerClientCreator{
 		client: controllerClient,
 	}}
+}
+
+func (u *updater) CreateOrUpdateFromBytes(ctx context.Context, crdYaml []byte) (bool, error) {
+	crd, err := embeddedyamls.GetTypedObject[apiextensions.CustomResourceDefinition](crdYaml)
+	if err != nil {
+		return false, errors.Wrap(err, "error extracting embedded CRD")
+	}
+
+	result, err := util.CreateOrUpdate(
+		ctx, &resource.InterfaceFuncs[*apiextensions.CustomResourceDefinition]{
+			GetFunc:    u.Get,
+			CreateFunc: u.Create,
+			UpdateFunc: u.Update,
+		}, crd, util.Replace(crd))
+
+	return result == util.OperationResultCreated, err
 }
 
 func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string) (bool, error) {

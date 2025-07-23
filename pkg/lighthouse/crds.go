@@ -23,7 +23,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
-	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
+	mcscrd "sigs.k8s.io/mcs-api/config/crd"
 )
 
 const (
@@ -34,8 +34,7 @@ const (
 // Ensure ensures that the required resources are deployed on the target system
 // The resources handled here are the lighthouse CRDs: ServiceImport, ServiceExport and ServiceDiscovery.
 func Ensure(ctx context.Context, crdUpdater crd.Updater, isBroker bool) (bool, error) {
-	installedMCSSI, err := crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceimports_yaml)
+	installedMCSSI, err := crdUpdater.CreateOrUpdateFromBytes(ctx, mcscrd.ServiceImportCRD)
 	if err != nil {
 		return installedMCSSI, errors.Wrap(err, "error creating the MCS ServiceImport CRD")
 	}
@@ -45,8 +44,7 @@ func Ensure(ctx context.Context, crdUpdater crd.Updater, isBroker bool) (bool, e
 		return installedMCSSI, nil
 	}
 
-	installedMCSSE, err := crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_mcsapi_crds_multicluster_x_k8s_io_serviceexports_yaml)
+	installedMCSSE, err := crdUpdater.CreateOrUpdateFromBytes(ctx, mcscrd.ServiceExportCRD)
 	if err != nil {
 		return installedMCSSI || installedMCSSE, errors.Wrap(err, "error creating the MCS ServiceExport CRD")
 	}

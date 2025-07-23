@@ -28,6 +28,16 @@ type IObject struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 }
 
+func GetTypedObject[T any](yamlBytes []byte) (*T, error) {
+	obj := new(T)
+
+	if err := yaml.Unmarshal(yamlBytes, &obj); err != nil {
+		return obj, errors.Wrapf(err, "error unmarshalling object")
+	}
+
+	return obj, nil
+}
+
 func GetObject(yamlStr string, obj any) error {
 	doc := []byte(yamlStr)
 

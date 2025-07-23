@@ -43,8 +43,6 @@ var files = []string{
 	"deploy/submariner/crds/submariner.io_gatewayroutes.yaml",
 	"deploy/submariner/crds/submariner.io_nongatewayroutes.yaml",
 	"deploy/submariner/crds/submariner.io_routeagents.yaml",
-	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceexports.yaml",
-	"deploy/mcsapi/crds/multicluster.x_k8s.io_serviceimports.yaml",
 	"config/broker/broker-admin/service_account.yaml",
 	"config/broker/broker-admin/role.yaml",
 	"config/broker/broker-admin/role_binding.yaml",
