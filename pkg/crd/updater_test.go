@@ -78,7 +78,7 @@ var _ = Describe("Updater", func() {
 
 		When("the CRD doesn't exist", func() {
 			It("should create it", func(ctx SpecContext) {
-				created, err := updater.CreateOrUpdateFromEmbedded(ctx, crdYAML)
+				created, err := updater.CreateOrUpdateFromBytes(ctx, []byte(crdYAML))
 				Expect(created).To(BeTrue())
 				Expect(err).To(Succeed())
 				assertCRDExists(ctx, crd.Name)
@@ -91,7 +91,7 @@ var _ = Describe("Updater", func() {
 				Expect(err).To(Succeed())
 				assertCRDExists(ctx, crd.Name)
 
-				created, err := updater.CreateOrUpdateFromEmbedded(ctx, crdYAML)
+				created, err := updater.CreateOrUpdateFromBytes(ctx, []byte(crdYAML))
 				Expect(created).To(BeFalse())
 				Expect(err).To(Succeed())
 

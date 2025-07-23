@@ -148,17 +148,18 @@ CONTROLLER_DEEPCOPY := api/v1alpha1/zz_generated.deepcopy.go
 $(CONTROLLER_DEEPCOPY): | $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) object:headerFile="$(CURDIR)/hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
 
-# Generate embedded YAMLs
-EMBEDDED_YAMLS := pkg/embeddedyamls/yamls.go
-$(EMBEDDED_YAMLS): pkg/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusterglobalegressips.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gatewayroutes.yaml deploy/submariner/crds/submariner.io_gateways.yaml deploy/submariner/crds/submariner.io_globalegressips.yaml deploy/submariner/crds/submariner.io_globalingressips.yaml deploy/submariner/crds/submariner.io_nongatewayroutes.yaml deploy/submariner/crds/submariner.io_routeagents.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(CONTROLLER_DEEPCOPY)
-	$(GO) generate pkg/embeddedyamls/generate.go
+# Generated YAMLs
+GENERATED_YAMLS := deploy/crds/submariner.io_servicediscoveries.yaml \
+                   deploy/crds/submariner.io_brokers.yaml \
+				   deploy/crds/submariner.io_submariners.yaml
+generatedyamls: $(GENERATED_YAMLS)
 
-bin/%/submariner-operator: cmd/main.go $(EMBEDDED_YAMLS)
+bin/%/submariner-operator: cmd/main.go $(GENERATED_YAMLS)
 	GOARCH=$(call dockertogoarch,$(patsubst bin/linux/%/,%,$(dir $@))) \
 	LDFLAGS="-X=main.version=$(VERSION)" \
 	${SCRIPTS_DIR}/compile.sh $@ ./cmd
 
-ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
+ci: $(GENERATED_YAMLS) golangci-lint markdownlint unit build images
 
 # Download controller-gen locally if not already downloaded.
 $(CONTROLLER_GEN):
@@ -174,11 +175,6 @@ deploy/crds/submariner.io_servicediscoveries.yaml: ./api/v1alpha1/servicediscove
 
 deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml: ./api/v1alpha1/submariner_types.go | $(CONTROLLER_GEN)
 	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=deploy/crds
-	test -f $@
-
-# Submariner CRDs
-deploy/submariner/crds/submariner.io_clusterglobalegressips.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gatewayroutes.yaml deploy/submariner/crds/submariner.io_gateways.yaml deploy/submariner/crds/submariner.io_globalegressips.yaml deploy/submariner/crds/submariner.io_globalingressips.yaml deploy/submariner/crds/submariner.io_nongatewayroutes.yaml deploy/submariner/crds/submariner.io_routeagents.yaml: | $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="github.com/submariner-io/submariner/pkg/apis/..." output:crd:artifacts:config=deploy/submariner/crds
 	test -f $@
 
 # Generate manifests e.g. CRD etc.
@@ -231,9 +227,9 @@ scorecard: bundle olm clusters
 # Create the clusters with olm
 olm: export OLM = true
 
-golangci-lint: $(EMBEDDED_YAMLS)
+golangci-lint: $(GENERATED_YAMLS)
 
-unit: $(EMBEDDED_YAMLS)
+unit: $(GENERATED_YAMLS)
 
 # Operator SDK
 # If necessary, the verification *keys* can be updated as follows:

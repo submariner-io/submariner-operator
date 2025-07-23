@@ -25,12 +25,12 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/admiral/pkg/util"
-	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 )
 
 type baseUpdater interface {
@@ -45,7 +45,6 @@ type baseUpdater interface {
 type Updater interface {
 	baseUpdater
 	CreateOrUpdateFromBytes(ctx context.Context, crdYaml []byte) (bool, error)
-	CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string) (bool, error)
 }
 
 type updater struct {
@@ -76,29 +75,13 @@ func UpdaterFromControllerClient(controllerClient client.Client) Updater {
 }
 
 func (u *updater) CreateOrUpdateFromBytes(ctx context.Context, crdYaml []byte) (bool, error) {
-	crd, err := embeddedyamls.GetTypedObject[apiextensions.CustomResourceDefinition](crdYaml)
-	if err != nil {
-		return false, errors.Wrap(err, "error extracting embedded CRD")
+	crd := &apiextensions.CustomResourceDefinition{}
+
+	if err := yaml.Unmarshal(crdYaml, &crd); err != nil {
+		return false, errors.Wrapf(err, "error extracting embedded CRD")
 	}
 
 	result, err := util.CreateOrUpdate(
-		ctx, &resource.InterfaceFuncs[*apiextensions.CustomResourceDefinition]{
-			GetFunc:    u.Get,
-			CreateFunc: u.Create,
-			UpdateFunc: u.Update,
-		}, crd, util.Replace(crd))
-
-	return result == util.OperationResultCreated, err
-}
-
-func (u *updater) CreateOrUpdateFromEmbedded(ctx context.Context, crdYaml string) (bool, error) {
-	crd := &apiextensions.CustomResourceDefinition{}
-
-	if err := embeddedyamls.GetObject(crdYaml, crd); err != nil {
-		return false, errors.Wrap(err, "error extracting embedded CRD")
-	}
-
-	result, err := util.CreateOrUpdate[*apiextensions.CustomResourceDefinition](
 		ctx, &resource.InterfaceFuncs[*apiextensions.CustomResourceDefinition]{
 			GetFunc:    u.Get,
 			CreateFunc: u.Create,
