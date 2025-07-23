@@ -130,8 +130,8 @@ github.com/submariner-io/admiral v0.22.0-m0 h1:Fu/ZS9/nZaPVtIjRwDSOwnDjTjn7z+Exl
 github.com/submariner-io/admiral v0.22.0-m0/go.mod h1:/TFjweSHJGNWguW7A6RtQSsN6ruckOyYIQ/FYHHoPI0=
 github.com/submariner-io/shipyard v0.22.0-m0 h1:j9ppv/JikwnfSkI5i+StWBWNi4uej+d/OZyzIxWvrKs=
 github.com/submariner-io/shipyard v0.22.0-m0/go.mod h1:8rBTmE8D6smPA6050GUt9BhEmx4OzX4m7U4giALY8GI=
-github.com/submariner-io/submariner v0.22.0-m0 h1:5oPUrudXah7mOSTQ2nazJPKa8qXQhDGPwYqasUpoC60=
-github.com/submariner-io/submariner v0.22.0-m0/go.mod h1:vg5d99oG6OhBJka4lkuJ4xX1PWyeMaGTTKSdsnDvMJc=
+github.com/submariner-io/submariner v0.22.0-m0.0.20250730124428-4797e0925ebb h1:+WN2YQRssSHUU6n9ZQrTkj1W3PrKRBdQOLxRaEkbcsE=
+github.com/submariner-io/submariner v0.22.0-m0.0.20250730124428-4797e0925ebb/go.mod h1:5/pr5YIlpQhmx0x9lYLWhJrBnG8/OFwG6qTY3JocXc0=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

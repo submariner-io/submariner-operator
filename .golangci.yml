@@ -62,16 +62,8 @@ linters:
         # Allow unnecessary embedded field selectors
         - -QF1008
     wrapcheck:
-      ignore-sigs:
+      extra-ignore-sigs:
         - .Error(
-        - .Errorf(
-        - errors.New(
-        - errors.Unwrap(
-        - .Wrap(
-        - .Wrapf(
-        - .WithMessage(
-        - .WithMessagef(
-        - .WithStack(
     wsl:
       # Separating explicit var declarations by blank lines seems excessive.
       allow-cuddle-declarations: true

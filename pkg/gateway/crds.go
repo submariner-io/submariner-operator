@@ -20,71 +20,37 @@ package gateway
 
 import (
 	"context"
+	goerrors "errors"
 
 	"github.com/pkg/errors"
 	"github.com/submariner-io/submariner-operator/pkg/crd"
-	"github.com/submariner-io/submariner-operator/pkg/embeddedyamls"
+	"github.com/submariner-io/submariner/deploy/crds"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // Ensure ensures that the required resources are deployed on the target system.
 // The resources handled here are the gateway CRDs: Cluster and Endpoint.
-//
-//nolint:gocyclo // No further refactors necessary
 func Ensure(ctx context.Context, crdUpdater crd.Updater) error {
-	_, err := crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_submariner_crds_submariner_io_clusters_yaml)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error provisioning the Cluster CRD")
+	var errs []error
+
+	for _, ref := range []struct {
+		name string
+		crd  []byte
+	}{
+		{"Cluster", crds.ClustersCRD},
+		{"Endpoint", crds.EndpointsCRD},
+		{"Gateway", crds.GatewaysCRD},
+		{"ClusterGlobalEgressIP", crds.ClusterGlobalEgressIPsCRD},
+		{"GlobalEgressIP", crds.GlobalEgressIPsCRD},
+		{"GlobalIngressIP", crds.GlobalIngressIPsCRD},
+		{"GatewayRoute", crds.GatewayRoutesCRD},
+		{"NonGatewayRoute", crds.NonGatewayRoutesCRD},
+		{"RouteAgent", crds.RouteAgentsCRD},
+	} {
+		if _, err := crdUpdater.CreateOrUpdateFromBytes(ctx, ref.crd); err != nil && !apierrors.IsAlreadyExists(err) {
+			errs = append(errs, errors.Wrapf(err, "error provisioning the %s CRD", ref.name))
+		}
 	}
 
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_submariner_crds_submariner_io_endpoints_yaml)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error provisioning the Endpoint CRD")
-	}
-
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_submariner_crds_submariner_io_gateways_yaml)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error provisioning the Gateway CRD")
-	}
-
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_submariner_crds_submariner_io_clusterglobalegressips_yaml)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error provisioning the ClusterGlobalEgressIP CRD")
-	}
-
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_submariner_crds_submariner_io_globalegressips_yaml)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error provisioning the GlobalEgressIP CRD")
-	}
-
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_submariner_crds_submariner_io_globalingressips_yaml)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error provisioning the GlobalIngressIP CRD")
-	}
-
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_submariner_crds_submariner_io_gatewayroutes_yaml)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error getting Gateway routes")
-	}
-
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_submariner_crds_submariner_io_nongatewayroutes_yaml)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error getting non-Gateway routes")
-	}
-
-	_, err = crdUpdater.CreateOrUpdateFromEmbedded(ctx,
-		embeddedyamls.Deploy_submariner_crds_submariner_io_routeagents_yaml)
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return errors.Wrap(err, "error getting Route Agent")
-	}
-
-	return nil
+	return goerrors.Join(errs...)
 }
