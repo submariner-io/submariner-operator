@@ -238,6 +238,12 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
         - urn:alm:descriptor:com.tectonic.ui:advanced
+      - description: Disable intra-cluster connectivity routing.
+        displayName: Disable Intra-cluster connectivity
+        path: disableIntraClusterConnectivity
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+        - urn:alm:descriptor:com.tectonic.ui:advanced
       - description: The Global CIDR super-net range for allocating GlobalCIDRs to
           each cluster.
         displayName: Global CIDR
