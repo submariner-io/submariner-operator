@@ -19,10 +19,6 @@ endif
 
 ifneq (,$(DAPPER_HOST_ARCH))
 
-OPERATOR_SDK := $(CURDIR)/bin/operator-sdk
-KUSTOMIZE := $(CURDIR)/bin/kustomize
-CONTROLLER_GEN := $(CURDIR)/bin/controller-gen
-
 # Running in Dapper
 
 # Semantic versioning regex
@@ -58,6 +54,15 @@ GO ?= go
 GOARCH = $(shell $(GO) env GOARCH)
 GOEXE = $(shell $(GO) env GOEXE)
 GOOS = $(shell $(GO) env GOOS)
+
+# Go 1.24 tool handling, from the cache; the double invocation will be fixed in 1.25
+# See https://github.com/golang/go/issues/72824
+gotool = $(shell $(GO) -C $(1) tool -n $(2) > /dev/null && $(GO) -C $(1) tool -n $(2))
+
+# The Operator SDK needs GCC and gpgme libraries, so this uses the "old" mechanism for now
+OPERATOR_SDK := $(CURDIR)/bin/operator-sdk
+KUSTOMIZE := $(call gotool,tools,kustomize)
+CONTROLLER_GEN := $(call gotool,tools,controller-gen)
 
 BINARIES := bin/$(GOOS)/$(GOARCH)/submariner-operator
 
@@ -136,12 +141,8 @@ clean:
 	rm -f $(BINARIES)
 
 licensecheck: export BUILD_UPX = false
-licensecheck: $(BINARIES) | bin/lichen
-	bin/lichen -c .lichen.yaml $(BINARIES)
-
-bin/lichen:
-	mkdir -p $(@D)
-	$(GO) -C tools build -o $(CURDIR)/$@ github.com/uw-labs/lichen
+licensecheck: $(BINARIES)
+	$(call gotool,tools,lichen) -c .lichen.yaml $(BINARIES)
 
 # Generate deep-copy code
 CONTROLLER_DEEPCOPY := api/v1alpha1/zz_generated.deepcopy.go
@@ -160,13 +161,6 @@ bin/%/submariner-operator: cmd/main.go $(GENERATED_YAMLS)
 	${SCRIPTS_DIR}/compile.sh $@ ./cmd
 
 ci: $(GENERATED_YAMLS) golangci-lint markdownlint unit build images
-
-# Download controller-gen locally if not already downloaded.
-$(CONTROLLER_GEN):
-	mkdir -p $(@D)
-	$(GO) -C tools build -o $@ sigs.k8s.io/controller-tools/cmd/controller-gen
-
-controller-gen: $(CONTROLLER_GEN)
 
 # Operator CRDs
 deploy/crds/submariner.io_servicediscoveries.yaml: ./api/v1alpha1/servicediscovery_types.go | $(CONTROLLER_GEN)
@@ -187,18 +181,8 @@ is-semantic-version:
 	    $(error 'ERROR: VERSION "$(BUNDLE_VERSION)" does not match the format required by operator-sdk.')
     endif
 
-# Download kustomize locally if not already downloaded.
-# We clear GITHUB_TOKEN to ensure that the installation script won't try to use it (and fail)
-KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
-KUSTOMIZE_VERSION := $(shell $(GO) -C tools list -m -f {{.Version}} sigs.k8s.io/kustomize/kustomize/v5)
-$(KUSTOMIZE):
-	mkdir -p $(@D)
-	{ curl -s $(KUSTOMIZE_INSTALL_SCRIPT) | GITHUB_TOKEN= bash -s -- $(subst v,,$(KUSTOMIZE_VERSION)) $(@D); }
-
-kustomize: $(KUSTOMIZE)
-
 # Generate kustomization.yaml for bundle
-kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
+kustomization: is-semantic-version manifests | $(KUSTOMIZE) $(OPERATOR_SDK)
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	(cd config/manifests && $(KUSTOMIZE) edit set image controller=$(IMG) && \
 	 $(KUSTOMIZE) edit set image repo=$(REPO))
@@ -209,7 +193,7 @@ kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
 
 # Generate bundle manifests and metadata, then validate generated files
-bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
+bundle: kustomization | $(KUSTOMIZE) $(OPERATOR_SDK)
 	(set -o pipefail; $(KUSTOMIZE) build $(KUSTOMIZE_BASE_PATH) \
 	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS))
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml)
@@ -219,7 +203,7 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	$(OPERATOR_SDK) bundle validate --select-optional suite=operatorframework ./bundle
 
 # Statically validate the operator bundle using Scorecard.
-scorecard: bundle olm clusters
+scorecard: bundle olm clusters | $(OPERATOR_SDK)
 	timeout 60 bash -c "until KUBECONFIG=$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 \
 	$(OPERATOR_SDK) olm status > /dev/null; do sleep 10; done"
 	$(OPERATOR_SDK) scorecard --kubeconfig=$(DAPPER_OUTPUT)/kubeconfigs/kind-config-cluster1 -o text ./bundle

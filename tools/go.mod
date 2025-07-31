@@ -3,13 +3,6 @@ module github.com/submariner-io/submariner-operator/tools
 go 1.24.3
 
 require (
-	github.com/operator-framework/operator-sdk v1.41.1
-	github.com/uw-labs/lichen v0.1.7
-	sigs.k8s.io/controller-tools v0.18.0
-	sigs.k8s.io/kustomize/kustomize/v5 v5.7.1
-)
-
-require (
 	cel.dev/expr v0.24.0 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 // indirect
@@ -162,6 +155,7 @@ require (
 	github.com/operator-framework/api v0.32.0 // indirect
 	github.com/operator-framework/operator-manifest-tools v0.10.0 // indirect
 	github.com/operator-framework/operator-registry v1.56.0 // indirect
+	github.com/operator-framework/operator-sdk v1.41.1 // indirect
 	github.com/otiai10/copy v1.14.1 // indirect
 	github.com/otiai10/mint v1.6.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
@@ -201,6 +195,7 @@ require (
 	github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399 // indirect
 	github.com/ulikunitz/xz v0.5.14 // indirect
 	github.com/urfave/cli/v2 v2.4.0 // indirect
+	github.com/uw-labs/lichen v0.1.7 // indirect
 	github.com/vbatts/tar-split v0.12.1 // indirect
 	github.com/vbauerster/mpb/v8 v8.10.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
@@ -258,12 +253,21 @@ require (
 	oras.land/oras-go/v2 v2.6.0 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.33.0 // indirect
 	sigs.k8s.io/controller-runtime v0.21.0 // indirect
+	sigs.k8s.io/controller-tools v0.18.0 // indirect
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/kubebuilder/v4 v4.6.0 // indirect
 	sigs.k8s.io/kustomize/api v0.20.1 // indirect
 	sigs.k8s.io/kustomize/cmd/config v0.20.1 // indirect
+	sigs.k8s.io/kustomize/kustomize/v5 v5.7.1 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.20.1 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.7.0 // indirect
 	sigs.k8s.io/yaml v1.5.0 // indirect
+)
+
+tool (
+	github.com/operator-framework/operator-sdk/cmd/operator-sdk
+	github.com/uw-labs/lichen
+	sigs.k8s.io/controller-tools/cmd/controller-gen
+	sigs.k8s.io/kustomize/kustomize/v5
 )
