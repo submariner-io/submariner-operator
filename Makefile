@@ -65,7 +65,7 @@ endif
 FROM_VERSION ?= $(shell (git tag -l --sort=-v:refname v[0-9]*\.[0-9]*\.[0-9]* | awk '/^$(BUNDLE_VERSION)$$/ { seen = 1; next } seen { print; exit } END { exit !seen }' || echo v0.0.0) \
           | head -n1 | cut -d'-' -f1 | cut -c2-)
 SHORT_VERSION := $(shell echo ${BUNDLE_VERSION} | cut -d'.' -f1,2)
-CHANNEL ?= alpha-$(SHORT_VERSION)
+CHANNEL ?= stable-$(SHORT_VERSION)
 CHANNELS ?= $(CHANNEL)
 DEFAULT_CHANNEL ?= $(CHANNEL)
 ifneq ($(origin CHANNELS), undefined)

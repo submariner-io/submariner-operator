@@ -77,7 +77,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
-    createdAt: "2025-08-03 23:30:07"
+    createdAt: "2025-08-03 23:37:53"
     description: Creates and manages Submariner deployments.
     features.operators.openshift.io/disconnected: "false"
     features.operators.openshift.io/fips-compliant: "false"
