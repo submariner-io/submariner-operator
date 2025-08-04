@@ -4,6 +4,8 @@ DEFAULT_IMAGE_VERSION ?= $(BASE_BRANCH)
 export BASE_BRANCH
 export DEFAULT_IMAGE_VERSION
 
+VERSION ?= $(shell git describe --abbrev=0 --tags --match="v[0-9]*\.[0-9]*\.[0-9]*" 2>/dev/null || echo v9.9.9)
+
 # Define LOCAL_BUILD to build directly on the host and not inside a Dapper container
 ifdef LOCAL_BUILD
 DAPPER_HOST_ARCH ?= $(shell go env GOHOSTARCH)
