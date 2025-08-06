@@ -77,7 +77,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
-    createdAt: "2025-08-03 23:37:53"
+    createdAt: "2025-08-05 21:47:50"
     description: Creates and manages Submariner deployments.
     features.operators.openshift.io/disconnected: "false"
     features.operators.openshift.io/fips-compliant: "false"
@@ -87,7 +87,7 @@ metadata:
     features.operators.openshift.io/token-auth-azure: "false"
     features.operators.openshift.io/token-auth-gcp: "false"
     operatorframework.io/suggested-namespace: submariner-operator
-    operators.openshift.io/valid-subscription: '["TODO", "foo"]'
+    operators.openshift.io/valid-subscription: '["OpenShift Platform Plus"]'
     operators.operatorframework.io/builder: operator-sdk-v1.40.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/submariner-io/submariner-operator
