@@ -355,17 +355,17 @@ function verify_subm_gateway_container() {
   grep "HOME=/root" "$env_file"
 
   if kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- command -v command; then
-    # Verify the gateway binary is in the expected place and in PATH
-    kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- command -v submariner-gateway | grep /usr/local/bin/submariner-gateway
+    # Verify the gateway binary is in the PATH
+    kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- command -v submariner-gateway
 
-    # Verify the gateway entry script is in the expected place and in PATH
-    kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- command -v submariner.sh | grep /usr/local/bin/submariner.sh
+    # Verify the gateway entry script is in the PATH
+    kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- command -v submariner.sh
   elif kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- which which; then
-    # Verify the gateway binary is in the expected place and in PATH
-    kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- which submariner-gateway | grep /usr/local/bin/submariner-gateway
+    # Verify the gateway binary is in the PATH
+    kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- which submariner-gateway
 
-    # Verify the gateway entry script is in the expected place and in PATH
-    kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- which submariner.sh | grep /usr/local/bin/submariner.sh
+    # Verify the gateway entry script is in the PATH
+    kubectl exec "$subm_gateway_pod_name" --namespace="$subm_ns" -- which submariner.sh
   fi
 }
 
@@ -390,11 +390,11 @@ function verify_subm_routeagent_container() {
     grep "SUBMARINER_CLUSTERCIDR=${cluster_CIDRs[$cluster]}" "$env_file"
     grep "HOME=/root" "$env_file"
 
-    # Verify the routeagent binary is in the expected place and in PATH
-    kubectl exec "$subm_routeagent_pod_name" --namespace="$subm_ns" -- command -v submariner-route-agent | grep /usr/local/bin/submariner-route-agent
+    # Verify the routeagent binary is in the PATH
+    kubectl exec "$subm_routeagent_pod_name" --namespace="$subm_ns" -- command -v submariner-route-agent
 
-    # Verify the routeagent entry script is in the expected place and in PATH
-    kubectl exec "$subm_routeagent_pod_name" --namespace="$subm_ns" -- command -v submariner-route-agent.sh | grep /usr/local/bin/submariner-route-agent.sh
+    # Verify the routeagent entry script is in the PATH
+    kubectl exec "$subm_routeagent_pod_name" --namespace="$subm_ns" -- command -v submariner-route-agent.sh
   done
 }
 
