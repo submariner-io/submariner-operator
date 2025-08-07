@@ -238,14 +238,14 @@ ifeq ($(CUSTOM_BUILD),true)
 endif
 
 # Custom bundle modifications
-CUSTOM_SUBMARINER_OPERATOR_IMAGE ?= registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:9bd4cce195d28beee61f1adf9144b16c4de4c14bb5b5c4046921b730d758ae93
-CUSTOM_SUBMARINER_GATEWAY_IMAGE ?= registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:5e822b12b5aadaa08a2f95b879be911455607a9c04922a641625515f955dc9ca
-CUSTOM_SUBMARINER_ROUTE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:2e18b858f09e7595a89c4dc6ea5a85f8c5952f581b769093bfaab8156bab0813
-CUSTOM_SUBMARINER_GLOBALNET_IMAGE ?= registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:2217d9128fe50d61d1dff48b588113b5267002f72d025b1b6fbf87a1c2e670d1
-CUSTOM_LIGHTHOUSE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:6b4d34e7a40b21cf464e2f42cef21ef72a69ae8a3f4e7600a7bd85aa689117d9
-CUSTOM_LIGHTHOUSE_COREDNS_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:0885c82cd09105a078d4308b4ec1047b96f3cbf1fd555a1c90a8b053befee27e
-CUSTOM_SUBCTL_IMAGE ?= registry.redhat.io/rhacm2/subctl-rhel9@sha256:26d0d02519bd9d226a0e8a7a92fc5c829c2d350f4139bdc1c989798d222a1d3f
-CUSTOM_NETTEST_IMAGE ?= registry.redhat.io/rhacm2/nettest-rhel9@sha256:5783a00c386858d1eb45f224431d07d40bb9be746de965e7b129ee30969d4014
+CUSTOM_SUBMARINER_OPERATOR_IMAGE ?= registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:43f5ff53faa3ae981a10407966c60991b7dd2fe187d19a5d61d0ab343d8d8214
+CUSTOM_SUBMARINER_GATEWAY_IMAGE ?= registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:d2683a4de09e6e7c2ed1a4783195279a7346b3d4b2bb02fa4de2cafa383cbf9e
+CUSTOM_SUBMARINER_ROUTE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:f9e7608876c716bbae4b8e8b0d83943c73f055a3a91d151f35b1b225fb4ae4a6
+CUSTOM_SUBMARINER_GLOBALNET_IMAGE ?= registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:7a4da369fecb4905f4af9146aeda00ca018e533a8fd306bc9f8104f7d852628c
+CUSTOM_LIGHTHOUSE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:56a013e67dabffa30d7d939aa35e22290804312477793cfa47306585f33ce579
+CUSTOM_LIGHTHOUSE_COREDNS_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:a8fdcfd009c0637409903e1d28a9d9bd17dfe13aeb8f91b9916f82a384a384fe
+CUSTOM_SUBCTL_IMAGE ?= registry.redhat.io/rhacm2/subctl-rhel9@sha256:4a0ead64fc508522065d63dede8c5df14dd4b6c5c543203ceb36c3bbb9074fed
+CUSTOM_NETTEST_IMAGE ?= registry.redhat.io/rhacm2/nettest-rhel9@sha256:37ce8fe254dd37c255b6d1577f965b0325e059d62c2f513af5b522727d12be93
 
 CUSTOMIZABLE_IMAGES := \
 	submariner-operator \
