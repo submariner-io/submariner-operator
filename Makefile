@@ -202,7 +202,7 @@ FEATURE_TLS_PROFILES ?= "false"
 FEATURE_TOKEN_AUTH_AWS ?= "false"
 FEATURE_TOKEN_AUTH_AZURE ?= "false"
 FEATURE_TOKEN_AUTH_GCP ?= "false"
-VALID_SUBSCRIPTION_ANNOTATION ?= ["OpenShift Platform Plus"]
+VALID_SUBSCRIPTION_ANNOTATION ?= ["OpenShift Platform Plus", "Red Hat Advanced Cluster Management for Kubernetes"]
 
 # Generate kustomization.yaml for bundle
 kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
