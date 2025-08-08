@@ -239,13 +239,13 @@ endif
 
 # Custom bundle modifications
 CUSTOM_SUBMARINER_OPERATOR_IMAGE ?= registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:43f5ff53faa3ae981a10407966c60991b7dd2fe187d19a5d61d0ab343d8d8214
-CUSTOM_SUBMARINER_GATEWAY_IMAGE ?= registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:d2683a4de09e6e7c2ed1a4783195279a7346b3d4b2bb02fa4de2cafa383cbf9e
-CUSTOM_SUBMARINER_ROUTE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:f9e7608876c716bbae4b8e8b0d83943c73f055a3a91d151f35b1b225fb4ae4a6
-CUSTOM_SUBMARINER_GLOBALNET_IMAGE ?= registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:7a4da369fecb4905f4af9146aeda00ca018e533a8fd306bc9f8104f7d852628c
+CUSTOM_SUBMARINER_GATEWAY_IMAGE ?= registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:23ea841f1af78a7ca2ee25d2d57b4a8333ee3205c89e1b4c4c6375f0b25b310c
+CUSTOM_SUBMARINER_ROUTE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:493e95abcf2908641995ba0437ab7f7a0706998cf8a294506049a9c27ea4007f
+CUSTOM_SUBMARINER_GLOBALNET_IMAGE ?= registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:bb406ab2d0df719f36cc876de849836e1d84f294dd9e0bb9b7f45e309b72ca68
 CUSTOM_LIGHTHOUSE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:56a013e67dabffa30d7d939aa35e22290804312477793cfa47306585f33ce579
 CUSTOM_LIGHTHOUSE_COREDNS_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:a8fdcfd009c0637409903e1d28a9d9bd17dfe13aeb8f91b9916f82a384a384fe
-CUSTOM_SUBCTL_IMAGE ?= registry.redhat.io/rhacm2/subctl-rhel9@sha256:4a0ead64fc508522065d63dede8c5df14dd4b6c5c543203ceb36c3bbb9074fed
-CUSTOM_NETTEST_IMAGE ?= registry.redhat.io/rhacm2/nettest-rhel9@sha256:37ce8fe254dd37c255b6d1577f965b0325e059d62c2f513af5b522727d12be93
+CUSTOM_SUBCTL_IMAGE ?= registry.redhat.io/rhacm2/subctl-rhel9@sha256:ff04a1bf09b2e2949efe564ef9d9bf27e54c4c8d4f5c05d3edeb059f0d9d42ca
+CUSTOM_NETTEST_IMAGE ?= registry.redhat.io/rhacm2/nettest-rhel9@sha256:88beb411428ecb4a8b0e33d4db8296ba4504971da4854e55b444ca2677d200f4
 
 CUSTOMIZABLE_IMAGES := \
 	submariner-operator \
