@@ -25,7 +25,7 @@ RUN bin/controller-gen crd:crdVersions=v1 paths="./..." output:crd:artifacts:con
 RUN bin/controller-gen crd:crdVersions=v1 paths="github.com/submariner-io/submariner/pkg/apis/..." output:crd:artifacts:config=deploy/submariner/crds
 RUN go generate pkg/embeddedyamls/generate.go
 
-RUN CGO_ENABLED=0 GOARCH=${TARGETPLATFORM##*/} go build \
+RUN CGO_ENABLED=1 GOARCH=${TARGETPLATFORM##*/} go build \
     -ldflags "-s -w \
     -X main.version=${BASE_BRANCH} \
     -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultRepo=registry.redhat.io/rhacm2 \
