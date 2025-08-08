@@ -197,7 +197,7 @@ kustomize: $(KUSTOMIZE)
 
 # TODO Set correctly
 FEATURE_DISCONNECTED ?= "false"
-FEATURE_FIPS_COMPLIANT ?= "false"
+FEATURE_FIPS_COMPLIANT ?= "true"
 FEATURE_PROXY_AWARE ?= "false"
 FEATURE_TLS_PROFILES ?= "false"
 FEATURE_TOKEN_AUTH_AWS ?= "false"
