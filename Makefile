@@ -238,13 +238,13 @@ ifeq ($(CUSTOM_BUILD),true)
 endif
 
 # Custom bundle modifications
-CUSTOM_SUBMARINER_OPERATOR_IMAGE ?= registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:43f5ff53faa3ae981a10407966c60991b7dd2fe187d19a5d61d0ab343d8d8214
-CUSTOM_SUBMARINER_GATEWAY_IMAGE ?= registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:23ea841f1af78a7ca2ee25d2d57b4a8333ee3205c89e1b4c4c6375f0b25b310c
-CUSTOM_SUBMARINER_ROUTE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:493e95abcf2908641995ba0437ab7f7a0706998cf8a294506049a9c27ea4007f
-CUSTOM_SUBMARINER_GLOBALNET_IMAGE ?= registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:bb406ab2d0df719f36cc876de849836e1d84f294dd9e0bb9b7f45e309b72ca68
-CUSTOM_LIGHTHOUSE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:56a013e67dabffa30d7d939aa35e22290804312477793cfa47306585f33ce579
-CUSTOM_LIGHTHOUSE_COREDNS_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:a8fdcfd009c0637409903e1d28a9d9bd17dfe13aeb8f91b9916f82a384a384fe
-CUSTOM_SUBCTL_IMAGE ?= registry.redhat.io/rhacm2/subctl-rhel9@sha256:ff04a1bf09b2e2949efe564ef9d9bf27e54c4c8d4f5c05d3edeb059f0d9d42ca
+CUSTOM_SUBMARINER_OPERATOR_IMAGE ?= registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:44659ce4e786d8b87682fd98fb1bc32e6fb443cbcfec37d529ce4c98b2a6bd9d
+CUSTOM_SUBMARINER_GATEWAY_IMAGE ?= registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:9604070cc5c88ad60bf1317e1f5916ecc68fc8cb0d670005564a37c2f6868c4f
+CUSTOM_SUBMARINER_ROUTE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:7a5de81a72ca5212e379b98477cf3a1ce0c2764835faa29bc662bd5de9fe56c4
+CUSTOM_SUBMARINER_GLOBALNET_IMAGE ?= registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:e4dd6f61d1a15db1aed4889ae0de60918eb11ac284a61971b6648f286b4f8610
+CUSTOM_LIGHTHOUSE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:0f16953b3b06b5710c5e3bccb53d5ae2b0877b59d14cc478851d08ca191c0b77
+CUSTOM_LIGHTHOUSE_COREDNS_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:e0b328dbbac79141cf2368dc47416952580d0554cd17ff4c8cc998b88eba54e6
+CUSTOM_SUBCTL_IMAGE ?= registry.redhat.io/rhacm2/subctl-rhel9@sha256:ccdd1b0c30a56d68dc72f2e22a18014f55dfe582a44016b82d84d4a18d7ed793
 CUSTOM_NETTEST_IMAGE ?= registry.redhat.io/rhacm2/nettest-rhel9@sha256:88beb411428ecb4a8b0e33d4db8296ba4504971da4854e55b444ca2677d200f4
 
 CUSTOMIZABLE_IMAGES := \
