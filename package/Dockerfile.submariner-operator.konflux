@@ -53,8 +53,7 @@ RUN adduser -r -l -u 1001 submariner
 
 COPY --from=builder ${SOURCE}/bin/submariner-operator /usr/local/bin/submariner-operator
 
-RUN chown submariner:submariner /usr/local/bin/submariner-operator && \
-    chmod 500 /usr/local/bin/submariner-operator
+RUN chown submariner:root /usr/local/bin/submariner-operator && chmod 550 /usr/local/bin/submariner-operator
 
 COPY --from=builder ${SOURCE}/LICENSE /licenses/LICENSE
 
