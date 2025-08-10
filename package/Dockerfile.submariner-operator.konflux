@@ -49,17 +49,18 @@ ARG BASE_BRANCH
 ARG SOURCE
 ARG SOURCE_DATE_EPOCH
 
-RUN adduser -r -l -u 1001 submariner
+RUN adduser -r -l -u 1001 -G root submariner
 
 COPY --from=builder ${SOURCE}/bin/submariner-operator /usr/local/bin/submariner-operator
 
-RUN chown submariner:root /usr/local/bin/submariner-operator && chmod 550 /usr/local/bin/submariner-operator
+RUN chown -Rc submariner:root /usr/local/bin
+RUN chmod -Rc 775 /usr/local/bin
 
 COPY --from=builder ${SOURCE}/LICENSE /licenses/LICENSE
 
 ENTRYPOINT ["/usr/local/bin/submariner-operator"]
 
-USER 1001
+USER submariner
 
 LABEL com.redhat.component="submariner-operator-container" \
       name="rhacm2/submariner-rhel9-operator" \
