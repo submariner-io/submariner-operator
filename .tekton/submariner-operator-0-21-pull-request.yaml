@@ -12,7 +12,6 @@ metadata:
       (".tekton/submariner-operator-0-21-pull-request.yaml".pathChanged() ||
       ".tekton/submariner-operator-0-21-push.yaml".pathChanged() ||
       "package/***".pathChanged() ||
-      "config/***".pathChanged() ||
       "internal/***".pathChanged() ||
       "pkg/***".pathChanged())
   creationTimestamp: null
