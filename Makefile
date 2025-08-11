@@ -232,6 +232,8 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	$(KUSTOMIZE) build config/bundle/ --load-restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
+	# The operator-sdk gets bugs when two RELATED_IMAGE_ variables point to the same image, so fix the empty name for the nettest image
+	sed -i 's/name: ""/name: submariner-nettest/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate --select-optional suite=operatorframework ./bundle
 
 # Statically validate the operator bundle using Scorecard.
