@@ -39,3 +39,6 @@
   value:
     name: RELATED_IMAGE_submariner-nettest
     value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:2287b528b2222f3722c8cdfca5830d77ee8af2b918e3941887c86767512c0000
+- op: replace
+  path: /spec/template/spec/containers/0/image
+  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:cb49afacf892743e5e7552502903a507651bf7c3cd68661d927132b12e3c926b
