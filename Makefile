@@ -233,49 +233,6 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate --select-optional suite=operatorframework ./bundle
-ifeq ($(CUSTOM_BUILD),true)
-	$(MAKE) bundle-customize
-endif
-
-# Custom bundle modifications
-CUSTOM_SUBMARINER_OPERATOR_IMAGE ?= registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:cb49afacf892743e5e7552502903a507651bf7c3cd68661d927132b12e3c926b
-CUSTOM_SUBMARINER_GATEWAY_IMAGE ?= registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:a951ebe78a28d0a27b89f942223d74907fe5f2837470554363ddb6adccd65ffe
-CUSTOM_SUBMARINER_ROUTE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:bd3ea135634b6f65afff2acbe4d9687c94fb0c0dc5c8f4ea2234b5b6bc18cac4
-CUSTOM_SUBMARINER_GLOBALNET_IMAGE ?= registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:7a32574891823d3f842aaaae948b196bf6292e6a4bd5ca3d5ec54e0894eba0c2
-CUSTOM_LIGHTHOUSE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:f5b138a564eb9d82894d74a8af38ad458b4ed78eedcfadc020a5220fb2172585
-CUSTOM_LIGHTHOUSE_COREDNS_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:08b9737f125e86af97c2e22aeba899e2fd3d0e6556fa5caf0adbb8b93acff2b8
-CUSTOM_SUBCTL_IMAGE ?= registry.redhat.io/rhacm2/subctl-rhel9@sha256:35f73decb5f2f12854a003ad33a846c9f73f3039904ae4619449311fb7785e31
-CUSTOM_NETTEST_IMAGE ?= registry.redhat.io/rhacm2/nettest-rhel9@sha256:2287b528b2222f3722c8cdfca5830d77ee8af2b918e3941887c86767512c0000
-
-CUSTOMIZABLE_IMAGES := \
-	submariner-operator \
-	submariner-gateway \
-	submariner-route-agent \
-	submariner-globalnet \
-	lighthouse-agent \
-	lighthouse-coredns \
-	subctl \
-	nettest
-
-# Replaces image references in the CSV using sed to avoid reformatting the YAML,
-# which can be problematic for version control.
-bundle-customize:
-	@echo "Applying custom image overrides using sed to preserve formatting..."
-	$(foreach image,$(CUSTOMIZABLE_IMAGES), \
-		NEW_URL='$(CUSTOM_$(shell echo $(image) | tr '[:lower:]-' '[:upper:]_')_IMAGE)'; \
-		\
-		OLD_URL_IMG=$$(grep -B 1 "name: $(image)" bundle/manifests/submariner.clusterserviceversion.yaml | head -n 1 | awk -F'image: ' '{print $$2}'); \
-		if [ -n "$$OLD_URL_IMG" ]; then \
-			sed -i "s|$$OLD_URL_IMG|$$NEW_URL|g" bundle/manifests/submariner.clusterserviceversion.yaml; \
-		fi; \
-		\
-		ENV_VAR_NAME="RELATED_IMAGE_$(image)"; \
-		OLD_URL_ENV=$$(grep -A 1 "name: $$ENV_VAR_NAME" bundle/manifests/submariner.clusterserviceversion.yaml | tail -n 1 | awk -F'value: ' '{print $$2}'); \
-		if [ -n "$$OLD_URL_ENV" ]; then \
-			sed -i "s|$$OLD_URL_ENV|$$NEW_URL|g" bundle/manifests/submariner.clusterserviceversion.yaml; \
-		fi; \
-	)
-	@echo "Custom image overrides applied."
 
 # Statically validate the operator bundle using Scorecard.
 scorecard: bundle olm clusters
@@ -316,7 +273,7 @@ $(OPERATOR_SDK):
 
 operator-sdk: $(OPERATOR_SDK)
 
-.PHONY: build ci clean bundle bundle-customize kustomization is-semantic-version olm scorecard system-test controller-gen kustomize operator-sdk
+.PHONY: build ci clean bundle kustomization is-semantic-version olm scorecard system-test controller-gen kustomize operator-sdk
 
 else
 
