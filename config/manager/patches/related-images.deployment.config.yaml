@@ -3,22 +3,22 @@
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-operator
-    value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:cb49afacf892743e5e7552502903a507651bf7c3cd68661d927132b12e3c926b
+    value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:c9ef39bd4a136035277210a8c99e59bb61928d8ef958640a6ff218e237b475f3
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-gateway
-    value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:a951ebe78a28d0a27b89f942223d74907fe5f2837470554363ddb6adccd65ffe
+    value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:fca98957a83d8b63ebf9eef63b432f4801121485a7ebdfcb3fdf4e6ac3e88253
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-routeagent
-    value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:bd3ea135634b6f65afff2acbe4d9687c94fb0c0dc5c8f4ea2234b5b6bc18cac4
+    value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:7521e64371f5a595bde111be09feffec4343837682b17bf859f0baf8eb9d253d
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-globalnet
-    value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:7a32574891823d3f842aaaae948b196bf6292e6a4bd5ca3d5ec54e0894eba0c2
+    value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:e5c9477d4cf20ddbe8ebfa92c39037a27ab7c16bc01edf3cf1bed6e0ed232da0
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
@@ -41,4 +41,4 @@
     value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:2287b528b2222f3722c8cdfca5830d77ee8af2b918e3941887c86767512c0000
 - op: replace
   path: /spec/template/spec/containers/0/image
-  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:cb49afacf892743e5e7552502903a507651bf7c3cd68661d927132b12e3c926b
+  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:c9ef39bd4a136035277210a8c99e59bb61928d8ef958640a6ff218e237b475f3
