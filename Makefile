@@ -195,8 +195,7 @@ $(KUSTOMIZE):
 
 kustomize: $(KUSTOMIZE)
 
-# TODO Set correctly
-FEATURE_DISCONNECTED ?= "false"
+FEATURE_DISCONNECTED ?= "true"
 FEATURE_FIPS_COMPLIANT ?= "true"
 FEATURE_PROXY_AWARE ?= "false"
 FEATURE_TLS_PROFILES ?= "false"
