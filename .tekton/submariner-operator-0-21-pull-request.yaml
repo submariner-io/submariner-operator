@@ -11,6 +11,8 @@ metadata:
     pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch == "release-0.21" &&
       (".tekton/submariner-operator-0-21-pull-request.yaml".pathChanged() ||
       ".tekton/submariner-operator-0-21-push.yaml".pathChanged() ||
+      "go.mod".pathChanged() ||
+      "api/***".pathChanged() ||
       "package/***".pathChanged() ||
       "internal/***".pathChanged() ||
       "pkg/***".pathChanged())
