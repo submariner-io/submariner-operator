@@ -35,7 +35,7 @@ metadata:
             "globalnetEnabled": false,
             "namespace": "submariner-operator",
             "repository": "quay.io/submariner",
-            "version": "v0.21.0"
+            "version": "release-0.21-7a0f64e98720"
           }
         },
         {
@@ -69,7 +69,7 @@ metadata:
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "v0.21.0"
+            "version": "release-0.21-7a0f64e98720"
           }
         }
       ]
