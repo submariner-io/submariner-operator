@@ -137,6 +137,7 @@ func (t *testDriver) assertRouteAgentDaemonSet(ctx context.Context) {
 	Expect(daemonSet.Spec.Template.Spec.Containers).To(HaveLen(1))
 	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
 		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.RouteAgentImage, t.submariner.Spec.Version)))
+	Expect(daemonSet.Spec.Template.Spec.NodeSelector).NotTo(HaveKey("submariner.io/gateway"))
 
 	t.assertRouteAgentDaemonSetEnv(t.withNetworkDiscovery(), test.EnvMapFrom(daemonSet))
 }

@@ -154,6 +154,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 								{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
 								{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
 								{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
+								{Name: "SUBMARINER_INTRAROUTINGDISABLED", Value: strconv.FormatBool(cr.Spec.DisableIntraClusterConnectivity)},
 							}),
 						},
 					},
@@ -165,6 +166,13 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 				},
 			},
 		},
+	}
+
+	// Run pods only on gateway nodes when intra-cluster connectivity is disabled.
+	if cr.Spec.DisableIntraClusterConnectivity {
+		ds.Spec.Template.Spec.NodeSelector = map[string]string{
+			"submariner.io/gateway": "true",
+		}
 	}
 
 	return ds

@@ -250,6 +250,20 @@ func testDaemonSetReconciliation() {
 		})
 	})
 
+	When("DisableIntraClusterConnectivity is set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.DisableIntraClusterConnectivity = true
+		})
+
+		Specify("the submariner route-agent DaemonSet template NodeSelector should have \"submariner.io/gateway\" set",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
+				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("submariner.io/gateway", "true"))
+			})
+	})
+
 	When("the submariner globalnet DaemonSet doesn't exist", func() {
 		It("should create it", func(ctx SpecContext) {
 			t.AssertReconcileSuccess(ctx)
