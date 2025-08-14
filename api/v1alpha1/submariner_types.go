@@ -168,6 +168,12 @@ type SubmarinerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	HostedCluster bool `json:"hostedCluster,omitempty"`
 
+	// Disable intra-cluster connectivity routing.
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Disable Intra-cluster connectivity"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	DisableIntraClusterConnectivity bool `json:"disableIntraClusterConnectivity,omitempty"`
+
 	// Enable automatic Load Balancer in front of the gateways.
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Enable Load Balancer"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch"}

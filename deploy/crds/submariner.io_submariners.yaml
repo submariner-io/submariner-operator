@@ -139,6 +139,9 @@ spec:
               debug:
                 description: Enable operator debugging.
                 type: boolean
+              disableIntraClusterConnectivity:
+                description: Disable intra-cluster connectivity routing.
+                type: boolean
               globalCIDR:
                 description: The Global CIDR super-net range for allocating GlobalCIDRs
                   to each cluster.
