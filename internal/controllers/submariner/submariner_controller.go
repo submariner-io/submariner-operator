@@ -345,8 +345,11 @@ func (r *Reconciler) setupSecretSyncer(ctx context.Context, instance *submopv1a1
 					Direction:       syncer.None,
 					RestMapper:      r.config.ScopedClient.RESTMapper(),
 					Scheme:          r.config.Scheme,
-					Federator: federate.NewCreateOrUpdateFederator(
-						r.config.DynClient, r.config.ScopedClient.RESTMapper(), namespace, ""),
+					Federator: federate.NewCreateOrUpdateFederator(federate.CreateOrUpdateOptions{
+						Client:          r.config.DynClient,
+						RestMapper:      r.config.ScopedClient.RESTMapper(),
+						TargetNamespace: namespace,
+					}),
 					Transform: func(from runtime.Object, _ int, _ syncer.Operation) (runtime.Object, bool) {
 						secret := from.(*corev1.Secret)
 						logger.V(level.TRACE).Info("Transforming secret", "secret", secret)
