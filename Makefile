@@ -178,8 +178,8 @@ deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yam
 	test -f $@
 
 # Generate manifests e.g. CRD etc.
-manifests: $(CONTROLLER_DEEPCOPY) $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) $(CRD_OPTIONS) paths="./..." output:crd:artifacts:config=config/crd/bases
+manifests: $(CONTROLLER_DEEPCOPY) $(GENERATED_YAMLS)
+	cp deploy/crds/*.yaml config/crd/bases
 
 # test if VERSION matches the semantic versioning rule
 is-semantic-version:
