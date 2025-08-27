@@ -64,10 +64,8 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 		"component": "submariner-globalnet",
 	}
 
-	cidrRange, err := json.Marshal(defaultGlobalCidrRange)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error marshalling CIDR range")
-	}
+	// Strings can always be encoded, no need to check for errors
+	cidrRange, _ := json.Marshal(defaultGlobalCidrRange)
 
 	var data map[string]string
 	if globalnetEnabled {

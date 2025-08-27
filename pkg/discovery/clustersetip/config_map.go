@@ -61,10 +61,8 @@ func CreateConfigMap(ctx context.Context, client controllerClient.Client, cluste
 func NewClustersetIPConfigMap(clustersetIPEnabled bool, defaultClusteretIPCidrRange string,
 	defaultClustersetIPClusterSize uint, namespace string,
 ) (*corev1.ConfigMap, error) {
-	cidrRange, err := json.Marshal(defaultClusteretIPCidrRange)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error marshalling clustersetIP CIDR range")
-	}
+	// Strings can always be encoded, no need to check for errors
+	cidrRange, _ := json.Marshal(defaultClusteretIPCidrRange)
 
 	data := map[string]string{
 		clustersetIPEnabledKey:  strconv.FormatBool(clustersetIPEnabled),

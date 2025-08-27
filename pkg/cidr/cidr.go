@@ -99,10 +99,8 @@ func AddClusterInfoData(toConfigMap *corev1.ConfigMap, newCluster ClusterInfo) e
 		existingInfo = append(existingInfo, newCluster)
 	}
 
-	data, err := json.MarshalIndent(existingInfo, "", "\t")
-	if err != nil {
-		return errors.Wrapf(err, "error marshalling ClusterInfo")
-	}
+	// The definition of ClusterInfo ensures it can be encoded, no need to check for errors
+	data, _ := json.MarshalIndent(existingInfo, "", "\t")
 
 	toConfigMap.Data[ClusterInfoKey] = string(data)
 
