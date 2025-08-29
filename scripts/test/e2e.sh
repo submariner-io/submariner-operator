@@ -6,8 +6,6 @@
 
 set -em -o pipefail
 
-subm_ns=submariner-operator
-
 ### Main ###
 
 # Run project specific E2E tests (they don't overlap with the generic ones)
@@ -36,6 +34,6 @@ verify="connectivity"
 [[ "${LIGHTHOUSE}" != "true" ]] || verify="service-discovery"
 
 # Run generic E2E tests between the clusters
-subctl verify --only "${verify}" --submariner-namespace="$subm_ns" \
+subctl verify --only "${verify}" \
     --verbose --connection-timeout 20 --connection-attempts 4 \
     --context "${clusters[0]}" --tocontext "${clusters[1]}"
