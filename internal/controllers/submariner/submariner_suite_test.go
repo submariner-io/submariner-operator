@@ -159,6 +159,7 @@ func (t *testDriver) assertRouteAgentDaemonSetEnv(submariner *v1alpha1.Submarine
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", submariner.Status.ServiceCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NETWORKPLUGIN", submariner.Status.NetworkPlugin))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_INTRAROUTINGDISABLED", strconv.FormatBool(false)))
 }
 
 func (t *testDriver) assertGatewayDaemonSet(ctx context.Context) {
