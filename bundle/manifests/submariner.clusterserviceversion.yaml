@@ -674,7 +674,7 @@ spec:
                 - name: OPERATOR_NAME
                   value: submariner-operator
                 - name: RELATED_IMAGE_submariner-operator
-                  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:65765c7f08c5454b557fbda91c49efbd2cc0d4d973cf8acc7ff40ec8a381839d
+                  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:a792eb1082744d7326ba3b1ac3d520911d8a85af40991df991b1a4930b2cb931
                 - name: RELATED_IMAGE_submariner-gateway
                   value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:b0ad338aed82367048cf024767b0b09e6bb09bbf7dd5128e6711e1feec6f696e
                 - name: RELATED_IMAGE_submariner-routeagent
@@ -689,7 +689,7 @@ spec:
                   value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:bcdeaa67664568c5e2a6928236ff69b175ce65ddf7a58c1664d091b926000052
                 - name: RELATED_IMAGE_submariner-nettest
                   value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:bcdeaa67664568c5e2a6928236ff69b175ce65ddf7a58c1664d091b926000052
-                image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:65765c7f08c5454b557fbda91c49efbd2cc0d4d973cf8acc7ff40ec8a381839d
+                image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:a792eb1082744d7326ba3b1ac3d520911d8a85af40991df991b1a4930b2cb931
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources:
@@ -842,7 +842,7 @@ spec:
   provider:
     name: submariner.io
   relatedImages:
-  - image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:65765c7f08c5454b557fbda91c49efbd2cc0d4d973cf8acc7ff40ec8a381839d
+  - image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:a792eb1082744d7326ba3b1ac3d520911d8a85af40991df991b1a4930b2cb931
     name: submariner-operator
   - image: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:b0ad338aed82367048cf024767b0b09e6bb09bbf7dd5128e6711e1feec6f696e
     name: submariner-gateway
