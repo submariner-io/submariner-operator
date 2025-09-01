@@ -23,6 +23,7 @@ import (
 	"os"
 	"reflect"
 	goslices "slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -261,6 +262,7 @@ func testDaemonSetReconciliation() {
 
 				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
 				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("submariner.io/gateway", "true"))
+				Expect(test.EnvMapFrom(daemonSet)).To(HaveKeyWithValue("SUBMARINER_INTRAROUTINGDISABLED", strconv.FormatBool(true)))
 			})
 	})
 
