@@ -70,3 +70,11 @@ rules:
       - daemonsets
     verbs:
       - list
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      # Needed for service CIDR discovery
+      - servicecidrs
+    verbs:
+      - get
+      - list
