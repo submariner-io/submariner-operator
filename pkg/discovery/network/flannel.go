@@ -64,12 +64,8 @@ func discoverFlannelNetwork(ctx context.Context, client controllerClient.Client)
 	configMapName := findFlannelConfigMapName(volumes)
 
 	clusterNetwork, err := extractCIDRsFromFlannelConfigMap(ctx, client, configMapName, flannelDaemonSet.Namespace)
-	if err != nil {
+	if err != nil || clusterNetwork == nil {
 		return nil, err
-	}
-
-	if clusterNetwork == nil {
-		return nil, errors.New("cluster network is nil")
 	}
 
 	clusterNetwork.NetworkPlugin = cni.Flannel
@@ -115,17 +111,12 @@ func extractCIDRsFromFlannelConfigMap(ctx context.Context, client controllerClie
 		PodCIDRs: []string{*podCIDR},
 	}
 
+	var err error
+
 	// Try to detect the service CIDRs using the generic functions
-	clusterIPRange, err := findClusterIPRange(ctx, client)
-	if err != nil {
-		return nil, err
-	}
+	clusterNetwork.ServiceCIDRs, err = discoverGenericServiceCIDRs(ctx, client)
 
-	if clusterIPRange != "" {
-		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
-	}
-
-	return clusterNetwork, nil
+	return clusterNetwork, err
 }
 
 func findFlannelConfigMapName(volumes []corev1.Volume) string {
