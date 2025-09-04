@@ -37,9 +37,9 @@ var _ = Describe("OvnKubernetes Network", func() {
 				ctx,
 				fakePodWithNamespace(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest, []string{}, []v1.EnvVar{}),
 				fakeService(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest),
+				newServiceCIDR(testServiceCIDR),
 			)
 
-			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.OVNKubernetes))
 			Expect(clusterNet.PodCIDRs).To(BeEmpty())
 			Expect(clusterNet.ServiceCIDRs).To(HaveLen(1))
@@ -48,15 +48,13 @@ var _ = Describe("OvnKubernetes Network", func() {
 
 	When("ovn-kubernetes database, configmap and service found", func() {
 		It("Should return cluster network with correct CIDRs", func(ctx SpecContext) {
-			clusterNet, err := testDiscoverNetwork(
+			clusterNet := testDiscoverNetworkSuccess(
 				ctx,
 				fakePodWithNamespace(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest, []string{}, []v1.EnvVar{}),
 				fakeService(ovnKubeNamespace, ovnKubeSvcTest, ovnKubeSvcTest),
 				ovnFakeConfigMap(ovnKubeNamespace, "ovn-config"),
 			)
 
-			Expect(err).NotTo(HaveOccurred())
-			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})

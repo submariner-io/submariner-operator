@@ -57,6 +57,7 @@ var _ = Describe("Calico Network", func() {
 		JustBeforeEach(func(ctx SpecContext) {
 			initObjs = []client.Object{
 				calicoCfgMap,
+				newServiceCIDR(testServiceCIDR),
 			}
 
 			client := newTestClient(initObjs...)
@@ -68,7 +69,7 @@ var _ = Describe("Calico Network", func() {
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Calico))
 			Expect(clusterNet.PodCIDRs).To(BeEmpty())
-			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})
 	})
 

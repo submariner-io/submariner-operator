@@ -34,18 +34,16 @@ const (
 var _ = Describe("Flannel Network", func() {
 	When("the flannel DaemonSet and ConfigMap exist", func() {
 		It("should return a ClusterNetwork with the plugin name and CIDRs set correctly", func(ctx SpecContext) {
-			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelDaemonSet, &flannelCfgMap)
-			Expect(clusterNet).NotTo(BeNil())
+			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelDaemonSet, &flannelCfgMap, newServiceCIDR(testServiceCIDR))
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Flannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testFlannelPodCIDR}))
-			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})
 	})
 
 	When("the flannel DaemonSet does not exist", func() {
 		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
-			clusterNet := testDiscoverNetworkSuccess(ctx)
-			Expect(clusterNet).NotTo(BeNil())
+			clusterNet := testDiscoverNetworkSuccess(ctx, newServiceCIDR(testServiceCIDR))
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
 		})
 	})
@@ -70,16 +68,14 @@ var _ = Describe("Flannel Network", func() {
 				},
 			}
 
-			clusterNet := testDiscoverNetworkSuccess(ctx, &nonFlannelDaemonSet)
-			Expect(clusterNet).NotTo(BeNil())
+			clusterNet := testDiscoverNetworkSuccess(ctx, &nonFlannelDaemonSet, newServiceCIDR(testServiceCIDR))
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
 		})
 	})
 
 	When("the flannel ConfigMap does not exist", func() {
 		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
-			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelDaemonSet)
-			Expect(clusterNet).NotTo(BeNil())
+			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelDaemonSet, newServiceCIDR(testServiceCIDR))
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
 		})
 	})
