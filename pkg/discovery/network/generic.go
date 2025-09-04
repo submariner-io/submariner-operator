@@ -25,8 +25,10 @@ import (
 	"regexp"
 
 	"github.com/pkg/errors"
+	"github.com/submariner-io/admiral/pkg/resource"
 	"github.com/submariner-io/submariner/pkg/cni"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,13 +62,9 @@ func discoverNetwork(ctx context.Context, client controllerClient.Client) (*Clus
 		clusterNetwork.PodCIDRs = []string{podIPRange}
 	}
 
-	clusterIPRange, err := findClusterIPRange(ctx, client)
+	clusterNetwork.ServiceCIDRs, err = discoverGenericServiceCIDRs(ctx, client)
 	if err != nil {
 		return nil, err
-	}
-
-	if clusterIPRange != "" {
-		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
 	}
 
 	if len(clusterNetwork.PodCIDRs) > 0 || len(clusterNetwork.ServiceCIDRs) > 0 {
@@ -76,23 +74,43 @@ func discoverNetwork(ctx context.Context, client controllerClient.Client) (*Clus
 	return nil, nil
 }
 
-func findClusterIPRange(ctx context.Context, client controllerClient.Client) (string, error) {
-	clusterIPRange, err := findClusterIPRangeFromApiserver(ctx, client)
-	if err != nil || clusterIPRange != "" {
-		return clusterIPRange, err
+func discoverGenericServiceCIDRs(ctx context.Context, client controllerClient.Client) ([]string, error) {
+	// In K8s 1.33, the networking.k8s.io/v1 ServiceCIDR resource became a stable feature allowing users to easily expand
+	// service IP ranges after initial cluster deployment and allowing for simple retrieval of all service CIDRs.
+	// For prior K8s versions, we'll fall back to the other methods to retrieve the service CIDR below.
+	serviceCIDRList := &networkingv1.ServiceCIDRList{}
+
+	err := client.List(ctx, serviceCIDRList, controllerClient.InNamespace(""))
+	if err == nil && len(serviceCIDRList.Items) > 0 {
+		var serviceCIDRs []string
+
+		for i := range serviceCIDRList.Items {
+			serviceCIDRs = append(serviceCIDRs, serviceCIDRList.Items[i].Spec.CIDRs...)
+		}
+
+		return serviceCIDRs, nil
 	}
 
-	clusterIPRange, err = findClusterIPRangeFromKubeController(ctx, client)
-	if err != nil || clusterIPRange != "" {
-		return clusterIPRange, err
+	if err != nil && !resource.IsNotFoundErr(err) {
+		return nil, errors.Wrap(err, "error retrieving ServiceCIDRs")
 	}
 
-	clusterIPRange, err = findClusterIPRangeFromServiceCreation(ctx, client)
-	if err != nil || clusterIPRange != "" {
-		return clusterIPRange, err
+	for _, fn := range []func(context.Context, controllerClient.Client) (string, error){
+		findClusterIPRangeFromApiserver,
+		findClusterIPRangeFromKubeController,
+		findClusterIPRangeFromServiceCreation,
+	} {
+		clusterIPRange, err := fn(ctx, client)
+		if err != nil {
+			return nil, err
+		}
+
+		if clusterIPRange != "" {
+			return []string{clusterIPRange}, nil
+		}
 	}
 
-	return "", nil
+	return []string{}, nil
 }
 
 func findClusterIPRangeFromApiserver(ctx context.Context, client controllerClient.Client) (string, error) {
@@ -135,8 +153,7 @@ func findClusterIPRangeFromServiceCreation(ctx context.Context, client controlle
 
 	// creating invalid service didn't fail as expected
 	if err == nil {
-		return "", errors.New("could not determine the service IP range via service creation - " +
-			"expected a specific error but none was returned")
+		return "", nil
 	}
 
 	return parseServiceCIDRFrom(err.Error())

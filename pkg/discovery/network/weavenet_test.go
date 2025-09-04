@@ -35,12 +35,12 @@ var _ = Describe("Weave Network", func() {
 			clusterNet = testDiscoverNetworkSuccess(
 				ctx,
 				fakePod("weave-net", []string{"weave-net"}, []v1.EnvVar{{Name: "IPALLOC_RANGE", Value: testPodCIDR}}),
+				newServiceCIDR(testServiceCIDR),
 			)
-			Expect(clusterNet).NotTo(BeNil())
 		})
 		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
-			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})
 
 		It("Should identify the networkplugin as weave-net", func() {
@@ -57,7 +57,6 @@ var _ = Describe("Weave Network", func() {
 				fakePod("weave-net", []string{"weave-net"}, []v1.EnvVar{{Name: "IPALLOC_RANGE", Value: testPodCIDR}}),
 				fakeKubeAPIServerPod(),
 			)
-			Expect(clusterNet).NotTo(BeNil())
 		})
 
 		It("Should return ClusterNetwork with the pod CIDR and the service CIDR", func() {
