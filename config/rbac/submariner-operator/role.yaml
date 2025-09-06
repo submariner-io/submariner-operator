@@ -56,8 +56,6 @@ rules:
   - apiGroups:
       - submariner.io
     resources:
-      - brokers
-      - brokers/status
       - submariners
       - submariners/status
       - servicediscoveries

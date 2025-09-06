@@ -4,6 +4,18 @@ kind: ClusterRole
 metadata:
   name: submariner-operator
 rules:
+  - apiGroups:
+      - submariner.io
+    resources:
+      - brokers
+      - brokers/status
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
   # submariner-operator updates the config map of core-dns to forward requests to
   # clusterset.local to Lighthouse DNS, also looks at existing configmaps
   # to figure out network settings

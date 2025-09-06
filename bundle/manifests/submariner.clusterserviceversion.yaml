@@ -35,7 +35,7 @@ metadata:
             "globalnetEnabled": false,
             "namespace": "submariner-operator",
             "repository": "quay.io/submariner",
-            "version": "devel-7c7c4a16632c"
+            "version": "devel-c122c3aad852"
           }
         },
         {
@@ -69,7 +69,7 @@ metadata:
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "devel-7c7c4a16632c"
+            "version": "devel-c122c3aad852"
           }
         }
       ]
@@ -77,7 +77,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
-    createdAt: "2025-09-05 10:46:06"
+    createdAt: "2025-09-06 12:55:58"
     description: Creates and manages Submariner deployments.
     operatorframework.io/suggested-namespace: submariner-operator
     operators.operatorframework.io/builder: operator-sdk-v1.41.1
@@ -572,6 +572,18 @@ spec:
           verbs:
           - get
         - apiGroups:
+          - submariner.io
+          resources:
+          - brokers
+          - brokers/status
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - delete
+        - apiGroups:
           - ""
           resources:
           - configmaps
@@ -678,18 +690,18 @@ spec:
                 - name: OPERATOR_NAME
                   value: submariner-operator
                 - name: RELATED_IMAGE_submariner-operator
-                  value: quay.io/submariner/submariner-operator:devel-7c7c4a16632c
+                  value: quay.io/submariner/submariner-operator:devel-c122c3aad852
                 - name: RELATED_IMAGE_submariner-gateway
-                  value: quay.io/submariner/submariner-gateway:devel-7c7c4a16632c
+                  value: quay.io/submariner/submariner-gateway:devel-c122c3aad852
                 - name: RELATED_IMAGE_submariner-route-agent
-                  value: quay.io/submariner/submariner-route-agent:devel-7c7c4a16632c
+                  value: quay.io/submariner/submariner-route-agent:devel-c122c3aad852
                 - name: RELATED_IMAGE_submariner-globalnet
-                  value: quay.io/submariner/submariner-globalnet:devel-7c7c4a16632c
+                  value: quay.io/submariner/submariner-globalnet:devel-c122c3aad852
                 - name: RELATED_IMAGE_lighthouse-agent
-                  value: quay.io/submariner/lighthouse-agent:devel-7c7c4a16632c
+                  value: quay.io/submariner/lighthouse-agent:devel-c122c3aad852
                 - name: RELATED_IMAGE_lighthouse-coredns
-                  value: quay.io/submariner/lighthouse-coredns:devel-7c7c4a16632c
-                image: quay.io/submariner/submariner-operator:devel-7c7c4a16632c
+                  value: quay.io/submariner/lighthouse-coredns:devel-c122c3aad852
+                image: quay.io/submariner/submariner-operator:devel-c122c3aad852
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources:
@@ -760,8 +772,6 @@ spec:
         - apiGroups:
           - submariner.io
           resources:
-          - brokers
-          - brokers/status
           - submariners
           - submariners/status
           - servicediscoveries
@@ -842,17 +852,17 @@ spec:
   provider:
     name: submariner.io
   relatedImages:
-  - image: quay.io/submariner/submariner-operator:devel-7c7c4a16632c
+  - image: quay.io/submariner/submariner-operator:devel-c122c3aad852
     name: submariner-operator
-  - image: quay.io/submariner/submariner-gateway:devel-7c7c4a16632c
+  - image: quay.io/submariner/submariner-gateway:devel-c122c3aad852
     name: submariner-gateway
-  - image: quay.io/submariner/submariner-route-agent:devel-7c7c4a16632c
+  - image: quay.io/submariner/submariner-route-agent:devel-c122c3aad852
     name: submariner-route-agent
-  - image: quay.io/submariner/submariner-globalnet:devel-7c7c4a16632c
+  - image: quay.io/submariner/submariner-globalnet:devel-c122c3aad852
     name: submariner-globalnet
-  - image: quay.io/submariner/lighthouse-agent:devel-7c7c4a16632c
+  - image: quay.io/submariner/lighthouse-agent:devel-c122c3aad852
     name: lighthouse-agent
-  - image: quay.io/submariner/lighthouse-coredns:devel-7c7c4a16632c
+  - image: quay.io/submariner/lighthouse-coredns:devel-c122c3aad852
     name: lighthouse-coredns
   selector:
     matchLabels:
