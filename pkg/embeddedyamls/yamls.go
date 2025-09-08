@@ -3404,6 +3404,13 @@ rules:
       - delete
       - update
       - deletecollection
+  - apiGroups:
+      - operator.tigera.io
+    resources:
+      - installations
+    verbs:
+      - get
+      - update
 `
 	Config_rbac_submariner_route_agent_cluster_role_binding_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
