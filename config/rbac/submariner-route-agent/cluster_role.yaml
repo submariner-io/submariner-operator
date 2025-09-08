@@ -51,3 +51,10 @@ rules:
       - delete
       - update
       - deletecollection
+  - apiGroups:
+      - operator.tigera.io
+    resources:
+      - installations
+    verbs:
+      - get
+      - update
