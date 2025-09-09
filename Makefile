@@ -4,8 +4,6 @@ DEFAULT_IMAGE_VERSION ?= $(BASE_BRANCH)
 export BASE_BRANCH
 export DEFAULT_IMAGE_VERSION
 
-VERSION ?= $(shell git describe --abbrev=0 --tags --match="v[0-9]*\.[0-9]*\.[0-9]*" 2>/dev/null || echo v9.9.9)
-
 # Define LOCAL_BUILD to build directly on the host and not inside a Dapper container
 ifdef LOCAL_BUILD
 DAPPER_HOST_ARCH ?= $(shell go env GOHOSTARCH)
@@ -195,15 +193,14 @@ $(KUSTOMIZE):
 
 kustomize: $(KUSTOMIZE)
 
-# TODO Set correctly
-FEATURE_DISCONNECTED ?= "false"
-FEATURE_FIPS_COMPLIANT ?= "false"
+FEATURE_DISCONNECTED ?= "true"
+FEATURE_FIPS_COMPLIANT ?= "true"
 FEATURE_PROXY_AWARE ?= "false"
 FEATURE_TLS_PROFILES ?= "false"
 FEATURE_TOKEN_AUTH_AWS ?= "false"
 FEATURE_TOKEN_AUTH_AZURE ?= "false"
 FEATURE_TOKEN_AUTH_GCP ?= "false"
-VALID_SUBSCRIPTION_ANNOTATION ?= ["TODO", "foo"]
+VALID_SUBSCRIPTION_ANNOTATION ?= ["OpenShift Platform Plus", "Red Hat Advanced Cluster Management for Kubernetes"]
 
 # Generate kustomization.yaml for bundle
 kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
@@ -232,50 +229,9 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	$(KUSTOMIZE) build config/bundle/ --load-restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
+	# The operator-sdk gets bugs when two RELATED_IMAGE_ variables point to the same image, so fix the empty name for the nettest image
+	sed -i 's/name: ""/name: submariner-nettest/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate --select-optional suite=operatorframework ./bundle
-ifeq ($(CUSTOM_BUILD),true)
-	$(MAKE) bundle-customize
-endif
-
-# Custom bundle modifications
-CUSTOM_SUBMARINER_OPERATOR_IMAGE ?= registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:9bd4cce195d28beee61f1adf9144b16c4de4c14bb5b5c4046921b730d758ae93
-CUSTOM_SUBMARINER_GATEWAY_IMAGE ?= registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:5e822b12b5aadaa08a2f95b879be911455607a9c04922a641625515f955dc9ca
-CUSTOM_SUBMARINER_ROUTE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:2e18b858f09e7595a89c4dc6ea5a85f8c5952f581b769093bfaab8156bab0813
-CUSTOM_SUBMARINER_GLOBALNET_IMAGE ?= registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:2217d9128fe50d61d1dff48b588113b5267002f72d025b1b6fbf87a1c2e670d1
-CUSTOM_LIGHTHOUSE_AGENT_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:6b4d34e7a40b21cf464e2f42cef21ef72a69ae8a3f4e7600a7bd85aa689117d9
-CUSTOM_LIGHTHOUSE_COREDNS_IMAGE ?= registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:0885c82cd09105a078d4308b4ec1047b96f3cbf1fd555a1c90a8b053befee27e
-CUSTOM_SUBCTL_IMAGE ?= registry.redhat.io/rhacm2/subctl-rhel9@sha256:26d0d02519bd9d226a0e8a7a92fc5c829c2d350f4139bdc1c989798d222a1d3f
-CUSTOM_NETTEST_IMAGE ?= registry.redhat.io/rhacm2/nettest-rhel9@sha256:5783a00c386858d1eb45f224431d07d40bb9be746de965e7b129ee30969d4014
-
-CUSTOMIZABLE_IMAGES := \
-	submariner-operator \
-	submariner-gateway \
-	submariner-route-agent \
-	submariner-globalnet \
-	lighthouse-agent \
-	lighthouse-coredns \
-	subctl \
-	nettest
-
-# Replaces image references in the CSV using sed to avoid reformatting the YAML,
-# which can be problematic for version control.
-bundle-customize:
-	@echo "Applying custom image overrides using sed to preserve formatting..."
-	$(foreach image,$(CUSTOMIZABLE_IMAGES), \
-		NEW_URL='$(CUSTOM_$(shell echo $(image) | tr '[:lower:]-' '[:upper:]_')_IMAGE)'; \
-		\
-		OLD_URL_IMG=$$(grep -B 1 "name: $(image)" bundle/manifests/submariner.clusterserviceversion.yaml | head -n 1 | awk -F'image: ' '{print $$2}'); \
-		if [ -n "$$OLD_URL_IMG" ]; then \
-			sed -i "s|$$OLD_URL_IMG|$$NEW_URL|g" bundle/manifests/submariner.clusterserviceversion.yaml; \
-		fi; \
-		\
-		ENV_VAR_NAME="RELATED_IMAGE_$(image)"; \
-		OLD_URL_ENV=$$(grep -A 1 "name: $$ENV_VAR_NAME" bundle/manifests/submariner.clusterserviceversion.yaml | tail -n 1 | awk -F'value: ' '{print $$2}'); \
-		if [ -n "$$OLD_URL_ENV" ]; then \
-			sed -i "s|$$OLD_URL_ENV|$$NEW_URL|g" bundle/manifests/submariner.clusterserviceversion.yaml; \
-		fi; \
-	)
-	@echo "Custom image overrides applied."
 
 # Statically validate the operator bundle using Scorecard.
 scorecard: bundle olm clusters
@@ -316,7 +272,7 @@ $(OPERATOR_SDK):
 
 operator-sdk: $(OPERATOR_SDK)
 
-.PHONY: build ci clean bundle bundle-customize kustomization is-semantic-version olm scorecard system-test controller-gen kustomize operator-sdk
+.PHONY: build ci clean bundle kustomization is-semantic-version olm scorecard system-test controller-gen kustomize operator-sdk
 
 else
 
