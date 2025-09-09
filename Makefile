@@ -62,7 +62,7 @@ endif
 FROM_VERSION ?= $(shell (git tag -l --sort=-v:refname v[0-9]*\.[0-9]*\.[0-9]* | awk '/^$(BUNDLE_VERSION)$$/ { seen = 1; next } seen { print; exit } END { exit !seen }' || echo v0.0.0) \
           | head -n1 | cut -d'-' -f1 | cut -c2-)
 SHORT_VERSION := $(shell echo ${BUNDLE_VERSION} | cut -d'.' -f1,2)
-CHANNEL ?= alpha-$(SHORT_VERSION)
+CHANNEL ?= stable-$(SHORT_VERSION)
 CHANNELS ?= $(CHANNEL)
 DEFAULT_CHANNEL ?= $(CHANNEL)
 ifneq ($(origin CHANNELS), undefined)
@@ -192,6 +192,15 @@ $(KUSTOMIZE):
 
 kustomize: $(KUSTOMIZE)
 
+FEATURE_DISCONNECTED ?= "true"
+FEATURE_FIPS_COMPLIANT ?= "true"
+FEATURE_PROXY_AWARE ?= "false"
+FEATURE_TLS_PROFILES ?= "false"
+FEATURE_TOKEN_AUTH_AWS ?= "false"
+FEATURE_TOKEN_AUTH_AZURE ?= "false"
+FEATURE_TOKEN_AUTH_GCP ?= "false"
+VALID_SUBSCRIPTION_ANNOTATION ?= ["OpenShift Platform Plus", "Red Hat Advanced Cluster Management for Kubernetes"]
+
 # Generate kustomization.yaml for bundle
 kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 	$(OPERATOR_SDK) generate kustomize manifests -q
@@ -202,6 +211,14 @@ kustomization: $(OPERATOR_SDK) $(KUSTOMIZE) is-semantic-version manifests
 		config/bundle/patches/submariner.csv.template.yaml > config/bundle/patches/submariner.csv.config.yaml
 	(cd config/bundle && \
 	$(KUSTOMIZE) edit add annotation createdAt:"$(shell date "+%Y-%m-%d %T")" -f)
+	(cd config/bundle && $(KUSTOMIZE) edit set annotation 'features.operators.openshift.io/disconnected:$(FEATURE_DISCONNECTED)')
+	(cd config/bundle && $(KUSTOMIZE) edit set annotation 'features.operators.openshift.io/fips-compliant:$(FEATURE_FIPS_COMPLIANT)')
+	(cd config/bundle && $(KUSTOMIZE) edit set annotation 'features.operators.openshift.io/proxy-aware:$(FEATURE_PROXY_AWARE)')
+	(cd config/bundle && $(KUSTOMIZE) edit set annotation 'features.operators.openshift.io/tls-profiles:$(FEATURE_TLS_PROFILES)')
+	(cd config/bundle && $(KUSTOMIZE) edit set annotation 'features.operators.openshift.io/token-auth-aws:$(FEATURE_TOKEN_AUTH_AWS)')
+	(cd config/bundle && $(KUSTOMIZE) edit set annotation 'features.operators.openshift.io/token-auth-azure:$(FEATURE_TOKEN_AUTH_AZURE)')
+	(cd config/bundle && $(KUSTOMIZE) edit set annotation 'features.operators.openshift.io/token-auth-gcp:$(FEATURE_TOKEN_AUTH_GCP)')
+	(cd config/bundle && $(KUSTOMIZE) edit set annotation 'operators.openshift.io/valid-subscription:$(VALID_SUBSCRIPTION_ANNOTATION)')
 
 # Generate bundle manifests and metadata, then validate generated files
 bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
@@ -211,6 +228,8 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	$(KUSTOMIZE) build config/bundle/ --load-restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
+	# The operator-sdk gets bugs when two RELATED_IMAGE_ variables point to the same image, so fix the empty name for the nettest image
+	sed -i 's/name: ""/name: submariner-nettest/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate --select-optional suite=operatorframework ./bundle
 
 # Statically validate the operator bundle using Scorecard.
