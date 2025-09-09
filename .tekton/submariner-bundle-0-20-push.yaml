@@ -7,8 +7,11 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/cancel-in-progress: "false"
     pipelinesascode.tekton.dev/max-keep-runs: "3"
-    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "release-0.20"
+    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch == "release-0.20" &&
+      (".tekton/submariner-bundle-0-20-pull-request.yaml".pathChanged() ||
+      ".tekton/submariner-bundle-0-20-push.yaml".pathChanged() ||
+      "bundle.Dockerfile.konflux".pathChanged() ||
+      "bundle/***".pathChanged())
   creationTimestamp: null
   labels:
     appstudio.openshift.io/application: submariner-0-20
@@ -25,7 +28,11 @@ spec:
   - name: output-image
     value: quay.io/redhat-user-workloads/submariner-tenant/submariner-bundle-0-20:{{revision}}
   - name: dockerfile
-    value: bundle.Dockerfile
+    value: bundle.Dockerfile.konflux
+  - name: hermetic
+    value: "true"
+  - name: build-source-image
+    value: "true"
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.

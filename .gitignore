@@ -1,14 +1,10 @@
 .dapper
 bin/
 build/_output/
-bundle/
-bundle.Dockerfile
 dist/
 deploy/crds
 deploy/submariner/crds
 deploy/lighthouse/crds
-config/bundle/kustomization.yaml
-config/bundle/patches/submariner.csv.config.yaml
 package/.image.*
 output/
 vendor/
