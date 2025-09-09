@@ -1,0 +1,36 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: submariner-routeagent
+rules:
+- apiGroups:
+  - submariner.io
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - submariner.io
+  resources:
+  - gatewayroutes
+  - nongatewayroutes
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - delete
+- apiGroups:
+  - submariner.io
+  resources:
+  - routeagents
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - delete
