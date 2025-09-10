@@ -61,14 +61,15 @@ var _ = Describe("Broker controller tests", func() {
 		t.JustBeforeEach()
 
 		t.Controller = &submarinerController.BrokerReconciler{
-			Client: t.ScopedClient,
+			ScopedClient:  t.ScopedClient,
+			GeneralClient: t.GeneralClient,
 		}
 	})
 
 	It("should create the globalnet ConfigMap", func(ctx SpecContext) {
 		t.AssertReconcileSuccess(ctx)
 
-		globalnetInfo, _, err := globalnet.GetGlobalNetworks(ctx, t.ScopedClient, submarinerNamespace)
+		globalnetInfo, _, err := globalnet.GetGlobalNetworks(ctx, t.GeneralClient, submarinerNamespace)
 		Expect(err).To(Succeed())
 		Expect(globalnetInfo.CIDR).To(Equal(broker.Spec.GlobalnetCIDRRange))
 		Expect(globalnetInfo.AllocationSize).To(Equal(broker.Spec.DefaultGlobalnetClusterSize))
@@ -78,10 +79,10 @@ var _ = Describe("Broker controller tests", func() {
 		t.AssertReconcileSuccess(ctx)
 
 		crd := &apiextensions.CustomResourceDefinition{}
-		Expect(t.ScopedClient.Get(ctx, client.ObjectKey{Name: "clusters.submariner.io"}, crd)).To(Succeed())
-		Expect(t.ScopedClient.Get(ctx, client.ObjectKey{Name: "endpoints.submariner.io"}, crd)).To(Succeed())
-		Expect(t.ScopedClient.Get(ctx, client.ObjectKey{Name: "gateways.submariner.io"}, crd)).To(Succeed())
-		Expect(t.ScopedClient.Get(ctx, client.ObjectKey{Name: "serviceimports.multicluster.x-k8s.io"}, crd)).To(Succeed())
+		Expect(t.GeneralClient.Get(ctx, client.ObjectKey{Name: "clusters.submariner.io"}, crd)).To(Succeed())
+		Expect(t.GeneralClient.Get(ctx, client.ObjectKey{Name: "endpoints.submariner.io"}, crd)).To(Succeed())
+		Expect(t.GeneralClient.Get(ctx, client.ObjectKey{Name: "gateways.submariner.io"}, crd)).To(Succeed())
+		Expect(t.GeneralClient.Get(ctx, client.ObjectKey{Name: "serviceimports.multicluster.x-k8s.io"}, crd)).To(Succeed())
 	})
 
 	When("the Broker resource doesn't exist", func() {

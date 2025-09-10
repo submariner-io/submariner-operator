@@ -37,8 +37,9 @@ import (
 
 // BrokerReconciler reconciles a Broker object.
 type BrokerReconciler struct {
-	Client client.Client
-	Config *rest.Config
+	ScopedClient  client.Client
+	GeneralClient client.Client
+	Config        *rest.Config
 }
 
 //+kubebuilder:rbac:groups=submariner.io,resources=brokers,verbs=get;list;watch;create;update;patch;delete
@@ -51,7 +52,7 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 	// Fetch the Broker instance
 	instance := &v1alpha1.Broker{}
 
-	err := r.Client.Get(ctx, request.NamespacedName, instance)
+	err := r.ScopedClient.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
@@ -69,7 +70,7 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 	}
 
 	// Broker CRDs
-	crdUpdater := crd.UpdaterFromControllerClient(r.Client)
+	crdUpdater := crd.UpdaterFromControllerClient(r.GeneralClient)
 
 	err = gateway.Ensure(ctx, crdUpdater)
 	if err != nil {
@@ -83,24 +84,24 @@ func (r *BrokerReconciler) Reconcile(ctx context.Context, request ctrl.Request) 
 	}
 
 	// Globalnet
-	err = globalnet.ValidateExistingGlobalNetworks(ctx, r.Client, request.Namespace)
+	err = globalnet.ValidateExistingGlobalNetworks(ctx, r.GeneralClient, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
-	err = globalnet.CreateConfigMap(ctx, r.Client, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
+	err = globalnet.CreateConfigMap(ctx, r.GeneralClient, instance.Spec.GlobalnetEnabled, instance.Spec.GlobalnetCIDRRange,
 		instance.Spec.DefaultGlobalnetClusterSize, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
 	// clustersetip
-	err = clustersetip.ValidateExistingClustersetIPNetworks(ctx, r.Client, request.Namespace)
+	err = clustersetip.ValidateExistingClustersetIPNetworks(ctx, r.GeneralClient, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
 	}
 
-	err = clustersetip.CreateConfigMap(ctx, r.Client, instance.Spec.ClustersetIPEnabled,
+	err = clustersetip.CreateConfigMap(ctx, r.GeneralClient, instance.Spec.ClustersetIPEnabled,
 		instance.Spec.ClustersetIPCIDRRange, 0, request.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err //nolint:wrapcheck // Errors are already wrapped
