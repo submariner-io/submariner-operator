@@ -633,6 +633,13 @@ spec:
           - daemonsets
           verbs:
           - list
+        - apiGroups:
+          - networking.k8s.io
+          resources:
+          - servicecidrs
+          verbs:
+          - get
+          - list
         serviceAccountName: submariner-operator
       deployments:
       - label:
