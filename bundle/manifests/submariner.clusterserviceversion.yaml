@@ -35,7 +35,7 @@ metadata:
             "globalnetEnabled": false,
             "namespace": "submariner-operator",
             "repository": "quay.io/submariner",
-            "version": "release-0.20-e7ae07619459"
+            "version": "v0.20.2"
           }
         },
         {
@@ -69,7 +69,7 @@ metadata:
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "release-0.20-e7ae07619459"
+            "version": "v0.20.2"
           }
         }
       ]
@@ -77,7 +77,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
-    createdAt: "2025-09-09 11:24:37"
+    createdAt: "2025-09-11 14:45:14"
     description: Creates and manages Submariner deployments.
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -89,7 +89,7 @@ metadata:
     operatorframework.io/suggested-namespace: submariner-operator
     operators.openshift.io/valid-subscription: '["OpenShift Platform Plus", "Red Hat
       Advanced Cluster Management for Kubernetes"]'
-    operators.operatorframework.io/builder: operator-sdk-v1.40.0
+    operators.operatorframework.io/builder: operator-sdk-v1.39.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/submariner-io/submariner-operator
     support: Submariner
@@ -686,19 +686,19 @@ spec:
                 - name: RELATED_IMAGE_submariner-operator
                   value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:2798452d47e3837e8bc938108fc3b4b024896b91f8ff816048caab6dd0e2dc4e
                 - name: RELATED_IMAGE_submariner-gateway
-                  value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:cec807c339e1b40d36cf8016e99b44f30310a0b089ebd338fd3ee782185dd957
+                  value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:1bf2533d79facf273e92327eebd0661591fc3d30a6ac4ce27c7913cafc3eb177
                 - name: RELATED_IMAGE_submariner-routeagent
-                  value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:96265a5d0442fd8693271a7bf157b4379e6dd2adc2326bd1fd66352a49c02d93
+                  value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:17a1afb154dcb85ef8d7df186fff276f4f16ed8dea53e023ebba1059ab4ce575
                 - name: RELATED_IMAGE_submariner-globalnet
-                  value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:b94a773c7cf06be0e57180788211a10aa6970bd2db38dce7345e850d352141b2
+                  value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:a675fa66f3b4e4e52737fc8575b582352158c1da353b3726c671f4be7c4b7a16
                 - name: RELATED_IMAGE_submariner-lighthouse-agent
-                  value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:be50ecdbe23f895f8a67dee68f84a63cd31e257a96f3a86a82beef52834a1419
+                  value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:46a18d4f7e224ab8c6b4ade98107434205396a79dee0c8d3925bc9b23f379c02
                 - name: RELATED_IMAGE_submariner-lighthouse-coredns
-                  value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:aa5a4825557b13c261b4af54defecf5fdb3dbb108154a9df80274a48a56897ee
+                  value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:de4b0dacc8e26b6c0e018144e2a79cf9688545353b170603491c2bbc4fdafa3d
                 - name: RELATED_IMAGE_submariner-metrics-proxy
-                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:826829a87822768198e9378e9d239f8fc3e4de24c20a9d5eb913a85e24879bba
+                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:53ac9dcc2e71806b7d63178cef6a4eb0d8a343e38fd725b679351af992127faf
                 - name: RELATED_IMAGE_submariner-nettest
-                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:826829a87822768198e9378e9d239f8fc3e4de24c20a9d5eb913a85e24879bba
+                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:53ac9dcc2e71806b7d63178cef6a4eb0d8a343e38fd725b679351af992127faf
                 image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:2798452d47e3837e8bc938108fc3b4b024896b91f8ff816048caab6dd0e2dc4e
                 imagePullPolicy: Always
                 name: submariner-operator
@@ -862,17 +862,17 @@ spec:
   relatedImages:
   - image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:2798452d47e3837e8bc938108fc3b4b024896b91f8ff816048caab6dd0e2dc4e
     name: submariner-operator
-  - image: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:cec807c339e1b40d36cf8016e99b44f30310a0b089ebd338fd3ee782185dd957
+  - image: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:1bf2533d79facf273e92327eebd0661591fc3d30a6ac4ce27c7913cafc3eb177
     name: submariner-gateway
-  - image: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:96265a5d0442fd8693271a7bf157b4379e6dd2adc2326bd1fd66352a49c02d93
+  - image: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:17a1afb154dcb85ef8d7df186fff276f4f16ed8dea53e023ebba1059ab4ce575
     name: submariner-routeagent
-  - image: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:b94a773c7cf06be0e57180788211a10aa6970bd2db38dce7345e850d352141b2
+  - image: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:a675fa66f3b4e4e52737fc8575b582352158c1da353b3726c671f4be7c4b7a16
     name: submariner-globalnet
-  - image: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:be50ecdbe23f895f8a67dee68f84a63cd31e257a96f3a86a82beef52834a1419
+  - image: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:46a18d4f7e224ab8c6b4ade98107434205396a79dee0c8d3925bc9b23f379c02
     name: submariner-lighthouse-agent
-  - image: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:aa5a4825557b13c261b4af54defecf5fdb3dbb108154a9df80274a48a56897ee
+  - image: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:de4b0dacc8e26b6c0e018144e2a79cf9688545353b170603491c2bbc4fdafa3d
     name: submariner-lighthouse-coredns
-  - image: registry.redhat.io/rhacm2/nettest-rhel9@sha256:826829a87822768198e9378e9d239f8fc3e4de24c20a9d5eb913a85e24879bba
+  - image: registry.redhat.io/rhacm2/nettest-rhel9@sha256:53ac9dcc2e71806b7d63178cef6a4eb0d8a343e38fd725b679351af992127faf
     name: submariner-nettest
   selector:
     matchLabels:
