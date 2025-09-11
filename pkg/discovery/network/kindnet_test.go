@@ -35,13 +35,13 @@ var _ = Describe("Kindnet CNI", func() {
 			clusterNet = testDiscoverNetworkSuccess(
 				ctx,
 				fakePod("kindnet", []string{"kindnet"}, []v1.EnvVar{{Name: "POD_SUBNET", Value: testPodCIDR}}),
+				newServiceCIDR(testServiceCIDR),
 			)
-			Expect(clusterNet).NotTo(BeNil())
 		})
 
 		It("Should return the ClusterNetwork structure with the pod CIDR and the service CIDR", func() {
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testPodCIDR}))
-			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})
 
 		It("Should identify the networkplugin as kindnet CNI", func() {
@@ -58,7 +58,6 @@ var _ = Describe("Kindnet CNI", func() {
 				fakePod("kindnet", []string{"kindnet"}, []v1.EnvVar{{Name: "POD_SUBNET", Value: testPodCIDR}}),
 				fakeKubeAPIServerPod(),
 			)
-			Expect(clusterNet).NotTo(BeNil())
 		})
 
 		It("Should return ClusterNetwork with the pod CIDR and the service CIDR", func() {

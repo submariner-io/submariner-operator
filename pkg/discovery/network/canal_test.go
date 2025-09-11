@@ -46,18 +46,16 @@ var _ = Describe("Canal Flannel Network", func() {
 
 	When("the canal DaemonSet and ConfigMap exist", func() {
 		It("should return a ClusterNetwork with the plugin name and CIDRs set correctly", func(ctx SpecContext) {
-			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelCfgMap, &canalDaemonSet)
-			Expect(clusterNet).NotTo(BeNil())
+			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelCfgMap, &canalDaemonSet, newServiceCIDR(testServiceCIDR))
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.CanalFlannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testFlannelPodCIDR}))
-			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDRFromService}))
+			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
 		})
 	})
 
 	When("a K8s API server pod exists", func() {
 		It("should return a ClusterNetwork with the plugin name and CIDRs set correctly", func(ctx SpecContext) {
 			clusterNet := testDiscoverNetworkSuccess(ctx, &flannelCfgMap, &canalDaemonSet, fakeKubeAPIServerPod())
-			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.CanalFlannel))
 			Expect(clusterNet.PodCIDRs).To(Equal([]string{testFlannelPodCIDR}))
 			Expect(clusterNet.ServiceCIDRs).To(Equal([]string{testServiceCIDR}))
@@ -66,15 +64,14 @@ var _ = Describe("Canal Flannel Network", func() {
 
 	When("the flannel DaemonSet does not exist", func() {
 		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
-			clusterNet := testDiscoverNetworkSuccess(ctx)
-			Expect(clusterNet).NotTo(BeNil())
+			clusterNet := testDiscoverNetworkSuccess(ctx, newServiceCIDR(testServiceCIDR))
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
 		})
 	})
 
 	When("the flannel ConfigMap does not exist", func() {
 		It("should return a ClusterNetwork with the generic plugin", func(ctx SpecContext) {
-			clusterNet := testDiscoverNetworkSuccess(ctx, &canalDaemonSet)
+			clusterNet := testDiscoverNetworkSuccess(ctx, &canalDaemonSet, newServiceCIDR(testServiceCIDR))
 			Expect(clusterNet).NotTo(BeNil())
 			Expect(clusterNet.NetworkPlugin).To(Equal(cni.Generic))
 		})

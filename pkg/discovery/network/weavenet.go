@@ -45,10 +45,7 @@ func discoverWeaveNetwork(ctx context.Context, client controllerClient.Client) (
 		}
 	}
 
-	clusterIPRange, err := findClusterIPRange(ctx, client)
-	if err == nil && clusterIPRange != "" {
-		clusterNetwork.ServiceCIDRs = []string{clusterIPRange}
-	}
+	clusterNetwork.ServiceCIDRs, err = discoverGenericServiceCIDRs(ctx, client)
 
-	return clusterNetwork, nil
+	return clusterNetwork, err
 }

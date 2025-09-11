@@ -71,6 +71,10 @@ func (cn *ClusterNetwork) IsComplete() bool {
 
 func Discover(ctx context.Context, client controllerClient.Client, operatorNamespace string) (*ClusterNetwork, error) {
 	discovery, err := networkPluginsDiscovery(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+
 	if discovery != nil {
 		// If the info we got from the non-generic plugins is incomplete
 		// try to complete with the generic discovery mechanisms
