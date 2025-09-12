@@ -45,6 +45,7 @@ jobs:
         run: make bundle LOCAL_BUILD=1
       - name: Verify generated code matches committed code (ignoring hashes)
         run: >-
+          baseref=${{ github.base_ref }} &&
           git add -A &&
           git diff --staged --exit-code
           -IcreatedAt:
@@ -52,8 +53,10 @@ jobs:
           -I"image: quay.io/submariner/"
           -Icontroller-gen.kubebuilder.io/version:
           -Ioperators.operatorframework.io.metrics.builder:
-          -I"\"version\": \"${{ github.base_ref }}-"
-          -I"newTag: ${{ github.base_ref }}-"
+          -I"\"version\": \"${baseref}-"
+          -I"\"version\": \"v${baseref/release-/}."
+          -I"newTag: ${baseref}-"
+          -I"newTag: v${baseref/release-/}."
 
   check-branch-dependencies:
     name: Check branch dependencies
