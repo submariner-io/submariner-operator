@@ -8,7 +8,7 @@ updates:
     groups:
       github-actions:
         patterns:
-          - "*"
+          - '*'
   - package-ecosystem: github-actions
     directory: /
     target-branch: release-0.17
@@ -17,7 +17,7 @@ updates:
     groups:
       github-actions:
         patterns:
-          - "*"
+          - '*'
   - package-ecosystem: github-actions
     directory: /
     target-branch: release-0.18
@@ -26,7 +26,7 @@ updates:
     groups:
       github-actions:
         patterns:
-          - "*"
+          - '*'
   - package-ecosystem: github-actions
     directory: /
     target-branch: release-0.19
@@ -35,7 +35,7 @@ updates:
     groups:
       github-actions:
         patterns:
-          - "*"
+          - '*'
   - package-ecosystem: github-actions
     directory: /
     target-branch: release-0.20
@@ -44,7 +44,7 @@ updates:
     groups:
       github-actions:
         patterns:
-          - "*"
+          - '*'
   - package-ecosystem: github-actions
     directory: /
     target-branch: release-0.21
@@ -53,7 +53,7 @@ updates:
     groups:
       github-actions:
         patterns:
-          - "*"
+          - '*'
   - package-ecosystem: gomod
     target-branch: release-0.17
     directory: /
@@ -65,7 +65,7 @@ updates:
     ignore:
       # 0.17 tracks the 0.29 branch
       - dependency-name: k8s.io/*
-        versions: ">= 0.30.0-alpha.0"
+        versions: '>= 0.30.0-alpha.0'
   - package-ecosystem: gomod
     target-branch: release-0.18
     directory: /
@@ -77,7 +77,7 @@ updates:
     ignore:
       # 0.18 tracks the 0.30 branch
       - dependency-name: k8s.io/*
-        versions: ">= 0.31.0-alpha.0"
+        versions: '>= 0.31.0-alpha.0'
   - package-ecosystem: gomod
     target-branch: release-0.19
     directory: /
@@ -89,7 +89,7 @@ updates:
     ignore:
       # 0.19 tracks the 0.31 branch
       - dependency-name: k8s.io/*
-        versions: ">= 0.32.0-alpha.0"
+        versions: '>= 0.32.0-alpha.0'
   - package-ecosystem: gomod
     target-branch: release-0.20
     directory: /
@@ -101,7 +101,7 @@ updates:
     ignore:
       # 0.20 tracks the 0.32 branch
       - dependency-name: k8s.io/*
-        versions: ">= 0.33.0-alpha.0"
+        versions: '>= 0.33.0-alpha.0'
   - package-ecosystem: gomod
     target-branch: release-0.21
     directory: /
@@ -113,7 +113,7 @@ updates:
     ignore:
       # 0.21 tracks the 0.33 branch
       - dependency-name: k8s.io/*
-        versions: ">= 0.34.0-alpha.0"
+        versions: '>= 0.34.0-alpha.0'
   - package-ecosystem: gomod
     directory: /
     schedule:
@@ -132,11 +132,16 @@ updates:
       - dependency-name: k8s.io/api
       - dependency-name: k8s.io/apimachinery
       - dependency-name: k8s.io/client-go
-      - dependency-name: sigs.k8s.io/controller-runtime
-      - dependency-name: sigs.k8s.io/yaml
-      # Managed in shipyard
       - dependency-name: k8s.io/utils
+      - dependency-name: sigs.k8s.io/controller-runtime
+      # Managed in shipyard
+      - dependency-name: sigs.k8s.io/mcs-api
+      # Managed in submariner
+      - dependency-name: golang.org/x/net
   - package-ecosystem: gomod
     directory: /tools
     schedule:
       interval: weekly
+    ignore:
+      # Our own dependencies are handled during releases
+      - dependency-name: github.com/submariner-io/*
