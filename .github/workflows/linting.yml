@@ -53,10 +53,9 @@ jobs:
           -I"image: quay.io/submariner/"
           -Icontroller-gen.kubebuilder.io/version:
           -Ioperators.operatorframework.io.metrics.builder:
-          -I"\"version\": \"${baseref}-"
-          -I"\"version\": \"v${baseref/release-/}."
-          -I"newTag: ${baseref}-"
-          -I"newTag: v${baseref/release-/}."
+          -I"\"?version\"?: \"?.*${baseref/release-/}."
+          -I"newTag: .*${baseref/release-/}."
+          -I"name: submariner.v${baseref/release-/}"
 
   crds:
     name: CRDs up-to-date
