@@ -77,7 +77,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
-    createdAt: "2025-09-30 10:06:13"
+    createdAt: "2025-09-30 14:21:54"
     description: Creates and manages Submariner deployments.
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -696,9 +696,9 @@ spec:
                 - name: RELATED_IMAGE_submariner-lighthouse-coredns
                   value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:70d563a6e6526b9a146a2973210b2abdae09d5acab403fa3f0b465ed5e3c9b11
                 - name: RELATED_IMAGE_submariner-metrics-proxy
-                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:3bad5b4a451da9662fd609e1753c86db81e8214b5af9d79fbd9d2fed0a6cfea3
+                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:77e0da2db6d5bb2831e6c51214e08685c9f7f3b8b1e6ac53b4fd1418644ad6a1
                 - name: RELATED_IMAGE_submariner-nettest
-                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:3bad5b4a451da9662fd609e1753c86db81e8214b5af9d79fbd9d2fed0a6cfea3
+                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:77e0da2db6d5bb2831e6c51214e08685c9f7f3b8b1e6ac53b4fd1418644ad6a1
                 image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:8ea02aba8f9dd901f1f0ccff97ec8d157bebe5a90a6c924affe5e01cf3454e72
                 imagePullPolicy: Always
                 name: submariner-operator
@@ -872,7 +872,7 @@ spec:
     name: submariner-lighthouse-agent
   - image: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:70d563a6e6526b9a146a2973210b2abdae09d5acab403fa3f0b465ed5e3c9b11
     name: submariner-lighthouse-coredns
-  - image: registry.redhat.io/rhacm2/nettest-rhel9@sha256:3bad5b4a451da9662fd609e1753c86db81e8214b5af9d79fbd9d2fed0a6cfea3
+  - image: registry.redhat.io/rhacm2/nettest-rhel9@sha256:77e0da2db6d5bb2831e6c51214e08685c9f7f3b8b1e6ac53b4fd1418644ad6a1
     name: submariner-nettest
   selector:
     matchLabels:
