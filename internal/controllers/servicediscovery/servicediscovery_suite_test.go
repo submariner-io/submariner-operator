@@ -276,6 +276,7 @@ func (t *testDriver) assertCoreDNSDeployment(ctx context.Context) {
 
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", t.serviceDiscovery.Spec.ClusterID))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", t.serviceDiscovery.Spec.ClusterCIDR))
+	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", t.serviceDiscovery.Spec.Namespace))
 }
 
 func assertDNSConfigServers(actual, expected *operatorv1.DNS) {

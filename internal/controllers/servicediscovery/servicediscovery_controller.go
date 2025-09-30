@@ -350,6 +350,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 							Image:           getImagePath(cr, opnames.LighthouseCoreDNSImage, names.LighthouseCoreDNSComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.LighthouseCoreDNSComponent]),
 							Env: httpproxy.AddEnvVars([]corev1.EnvVar{
+								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
 								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Spec.ClusterCIDR},
 							}),
