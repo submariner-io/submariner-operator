@@ -33,12 +33,12 @@
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-metrics-proxy
-    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:3bad5b4a451da9662fd609e1753c86db81e8214b5af9d79fbd9d2fed0a6cfea3
+    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:77e0da2db6d5bb2831e6c51214e08685c9f7f3b8b1e6ac53b4fd1418644ad6a1
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-nettest
-    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:3bad5b4a451da9662fd609e1753c86db81e8214b5af9d79fbd9d2fed0a6cfea3
+    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:77e0da2db6d5bb2831e6c51214e08685c9f7f3b8b1e6ac53b4fd1418644ad6a1
 - op: replace
   path: /spec/template/spec/containers/0/image
   value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:8ea02aba8f9dd901f1f0ccff97ec8d157bebe5a90a6c924affe5e01cf3454e72

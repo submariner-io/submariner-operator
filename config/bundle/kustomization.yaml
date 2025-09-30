@@ -9,7 +9,7 @@ patches:
     namespace: placeholder
     version: v1alpha1
 commonAnnotations:
-  createdAt: "2025-09-30 10:06:13"
+  createdAt: "2025-09-30 14:21:54"
   features.operators.openshift.io/disconnected: "true"
   features.operators.openshift.io/fips-compliant: "true"
   features.operators.openshift.io/proxy-aware: "false"
