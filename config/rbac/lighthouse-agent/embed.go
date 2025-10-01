@@ -34,6 +34,12 @@ var (
 	//go:embed ocp_cluster_role.yaml
 	OCPClusterRole []byte
 
+	//go:embed role_binding.yaml
+	RoleBinding []byte
+
+	//go:embed role.yaml
+	Role []byte
+
 	//go:embed service_account.yaml
 	ServiceAccount []byte
 )

@@ -38,11 +38,15 @@ resources:
   - lighthouse-agent/service_account.yaml
   - lighthouse-agent/cluster_role.yaml
   - lighthouse-agent/cluster_role_binding.yaml
+  - lighthouse-agent/role.yaml
+  - lighthouse-agent/role_binding.yaml
   - lighthouse-agent/ocp_cluster_role.yaml
   - lighthouse-agent/ocp_cluster_role_binding.yaml
   - lighthouse-coredns/service_account.yaml
   - lighthouse-coredns/cluster_role.yaml
   - lighthouse-coredns/cluster_role_binding.yaml
+  - lighthouse-coredns/role.yaml
+  - lighthouse-coredns/role_binding.yaml
   - lighthouse-coredns/ocp_cluster_role.yaml
   - lighthouse-coredns/ocp_cluster_role_binding.yaml
 # - leader_election/leader_election_role.yaml

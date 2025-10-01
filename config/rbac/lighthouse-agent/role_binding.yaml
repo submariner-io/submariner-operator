@@ -1,0 +1,12 @@
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: submariner-lighthouse-agent
+subjects:
+  - kind: ServiceAccount
+    name: submariner-lighthouse-agent
+roleRef:
+  kind: Role
+  name: submariner-lighthouse-agent
+  apiGroup: rbac.authorization.k8s.io
