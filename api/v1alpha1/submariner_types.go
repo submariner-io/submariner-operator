@@ -151,6 +151,12 @@ type SubmarinerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch","urn:alm:descriptor:com.tectonic.ui:advanced"}
 	CeIPSecForceUDPEncaps bool `json:"ceIPSecForceUDPEncaps,omitempty"`
 
+	// Use certificates for authentication when OVN IPsec is enabled.
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="IPsec Use OVN Certificate Authentication Mode"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:booleanSwitch","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	CeIPSecUseOVNCertAuthMode bool `json:"ceIPSecUseOVNCertAuthMode,omitempty"`
+
 	// Enable operator debugging.
 	//nolint:lll // Markers can't be wrapped
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Debug"

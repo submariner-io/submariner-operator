@@ -166,6 +166,12 @@ spec:
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
         - urn:alm:descriptor:com.tectonic.ui:advanced
+      - description: Use certificates for authentication when OVN IPsec is enabled.
+        displayName: IPsec Use OVN Certificate Authentication Mode
+        path: ceIPSecUseOVNCertAuthMode
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+        - urn:alm:descriptor:com.tectonic.ui:advanced
       - description: The cluster CIDR.
         displayName: Cluster CIDR
         path: clusterCIDR

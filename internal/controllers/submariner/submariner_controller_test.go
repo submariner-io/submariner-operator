@@ -199,6 +199,20 @@ func testDaemonSetReconciliation() {
 		})
 	})
 
+	When("CeIPSecUseOVNCertAuthMode is set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.CeIPSecUseOVNCertAuthMode = true
+		})
+
+		Specify("the submariner gateway DaemonSet template should have the CE_IPSEC_AUTHMODE env var set",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
+				Expect(test.EnvMapFrom(daemonSet)).To(HaveKeyWithValue("CE_IPSEC_AUTHMODE", "cert"))
+			})
+	})
+
 	When("the submariner route-agent DaemonSet doesn't exist", func() {
 		It("should create it", func(ctx SpecContext) {
 			t.AssertReconcileSuccess(ctx)

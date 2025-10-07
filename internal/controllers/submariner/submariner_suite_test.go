@@ -202,6 +202,8 @@ func (t *testDriver) assertGatewayDaemonSetEnv(submariner *v1alpha1.Submariner, 
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_GLOBALCIDR", submariner.Spec.GlobalCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", submariner.Spec.Namespace))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_DEBUG", strconv.FormatBool(submariner.Spec.Debug)))
+
+	Expect(envMap).NotTo(HaveKey("CE_IPSEC_AUTHMODE"))
 }
 
 func (t *testDriver) assertGlobalnetDaemonSet(ctx context.Context) {
