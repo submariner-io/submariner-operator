@@ -86,6 +86,10 @@ spec:
                 description: Enable this cluster as a preferred server for data-plane
                   connections.
                 type: boolean
+              ceIPSecUseOVNCertAuthMode:
+                description: Use certificates for authentication when OVN IPsec is
+                  enabled.
+                type: boolean
               clusterCIDR:
                 description: The cluster CIDR.
                 type: string
