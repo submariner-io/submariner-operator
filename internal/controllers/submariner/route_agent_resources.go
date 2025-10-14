@@ -48,8 +48,8 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 	// Default healthCheck Values
 	healthCheckEnabled := true
 	// The values are in seconds
-	healthCheckInterval := uint64(1)
-	healthCheckMaxPacketLossCount := uint64(5)
+	healthCheckInterval := uint(1)
+	healthCheckMaxPacketLossCount := uint(5)
 
 	if cr.Spec.ConnectionHealthCheck != nil {
 		healthCheckEnabled = cr.Spec.ConnectionHealthCheck.Enabled
@@ -152,8 +152,8 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 									},
 								}},
 								{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
-								{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
-								{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
+								{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(uint64(healthCheckInterval), 10)},
+								{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(uint64(healthCheckMaxPacketLossCount), 10)},
 								{Name: "SUBMARINER_INTRAROUTINGDISABLED", Value: strconv.FormatBool(cr.Spec.DisableIntraClusterConnectivity)},
 							}),
 						},

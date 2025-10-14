@@ -365,13 +365,13 @@ type HealthCheckSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Connection Health Check Interval"
 	//nolint:lll // Markers can't be wrapped
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number","urn:alm:descriptor:com.tectonic.ui:fieldDependency:connectionHealthCheck.enabled:true"}
-	IntervalSeconds uint64 `json:"intervalSeconds,omitempty"`
+	IntervalSeconds uint `json:"intervalSeconds,omitempty"`
 
 	// The maximum number of packets lost at which the health checker will mark the connection as down.
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Maximum Packet Loss"
 	//nolint:lll // Markers can't be wrapped
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:number","urn:alm:descriptor:com.tectonic.ui:fieldDependency:connectionHealthCheck.enabled:true"}
-	MaxPacketLossCount uint64 `json:"maxPacketLossCount,omitempty"`
+	MaxPacketLossCount uint `json:"maxPacketLossCount,omitempty"`
 }
 
 type (
