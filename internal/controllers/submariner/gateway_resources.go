@@ -82,8 +82,8 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 	// Default healthCheck Values
 	healthCheckEnabled := true
 	// The values are in seconds
-	healthCheckInterval := uint64(1)
-	healthCheckMaxPacketLossCount := uint64(5)
+	healthCheckInterval := uint(1)
+	healthCheckMaxPacketLossCount := uint(5)
 
 	if cr.Spec.ConnectionHealthCheck != nil {
 		healthCheckEnabled = cr.Spec.ConnectionHealthCheck.Enabled
@@ -221,8 +221,8 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 						{Name: "CE_IPSEC_PSKSECRET", Value: cr.Spec.CeIPSecPSKSecret},
 						{Name: "CE_IPSEC_DEBUG", Value: strconv.FormatBool(cr.Spec.CeIPSecDebug)},
 						{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
-						{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(healthCheckInterval, 10)},
-						{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(healthCheckMaxPacketLossCount, 10)},
+						{Name: "SUBMARINER_HEALTHCHECKINTERVAL", Value: strconv.FormatUint(uint64(healthCheckInterval), 10)},
+						{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(uint64(healthCheckMaxPacketLossCount), 10)},
 						{Name: "SUBMARINER_METRICSPORT", Value: gatewayMetricsServerPort},
 						{Name: "SUBMARINER_HALT_ON_CERT_ERROR", Value: strconv.FormatBool(cr.Spec.HaltOnCertificateError)},
 						{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
