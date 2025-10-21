@@ -21,3 +21,9 @@ ignore:
   - vulnerability: GHSA-557j-xg8c-q2mm
     package:
       name: helm.sh/helm/v3
+  - vulnerability: GHSA-f9f8-9pmf-xv68
+    package:
+      name: helm.sh/helm/v3
+  - vulnerability: GHSA-9h84-qmv7-982p
+    package:
+      name: helm.sh/helm/v3
