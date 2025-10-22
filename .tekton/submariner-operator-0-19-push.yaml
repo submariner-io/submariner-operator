@@ -8,7 +8,9 @@ metadata:
     pipelinesascode.tekton.dev/cancel-in-progress: "false"
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "release-0.19"
+      == "release-0.19" && (".tekton/submariner-operator-0-19-pull-request.yaml".pathChanged()
+      || ".tekton/submariner-operator-0-19-push.yaml".pathChanged() || "package/***".pathChanged()
+      || "config/***".pathChanged() || "internal/***".pathChanged() || "pkg/***".pathChanged())
   creationTimestamp: null
   labels:
     appstudio.openshift.io/application: submariner-0-19
