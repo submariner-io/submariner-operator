@@ -23,3 +23,4 @@ ignore: |
   /config/bundle/kustomization.yaml
   /bundle
   /packagemanifests
+  /.tekton
