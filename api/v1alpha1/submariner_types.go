@@ -221,6 +221,11 @@ type SubmarinerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:hidden","urn:alm:descriptor:com.tectonic.ui:advanced"}
 	ImageOverrides map[string]string `json:"imageOverrides,omitempty"`
 
+	// Annotations to add to LoadBalancer services, allowing custom configuration for any cloud.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Annotations for Load Balancer Service"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced"}
+	LoadBalancerServiceAnnotations map[string]string `json:"loadBalancerServiceAnnotations,omitempty"`
+
 	// The gateway connection health check.
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Connection Health Check"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced"}

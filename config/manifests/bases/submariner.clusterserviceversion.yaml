@@ -273,6 +273,12 @@ spec:
         path: loadBalancerEnabled
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Annotations to add to LoadBalancer services, allowing custom
+          configuration for any cloud.
+        displayName: Annotations for Load Balancer Service
+        path: loadBalancerServiceAnnotations
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:advanced
       - description: The namespace in which to deploy the submariner operator.
         displayName: Namespace
         path: namespace

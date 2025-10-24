@@ -20,6 +20,7 @@ package submariner
 
 import (
 	"context"
+	"maps"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -110,8 +111,14 @@ func newLoadBalancerService(instance *v1alpha1.Submariner, platformTypeOCP strin
 		if instance.Spec.HostedCluster {
 			externalTrafficPolicy = corev1.ServiceExternalTrafficPolicyTypeCluster
 		}
-	default:
-		svcAnnotations = map[string]string{}
+	}
+
+	if len(instance.Spec.LoadBalancerServiceAnnotations) > 0 {
+		if svcAnnotations == nil {
+			svcAnnotations = make(map[string]string, len(instance.Spec.LoadBalancerServiceAnnotations))
+		}
+
+		maps.Copy(svcAnnotations, instance.Spec.LoadBalancerServiceAnnotations)
 	}
 
 	return &corev1.Service{

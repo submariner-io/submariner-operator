@@ -420,6 +420,19 @@ func testLoadBalancerReconciliation() {
 					"service.kubernetes.io/ibm-load-balancer-cloud-provider-enable-features", "nlb"))
 			})
 		})
+
+		Context("and custom annotations are defined", func() {
+			BeforeEach(func() {
+				t.submariner.Spec.LoadBalancerServiceAnnotations = map[string]string{"submariner.io/annotation": "customvalue"}
+			})
+
+			It("should copy them", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				service := t.assertLoadBalancerService(ctx)
+				Expect(service.Annotations).To(HaveKeyWithValue("submariner.io/annotation", "customvalue"))
+			})
+		})
 	})
 }
 

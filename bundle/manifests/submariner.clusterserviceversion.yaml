@@ -35,7 +35,7 @@ metadata:
             "globalnetEnabled": false,
             "namespace": "submariner-operator",
             "repository": "quay.io/submariner",
-            "version": "devel-690336c20274"
+            "version": "devel-6dae8d695d23"
           }
         },
         {
@@ -69,7 +69,7 @@ metadata:
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "devel-690336c20274"
+            "version": "devel-6dae8d695d23"
           }
         }
       ]
@@ -77,7 +77,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
-    createdAt: "2025-10-08 12:55:48"
+    createdAt: "2025-10-24 21:35:51"
     description: Creates and manages Submariner deployments.
     operatorframework.io/suggested-namespace: submariner-operator
     operators.operatorframework.io/builder: operator-sdk-v1.41.1
@@ -344,6 +344,12 @@ spec:
         path: loadBalancerEnabled
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:booleanSwitch
+      - description: Annotations to add to LoadBalancer services, allowing custom
+          configuration for any cloud.
+        displayName: Annotations for Load Balancer Service
+        path: loadBalancerServiceAnnotations
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:advanced
       - description: The namespace in which to deploy the submariner operator.
         displayName: Namespace
         path: namespace
@@ -696,18 +702,18 @@ spec:
                 - name: OPERATOR_NAME
                   value: submariner-operator
                 - name: RELATED_IMAGE_submariner-operator
-                  value: quay.io/submariner/submariner-operator:devel-690336c20274
+                  value: quay.io/submariner/submariner-operator:devel-6dae8d695d23
                 - name: RELATED_IMAGE_submariner-gateway
-                  value: quay.io/submariner/submariner-gateway:devel-690336c20274
+                  value: quay.io/submariner/submariner-gateway:devel-6dae8d695d23
                 - name: RELATED_IMAGE_submariner-route-agent
-                  value: quay.io/submariner/submariner-route-agent:devel-690336c20274
+                  value: quay.io/submariner/submariner-route-agent:devel-6dae8d695d23
                 - name: RELATED_IMAGE_submariner-globalnet
-                  value: quay.io/submariner/submariner-globalnet:devel-690336c20274
+                  value: quay.io/submariner/submariner-globalnet:devel-6dae8d695d23
                 - name: RELATED_IMAGE_lighthouse-agent
-                  value: quay.io/submariner/lighthouse-agent:devel-690336c20274
+                  value: quay.io/submariner/lighthouse-agent:devel-6dae8d695d23
                 - name: RELATED_IMAGE_lighthouse-coredns
-                  value: quay.io/submariner/lighthouse-coredns:devel-690336c20274
-                image: quay.io/submariner/submariner-operator:devel-690336c20274
+                  value: quay.io/submariner/lighthouse-coredns:devel-6dae8d695d23
+                image: quay.io/submariner/submariner-operator:devel-6dae8d695d23
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources:
@@ -860,17 +866,17 @@ spec:
   provider:
     name: submariner.io
   relatedImages:
-  - image: quay.io/submariner/submariner-operator:devel-690336c20274
+  - image: quay.io/submariner/submariner-operator:devel-6dae8d695d23
     name: submariner-operator
-  - image: quay.io/submariner/submariner-gateway:devel-690336c20274
+  - image: quay.io/submariner/submariner-gateway:devel-6dae8d695d23
     name: submariner-gateway
-  - image: quay.io/submariner/submariner-route-agent:devel-690336c20274
+  - image: quay.io/submariner/submariner-route-agent:devel-6dae8d695d23
     name: submariner-route-agent
-  - image: quay.io/submariner/submariner-globalnet:devel-690336c20274
+  - image: quay.io/submariner/submariner-globalnet:devel-6dae8d695d23
     name: submariner-globalnet
-  - image: quay.io/submariner/lighthouse-agent:devel-690336c20274
+  - image: quay.io/submariner/lighthouse-agent:devel-6dae8d695d23
     name: lighthouse-agent
-  - image: quay.io/submariner/lighthouse-coredns:devel-690336c20274
+  - image: quay.io/submariner/lighthouse-coredns:devel-6dae8d695d23
     name: lighthouse-coredns
   selector:
     matchLabels:
