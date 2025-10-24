@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.18.0
+    controller-gen.kubebuilder.io/version: v0.19.0
   name: submariners.submariner.io
 spec:
   group: submariner.io
@@ -114,12 +114,10 @@ spec:
                     type: boolean
                   intervalSeconds:
                     description: The interval at which health check pings are sent.
-                    format: int64
                     type: integer
                   maxPacketLossCount:
                     description: The maximum number of packets lost at which the health
                       checker will mark the connection as down.
-                    format: int64
                     type: integer
                 type: object
               coreDNSCustomConfig:
@@ -164,6 +162,12 @@ spec:
               loadBalancerEnabled:
                 description: Enable automatic Load Balancer in front of the gateways.
                 type: boolean
+              loadBalancerServiceAnnotations:
+                additionalProperties:
+                  type: string
+                description: Annotations to add to LoadBalancer services, allowing
+                  custom configuration for any cloud.
+                type: object
               namespace:
                 description: The namespace in which to deploy the submariner operator.
                 type: string
