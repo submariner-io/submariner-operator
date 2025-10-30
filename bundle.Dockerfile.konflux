@@ -22,7 +22,7 @@ COPY bundle/tests/scorecard /tests/scorecard/
 
 ARG SOURCE_DATE_EPOCH
 
-LABEL cpe="cpe:/a:redhat:acm:2.14::el9"
+LABEL cpe="cpe:/a:redhat:acm:2.13::el9"
 LABEL csv-version="0.20.2"
 LABEL description="submariner-operator-bundle"
 LABEL distribution-scope="public"
@@ -50,4 +50,4 @@ LABEL io.openshift.non-scalable="true"
 LABEL io.openshift.tags="submariner,submariner-operator-bundle,rhel9"
 LABEL io.openshift.wants="submariner-operator"
 
-LABEL org.opencontainers.image.created=$SOURCE_DATE_EPOCH
+LABEL org.opencontainers.image.created="${SOURCE_DATE_EPOCH}"
