@@ -48,7 +48,7 @@ func FindPodCommandParameter(ctx context.Context, client controllerClient.Client
 
 			// Handling the case where the command is in the form of /bin/sh -c exec ....
 			if strings.Contains(arg, " ") {
-				for _, subArg := range strings.Split(arg, " ") {
+				for subArg := range strings.SplitSeq(arg, " ") {
 					if strings.HasPrefix(subArg, parameter) {
 						return strings.SplitN(subArg, "=", 2)[1], nil
 					}
