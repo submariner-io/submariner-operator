@@ -239,6 +239,11 @@ linters:
       - linters:
           - goconst
         path: pkg/embeddedyamls/yamls.go
+      # Specifying "omitempty" for CRD structs (eg ObjectMeta, Status) is the norm so allow it.
+      - linter:
+          - modernize
+        path: api/v1alpha1/
+        text: "Omitempty has no effect on nested struct fields"
     paths:
       - third_party$
       - builtin$
