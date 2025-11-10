@@ -129,6 +129,7 @@ func testSubmarinerCleanup() {
 					Name:      opnames.SubmarinerCrName,
 				},
 				submariner)
+
 			return apierrors.IsNotFound(err)
 		}, uninstall.ComponentReadyTimeout*2).Should(BeTrue(), "Submariner resource not deleted")
 

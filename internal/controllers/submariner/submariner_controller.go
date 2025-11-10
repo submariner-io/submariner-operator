@@ -353,6 +353,7 @@ func (r *Reconciler) setupSecretSyncer(ctx context.Context, instance *submopv1a1
 					Transform: func(from runtime.Object, _ int, _ syncer.Operation) (runtime.Object, bool) {
 						secret := from.(*corev1.Secret)
 						logger.V(level.TRACE).Info("Transforming secret", "secret", secret)
+
 						if saName, ok := secret.ObjectMeta.Annotations[corev1.ServiceAccountNameKey]; ok &&
 							saName == names.ForClusterSA(clusterID) {
 							transformedSecret := &corev1.Secret{
@@ -362,9 +363,12 @@ func (r *Reconciler) setupSecretSyncer(ctx context.Context, instance *submopv1a1
 								Type: corev1.SecretTypeOpaque,
 								Data: secret.Data,
 							}
+
 							logger.V(level.TRACE).Info("Transformed secret", "transformedSecret", transformedSecret)
+
 							return transformedSecret, false
 						}
+
 						return nil, false
 					},
 				})
