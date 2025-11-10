@@ -32,8 +32,8 @@ import (
 )
 
 type Info struct {
-	Enabled bool
 	cidr.Info
+	Enabled bool
 }
 
 type Config struct {
