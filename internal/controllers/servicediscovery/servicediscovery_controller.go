@@ -537,8 +537,7 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 
 				log.Infof("Coredns ConfigMap \"%s/%s\" has lighthouse configuration - updating it", configMapNamespace, configMapName)
 
-				lines := strings.Split(coreFile, "\n")
-				for _, line := range lines {
+				for line := range strings.SplitSeq(coreFile, "\n") {
 					if strings.Contains(line, "lighthouse-start") {
 						skip = true
 					} else if strings.Contains(line, "lighthouse-end") {
