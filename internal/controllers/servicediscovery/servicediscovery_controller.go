@@ -602,6 +602,7 @@ func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Co
 			// microshift uses the coredns image, but the DNS operator and CRDs are off
 			if resource.IsNotFoundErr(err) {
 				err = r.updateLighthouseConfigInConfigMap(ctx, instance, MicroshiftDNSNamespace, MicroshiftDNSConfigMap, clusterIP)
+
 				return errors.Wrapf(err, "error trying to update microshift coredns configmap %q in namespace %q",
 					MicroshiftDNSNamespace, MicroshiftDNSNamespace)
 			}
@@ -623,7 +624,6 @@ func (r *Reconciler) updateLighthouseConfigInOpenshiftDNSOperator(ctx context.Co
 
 				return existing, nil
 			})
-
 		if err == nil {
 			log.Info("Updated Cluster DNS Operator", "DnsOperator.Name", dnsOperator.Name)
 		}

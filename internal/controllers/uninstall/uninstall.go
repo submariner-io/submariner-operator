@@ -262,6 +262,7 @@ func (i *Info) ensureDaemonSetReady(ctx context.Context, key client.ObjectKey) (
 	if daemonSet.Status.ObservedGeneration == 0 || daemonSet.Status.ObservedGeneration < daemonSet.Generation {
 		i.Log.Info("DaemonSet generation not yet observed - requeueing:", "name", daemonSet.Name,
 			"namespace", daemonSet.Namespace, "Generation", daemonSet.Generation, "ObservedGeneration", daemonSet.Status.ObservedGeneration)
+
 		return true, nil
 	}
 
@@ -270,6 +271,7 @@ func (i *Info) ensureDaemonSetReady(ctx context.Context, key client.ObjectKey) (
 	} else if daemonSet.Status.DesiredNumberScheduled != daemonSet.Status.NumberReady {
 		i.Log.Info("DaemonSet not ready yet:", "name", daemonSet.Name, "namespace", daemonSet.Namespace,
 			"DesiredNumberScheduled", daemonSet.Status.DesiredNumberScheduled, "NumberReady", daemonSet.Status.NumberReady)
+
 		return true, nil
 	} else {
 		i.Log.Info("DaemonSet is ready:", "name", daemonSet.Name, "namespace", daemonSet.Namespace)
@@ -294,6 +296,7 @@ func (i *Info) ensureDeploymentReady(ctx context.Context, key client.ObjectKey) 
 	if deployment.Status.AvailableReplicas != replicas {
 		i.Log.Info("Deployment not ready yet:", "name", deployment.Name, "namespace", deployment.Namespace,
 			"AvailableReplicas", deployment.Status.AvailableReplicas, "DesiredReplicas", replicas)
+
 		return true, nil
 	}
 
