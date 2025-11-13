@@ -5,16 +5,16 @@ go 1.24.0
 require (
 	github.com/coreos/go-semver v0.3.1
 	github.com/go-logr/logr v1.4.3
-	github.com/onsi/ginkgo/v2 v2.26.0
+	github.com/onsi/ginkgo/v2 v2.27.2
 	github.com/onsi/gomega v1.38.2
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.86.2
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.86.2
 	github.com/prometheus/client_golang v1.23.2
-	github.com/submariner-io/admiral v0.22.0-m2.0.20251020132010-7ac697e3ece9
-	github.com/submariner-io/shipyard v0.22.0-m2.0.20251020130707-f102743f3cdb
-	github.com/submariner-io/submariner v0.22.0-m2.0.20251020160523-8554d10f7066
+	github.com/submariner-io/admiral v0.22.0-rc0
+	github.com/submariner-io/shipyard v0.22.0-rc0
+	github.com/submariner-io/submariner v0.22.0-rc0
 	golang.org/x/net v0.46.0
 	k8s.io/api v0.34.1
 	k8s.io/apiextensions-apiserver v0.34.1
@@ -73,13 +73,12 @@ require (
 	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/mod v0.28.0 // indirect
 	golang.org/x/oauth2 v0.31.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/term v0.36.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
