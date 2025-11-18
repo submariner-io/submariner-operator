@@ -8,17 +8,17 @@
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-gateway
-    value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:e3bc5226f085e2d61e6e4c8af7632376b5cd308b5450ed42e0ad063853cffaa3
+    value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:86eb47f7db45c51fc334e12a95ccbcc955d36cff55d302e9b835df0198881ed6
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-routeagent
-    value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:e720613ecd1b50894b56d23dbbcdb46bbe9f3c29be8697d0e4e328ff27d11973
+    value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:9d57f677f46236a94987223783d88a61101e8eb44bdb72420c1480fa8f39fd67
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-globalnet
-    value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:619112d4ac5370461017bcf28f870917e5a0d5e1c7ca5049ed97768c87a94735
+    value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:f8223f48bca9166c8be441158c8eeffbcf6f4dff55b3bb47c05edfcc001569e8
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
@@ -33,12 +33,12 @@
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-metrics-proxy
-    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:be3c95e254ce596f04ed5d850a4bd68405839242acd3cf3a89f4786c815de454
+    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:216411b2b30bcbd993553d1e6e801aee2a8d059ff77a2daf34d7f89e2897a87a
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-nettest
-    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:be3c95e254ce596f04ed5d850a4bd68405839242acd3cf3a89f4786c815de454
+    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:216411b2b30bcbd993553d1e6e801aee2a8d059ff77a2daf34d7f89e2897a87a
 - op: replace
   path: /spec/template/spec/containers/0/image
   value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:c18f75ecce7a2ff854ce438110c0441d7ca94c92fd0f6544694921f28d9ae815
