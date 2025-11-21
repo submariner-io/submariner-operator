@@ -22,7 +22,7 @@ COPY bundle/tests/scorecard /tests/scorecard/
 
 ARG SOURCE_DATE_EPOCH
 
-LABEL cpe="cpe:/a:redhat:acm:2.14::el9"
+LABEL cpe="cpe:/a:redhat:acm:2.15::el9"
 LABEL csv-version="0.22.2"
 LABEL description="submariner-operator-bundle"
 LABEL distribution-scope="public"
