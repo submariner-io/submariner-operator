@@ -9,17 +9,17 @@ require (
 	github.com/onsi/gomega v1.38.2
 	github.com/openshift/api v0.0.0-20230714214528-de6ad7979b00
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.86.2
-	github.com/prometheus-operator/prometheus-operator/pkg/client v0.86.2
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.87.0
+	github.com/prometheus-operator/prometheus-operator/pkg/client v0.87.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/submariner-io/admiral v0.22.0-m2.0.20251020132010-7ac697e3ece9
 	github.com/submariner-io/shipyard v0.22.0-m2.0.20251020130707-f102743f3cdb
 	github.com/submariner-io/submariner v0.22.0-m2.0.20251020160523-8554d10f7066
 	golang.org/x/net v0.46.0
-	k8s.io/api v0.34.1
-	k8s.io/apiextensions-apiserver v0.34.1
-	k8s.io/apimachinery v0.34.1
-	k8s.io/client-go v0.34.1
+	k8s.io/api v0.34.2
+	k8s.io/apiextensions-apiserver v0.34.2
+	k8s.io/apimachinery v0.34.2
+	k8s.io/client-go v0.34.2
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
 	sigs.k8s.io/controller-runtime v0.22.3
 	sigs.k8s.io/mcs-api v0.3.0
