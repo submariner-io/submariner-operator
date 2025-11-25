@@ -3,29 +3,42 @@
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-operator
-    value: quay.io/submariner/submariner-operator:$(VERSION)
+    value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:3f71495eab9e2f82f74a21df6143c799bfb8a0038aef4e97b766a498bb535c16
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-gateway
-    value: quay.io/submariner/submariner-gateway:$(VERSION)
+    value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:76d56f35c2cd571c9ed3fb093f567b4e747176f6c1981dbb9004e2acd776cf01
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
-    name: RELATED_IMAGE_submariner-route-agent
-    value: quay.io/submariner/submariner-route-agent:$(VERSION)
+    name: RELATED_IMAGE_submariner-routeagent
+    value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:f796582068397410bfa40f7ed7a8eaf776613422e3a6e25c1f88b65912b949ae
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-globalnet
-    value: quay.io/submariner/submariner-globalnet:$(VERSION)
+    value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:812dd3d43a0b441b069e3c953e9d9c7e91ca637be78896f6841e35617061f922
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
-    name: RELATED_IMAGE_lighthouse-agent
-    value: quay.io/submariner/lighthouse-agent:$(VERSION)
+    name: RELATED_IMAGE_submariner-lighthouse-agent
+    value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:74e77a32ce8f02d777eede95709a2e393cd0a061e5862bb05136eb92994f512d
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
-    name: RELATED_IMAGE_lighthouse-coredns
-    value: quay.io/submariner/lighthouse-coredns:$(VERSION)
+    name: RELATED_IMAGE_submariner-lighthouse-coredns
+    value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:a739dbcd7effcd11742bca577f1a269b9f959a83ea3b5b08a1fe23b2af830612
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: RELATED_IMAGE_submariner-nettest
+    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:99f4ad4ddc75e589bdca2eb4349dcdaf46809749addbaed60ce299d075c7b257
+- op: add
+  path: /spec/template/spec/containers/0/env/-
+  value:
+    name: RELATED_IMAGE_submariner-metrics-proxy
+    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:99f4ad4ddc75e589bdca2eb4349dcdaf46809749addbaed60ce299d075c7b257
+- op: replace
+  path: /spec/template/spec/containers/0/image
+  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:3f71495eab9e2f82f74a21df6143c799bfb8a0038aef4e97b766a498bb535c16
