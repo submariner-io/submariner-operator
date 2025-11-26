@@ -5,19 +5,10 @@ patches:
   target:
     group: operators.coreos.com
     kind: ClusterServiceVersion
-    name: submariner.v0.22.2
+    name: submariner.v0.22.0
     namespace: placeholder
     version: v1alpha1
 commonAnnotations:
-  createdAt: "2025-09-30 14:21:54"
-  features.operators.openshift.io/disconnected: "true"
-  features.operators.openshift.io/fips-compliant: "true"
-  features.operators.openshift.io/proxy-aware: "false"
-  features.operators.openshift.io/tls-profiles: "false"
-  features.operators.openshift.io/token-auth-aws: "false"
-  features.operators.openshift.io/token-auth-azure: "false"
-  features.operators.openshift.io/token-auth-gcp: "false"
-  operators.openshift.io/valid-subscription: '["OpenShift Platform Plus", "Red Hat
-    Advanced Cluster Management for Kubernetes"]'
+  createdAt: "2025-11-26 12:14:04"
 resources:
 - ../../bundle/manifests/submariner.clusterserviceversion.yaml
