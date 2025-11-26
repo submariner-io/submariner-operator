@@ -15,7 +15,7 @@ Bot creates PR with `.tekton/*.yaml` on branch named like `konflux-submariner-bu
 git checkout <bot-branch-name>  # e.g., konflux-submariner-bundle-0-22
 ```
 
-Then run steps 2-9 below.
+Then run steps 2-10 below.
 
 **Reference:**
 
@@ -61,7 +61,44 @@ git commit -s -m "Add Konflux bundle infrastructure for <target-branch>"
 
 - `054ea753` - Add Konflux bundle infrastructure for release-0.22
 
-##### 4. Add Build Args File
+##### 4. Add OLM Feature Annotations
+
+Add required OLM feature annotations to the CSV base template. These annotations are validated by Enterprise Contract.
+
+```bash
+# Check if annotations already exist
+if ! grep -q "features.operators.openshift.io/disconnected" config/manifests/bases/submariner.clusterserviceversion.yaml; then
+  # Add feature annotations after description line
+  sed -i '/description: Creates and manages Submariner deployments./a\    features.operators.openshift.io/disconnected: "true"\n    features.operators.openshift.io/fips-compliant: "true"\n    features.operators.openshift.io/proxy-aware: "false"\n    features.operators.openshift.io/tls-profiles: "false"\n    features.operators.openshift.io/token-auth-aws: "false"\n    features.operators.openshift.io/token-auth-azure: "false"\n    features.operators.openshift.io/token-auth-gcp: "false"' config/manifests/bases/submariner.clusterserviceversion.yaml
+
+  git add config/manifests/bases/submariner.clusterserviceversion.yaml
+  git commit -s -m "Add required OLM feature annotations to CSV base"
+fi
+
+# Add subscription annotation
+if ! grep -q "valid-subscription" config/manifests/bases/submariner.clusterserviceversion.yaml; then
+  # Add after suggested-namespace line
+  sed -i '/operatorframework.io\/suggested-namespace: submariner-operator/a\    operators.openshift.io/valid-subscription: '\''["OpenShift Platform Plus", "Red Hat\n      Advanced Cluster Management for Kubernetes"]'\''' config/manifests/bases/submariner.clusterserviceversion.yaml
+
+  git add config/manifests/bases/submariner.clusterserviceversion.yaml
+  git commit -s -m "Add required subscription annotation to CSV base"
+fi
+```
+
+**Note:** These annotations indicate operator capabilities and requirements:
+- `disconnected`: Works in disconnected/air-gapped environments
+- `fips-compliant`: FIPS 140-2 compliant
+- `proxy-aware`: Supports HTTP/HTTPS proxy configuration
+- `tls-profiles`: Supports OpenShift TLS security profiles
+- `token-auth-*`: Supports cloud provider token authentication
+- `valid-subscription`: Required Red Hat subscriptions for this operator
+
+**Reference:**
+
+- `288af498` - Add required OLM feature annotations to bundle
+- `661673d5` - Add required subscription annotation to bundle
+
+##### 5. Add Build Args File
 
 ```bash
 # Verify build-args-file parameter is set in spec.params
@@ -72,7 +109,7 @@ if ! awk '/^spec:/,/^  pipelineSpec:/' .tekton/submariner-bundle-*-pull-request.
 fi
 ```
 
-##### 5. Enable Hermetic Builds and SBOM
+##### 6. Enable Hermetic Builds and SBOM
 
 ```bash
 # Add hermetic and build-source-image parameters
@@ -83,7 +120,7 @@ git commit -s -m "Enable hermetic builds and SBOM for bundle"
 
 **Note:** Bundles don't use prefetch-input (no go modules to prefetch).
 
-##### 6. Add Multi-Platform Support
+##### 7. Add Multi-Platform Support
 
 ```bash
 sed -i '/value: bundle.Dockerfile.konflux$/a\  - name: build-platforms\n    value:\n    - linux/x86_64\n    - linux/ppc64le\n    - linux/s390x\n    - linux/arm64' .tekton/submariner-bundle-*.yaml
@@ -91,7 +128,7 @@ git add .tekton/submariner-bundle-*.yaml
 git commit -s -m "Add multi-platform build support to bundle"
 ```
 
-##### 7. Add File Change Filters
+##### 8. Add File Change Filters
 
 Manually edit both `.tekton/submariner-bundle-*.yaml` files. Add path filters to the existing CEL expression.
 
@@ -126,7 +163,7 @@ git commit -s -m "Avoid building bundle when updating operator"
 
 **Note:** Bundle filters are different from operator filters - they watch `bundle/`, `config/bundle/`, and `bundle.Dockerfile.konflux`.
 
-##### 8. Update Task References
+##### 9. Update Task References
 
 Update Tekton task references to latest versions. This addresses CI warnings about outdated task definitions.
 
@@ -151,7 +188,7 @@ git commit -s -m "Optimize Tekton configs for enterprise builds"
 
 - `1daae535` - Optimize Tekton configs for enterprise builds
 
-##### 9. Final Verification
+##### 10. Final Verification
 
 After completing all steps:
 
@@ -167,7 +204,7 @@ awk '/^spec:/,/^  pipelineSpec:/' .tekton/submariner-bundle-*-pull-request.yaml 
 # Should show all 5 parameters with values
 ```
 
-Expected: Bot commit + commits from Steps 3-8 (YAMLlint step may not produce a commit if already present), clean working tree.
+Expected: Bot commit + commits from Steps 3-9 (YAMLlint step may not produce a commit if already present), clean working tree.
 
 All spec.params should include:
 - `dockerfile: bundle.Dockerfile.konflux`
