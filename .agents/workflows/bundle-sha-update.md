@@ -140,7 +140,7 @@ make bundle LOCAL_BUILD=1 VERSION=v0.21.2
 ```
 
 **Choose VERSION based on your scenario:**
-- **Version bump**: Use the NEW version you're bumping to (e.g., `VERSION=v0.21.2` when bumping from 0.21.1 to 0.21.2)
+- **New version**: Use the target version (e.g., `VERSION=v0.22.0`)
 - **SHA-only update**: Use the CURRENT version (e.g., `VERSION=v0.21.1` to refresh SHAs without changing bundle version)
 
 To find current version for SHA-only updates:
@@ -163,7 +163,31 @@ grep "^  version:" bundle/manifests/submariner.clusterserviceversion.yaml
 - `d19aa59d` - Update bundle to 0.21.2
 - `4ac94990` - Update bundle for 0.21.1
 
-##### 4. Verify Changes
+##### 4. Update Dockerfile Labels
+
+Update version labels in `bundle.Dockerfile.konflux`. The ReleasePlanAdmission uses `{{ labels.version }}` template
+to read these labels and create registry tags.
+
+```bash
+# Use same version as step 3, WITHOUT the v prefix
+VERSION=0.22.0
+
+sed -i "s/csv-version=\"[^\"]*\"/csv-version=\"$VERSION\"/" bundle.Dockerfile.konflux
+sed -i "s/release=\"v[^\"]*\"/release=\"v$VERSION\"/" bundle.Dockerfile.konflux
+sed -i "s/version=\"v[^\"]*\"/version=\"v$VERSION\"/" bundle.Dockerfile.konflux
+```
+
+Verify the labels were updated:
+
+```bash
+grep -E "LABEL (csv-version|release|version)=\"" bundle.Dockerfile.konflux
+# Expected output (example for 0.22.0):
+# LABEL csv-version="0.22.0"
+# LABEL release="v0.22.0"
+# LABEL version="v0.22.0"
+```
+
+##### 5. Verify Changes
 
 Check that the bundle was updated correctly:
 
@@ -264,8 +288,9 @@ Expected files changed:
 - `config/manager/patches/related-images.deployment.config.yaml` (your manual edits)
 - `bundle/manifests/submariner.clusterserviceversion.yaml` (generated with new SHAs)
 
-**For version bumps** (VERSION differs from current version):
+**For new versions** (VERSION differs from current version):
 - `config/manager/patches/related-images.deployment.config.yaml` (your manual edits)
+- `bundle.Dockerfile.konflux` (step 4 - version labels)
 - `bundle/manifests/submariner.clusterserviceversion.yaml` (generated with new SHAs and version)
 - `config/manifests/kustomization.yaml` (newTag updated to new version)
 - `bundle/metadata/annotations.yaml` (version updated)
@@ -274,16 +299,17 @@ Expected files changed:
 - Possibly: `config/crd/bases/submariner.io_*.yaml`
 - Possibly: `bundle.Dockerfile`
 
-##### 5. Commit Changes
+##### 6. Commit Changes
 
 ```bash
 # Stage all bundle-related changes
 git add config/manager/patches/related-images.deployment.config.yaml
+git add bundle.Dockerfile.konflux 2>/dev/null || true  # Only modified for new versions
 git add bundle/
 git add config/manifests/kustomization.yaml config/bundle/kustomization.yaml 2>/dev/null || true
 
-# Commit - use first option for version bumps, second for SHA-only updates
-# Option 1: Version bump (replace <z-version> with Z-stream, e.g., 0.21.2)
+# Commit - use first option for new versions, second for SHA-only updates
+# Option 1: New version (e.g., 0.22.0)
 git commit -s -m "$(cat <<'EOF'
 Update bundle to <z-version>
 
@@ -306,14 +332,14 @@ Follow commit templates in @.agents/commit-templates.md.
 
 - `d19aa59d` - Update bundle to 0.21.2
 
-##### 6. Create Pull Request (Optional)
+##### 7. Create Pull Request (Optional)
 
 ```bash
 # Push to your fork (replace with your fork remote name)
 git push <your-fork-remote> <current-branch>
 
 # Create PR (replace values in angle brackets)
-# For version bump, use "Update bundle to <z-version>" as title
+# For new version, use "Update bundle to <z-version>" as title
 # For SHA-only update, use "Update bundle SHAs to latest" as title
 gh pr create \
   --title "Update bundle to <z-version>" \
@@ -325,7 +351,7 @@ gh pr create \
 Replace:
 - `<your-fork-remote>`: Your fork's git remote name (usually your GitHub username)
 - `<current-branch>`: Current branch name
-- `<z-version>`: Z-stream version (e.g., `0.21.2`, `0.20.3`) - for version bumps only
+- `<z-version>`: Version (e.g., `0.22.0`, `0.21.2`) - for new versions only
 - `<y-version>`: Branch version (e.g., `0.21`, `0.20`)
 
 ##### Common Issues
