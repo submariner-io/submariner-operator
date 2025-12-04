@@ -23,12 +23,12 @@
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-lighthouse-agent
-    value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:45d64e616c9fb14273f710e347f74eb7a15cf8bfc6e8fd6e1c88de61fa32f826
+    value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:5ee9a8aff7bd566cc4633c5191c40d7370349abdbfe19ac6e0588956f879c0c8
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-lighthouse-coredns
-    value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:82941624d39464b103816e6c9d003d2b4386239ada2bc25b38f574b9735ce81b
+    value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:cd29afa47105e0b49b0f640651c16a73d1190c84fb28aa6feee75d5e89b40b2c
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
