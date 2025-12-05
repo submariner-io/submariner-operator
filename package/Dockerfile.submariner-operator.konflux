@@ -64,7 +64,7 @@ USER submariner
 
 LABEL com.redhat.component="submariner-operator-container" \
       name="rhacm2/submariner-rhel9-operator" \
-      version="${BASE_BRANCH}" \
+      version="v0.20.2" \
       summary="Submariner Operator" \
       description="The Submariner Operator manages the lifecycle of Submariner components." \
       io.k8s.display-name="Submariner Operator" \
