@@ -405,24 +405,8 @@ func newLighthouseCoreDNSService(cr *submarinerv1alpha1.ServiceDiscovery) *corev
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
-				{
-					Name:     "udp",
-					Protocol: "UDP",
-					Port:     53,
-					TargetPort: intstr.IntOrString{
-						Type:   intstr.Int,
-						IntVal: 53,
-					},
-				},
-				{
-					Name:     "tcp",
-					Protocol: "TCP",
-					Port:     53,
-					TargetPort: intstr.IntOrString{
-						Type:   intstr.Int,
-						IntVal: 53,
-					},
-				},
+				{Name: "udp", Protocol: "UDP", Port: 53, TargetPort: intstr.FromInt32(53)},
+				{Name: "tcp", Protocol: "TCP", Port: 53, TargetPort: intstr.FromInt32(53)},
 			},
 			Type: corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{

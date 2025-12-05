@@ -137,14 +137,7 @@ func findClusterIPRangeFromServiceCreation(ctx context.Context, client controlle
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: "1.1.1.1",
-			Ports: []corev1.ServicePort{
-				{
-					Port: 443,
-					TargetPort: intstr.IntOrString{
-						IntVal: 443,
-					},
-				},
-			},
+			Ports:     []corev1.ServicePort{{Port: 443, TargetPort: intstr.FromInt32(443)}},
 		},
 	}
 

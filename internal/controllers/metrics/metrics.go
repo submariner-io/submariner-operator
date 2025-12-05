@@ -83,10 +83,7 @@ func newMetricsService(name, namespace, appKey, appName string, port int32) *cor
 	}
 
 	servicePorts := []corev1.ServicePort{
-		{Port: port, Name: "metrics", Protocol: corev1.ProtocolTCP, TargetPort: intstr.IntOrString{
-			Type:   intstr.Int,
-			IntVal: port,
-		}},
+		{Port: port, Name: "metrics", Protocol: corev1.ProtocolTCP, TargetPort: intstr.FromInt32(port)},
 	}
 
 	service := &corev1.Service{
