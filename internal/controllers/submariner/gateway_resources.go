@@ -185,6 +185,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 						// We need to be able to update /var/lib/alternatives (for iptables)
 						ReadOnlyRootFilesystem: ptr.To(false),
 					},
+					//nolint:gosec // Ignore integer overflow conversion int -> int32
 					Ports: []corev1.ContainerPort{
 						{
 							Name:          encapsPortName,
