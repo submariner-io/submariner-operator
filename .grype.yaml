@@ -10,3 +10,7 @@ ignore:
   - vulnerability: CVE-2021-22570
     package:
       name: google.golang.org/protobuf
+  # This requires bumping to Go 1.25
+  - vulnerability: GHSA-f83f-xpx7-ffpw
+    package:
+      name: github.com/sigstore/fulcio
