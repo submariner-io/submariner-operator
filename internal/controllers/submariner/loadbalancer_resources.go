@@ -135,6 +135,7 @@ func newLoadBalancerService(instance *v1alpha1.Submariner, platformTypeOCP strin
 				appLabel:           names.GatewayComponent,
 				gatewayStatusLabel: string(submv1.HAStatusActive),
 			},
+			//nolint:gosec // Ignore integer overflow conversion int -> int32
 			Ports: []corev1.ServicePort{
 				{
 					Name:       encapsPortName,
