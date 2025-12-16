@@ -3,7 +3,7 @@
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-operator
-    value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:3f71495eab9e2f82f74a21df6143c799bfb8a0038aef4e97b766a498bb535c16
+    value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:203586d39b1698770884a3d60597736dc91b5f25a3eebfb8d767b60904d08884
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
@@ -41,4 +41,4 @@
     value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:81fd7584951aaf7bcb86d4038089675e3ec4da3791b2a49fe73ae55f217f4303
 - op: replace
   path: /spec/template/spec/containers/0/image
-  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:3f71495eab9e2f82f74a21df6143c799bfb8a0038aef4e97b766a498bb535c16
+  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:203586d39b1698770884a3d60597736dc91b5f25a3eebfb8d767b60904d08884
