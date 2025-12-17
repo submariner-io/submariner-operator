@@ -135,17 +135,18 @@ func newLoadBalancerService(instance *v1alpha1.Submariner, platformTypeOCP strin
 				appLabel:           names.GatewayComponent,
 				gatewayStatusLabel: string(submv1.HAStatusActive),
 			},
+			//nolint:gosec // Ignore integer overflow conversion int -> int32
 			Ports: []corev1.ServicePort{
 				{
 					Name:       encapsPortName,
 					Port:       int32(instance.Spec.CeIPSecNATTPort),
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(instance.Spec.CeIPSecNATTPort)},
+					TargetPort: intstr.FromInt32(int32(instance.Spec.CeIPSecNATTPort)),
 					Protocol:   corev1.ProtocolUDP,
 				},
 				{
 					Name:       nattDiscoveryPortName,
 					Port:       int32(port.NATTDiscovery),
-					TargetPort: intstr.IntOrString{Type: intstr.Int, IntVal: int32(port.NATTDiscovery)},
+					TargetPort: intstr.FromInt32(int32(port.NATTDiscovery)),
 					Protocol:   corev1.ProtocolUDP,
 				},
 			},

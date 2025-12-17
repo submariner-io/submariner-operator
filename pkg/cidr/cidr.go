@@ -278,7 +278,7 @@ func GetValidAllocationSize(cidrRange string, allocationSize uint) (uint, error)
 	}
 
 	ones, totalbits := network.Mask.Size()
-	availableSize := uint(1) << uint(totalbits-ones)
+	availableSize := uint(1) << uint(totalbits-ones) //nolint:gosec // Ignore overflow conversion int -> uint
 	userClusterSize := allocationSize
 	allocationSize = nextPowerOf2(allocationSize)
 
