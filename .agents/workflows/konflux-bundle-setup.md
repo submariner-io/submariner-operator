@@ -218,6 +218,8 @@ git status
 # Verify spec.params has all required parameters
 awk '/^spec:/,/^  pipelineSpec:/' .tekton/submariner-bundle-*-pull-request.yaml | grep -E "name: (dockerfile|build-args-file|build-platforms|hermetic|build-source-image)"
 # Should show all 5 parameters with values
+
+make yamllint
 ```
 
 Expected: Bot commit + commits from Steps 3 and 5-10 (Step 4 is verification only; Steps 5 and 6 may not produce commits if already configured), clean working tree.

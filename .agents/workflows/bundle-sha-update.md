@@ -278,6 +278,8 @@ else
   echo "DO NOT COMMIT. Review and fix SHA mismatches above."
   exit 1
 fi
+
+make yamllint
 ```
 
 **Note:** This verification catches typos, wrong component mappings, and missed updates. If verification fails, review step 2 and fix the mismatches before committing.
