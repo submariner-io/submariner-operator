@@ -1,16 +1,15 @@
----
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 patches:
-  - path: patches/submariner.csv.config.yaml
-    target:
-      group: operators.coreos.com
-      kind: ClusterServiceVersion
-      name: submariner.v${VERSION}
-      namespace: placeholder
-      version: v1alpha1
+- path: patches/submariner.csv.config.yaml
+  target:
+    group: operators.coreos.com
+    kind: ClusterServiceVersion
+    name: submariner.v0.19.4
+    namespace: placeholder
+    version: v1alpha1
 commonAnnotations:
-  createdAt: null
+  createdAt: "2026-01-06 16:12:19"
   features.operators.openshift.io/disconnected: "true"
   features.operators.openshift.io/fips-compliant: "true"
   features.operators.openshift.io/proxy-aware: "false"
@@ -18,5 +17,6 @@ commonAnnotations:
   features.operators.openshift.io/token-auth-aws: "false"
   features.operators.openshift.io/token-auth-azure: "false"
   features.operators.openshift.io/token-auth-gcp: "false"
-  operators.openshift.io/valid-subscription: '["OpenShift Platform Plus", "Red Hat
-    Advanced Cluster Management for Kubernetes"]'
+  operators.openshift.io/valid-subscription: '["OpenShift Platform Plus", "Red Hat Advanced Cluster Management for Kubernetes"]'
+resources:
+- ../../bundle/manifests/submariner.clusterserviceversion.yaml
