@@ -61,6 +61,18 @@ git commit -s -m "Add Konflux bundle infrastructure for <target-branch>"
 
 - `054ea753` - Add Konflux bundle infrastructure for release-0.22
 
+##### 3a. Verify Images Are Pinned
+
+EC validation requires pinned image references with SHA digests. Check if the source branch has pinned images:
+
+```bash
+grep -q "@sha256:" config/manager/patches/related-images.deployment.config.yaml && \
+  echo "Images pinned - continue to step 4" || \
+  echo "WARNING: Images unpinned - follow bundle-sha-update.md first"
+```
+
+If unpinned, follow @.agents/workflows/bundle-sha-update.md to update SHAs from the Konflux snapshot before proceeding. Return here after completing that workflow.
+
 ##### 4. Add OLM Feature Annotations
 
 Add required OLM feature annotations to the CSV base template. These annotations are validated by Enterprise Contract.
