@@ -1,7 +1,6 @@
 .dapper
 bin/
 build/_output/
-bundle/
 bundle.Dockerfile
 dist/
 deploy/crds
