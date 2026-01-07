@@ -673,7 +673,7 @@ spec:
                 - name: OPERATOR_NAME
                   value: submariner-operator
                 - name: RELATED_IMAGE_submariner-operator
-                  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:dd83b4947e3cb5317f7115dbdd4f0c9693c3e845db67a527e32fef416e16d439
+                  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:94c846ff6f279389d6995e44d0def5947875f39de8354417a1ed3a53e3fae570
                 - name: RELATED_IMAGE_submariner-gateway
                   value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:956a7389a345ab616018b640b3ed48afa5df63f5f25578149e0bad0d6280ce66
                 - name: RELATED_IMAGE_submariner-routeagent
@@ -688,7 +688,7 @@ spec:
                   value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:2e42a7de56fffb837395ce6ba5ba39a213e3a81600d89c1f61dd5c52fac7dae4
                 - name: RELATED_IMAGE_submariner-metrics-proxy
                   value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:2e42a7de56fffb837395ce6ba5ba39a213e3a81600d89c1f61dd5c52fac7dae4
-                image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:dd83b4947e3cb5317f7115dbdd4f0c9693c3e845db67a527e32fef416e16d439
+                image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:94c846ff6f279389d6995e44d0def5947875f39de8354417a1ed3a53e3fae570
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources:
@@ -832,7 +832,7 @@ spec:
   provider:
     name: submariner.io
   relatedImages:
-  - image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:dd83b4947e3cb5317f7115dbdd4f0c9693c3e845db67a527e32fef416e16d439
+  - image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:94c846ff6f279389d6995e44d0def5947875f39de8354417a1ed3a53e3fae570
     name: submariner-operator
   - image: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:956a7389a345ab616018b640b3ed48afa5df63f5f25578149e0bad0d6280ce66
     name: submariner-gateway
