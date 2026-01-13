@@ -82,7 +82,7 @@ func discoverGenericServiceCIDRs(ctx context.Context, client controllerClient.Cl
 
 	err := client.List(ctx, serviceCIDRList, controllerClient.InNamespace(""))
 	if err == nil && len(serviceCIDRList.Items) > 0 {
-		var serviceCIDRs []string
+		serviceCIDRs := make([]string, 0, len(serviceCIDRList.Items))
 
 		for i := range serviceCIDRList.Items {
 			serviceCIDRs = append(serviceCIDRs, serviceCIDRList.Items[i].Spec.CIDRs...)

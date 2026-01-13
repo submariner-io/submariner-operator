@@ -152,7 +152,7 @@ func getCIDRs(ctx context.Context, operatorClient controllerClient.Client, opera
 }
 
 func splitCommaSeparatedCIDRs(cidrs []string) []string {
-	var newCIDRs []string
+	newCIDRs := make([]string, 0, len(cidrs))
 	for _, c := range cidrs {
 		newCIDRs = append(newCIDRs, strings.Split(c, ",")...)
 	}
