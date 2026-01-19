@@ -15,7 +15,7 @@ Bot creates PR with `.tekton/*.yaml` on branch named like `konflux-submariner-bu
 git checkout <bot-branch-name>  # e.g., konflux-submariner-bundle-0-22
 ```
 
-Then run steps 2-10 below.
+Then run steps 2-11 below.
 
 **Reference:**
 
@@ -61,7 +61,23 @@ git commit -s -m "Add Konflux bundle infrastructure for <target-branch>"
 
 - `054ea753` - Add Konflux bundle infrastructure for release-0.22
 
-##### 4. Add OLM Feature Annotations
+##### 4. Verify Images Are Pinned
+
+EC validation requires `registry.redhat.io/rhacm2/...@sha256:...` format:
+
+```bash
+grep -q "registry.redhat.io.*@sha256:" config/manager/patches/related-images.deployment.config.yaml && \
+  echo "Images pinned - continue to step 5" || \
+  echo "WARNING: Images need transformation"
+```
+
+If the check fails, the file needs transformation. It may have different variable names, `quay.io/...` URLs, and different components.
+
+See @.agents/workflows/bundle-sha-update.md:
+- Step 1: Correct variable names (component mapping) and Konflux snapshot SHAs
+- Step 2: Target format (`registry.redhat.io/rhacm2/...@sha256:...`)
+
+##### 5. Add OLM Feature Annotations
 
 Add required OLM feature annotations to the CSV base template. These annotations are validated by Enterprise Contract.
 
@@ -98,7 +114,7 @@ fi
 - `288af498` - Add required OLM feature annotations to bundle
 - `661673d5` - Add required subscription annotation to bundle
 
-##### 5. Add Build Args File
+##### 6. Add Build Args File
 
 ```bash
 # Verify build-args-file parameter is set in spec.params
@@ -109,7 +125,7 @@ if ! awk '/^spec:/,/^  pipelineSpec:/' .tekton/submariner-bundle-*-pull-request.
 fi
 ```
 
-##### 6. Enable Hermetic Builds and SBOM
+##### 7. Enable Hermetic Builds and SBOM
 
 ```bash
 # Add hermetic and build-source-image parameters
@@ -120,7 +136,7 @@ git commit -s -m "Enable hermetic builds and SBOM for bundle"
 
 **Note:** Bundles don't use prefetch-input (no go modules to prefetch).
 
-##### 7. Add Multi-Platform Support
+##### 8. Add Multi-Platform Support
 
 ```bash
 sed -i '/value: bundle.Dockerfile.konflux$/a\  - name: build-platforms\n    value:\n    - linux/x86_64\n    - linux/ppc64le\n    - linux/s390x\n    - linux/arm64' .tekton/submariner-bundle-*.yaml
@@ -128,7 +144,7 @@ git add .tekton/submariner-bundle-*.yaml
 git commit -s -m "Add multi-platform build support to bundle"
 ```
 
-##### 8. Add File Change Filters
+##### 9. Add File Change Filters
 
 Manually edit both `.tekton/submariner-bundle-*.yaml` files. Add path filters to the existing CEL expression.
 
@@ -163,7 +179,7 @@ git commit -s -m "Avoid building bundle when updating operator"
 
 **Note:** Bundle filters are different from operator filters - they watch `bundle/`, `config/bundle/`, and `bundle.Dockerfile.konflux`.
 
-##### 9. Update Task References
+##### 10. Update Task References
 
 Update Tekton task references to latest versions. This addresses CI warnings about outdated task definitions.
 
@@ -188,7 +204,7 @@ git commit -s -m "Optimize Tekton configs for enterprise builds"
 
 - `1daae535` - Optimize Tekton configs for enterprise builds
 
-##### 10. Final Verification
+##### 11. Final Verification
 
 After completing all steps:
 
@@ -204,7 +220,7 @@ awk '/^spec:/,/^  pipelineSpec:/' .tekton/submariner-bundle-*-pull-request.yaml 
 # Should show all 5 parameters with values
 ```
 
-Expected: Bot commit + commits from Steps 3-9 (YAMLlint step may not produce a commit if already present), clean working tree.
+Expected: Bot commit + commits from Steps 3 and 5-10 (Step 4 is verification only; Steps 5 and 6 may not produce commits if already configured), clean working tree.
 
 All spec.params should include:
 - `dockerfile: bundle.Dockerfile.konflux`
