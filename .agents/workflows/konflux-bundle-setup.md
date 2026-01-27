@@ -2,7 +2,7 @@
 
 **Prerequisites:**
 
-- Configuration added in konflux-ci/build-definitions repo
+- Configuration added in [konflux-release-data](https://gitlab.cee.redhat.com/releng/konflux-release-data) repo (VPN required, see `tenants-config/cluster/kflux-prd-rh02/tenants/submariner-tenant/CLAUDE.md`)
 - Existing Konflux-configured bundle branch (to copy files from)
 
 **Note:** `release-0.20` is the example source branch (any Konflux-enabled bundle branch works). For your target branch (e.g., `release-0.22`), replace `<target-branch>` in commands below.
