@@ -71,6 +71,7 @@ endif
 FROM_VERSION ?= $(shell (git tag -l --sort=-v:refname v[0-9]*\.[0-9]*\.[0-9]* | awk '/^$(BUNDLE_VERSION)$$/ { seen = 1; next } seen { print; exit } END { exit !seen }' || echo v0.0.0) \
           | head -n1 | cut -d'-' -f1 | cut -c2-)
 SHORT_VERSION := $(shell echo ${BUNDLE_VERSION} | cut -d'.' -f1,2)
+OPERATOR_IMG := $(shell grep -A2 'RELATED_IMAGE_submariner-operator' config/manager/patches/related-images.deployment.config.yaml 2>/dev/null | grep 'value:' | awk '{print $$2}')
 CHANNEL ?= stable-$(SHORT_VERSION)
 CHANNELS ?= $(CHANNEL)
 DEFAULT_CHANNEL ?= $(CHANNEL)
@@ -235,6 +236,7 @@ bundle: $(KUSTOMIZE) $(OPERATOR_SDK) kustomization
 	| $(OPERATOR_SDK) generate bundle -q --overwrite --version $(BUNDLE_VERSION) $(BUNDLE_METADATA_OPTS))
 	(cd config/bundle && $(KUSTOMIZE) edit add resource ../../bundle/manifests/submariner.clusterserviceversion.yaml)
 	$(KUSTOMIZE) build config/bundle/ --load-restrictor=LoadRestrictionsNone --output bundle/manifests/submariner.clusterserviceversion.yaml
+	sed -i -e 's|$$(SUBMARINER_OPERATOR_IMAGE)|$(OPERATOR_IMG)|g' bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(SHORT_VERSION)/$(SHORT_VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	sed -i -e 's/$$(VERSION)/$(VERSION)/g' bundle/manifests/submariner.clusterserviceversion.yaml
 	# The operator-sdk gets bugs when two RELATED_IMAGE_ variables point to the same image, so fix the empty name for the nettest image
