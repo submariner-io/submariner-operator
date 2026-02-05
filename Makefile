@@ -77,7 +77,7 @@ FROM_VERSION ?= $(shell (git tag -l --sort=-v:refname v[0-9]*\.[0-9]*\.[0-9]* | 
           | head -n1 | cut -d'-' -f1 | cut -c2-)
 SHORT_VERSION := $(shell echo ${BUNDLE_VERSION} | cut -d'.' -f1,2)
 OPERATOR_IMG := $(shell grep -A2 'RELATED_IMAGE_submariner-operator' config/manager/patches/related-images.deployment.config.yaml 2>/dev/null | grep 'value:' | awk '{print $$2}')
-CHANNEL ?= alpha-$(SHORT_VERSION)
+CHANNEL ?= stable-$(SHORT_VERSION)
 CHANNELS ?= $(CHANNEL)
 DEFAULT_CHANNEL ?= $(CHANNEL)
 ifneq ($(origin CHANNELS), undefined)
