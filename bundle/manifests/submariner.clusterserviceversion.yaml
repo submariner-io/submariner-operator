@@ -35,7 +35,7 @@ metadata:
             "globalnetEnabled": false,
             "namespace": "submariner-operator",
             "repository": "quay.io/submariner",
-            "version": "v0.19.4"
+            "version": "release-0.19-47a20cd423c1"
           }
         },
         {
@@ -69,15 +69,15 @@ metadata:
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "v0.19.4"
+            "version": "release-0.19-47a20cd423c1"
           }
         }
       ]
     capabilities: Basic Install
     categories: Networking
     certified: "false"
-    containerImage: $(SUBMARINER_OPERATOR_IMAGE)
-    createdAt: "2026-01-06 16:39:21"
+    containerImage: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:dd83b4947e3cb5317f7115dbdd4f0c9693c3e845db67a527e32fef416e16d439
+    createdAt: "2026-02-05 12:13:50"
     description: Creates and manages Submariner deployments.
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
