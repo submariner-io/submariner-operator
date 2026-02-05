@@ -49,6 +49,7 @@ jobs:
           git add -A &&
           git diff --staged --exit-code
           -IcreatedAt:
+          -IcontainerImage:
           -I"value: quay.io/submariner/"
           -I"image: quay.io/submariner/"
           -Icontroller-gen.kubebuilder.io/version:
