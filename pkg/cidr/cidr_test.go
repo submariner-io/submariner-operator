@@ -40,7 +40,6 @@ var _ = Describe("Allocate", func() {
 	When("no CIDRs are already allocated", func() {
 		It("should allocate the next CIDR in sequence", func() {
 			// First
-
 			result, err := cidr.Allocate(&cidrInfo)
 			Expect(err).To(Succeed())
 			Expect(result).To(Equal("169.254.0.0/19"))
