@@ -35,7 +35,7 @@ metadata:
             "globalnetEnabled": false,
             "namespace": "submariner-operator",
             "repository": "quay.io/submariner",
-            "version": "devel-a2f4cbe817ec"
+            "version": "devel-30c9e48f194d"
           }
         },
         {
@@ -69,22 +69,22 @@ metadata:
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "devel-a2f4cbe817ec"
+            "version": "devel-30c9e48f194d"
           }
         }
       ]
     capabilities: Basic Install
     categories: Networking
     certified: "false"
-    containerImage: quay.io/submariner/submariner-operator:devel-a2f4cbe817ec
-    createdAt: "2026-02-05 12:23:53"
+    containerImage: quay.io/submariner/submariner-operator:devel-30c9e48f194d
+    createdAt: "2026-02-12 10:10:20"
     description: Creates and manages Submariner deployments.
     operatorframework.io/suggested-namespace: submariner-operator
     operators.operatorframework.io/builder: operator-sdk-v1.41.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/submariner-io/submariner-operator
     support: Submariner
-  name: submariner.v0.23.0
+  name: submariner.v0.24.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -491,7 +491,7 @@ spec:
     2. Apply the broker RBAC definitions:
 
         ```shell
-        git clone --depth 1 --single-branch --branch release-0.23 https://github.com/submariner-io/submariner-operator
+        git clone --depth 1 --single-branch --branch release-0.24 https://github.com/submariner-io/submariner-operator
         kubectl apply -k submariner-operator/config/broker -n submariner-k8s-broker
         ```
 
@@ -702,18 +702,18 @@ spec:
                 - name: OPERATOR_NAME
                   value: submariner-operator
                 - name: RELATED_IMAGE_submariner-operator
-                  value: quay.io/submariner/submariner-operator:devel-a2f4cbe817ec
+                  value: quay.io/submariner/submariner-operator:devel-30c9e48f194d
                 - name: RELATED_IMAGE_submariner-gateway
-                  value: quay.io/submariner/submariner-gateway:devel-a2f4cbe817ec
+                  value: quay.io/submariner/submariner-gateway:devel-30c9e48f194d
                 - name: RELATED_IMAGE_submariner-route-agent
-                  value: quay.io/submariner/submariner-route-agent:devel-a2f4cbe817ec
+                  value: quay.io/submariner/submariner-route-agent:devel-30c9e48f194d
                 - name: RELATED_IMAGE_submariner-globalnet
-                  value: quay.io/submariner/submariner-globalnet:devel-a2f4cbe817ec
+                  value: quay.io/submariner/submariner-globalnet:devel-30c9e48f194d
                 - name: RELATED_IMAGE_lighthouse-agent
-                  value: quay.io/submariner/lighthouse-agent:devel-a2f4cbe817ec
+                  value: quay.io/submariner/lighthouse-agent:devel-30c9e48f194d
                 - name: RELATED_IMAGE_lighthouse-coredns
-                  value: quay.io/submariner/lighthouse-coredns:devel-a2f4cbe817ec
-                image: quay.io/submariner/submariner-operator:devel-a2f4cbe817ec
+                  value: quay.io/submariner/lighthouse-coredns:devel-30c9e48f194d
+                image: quay.io/submariner/submariner-operator:devel-30c9e48f194d
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources:
@@ -866,19 +866,19 @@ spec:
   provider:
     name: submariner.io
   relatedImages:
-  - image: quay.io/submariner/submariner-operator:devel-a2f4cbe817ec
+  - image: quay.io/submariner/submariner-operator:devel-30c9e48f194d
     name: submariner-operator
-  - image: quay.io/submariner/submariner-gateway:devel-a2f4cbe817ec
+  - image: quay.io/submariner/submariner-gateway:devel-30c9e48f194d
     name: submariner-gateway
-  - image: quay.io/submariner/submariner-route-agent:devel-a2f4cbe817ec
+  - image: quay.io/submariner/submariner-route-agent:devel-30c9e48f194d
     name: submariner-route-agent
-  - image: quay.io/submariner/submariner-globalnet:devel-a2f4cbe817ec
+  - image: quay.io/submariner/submariner-globalnet:devel-30c9e48f194d
     name: submariner-globalnet
-  - image: quay.io/submariner/lighthouse-agent:devel-a2f4cbe817ec
+  - image: quay.io/submariner/lighthouse-agent:devel-30c9e48f194d
     name: lighthouse-agent
-  - image: quay.io/submariner/lighthouse-coredns:devel-a2f4cbe817ec
+  - image: quay.io/submariner/lighthouse-coredns:devel-30c9e48f194d
     name: lighthouse-coredns
   selector:
     matchLabels:
       control-plane: submariner-operator
-  version: 0.23.0
+  version: 0.24.0
