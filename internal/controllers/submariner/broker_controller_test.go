@@ -73,6 +73,7 @@ var _ = Describe("Broker controller", func() {
 
 	BeforeEach(func() {
 		t.BeforeEach()
+
 		brokerObject = &v1alpha1.Broker{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      brokerName,
