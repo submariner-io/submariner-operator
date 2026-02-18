@@ -2,9 +2,8 @@
   "extraKnownMarketplaces": {
     "submariner": {
       "source": {
-        "source": "github",
-        "repo": "submariner-io/shipyard",
-        "ref": "devel"
+        "source": "git",
+        "url": "https://github.com/submariner-io/shipyard.git"
       }
     }
   },
