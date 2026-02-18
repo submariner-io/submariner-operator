@@ -253,6 +253,7 @@ func newSubmariner() *v1alpha1.Submariner {
 			Name:      submarinerName,
 			Namespace: submarinerNamespace,
 		},
+		//nolint:gosec // Ignore warning for hardcoded credentials
 		Spec: v1alpha1.SubmarinerSpec{
 			Repository:               "quay.io/submariner",
 			Version:                  "0.12.0",
