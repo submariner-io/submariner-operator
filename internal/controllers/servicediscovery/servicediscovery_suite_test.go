@@ -203,6 +203,7 @@ func newServiceDiscovery() *v1alpha1.ServiceDiscovery {
 			Name:      serviceDiscoveryName,
 			Namespace: submarinerNamespace,
 		},
+		//nolint:gosec // Ignore warning for hardcoded credentials
 		Spec: v1alpha1.ServiceDiscoverySpec{
 			GlobalnetEnabled:         false,
 			Repository:               "quay.io/submariner",
