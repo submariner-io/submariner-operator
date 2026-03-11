@@ -26,6 +26,8 @@ spec:
     value: quay.io/redhat-user-workloads/submariner-tenant/submariner-bundle-0-23:{{revision}}
   - name: dockerfile
     value: bundle.Dockerfile.konflux
+  - name: build-args-file
+    value: .tekton/konflux.args
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
