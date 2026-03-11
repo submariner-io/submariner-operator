@@ -1,0 +1,53 @@
+FROM scratch
+
+# Core bundle labels.
+LABEL operators.operatorframework.io.bundle.mediatype.v1=registry+v1
+LABEL operators.operatorframework.io.bundle.manifests.v1=manifests/
+LABEL operators.operatorframework.io.bundle.metadata.v1=metadata/
+LABEL operators.operatorframework.io.bundle.package.v1=submariner
+LABEL operators.operatorframework.io.bundle.channels.v1=stable-0.23
+LABEL operators.operatorframework.io.bundle.channel.default.v1=stable-0.23
+LABEL operators.operatorframework.io.metrics.builder=operator-sdk-v1.40.0
+LABEL operators.operatorframework.io.metrics.mediatype.v1=metrics+v1
+LABEL operators.operatorframework.io.metrics.project_layout=go.kubebuilder.io/v4
+
+# Labels for testing.
+LABEL operators.operatorframework.io.test.mediatype.v1=scorecard+v1
+LABEL operators.operatorframework.io.test.config.v1=tests/scorecard/
+
+# Copy files to locations specified by labels.
+COPY bundle/manifests /manifests/
+COPY bundle/metadata /metadata/
+COPY bundle/tests/scorecard /tests/scorecard/
+
+ARG SOURCE_DATE_EPOCH
+
+LABEL cpe="cpe:/a:redhat:acm:2.16::el9"
+LABEL csv-version="0.23.1"
+LABEL description="submariner-operator-bundle"
+LABEL distribution-scope="public"
+LABEL maintainer="['multi-cluster-networking@redhat.com']"
+LABEL name="rhacm2/submariner-operator-bundle"
+LABEL release="v0.23.1"
+LABEL summary="submariner-operator-bundle"
+LABEL url="https://github.com/submariner-io/submariner-operator"
+LABEL vendor="Red Hat, Inc."
+LABEL version="v0.23.1"
+
+LABEL com.github.commit="25ca7d600c464d14bd60d0e92b414e5824c8a5ee"
+LABEL com.github.url="https://github.com/submariner-io/submariner-operator.git"
+
+LABEL com.redhat.component="submariner-operator-bundle-container"
+LABEL com.redhat.delivery.backport=false
+LABEL com.redhat.delivery.operator.bundle=true
+LABEL com.redhat.openshift.versions=v4.15-v4.19
+
+LABEL io.k8s.description="submariner-operator-bundle"
+LABEL io.k8s.display-name="submariner-operator-bundle"
+
+LABEL io.openshift.expose-services=""
+LABEL io.openshift.non-scalable="true"
+LABEL io.openshift.tags="submariner,submariner-operator-bundle,rhel9"
+LABEL io.openshift.wants="submariner-operator"
+
+LABEL org.opencontainers.image.created=$SOURCE_DATE_EPOCH
