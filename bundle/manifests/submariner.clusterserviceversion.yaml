@@ -76,7 +76,7 @@ metadata:
     capabilities: Basic Install
     categories: Networking
     certified: "false"
-    containerImage: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:e9a8c2ea449ecd2b625c5097920c06848362dcf8af8f494bb66f42de5af267be
+    containerImage: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:0a908e335187652b61a06136703c5f369e1abecba683890028b974fd85f3c216
     createdAt: "2026-03-12 16:05:31"
     description: Creates and manages Submariner deployments.
     features.operators.openshift.io/disconnected: "true"
@@ -711,7 +711,7 @@ spec:
                 - name: OPERATOR_NAME
                   value: submariner-operator
                 - name: RELATED_IMAGE_submariner-operator
-                  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:e9a8c2ea449ecd2b625c5097920c06848362dcf8af8f494bb66f42de5af267be
+                  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:0a908e335187652b61a06136703c5f369e1abecba683890028b974fd85f3c216
                 - name: RELATED_IMAGE_submariner-gateway
                   value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:d53a4ac8e258a38c177f9228594e47e3bf41b637b48ea02a3e7a159ee615e511
                 - name: RELATED_IMAGE_submariner-routeagent
@@ -726,7 +726,7 @@ spec:
                   value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:e33f2c236d4c474aefb3a62287d67758b127602d6f73b96802f559f4e7f5a92f
                 - name: RELATED_IMAGE_submariner-metrics-proxy
                   value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:e33f2c236d4c474aefb3a62287d67758b127602d6f73b96802f559f4e7f5a92f
-                image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:e9a8c2ea449ecd2b625c5097920c06848362dcf8af8f494bb66f42de5af267be
+                image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:0a908e335187652b61a06136703c5f369e1abecba683890028b974fd85f3c216
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources:
@@ -879,7 +879,7 @@ spec:
   provider:
     name: submariner.io
   relatedImages:
-  - image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:e9a8c2ea449ecd2b625c5097920c06848362dcf8af8f494bb66f42de5af267be
+  - image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:0a908e335187652b61a06136703c5f369e1abecba683890028b974fd85f3c216
     name: submariner-operator
   - image: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:d53a4ac8e258a38c177f9228594e47e3bf41b637b48ea02a3e7a159ee615e511
     name: submariner-gateway
