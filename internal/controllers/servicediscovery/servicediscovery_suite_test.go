@@ -263,21 +263,29 @@ func (t *testDriver) testServiceDiscoveryDeleted() {
 	})
 }
 
-func (t *testDriver) assertCoreDNSDeployment(ctx context.Context) {
-	d := t.AssertDeployment(ctx, names.LighthouseCoreDNSComponent)
+func (t *testDriver) assertDeployment(ctx context.Context, deploymentName, imageName string, expectedReplicas int) {
+	d := t.AssertDeployment(ctx, deploymentName)
 
 	Expect(d.Spec.Replicas).ToNot(BeNil())
-	Expect(int(*d.Spec.Replicas)).To(Equal(2))
+	Expect(int(*d.Spec.Replicas)).To(Equal(expectedReplicas))
 
 	Expect(d.Spec.Template.Spec.Containers).To(HaveLen(1))
 	Expect(d.Spec.Template.Spec.Containers[0].Image).To(Equal(fmt.Sprintf("%s/%s:%s",
-		t.serviceDiscovery.Spec.Repository, opnames.LighthouseCoreDNSImage, t.serviceDiscovery.Spec.Version)))
+		t.serviceDiscovery.Spec.Repository, imageName, t.serviceDiscovery.Spec.Version)))
 
 	envMap := test.EnvMapFromVars(d.Spec.Template.Spec.Containers[0].Env)
 
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERID", t.serviceDiscovery.Spec.ClusterID))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_CLUSTERCIDR", t.serviceDiscovery.Spec.ClusterCIDR))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_NAMESPACE", t.serviceDiscovery.Spec.Namespace))
+}
+
+func (t *testDriver) assertCoreDNSDeployment(ctx context.Context) {
+	t.assertDeployment(ctx, names.LighthouseCoreDNSComponent, opnames.LighthouseCoreDNSImage, 2)
+}
+
+func (t *testDriver) assertAgentDeployment(ctx context.Context) {
+	t.assertDeployment(ctx, names.ServiceDiscoveryComponent, opnames.ServiceDiscoveryImage, 1)
 }
 
 func assertDNSConfigServers(actual, expected *operatorv1.DNS) {
