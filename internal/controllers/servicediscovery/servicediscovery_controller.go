@@ -252,6 +252,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 							Env: httpproxy.AddEnvVars([]corev1.EnvVar{
 								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
 								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
+								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Spec.ClusterCIDR},
 								{Name: "SUBMARINER_CLUSTERSET_IP_CIDR", Value: cr.Spec.ClustersetIPCIDR},
 								{Name: "SUBMARINER_CLUSTERSET_IP_ENABLED", Value: strconv.FormatBool(cr.Spec.ClustersetIPEnabled)},
 								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},

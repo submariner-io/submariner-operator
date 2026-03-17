@@ -47,6 +47,18 @@ func testReconciliation() {
 		t.awaitFinalizer()
 	})
 
+	Context("", func() {
+		BeforeEach(func() {
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+			t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfig(""))
+		})
+
+		It("should create the lighthouse agent deployment", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+			t.assertAgentDeployment(ctx)
+		})
+	})
+
 	When("the openshift DNS config exists", func() {
 		Context("and the lighthouse config isn't present", func() {
 			BeforeEach(func() {
