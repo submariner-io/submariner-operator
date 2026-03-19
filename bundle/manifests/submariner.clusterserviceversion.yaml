@@ -77,7 +77,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:e33cdae8d75c6caa90890103c1e588a8cd6e9336ad2dad33532df2a9d939e0e4
-    createdAt: "2026-03-18 10:48:49"
+    createdAt: "2026-03-19 16:40:26"
     description: Creates and manages Submariner deployments.
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -719,13 +719,13 @@ spec:
                 - name: RELATED_IMAGE_submariner-globalnet
                   value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:1adca7427abdfbc9004cdedf1c364ac1de4a36b56f5c03f9eb85eeb7c82625b7
                 - name: RELATED_IMAGE_submariner-lighthouse-agent
-                  value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:ae6c21eec369d43d88970e5a3da8f7f5af39df3d883a51053485f07b4e0264c7
+                  value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:b6feae080571d4cb328e0c69840267f5068028627d654c1d898a3d9d0b4015fa
                 - name: RELATED_IMAGE_submariner-lighthouse-coredns
-                  value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:bd6dc577edcf13bc644388e61e6b695e20f215ece861b0217dddf1d1ce74fa63
+                  value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:333ef38908fa84bb46bb168e1cd7090e24b7f7806dbdf03eac7e73008565a7c9
                 - name: RELATED_IMAGE_submariner-nettest
-                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:e029f1821ec2ac750c84b39532dd0ef0072a6dcaab5190928872e283b8c22963
+                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:ba1c63d18d4f9c0668192a555d1323b1799e3a5912a79f53907fdf7843eb6e54
                 - name: RELATED_IMAGE_submariner-metrics-proxy
-                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:e029f1821ec2ac750c84b39532dd0ef0072a6dcaab5190928872e283b8c22963
+                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:ba1c63d18d4f9c0668192a555d1323b1799e3a5912a79f53907fdf7843eb6e54
                 image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:e33cdae8d75c6caa90890103c1e588a8cd6e9336ad2dad33532df2a9d939e0e4
                 imagePullPolicy: Always
                 name: submariner-operator
@@ -887,11 +887,11 @@ spec:
     name: submariner-routeagent
   - image: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:1adca7427abdfbc9004cdedf1c364ac1de4a36b56f5c03f9eb85eeb7c82625b7
     name: submariner-globalnet
-  - image: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:ae6c21eec369d43d88970e5a3da8f7f5af39df3d883a51053485f07b4e0264c7
+  - image: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:b6feae080571d4cb328e0c69840267f5068028627d654c1d898a3d9d0b4015fa
     name: submariner-lighthouse-agent
-  - image: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:bd6dc577edcf13bc644388e61e6b695e20f215ece861b0217dddf1d1ce74fa63
+  - image: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:333ef38908fa84bb46bb168e1cd7090e24b7f7806dbdf03eac7e73008565a7c9
     name: submariner-lighthouse-coredns
-  - image: registry.redhat.io/rhacm2/nettest-rhel9@sha256:e029f1821ec2ac750c84b39532dd0ef0072a6dcaab5190928872e283b8c22963
+  - image: registry.redhat.io/rhacm2/nettest-rhel9@sha256:ba1c63d18d4f9c0668192a555d1323b1799e3a5912a79f53907fdf7843eb6e54
     name: ""
   selector:
     matchLabels:
