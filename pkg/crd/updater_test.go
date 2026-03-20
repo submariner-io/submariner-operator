@@ -49,7 +49,7 @@ var _ = Describe("Updater", func() {
 	)
 
 	BeforeEach(func() {
-		client = extendedfakeclientset.NewSimpleClientset() //nolint:staticcheck // NewClientset fails with a schema error
+		client = extendedfakeclientset.NewSimpleClientset()
 		updater = crd.UpdaterFromClientSet(client)
 	})
 
