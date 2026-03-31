@@ -27,3 +27,11 @@ ignore:
   - vulnerability: GHSA-9h84-qmv7-982p
     package:
       name: helm.sh/helm/v3
+  # No fix available for docker/docker
+  - vulnerability: GHSA-x744-4wpc-v9h2
+    package:
+      name: github.com/docker/docker
+  # No fix available for docker/docker
+  - vulnerability: GHSA-pxq6-2prw-chj9
+    package:
+      name: github.com/docker/docker
