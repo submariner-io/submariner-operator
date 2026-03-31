@@ -10,3 +10,11 @@ ignore:
   - vulnerability: CVE-2021-22570
     package:
       name: google.golang.org/protobuf
+  # No fix available for docker/docker
+  - vulnerability: GHSA-x744-4wpc-v9h2
+    package:
+      name: github.com/docker/docker
+  # No fix available for docker/docker
+  - vulnerability: GHSA-pxq6-2prw-chj9
+    package:
+      name: github.com/docker/docker
