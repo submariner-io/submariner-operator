@@ -14,3 +14,11 @@ ignore:
   - vulnerability: GHSA-f83f-xpx7-ffpw
     package:
       name: github.com/sigstore/fulcio
+  # No fix available for docker/docker. Tool dependency only, not production code.
+  - vulnerability: GHSA-x744-4wpc-v9h2
+    package:
+      name: github.com/docker/docker
+  # No fix available for docker/docker. Tool dependency only, not production code.
+  - vulnerability: GHSA-pxq6-2prw-chj9
+    package:
+      name: github.com/docker/docker
