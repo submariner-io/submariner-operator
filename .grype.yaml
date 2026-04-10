@@ -35,3 +35,11 @@ ignore:
   - vulnerability: GHSA-pxq6-2prw-chj9
     package:
       name: github.com/docker/docker
+  # Only in tools/go.mod (development tools), not production code. Update requires Go 1.25.
+  - vulnerability: GHSA-hfvc-g4fc-pqhx
+    package:
+      name: go.opentelemetry.io/otel/sdk
+  # Only in tools/go.mod (development tools), not production code. No fix available.
+  - vulnerability: GHSA-6jwv-w5xf-7j27
+    package:
+      name: go.etcd.io/bbolt
