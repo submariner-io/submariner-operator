@@ -44,7 +44,7 @@ func testReconciliation() {
 
 	It("should add a finalizer to the ServiceDiscovery resource", func(ctx SpecContext) {
 		_, _ = t.DoReconcile(ctx)
-		t.awaitFinalizer()
+		t.awaitFinalizer(ctx)
 	})
 
 	Context("", func() {
@@ -348,13 +348,13 @@ func testDeploymentUninstall() {
 
 			t.UpdateDeploymentToReady(ctx, t.assertUninstallServiceDiscoveryDeployment(ctx))
 
-			t.awaitFinalizer()
+			t.awaitFinalizer(ctx)
 
 			t.AssertReconcileSuccess(ctx)
 
 			t.AssertNoDeployment(ctx, opnames.AppendUninstall(names.ServiceDiscoveryComponent))
 
-			t.awaitServiceDiscoveryDeleted()
+			t.awaitServiceDiscoveryDeleted(ctx)
 
 			t.AssertReconcileSuccess(ctx)
 			t.AssertNoDeployment(ctx, opnames.AppendUninstall(names.ServiceDiscoveryComponent))
@@ -376,7 +376,7 @@ func testDeploymentUninstall() {
 
 			t.AssertNoDeployment(ctx, opnames.AppendUninstall(names.ServiceDiscoveryComponent))
 
-			t.awaitServiceDiscoveryDeleted()
+			t.awaitServiceDiscoveryDeleted(ctx)
 		})
 	})
 }

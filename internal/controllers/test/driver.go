@@ -239,13 +239,13 @@ func (d *Driver) DeletePods(ctx context.Context, label, value string) {
 	Expect(err).To(Succeed())
 }
 
-func (d *Driver) AwaitFinalizer(obj client.Object, finalizer string) {
-	admtest.AwaitFinalizer[client.Object](resource.ForControllerClient[client.Object](d.ScopedClient, d.Namespace, obj), obj.GetName(),
+func (d *Driver) AwaitFinalizer(ctx context.Context, obj client.Object, finalizer string) {
+	admtest.AwaitFinalizer(ctx, resource.ForControllerClient(d.ScopedClient, d.Namespace, obj), obj.GetName(),
 		finalizer)
 }
 
-func (d *Driver) AwaitNoResource(obj client.Object) {
-	admtest.AwaitNoResource[client.Object](resource.ForControllerClient[client.Object](d.ScopedClient, d.Namespace, obj), obj.GetName())
+func (d *Driver) AwaitNoResource(ctx context.Context, obj client.Object) {
+	admtest.AwaitNoResource(ctx, resource.ForControllerClient(d.ScopedClient, d.Namespace, obj), obj.GetName())
 }
 
 func EnvMapFrom(daemonSet *appsv1.DaemonSet) map[string]string {

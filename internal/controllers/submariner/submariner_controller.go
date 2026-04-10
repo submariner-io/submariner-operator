@@ -73,7 +73,7 @@ type Config struct {
 	Scheme                       *runtime.Scheme
 	DynClient                    dynamic.Interface
 	ClusterNetwork               *network.ClusterNetwork
-	GetAuthorizedBrokerClientFor func(spec *submopv1a1.SubmarinerSpec, brokerToken, brokerCA string,
+	GetAuthorizedBrokerClientFor func(ctx context.Context, spec *submopv1a1.SubmarinerSpec, brokerToken, brokerCA string,
 		secretGVR schema.GroupVersionResource) (dynamic.Interface, error)
 }
 
@@ -422,12 +422,14 @@ func (r *Reconciler) getBrokerClient(ctx context.Context, instance *submopv1a1.S
 		return nil, errors.Wrapf(err, "error retrieving broker secret %q", spec.BrokerK8sSecret)
 	}
 
-	return r.config.GetAuthorizedBrokerClientFor(spec, brokerToken, brokerCA, *secretGVR)
+	return r.config.GetAuthorizedBrokerClientFor(ctx, spec, brokerToken, brokerCA, *secretGVR)
 }
 
-func getAuthorizedBrokerClientFor(spec *submopv1a1.SubmarinerSpec, brokerToken, brokerCA string, secretGVR schema.GroupVersionResource,
+func getAuthorizedBrokerClientFor(ctx context.Context, spec *submopv1a1.SubmarinerSpec, brokerToken, brokerCA string,
+	secretGVR schema.GroupVersionResource,
 ) (dynamic.Interface, error) {
 	brokerConfig, _, err := resource.GetAuthorizedRestConfigFromData(
+		ctx,
 		spec.BrokerK8sApiServer,
 		brokerToken,
 		brokerCA,

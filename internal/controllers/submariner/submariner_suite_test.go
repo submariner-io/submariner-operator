@@ -70,7 +70,8 @@ type testDriver struct {
 	clusterNetwork               *network.ClusterNetwork
 	dynClient                    *dynamicfake.FakeDynamicClient
 	secrets                      dynamic.NamespaceableResourceInterface
-	getAuthorizedBrokerClientFor func(*v1alpha1.SubmarinerSpec, string, string, schema.GroupVersionResource) (dynamic.Interface, error)
+	getAuthorizedBrokerClientFor func(
+		context.Context, *v1alpha1.SubmarinerSpec, string, string, schema.GroupVersionResource) (dynamic.Interface, error)
 }
 
 func newTestDriver() *testDriver {
@@ -115,12 +116,12 @@ func newTestDriver() *testDriver {
 	return t
 }
 
-func (t *testDriver) awaitFinalizer() {
-	t.AwaitFinalizer(t.submariner, opnames.CleanupFinalizer)
+func (t *testDriver) awaitFinalizer(ctx context.Context) {
+	t.AwaitFinalizer(ctx, t.submariner, opnames.CleanupFinalizer)
 }
 
-func (t *testDriver) awaitSubmarinerDeleted() {
-	t.AwaitNoResource(t.submariner)
+func (t *testDriver) awaitSubmarinerDeleted(ctx context.Context) {
+	t.AwaitNoResource(ctx, t.submariner)
 }
 
 func (t *testDriver) getSubmariner(ctx context.Context) *v1alpha1.Submariner {
