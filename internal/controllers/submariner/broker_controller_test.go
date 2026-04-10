@@ -19,6 +19,7 @@ limitations under the License.
 package submariner_test
 
 import (
+	"context"
 	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -171,7 +172,7 @@ var _ = Describe("Broker controller", func() {
 		When("Broker resources are deleted", func() {
 			var signingRequestors []certificate.SigningRequestor
 
-			BeforeEach(func() {
+			BeforeEach(func(ctx context.Context) {
 				for i, ns := range []string{brokerNamespace, brokerNamespace2} {
 					syncerConfig := broker.SyncerConfig{
 						LocalNamespace:  fmt.Sprintf("local-ns%d", i+1),
@@ -184,14 +185,10 @@ var _ = Describe("Broker controller", func() {
 
 					stopCh := make(chan struct{})
 
-					signingRequestor, err := certificate.StartSigningRequestor(syncerConfig, stopCh)
+					signingRequestor, err := certificate.StartSigningRequestor(ctx, syncerConfig, stopCh)
 					Expect(err).NotTo(HaveOccurred())
 
 					signingRequestors = append(signingRequestors, signingRequestor)
-
-					DeferCleanup(func() {
-						close(stopCh)
-					})
 				}
 			})
 

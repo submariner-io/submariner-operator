@@ -62,7 +62,7 @@ func testSubmarinerCleanup() {
 	BeforeEach(func(ctx SpecContext) {
 		stopCh = make(chan struct{})
 
-		framework.DetectGlobalnet()
+		framework.DetectGlobalnet(ctx)
 
 		var err error
 

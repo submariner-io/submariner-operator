@@ -72,7 +72,7 @@ func testSubmarinerResourceReconciliation() {
 
 	It("should add a finalizer to the Submariner resource", func(ctx SpecContext) {
 		t.AssertReconcileSuccess(ctx)
-		t.awaitFinalizer()
+		t.awaitFinalizer(ctx)
 	})
 
 	Context("", func() {
@@ -442,10 +442,11 @@ func testBrokerSecretReconciliation() {
 	When("the broker secret is created/updated", func() {
 		var brokerSecret *corev1.Secret
 
-		BeforeEach(func() {
+		BeforeEach(func(ctx context.Context) {
 			t.submariner.Spec.BrokerK8sSecret = "submariner-broker-secret"
 
-			t.getAuthorizedBrokerClientFor = func(_ *v1alpha1.SubmarinerSpec, brokerToken, brokerCA string, _ schema.GroupVersionResource,
+			t.getAuthorizedBrokerClientFor = func(_ context.Context, _ *v1alpha1.SubmarinerSpec, brokerToken, brokerCA string,
+				_ schema.GroupVersionResource,
 			) (dynamic.Interface, error) {
 				Expect(brokerToken).To(Equal(t.submariner.Spec.BrokerK8sApiServerToken))
 				Expect(brokerCA).To(Equal(t.submariner.Spec.BrokerK8sCA))
@@ -466,7 +467,7 @@ func testBrokerSecretReconciliation() {
 				Data: map[string][]byte{"data": {1, 2, 3}},
 			}
 
-			syncertest.CreateResource(t.secrets.Namespace(brokerSecret.Namespace), brokerSecret)
+			syncertest.CreateResource(ctx, t.secrets.Namespace(brokerSecret.Namespace), brokerSecret)
 		})
 
 		It("should update the local secret", func(ctx SpecContext) {
@@ -474,21 +475,21 @@ func testBrokerSecretReconciliation() {
 
 			ri := resource.ForDynamic(t.secrets.Namespace(t.submariner.Spec.Namespace))
 
-			obj := testutil.AwaitResource(ri, t.submariner.Spec.BrokerK8sSecret)
+			obj := testutil.AwaitResource(ctx, ri, t.submariner.Spec.BrokerK8sSecret)
 			secret := resource.MustFromUnstructured(obj, &corev1.Secret{})
 			Expect(secret.Data).To(Equal(brokerSecret.Data))
 			Expect(secret.Type).To(Equal(corev1.SecretTypeOpaque))
 
 			brokerSecret.Data = map[string][]byte{"data": {40, 50, 60}}
-			syncertest.UpdateResource(t.secrets.Namespace(brokerSecret.Namespace), brokerSecret)
+			syncertest.UpdateResource(ctx, t.secrets.Namespace(brokerSecret.Namespace), brokerSecret)
 
-			testutil.AwaitAndVerifyResource(ri, t.submariner.Spec.BrokerK8sSecret, func(obj *unstructured.Unstructured) bool {
+			testutil.AwaitAndVerifyResource(ctx, ri, t.submariner.Spec.BrokerK8sSecret, func(obj *unstructured.Unstructured) bool {
 				return reflect.DeepEqual(resource.MustFromUnstructured(obj, &corev1.Secret{}).Data, brokerSecret.Data)
 			})
 		})
 
 		Context("and the local secret already exists", func() {
-			BeforeEach(func() {
+			BeforeEach(func(ctx context.Context) {
 				t.submariner.Spec.BrokerK8sSecret = "submariner-broker-secret"
 
 				localSecret := &corev1.Secret{
@@ -503,9 +504,10 @@ func testBrokerSecretReconciliation() {
 					},
 				}
 
-				syncertest.CreateResource(t.secrets.Namespace(t.Namespace), localSecret)
+				syncertest.CreateResource(ctx, t.secrets.Namespace(t.Namespace), localSecret)
 
-				t.getAuthorizedBrokerClientFor = func(_ *v1alpha1.SubmarinerSpec, brokerToken, _ string, _ schema.GroupVersionResource,
+				t.getAuthorizedBrokerClientFor = func(_ context.Context, _ *v1alpha1.SubmarinerSpec, brokerToken, _ string,
+					_ schema.GroupVersionResource,
 				) (dynamic.Interface, error) {
 					Expect(brokerToken).To(Equal(string(localSecret.Data["token"])))
 					return t.dynClient, nil
@@ -590,7 +592,7 @@ func testDeletion() {
 			t.UpdateDaemonSetToReady(ctx, globalnetDS)
 
 			// Ensure the finalizer is still present.
-			t.awaitFinalizer()
+			t.awaitFinalizer(ctx)
 
 			// Finally, the controller should delete the uninstall DaemonSets/Deployments and remove the finalizer.
 			t.AssertReconcileSuccess(ctx)
@@ -599,7 +601,7 @@ func testDeletion() {
 			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.RouteAgentComponent))
 			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GlobalnetComponent))
 
-			t.awaitSubmarinerDeleted()
+			t.awaitSubmarinerDeleted(ctx)
 
 			t.AssertReconcileSuccess(ctx)
 			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
@@ -629,7 +631,7 @@ func testDeletion() {
 			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
 			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.RouteAgentComponent))
 
-			t.awaitSubmarinerDeleted()
+			t.awaitSubmarinerDeleted(ctx)
 		})
 	})
 
@@ -677,7 +679,7 @@ func testDeletion() {
 			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
 			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.RouteAgentComponent))
 
-			t.awaitSubmarinerDeleted()
+			t.awaitSubmarinerDeleted(ctx)
 		})
 	})
 
@@ -697,7 +699,7 @@ func testDeletion() {
 
 			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
 
-			t.awaitSubmarinerDeleted()
+			t.awaitSubmarinerDeleted(ctx)
 		})
 	})
 
@@ -728,7 +730,7 @@ func testDeletion() {
 				serviceDiscovery)
 			Expect(errors.IsNotFound(err)).To(BeTrue(), "ServiceDiscovery still exists")
 
-			t.awaitSubmarinerDeleted()
+			t.awaitSubmarinerDeleted(ctx)
 		})
 	})
 }

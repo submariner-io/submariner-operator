@@ -103,12 +103,12 @@ func newTestDriver() *testDriver {
 	return t
 }
 
-func (t *testDriver) awaitFinalizer() {
-	t.AwaitFinalizer(t.serviceDiscovery, opnames.CleanupFinalizer)
+func (t *testDriver) awaitFinalizer(ctx context.Context) {
+	t.AwaitFinalizer(ctx, t.serviceDiscovery, opnames.CleanupFinalizer)
 }
 
-func (t *testDriver) awaitServiceDiscoveryDeleted() {
-	t.AwaitNoResource(t.serviceDiscovery)
+func (t *testDriver) awaitServiceDiscoveryDeleted(ctx context.Context) {
+	t.AwaitNoResource(ctx, t.serviceDiscovery)
 }
 
 func (t *testDriver) assertUninstallServiceDiscoveryDeployment(ctx context.Context) *appsv1.Deployment {
@@ -258,8 +258,8 @@ func (t *testDriver) setLighthouseCoreDNSServiceIP(ctx context.Context) {
 }
 
 func (t *testDriver) testServiceDiscoveryDeleted() {
-	It("eventually delete the ServiceDiscovery resource", func() {
-		t.awaitServiceDiscoveryDeleted()
+	It("eventually delete the ServiceDiscovery resource", func(ctx context.Context) {
+		t.awaitServiceDiscoveryDeleted(ctx)
 	})
 }
 
