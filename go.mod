@@ -12,9 +12,9 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.90.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.90.1
 	github.com/prometheus/client_golang v1.23.2
-	github.com/submariner-io/admiral v0.24.0-m0
-	github.com/submariner-io/shipyard v0.24.0-m0.0.20260306154329-2ebe00673c2d
-	github.com/submariner-io/submariner v0.24.0-m0
+	github.com/submariner-io/admiral v0.24.0-rc0
+	github.com/submariner-io/shipyard v0.24.0-rc0
+	github.com/submariner-io/submariner v0.24.0-rc0
 	golang.org/x/net v0.52.0
 	k8s.io/api v0.35.3
 	k8s.io/apiextensions-apiserver v0.35.3
@@ -22,7 +22,7 @@ require (
 	k8s.io/client-go v0.35.3
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
 	sigs.k8s.io/controller-runtime v0.23.3
-	sigs.k8s.io/mcs-api v0.4.0
+	sigs.k8s.io/mcs-api v0.4.1
 	sigs.k8s.io/yaml v1.6.0
 )
 
@@ -58,8 +58,8 @@ require (
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/moby/spdystream v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
@@ -69,7 +69,7 @@ require (
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
-	github.com/rs/zerolog v1.34.0 // indirect
+	github.com/rs/zerolog v1.35.0 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
