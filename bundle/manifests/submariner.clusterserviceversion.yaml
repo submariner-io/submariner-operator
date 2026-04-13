@@ -35,7 +35,7 @@ metadata:
             "globalnetEnabled": false,
             "namespace": "submariner-operator",
             "repository": "quay.io/submariner",
-            "version": "devel-30c9e48f194d"
+            "version": "release-0.24-f60722461844"
           }
         },
         {
@@ -69,15 +69,15 @@ metadata:
             "repository": "quay.io/submariner",
             "serviceCIDR": "192.168.66.0/24",
             "serviceDiscoveryEnabled": true,
-            "version": "devel-30c9e48f194d"
+            "version": "release-0.24-f60722461844"
           }
         }
       ]
     capabilities: Basic Install
     categories: Networking
     certified: "false"
-    containerImage: quay.io/submariner/submariner-operator:devel-30c9e48f194d
-    createdAt: "2026-02-12 10:10:20"
+    containerImage: quay.io/submariner/submariner-operator:release-0.24-f60722461844
+    createdAt: "2026-04-13 22:14:17"
     description: Creates and manages Submariner deployments.
     operatorframework.io/suggested-namespace: submariner-operator
     operators.operatorframework.io/builder: operator-sdk-v1.41.1
@@ -702,18 +702,18 @@ spec:
                 - name: OPERATOR_NAME
                   value: submariner-operator
                 - name: RELATED_IMAGE_submariner-operator
-                  value: quay.io/submariner/submariner-operator:devel-30c9e48f194d
+                  value: quay.io/submariner/submariner-operator:release-0.24-f60722461844
                 - name: RELATED_IMAGE_submariner-gateway
-                  value: quay.io/submariner/submariner-gateway:devel-30c9e48f194d
+                  value: quay.io/submariner/submariner-gateway:release-0.24-f60722461844
                 - name: RELATED_IMAGE_submariner-route-agent
-                  value: quay.io/submariner/submariner-route-agent:devel-30c9e48f194d
+                  value: quay.io/submariner/submariner-route-agent:release-0.24-f60722461844
                 - name: RELATED_IMAGE_submariner-globalnet
-                  value: quay.io/submariner/submariner-globalnet:devel-30c9e48f194d
+                  value: quay.io/submariner/submariner-globalnet:release-0.24-f60722461844
                 - name: RELATED_IMAGE_lighthouse-agent
-                  value: quay.io/submariner/lighthouse-agent:devel-30c9e48f194d
+                  value: quay.io/submariner/lighthouse-agent:release-0.24-f60722461844
                 - name: RELATED_IMAGE_lighthouse-coredns
-                  value: quay.io/submariner/lighthouse-coredns:devel-30c9e48f194d
-                image: quay.io/submariner/submariner-operator:devel-30c9e48f194d
+                  value: quay.io/submariner/lighthouse-coredns:release-0.24-f60722461844
+                image: quay.io/submariner/submariner-operator:release-0.24-f60722461844
                 imagePullPolicy: Always
                 name: submariner-operator
                 resources:
@@ -866,17 +866,17 @@ spec:
   provider:
     name: submariner.io
   relatedImages:
-  - image: quay.io/submariner/submariner-operator:devel-30c9e48f194d
+  - image: quay.io/submariner/submariner-operator:release-0.24-f60722461844
     name: submariner-operator
-  - image: quay.io/submariner/submariner-gateway:devel-30c9e48f194d
+  - image: quay.io/submariner/submariner-gateway:release-0.24-f60722461844
     name: submariner-gateway
-  - image: quay.io/submariner/submariner-route-agent:devel-30c9e48f194d
+  - image: quay.io/submariner/submariner-route-agent:release-0.24-f60722461844
     name: submariner-route-agent
-  - image: quay.io/submariner/submariner-globalnet:devel-30c9e48f194d
+  - image: quay.io/submariner/submariner-globalnet:release-0.24-f60722461844
     name: submariner-globalnet
-  - image: quay.io/submariner/lighthouse-agent:devel-30c9e48f194d
+  - image: quay.io/submariner/lighthouse-agent:release-0.24-f60722461844
     name: lighthouse-agent
-  - image: quay.io/submariner/lighthouse-coredns:devel-30c9e48f194d
+  - image: quay.io/submariner/lighthouse-coredns:release-0.24-f60722461844
     name: lighthouse-coredns
   selector:
     matchLabels:
