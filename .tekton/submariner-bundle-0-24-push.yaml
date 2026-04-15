@@ -25,7 +25,7 @@ spec:
   - name: output-image
     value: quay.io/redhat-user-workloads/submariner-tenant/submariner-bundle-0-24:{{revision}}
   - name: dockerfile
-    value: bundle.Dockerfile
+    value: bundle.Dockerfile.konflux
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
