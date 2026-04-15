@@ -7,8 +7,7 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/cancel-in-progress: "false"
     pipelinesascode.tekton.dev/max-keep-runs: "3"
-    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "release-0.24"
+    pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch == "release-0.24" && (".tekton/submariner-operator-0-24-pull-request.yaml".pathChanged() || ".tekton/submariner-operator-0-24-push.yaml".pathChanged() || "go.mod".pathChanged() || "api/***".pathChanged() || "package/***".pathChanged() || "internal/***".pathChanged() || "pkg/***".pathChanged())
   creationTimestamp: null
   labels:
     appstudio.openshift.io/application: submariner-0-24
