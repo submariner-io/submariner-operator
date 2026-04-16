@@ -34,7 +34,6 @@ LABEL url="https://github.com/submariner-io/submariner-operator"
 LABEL vendor="Red Hat, Inc."
 LABEL version="v0.20.2"
 
-LABEL com.github.commit="25ca7d600c464d14bd60d0e92b414e5824c8a5ee"
 LABEL com.github.url="https://github.com/submariner-io/submariner-operator.git"
 
 LABEL com.redhat.component="submariner-operator-bundle-container"
