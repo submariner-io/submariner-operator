@@ -22,3 +22,11 @@ ignore:
   - vulnerability: GHSA-pxq6-2prw-chj9
     package:
       name: github.com/docker/docker
+  # Update requires helm.sh/helm/v3 v3.20.2. Moderate doesn't justify breaking changes.
+  - vulnerability: GHSA-hr2v-4r36-88hr
+    package:
+      name: helm.sh/helm/v3
+  # Update requires go.opentelemetry.io/otel/sdk v1.43.0. High severity, but only affects BSD/Solaris with PATH hijacking.
+  - vulnerability: GHSA-hfvc-g4fc-pqhx
+    package:
+      name: go.opentelemetry.io/otel/sdk
