@@ -151,7 +151,7 @@ func AssignGlobalnetIPs(globalnetInfo *Info, netconfig Config, status reporter.I
 				return "", status.Error(err, "unable to allocate global CIDR")
 			}
 
-			status.Success("Allocated global CIDR " + globalnetCIDR)
+			status.Success("Allocated global CIDR %s", globalnetCIDR)
 		}
 	} else {
 		// Globalnet enabled, globalnetCIDR specified by user
