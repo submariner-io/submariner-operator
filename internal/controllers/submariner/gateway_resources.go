@@ -39,7 +39,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -70,7 +69,7 @@ func newGatewayDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonSet
 				},
 				Type: appsv1.RollingUpdateDaemonSetStrategyType,
 			},
-			RevisionHistoryLimit: ptr.To(int32(5)),
+			RevisionHistoryLimit: new(int32(5)),
 		},
 	}
 
@@ -98,13 +97,13 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 	}
 	volumes := []corev1.Volume{
 		{Name: "ipsecd", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-			Path: "/etc/ipsec.d", Type: ptr.To(corev1.HostPathDirectoryOrCreate),
+			Path: "/etc/ipsec.d", Type: new(corev1.HostPathDirectoryOrCreate),
 		}}},
 		{Name: "ipsecnss", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-			Path: "/var/lib/ipsec/nss", Type: ptr.To(corev1.HostPathDirectoryOrCreate),
+			Path: "/var/lib/ipsec/nss", Type: new(corev1.HostPathDirectoryOrCreate),
 		}}},
 		{Name: "plutosocket", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-			Path: "/var/run/pluto", Type: ptr.To(corev1.HostPathDirectoryOrCreate),
+			Path: "/var/run/pluto", Type: new(corev1.HostPathDirectoryOrCreate),
 		}}},
 	}
 
@@ -179,11 +178,11 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 							Drop: []corev1.Capability{"all"},
 						},
 						// The gateway needs to be privileged so it can write to /proc/sys
-						AllowPrivilegeEscalation: ptr.To(true),
-						Privileged:               ptr.To(true),
-						RunAsNonRoot:             ptr.To(false),
+						AllowPrivilegeEscalation: new(true),
+						Privileged:               new(true),
+						RunAsNonRoot:             new(false),
 						// We need to be able to update /var/lib/alternatives (for iptables)
-						ReadOnlyRootFilesystem: ptr.To(false),
+						ReadOnlyRootFilesystem: new(false),
 					},
 					//nolint:gosec // Ignore integer overflow conversion int -> int32
 					Ports: []corev1.ContainerPort{
@@ -243,7 +242,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 			ServiceAccountName:            names.GatewayComponent,
 			HostNetwork:                   true,
 			DNSPolicy:                     corev1.DNSClusterFirstWithHostNet,
-			TerminationGracePeriodSeconds: ptr.To(int64(1)),
+			TerminationGracePeriodSeconds: new(int64(1)),
 			RestartPolicy:                 corev1.RestartPolicyAlways,
 			// The gateway engine must be able to run on any flagged node, regardless of existing taints
 			Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},

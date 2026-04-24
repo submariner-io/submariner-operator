@@ -34,7 +34,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 )
 
 //nolint:wrapcheck // No need to wrap errors here.
@@ -85,7 +84,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					TerminationGracePeriodSeconds: ptr.To(int64(1)),
+					TerminationGracePeriodSeconds: new(int64(1)),
 					Volumes: []corev1.Volume{
 						// Share /run/xtables.lock with the host for iptables
 						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
@@ -93,7 +92,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 						}}},
 						// Share /run/openvswitch/db.sock and /run/openvswitch/ovnnb_db.sock with the host for OVS/OVN
 						{Name: "host-run-openvswitch", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/run/openvswitch", Type: ptr.To(corev1.HostPathDirectoryOrCreate),
+							Path: "/run/openvswitch", Type: new(corev1.HostPathDirectoryOrCreate),
 						}}},
 						// Share /sys with the host for OVS/OVN
 						{Name: "host-sys", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
@@ -101,7 +100,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 						}}},
 						// Share /run/ovn-ic with the host for OVN (this is a transitional path used by OpenShift for upgrades)
 						{Name: "host-run-ovn-ic", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/run/ovn-ic", Type: ptr.To(corev1.HostPathDirectoryOrCreate),
+							Path: "/run/ovn-ic", Type: new(corev1.HostPathDirectoryOrCreate),
 						}}},
 					},
 					// The route agent needs to wait for the node to be ready before starting,
@@ -128,10 +127,10 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
 							SecurityContext: &corev1.SecurityContext{
 								Capabilities:             &corev1.Capabilities{Add: []corev1.Capability{"ALL"}},
-								AllowPrivilegeEscalation: ptr.To(true),
-								Privileged:               ptr.To(true),
-								ReadOnlyRootFilesystem:   ptr.To(false),
-								RunAsNonRoot:             ptr.To(false),
+								AllowPrivilegeEscalation: new(true),
+								Privileged:               new(true),
+								ReadOnlyRootFilesystem:   new(false),
+								RunAsNonRoot:             new(false),
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
