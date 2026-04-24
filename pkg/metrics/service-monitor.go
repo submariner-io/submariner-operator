@@ -29,7 +29,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/ptr"
 )
 
 var ErrServiceMonitorNotPresent = errors.New("no ServiceMonitor registered with the API")
@@ -95,8 +94,8 @@ func GenerateServiceMonitor(ns string, s *v1.Service) *monitoringv1.ServiceMonit
 		ownerReferences = []metav1.OwnerReference{
 			{
 				APIVersion:         "v1",
-				BlockOwnerDeletion: ptr.To(true),
-				Controller:         ptr.To(true),
+				BlockOwnerDeletion: new(true),
+				Controller:         new(true),
 				Kind:               "Service",
 				Name:               s.Name,
 				UID:                s.UID,

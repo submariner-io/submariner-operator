@@ -53,7 +53,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -238,7 +237,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 			Selector: &metav1.LabelSelector{
 				MatchLabels: matchLabels,
 			},
-			Replicas: ptr.To(int32(1)),
+			Replicas: new(int32(1)),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -272,7 +271,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 					ServiceAccountName:            "submariner-lighthouse-agent",
 					Tolerations:                   cr.Spec.Tolerations,
 					NodeSelector:                  cr.Spec.NodeSelector,
-					TerminationGracePeriodSeconds: ptr.To(int64(0)),
+					TerminationGracePeriodSeconds: new(int64(0)),
 					Volumes:                       volumes,
 				},
 			},
@@ -339,7 +338,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 			Selector: &metav1.LabelSelector{
 				MatchLabels: matchLabels,
 			},
-			Replicas: ptr.To(int32(2)),
+			Replicas: new(int32(2)),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -367,14 +366,14 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 									Add:  []corev1.Capability{"net_bind_service"},
 									Drop: []corev1.Capability{"all"},
 								},
-								AllowPrivilegeEscalation: ptr.To(false),
-								ReadOnlyRootFilesystem:   ptr.To(true),
+								AllowPrivilegeEscalation: new(false),
+								ReadOnlyRootFilesystem:   new(true),
 							},
 						},
 					},
 
 					ServiceAccountName:            "submariner-lighthouse-coredns",
-					TerminationGracePeriodSeconds: ptr.To(int64(0)),
+					TerminationGracePeriodSeconds: new(int64(0)),
 					Tolerations:                   cr.Spec.Tolerations,
 					NodeSelector:                  cr.Spec.NodeSelector,
 					Volumes: []corev1.Volume{
@@ -383,7 +382,7 @@ func newLighthouseCoreDNSDeployment(cr *submarinerv1alpha1.ServiceDiscovery) *ap
 							Items: []corev1.KeyToPath{
 								{Key: Corefile, Path: Corefile},
 							},
-							DefaultMode: ptr.To(int32(0o644)),
+							DefaultMode: new(int32(0o644)),
 						}}},
 					},
 				},
