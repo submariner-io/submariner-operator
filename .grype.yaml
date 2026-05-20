@@ -18,3 +18,7 @@ ignore:
   - vulnerability: GHSA-pxq6-2prw-chj9
     package:
       name: github.com/docker/docker
+  # Ignore all docker CVEs in tools directory (build-time only, not production)
+  - package:
+      name: github.com/docker/docker
+      location: /tools/go.mod
