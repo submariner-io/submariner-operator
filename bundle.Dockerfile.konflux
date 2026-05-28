@@ -23,16 +23,16 @@ COPY bundle/tests/scorecard /tests/scorecard/
 ARG SOURCE_DATE_EPOCH
 
 LABEL cpe="cpe:/a:redhat:acm:2.14::el9"
-LABEL csv-version="0.21.2"
+LABEL csv-version="0.21.3"
 LABEL description="submariner-operator-bundle"
 LABEL distribution-scope="public"
 LABEL maintainer="['multi-cluster-networking@redhat.com']"
 LABEL name="rhacm2/submariner-operator-bundle"
-LABEL release="v0.21.2"
+LABEL release="v0.21.3"
 LABEL summary="submariner-operator-bundle"
 LABEL url="https://github.com/submariner-io/submariner-operator"
 LABEL vendor="Red Hat, Inc."
-LABEL version="v0.21.2"
+LABEL version="v0.21.3"
 
 LABEL com.github.url="https://github.com/submariner-io/submariner-operator.git"
 
