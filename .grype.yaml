@@ -30,3 +30,15 @@ ignore:
   - vulnerability: GHSA-hfvc-g4fc-pqhx
     package:
       name: go.opentelemetry.io/otel/sdk
+  # No fix available for docker/docker v28.5.2. Tool dependency only, not production code.
+  - vulnerability: GHSA-rg2x-37c3-w2rh
+    package:
+      name: github.com/docker/docker
+  # No fix available for docker/docker v28.5.2. Tool dependency only, not production code.
+  - vulnerability: GHSA-x86f-5xw2-fm2r
+    package:
+      name: github.com/docker/docker
+  # No fix available for docker/docker v28.5.2. Tool dependency only, not production code.
+  - vulnerability: GHSA-vp62-88p7-qqf5
+    package:
+      name: github.com/docker/docker
