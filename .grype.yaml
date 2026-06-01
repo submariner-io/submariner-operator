@@ -43,3 +43,21 @@ ignore:
   - vulnerability: GHSA-6jwv-w5xf-7j27
     package:
       name: go.etcd.io/bbolt
+
+  # No fixes available for GHSA-rg2x-37c3-w2rh, GHSA-x86f-5xw2-fm2r, GHSA-vp62-88p7-qqf5
+  - vulnerability: GHSA-rg2x-37c3-w2rh
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
+
+  # No fixes available for GHSA-rg2x-37c3-w2rh, GHSA-x86f-5xw2-fm2r, GHSA-vp62-88p7-qqf5
+  - vulnerability: GHSA-x86f-5xw2-fm2r
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
+
+  # No fixes available for GHSA-rg2x-37c3-w2rh, GHSA-x86f-5xw2-fm2r, GHSA-vp62-88p7-qqf5
+  - vulnerability: GHSA-vp62-88p7-qqf5
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
