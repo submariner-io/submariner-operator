@@ -50,14 +50,12 @@ ignore:
     package:
       name: github.com/docker/docker
 
-  # No fix available upstream
+  # No fix available for docker/docker. Tool dependency only, not production code.
   - vulnerability: GO-2026-4887
-    fix-state: not-fixed
     package:
       name: github.com/docker/docker
 
-  # No fix available upstream
+  # No fix available for docker/docker. Tool dependency only, not production code.
   - vulnerability: GO-2026-4883
-    fix-state: not-fixed
     package:
       name: github.com/docker/docker
