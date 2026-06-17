@@ -49,3 +49,15 @@ ignore:
     fix-state: not-fixed
     package:
       name: github.com/docker/docker
+
+  # No fix available upstream
+  - vulnerability: GO-2026-4887
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
+
+  # No fix available upstream
+  - vulnerability: GO-2026-4883
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
