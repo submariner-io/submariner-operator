@@ -1,6 +1,6 @@
 module github.com/submariner-io/submariner-operator
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/coreos/go-semver v0.3.1
@@ -15,8 +15,8 @@ require (
 	github.com/submariner-io/admiral v0.20.2
 	github.com/submariner-io/shipyard v0.20.2
 	github.com/submariner-io/submariner v0.20.2
-	golang.org/x/net v0.48.0
-	golang.org/x/text v0.32.0
+	golang.org/x/net v0.55.0
+	golang.org/x/text v0.37.0
 	k8s.io/api v0.32.13
 	k8s.io/apiextensions-apiserver v0.32.13
 	k8s.io/apimachinery v0.32.13
@@ -66,11 +66,11 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
-	golang.org/x/term v0.38.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/term v0.43.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
-	golang.org/x/tools v0.39.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
