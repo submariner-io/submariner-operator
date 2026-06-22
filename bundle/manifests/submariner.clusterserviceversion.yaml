@@ -84,7 +84,7 @@ metadata:
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/submariner-io/submariner-operator
     support: Submariner
-  name: submariner.v0.24.0
+  name: submariner.v0.25.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -491,7 +491,7 @@ spec:
     2. Apply the broker RBAC definitions:
 
         ```shell
-        git clone --depth 1 --single-branch --branch release-0.24 https://github.com/submariner-io/submariner-operator
+        git clone --depth 1 --single-branch --branch release-0.25 https://github.com/submariner-io/submariner-operator
         kubectl apply -k submariner-operator/config/broker -n submariner-k8s-broker
         ```
 
@@ -881,4 +881,4 @@ spec:
   selector:
     matchLabels:
       control-plane: submariner-operator
-  version: 0.24.0
+  version: 0.25.0
