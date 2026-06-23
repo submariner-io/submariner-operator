@@ -16,10 +16,10 @@ require (
 	github.com/submariner-io/shipyard v0.25.0-m0
 	github.com/submariner-io/submariner v0.25.0-m0
 	golang.org/x/net v0.55.0
-	k8s.io/api v0.35.5
-	k8s.io/apiextensions-apiserver v0.35.5
-	k8s.io/apimachinery v0.35.5
-	k8s.io/client-go v0.35.5
+	k8s.io/api v0.35.6
+	k8s.io/apiextensions-apiserver v0.35.6
+	k8s.io/apimachinery v0.35.6
+	k8s.io/client-go v0.35.6
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
 	sigs.k8s.io/controller-runtime v0.23.3
 	sigs.k8s.io/mcs-api v0.5.0
