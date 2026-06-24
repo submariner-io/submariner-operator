@@ -59,3 +59,8 @@ ignore:
   - vulnerability: GO-2026-4883
     package:
       name: github.com/docker/docker
+
+  # False positive: v29.2.0+incompatible is the fixed version per Go vuln DB, grype version comparison bug
+  - vulnerability: GO-2026-4610
+    package:
+      name: github.com/docker/cli
