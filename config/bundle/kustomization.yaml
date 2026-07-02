@@ -5,11 +5,11 @@ patches:
   target:
     group: operators.coreos.com
     kind: ClusterServiceVersion
-    name: submariner.v0.20.2
+    name: submariner.v0.20.3
     namespace: placeholder
     version: v1alpha1
 commonAnnotations:
-  createdAt: "2026-02-05 13:34:06"
+  createdAt: "2026-07-02 09:44:50"
   features.operators.openshift.io/disconnected: "true"
   features.operators.openshift.io/fips-compliant: "true"
   features.operators.openshift.io/proxy-aware: "false"
