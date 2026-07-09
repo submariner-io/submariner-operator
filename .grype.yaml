@@ -45,3 +45,8 @@ ignore:
   - vulnerability: GHSA-fxhp-mv3v-67qp
     package:
       name: oras.land/oras-go/v2
+
+  # Unknown severity, no fix available for v0.52.0
+  - vulnerability: GO-2026-5932
+    package:
+      name: golang.org/x/crypto
