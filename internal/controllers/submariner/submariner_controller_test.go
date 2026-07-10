@@ -280,6 +280,40 @@ func testDaemonSetReconciliation() {
 			})
 	})
 
+	When("NodeSelector is specified for the route-agent", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.NodeSelector = map[string]string{
+				"disktype": "ssd",
+			}
+		})
+
+		Specify("the submariner route-agent DaemonSet template NodeSelector should contain the specified labels",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
+				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("disktype", "ssd"))
+			})
+	})
+
+	When("NodeSelector and DisableIntraClusterConnectivity are both set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.NodeSelector = map[string]string{
+				"disktype": "ssd",
+			}
+			t.submariner.Spec.DisableIntraClusterConnectivity = true
+		})
+
+		Specify("the submariner route-agent DaemonSet template NodeSelector should contain both labels",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
+				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("disktype", "ssd"))
+				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("submariner.io/gateway", "true"))
+			})
+	})
+
 	When("the submariner globalnet DaemonSet doesn't exist", func() {
 		It("should create it", func(ctx SpecContext) {
 			t.AssertReconcileSuccess(ctx)

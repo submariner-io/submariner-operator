@@ -20,6 +20,7 @@ package submariner
 
 import (
 	"context"
+	"maps"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -173,11 +174,22 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 		},
 	}
 
-	// Run pods only on gateway nodes when intra-cluster connectivity is disabled.
-	if cr.Spec.DisableIntraClusterConnectivity {
-		ds.Spec.Template.Spec.NodeSelector = map[string]string{
-			"submariner.io/gateway": "true",
+	// Apply node selector from spec if configured.
+	if len(cr.Spec.NodeSelector) > 0 {
+		if ds.Spec.Template.Spec.NodeSelector == nil {
+			ds.Spec.Template.Spec.NodeSelector = make(map[string]string)
 		}
+
+		maps.Copy(ds.Spec.Template.Spec.NodeSelector, cr.Spec.NodeSelector)
+	}
+
+	// When intra-cluster connectivity is disabled, also restrict to gateway nodes.
+	if cr.Spec.DisableIntraClusterConnectivity {
+		if ds.Spec.Template.Spec.NodeSelector == nil {
+			ds.Spec.Template.Spec.NodeSelector = map[string]string{}
+		}
+
+		ds.Spec.Template.Spec.NodeSelector["submariner.io/gateway"] = "true"
 	}
 
 	return ds
