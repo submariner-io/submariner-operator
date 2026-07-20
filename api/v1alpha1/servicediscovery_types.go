@@ -23,6 +23,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -92,7 +93,10 @@ type ServiceDiscoveryList struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&ServiceDiscovery{}, &ServiceDiscoveryList{})
+	SchemeBuilder.Register(func(scheme *runtime.Scheme) error {
+		scheme.AddKnownTypes(GroupVersion, &ServiceDiscovery{}, &ServiceDiscoveryList{})
+		return nil
+	})
 }
 
 type CoreDNSCustomConfig struct {
