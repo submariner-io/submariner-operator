@@ -97,7 +97,9 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 	}
 	volumes := []corev1.Volume{
 		{Name: "ipsecd", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-			Path: "/etc/ipsec.d", Type: new(corev1.HostPathDirectoryOrCreate),
+			// Host path under /var (not /etc): Talos and other immutable OS have a read-only
+			// root; kubelet DirectoryOrCreate on /etc/ipsec.d fails with CreateContainerError.
+			Path: "/var/lib/ipsec/ipsec.d", Type: new(corev1.HostPathDirectoryOrCreate),
 		}}},
 		{Name: "ipsecnss", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
 			Path: "/var/lib/ipsec/nss", Type: new(corev1.HostPathDirectoryOrCreate),

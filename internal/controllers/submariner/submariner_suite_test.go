@@ -38,6 +38,7 @@ import (
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -171,7 +172,40 @@ func (t *testDriver) assertGatewayDaemonSet(ctx context.Context) {
 	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
 		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.GatewayImage, t.submariner.Spec.Version)))
 
+	assertGatewayIPsecHostPaths(daemonSet)
+
 	t.assertGatewayDaemonSetEnv(t.withNetworkDiscovery(), test.EnvMapFrom(daemonSet))
+}
+
+func assertGatewayIPsecHostPaths(daemonSet *appsv1.DaemonSet) {
+	hostPathType := corev1.HostPathDirectoryOrCreate
+	expected := map[string]string{
+		"ipsecd":      "/var/lib/ipsec/ipsec.d",
+		"ipsecnss":    "/var/lib/ipsec/nss",
+		"plutosocket": "/var/run/pluto",
+	}
+
+	for name, path := range expected {
+		var volume *corev1.Volume
+
+		for i := range daemonSet.Spec.Template.Spec.Volumes {
+			if daemonSet.Spec.Template.Spec.Volumes[i].Name == name {
+				volume = &daemonSet.Spec.Template.Spec.Volumes[i]
+				break
+			}
+		}
+
+		Expect(volume).NotTo(BeNil(), "missing volume %q", name)
+		Expect(volume.HostPath).NotTo(BeNil(), "volume %q should be HostPath", name)
+		Expect(volume.HostPath.Path).To(Equal(path))
+		Expect(volume.HostPath.Type).To(Equal(&hostPathType))
+	}
+
+	Expect(daemonSet.Spec.Template.Spec.Containers[0].VolumeMounts).To(ContainElement(corev1.VolumeMount{
+		Name:      "ipsecd",
+		MountPath: "/etc/ipsec.d",
+		ReadOnly:  false,
+	}))
 }
 
 func (t *testDriver) assertUninstallGatewayDaemonSet(ctx context.Context) *appsv1.DaemonSet {
