@@ -159,7 +159,86 @@ var _ = Describe("Cilium CM publisher wiring", func() {
 			Expect(string(tls.Data[ciliumcm.TLSCertKey])).To(Equal(string(serverBefore)))
 			Expect(tls.ResourceVersion).To(Equal(rvBefore))
 		})
+
+		It("should fully regenerate TLS when required keys are missing", func(ctx SpecContext) {
+			_, err := t.DoReconcile(ctx)
+			Expect(err).NotTo(HaveOccurred())
+
+			tls := &corev1.Secret{}
+			Expect(t.ScopedClient.Get(ctx, types.NamespacedName{
+				Name: ciliumcm.TLSSecretName, Namespace: submarinerNamespace,
+			}, tls)).To(Succeed())
+
+			originalCA := append([]byte(nil), tls.Data[ciliumcm.CACertKey]...)
+			delete(tls.Data, ciliumcm.ClientCertKey)
+			Expect(t.ScopedClient.Update(ctx, tls)).To(Succeed())
+
+			_, err = t.DoReconcile(ctx)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(t.ScopedClient.Get(ctx, types.NamespacedName{
+				Name: ciliumcm.TLSSecretName, Namespace: submarinerNamespace,
+			}, tls)).To(Succeed())
+			Expect(tls.Data).To(HaveKey(ciliumcm.ClientCertKey))
+			Expect(string(tls.Data[ciliumcm.CACertKey])).NotTo(Equal(string(originalCA)))
+
+			mesh := &corev1.Secret{}
+			Expect(t.GeneralClient.Get(ctx, types.NamespacedName{
+				Name: ciliumcm.ClusterMeshSecretName, Namespace: metav1.NamespaceSystem,
+			}, mesh)).To(Succeed())
+			Expect(string(mesh.Data[ciliumcm.DefaultRemoteName+".etcd-client.crt"])).
+				To(Equal(string(tls.Data[ciliumcm.ClientCertKey])))
+		})
+
+		It("should merge Submariner peer into an existing shared cilium-clustermesh Secret", func(ctx SpecContext) {
+			Expect(t.GeneralClient.Create(ctx, &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      ciliumcm.ClusterMeshSecretName,
+					Namespace: metav1.NamespaceSystem,
+				},
+				Type: corev1.SecretTypeOpaque,
+				Data: map[string][]byte{
+					"other-cluster":                 []byte("endpoints:\n- https://10.0.0.1:2379\n"),
+					"other-cluster.etcd-client.crt": []byte("other-crt"),
+					ciliumcm.DefaultRemoteName:      []byte("stale-config"),
+				},
+			})).To(Succeed())
+
+			_, err := t.DoReconcile(ctx)
+			Expect(err).NotTo(HaveOccurred())
+
+			tls := &corev1.Secret{}
+			Expect(t.ScopedClient.Get(ctx, types.NamespacedName{
+				Name: ciliumcm.TLSSecretName, Namespace: submarinerNamespace,
+			}, tls)).To(Succeed())
+
+			mesh := &corev1.Secret{}
+			Expect(t.GeneralClient.Get(ctx, types.NamespacedName{
+				Name: ciliumcm.ClusterMeshSecretName, Namespace: metav1.NamespaceSystem,
+			}, mesh)).To(Succeed())
+			Expect(mesh.Data).To(HaveKey("other-cluster"))
+			Expect(mesh.Data).To(HaveKeyWithValue("other-cluster.etcd-client.crt", []byte("other-crt")))
+			Expect(string(mesh.Data[ciliumcm.DefaultRemoteName])).NotTo(Equal("stale-config"))
+			Expect(string(mesh.Data[ciliumcm.DefaultRemoteName+".etcd-client.crt"])).
+				To(Equal(string(tls.Data[ciliumcm.ClientCertKey])))
+		})
 	})
+
+	assertTLSWithoutClusterMeshMerge := func(ctx SpecContext) {
+		_, err := t.DoReconcile(ctx)
+		Expect(err).NotTo(HaveOccurred())
+
+		tls := &corev1.Secret{}
+		Expect(t.ScopedClient.Get(ctx, types.NamespacedName{
+			Name: ciliumcm.TLSSecretName, Namespace: submarinerNamespace,
+		}, tls)).To(Succeed())
+
+		mesh := &corev1.Secret{}
+		err = t.GeneralClient.Get(ctx, types.NamespacedName{
+			Name: ciliumcm.ClusterMeshSecretName, Namespace: metav1.NamespaceSystem,
+		}, mesh)
+		Expect(apierrors.IsNotFound(err)).To(BeTrue())
+	}
 
 	When("cilium-config cluster-id is 0", func() {
 		BeforeEach(func() {
@@ -177,21 +256,26 @@ var _ = Describe("Cilium CM publisher wiring", func() {
 			}
 		})
 
-		It("should create TLS Secret but not merge cilium-clustermesh", func(ctx SpecContext) {
-			_, err := t.DoReconcile(ctx)
-			Expect(err).NotTo(HaveOccurred())
+		It("should create TLS Secret but not merge cilium-clustermesh", assertTLSWithoutClusterMeshMerge)
+	})
 
-			tls := &corev1.Secret{}
-			Expect(t.ScopedClient.Get(ctx, types.NamespacedName{
-				Name: ciliumcm.TLSSecretName, Namespace: submarinerNamespace,
-			}, tls)).To(Succeed())
-
-			mesh := &corev1.Secret{}
-			err = t.GeneralClient.Get(ctx, types.NamespacedName{
-				Name: ciliumcm.ClusterMeshSecretName, Namespace: metav1.NamespaceSystem,
-			}, mesh)
-			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+	When("cilium-config cluster-name is default", func() {
+		BeforeEach(func() {
+			t.InitGeneralClientObjs = []controllerClient.Object{
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      ciliumcm.CiliumConfigMapName,
+						Namespace: metav1.NamespaceSystem,
+					},
+					Data: map[string]string{
+						"cluster-id":   "1",
+						"cluster-name": "default",
+					},
+				},
+			}
 		})
+
+		It("should create TLS Secret but not merge cilium-clustermesh", assertTLSWithoutClusterMeshMerge)
 	})
 
 	When("NetworkPlugin is not cilium and a leftover Submariner peer exists", func() {
