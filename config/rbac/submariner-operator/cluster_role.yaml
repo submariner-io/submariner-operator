@@ -78,9 +78,10 @@ rules:
   - apiGroups:
       - apps
     resources:
-      # Needed for Flannel CNI discovery
+      # Needed for Flannel / Cilium CNI discovery
       - daemonsets
     verbs:
+      - get
       - list
   - apiGroups:
       - networking.k8s.io
@@ -91,9 +92,10 @@ rules:
       - get
       - list
   # Cilium ClusterMesh-shaped publisher: merge/remove only the Submariner peer in
-  # kube-system/cilium-clustermesh. create cannot be restricted by resourceNames;
-  # other verbs are scoped. delete is used only when the Secret is empty after we
-  # remove our keys (Cilium mounts it optional: true); other peers are never wiped.
+  # cilium-clustermesh (namespace from Submariner.spec.ciliumNamespace). create
+  # cannot be restricted by resourceNames; other verbs are scoped. On cleanup we
+  # only remove our keys and leave the Secret (possibly empty); Cilium mounts it
+  # optional: true.
   - apiGroups:
       - ""
     resources:
@@ -111,4 +113,3 @@ rules:
       - list
       - update
       - patch
-      - delete

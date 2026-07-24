@@ -653,6 +653,7 @@ spec:
           resources:
           - daemonsets
           verbs:
+          - get
           - list
         - apiGroups:
           - networking.k8s.io
@@ -678,7 +679,6 @@ spec:
           - list
           - update
           - patch
-          - delete
         serviceAccountName: submariner-operator
       deployments:
       - label:

@@ -43,7 +43,7 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 
 	// Drop Submariner's ClusterMesh peer early so Cilium stops dialing our etcd
 	// while uninstall DaemonSets run. Only our keys are touched.
-	if err := r.removeCiliumClusterMeshPeer(ctx, log); err != nil {
+	if err := r.removeCiliumClusterMeshPeer(ctx, instance, log); err != nil {
 		return reconcile.Result{}, err
 	}
 

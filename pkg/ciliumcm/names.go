@@ -20,6 +20,14 @@ limitations under the License.
 // ipcache publisher (TLS material and peer Secret keys).
 package ciliumcm
 
+import (
+	"context"
+
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+)
+
 const (
 	// TLSSecretName is the Secret in the operator namespace holding CA/server/client PEM.
 	TLSSecretName = "submariner-cilium-cm-tls"
@@ -58,6 +66,32 @@ const (
 	ClientCertKey = "client.crt"
 	ClientKeyKey  = "client.key"
 )
+
+// ClusterMeshSecretNameOrDefault returns name or the Cilium default.
+func ClusterMeshSecretNameOrDefault(name string) string {
+	if name == "" {
+		return ClusterMeshSecretName
+	}
+
+	return name
+}
+
+// FindUniqueCiliumConfigNamespace returns the namespace of cilium-config when exactly
+// one such ConfigMap exists cluster-wide. Returns "" if none or more than one.
+func FindUniqueCiliumConfigNamespace(ctx context.Context, client kubernetes.Interface) (string, error) {
+	list, err := client.CoreV1().ConfigMaps(metav1.NamespaceAll).List(ctx, metav1.ListOptions{
+		FieldSelector: "metadata.name=" + CiliumConfigMapName,
+	})
+	if err != nil {
+		return "", errors.Wrapf(err, "list ConfigMaps named %q", CiliumConfigMapName)
+	}
+
+	if len(list.Items) != 1 {
+		return "", nil
+	}
+
+	return list.Items[0].Namespace, nil
+}
 
 // PeerSecretKeys returns the cilium-clustermesh Secret.Data keys owned by Submariner
 // for the given ClusterMesh peer name. Callers must only write/delete these keys.

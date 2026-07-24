@@ -236,6 +236,22 @@ type SubmarinerSpec struct {
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// +optional
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+
+	// Namespace where Cilium is installed (cilium-config and cilium-clustermesh).
+	// Typically set by subctl after discovering cilium-config. Required for peer merge.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Cilium Namespace"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	// +optional
+	CiliumNamespace string `json:"ciliumNamespace,omitempty"`
+
+	// Name of Cilium's ClusterMesh peer Secret. Empty means the Cilium default
+	// "cilium-clustermesh". Optional override for non-standard installs.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Cilium ClusterMesh Secret"
+	//nolint:lll // Markers can't be wrapped
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text","urn:alm:descriptor:com.tectonic.ui:advanced"}
+	// +optional
+	CiliumClusterMeshSecret string `json:"ciliumClusterMeshSecret,omitempty"`
 }
 
 // SubmarinerStatus defines the observed state of Submariner.
@@ -286,6 +302,16 @@ type SubmarinerStatus struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Network Plugin"
 	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	NetworkPlugin string `json:"networkPlugin,omitempty"`
+
+	// Namespace used for Cilium ClusterMesh peer wiring (mirrors Spec when set).
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Cilium Namespace"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	CiliumNamespace string `json:"ciliumNamespace,omitempty"`
+
+	// Peer Secret name used for Cilium ClusterMesh wiring.
+	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Cilium ClusterMesh Secret"
+	// +operator-sdk:csv:customresourcedefinitions:type=status,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	CiliumClusterMeshSecret string `json:"ciliumClusterMeshSecret,omitempty"`
 
 	// The status of the gateway DaemonSet.
 	// +operator-sdk:csv:customresourcedefinitions:type=status,displayName="Gateway DaemonSet Status"

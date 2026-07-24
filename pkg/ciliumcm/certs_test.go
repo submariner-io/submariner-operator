@@ -27,6 +27,9 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/submariner-operator/pkg/ciliumcm"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestCiliumCM(t *testing.T) {
@@ -140,5 +143,32 @@ var _ = Describe("ReissueLeaves", func() {
 
 		action, reason := ciliumcm.AssessSecretData(renewed.SecretData(), time.Now(), ciliumcm.DefaultRenewBefore)
 		Expect(action).To(Equal(ciliumcm.RenewNone), reason)
+	})
+})
+
+var _ = Describe("FindUniqueCiliumConfigNamespace", func() {
+	It("should return the namespace when exactly one cilium-config exists", func(ctx SpecContext) {
+		client := fake.NewSimpleClientset(&corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Name: ciliumcm.CiliumConfigMapName, Namespace: "cilium"},
+		})
+
+		ns, err := ciliumcm.FindUniqueCiliumConfigNamespace(ctx, client)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ns).To(Equal("cilium"))
+	})
+
+	It("should return empty when none or multiple exist", func(ctx SpecContext) {
+		client := fake.NewSimpleClientset()
+		ns, err := ciliumcm.FindUniqueCiliumConfigNamespace(ctx, client)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ns).To(BeEmpty())
+
+		client = fake.NewSimpleClientset(
+			&corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: ciliumcm.CiliumConfigMapName, Namespace: "a"}},
+			&corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Name: ciliumcm.CiliumConfigMapName, Namespace: "b"}},
+		)
+		ns, err = ciliumcm.FindUniqueCiliumConfigNamespace(ctx, client)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ns).To(BeEmpty())
 	})
 })

@@ -37,14 +37,15 @@ import (
 )
 
 // reconcileCiliumClusterMesh ensures TLS for the route-agent publisher and merges the
-// Submariner peer into Cilium's cilium-clustermesh Secret when NetworkPlugin is cilium.
+// Submariner peer into Cilium's ClusterMesh peer Secret when NetworkPlugin is cilium.
+// Peer merge requires Spec.CiliumNamespace (typically set by subctl).
 // Returns CertCheckRequeue so expiry is re-checked even without other events.
 func (r *Reconciler) reconcileCiliumClusterMesh(ctx context.Context, instance *v1alpha1.Submariner,
 	reqLogger logr.Logger,
 ) (time.Duration, error) {
 	if instance.Status.NetworkPlugin != "cilium" {
 		// Drop any leftover Submariner peer so Cilium stops dialing our publisher.
-		return 0, r.removeCiliumClusterMeshPeer(ctx, reqLogger)
+		return 0, r.removeCiliumClusterMeshPeer(ctx, instance, reqLogger)
 	}
 
 	tlsSecret, err := r.ensureCiliumCMTLSSecret(ctx, instance, reqLogger)
@@ -52,21 +53,37 @@ func (r *Reconciler) reconcileCiliumClusterMesh(ctx context.Context, instance *v
 		return 0, err
 	}
 
-	ok, msg := r.checkCiliumClusterID(ctx, reqLogger)
-	if !ok {
-		reqLogger.Info("Skipping cilium-clustermesh peer merge", "reason", msg)
+	ciliumNS := instance.Spec.CiliumNamespace
+	secretName := ciliumcm.ClusterMeshSecretNameOrDefault(instance.Spec.CiliumClusterMeshSecret)
+
+	instance.Status.CiliumNamespace = ciliumNS
+	instance.Status.CiliumClusterMeshSecret = ""
+
+	if ciliumNS == "" {
+		reqLogger.Info("Skipping cilium-clustermesh peer merge",
+			"reason", "spec.ciliumNamespace is empty; set it (e.g. via subctl) to the namespace with cilium-config")
 
 		return ciliumcm.CertCheckRequeue, nil
 	}
 
-	if err := r.mergeCiliumClusterMeshPeer(ctx, tlsSecret, reqLogger); err != nil {
+	instance.Status.CiliumClusterMeshSecret = secretName
+
+	ok, msg := r.checkCiliumClusterID(ctx, ciliumNS, reqLogger)
+	if !ok {
+		reqLogger.Info("Skipping cilium-clustermesh peer merge", "reason", msg, "namespace", ciliumNS)
+
+		return ciliumcm.CertCheckRequeue, nil
+	}
+
+	if err := r.mergeCiliumClusterMeshPeer(ctx, ciliumNS, secretName, tlsSecret, reqLogger); err != nil {
 		return 0, err
 	}
 
 	reqLogger.Info("Ensured Cilium CM publisher TLS and peer",
 		"tlsSecret", ciliumcm.TLSSecretName,
 		"remote", ciliumcm.DefaultRemoteName,
-		"clusterMeshSecret", ciliumcm.ClusterMeshSecretName)
+		"clusterMeshSecret", secretName,
+		"namespace", ciliumNS)
 
 	return ciliumcm.CertCheckRequeue, nil
 }
@@ -152,19 +169,19 @@ func (r *Reconciler) updateCiliumCMTLSSecret(ctx context.Context, secret *corev1
 	return secret, nil
 }
 
-func (r *Reconciler) checkCiliumClusterID(ctx context.Context, reqLogger logr.Logger) (bool, string) {
+func (r *Reconciler) checkCiliumClusterID(ctx context.Context, ciliumNS string, reqLogger logr.Logger) (bool, string) {
 	cm := &corev1.ConfigMap{}
 
 	err := r.config.GeneralClient.Get(ctx, types.NamespacedName{
-		Namespace: metav1.NamespaceSystem,
+		Namespace: ciliumNS,
 		Name:      ciliumcm.CiliumConfigMapName,
 	}, cm)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			return false, "cilium-config ConfigMap not found in kube-system; cannot validate cluster-id"
+			return false, fmt.Sprintf("cilium-config ConfigMap not found in namespace %q; cannot validate cluster-id", ciliumNS)
 		}
 
-		reqLogger.Error(err, "Failed to get cilium-config")
+		reqLogger.Error(err, "Failed to get cilium-config", "namespace", ciliumNS)
 
 		return false, fmt.Sprintf("failed to read cilium-config: %v", err)
 	}
@@ -183,7 +200,9 @@ func (r *Reconciler) checkCiliumClusterID(ctx context.Context, reqLogger logr.Lo
 	return true, ""
 }
 
-func (r *Reconciler) mergeCiliumClusterMeshPeer(ctx context.Context, tlsSecret *corev1.Secret, reqLogger logr.Logger) error {
+func (r *Reconciler) mergeCiliumClusterMeshPeer(ctx context.Context, ciliumNS, secretName string, tlsSecret *corev1.Secret,
+	reqLogger logr.Logger,
+) error {
 	remoteName := ciliumcm.DefaultRemoteName
 	peerKeys := map[string][]byte{
 		remoteName:                         ciliumcm.PeerConfigYAML(remoteName, ciliumcm.DefaultListenURL),
@@ -194,30 +213,31 @@ func (r *Reconciler) mergeCiliumClusterMeshPeer(ctx context.Context, tlsSecret *
 
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		secret := &corev1.Secret{}
-		key := types.NamespacedName{Namespace: metav1.NamespaceSystem, Name: ciliumcm.ClusterMeshSecretName}
+		key := types.NamespacedName{Namespace: ciliumNS, Name: secretName}
 
 		err := r.config.GeneralClient.Get(ctx, key, secret)
 		if apierrors.IsNotFound(err) {
 			secret = &corev1.Secret{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      ciliumcm.ClusterMeshSecretName,
-					Namespace: metav1.NamespaceSystem,
+					Name:      secretName,
+					Namespace: ciliumNS,
 				},
 				Type: corev1.SecretTypeOpaque,
 				Data: peerKeys,
 			}
 
 			if createErr := r.config.GeneralClient.Create(ctx, secret); createErr != nil {
-				return errors.Wrap(createErr, "create cilium-clustermesh Secret")
+				return errors.Wrapf(createErr, "create %s/%s Secret", ciliumNS, secretName)
 			}
 
-			reqLogger.Info("Created cilium-clustermesh Secret with Submariner peer", "remote", remoteName)
+			reqLogger.Info("Created ClusterMesh Secret with Submariner peer",
+				"secret", secretName, "namespace", ciliumNS, "remote", remoteName)
 
 			return nil
 		}
 
 		if err != nil {
-			return errors.Wrap(err, "get cilium-clustermesh Secret")
+			return errors.Wrapf(err, "get %s/%s Secret", ciliumNS, secretName)
 		}
 
 		if secret.Data == nil {
@@ -238,90 +258,101 @@ func (r *Reconciler) mergeCiliumClusterMeshPeer(ctx context.Context, tlsSecret *
 		}
 
 		if err := r.config.GeneralClient.Update(ctx, secret); err != nil {
-			return errors.Wrap(err, "update cilium-clustermesh Secret")
+			return errors.Wrapf(err, "update %s/%s Secret", ciliumNS, secretName)
 		}
 
-		reqLogger.Info("Merged Submariner peer into cilium-clustermesh", "remote", remoteName)
+		reqLogger.Info("Merged Submariner peer into ClusterMesh Secret",
+			"secret", secretName, "namespace", ciliumNS, "remote", remoteName)
 
 		return nil
 	})
 	if err != nil {
-		return errors.Wrap(err, "merge Submariner peer into cilium-clustermesh Secret")
+		return errors.Wrap(err, "merge Submariner peer into ClusterMesh Secret")
 	}
 
 	return nil
 }
 
-// removeCiliumClusterMeshPeer removes only Submariner-owned keys from cilium-clustermesh
+// removeCiliumClusterMeshPeer removes only Submariner-owned keys from the peer Secret
 // (see ciliumcm.PeerSecretKeys). Other ClusterMesh peers are never touched.
 //
-// Flow: Update first so peer keys disappear even without delete RBAC; if the Secret
-// is then empty, Delete it (Cilium mounts the Secret with optional: true).
-func (r *Reconciler) removeCiliumClusterMeshPeer(ctx context.Context, reqLogger logr.Logger) error {
+// Namespace/name come from Spec, falling back to Status (last successful wiring).
+func (r *Reconciler) removeCiliumClusterMeshPeer(ctx context.Context, instance *v1alpha1.Submariner,
+	reqLogger logr.Logger,
+) error {
+	ciliumNS, secretName := ciliumPeerLocation(instance)
+	if ciliumNS == "" {
+		return nil
+	}
+
 	remoteName := ciliumcm.DefaultRemoteName
 	ownedKeys := ciliumcm.PeerSecretKeys(remoteName)
 
 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		secret := &corev1.Secret{}
-		key := types.NamespacedName{Namespace: metav1.NamespaceSystem, Name: ciliumcm.ClusterMeshSecretName}
-
-		err := r.config.GeneralClient.Get(ctx, key, secret)
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-
-		if err != nil {
-			return errors.Wrap(err, "get cilium-clustermesh Secret")
-		}
-
-		if secret.Data == nil {
-			return nil
-		}
-
-		changed := false
-
-		for _, k := range ownedKeys {
-			if _, ok := secret.Data[k]; ok {
-				delete(secret.Data, k)
-
-				changed = true
-			}
-		}
-
-		if !changed {
-			return nil
-		}
-
-		// Persist key removal before any Delete. Never wipe unrelated peer keys.
-		empty := len(secret.Data) == 0
-
-		if err := r.config.GeneralClient.Update(ctx, secret); err != nil {
-			return errors.Wrap(err, "update cilium-clustermesh Secret to remove Submariner peer")
-		}
-
-		if !empty {
-			reqLogger.Info("Removed Submariner peer from cilium-clustermesh", "remote", remoteName)
-
-			return nil
-		}
-
-		// Only our keys were present — drop the now-empty Secret (optional for Cilium).
-		if err := r.config.GeneralClient.Delete(ctx, secret); err != nil && !apierrors.IsNotFound(err) {
-			// Keys are already cleared; an empty leftover Secret is harmless.
-			reqLogger.Info("Cleared Submariner peer; leaving empty cilium-clustermesh Secret",
-				"remote", remoteName, "reason", err.Error())
-
-			return nil
-		}
-
-		reqLogger.Info("Removed Submariner peer and deleted empty cilium-clustermesh Secret",
-			"remote", remoteName)
-
-		return nil
+		return r.removeOwnedPeerKeys(ctx, ciliumNS, secretName, remoteName, ownedKeys, reqLogger)
 	})
 	if err != nil {
-		return errors.Wrap(err, "remove Submariner peer from cilium-clustermesh Secret")
+		return errors.Wrap(err, "remove Submariner peer from ClusterMesh Secret")
 	}
+
+	return nil
+}
+
+func ciliumPeerLocation(instance *v1alpha1.Submariner) (string, string) {
+	ciliumNS := instance.Spec.CiliumNamespace
+	if ciliumNS == "" {
+		ciliumNS = instance.Status.CiliumNamespace
+	}
+
+	secretName := ciliumcm.ClusterMeshSecretNameOrDefault(instance.Spec.CiliumClusterMeshSecret)
+	if instance.Spec.CiliumClusterMeshSecret == "" && instance.Status.CiliumClusterMeshSecret != "" {
+		secretName = instance.Status.CiliumClusterMeshSecret
+	}
+
+	return ciliumNS, secretName
+}
+
+func (r *Reconciler) removeOwnedPeerKeys(ctx context.Context, ciliumNS, secretName, remoteName string,
+	ownedKeys []string, reqLogger logr.Logger,
+) error {
+	secret := &corev1.Secret{}
+	key := types.NamespacedName{Namespace: ciliumNS, Name: secretName}
+
+	err := r.config.GeneralClient.Get(ctx, key, secret)
+	if apierrors.IsNotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return errors.Wrapf(err, "get %s/%s Secret", ciliumNS, secretName)
+	}
+
+	if secret.Data == nil {
+		return nil
+	}
+
+	changed := false
+
+	for _, k := range ownedKeys {
+		if _, ok := secret.Data[k]; ok {
+			delete(secret.Data, k)
+
+			changed = true
+		}
+	}
+
+	if !changed {
+		return nil
+	}
+
+	// Leave an empty Secret in place; Cilium mounts it optional: true and we
+	// avoid needing secrets/delete RBAC.
+	if err := r.config.GeneralClient.Update(ctx, secret); err != nil {
+		return errors.Wrapf(err, "update %s/%s Secret to remove Submariner peer", ciliumNS, secretName)
+	}
+
+	reqLogger.Info("Removed Submariner peer from ClusterMesh Secret",
+		"secret", secretName, "namespace", ciliumNS, "remote", remoteName)
 
 	return nil
 }

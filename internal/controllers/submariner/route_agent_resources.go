@@ -207,6 +207,13 @@ func addCiliumCMPublisherToRouteAgent(ds *appsv1.DaemonSet, cr *v1alpha1.Submari
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
 				SecretName: ciliumcm.TLSSecretName,
+				// Project only what the publisher needs: never mount ca.key
+				// (CA signing key) or client certs into every node.
+				Items: []corev1.KeyToPath{
+					{Key: ciliumcm.TLSCertKey, Path: ciliumcm.TLSCertKey},
+					{Key: ciliumcm.TLSKeyKey, Path: ciliumcm.TLSKeyKey},
+					{Key: ciliumcm.CACertKey, Path: ciliumcm.CACertKey},
+				},
 			},
 		},
 	})
