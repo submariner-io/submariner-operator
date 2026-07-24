@@ -190,11 +190,21 @@ func (r *Reconciler) checkCiliumClusterID(ctx context.Context, ciliumNS string, 
 	clusterName := cm.Data["cluster-name"]
 
 	if clusterID == "" || clusterID == "0" {
-		return false, "cilium-config cluster-id is 0 or unset; set to 1..255 for ClusterMesh-shaped publisher"
+		return false, "cilium-config cluster-id is 0 or unset; set to 1..254 (255 is reserved for Submariner)"
+	}
+
+	if clusterID == ciliumcm.DefaultClusterID {
+		return false, fmt.Sprintf("cilium-config cluster-id %s is reserved for the Submariner ClusterMesh-shaped publisher; use 1..254",
+			ciliumcm.DefaultClusterID)
 	}
 
 	if clusterName == "" || clusterName == "default" {
 		return false, "cilium-config cluster-name is 'default' or unset; set a non-default name"
+	}
+
+	if clusterName == ciliumcm.DefaultRemoteName {
+		return false, fmt.Sprintf("cilium-config cluster-name %q is reserved for the Submariner ClusterMesh peer",
+			ciliumcm.DefaultRemoteName)
 	}
 
 	return true, ""

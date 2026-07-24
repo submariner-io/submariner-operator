@@ -44,7 +44,8 @@ const (
 	DefaultRemoteName = "submariner"
 
 	// DefaultClusterID is the synthetic remote cluster-id published into embed etcd.
-	DefaultClusterID = "99"
+	// Reserved for Submariner: local cilium-config cluster-id must not use this value.
+	DefaultClusterID = "255"
 
 	// DefaultListenURL is the per-node etcd client URL (TLS).
 	DefaultListenURL = "https://127.0.0.1:12379"

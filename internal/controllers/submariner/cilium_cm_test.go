@@ -334,6 +334,25 @@ var _ = Describe("Cilium CM publisher wiring", func() {
 		It("should create TLS Secret but not merge cilium-clustermesh", assertTLSWithoutClusterMeshMerge)
 	})
 
+	When("cilium-config cluster-id is reserved for Submariner", func() {
+		BeforeEach(func() {
+			t.InitGeneralClientObjs = []controllerClient.Object{
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      ciliumcm.CiliumConfigMapName,
+						Namespace: metav1.NamespaceSystem,
+					},
+					Data: map[string]string{
+						"cluster-id":   ciliumcm.DefaultClusterID,
+						"cluster-name": "test-cluster",
+					},
+				},
+			}
+		})
+
+		It("should create TLS Secret but not merge cilium-clustermesh", assertTLSWithoutClusterMeshMerge)
+	})
+
 	When("cilium-config cluster-name is default", func() {
 		BeforeEach(func() {
 			t.InitGeneralClientObjs = []controllerClient.Object{
