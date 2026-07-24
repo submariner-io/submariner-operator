@@ -230,6 +230,5 @@ func addCiliumCMPublisherToRouteAgent(ds *appsv1.DaemonSet, cr *v1alpha1.Submari
 		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_PEER_URL", Value: ciliumcm.DefaultPeerURL},
 		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_REMOTE_NAME", Value: ciliumcm.DefaultRemoteName},
 		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_CLUSTER_ID", Value: ciliumcm.DefaultClusterID},
-		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_CLIENT_CERT_AUTH", Value: "true"},
 	)
 }
