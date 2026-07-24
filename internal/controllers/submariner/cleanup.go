@@ -41,6 +41,12 @@ func (r *Reconciler) runComponentCleanup(ctx context.Context, instance *operator
 		return reconcile.Result{}, nil
 	}
 
+	// Drop Submariner's ClusterMesh peer early so Cilium stops dialing our etcd
+	// while uninstall DaemonSets run. Only our keys are touched.
+	if err := r.removeCiliumClusterMeshPeer(ctx, log); err != nil {
+		return reconcile.Result{}, err
+	}
+
 	if !uninstall.IsSupportedForVersion(instance.Spec.Version) {
 		log.Info("Deleting Submariner version does not support uninstall", "version", instance.Spec.Version)
 		return reconcile.Result{}, r.removeFinalizer(ctx, instance)

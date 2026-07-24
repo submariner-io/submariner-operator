@@ -117,6 +117,7 @@ var discoverFunctions = []pluginDiscoveryFn{
 	discoverWeaveNetwork,
 	discoverCanalFlannelNetwork,
 	discoverCalicoNetwork,
+	discoverCiliumNetwork,
 	discoverFlannelNetwork,
 	discoverKindNetwork,
 }

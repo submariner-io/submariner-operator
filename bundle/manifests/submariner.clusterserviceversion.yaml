@@ -661,6 +661,24 @@ spec:
           verbs:
           - get
           - list
+        - apiGroups:
+          - ""
+          resources:
+          - secrets
+          verbs:
+          - create
+        - apiGroups:
+          - ""
+          resourceNames:
+          - cilium-clustermesh
+          resources:
+          - secrets
+          verbs:
+          - get
+          - list
+          - update
+          - patch
+          - delete
         serviceAccountName: submariner-operator
       deployments:
       - label:

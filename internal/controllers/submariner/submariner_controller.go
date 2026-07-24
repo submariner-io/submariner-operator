@@ -169,6 +169,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
+	ciliumRequeueAfter, err := r.reconcileCiliumClusterMesh(ctx, instance, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	gatewayDaemonSet, err := r.reconcileGatewayDaemonSet(ctx, instance, reqLogger)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -262,7 +267,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		}
 	}
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{RequeueAfter: ciliumRequeueAfter}, nil
 }
 
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {

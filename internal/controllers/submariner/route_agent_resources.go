@@ -27,6 +27,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/controllers/apply"
+	"github.com/submariner-io/submariner-operator/pkg/ciliumcm"
 	"github.com/submariner-io/submariner-operator/pkg/httpproxy"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
@@ -173,6 +174,8 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 		},
 	}
 
+	addCiliumCMPublisherToRouteAgent(ds, cr)
+
 	// Apply node selector from spec if configured.
 	if len(cr.Spec.NodeSelector) > 0 {
 		if ds.Spec.Template.Spec.NodeSelector == nil {
@@ -192,4 +195,41 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 	}
 
 	return ds
+}
+
+func addCiliumCMPublisherToRouteAgent(ds *appsv1.DaemonSet, cr *v1alpha1.Submariner) {
+	if cr.Status.NetworkPlugin != "cilium" {
+		return
+	}
+
+	ds.Spec.Template.Spec.Volumes = append(ds.Spec.Template.Spec.Volumes, corev1.Volume{
+		Name: ciliumcm.VolumeName,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: ciliumcm.TLSSecretName,
+			},
+		},
+	})
+
+	if len(ds.Spec.Template.Spec.Containers) == 0 {
+		return
+	}
+
+	container := &ds.Spec.Template.Spec.Containers[0]
+	container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
+		Name:      ciliumcm.VolumeName,
+		MountPath: ciliumcm.MountPath,
+		ReadOnly:  true,
+	})
+
+	container.Env = append(container.Env,
+		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_CERT_FILE", Value: ciliumcm.MountPath + "/" + ciliumcm.TLSCertKey},
+		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_KEY_FILE", Value: ciliumcm.MountPath + "/" + ciliumcm.TLSKeyKey},
+		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_CA_FILE", Value: ciliumcm.MountPath + "/" + ciliumcm.CACertKey},
+		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_LISTEN_URL", Value: ciliumcm.DefaultListenURL},
+		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_PEER_URL", Value: ciliumcm.DefaultPeerURL},
+		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_REMOTE_NAME", Value: ciliumcm.DefaultRemoteName},
+		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_CLUSTER_ID", Value: ciliumcm.DefaultClusterID},
+		corev1.EnvVar{Name: "SUBMARINER_CILIUM_CM_CLIENT_CERT_AUTH", Value: "true"},
+	)
 }
