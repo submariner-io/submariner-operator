@@ -191,6 +191,8 @@ var _ = Describe("ValidateLocalClusterIdentity", func() {
 		Entry("id 0", "0", "my-cluster", "cluster-id"),
 		Entry("id empty", "", "my-cluster", "cluster-id"),
 		Entry("id reserved", ciliumcm.DefaultClusterID, "my-cluster", "reserved"),
+		Entry("id too high", "300", "my-cluster", "cluster-id"),
+		Entry("id non-numeric", "abc", "my-cluster", "cluster-id"),
 		Entry("name default", "1", "default", "cluster-name"),
 		Entry("name empty", "1", "", "cluster-name"),
 		Entry("name reserved", "1", ciliumcm.DefaultRemoteName, "reserved"),

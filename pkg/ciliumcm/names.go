@@ -38,6 +38,9 @@ const (
 	// CiliumConfigMapName is the Cilium agent ConfigMap.
 	CiliumConfigMapName = "cilium-config"
 
+	// CiliumDaemonSetName is the typical Cilium agent DaemonSet name.
+	CiliumDaemonSetName = "cilium"
+
 	// DefaultRemoteName is the ClusterMesh peer name reserved for Submariner.
 	// Only Secret keys for this peer name are written or removed; other ClusterMesh
 	// peers in cilium-clustermesh are left untouched.
@@ -46,6 +49,10 @@ const (
 	// DefaultClusterID is the synthetic remote cluster-id published into embed etcd.
 	// Reserved for Submariner: local cilium-config cluster-id must not use this value.
 	DefaultClusterID = "255"
+
+	// SuggestedLocalClusterID is a safe default for a local Cilium cluster-id when
+	// none is configured (Submariner's publisher uses DefaultClusterID).
+	SuggestedLocalClusterID = "1"
 
 	// DefaultListenURL is the per-node etcd client URL (TLS).
 	DefaultListenURL = "https://127.0.0.1:12379"

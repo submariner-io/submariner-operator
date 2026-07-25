@@ -21,6 +21,7 @@ package ciliumcm
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -35,13 +36,13 @@ import (
 func LocalClusterIdentityFailures(clusterID, clusterName string) []string {
 	var failures []string
 
-	if clusterID == "" || clusterID == "0" {
-		failures = append(failures,
-			fmt.Sprintf("cilium-config cluster-id is %q; set to 1..254 (255 is reserved for Submariner)", clusterID))
-	} else if clusterID == DefaultClusterID {
+	if clusterID == DefaultClusterID {
 		failures = append(failures,
 			fmt.Sprintf("cilium-config cluster-id %s is reserved for the Submariner ClusterMesh-shaped publisher; use 1..254",
 				DefaultClusterID))
+	} else if id, err := strconv.Atoi(clusterID); err != nil || id < 1 || id > 254 {
+		failures = append(failures,
+			fmt.Sprintf("cilium-config cluster-id is %q; set to an integer 1..254 (255 is reserved for Submariner)", clusterID))
 	}
 
 	if clusterName == "" || clusterName == "default" {
