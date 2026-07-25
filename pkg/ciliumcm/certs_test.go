@@ -172,3 +172,39 @@ var _ = Describe("FindUniqueCiliumConfigNamespace", func() {
 		Expect(ns).To(BeEmpty())
 	})
 })
+
+var _ = Describe("ValidateLocalClusterIdentity", func() {
+	DescribeTable("should accept usable identities",
+		func(clusterID, clusterName string) {
+			Expect(ciliumcm.ValidateLocalClusterIdentity(clusterID, clusterName)).To(Succeed())
+		},
+		Entry("typical", "1", "my-cluster"),
+		Entry("upper bound", "254", "edge"),
+	)
+
+	DescribeTable("should reject unusable identities",
+		func(clusterID, clusterName, substr string) {
+			err := ciliumcm.ValidateLocalClusterIdentity(clusterID, clusterName)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(substr))
+		},
+		Entry("id 0", "0", "my-cluster", "cluster-id"),
+		Entry("id empty", "", "my-cluster", "cluster-id"),
+		Entry("id reserved", ciliumcm.DefaultClusterID, "my-cluster", "reserved"),
+		Entry("name default", "1", "default", "cluster-name"),
+		Entry("name empty", "1", "", "cluster-name"),
+		Entry("name reserved", "1", ciliumcm.DefaultRemoteName, "reserved"),
+	)
+
+	It("should load and validate from cilium-config", func(ctx SpecContext) {
+		client := fake.NewSimpleClientset(&corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Name: ciliumcm.CiliumConfigMapName, Namespace: "kube-system"},
+			Data:       map[string]string{"cluster-id": "0", "cluster-name": "default"},
+		})
+
+		err := ciliumcm.LoadAndValidateLocalClusterIdentity(ctx, client, "kube-system")
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("cluster-id"))
+		Expect(err.Error()).To(ContainSubstring("cluster-name"))
+	})
+})
