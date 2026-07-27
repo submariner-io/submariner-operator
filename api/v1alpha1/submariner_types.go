@@ -69,6 +69,12 @@ type SubmarinerSpec struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:select:libreswan","urn:alm:descriptor:com.tectonic.ui:select:vxlan","urn:alm:descriptor:com.tectonic.ui:select:wireguard"}
 	CableDriver string `json:"cableDriver,omitempty"`
 
+	// Driver-specific options passed to the selected cable driver (for example AmneziaWG
+	// obfuscation parameters). Unknown keys are ignored by drivers that do not use them.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="Cable Driver Options"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:advanced"}
+	CableDriverOptions map[string]string `json:"cableDriverOptions,omitempty"`
+
 	// The IPsec Pre-Shared Key which must be identical in all route agents across the cluster.
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="IPsec Pre-Shared Key"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:password"}
