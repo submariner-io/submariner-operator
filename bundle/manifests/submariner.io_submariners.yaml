@@ -64,6 +64,13 @@ spec:
                 description: Cable driver implementation - any of [libreswan, wireguard,
                   vxlan].
                 type: string
+              cableDriverOptions:
+                additionalProperties:
+                  type: string
+                description: Driver-specific options passed to the selected cable
+                  driver (for example AmneziaWG obfuscation parameters). Unknown keys
+                  are ignored by drivers that do not use them.
+                type: object
               ceIPSecDebug:
                 description: Enable logging IPsec debugging information.
                 type: boolean

@@ -213,6 +213,24 @@ func testDaemonSetReconciliation() {
 			})
 	})
 
+	When("CableDriverOptions are set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.CableDriverOptions = map[string]string{
+				"jc": "3",
+				"h1": "10-20",
+			}
+		})
+
+		Specify("the submariner gateway DaemonSet should have SUBMARINER_CABLEDRIVEROPTIONS set",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
+				Expect(test.EnvMapFrom(daemonSet)).To(HaveKeyWithValue("SUBMARINER_CABLEDRIVEROPTIONS",
+					`{"h1":"10-20","jc":"3"}`))
+			})
+	})
+
 	When("the submariner route-agent DaemonSet doesn't exist", func() {
 		It("should create it", func(ctx SpecContext) {
 			t.AssertReconcileSuccess(ctx)
