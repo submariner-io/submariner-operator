@@ -116,8 +116,10 @@ var discoverFunctions = []pluginDiscoveryFn{
 	discoverOvnKubernetesNetwork,
 	discoverWeaveNetwork,
 	discoverCanalFlannelNetwork,
-	discoverCalicoNetwork,
+	// Amazon VPC before Calico: discovery stops at the first match, and Calico
+	// probes can false-positive on EKS clusters that also run aws-node.
 	discoverAmazonVPCNetwork,
+	discoverCalicoNetwork,
 	discoverFlannelNetwork,
 	discoverKindNetwork,
 }
