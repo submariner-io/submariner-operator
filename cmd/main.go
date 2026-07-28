@@ -86,7 +86,8 @@ func main() {
 	var probeAddr string
 	var pprofAddr string
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.StringVar(&pprofAddr, "pprof-bind-address", ":8082", "The address the profiling endpoint binds to.")
+	flag.StringVar(&pprofAddr, "pprof-bind-address", "",
+		"The address the profiling endpoint binds to. Disabled by default; set e.g. 127.0.0.1:8082 for local debugging.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for the controller manager to ensure there is only one active instance.")
 	flag.BoolVar(&runWebhook, "webhook", false, "Runs the broker validating webhook.")
