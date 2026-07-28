@@ -116,8 +116,10 @@ var discoverFunctions = []pluginDiscoveryFn{
 	discoverOvnKubernetesNetwork,
 	discoverWeaveNetwork,
 	discoverCanalFlannelNetwork,
-	// Amazon VPC before Calico: discovery stops at the first match, and Calico
-	// probes can false-positive on EKS clusters that also run aws-node.
+	// Amazon VPC before Calico: discovery stops at the first match. On EKS it is
+	// common to run amazon-vpc-cni for pod networking together with Calico only
+	// for NetworkPolicy (aws-node plus calico-node / calico-config). In that
+	// setup Calico probes would otherwise win and mis-label the CNI.
 	discoverAmazonVPCNetwork,
 	discoverCalicoNetwork,
 	discoverFlannelNetwork,
