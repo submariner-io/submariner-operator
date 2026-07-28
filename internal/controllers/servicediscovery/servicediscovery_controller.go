@@ -73,6 +73,9 @@ const (
 	MicroshiftDNSNamespace        = "openshift-dns"
 	MicroshiftDNSConfigMap        = "dns-default"
 	coreDNSDefaultPort            = "53"
+	defaultCoreDNSCustomConfigKey = "lighthouse.server"
+	lighthouseStartMarker         = "lighthouse-start"
+	lighthouseEndMarker           = "lighthouse-end"
 )
 
 // Reconciler reconciles a ServiceDiscovery object.
@@ -429,6 +432,7 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 	reqLogger logr.Logger,
 ) error {
 	configMap := newCoreDNSCustomConfigMap(cr.Spec.CoreDNSCustomConfig)
+	configKey := getCustomCoreDNSConfigKey(cr.Spec.CoreDNSCustomConfig)
 
 	_, err := controllerutil.CreateOrUpdate(ctx, r.GeneralClient, configMap, func() error {
 		lighthouseDNSService := &corev1.Service{}
@@ -441,27 +445,43 @@ func (r *Reconciler) updateDNSCustomConfigMap(ctx context.Context, cr *submarine
 		}
 
 		if configMap.Data == nil {
-			reqLogger.Info("Initializing configMap.Data in " + configMap.Name)
+			reqLogger.Info("Initializing configMap.Data", "Name", configMap.Name)
 			configMap.Data = make(map[string]string)
 		}
 
-		if _, ok := configMap.Data["lighthouse.server"]; ok {
-			reqLogger.Info("Overwriting existing lighthouse.server data in " + configMap.Name)
-		}
+		domains := buildDomains(cr)
 
-		coreFile := ""
-		for _, domain := range buildDomains(cr) {
-			coreFile = fmt.Sprintf("%s%s:53 {\n    forward . %s\n}\n",
-				coreFile, domain, lighthouseClusterIP)
-		}
+		if configKey == Corefile {
+			configMap.Data[configKey] = mergeLighthouseIntoCorefile(configMap.Data[configKey], domains, lighthouseClusterIP)
+			reqLogger.Info("Updated custom CoreDNS ConfigMap Corefile key", "Name", configMap.Name,
+				"Namespace", configMap.Namespace)
+		} else {
+			if _, ok := configMap.Data[configKey]; ok {
+				reqLogger.Info("Overwriting existing ConfigMap data", "key", configKey, "Name", configMap.Name)
+			}
 
-		log.Info("Updating coredns-custom ConfigMap for lighthouse.server: " + coreFile)
-		configMap.Data["lighthouse.server"] = coreFile
+			coreFile := ""
+			for _, domain := range domains {
+				coreFile = fmt.Sprintf("%s%s:53 {\n    forward . %s\n}\n",
+					coreFile, domain, lighthouseClusterIP)
+			}
+
+			reqLogger.Info("Updating custom CoreDNS ConfigMap key", "key", configKey, "coreFile", coreFile)
+			configMap.Data[configKey] = coreFile
+		}
 
 		return nil
 	})
 
 	return errors.Wrap(err, "error updating DNS custom ConfigMap")
+}
+
+func getCustomCoreDNSConfigKey(config *submarinerv1alpha1.CoreDNSCustomConfig) string {
+	if config != nil && config.Key != "" {
+		return config.Key
+	}
+
+	return defaultCoreDNSCustomConfigKey
 }
 
 func (r *Reconciler) updateDNSConfig(ctx context.Context, cr *submarinerv1alpha1.ServiceDiscovery) error {
@@ -514,55 +534,127 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 	configMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: configMapNamespace, Name: configMapName}}
 	err := util.MustUpdate[*corev1.ConfigMap](ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
 		func(existing *corev1.ConfigMap) (*corev1.ConfigMap, error) {
-			coreFile := existing.Data[Corefile]
-			if strings.Contains(coreFile, "lighthouse-start") {
-				// Assume this means we've already set the ConfigMap up, first remove existing lighthouse config
-				newCoreStr := ""
-				skip := false
-
-				log.Infof("Coredns ConfigMap \"%s/%s\" has lighthouse configuration - updating it", configMapNamespace, configMapName)
-
-				for line := range strings.SplitSeq(coreFile, "\n") {
-					if strings.Contains(line, "lighthouse-start") {
-						skip = true
-					} else if strings.Contains(line, "lighthouse-end") {
-						skip = false
-						continue
-					}
-
-					if skip {
-						continue
-					}
-
-					newCoreStr = newCoreStr + line + "\n"
-				}
-
-				coreFile = newCoreStr
-			} else {
-				log.Infof("Coredns ConfigMap \"%s/%s\" does not have lighthouse configuration - adding it",
-					configMapNamespace, configMapName)
-			}
-
-			if clusterIP != "" {
-				coreDNSPort := findCoreDNSListeningPort(coreFile)
-
-				expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
-				for _, domain := range buildDomains(cr) {
-					expectedCorefile = fmt.Sprintf("%s%s:%s {\n    forward . %s\n}\n",
-						expectedCorefile, domain, coreDNSPort, clusterIP)
-				}
-
-				coreFile = expectedCorefile + "#lighthouse-end\n" + coreFile
-			}
-
-			log.Infof("Updated coredns ConfigMap \"%s/%s\": %s", configMapNamespace, configMapName, coreFile)
-
-			existing.Data[Corefile] = coreFile
+			existing.Data[Corefile] = mergeLighthouseIntoCorefile(existing.Data[Corefile], buildDomains(cr), clusterIP)
+			log.Infof("Updated coredns ConfigMap \"%s/%s\": %s", configMapNamespace, configMapName, existing.Data[Corefile])
 
 			return existing, nil
 		})
 
 	return errors.Wrap(err, "error updating DNS ConfigMap")
+}
+
+// mergeLighthouseIntoCorefile injects/updates the lighthouse forward section using markers.
+// When clusterIP is empty the section is removed (cleanup). Existing unmarked server blocks for the
+// managed domains are also removed so re-joins do not leave stale duplicates.
+func mergeLighthouseIntoCorefile(coreFile string, domains []string, clusterIP string) string {
+	if strings.Contains(coreFile, lighthouseStartMarker) {
+		log.Info("Corefile has lighthouse configuration - updating it")
+
+		coreFile = removeLighthouseMarkedSection(coreFile)
+	} else {
+		log.Info("Corefile does not have lighthouse configuration - adding it")
+	}
+
+	coreFile = removeDomainServerBlocks(coreFile, domains)
+
+	if clusterIP == "" {
+		return strings.TrimSpace(coreFile) + "\n"
+	}
+
+	coreDNSPort := findCoreDNSListeningPort(coreFile)
+
+	expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
+	for _, domain := range domains {
+		expectedCorefile = fmt.Sprintf("%s%s:%s {\n    forward . %s\n}\n",
+			expectedCorefile, domain, coreDNSPort, clusterIP)
+	}
+
+	return expectedCorefile + "#lighthouse-end\n" + strings.TrimLeft(coreFile, "\n")
+}
+
+func removeLighthouseMarkedSection(coreFile string) string {
+	newCoreStr := ""
+	skip := false
+
+	for line := range strings.SplitSeq(coreFile, "\n") {
+		if strings.Contains(line, lighthouseStartMarker) {
+			skip = true
+		} else if strings.Contains(line, lighthouseEndMarker) {
+			skip = false
+			continue
+		}
+
+		if skip {
+			continue
+		}
+
+		newCoreStr = newCoreStr + line + "\n"
+	}
+
+	return newCoreStr
+}
+
+// removeDomainServerBlocks strips top-level CoreDNS server blocks whose zone matches a managed domain
+// (with or without an explicit :port), so a previously hand-edited clusterset.local block is replaced.
+func removeDomainServerBlocks(coreFile string, domains []string) string {
+	if coreFile == "" || len(domains) == 0 {
+		return coreFile
+	}
+
+	domainSet := make(map[string]struct{}, len(domains))
+	for _, domain := range domains {
+		domainSet[domain] = struct{}{}
+	}
+
+	lines := strings.Split(coreFile, "\n")
+	var out []string
+	braceDepth := 0
+	skipping := false
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		if !skipping && braceDepth == 0 {
+			zone := serverBlockZone(trimmed)
+			if _, ok := domainSet[zone]; ok {
+				skipping = true
+			}
+		}
+
+		if skipping {
+			braceDepth += strings.Count(line, "{")
+			braceDepth -= strings.Count(line, "}")
+
+			if braceDepth <= 0 {
+				skipping = false
+				braceDepth = 0
+			}
+
+			continue
+		}
+
+		out = append(out, line)
+	}
+
+	return strings.Join(out, "\n")
+}
+
+func serverBlockZone(trimmedLine string) string {
+	if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
+		return ""
+	}
+
+	fields := strings.Fields(trimmedLine)
+	if len(fields) == 0 {
+		return ""
+	}
+
+	zone := fields[0]
+	if idx := strings.Index(zone, ":"); idx >= 0 {
+		zone = zone[:idx]
+	}
+
+	return zone
 }
 
 func findCoreDNSListeningPort(coreFile string) string {

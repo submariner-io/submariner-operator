@@ -105,6 +105,11 @@ type CoreDNSCustomConfig struct {
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="CoreDNS Custom Config Namespace"
 	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
 	Namespace string `json:"namespace,omitempty"`
+
+	// ConfigMap data key that holds the lighthouse forwarding config.
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,displayName="CoreDNS Custom Config Key"
+	// +operator-sdk:csv:customresourcedefinitions:type=spec,xDescriptors={"urn:alm:descriptor:com.tectonic.ui:text"}
+	Key string `json:"key,omitempty"`
 }
 
 func (sd *ServiceDiscovery) UnmarshalJSON(data []byte) error {

@@ -160,6 +160,11 @@ spec:
         path: coreDNSCustomConfig.namespace
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
+      - description: ConfigMap data key that holds the lighthouse forwarding config.
+        displayName: CoreDNS Custom Config Key
+        path: coreDNSCustomConfig.key
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
       version: v1alpha1
     - description: Submariner is the Schema for the submariners API.
       displayName: Submariner
@@ -302,6 +307,11 @@ spec:
       - description: Namespace of the custom CoreDNS configmap.
         displayName: CoreDNS Custom Config Namespace
         path: coreDNSCustomConfig.namespace
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:text
+      - description: ConfigMap data key that holds the lighthouse forwarding config.
+        displayName: CoreDNS Custom Config Key
+        path: coreDNSCustomConfig.key
         x-descriptors:
         - urn:alm:descriptor:com.tectonic.ui:text
       - description: List of domains to use for multi-cluster service discovery.
