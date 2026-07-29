@@ -19,14 +19,23 @@ limitations under the License.
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"runtime"
+	"strconv"
+	"syscall"
+	"time"
 
 	configv1 "github.com/openshift/api/config/v1"
+	"github.com/submariner-io/admiral/pkg/configmap"
+	"github.com/submariner-io/admiral/pkg/global"
 	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 	"github.com/submariner-io/admiral/pkg/names"
+	"github.com/submariner-io/admiral/pkg/resource"
 	admversion "github.com/submariner-io/admiral/pkg/version"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/controllers/metrics"
@@ -40,8 +49,10 @@ import (
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,12 +60,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
-)
-
-// Change below variables to serve metrics on different host or port.
-var (
-	metricsHost       = "0.0.0.0"
-	metricsPort int32 = 8383
 )
 
 var (
@@ -152,11 +157,27 @@ func main() {
 	utilruntime.Must(configv1.Install(scheme))
 	// +kubebuilder:scaffold:scheme
 
+	k8sClient, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		log.Error(err, "Error creating client")
+		os.Exit(1)
+	}
+
+	configMap, err := configmap.Get(ctx, resource.ForConfigMap(k8sClient, namespace), names.OperatorComponent)
+	if err != nil {
+		log.Error(err, "Error retrieving ConfigMap")
+		os.Exit(1)
+	}
+
+	global.Init(configMap)
+
+	metricsAddr := global.Get("metrics-bind-address", "0.0.0.0:8383")
+
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme,
 		Metrics: server.Options{
-			BindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+			BindAddress: metricsAddr,
 		},
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
@@ -178,26 +199,9 @@ func main() {
 
 	log.Info("Setting up metrics services and monitors")
 
-	// Setup the metrics services and service monitors
-	name := os.Getenv("OPERATOR_NAME")
-
-	// We need a new client using the manager's rest.Config because
-	// the manager's caches haven't started yet and it won't allow
-	// modifications until then
-	metricsClient, err := client.New(cfg, client.Options{})
-	if err != nil {
-		log.Error(err, "Error obtaining a Kubernetes client")
-	}
-
-	if err := metrics.Setup(ctx, metricsClient, cfg, scheme,
-		&metrics.ServiceInfo{
-			Name:            name,
-			Namespace:       namespace,
-			ApplicationKey:  "name",
-			ApplicationName: name,
-			Port:            metricsPort,
-		}, log); err != nil {
-		log.Error(err, "Error setting up metrics services and monitors")
+	if err = setupMetrics(ctx, metricsAddr, cfg, namespace); err != nil {
+		log.Error(err, "Failed to setup metrics")
+		os.Exit(1)
 	}
 
 	log.Info("Registering Components.")
@@ -249,6 +253,8 @@ func main() {
 		os.Exit(1) // We might not want to exit here if ready checks are not setup.
 	}
 
+	configmap.WatchAndSignalOnChange(ctx, k8sClient, namespace, syscall.SIGINT, names.OperatorComponent)
+
 	// Start the Cmd
 	log.Info("Starting the Cmd.")
 
@@ -256,6 +262,106 @@ func main() {
 		log.Error(err, "Manager exited non-zero")
 		os.Exit(1)
 	}
+}
+
+//nolint:gocyclo // No further refactors necessary
+func setupMetrics(ctx context.Context, metricsAddr string, cfg *rest.Config, namespace string) error {
+	// Handle the special "0" literal that disables metrics
+	if metricsAddr == "" || metricsAddr == "0" {
+		log.Info("Metrics disabled - skipping Service and ServiceMonitor creation", "address", metricsAddr)
+		return nil
+	}
+
+	name := os.Getenv("OPERATOR_NAME")
+
+	// Parse the bind address to extract host and port
+	host, portStr, err := net.SplitHostPort(metricsAddr)
+	if err != nil {
+		return fmt.Errorf("invalid metrics-bind-address format %q: %w", metricsAddr, err)
+	}
+
+	// LookupPort supports both numeric ports ("8383") and named ports ("http-metrics")
+	// Use a short timeout to avoid stalling startup on slow/unavailable resolvers
+	portCtx, portCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer portCancel()
+
+	port, err := net.DefaultResolver.LookupPort(portCtx, "tcp", portStr)
+	if err != nil {
+		// Only treat timeout errors gracefully; fail on truly invalid ports
+		if errors.Is(portCtx.Err(), context.DeadlineExceeded) {
+			log.Info("timeout resolving port; assuming non-loopback and proceeding with Service creation",
+				"port", portStr)
+			// Port string must be numeric if the resolver timed out
+			// This will fail with clear error if portStr is invalid
+			port64, parseErr := strconv.ParseInt(portStr, 10, 32)
+			if parseErr != nil {
+				return fmt.Errorf("invalid port %q in metrics-bind-address: %w", portStr, parseErr)
+			}
+
+			port = int(port64)
+		} else {
+			return fmt.Errorf("failed to resolve port %q: %w", portStr, err)
+		}
+	}
+
+	// Check if binding to loopback interface
+	// Empty host (e.g., ":8383") means bind to all interfaces, not loopback
+	isLoopback := false
+
+	if host != "" {
+		// LookupHost supports both IP addresses and hostnames (e.g., "localhost")
+		// Use a fresh timeout context to avoid reusing an expired context from LookupPort
+		hostCtx, hostCancel := context.WithTimeout(ctx, 5*time.Second)
+		defer hostCancel()
+
+		ips, err := net.DefaultResolver.LookupHost(hostCtx, host)
+		if err != nil {
+			// Only treat timeout/DNS errors gracefully; fail on truly invalid hosts
+			if errors.Is(hostCtx.Err(), context.DeadlineExceeded) {
+				log.Info("DNS resolver timeout resolving host; assuming non-loopback and proceeding with Service creation",
+					"host", host)
+				// Assume non-loopback on timeout
+			} else {
+				return fmt.Errorf("failed to resolve host %q: %w", host, err)
+			}
+		} else {
+			// Check if any resolved IP is a loopback address
+			for _, ipStr := range ips {
+				if ip := net.ParseIP(ipStr); ip != nil && ip.IsLoopback() {
+					isLoopback = true
+					break
+				}
+			}
+		}
+	}
+
+	if isLoopback {
+		log.Info("Metrics bound to loopback - accessible only within pod via localhost or kubectl port-forward; "+
+			"skipping Service and ServiceMonitor creation (no cluster scraping)", "address", metricsAddr)
+
+		return nil
+	}
+
+	// We need a new client using the manager's rest.Config because
+	// the manager's caches haven't started yet and it won't allow
+	// modifications until then
+	metricsClient, err := client.New(cfg, client.Options{})
+	if err != nil {
+		return fmt.Errorf("failed to create Kubernetes client: %w", err)
+	}
+
+	if err := metrics.Setup(ctx, metricsClient, cfg, scheme,
+		&metrics.ServiceInfo{
+			Name:            name,
+			Namespace:       namespace,
+			ApplicationKey:  "name",
+			ApplicationName: name,
+			Port:            int32(port),
+		}, log); err != nil {
+		return fmt.Errorf("failed to setup metrics services and monitors: %w", err)
+	}
+
+	return nil
 }
 
 // getWatchNamespace returns the Namespace the operator should be watching for changes.
