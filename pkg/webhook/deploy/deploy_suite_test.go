@@ -15,21 +15,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package e2e_test
+
+package deploy_test
 
 import (
 	"testing"
 
-	"github.com/submariner-io/shipyard/test/e2e"
-	"github.com/submariner-io/shipyard/test/e2e/framework"
-	_ "github.com/submariner-io/submariner-operator/test/e2e/cleanup"
-	"github.com/submariner-io/submariner-operator/test/e2e/webhook"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-func init() {
-	framework.AddBeforeSuite(webhook.Deploy)
-}
-
-func TestE2E(t *testing.T) {
-	e2e.RunE2ETests(t)
+func TestDeploy(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Deploy Suite")
 }
