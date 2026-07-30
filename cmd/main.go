@@ -19,6 +19,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -35,6 +36,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	opwebhook "github.com/submariner-io/submariner-operator/pkg/webhook"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
@@ -42,6 +44,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,6 +52,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -77,6 +81,7 @@ func init() {
 
 //nolint:gocyclo // No further refactors necessary
 func main() {
+	var runWebhook bool
 	var enableLeaderElection bool
 	var probeAddr string
 	var pprofAddr string
@@ -84,6 +89,7 @@ func main() {
 	flag.StringVar(&pprofAddr, "pprof-bind-address", ":8082", "The address the profiling endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for the controller manager to ensure there is only one active instance.")
+	flag.BoolVar(&runWebhook, "webhook", false, "Runs the broker validating webhook.")
 
 	kzerolog.AddFlags(nil)
 	flag.Parse()
@@ -118,6 +124,15 @@ func main() {
 	}
 
 	ctx := ctrl.SetupSignalHandler()
+
+	if runWebhook {
+		if err := runBrokerWebhook(ctx, cfg); err != nil {
+			log.Error(err, "")
+			os.Exit(1)
+		}
+
+		return
+	}
 
 	// Set up the CRDs we need
 	crdUpdater, err := crd.UpdaterFromRestConfig(cfg)
@@ -266,4 +281,31 @@ func getWatchNamespace() (string, error) {
 	}
 
 	return ns, nil
+}
+
+func runBrokerWebhook(ctx context.Context, cfg *rest.Config) error {
+	log.Info("Starting the broker webhook server")
+
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: opwebhook.NewScheme(),
+		Metrics: server.Options{
+			BindAddress: "0",
+		},
+		WebhookServer: webhook.NewServer(webhook.Options{
+			Port:    9443,
+			CertDir: "/var/run/webhook-certs",
+		}),
+	})
+	if err != nil {
+		return fmt.Errorf("unable to create manager: %w", err)
+	}
+
+	brokerValidator := opwebhook.NewBrokerValidator()
+	brokerValidator.SetupWithManager(mgr)
+
+	if err := mgr.Start(ctx); err != nil {
+		return fmt.Errorf("webhook manager failed: %w", err)
+	}
+
+	return nil
 }
