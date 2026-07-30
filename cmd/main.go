@@ -44,6 +44,7 @@ import (
 	"github.com/submariner-io/submariner-operator/pkg/crd"
 	"github.com/submariner-io/submariner-operator/pkg/gateway"
 	"github.com/submariner-io/submariner-operator/pkg/lighthouse"
+	opwebhook "github.com/submariner-io/submariner-operator/pkg/webhook"
 	submv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiruntime "k8s.io/apimachinery/pkg/runtime"
@@ -60,6 +61,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
 var (
@@ -82,9 +84,11 @@ func init() {
 
 //nolint:gocyclo // No further refactors necessary
 func main() {
+	var runWebhook bool
 	var enableLeaderElection bool
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for the controller manager to ensure there is only one active instance.")
+	flag.BoolVar(&runWebhook, "webhook", false, "Runs the broker validating webhook.")
 
 	kzerolog.AddFlags(nil)
 	flag.Parse()
@@ -119,6 +123,15 @@ func main() {
 	}
 
 	ctx := ctrl.SetupSignalHandler()
+
+	if runWebhook {
+		if err := runBrokerWebhook(ctx, cfg); err != nil {
+			log.Error(err, "")
+			os.Exit(1)
+		}
+
+		return
+	}
 
 	// Set up the CRDs we need
 	crdUpdater, err := crd.UpdaterFromRestConfig(cfg)
@@ -375,4 +388,31 @@ func getWatchNamespace() (string, error) {
 	}
 
 	return ns, nil
+}
+
+func runBrokerWebhook(ctx context.Context, cfg *rest.Config) error {
+	log.Info("Starting the broker webhook server")
+
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: opwebhook.NewScheme(),
+		Metrics: server.Options{
+			BindAddress: "0",
+		},
+		WebhookServer: webhook.NewServer(webhook.Options{
+			Port:    9443,
+			CertDir: "/var/run/webhook-certs",
+		}),
+	})
+	if err != nil {
+		return fmt.Errorf("unable to create manager: %w", err)
+	}
+
+	brokerValidator := opwebhook.NewBrokerValidator()
+	brokerValidator.SetupWithManager(mgr)
+
+	if err := mgr.Start(ctx); err != nil {
+		return fmt.Errorf("webhook manager failed: %w", err)
+	}
+
+	return nil
 }
