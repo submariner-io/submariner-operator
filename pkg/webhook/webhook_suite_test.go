@@ -15,21 +15,31 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package e2e_test
+
+package webhook_test
 
 import (
+	"flag"
 	"testing"
 
-	"github.com/submariner-io/shipyard/test/e2e"
-	"github.com/submariner-io/shipyard/test/e2e/framework"
-	_ "github.com/submariner-io/submariner-operator/test/e2e/cleanup"
-	"github.com/submariner-io/submariner-operator/test/e2e/webhook"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 )
 
 func init() {
-	framework.AddBeforeSuite(webhook.Deploy)
+	flags := flag.NewFlagSet("kzerolog", flag.ExitOnError)
+	kzerolog.AddFlags(flags)
+	_ = flags.Parse([]string{"-v=3"})
+
+	kzerolog.AddFlags(nil)
 }
 
-func TestE2E(t *testing.T) {
-	e2e.RunE2ETests(t)
+var _ = Describe("", func() {
+	kzerolog.InitK8sLogging()
+})
+
+func TestWebhook(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Webhook Suite")
 }
