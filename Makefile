@@ -43,6 +43,8 @@ else
 SETTINGS = $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
+override export PLUGIN = $(DAPPER_SOURCE)/scripts/test/deploy-plugin.sh
+
 -include $(SHIPYARD_DIR)/Makefile.inc
 # Version calculation from Shipyard Makefile.versions
 # These are used by the bundle construction and copied here
