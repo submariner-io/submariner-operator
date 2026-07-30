@@ -83,11 +83,6 @@ func init() {
 //nolint:gocyclo // No further refactors necessary
 func main() {
 	var enableLeaderElection bool
-	var probeAddr string
-	var pprofAddr string
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
-	flag.StringVar(&pprofAddr, "pprof-bind-address", "",
-		"The address the profiling endpoint binds to. Disabled by default; set e.g. 127.0.0.1:8082 for local debugging.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for the controller manager to ensure there is only one active instance.")
 
@@ -172,6 +167,9 @@ func main() {
 	global.Init(configMap)
 
 	metricsAddr := global.Get("metrics-bind-address", "0.0.0.0:8383")
+	// Profiling is disabled by default for security; users can set to 127.0.0.1:8082 for local debugging.
+	pprofAddr := global.Get("pprof-bind-address", "")
+	probeAddr := global.Get("health-probe-bind-address", ":8081")
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
