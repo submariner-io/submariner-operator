@@ -18,13 +18,12 @@ limitations under the License.
 
 package names
 
-import "fmt"
-
 /* CR names and other constants. */
 const (
 	ServiceDiscoveryCrName = "service-discovery"
 	SubmarinerCrName       = "submariner"
 	CleanupFinalizer       = "controllers.submariner.io/cleanup"
+	ClusterSAPrefix        = "cluster-"
 )
 
 /* These values are used by downstream distributions to override the component default image name. */
@@ -45,5 +44,5 @@ func AppendUninstall(name string) string {
 }
 
 func ForClusterSA(clusterID string) string {
-	return fmt.Sprintf("cluster-%s", clusterID)
+	return ClusterSAPrefix + clusterID
 }
