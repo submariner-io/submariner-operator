@@ -424,6 +424,13 @@ func (in *SubmarinerSpec) DeepCopyInto(out *SubmarinerSpec) {
 			(*out)[key] = val
 		}
 	}
+	if in.CableDriverOptions != nil {
+		in, out := &in.CableDriverOptions, &out.CableDriverOptions
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	if in.ConnectionHealthCheck != nil {
 		in, out := &in.ConnectionHealthCheck, &out.ConnectionHealthCheck
 		*out = new(HealthCheckSpec)

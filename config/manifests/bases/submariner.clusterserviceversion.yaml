@@ -131,6 +131,13 @@ spec:
         - urn:alm:descriptor:com.tectonic.ui:select:libreswan
         - urn:alm:descriptor:com.tectonic.ui:select:vxlan
         - urn:alm:descriptor:com.tectonic.ui:select:wireguard
+      - description: |-
+          Driver-specific options passed to the selected cable driver (for example AmneziaWG
+          obfuscation parameters). Unknown keys are ignored by drivers that do not use them.
+        displayName: Cable Driver Options
+        path: cableDriverOptions
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:advanced
       - description: Enable logging IPsec debugging information.
         displayName: IPsec Debug
         path: ceIPSecDebug

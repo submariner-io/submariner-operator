@@ -20,6 +20,7 @@ package submariner
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 
 	"github.com/go-logr/logr"
@@ -264,6 +265,13 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer ||
 			cr.Spec.LoadBalancerEnabled)},
 		corev1.EnvVar{Name: "CE_IPSEC_FORCEENCAPS", Value: strconv.FormatBool(cr.Spec.CeIPSecForceUDPEncaps)})
+
+	if len(cr.Spec.CableDriverOptions) > 0 {
+		// map[string]string always encodes successfully.
+		optionsJSON, _ := json.Marshal(cr.Spec.CableDriverOptions)
+		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+			corev1.EnvVar{Name: "SUBMARINER_CABLEDRIVEROPTIONS", Value: string(optionsJSON)})
+	}
 
 	if cr.Spec.LoadBalancerEnabled {
 		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
