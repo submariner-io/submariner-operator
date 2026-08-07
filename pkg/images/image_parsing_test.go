@@ -41,18 +41,48 @@ var imageTests = []struct {
 	{"submariner-operator", "", apis.DefaultSubmarinerOperatorVersion},
 }
 
-var _ = Describe("image parsing", func() {
-	When("Parsing image", func() {
-		It("Should parse version and repository", func() {
-			_, rep := images.ParseOperatorImage("localhost:5000/submariner-operator:local")
-			Expect(rep).To(Equal("localhost:5000"))
+var _ = Describe("GetImagePath", func() {
+	When("a RELATED_IMAGE_<component> env var is set", func() {
+		It("should ignore supplied imageOverrides for that component", func() {
+			GinkgoT().Setenv("RELATED_IMAGE_submariner-gateway", "registry.redhat.io/rhacm2/gateway@sha256:abc")
 
-			for _, tt := range imageTests {
-				version, repository := images.ParseOperatorImage(tt.image)
-				Expect(repository).To(Equal(tt.repository))
-				Expect(version).To(Equal(tt.version))
-			}
+			path := images.GetImagePath("quay.io/submariner", "0.20.0", "submariner-gateway", "submariner-gateway",
+				map[string]string{"submariner-gateway": "evil.example.com/pwn:latest"})
+			Expect(path).To(Equal("registry.redhat.io/rhacm2/gateway@sha256:abc"))
 		})
+	})
+
+	When("a RELATED_IMAGE_<component> env var is not set", func() {
+		It("should honour supplied imageOverrides", func() {
+			path := images.GetImagePath("quay.io/submariner", "0.20.0", "submariner-gateway", "no-related-image",
+				map[string]string{"no-related-image": "localhost:5000/dev:local"})
+			Expect(path).To(Equal("localhost:5000/dev:local"))
+		})
+	})
+
+	When("no RELATED_IMAGE env var or imageOverride is set", func() {
+		It("should construct path with repository and version", func() {
+			path := images.GetImagePath("quay.io/submariner", "0.20.0", "submariner-gateway", "submariner-gateway", nil)
+			Expect(path).To(Equal("quay.io/submariner/submariner-gateway:0.20.0"))
+		})
+
+		It("should construct path without repository prefix when repo is 'local'", func() {
+			path := images.GetImagePath("local", "dev", "submariner-gateway", "submariner-gateway", nil)
+			Expect(path).To(Equal("submariner-gateway:dev"))
+		})
+	})
+})
+
+var _ = Describe("ParseOperatorImage", func() {
+	It("should parse version and repository", func() {
+		_, rep := images.ParseOperatorImage("localhost:5000/submariner-operator:local")
+		Expect(rep).To(Equal("localhost:5000"))
+
+		for _, tt := range imageTests {
+			version, repository := images.ParseOperatorImage(tt.image)
+			Expect(repository).To(Equal(tt.repository))
+			Expect(version).To(Equal(tt.version))
+		}
 	})
 })
 
