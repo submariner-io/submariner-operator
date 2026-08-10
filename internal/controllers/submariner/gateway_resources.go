@@ -213,12 +213,9 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 						{Name: "SUBMARINER_BROKER", Value: cr.Spec.Broker},
 						{Name: "SUBMARINER_CABLEDRIVER", Value: cr.Spec.CableDriver},
 						{Name: broker.EnvironmentVariable("ApiServer"), Value: cr.Spec.BrokerK8sApiServer},
-						{Name: broker.EnvironmentVariable("ApiServerToken"), Value: cr.Spec.BrokerK8sApiServerToken},
 						{Name: broker.EnvironmentVariable("RemoteNamespace"), Value: cr.Spec.BrokerK8sRemoteNamespace},
-						{Name: broker.EnvironmentVariable("CA"), Value: cr.Spec.BrokerK8sCA},
 						{Name: broker.EnvironmentVariable("Insecure"), Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
 						{Name: broker.EnvironmentVariable("Secret"), Value: cr.Spec.BrokerK8sSecret},
-						{Name: "CE_IPSEC_PSK", Value: cr.Spec.CeIPSecPSK},
 						{Name: "CE_IPSEC_PSKSECRET", Value: cr.Spec.CeIPSecPSKSecret},
 						{Name: "CE_IPSEC_DEBUG", Value: strconv.FormatBool(cr.Spec.CeIPSecDebug)},
 						{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
@@ -265,6 +262,19 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 		corev1.EnvVar{Name: "CE_IPSEC_PREFERREDSERVER", Value: strconv.FormatBool(cr.Spec.CeIPSecPreferredServer ||
 			cr.Spec.LoadBalancerEnabled)},
 		corev1.EnvVar{Name: "CE_IPSEC_FORCEENCAPS", Value: strconv.FormatBool(cr.Spec.CeIPSecForceUDPEncaps)})
+
+	// Conditionally inject broker token and CA as environment variables for legacy compatibility when BrokerK8sSecret isn't set.
+	if cr.Spec.BrokerK8sSecret == "" {
+		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+			corev1.EnvVar{Name: broker.EnvironmentVariable("ApiServerToken"), Value: cr.Spec.BrokerK8sApiServerToken},
+			corev1.EnvVar{Name: broker.EnvironmentVariable("CA"), Value: cr.Spec.BrokerK8sCA})
+	}
+
+	// Conditionally inject IPSec PSK as environment variable for legacy compatibility when CeIPSecPSKSecret isn't set.
+	if cr.Spec.CeIPSecPSKSecret == "" {
+		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
+			corev1.EnvVar{Name: "CE_IPSEC_PSK", Value: cr.Spec.CeIPSecPSK})
+	}
 
 	if cr.Spec.LoadBalancerEnabled {
 		podTemplate.Spec.Containers[0].Env = append(podTemplate.Spec.Containers[0].Env,
