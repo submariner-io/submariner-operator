@@ -3433,6 +3433,12 @@ rules:
       - get
       - list
   - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+  - apiGroups:
       - apps
     resources:
       - daemonsets
