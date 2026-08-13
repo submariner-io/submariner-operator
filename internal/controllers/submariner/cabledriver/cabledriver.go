@@ -20,14 +20,16 @@ limitations under the License.
 //
 // To add gateway volumes (or other DaemonSet bits) for a new cable driver:
 //  1. Add <driver>.go in this package implementing Driver
-//  2. Register it in the drivers map below
+//  2. Register it in init() via AddDriver (see libreswan.go)
 //
 // Drivers with no operator-side volumes stay unregistered and contribute nothing.
 package cabledriver
 
 import (
+	"github.com/submariner-io/admiral/pkg/log"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // Driver customizes gateway DaemonSet construction for a cable driver.
@@ -35,10 +37,18 @@ type Driver interface {
 	Volumes(cr *v1alpha1.Submariner) ([]corev1.VolumeMount, []corev1.Volume)
 }
 
-// drivers is the static registry (same idea as cable.AddDriver / network discoverFunctions).
-var drivers = map[string]Driver{
-	"libreswan": libreswanDriver{},
-	"":          libreswanDriver{}, // omitempty → same as gateway default
+var (
+	drivers = map[string]Driver{}
+	logger  = log.Logger{Logger: logf.Log.WithName("CableDriver")}
+)
+
+// AddDriver registers a cable driver for gateway DaemonSet customization.
+func AddDriver(name string, driver Driver) {
+	if drivers[name] != nil {
+		logger.Fatalf("Multiple gateway cable drivers attempting to register with name %q", name)
+	}
+
+	drivers[name] = driver
 }
 
 // Volumes returns cable-driver-specific volume mounts and volumes for the gateway pod.

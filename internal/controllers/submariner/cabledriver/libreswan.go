@@ -24,6 +24,8 @@ import (
 )
 
 const (
+	cableDriverName = "libreswan"
+
 	defaultIPsecHostPath = "/etc/ipsec.d"
 	defaultNSSHostPath   = "/var/lib/ipsec/nss"
 	defaultPlutoHostPath = "/var/run/pluto"
@@ -32,6 +34,11 @@ const (
 	nssHostPathOptionKey   = "ipsecNSSHostPath"
 	plutoHostPathOptionKey = "plutoHostPath"
 )
+
+func init() {
+	AddDriver(cableDriverName, libreswanDriver{})
+	AddDriver("", libreswanDriver{}) // empty CableDriver is the gateway default
+}
 
 type libreswanDriver struct{}
 
