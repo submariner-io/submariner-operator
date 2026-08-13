@@ -40,3 +40,19 @@ ignore:
     fix-state: not-fixed
     package:
       name: github.com/docker/docker
+
+  # No fix available in any released version
+  - vulnerability: GO-2026-5932
+    package:
+      name: golang.org/x/crypto
+
+  # No fix available in containerd v1.7.x line. Fix requires v2.x (breaking change).
+  - vulnerability: GO-2026-5064
+    package:
+      name: github.com/containerd/containerd
+  - vulnerability: GO-2026-5338
+    package:
+      name: github.com/containerd/containerd
+  - vulnerability: GO-2026-5622
+    package:
+      name: github.com/containerd/containerd
