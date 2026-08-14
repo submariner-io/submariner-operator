@@ -36,3 +36,21 @@ ignore:
     fix-state: unknown
     package:
       name: github.com/containerd/containerd
+
+  # No fix available
+  - vulnerability: GHSA-rg2x-37c3-w2rh
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
+
+  # No fix available
+  - vulnerability: GHSA-vp62-88p7-qqf5
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
+
+  # No fix available
+  - vulnerability: GHSA-x86f-5xw2-fm2r
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
