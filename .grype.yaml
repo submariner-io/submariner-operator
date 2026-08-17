@@ -60,3 +60,21 @@ ignore:
   - vulnerability: GO-2026-5856
     package:
       name: stdlib
+
+  # No fix available
+  - vulnerability: GO-2026-5064
+    fix-state: unknown
+    package:
+      name: github.com/containerd/containerd
+
+  # No fix available
+  - vulnerability: GO-2026-5338
+    fix-state: unknown
+    package:
+      name: github.com/containerd/containerd
+
+  # No fix available
+  - vulnerability: GO-2026-5622
+    fix-state: unknown
+    package:
+      name: github.com/containerd/containerd
