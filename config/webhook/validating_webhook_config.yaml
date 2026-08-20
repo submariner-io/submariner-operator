@@ -36,12 +36,12 @@ webhooks:
         scope: "Namespaced"
       - operations: ["CREATE", "UPDATE", "DELETE"]
         apiGroups: ["multicluster.x-k8s.io"]
-        apiVersions: ["v1alpha1", "v1beta1"]
+        apiVersions: ["v1alpha1"]
         resources: ["serviceimports"]
         scope: "Namespaced"
       - operations: ["UPDATE"]
         apiGroups: ["multicluster.x-k8s.io"]
-        apiVersions: ["v1alpha1", "v1beta1"]
+        apiVersions: ["v1alpha1"]
         resources: ["serviceimports/status"]
         scope: "Namespaced"
     namespaceSelector:
