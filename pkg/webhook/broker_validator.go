@@ -108,6 +108,35 @@ func (v *BrokerValidator) handleSecret(req *admission.Request, clusterID string)
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
+	// For Update operations, validate that the old owner also matches to prevent ownership takeover
+	if req.Operation == admissionv1.Update {
+		oldSecret := &corev1.Secret{}
+		if err := v.decoder.DecodeRaw(req.OldObject, oldSecret); err != nil {
+			webhookLog.Error(err, "Failed to decode old Secret")
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+
+		oldOwner, oldHasLabel := oldSecret.Labels[SigningRequestLabelKey]
+		newOwner, newHasLabel := secret.Labels[SigningRequestLabelKey]
+
+		// Both old and new must match clusterID to prevent ownership changes
+		if oldHasLabel && oldOwner != clusterID {
+			msg := fmt.Sprintf("cluster %s cannot update Secret belonging to cluster %s", clusterID, oldOwner)
+			webhookLog.Info("Denying update of other cluster's Secret", "requesting-cluster", clusterID,
+				"secret-owner", oldOwner, "secret", secret.Name)
+
+			return admission.Denied(msg)
+		}
+
+		if newHasLabel && newOwner != clusterID {
+			msg := fmt.Sprintf("cluster %s cannot change Secret ownership to cluster %s", clusterID, newOwner)
+			webhookLog.Info("Denying Secret ownership change", "requesting-cluster", clusterID,
+				"new-owner", newOwner, "secret", secret.Name)
+
+			return admission.Denied(msg)
+		}
+	}
+
 	// Allow access to secrets that belong to this cluster (certificate secrets)
 	// These are labeled with submariner.io/csr-request: <cluster-id>
 	if labelValue, ok := secret.Labels[SigningRequestLabelKey]; ok {
@@ -162,6 +191,24 @@ func (v *BrokerValidator) handleEndpoint(req *admission.Request, clusterID strin
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
+	// For Update operations, validate that the old ClusterID also matches to prevent ownership takeover
+	if req.Operation == admissionv1.Update {
+		oldEndpoint := &submarinerv1.Endpoint{}
+		if err := v.decoder.DecodeRaw(req.OldObject, oldEndpoint); err != nil {
+			webhookLog.Error(err, "Failed to decode old Endpoint")
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+
+		if oldEndpoint.Spec.ClusterID != clusterID {
+			msg := fmt.Sprintf("cluster %s cannot update Endpoint belonging to cluster %s",
+				clusterID, oldEndpoint.Spec.ClusterID)
+			webhookLog.Info("Denying update of other cluster's Endpoint", "requesting-cluster", clusterID,
+				"endpoint-cluster", oldEndpoint.Spec.ClusterID, "endpoint", endpoint.Name)
+
+			return admission.Denied(msg)
+		}
+	}
+
 	// Validate that the endpoint's ClusterID matches the requesting cluster's ID
 	if endpoint.Spec.ClusterID != clusterID {
 		msg := fmt.Sprintf("cluster %s cannot %s Endpoint for cluster %s", clusterID, req.Operation, endpoint.Spec.ClusterID)
@@ -185,6 +232,25 @@ func (v *BrokerValidator) handleEndpointSlice(req *admission.Request, clusterID 
 		webhookLog.Error(err, "Failed to decode EndpointSlice")
 
 		return admission.Errored(http.StatusBadRequest, err)
+	}
+
+	// For Update operations, validate that the old source cluster label also matches to prevent ownership takeover
+	if req.Operation == admissionv1.Update {
+		oldEndpointSlice := &discoveryv1.EndpointSlice{}
+		if err := v.decoder.DecodeRaw(req.OldObject, oldEndpointSlice); err != nil {
+			webhookLog.Error(err, "Failed to decode old EndpointSlice")
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+
+		oldSourceCluster, oldHasLabel := oldEndpointSlice.Labels[mcsv1a1.LabelSourceCluster]
+		if oldHasLabel && oldSourceCluster != clusterID {
+			msg := fmt.Sprintf("cluster %s cannot update EndpointSlice belonging to cluster %s",
+				clusterID, oldSourceCluster)
+			webhookLog.Info("Denying update of other cluster's EndpointSlice", "requesting-cluster", clusterID,
+				"source-cluster", oldSourceCluster, "endpointslice", endpointSlice.Name)
+
+			return admission.Denied(msg)
+		}
 	}
 
 	// Validate that the EndpointSlice's source cluster label matches the requesting cluster's ID
@@ -225,9 +291,45 @@ func (v *BrokerValidator) handleServiceImport(req *admission.Request, clusterID 
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	// Ignore aggregated ServiceImports - they have LabelServiceName in annotations instead of labels
+	var oldServiceImport *mcsv1a1.ServiceImport
+
+	// For Update operations, validate that the old classification and ownership match to prevent takeover
+	if req.Operation == admissionv1.Update {
+		oldServiceImport = &mcsv1a1.ServiceImport{}
+		if err := v.decoder.DecodeRaw(req.OldObject, oldServiceImport); err != nil {
+			webhookLog.Error(err, "Failed to decode old ServiceImport")
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+
+		// Check if classification changed (local <-> aggregated)
+		oldIsAggregated := oldServiceImport.Annotations[mcsv1a1.LabelServiceName] != ""
+		newIsAggregated := serviceImport.Annotations[mcsv1a1.LabelServiceName] != ""
+
+		if oldIsAggregated != newIsAggregated {
+			msg := fmt.Sprintf("cluster %s cannot change ServiceImport classification", clusterID)
+			webhookLog.Info("Denying ServiceImport classification change", "requesting-cluster", clusterID,
+				"serviceimport", serviceImport.Name, "old-aggregated", oldIsAggregated, "new-aggregated", newIsAggregated)
+
+			return admission.Denied(msg)
+		}
+
+		// For local ServiceImports, validate old ownership
+		if !oldIsAggregated {
+			oldSourceCluster, oldHasLabel := oldServiceImport.Labels[mcsv1a1.LabelSourceCluster]
+			if oldHasLabel && oldSourceCluster != clusterID {
+				msg := fmt.Sprintf("cluster %s cannot update ServiceImport belonging to cluster %s",
+					clusterID, oldSourceCluster)
+				webhookLog.Info("Denying update of other cluster's ServiceImport", "requesting-cluster", clusterID,
+					"source-cluster", oldSourceCluster, "serviceimport", serviceImport.Name)
+
+				return admission.Denied(msg)
+			}
+		}
+	}
+
+	// Aggregated ServiceImports have LabelServiceName in annotations instead of labels.
 	if serviceImport.Annotations[mcsv1a1.LabelServiceName] != "" {
-		return v.handleAggregatedServiceImport(req, serviceImport, clusterID)
+		return v.handleAggregatedServiceImport(req, serviceImport, oldServiceImport, clusterID)
 	}
 
 	// Validate that the ServiceImport's source cluster label matches the requesting cluster's ID
@@ -254,16 +356,9 @@ func (v *BrokerValidator) handleServiceImport(req *admission.Request, clusterID 
 	return admission.Allowed(fmt.Sprintf("cluster %s accessing own ServiceImport", clusterID))
 }
 
-func (v *BrokerValidator) handleAggregatedServiceImport(req *admission.Request, serviceImport *mcsv1a1.ServiceImport, clusterID string,
+func (v *BrokerValidator) handleAggregatedServiceImport(req *admission.Request, serviceImport, old *mcsv1a1.ServiceImport, clusterID string,
 ) admission.Response {
 	if req.Operation == admissionv1.Update {
-		old := &mcsv1a1.ServiceImport{}
-		if err := v.decoder.DecodeRaw(req.OldObject, old); err != nil {
-			webhookLog.Error(err, "Failed to decode old ServiceImport")
-
-			return admission.Errored(http.StatusBadRequest, err)
-		}
-
 		if !reflect.DeepEqual(old.Status.Clusters, serviceImport.Status.Clusters) {
 			return v.handleServiceImportClustersUpdated(old.Status.Clusters, serviceImport.Status.Clusters, serviceImport.Name, clusterID)
 		}
