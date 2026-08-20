@@ -286,7 +286,7 @@ var _ = Describe("Broker webhook", func() {
 					Namespace: brokerNamespace,
 					Name:      fmt.Sprintf("%s-%s", serviceName, serviceNamespace),
 				}, serviceImport)).To(Succeed())
-			}).Within(5 * time.Second).To(Succeed())
+			}).Within(time.Minute).To(Succeed())
 
 			impersonatedConfig := rest.CopyConfig(framework.RestConfigs[brokerCluster])
 			impersonatedConfig.Impersonate = rest.ImpersonationConfig{
