@@ -76,6 +76,15 @@ var _ = Describe("BrokerValidator", func() {
 		})
 	})
 
+	Context("attempting to claim an unlabeled Secret via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldSecret := newSecret("")
+			newSecret := newSecret(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newSecret, oldSecret, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
+
 	t.testAccess("own Endpoint", newEndpoint(testClusterID), AllowOwn)
 	t.testAccess("another cluster's Endpoint", newEndpoint("cluster-b"), Deny)
 
@@ -104,6 +113,15 @@ var _ = Describe("BrokerValidator", func() {
 		})
 	})
 
+	Context("attempting to claim an unlabeled EndpointSlice via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldEPS := newEndpointSlice("")
+			newEPS := newEndpointSlice(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newEPS, oldEPS, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
+
 	t.testAccess("own ServiceImport", newServiceImport(testClusterID), AllowOwn)
 	t.testAccess("another cluster's ServiceImport", newServiceImport("cluster-b"), Deny)
 	t.testAccess("unlabeled ServiceImport", newServiceImport(""), Deny)
@@ -111,6 +129,15 @@ var _ = Describe("BrokerValidator", func() {
 	Context("attempting to take over another cluster's ServiceImport via Update", func() {
 		It("should deny", func(ctx context.Context) {
 			oldSI := newServiceImport(otherClusterID)
+			newSI := newServiceImport(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newSI, oldSI, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
+
+	Context("attempting to claim an unlabeled ServiceImport via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldSI := newServiceImport("")
 			newSI := newServiceImport(testClusterID)
 			resp := t.validator.Handle(ctx, t.createRequest(newSI, oldSI, admissionv1.Update))
 			Expect(resp.Allowed).To(BeFalse())
@@ -368,7 +395,7 @@ func newEndpointSlice(clusterID string) *discoveryv1.EndpointSlice {
 	}
 
 	if clusterID != "" {
-		s.Labels = map[string]string{mcsv1a1.LabelSourceCluster: clusterID}
+		s.Labels = map[string]string{webhook.LabelSourceCluster: clusterID}
 	}
 
 	return s
@@ -387,7 +414,7 @@ func newServiceImport(clusterID string) *mcsv1a1.ServiceImport {
 	}
 
 	if clusterID != "" {
-		s.Labels[mcsv1a1.LabelSourceCluster] = clusterID
+		s.Labels[webhook.LabelSourceCluster] = clusterID
 	}
 
 	return s

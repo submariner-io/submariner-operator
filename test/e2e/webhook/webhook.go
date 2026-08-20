@@ -43,6 +43,8 @@ import (
 	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 )
 
+const LabelSourceCluster = "multicluster.kubernetes.io/source-cluster"
+
 var _ = Describe("Broker webhook", func() {
 	var (
 		generalClient      client.Client
@@ -156,7 +158,8 @@ var _ = Describe("Broker webhook", func() {
 					resource.ToJSON(obj)))
 
 				Eventually(func(g Gomega) {
-					expectForbidden(g, impersonatedClient.Create(ctx, obj))
+					// Create a fresh object for each retry to avoid resourceVersion issues
+					expectForbidden(g, impersonatedClient.Create(ctx, newObj()))
 				}).Within(time.Second * 5).ProbeEvery(time.Second).Should(Succeed())
 			})
 		},
@@ -174,7 +177,7 @@ var _ = Describe("Broker webhook", func() {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "forbidden-eps",
 					Namespace: brokerNamespace,
-					Labels:    map[string]string{mcsv1a1.LabelSourceCluster: otherClusterID},
+					Labels:    map[string]string{LabelSourceCluster: otherClusterID},
 				},
 				AddressType: discoveryv1.AddressTypeIPv4,
 			}
@@ -185,8 +188,8 @@ var _ = Describe("Broker webhook", func() {
 					Name:      "forbidden-si",
 					Namespace: brokerNamespace,
 					Labels: map[string]string{
-						mcsv1a1.LabelServiceName:   "nginx",
-						mcsv1a1.LabelSourceCluster: otherClusterID,
+						mcsv1a1.LabelServiceName: "nginx",
+						LabelSourceCluster:       otherClusterID,
 					},
 				},
 				Spec: mcsv1a1.ServiceImportSpec{
@@ -286,7 +289,7 @@ var _ = Describe("Broker webhook", func() {
 					Namespace: brokerNamespace,
 					Name:      fmt.Sprintf("%s-%s", serviceName, serviceNamespace),
 				}, serviceImport)).To(Succeed())
-			}).Within(time.Minute).To(Succeed())
+			}).Within(time.Minute).Should(Succeed())
 
 			impersonatedConfig := rest.CopyConfig(framework.RestConfigs[brokerCluster])
 			impersonatedConfig.Impersonate = rest.ImpersonationConfig{
@@ -304,7 +307,7 @@ var _ = Describe("Broker webhook", func() {
 
 			Eventually(func(g Gomega) {
 				expectForbidden(g, util.MustUpdate(ctx, resourceClient, serviceImport, util.Replace(serviceImport)))
-			}).Within(5 * time.Second).To(Succeed())
+			}).Within(5 * time.Second).Should(Succeed())
 
 			framework.By(fmt.Sprintf("Attempting to add cluster %q to the Status impersonating cluster %q - should be allowed",
 				otherClusterID, otherClusterID))
@@ -314,7 +317,7 @@ var _ = Describe("Broker webhook", func() {
 					si.Status.Clusters = append(si.Status.Clusters, mcsv1a1.ClusterStatus{Cluster: otherClusterID})
 					return si, nil
 				})).To(Succeed())
-			}).Within(5 * time.Second).To(Succeed())
+			}).Within(5 * time.Second).Should(Succeed())
 
 			framework.By(fmt.Sprintf("Attempting to remove cluster %q from the Status impersonating cluster %q - should be denied",
 				clusterName, otherClusterID))
@@ -327,7 +330,7 @@ var _ = Describe("Broker webhook", func() {
 
 					return si, nil
 				}))
-			}).Within(5 * time.Second).To(Succeed())
+			}).Within(5 * time.Second).Should(Succeed())
 
 			framework.By(fmt.Sprintf("Attempting to remove cluster %q from the Status impersonating cluster %q - should be allowed",
 				otherClusterID, otherClusterID))
@@ -340,7 +343,7 @@ var _ = Describe("Broker webhook", func() {
 
 					return si, nil
 				})).To(Succeed())
-			}).Within(5 * time.Second).To(Succeed())
+			}).Within(5 * time.Second).Should(Succeed())
 
 			framework.By("Deleting ServiceExport")
 
@@ -352,7 +355,7 @@ var _ = Describe("Broker webhook", func() {
 					Name:      fmt.Sprintf("%s-%s", serviceName, serviceNamespace),
 				}, serviceImport)
 				g.Expect(apierrors.IsNotFound(err)).To(BeTrue(), "ServiceImport should be deleted")
-			}).Within(10 * time.Second).To(Succeed())
+			}).Within(10 * time.Second).Should(Succeed())
 		})
 	})
 })
