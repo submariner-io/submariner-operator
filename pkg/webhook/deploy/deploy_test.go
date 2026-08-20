@@ -34,6 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	fakeClient "sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/client/interceptor"
 )
 
 const (
@@ -52,7 +53,31 @@ var _ = Describe("Webhook", func() {
 
 	BeforeEach(func() {
 		status = reporter.Stdout()
-		clientBuilder = fakeClient.NewClientBuilder()
+		clientBuilder = fakeClient.NewClientBuilder().
+			WithStatusSubresource(&appsv1.Deployment{}, &corev1.Secret{}).
+			WithInterceptorFuncs(interceptor.Funcs{
+				Get: func(ctx context.Context, client controllerClient.WithWatch, key controllerClient.ObjectKey,
+					obj controllerClient.Object, opts ...controllerClient.GetOption,
+				) error {
+					if err := client.Get(ctx, key, obj, opts...); err != nil {
+						return err
+					}
+
+					// Simulate deployment controller - populate status fields
+					if deployment, ok := obj.(*appsv1.Deployment); ok {
+						if deployment.Generation == 0 {
+							deployment.Generation = 1
+						}
+
+						deployment.Status.ObservedGeneration = deployment.Generation
+						deployment.Status.UpdatedReplicas = 1
+						deployment.Status.ReadyReplicas = 1
+						deployment.Status.AvailableReplicas = 1
+					}
+
+					return nil
+				},
+			})
 	})
 
 	JustBeforeEach(func() {
@@ -101,7 +126,7 @@ var _ = Describe("Webhook", func() {
 	When("an issuerName is provided", func() {
 		Context("and an Issuer exists in the namespace", func() {
 			BeforeEach(func() {
-				clientBuilder = clientBuilder.WithRuntimeObjects(newIssuer())
+				clientBuilder = clientBuilder.WithRuntimeObjects(newIssuer(), newCertificateSecret())
 			})
 
 			It("should deploy the Certificate with Issuer kind", func(ctx context.Context) {
@@ -112,7 +137,7 @@ var _ = Describe("Webhook", func() {
 
 		Context("a ClusterIssuer exists", func() {
 			BeforeEach(func() {
-				clientBuilder = clientBuilder.WithRuntimeObjects(newClusterIssuer())
+				clientBuilder = clientBuilder.WithRuntimeObjects(newClusterIssuer(), newCertificateSecret())
 			})
 
 			It("should deploy the Certificate with ClusterIssuer kind", func(ctx context.Context) {
@@ -129,7 +154,7 @@ var _ = Describe("Webhook", func() {
 
 		Context("and the Certificate already exists", func() {
 			BeforeEach(func() {
-				clientBuilder = clientBuilder.WithRuntimeObjects(newIssuer(), newCertificate())
+				clientBuilder = clientBuilder.WithRuntimeObjects(newIssuer(), newCertificate(), newCertificateSecret())
 			})
 
 			It("should update the existing Certificate", func(ctx context.Context) {
@@ -180,6 +205,19 @@ func verifyCertificate(ctx context.Context, client controllerClient.Client, kind
 	Expect(found).To(BeTrue())
 	Expect(issuerRef["name"]).To(Equal(issuerName))
 	Expect(issuerRef["kind"]).To(Equal(kind))
+}
+
+func newCertificateSecret() *corev1.Secret {
+	return &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "submariner-operator-webhook-cert",
+			Namespace: deploy.OperatorNamespace,
+		},
+		Data: map[string][]byte{
+			"tls.crt": []byte("fake-cert"),
+			"tls.key": []byte("fake-key"),
+		},
+	}
 }
 
 func verifyWebhookDeployment(ctx context.Context, client controllerClient.Client, image string) {
