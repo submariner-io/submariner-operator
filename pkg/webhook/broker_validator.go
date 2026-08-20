@@ -119,8 +119,17 @@ func (v *BrokerValidator) handleSecret(req *admission.Request, clusterID string)
 		oldOwner, oldHasLabel := oldSecret.Labels[SigningRequestLabelKey]
 		newOwner, newHasLabel := secret.Labels[SigningRequestLabelKey]
 
-		// Both old and new must match clusterID to prevent ownership changes
-		if oldHasLabel && oldOwner != clusterID {
+		// Deny updates to unlabeled secrets (shared resources like submariner-ipsec-psk)
+		if !oldHasLabel {
+			msg := fmt.Sprintf("cluster %s cannot update unlabeled Secret %s", clusterID, secret.Name)
+			webhookLog.Info("Denying update of unlabeled Secret", "requesting-cluster", clusterID,
+				"secret", secret.Name)
+
+			return admission.Denied(msg)
+		}
+
+		// Old label exists - require it to match clusterID
+		if oldOwner != clusterID {
 			msg := fmt.Sprintf("cluster %s cannot update Secret belonging to cluster %s", clusterID, oldOwner)
 			webhookLog.Info("Denying update of other cluster's Secret", "requesting-cluster", clusterID,
 				"secret-owner", oldOwner, "secret", secret.Name)
@@ -128,6 +137,7 @@ func (v *BrokerValidator) handleSecret(req *admission.Request, clusterID string)
 			return admission.Denied(msg)
 		}
 
+		// Prevent changing ownership to another cluster
 		if newHasLabel && newOwner != clusterID {
 			msg := fmt.Sprintf("cluster %s cannot change Secret ownership to cluster %s", clusterID, newOwner)
 			webhookLog.Info("Denying Secret ownership change", "requesting-cluster", clusterID,
@@ -243,7 +253,18 @@ func (v *BrokerValidator) handleEndpointSlice(req *admission.Request, clusterID 
 		}
 
 		oldSourceCluster, oldHasLabel := oldEndpointSlice.Labels[mcsv1b1.LabelSourceCluster]
-		if oldHasLabel && oldSourceCluster != clusterID {
+
+		// Deny updates to unlabeled EndpointSlices
+		if !oldHasLabel {
+			msg := fmt.Sprintf("cluster %s cannot update unlabeled EndpointSlice %s", clusterID, endpointSlice.Name)
+			webhookLog.Info("Denying update of unlabeled EndpointSlice", "requesting-cluster", clusterID,
+				"endpointslice", endpointSlice.Name)
+
+			return admission.Denied(msg)
+		}
+
+		// Old label exists - require it to match clusterID
+		if oldSourceCluster != clusterID {
 			msg := fmt.Sprintf("cluster %s cannot update EndpointSlice belonging to cluster %s",
 				clusterID, oldSourceCluster)
 			webhookLog.Info("Denying update of other cluster's EndpointSlice", "requesting-cluster", clusterID,
@@ -316,7 +337,18 @@ func (v *BrokerValidator) handleServiceImport(req *admission.Request, clusterID 
 		// For local ServiceImports, validate old ownership
 		if !oldIsAggregated {
 			oldSourceCluster, oldHasLabel := oldServiceImport.Labels[mcsv1b1.LabelSourceCluster]
-			if oldHasLabel && oldSourceCluster != clusterID {
+
+			// Deny updates to unlabeled local ServiceImports
+			if !oldHasLabel {
+				msg := fmt.Sprintf("cluster %s cannot update unlabeled ServiceImport %s", clusterID, serviceImport.Name)
+				webhookLog.Info("Denying update of unlabeled ServiceImport", "requesting-cluster", clusterID,
+					"serviceimport", serviceImport.Name)
+
+				return admission.Denied(msg)
+			}
+
+			// Old label exists - require it to match clusterID
+			if oldSourceCluster != clusterID {
 				msg := fmt.Sprintf("cluster %s cannot update ServiceImport belonging to cluster %s",
 					clusterID, oldSourceCluster)
 				webhookLog.Info("Denying update of other cluster's ServiceImport", "requesting-cluster", clusterID,
