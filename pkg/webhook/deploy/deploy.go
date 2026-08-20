@@ -247,8 +247,16 @@ func waitForDeploymentReady(ctx context.Context, client controllerClient.Client,
 			return false, err //nolint:wrapcheck // No need to wrap
 		}
 
-		// Check if deployment has available replicas
-		if deployment.Status.AvailableReplicas > 0 {
+		expectedReplicas := int32(1)
+		if deployment.Spec.Replicas != nil {
+			expectedReplicas = *deployment.Spec.Replicas
+		}
+
+		// Check if deployment has converged to the current generation
+		if deployment.Status.ObservedGeneration == deployment.Generation &&
+			deployment.Status.UpdatedReplicas >= expectedReplicas &&
+			deployment.Status.ReadyReplicas >= expectedReplicas &&
+			deployment.Status.AvailableReplicas >= expectedReplicas {
 			return true, nil
 		}
 
