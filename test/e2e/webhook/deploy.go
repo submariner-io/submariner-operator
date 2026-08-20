@@ -58,7 +58,7 @@ func Deploy() {
 
 	// Wait for webhook deployment to be ready
 	framework.By("Waiting for webhook deployment to be ready")
-	framework.AwaitUntil("find ready webhook deployment", func() (*appsv1.Deployment, error) {
+	framework.AwaitUntil("find ready webhook deployment", func() (interface{}, error) {
 		deployment := &appsv1.Deployment{}
 		err := crClient.Get(ctx, client.ObjectKey{
 			Namespace: deploy.OperatorNamespace,
@@ -66,7 +66,9 @@ func Deploy() {
 		}, deployment)
 
 		return deployment, err
-	}, func(result *appsv1.Deployment) (bool, string, error) {
+	}, func(obj interface{}) (bool, string, error) {
+		result := obj.(*appsv1.Deployment)
+
 		if result.Status.ReadyReplicas > 0 && result.Status.AvailableReplicas > 0 {
 			return true, "", nil
 		}

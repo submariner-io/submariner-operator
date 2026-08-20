@@ -156,7 +156,8 @@ var _ = Describe("Broker webhook", func() {
 					resource.ToJSON(obj)))
 
 				Eventually(func(g Gomega) {
-					expectForbidden(g, impersonatedClient.Create(ctx, obj))
+					// Create a fresh object for each retry to avoid resourceVersion issues
+					expectForbidden(g, impersonatedClient.Create(ctx, newObj()))
 				}).Within(time.Second * 5).ProbeEvery(time.Second).Should(Succeed())
 			})
 		},
