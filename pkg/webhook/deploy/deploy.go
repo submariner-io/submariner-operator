@@ -20,6 +20,7 @@ package deploy
 
 import (
 	"context"
+	"time"
 
 	"github.com/submariner-io/admiral/pkg/reporter"
 	"github.com/submariner-io/admiral/pkg/resource"
@@ -31,6 +32,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/wait"
 	controllerClient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -52,7 +54,12 @@ func Webhook(ctx context.Context, client controllerClient.Client, issuerName, op
 	}
 
 	if issuerName != "" {
-		if err := deployCertificate(ctx, client, issuerName, status); err != nil {
+		secretName, err := deployCertificate(ctx, client, issuerName, status)
+		if err != nil {
+			return err
+		}
+
+		if err := waitForCertificateSecret(ctx, client, secretName, status); err != nil {
 			return err
 		}
 	}
@@ -61,11 +68,16 @@ func Webhook(ctx context.Context, client controllerClient.Client, issuerName, op
 		return err
 	}
 
-	if err := deployWebhookConfig(ctx, client, brokerNamespace, status); err != nil {
+	deploymentName, err := deployOperator(ctx, client, operatorImage, status)
+	if err != nil {
 		return err
 	}
 
-	return deployOperator(ctx, client, operatorImage, status)
+	if err := waitForDeploymentReady(ctx, client, deploymentName, status); err != nil {
+		return err
+	}
+
+	return deployWebhookConfig(ctx, client, brokerNamespace, status)
 }
 
 func getOperatorImage(ctx context.Context, client controllerClient.Client, status reporter.Interface) (string, error) {
@@ -87,10 +99,11 @@ func getOperatorImage(ctx context.Context, client controllerClient.Client, statu
 	return existingDeployment.Spec.Template.Spec.Containers[0].Image, nil
 }
 
-func deployCertificate(ctx context.Context, client controllerClient.Client, issuerName string, status reporter.Interface) error {
+func deployCertificate(ctx context.Context, client controllerClient.Client, issuerName string, status reporter.Interface,
+) (string, error) {
 	kind, err := getIssuerKind(ctx, client, issuerName, status)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	status.Start("Deploying the Certificate")
@@ -98,20 +111,25 @@ func deployCertificate(ctx context.Context, client controllerClient.Client, issu
 
 	certificate := &unstructured.Unstructured{}
 	if err := yaml.Unmarshal(webhookyaml.Certificate, certificate); err != nil {
-		return status.Error(err, "error parsing Certificate YAML")
+		return "", status.Error(err, "error parsing Certificate YAML")
 	}
 
 	if err := unstructured.SetNestedField(certificate.Object, issuerName, "spec", "issuerRef", "name"); err != nil {
-		return status.Error(err, "error setting issuerRef name")
+		return "", status.Error(err, "error setting issuerRef name")
 	}
 
 	if err := unstructured.SetNestedField(certificate.Object, kind, "spec", "issuerRef", "kind"); err != nil {
-		return status.Error(err, "error setting issuerRef kind")
+		return "", status.Error(err, "error setting issuerRef kind")
 	}
 
 	err = Ensure(ctx, client, certificate)
+	if err != nil {
+		return "", status.Error(err, "error deploying Certificate")
+	}
 
-	return status.Error(err, "error deploying Certificate")
+	secretName, _, err := unstructured.NestedString(certificate.Object, "spec", "secretName")
+
+	return secretName, status.Error(err, "error getting secretName")
 }
 
 func getIssuerKind(ctx context.Context, client controllerClient.Client, issuerName string,
@@ -163,20 +181,21 @@ func deployService(ctx context.Context, client controllerClient.Client, status r
 	return status.Error(err, "error deploying Service")
 }
 
-func deployOperator(ctx context.Context, client controllerClient.Client, operatorImage string, status reporter.Interface) error {
+func deployOperator(ctx context.Context, client controllerClient.Client, operatorImage string, status reporter.Interface,
+) (string, error) {
 	status.Start("Deploying the Operator")
 	defer status.End()
 
 	deployment := &appsv1.Deployment{}
 	if err := yaml.Unmarshal(webhookyaml.Deployment, deployment); err != nil {
-		return status.Error(err, "error parsing Deployment YAML")
+		return "", status.Error(err, "error parsing Deployment YAML")
 	}
 
 	deployment.Spec.Template.Spec.Containers[0].Image = operatorImage
 
 	err := Ensure(ctx, client, deployment)
 
-	return status.Error(err, "error deploying Deployment")
+	return deployment.Name, status.Error(err, "error deploying Deployment")
 }
 
 func deployWebhookConfig(ctx context.Context, client controllerClient.Client, brokerNamespace string,
@@ -200,4 +219,78 @@ func deployWebhookConfig(ctx context.Context, client controllerClient.Client, br
 func Ensure[T controllerClient.Object](ctx context.Context, client controllerClient.Client, obj T) error {
 	_, err := util.CreateOrUpdate(ctx, resource.ForControllerClient(client, OperatorNamespace, obj), obj, util.Replace(obj))
 	return err //nolint:wrapcheck // No need to wrap.
+}
+
+func waitForDeploymentReady(ctx context.Context, client controllerClient.Client, deploymentName string, status reporter.Interface) error {
+	status.Start("Waiting for webhook deployment to become ready")
+	defer status.End()
+
+	backoff := wait.Backoff{
+		Duration: 1 * time.Second,
+		Factor:   1.5,
+		Steps:    20,
+		Cap:      30 * time.Second,
+	}
+
+	err := wait.ExponentialBackoffWithContext(ctx, backoff, func(ctx context.Context) (bool, error) {
+		deployment := &appsv1.Deployment{}
+
+		err := client.Get(ctx, controllerClient.ObjectKey{
+			Namespace: OperatorNamespace,
+			Name:      deploymentName,
+		}, deployment)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return false, nil
+			}
+
+			return false, err //nolint:wrapcheck // No need to wrap
+		}
+
+		// Check if deployment has available replicas
+		if deployment.Status.AvailableReplicas > 0 {
+			return true, nil
+		}
+
+		return false, nil
+	})
+
+	return status.Error(err, "webhook deployment did not become ready")
+}
+
+func waitForCertificateSecret(ctx context.Context, client controllerClient.Client, secretName string, status reporter.Interface) error {
+	status.Start("Waiting for webhook certificate to be issued")
+	defer status.End()
+
+	backoff := wait.Backoff{
+		Duration: 1 * time.Second,
+		Factor:   1.5,
+		Steps:    20,
+		Cap:      30 * time.Second,
+	}
+
+	err := wait.ExponentialBackoffWithContext(ctx, backoff, func(ctx context.Context) (bool, error) {
+		secret := &corev1.Secret{}
+
+		err := client.Get(ctx, controllerClient.ObjectKey{
+			Namespace: OperatorNamespace,
+			Name:      secretName,
+		}, secret)
+		if err != nil {
+			if apierrors.IsNotFound(err) {
+				return false, nil
+			}
+
+			return false, err //nolint:wrapcheck // No need to wrap
+		}
+
+		// Check if secret contains the expected certificate data
+		if len(secret.Data["tls.crt"]) > 0 && len(secret.Data["tls.key"]) > 0 {
+			return true, nil
+		}
+
+		return false, nil
+	})
+
+	return status.Error(err, "certificate secret %q was not created", secretName)
 }
