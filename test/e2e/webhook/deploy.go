@@ -69,11 +69,20 @@ func Deploy() {
 	}, func(obj interface{}) (bool, string, error) {
 		result := obj.(*appsv1.Deployment)
 
-		if result.Status.ReadyReplicas > 0 && result.Status.AvailableReplicas > 0 {
+		expectedReplicas := int32(1)
+
+		if result.Spec.Replicas != nil {
+			expectedReplicas = *result.Spec.Replicas
+		}
+
+		if result.Status.ObservedGeneration == result.Generation &&
+			result.Status.UpdatedReplicas >= expectedReplicas &&
+			result.Status.ReadyReplicas >= expectedReplicas &&
+			result.Status.AvailableReplicas >= expectedReplicas {
 			return true, "", nil
 		}
 
-		return false, "Deployment not ready yet", nil
+		return false, "Deployment has not converged", nil
 	})
 }
 
