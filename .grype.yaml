@@ -43,3 +43,10 @@ ignore:
     package:
       name: github.com/containerd/containerd
       location: /tools/go.mod
+
+  # No fix available
+  - vulnerability: GO-2026-5932
+    fix-state: unknown
+    package:
+      name: golang.org/x/crypto
+      location: /tools/go.mod
