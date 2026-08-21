@@ -1,10 +1,10 @@
 ---
 ignore:
-  # No fix available for docker/docker
+  # Fix requires docker/docker v28→v29 major upgrade, incompatible with this branch
   - vulnerability: GHSA-x744-4wpc-v9h2
     package:
       name: github.com/docker/docker
-  # No fix available for docker/docker
+  # Fix requires docker/docker v28→v29 major upgrade, incompatible with this branch
   - vulnerability: GHSA-pxq6-2prw-chj9
     package:
       name: github.com/docker/docker
