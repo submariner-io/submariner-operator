@@ -6,6 +6,7 @@ ignore:
       name: github.com/docker/docker
   # No fix available for docker/docker
   - vulnerability: GHSA-pxq6-2prw-chj9
+    fix-state: not-fixed
     package:
       name: github.com/docker/docker
 
