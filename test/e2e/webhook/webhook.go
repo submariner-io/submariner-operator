@@ -201,12 +201,12 @@ var _ = Describe("Broker webhook", func() {
 	)
 
 	Context("for aggregate ServiceImports", func() {
-		BeforeEach(func() {
+		BeforeEach(func(ctx context.Context) {
 			if !submariner.Spec.ServiceDiscoveryEnabled {
 				Skip("Service Discovery is not enabled")
 			}
 
-			err := generalClient.Create(context.TODO(), &rbacv1.RoleBinding{
+			roleBinding := &rbacv1.RoleBinding{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      names.ForClusterSA(otherClusterID) + "-submariner-k8s-broker-cluster",
 					Namespace: brokerNamespace,
@@ -223,10 +223,17 @@ var _ = Describe("Broker webhook", func() {
 						Kind:      "ServiceAccount",
 					},
 				},
-			})
-			if !apierrors.IsAlreadyExists(err) {
-				Expect(err).NotTo(HaveOccurred())
 			}
+
+			err := generalClient.Create(ctx, roleBinding)
+			if apierrors.IsAlreadyExists(err) {
+				return
+			}
+
+			Expect(err).NotTo(HaveOccurred())
+			DeferCleanup(func(ctx context.Context) {
+				Expect(generalClient.Delete(ctx, roleBinding)).To(Succeed())
+			})
 		})
 
 		It("should only allow access to participating clusters", func(ctx context.Context) {
