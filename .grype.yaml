@@ -14,8 +14,9 @@ ignore:
   - vulnerability: GHSA-x744-4wpc-v9h2
     package:
       name: github.com/docker/docker
-  # Fix requires docker/docker v28→v29 major upgrade, incompatible with this branch
+  # No fix available for docker/docker
   - vulnerability: GHSA-pxq6-2prw-chj9
+    fix-state: not-fixed
     package:
       name: github.com/docker/docker
   # Ignore all docker CVEs in tools directory (build-time only, not production)
