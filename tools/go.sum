@@ -554,12 +554,12 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 go.etcd.io/bbolt v1.4.3 h1:dEadXpI6G79deX5prL3QRNP6JB8UxVkqo4UPnHaNXJo=
 go.etcd.io/bbolt v1.4.3/go.mod h1:tKQlpPaYCVFctUIgFKFnAlvbmB3tpy1vkTnDWohtc0E=
-go.etcd.io/etcd/api/v3 v3.6.8 h1:gqb1VN92TAI6G2FiBvWcqKtHiIjr4SU2GdXxTwyexbM=
-go.etcd.io/etcd/api/v3 v3.6.8/go.mod h1:qyQj1HZPUV3B5cbAL8scG62+fyz5dSxxu0w8pn28N6Q=
+go.etcd.io/etcd/api/v3 v3.6.14 h1:3EEwTzQPiCyhLtacyl2ZkC0pMJWowghi61nJ9JSpO1w=
+go.etcd.io/etcd/api/v3 v3.6.14/go.mod h1:L4HXnXoJ5NqXSxiwB4RihT5gGJJVvHEEOpEZ37g1Uj4=
 go.etcd.io/etcd/client/pkg/v3 v3.6.14 h1:kqZf/BCRDWk9u5cNwBn1mTA+4GIZAU0POFPHmWHvo/I=
 go.etcd.io/etcd/client/pkg/v3 v3.6.14/go.mod h1:Po3WXW01VRS7/gSDf8xjiY2rJTLmAwq/YmKAEz6u1+E=
-go.etcd.io/etcd/client/v3 v3.6.8 h1:B3G76t1UykqAOrbio7s/EPatixQDkQBevN8/mwiplrY=
-go.etcd.io/etcd/client/v3 v3.6.8/go.mod h1:MVG4BpSIuumPi+ELF7wYtySETmoTWBHVcDoHdVupwt8=
+go.etcd.io/etcd/client/v3 v3.6.14 h1:3hjJbZCFJ3nFR47dZ/jjVu1/z6BRUHN1AA34pRbUW8Q=
+go.etcd.io/etcd/client/v3 v3.6.14/go.mod h1:rQqHPE7ju1B1nmaqpGdhRgBHqOTiVaUeymlY1/ATcoM=
 go.opencensus.io v0.24.0 h1:y73uSU6J157QMP2kn2r30vwW1A2W2WFwSCGnAVxeaD0=
 go.opencensus.io v0.24.0/go.mod h1:vNK8G9p7aAivkbmorf4v+7Hgx+Zs0yY+0fOtgBfjQKo=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
