@@ -46,11 +46,6 @@ ignore:
     package:
       name: oras.land/oras-go/v2
 
-  # Unknown severity, no fix available for v0.52.0
-  - vulnerability: GO-2026-5932
-    package:
-      name: golang.org/x/crypto
-
   # Requires Go 1.25.12; must be updated in Shipyard build environment
   - vulnerability: GO-2026-4970
     package:
