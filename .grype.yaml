@@ -16,10 +16,12 @@ ignore:
       name: github.com/docker/docker
   # No fix available for docker/docker
   - vulnerability: GHSA-pxq6-2prw-chj9
+    fix-state: not-fixed
     package:
       name: github.com/docker/docker
   # Only in tools/go.mod (development tools), not production code. No fix available.
   - vulnerability: GHSA-6jwv-w5xf-7j27
+    fix-state: not-fixed
     package:
       name: go.etcd.io/bbolt
 
@@ -43,6 +45,7 @@ ignore:
 
   # On latest version v2.6.1; no fix available yet
   - vulnerability: GHSA-fxhp-mv3v-67qp
+    fix-state: not-fixed
     package:
       name: oras.land/oras-go/v2
 
@@ -58,24 +61,24 @@ ignore:
 
   # No fix available
   - vulnerability: GO-2026-5064
-    fix-state: unknown
+    fix-state: not-fixed
     package:
       name: github.com/containerd/containerd
 
   # No fix available
   - vulnerability: GO-2026-5338
-    fix-state: unknown
+    fix-state: not-fixed
     package:
       name: github.com/containerd/containerd
 
   # No fix available
   - vulnerability: GO-2026-5622
-    fix-state: unknown
+    fix-state: not-fixed
     package:
       name: github.com/containerd/containerd
 
   # No fix available
   - vulnerability: GO-2026-5932
-    fix-state: unknown
+    fix-state: not-fixed
     package:
       name: golang.org/x/crypto
