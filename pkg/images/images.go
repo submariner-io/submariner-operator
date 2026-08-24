@@ -30,12 +30,21 @@ import (
 )
 
 func GetImagePath(repo, version, image, component string, imageOverrides map[string]string) string {
-	if override, ok := imageOverrides[component]; ok {
-		return logIfChanged(repo, version, image, component, override, "Image is overridden")
+	// Treat RELATED_IMAGE_* as a trusted source (e.g. set by OLM from the trusted operator bundle) that takes precedence over the
+	// supplied imageOverrides map, which is assumed to be user-supplied (e.g. from the Submariner CR which is namespaced and writable
+	// by lesser-privileged principals). Honouring the latter ahead of the former could let a bad actor pull arbitrary images into
+	// the privileged hostNetwork DaemonSets the operator manages.
+	if relatedImage, present := os.LookupEnv("RELATED_IMAGE_" + component); present {
+		if override, ok := imageOverrides[component]; ok && override != relatedImage {
+			log.Info("Ignoring image override as RELATED_IMAGE_* takes precedence",
+				"component", component, "override", override, "relatedImage", relatedImage)
+		}
+
+		return logIfChanged(repo, version, image, component, relatedImage, "Related image in the environment")
 	}
 
-	if relatedImage, present := os.LookupEnv("RELATED_IMAGE_" + component); present {
-		return logIfChanged(repo, version, image, component, relatedImage, "Related image in the environment")
+	if override, ok := imageOverrides[component]; ok {
+		return logIfChanged(repo, version, image, component, override, "Image is overridden")
 	}
 
 	path := image
