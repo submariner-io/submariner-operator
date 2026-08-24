@@ -67,8 +67,35 @@ var _ = Describe("BrokerValidator", func() {
 	t.testAccess("another cluster's certificate Secret", newSecret("cluster-b"), Deny)
 	t.testAccess("unlabeled Secret", newSecret(""), Deny)
 
+	Context("attempting to take over another cluster's Secret via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldSecret := newSecret(otherClusterID)
+			newSecret := newSecret(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newSecret, oldSecret, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
+
+	Context("attempting to claim an unlabeled Secret via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldSecret := newSecret("")
+			newSecret := newSecret(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newSecret, oldSecret, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
+
 	t.testAccess("own Endpoint", newEndpoint(testClusterID), AllowOwn)
 	t.testAccess("another cluster's Endpoint", newEndpoint("cluster-b"), Deny)
+
+	Context("attempting to take over another cluster's Endpoint via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldEndpoint := newEndpoint(otherClusterID)
+			newEndpoint := newEndpoint(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newEndpoint, oldEndpoint, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
 
 	t.testAccess("own Cluster", newCluster(testClusterID), AllowOwn)
 	t.testAccess("another cluster's Cluster", newCluster("cluster-b"), Deny)
@@ -77,9 +104,61 @@ var _ = Describe("BrokerValidator", func() {
 	t.testAccess("another cluster's EndpointSlice", newEndpointSlice("cluster-b"), Deny)
 	t.testAccess("unlabeled EndpointSlice", newEndpointSlice(""), Deny)
 
+	Context("attempting to take over another cluster's EndpointSlice via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldEPS := newEndpointSlice(otherClusterID)
+			newEPS := newEndpointSlice(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newEPS, oldEPS, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
+
+	Context("attempting to claim an unlabeled EndpointSlice via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldEPS := newEndpointSlice("")
+			newEPS := newEndpointSlice(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newEPS, oldEPS, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
+
 	t.testAccess("own ServiceImport", newServiceImport(testClusterID), AllowOwn)
 	t.testAccess("another cluster's ServiceImport", newServiceImport("cluster-b"), Deny)
 	t.testAccess("unlabeled ServiceImport", newServiceImport(""), Deny)
+
+	Context("attempting to take over another cluster's ServiceImport via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldSI := newServiceImport(otherClusterID)
+			newSI := newServiceImport(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newSI, oldSI, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
+
+	Context("attempting to claim an unlabeled ServiceImport via Update", func() {
+		It("should deny", func(ctx context.Context) {
+			oldSI := newServiceImport("")
+			newSI := newServiceImport(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newSI, oldSI, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
+
+	Context("attempting to change ServiceImport classification", func() {
+		It("should deny local to aggregated", func(ctx context.Context) {
+			oldSI := newServiceImport(testClusterID)
+			newSI := newAggregatedServiceImport(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newSI, oldSI, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+
+		It("should deny aggregated to local", func(ctx context.Context) {
+			oldSI := newAggregatedServiceImport(testClusterID)
+			newSI := newServiceImport(testClusterID)
+			resp := t.validator.Handle(ctx, t.createRequest(newSI, oldSI, admissionv1.Update))
+			Expect(resp.Allowed).To(BeFalse())
+		})
+	})
 
 	t.testAccess("an aggregate ServiceImport with only other clusters present", newAggregatedServiceImport(otherClusterID), Deny)
 

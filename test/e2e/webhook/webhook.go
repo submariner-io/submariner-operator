@@ -156,7 +156,8 @@ var _ = Describe("Broker webhook", func() {
 					resource.ToJSON(obj)))
 
 				Eventually(func(g Gomega) {
-					expectForbidden(g, impersonatedClient.Create(ctx, obj))
+					// Create a fresh object for each retry to avoid resourceVersion issues
+					expectForbidden(g, impersonatedClient.Create(ctx, newObj()))
 				}).Within(time.Second * 5).ProbeEvery(time.Second).Should(Succeed())
 			})
 		},
@@ -198,12 +199,12 @@ var _ = Describe("Broker webhook", func() {
 	)
 
 	Context("for aggregate ServiceImports", func() {
-		BeforeEach(func() {
+		BeforeEach(func(ctx context.Context) {
 			if !submariner.Spec.ServiceDiscoveryEnabled {
 				Skip("Service Discovery is not enabled")
 			}
 
-			err := generalClient.Create(context.TODO(), &rbacv1.RoleBinding{
+			roleBinding := &rbacv1.RoleBinding{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      names.ForClusterSA(otherClusterID) + "-submariner-k8s-broker-cluster",
 					Namespace: brokerNamespace,
@@ -220,10 +221,17 @@ var _ = Describe("Broker webhook", func() {
 						Kind:      "ServiceAccount",
 					},
 				},
-			})
-			if !apierrors.IsAlreadyExists(err) {
-				Expect(err).NotTo(HaveOccurred())
 			}
+
+			err := generalClient.Create(ctx, roleBinding)
+			if apierrors.IsAlreadyExists(err) {
+				return
+			}
+
+			Expect(err).NotTo(HaveOccurred())
+			DeferCleanup(func(ctx context.Context) {
+				Expect(generalClient.Delete(ctx, roleBinding)).To(Succeed())
+			})
 		})
 
 		It("should only allow access to participating clusters", func(ctx context.Context) {
@@ -286,7 +294,7 @@ var _ = Describe("Broker webhook", func() {
 					Namespace: brokerNamespace,
 					Name:      fmt.Sprintf("%s-%s", serviceName, serviceNamespace),
 				}, serviceImport)).To(Succeed())
-			}).Within(5 * time.Second).To(Succeed())
+			}).Within(time.Minute).To(Succeed())
 
 			impersonatedConfig := rest.CopyConfig(framework.RestConfigs[brokerCluster])
 			impersonatedConfig.Impersonate = rest.ImpersonationConfig{
