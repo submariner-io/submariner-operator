@@ -51,3 +51,21 @@ ignore:
     fix-state: not-fixed
     package:
       name: golang.org/x/crypto
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5064
+    fix-state: not-fixed
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5338
+    fix-state: not-fixed
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5622
+    fix-state: not-fixed
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
