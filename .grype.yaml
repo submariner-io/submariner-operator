@@ -75,3 +75,9 @@ ignore:
     package:
       name: github.com/docker/docker
       location: /tools/go.mod
+  # No fix available for golang.org/x/crypto.
+  - vulnerability: GO-2026-5932
+    fix-state: not-fixed
+    package:
+      name: golang.org/x/crypto
+      location: /tools/go.mod
