@@ -10,44 +10,14 @@ ignore:
   - vulnerability: CVE-2021-22570
     package:
       name: google.golang.org/protobuf
-  # Fix requires docker/docker v28→v29 major upgrade, incompatible with this branch
-  - vulnerability: GHSA-x744-4wpc-v9h2
-    package:
-      name: github.com/docker/docker
-  # No fix available for docker/docker
-  - vulnerability: GHSA-pxq6-2prw-chj9
-    fix-state: not-fixed
-    package:
-      name: github.com/docker/docker
-  # Ignore all docker CVEs in tools directory (build-time only, not production)
+  # Ignore all docker, containerd CVEs in tools directory (build-time only, not production)
   - package:
       name: github.com/docker/docker
       location: /tools/go.mod
-
-  # No fix available
-  - vulnerability: GO-2026-5064
-    fix-state: not-fixed
-    package:
+  - package:
       name: github.com/containerd/containerd
       location: /tools/go.mod
-
-  # No fix available
-  - vulnerability: GO-2026-5338
-    fix-state: not-fixed
-    package:
-      name: github.com/containerd/containerd
-      location: /tools/go.mod
-
-  # No fix available
-  - vulnerability: GO-2026-5622
-    fix-state: not-fixed
-    package:
-      name: github.com/containerd/containerd
-      location: /tools/go.mod
-
   # No fix available
   - vulnerability: GO-2026-5932
-    fix-state: not-fixed
     package:
       name: golang.org/x/crypto
-      location: /tools/go.mod
