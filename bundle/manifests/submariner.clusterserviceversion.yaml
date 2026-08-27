@@ -670,6 +670,18 @@ spec:
           verbs:
           - get
           - list
+        - apiGroups:
+          - networking.k8s.io
+          resources:
+          - networkpolicies
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
         serviceAccountName: submariner-operator
       deployments:
       - label:
