@@ -1,6 +1,6 @@
 module github.com/submariner-io/submariner-operator
 
-go 1.25.0
+go 1.25.13
 
 require (
 	github.com/coreos/go-semver v0.3.1
@@ -12,9 +12,9 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.90.1
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.90.1
 	github.com/prometheus/client_golang v1.23.2
-	github.com/submariner-io/admiral v0.24.0
-	github.com/submariner-io/shipyard v0.24.0
-	github.com/submariner-io/submariner v0.24.0
+	github.com/submariner-io/admiral v0.24.1
+	github.com/submariner-io/shipyard v0.24.1
+	github.com/submariner-io/submariner v0.24.1
 	golang.org/x/net v0.58.0
 	k8s.io/api v0.35.8
 	k8s.io/apiextensions-apiserver v0.35.8
@@ -58,7 +58,6 @@ require (
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
-	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/moby/spdystream v0.5.1 // indirect
