@@ -77,7 +77,7 @@ metadata:
     categories: Networking
     certified: "false"
     containerImage: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:e5a8b71af403847967f367a22ddc05c7399aec9c3fe871d997e7c7b20f861e14
-    createdAt: "2026-08-30 18:56:35"
+    createdAt: "2026-08-31 18:22:04"
     description: Creates and manages Submariner deployments.
     features.operators.openshift.io/disconnected: "true"
     features.operators.openshift.io/fips-compliant: "true"
@@ -723,9 +723,9 @@ spec:
                 - name: RELATED_IMAGE_submariner-lighthouse-coredns
                   value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:f9eb92b1bfed9df285cf4cb02c4d9a8fceb950ac9a0dbc0318a188e8e6f73cef
                 - name: RELATED_IMAGE_submariner-nettest
-                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:08f1605cd95eeb20152b1bcf876a2ddc4863e2dbc1e470dbf5c86a9e0808b456
+                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:ddb412ca375e3d5b27fda072fbce9521492cec037bbda38b25cad556777634cd
                 - name: RELATED_IMAGE_submariner-metrics-proxy
-                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:08f1605cd95eeb20152b1bcf876a2ddc4863e2dbc1e470dbf5c86a9e0808b456
+                  value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:ddb412ca375e3d5b27fda072fbce9521492cec037bbda38b25cad556777634cd
                 image: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:e5a8b71af403847967f367a22ddc05c7399aec9c3fe871d997e7c7b20f861e14
                 imagePullPolicy: Always
                 name: submariner-operator
@@ -891,7 +891,7 @@ spec:
     name: submariner-lighthouse-agent
   - image: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:f9eb92b1bfed9df285cf4cb02c4d9a8fceb950ac9a0dbc0318a188e8e6f73cef
     name: submariner-lighthouse-coredns
-  - image: registry.redhat.io/rhacm2/nettest-rhel9@sha256:08f1605cd95eeb20152b1bcf876a2ddc4863e2dbc1e470dbf5c86a9e0808b456
+  - image: registry.redhat.io/rhacm2/nettest-rhel9@sha256:ddb412ca375e3d5b27fda072fbce9521492cec037bbda38b25cad556777634cd
     name: ""
   selector:
     matchLabels:
