@@ -38,6 +38,7 @@ import (
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	submarinerv1 "github.com/submariner-io/submariner/pkg/apis/submariner.io/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -171,7 +172,48 @@ func (t *testDriver) assertGatewayDaemonSet(ctx context.Context) {
 	Expect(daemonSet.Spec.Template.Spec.Containers[0].Image).To(
 		Equal(fmt.Sprintf("%s/%s:%s", t.submariner.Spec.Repository, opnames.GatewayImage, t.submariner.Spec.Version)))
 
+	assertGatewayIPsecEmptyDirVolumes(daemonSet)
+
 	t.assertGatewayDaemonSetEnv(t.withNetworkDiscovery(), test.EnvMapFrom(daemonSet))
+}
+
+func assertGatewayIPsecEmptyDirVolumes(daemonSet *appsv1.DaemonSet) {
+	volumes := daemonSet.Spec.Template.Spec.Volumes
+
+	Expect(findVolume(volumes, "ipsecd").EmptyDir).NotTo(BeNil())
+	Expect(findVolume(volumes, "ipsecnss").EmptyDir).NotTo(BeNil())
+	Expect(findVolume(volumes, "plutosocket")).To(BeNil())
+}
+
+func assertGatewayIPsecHostPathVolumes(daemonSet *appsv1.DaemonSet, ipsecHostPath, nssHostPath, plutoHostPath string) {
+	hostPathType := corev1.HostPathDirectoryOrCreate
+	volumes := daemonSet.Spec.Template.Spec.Volumes
+
+	ipsecd := findVolume(volumes, "ipsecd")
+	Expect(ipsecd.HostPath).NotTo(BeNil())
+	Expect(ipsecd.HostPath.Path).To(Equal(ipsecHostPath))
+	Expect(ipsecd.HostPath.Type).To(Equal(&hostPathType))
+
+	Expect(findVolume(volumes, "ipsecnss").HostPath.Path).To(Equal(nssHostPath))
+	Expect(findVolume(volumes, "plutosocket").HostPath.Path).To(Equal(plutoHostPath))
+}
+
+func assertGatewayNoIPsecVolumes(daemonSet *appsv1.DaemonSet) {
+	volumes := daemonSet.Spec.Template.Spec.Volumes
+
+	Expect(findVolume(volumes, "ipsecd")).To(BeNil())
+	Expect(findVolume(volumes, "ipsecnss")).To(BeNil())
+	Expect(findVolume(volumes, "plutosocket")).To(BeNil())
+}
+
+func findVolume(volumes []corev1.Volume, name string) *corev1.Volume {
+	for i := range volumes {
+		if volumes[i].Name == name {
+			return &volumes[i]
+		}
+	}
+
+	return nil
 }
 
 func (t *testDriver) assertUninstallGatewayDaemonSet(ctx context.Context) *appsv1.DaemonSet {
