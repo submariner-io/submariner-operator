@@ -221,6 +221,42 @@ func testReconciliation() {
 			}
 		})
 
+		Context("and the custom key is Corefile", func() {
+			BeforeEach(func() {
+				t.serviceDiscovery.Spec.CoreDNSCustomConfig.Key = servicediscovery.Corefile
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+						Namespace: t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace,
+					},
+					Data: map[string]string{
+						servicediscovery.Corefile: `# User can put their additional configurations here
+example.com:53 {
+    forward . 1.2.3.4
+}
+clusterset.local:53 {
+    forward . 10.96.209.137
+}
+`,
+					},
+				})
+				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+			})
+
+			It("should merge lighthouse config into Corefile and replace the stale domain block", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				corefile := t.assertConfigMap(ctx, t.serviceDiscovery.Spec.CoreDNSCustomConfig.ConfigMapName,
+					t.serviceDiscovery.Spec.CoreDNSCustomConfig.Namespace).Data[servicediscovery.Corefile]
+				Expect(corefile).To(ContainSubstring("#lighthouse-start"))
+				Expect(corefile).To(ContainSubstring("forward . " + clusterIP))
+				Expect(corefile).To(ContainSubstring("example.com:53"))
+				Expect(corefile).To(ContainSubstring("forward . 1.2.3.4"))
+				Expect(corefile).NotTo(ContainSubstring("10.96.209.137"))
+				Expect(strings.Count(corefile, "clusterset.local")).To(Equal(1))
+			})
+		})
+
 		Context("and the custom coredns ConfigMap already exists", func() {
 			BeforeEach(func() {
 				t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP), &corev1.ConfigMap{
