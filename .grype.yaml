@@ -24,12 +24,6 @@ ignore:
     package:
       name: github.com/docker/docker
 
-  # On latest version v2.6.1; no fix available yet
-  - vulnerability: GHSA-fxhp-mv3v-67qp
-    fix-state: not-fixed
-    package:
-      name: oras.land/oras-go/v2
-
   # Requires Go 1.25.12; must be updated in Shipyard build environment
   - vulnerability: GO-2026-4970
     package:
