@@ -82,3 +82,9 @@ ignore:
     fix-state: not-fixed
     package:
       name: golang.org/x/crypto
+  # No fix available for github.com/docker/docker.
+  - vulnerability: GO-2026-4887
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
+      location: /tools/go.mod
