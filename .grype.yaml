@@ -1,10 +1,5 @@
 ---
 ignore:
-  # False positive, CVE is actually about the C++ project protocolbuffers/protobuf
-  # https://github.com/anchore/grype/issues/633
-  - vulnerability: CVE-2021-22570
-    package:
-      name: google.golang.org/protobuf
   # Fix requires docker/docker v28→v29 major upgrade, incompatible with this branch
   - vulnerability: GHSA-x744-4wpc-v9h2
     package:
