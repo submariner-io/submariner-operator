@@ -5,11 +5,6 @@ ignore:
     fix-state: not-fixed
     package:
       name: github.com/docker/docker
-  # Only in tools/go.mod (development tools), not production code. No fix available.
-  - vulnerability: GHSA-6jwv-w5xf-7j27
-    fix-state: not-fixed
-    package:
-      name: go.etcd.io/bbolt
 
   # No fix available for github.com/docker/docker. CVEs only affect docker cp operations.
   - vulnerability: GHSA-rg2x-37c3-w2rh
