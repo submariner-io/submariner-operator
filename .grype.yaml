@@ -24,11 +24,6 @@ ignore:
     package:
       name: github.com/docker/docker
 
-  # Requires Go 1.25.12; must be updated in Shipyard build environment
-  - vulnerability: GO-2026-5856
-    package:
-      name: stdlib
-
   # No fix available
   - vulnerability: GO-2026-5064
     fix-state: not-fixed
