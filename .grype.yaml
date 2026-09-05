@@ -25,11 +25,6 @@ ignore:
       name: github.com/docker/docker
 
   # Requires Go 1.25.12; must be updated in Shipyard build environment
-  - vulnerability: GO-2026-4970
-    package:
-      name: stdlib
-
-  # Requires Go 1.25.12; must be updated in Shipyard build environment
   - vulnerability: GO-2026-5856
     package:
       name: stdlib
