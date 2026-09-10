@@ -51,7 +51,7 @@ func (r *Reconciler) doCleanup(ctx context.Context, instance *operatorv1alpha1.S
 	var err error
 
 	if instance.Spec.CoreDNSCustomConfig != nil && instance.Spec.CoreDNSCustomConfig.ConfigMapName != "" {
-		err = r.removeLighthouseConfigFromCustomDNSConfigMap(ctx, instance.Spec.CoreDNSCustomConfig)
+		err = r.removeLighthouseConfigFromCustomDNSConfigMap(ctx, instance)
 	} else {
 		err = r.updateLighthouseConfigInConfigMap(ctx, instance, DefaultCoreDNSNamespace, CoreDNSName, "")
 	}
@@ -107,15 +107,25 @@ func (r *Reconciler) removeFinalizer(ctx context.Context, instance *operatorv1al
 }
 
 func (r *Reconciler) removeLighthouseConfigFromCustomDNSConfigMap(ctx context.Context,
-	config *operatorv1alpha1.CoreDNSCustomConfig,
+	instance *operatorv1alpha1.ServiceDiscovery,
 ) error {
+	config := instance.Spec.CoreDNSCustomConfig
 	configMap := newCoreDNSCustomConfigMap(config)
+	configKey := getCustomCoreDNSConfigKey(config)
 
-	log.Info("Removing lighthouse config from custom DNS ConfigMap", "Name", configMap.Name, "Namespace", configMap.Namespace)
+	log.Info("Removing lighthouse config from custom DNS ConfigMap", "Name", configMap.Name, "Namespace", configMap.Namespace,
+		"Key", configKey)
 
 	err := util.Update[*corev1.ConfigMap](ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
 		func(existing *corev1.ConfigMap) (*corev1.ConfigMap, error) {
-			delete(existing.Data, "lighthouse.server")
+			if configKey == Corefile {
+				// Keep user-managed content; only strip lighthouse markers and managed domain blocks.
+				existing.Data[Corefile] = mergeLighthouseIntoCorefile(existing.Data[Corefile], buildDomains(instance), "")
+				return existing, nil
+			}
+
+			delete(existing.Data, configKey)
+
 			return existing, nil
 		})
 
