@@ -1,0 +1,8 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: submariner-operator-selfsigned-issuer
+  namespace: submariner-operator
+spec:
+  selfSigned: {}
