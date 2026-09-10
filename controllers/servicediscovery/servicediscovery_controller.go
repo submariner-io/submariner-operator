@@ -214,7 +214,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 		})
 	}
 
-	return &appsv1.Deployment{
+	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cr.Namespace,
 			Name:      name,
@@ -242,9 +242,7 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 								{Name: "SUBMARINER_GLOBALNET_ENABLED", Value: strconv.FormatBool(cr.Spec.GlobalnetEnabled)},
 								{Name: "SUBMARINER_HALT_ON_CERT_ERROR", Value: strconv.FormatBool(cr.Spec.HaltOnCertificateError)},
 								{Name: broker.EnvironmentVariable("ApiServer"), Value: cr.Spec.BrokerK8sApiServer},
-								{Name: broker.EnvironmentVariable("ApiServerToken"), Value: cr.Spec.BrokerK8sApiServerToken},
 								{Name: broker.EnvironmentVariable("RemoteNamespace"), Value: cr.Spec.BrokerK8sRemoteNamespace},
-								{Name: broker.EnvironmentVariable("CA"), Value: cr.Spec.BrokerK8sCA},
 								{Name: broker.EnvironmentVariable("Insecure"), Value: strconv.FormatBool(cr.Spec.BrokerK8sInsecure)},
 								{Name: broker.EnvironmentVariable("Secret"), Value: cr.Spec.BrokerK8sSecret},
 							}),
@@ -261,6 +259,15 @@ func newLighthouseAgent(cr *submarinerv1alpha1.ServiceDiscovery, name string) *a
 			},
 		},
 	}
+
+	// Conditionally inject broker token and CA as environment variables for legacy compatibility when BrokerK8sSecret isn't set.
+	if cr.Spec.BrokerK8sSecret == "" {
+		deployment.Spec.Template.Spec.Containers[0].Env = append(deployment.Spec.Template.Spec.Containers[0].Env,
+			corev1.EnvVar{Name: broker.EnvironmentVariable("ApiServerToken"), Value: cr.Spec.BrokerK8sApiServerToken},
+			corev1.EnvVar{Name: broker.EnvironmentVariable("CA"), Value: cr.Spec.BrokerK8sCA})
+	}
+
+	return deployment
 }
 
 func newLighthouseDNSConfigMap(cr *submarinerv1alpha1.ServiceDiscovery) *corev1.ConfigMap {

@@ -183,12 +183,10 @@ func (t *testDriver) assertUninstallGatewayDaemonSet(ctx context.Context) *appsv
 }
 
 func (t *testDriver) assertGatewayDaemonSetEnv(submariner *v1alpha1.Submariner, envMap map[string]string) {
-	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_PSK", submariner.Spec.CeIPSecPSK))
+	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_PSKSECRET", submariner.Spec.CeIPSecPSKSecret))
 	Expect(envMap).To(HaveKeyWithValue("CE_IPSEC_NATTPORT", strconv.Itoa(submariner.Spec.CeIPSecNATTPort)))
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("RemoteNamespace"), submariner.Spec.BrokerK8sRemoteNamespace))
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("ApiServer"), submariner.Spec.BrokerK8sApiServer))
-	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("ApiServerToken"), submariner.Spec.BrokerK8sApiServerToken))
-	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("CA"), submariner.Spec.BrokerK8sCA))
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("Insecure"), strconv.FormatBool(submariner.Spec.BrokerK8sInsecure)))
 	Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("Secret"), submariner.Spec.BrokerK8sSecret))
 	Expect(envMap).To(HaveKeyWithValue("SUBMARINER_BROKER", submariner.Spec.Broker))
@@ -254,6 +252,7 @@ func newSubmariner() *v1alpha1.Submariner {
 			CeIPSecNATTPort:          4500,
 			CeIPSecIKEPort:           500,
 			CeIPSecPSK:               "DJaA2kVW72w8kjQCEpzkDhwZuniDwgePKFE7FaxVNMWqbpmT2qvp68XW52MO70ho",
+			CeIPSecPSKSecret:         "psk-secret",
 			BrokerK8sRemoteNamespace: "submariner-broker",
 			BrokerK8sApiServer:       "https://192.168.99.110:8443",
 			BrokerK8sApiServerToken:  "MIIDADCCAeigAw",

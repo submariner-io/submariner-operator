@@ -2612,8 +2612,6 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: submariner-operator
-  annotations:
-    kubernetes.io/enforce-mountable-secrets: "true"
 `
 	Config_rbac_submariner_operator_role_yaml = `---
 apiVersion: rbac.authorization.k8s.io/v1
