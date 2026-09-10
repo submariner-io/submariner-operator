@@ -16,11 +16,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+// Package webhook embeds the webhook YAML files
+package webhook
+
+import _ "embed"
 
 var (
-	DefaultRepo                      = "quay.io/submariner"
-	DefaultSubmarinerOperatorVersion = "0.23.2"
-	DefaultSubmarinerVersion         = "0.23.2"
-	DefaultLighthouseVersion         = "0.23.2"
+	//go:embed certificate.yaml
+	Certificate []byte
+
+	//go:embed deployment.yaml
+	Deployment []byte
+
+	//go:embed service.yaml
+	Service []byte
+
+	//go:embed self_signed_issuer.yaml
+	SelfSignedIssuer []byte
+
+	//go:embed validating_webhook_config.yaml
+	ValidatingWebhookConfig []byte
 )

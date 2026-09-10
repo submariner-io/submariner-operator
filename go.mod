@@ -12,14 +12,14 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.89.0
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.89.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/submariner-io/admiral v0.23.1
-	github.com/submariner-io/shipyard v0.23.1
-	github.com/submariner-io/submariner v0.23.1
+	github.com/submariner-io/admiral v0.23.2
+	github.com/submariner-io/shipyard v0.23.2
+	github.com/submariner-io/submariner v0.23.2
 	golang.org/x/net v0.58.0
-	k8s.io/api v0.35.7
-	k8s.io/apiextensions-apiserver v0.35.7
-	k8s.io/apimachinery v0.35.7
-	k8s.io/client-go v0.35.7
+	k8s.io/api v0.35.8
+	k8s.io/apiextensions-apiserver v0.35.8
+	k8s.io/apimachinery v0.35.8
+	k8s.io/client-go v0.35.8
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
 	sigs.k8s.io/controller-runtime v0.23.0
 	sigs.k8s.io/mcs-api v0.3.0
@@ -58,7 +58,6 @@ require (
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
-	github.com/klauspost/compress v1.18.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/moby/spdystream v0.5.1 // indirect

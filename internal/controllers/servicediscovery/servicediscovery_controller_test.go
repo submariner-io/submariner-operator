@@ -19,13 +19,16 @@ limitations under the License.
 package servicediscovery_test
 
 import (
+	"encoding/base64"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/names"
+	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	submariner_v1 "github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/controllers/servicediscovery"
+	"github.com/submariner-io/submariner-operator/internal/controllers/test"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -45,6 +48,47 @@ func testReconciliation() {
 	It("should add a finalizer to the ServiceDiscovery resource", func(ctx SpecContext) {
 		_, _ = t.DoReconcile(ctx)
 		t.awaitFinalizer()
+	})
+
+	When("BrokerK8sSecret is set", func() {
+		BeforeEach(func() {
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+			t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfig(""))
+			t.serviceDiscovery.Spec.BrokerK8sSecret = "my-broker-secret"
+			t.serviceDiscovery.Spec.BrokerK8sApiServerToken = base64.StdEncoding.EncodeToString([]byte("secret-token"))
+			t.serviceDiscovery.Spec.BrokerK8sCA = base64.StdEncoding.EncodeToString([]byte("secret-ca"))
+		})
+
+		Specify("the lighthouse agent deployment should NOT have broker credentials as env vars",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				deployment := t.AssertDeployment(ctx, names.ServiceDiscoveryComponent)
+				envMap := test.EnvMapFromVars(deployment.Spec.Template.Spec.Containers[0].Env)
+				Expect(envMap).NotTo(HaveKey(broker.EnvironmentVariable("ApiServerToken")))
+				Expect(envMap).NotTo(HaveKey(broker.EnvironmentVariable("CA")))
+			})
+	})
+
+	When("BrokerK8sSecret is NOT set", func() {
+		BeforeEach(func() {
+			t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+			t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newDNSConfig(""))
+			t.serviceDiscovery.Spec.BrokerK8sSecret = ""
+			t.serviceDiscovery.Spec.BrokerK8sApiServerToken = base64.StdEncoding.EncodeToString([]byte("plaintext-token"))
+			t.serviceDiscovery.Spec.BrokerK8sCA = base64.StdEncoding.EncodeToString([]byte("plaintext-ca"))
+		})
+
+		Specify("the lighthouse agent deployment should have broker credentials as env vars for backwards compatibility",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				deployment := t.AssertDeployment(ctx, names.ServiceDiscoveryComponent)
+				envMap := test.EnvMapFromVars(deployment.Spec.Template.Spec.Containers[0].Env)
+				Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("ApiServerToken"),
+					t.serviceDiscovery.Spec.BrokerK8sApiServerToken))
+				Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("CA"), t.serviceDiscovery.Spec.BrokerK8sCA))
+			})
 	})
 
 	When("the openshift DNS config exists", func() {

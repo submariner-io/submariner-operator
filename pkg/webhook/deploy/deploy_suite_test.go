@@ -16,11 +16,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package deploy_test
 
-var (
-	DefaultRepo                      = "quay.io/submariner"
-	DefaultSubmarinerOperatorVersion = "0.23.2"
-	DefaultSubmarinerVersion         = "0.23.2"
-	DefaultLighthouseVersion         = "0.23.2"
+import (
+	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
+
+func TestDeploy(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Deploy Suite")
+}

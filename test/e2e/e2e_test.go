@@ -21,8 +21,14 @@ import (
 	"testing"
 
 	"github.com/submariner-io/shipyard/test/e2e"
+	"github.com/submariner-io/shipyard/test/e2e/framework"
 	_ "github.com/submariner-io/submariner-operator/test/e2e/cleanup"
+	"github.com/submariner-io/submariner-operator/test/e2e/webhook"
 )
+
+func init() {
+	framework.AddBeforeSuite(webhook.Deploy)
+}
 
 func TestE2E(t *testing.T) {
 	e2e.RunE2ETests(t)
