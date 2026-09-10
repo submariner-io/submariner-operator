@@ -20,6 +20,7 @@ package submariner_test
 
 import (
 	"context"
+	"encoding/base64"
 	"os"
 	"reflect"
 	goslices "slices"
@@ -32,6 +33,7 @@ import (
 	"github.com/submariner-io/admiral/pkg/fake"
 	"github.com/submariner-io/admiral/pkg/names"
 	"github.com/submariner-io/admiral/pkg/resource"
+	"github.com/submariner-io/admiral/pkg/syncer/broker"
 	syncertest "github.com/submariner-io/admiral/pkg/syncer/test"
 	testutil "github.com/submariner-io/admiral/pkg/test"
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
@@ -169,6 +171,7 @@ func testSubmarinerResourceReconciliation() {
 	})
 }
 
+//nolint:maintidx // Ignore for unit tests.
 func testDaemonSetReconciliation() {
 	t := newTestDriver()
 
@@ -196,6 +199,79 @@ func testDaemonSetReconciliation() {
 			updatedDaemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
 			Expect(test.EnvMapFrom(updatedDaemonSet)).To(HaveKeyWithValue("SUBMARINER_SERVICECIDR", initial.Spec.ServiceCIDR))
 		})
+	})
+	
+	When("BrokerK8sSecret is set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.BrokerK8sSecret = "my-broker-secret"
+			t.submariner.Spec.BrokerK8sApiServerToken = base64.StdEncoding.EncodeToString([]byte("secret-token"))
+			t.submariner.Spec.BrokerK8sCA = base64.StdEncoding.EncodeToString([]byte("secret-ca"))
+
+			t.getAuthorizedBrokerClientFor = func(_ *v1alpha1.SubmarinerSpec, brokerToken, brokerCA string,
+				_ schema.GroupVersionResource,
+			) (dynamic.Interface, error) {
+				return t.dynClient, nil
+			}
+		})
+
+		Specify("the submariner gateway DaemonSet should NOT have broker credentials as env vars",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
+				envMap := test.EnvMapFrom(daemonSet)
+				Expect(envMap).NotTo(HaveKey(broker.EnvironmentVariable("ApiServerToken")))
+				Expect(envMap).NotTo(HaveKey(broker.EnvironmentVariable("CA")))
+			})
+	})
+
+	When("BrokerK8sSecret is not set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.BrokerK8sSecret = ""
+			t.submariner.Spec.BrokerK8sApiServerToken = base64.StdEncoding.EncodeToString([]byte("plaintext-token"))
+			t.submariner.Spec.BrokerK8sCA = base64.StdEncoding.EncodeToString([]byte("plaintext-ca"))
+		})
+
+		Specify("the submariner gateway DaemonSet should have broker credentials as env vars for backwards compatibility",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
+				envMap := test.EnvMapFrom(daemonSet)
+				Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("ApiServerToken"),
+					t.submariner.Spec.BrokerK8sApiServerToken))
+				Expect(envMap).To(HaveKeyWithValue(broker.EnvironmentVariable("CA"), t.submariner.Spec.BrokerK8sCA))
+			})
+	})
+
+	When("CeIPSecPSKSecret is set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.CeIPSecPSKSecret = "my-psk-secret"
+			t.submariner.Spec.CeIPSecPSK = "secret-psk"
+		})
+
+		Specify("the submariner gateway DaemonSet should NOT have PSK as env var",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
+				Expect(test.EnvMapFrom(daemonSet)).NotTo(HaveKey("CE_IPSEC_PSK"))
+			})
+	})
+
+	When("CeIPSecPSKSecret is not set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.CeIPSecPSKSecret = ""
+			t.submariner.Spec.CeIPSecPSK = "plaintext-psk"
+		})
+
+		Specify("the submariner gateway DaemonSet should have PSK as env var for backwards compatibility",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
+				Expect(test.EnvMapFrom(daemonSet)).To(HaveKeyWithValue("CE_IPSEC_PSK", "plaintext-psk"))
+			})
 	})
 
 	When("the submariner route-agent DaemonSet doesn't exist", func() {
