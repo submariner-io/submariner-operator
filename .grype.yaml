@@ -1,62 +1,46 @@
 ---
 ignore:
-  # False positive, CVE is actually about the C++ project protocolbuffers/protobuf
-  # https://github.com/anchore/grype/issues/558
-  - vulnerability: CVE-2015-5237
-    package:
-      name: google.golang.org/protobuf
-  # False positive, CVE is actually about the C++ project protocolbuffers/protobuf
-  # https://github.com/anchore/grype/issues/633
-  - vulnerability: CVE-2021-22570
-    package:
-      name: google.golang.org/protobuf
-  # No fix available for docker/docker
-  - vulnerability: GHSA-x744-4wpc-v9h2
-    package:
-      name: github.com/docker/docker
   # No fix available for docker/docker
   - vulnerability: GHSA-pxq6-2prw-chj9
     package:
       name: github.com/docker/docker
 
   # No fix available
-  - vulnerability: GO-2026-5064
-    fix-state: unknown
-    package:
-      name: github.com/containerd/containerd
-
-  # No fix available
-  - vulnerability: GO-2026-5338
-    fix-state: unknown
-    package:
-      name: github.com/containerd/containerd
-
-  # No fix available
-  - vulnerability: GO-2026-5622
-    fix-state: unknown
-    package:
-      name: github.com/containerd/containerd
-
-  # No fix available
   - vulnerability: GHSA-rg2x-37c3-w2rh
-    fix-state: not-fixed
     package:
       name: github.com/docker/docker
 
   # No fix available
   - vulnerability: GHSA-vp62-88p7-qqf5
-    fix-state: not-fixed
     package:
       name: github.com/docker/docker
 
   # No fix available
   - vulnerability: GHSA-x86f-5xw2-fm2r
-    fix-state: not-fixed
     package:
       name: github.com/docker/docker
 
   # No fix available
   - vulnerability: GO-2026-5932
-    fix-state: unknown
     package:
       name: golang.org/x/crypto
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5064
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5338
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5622
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
+  # No fix available for github.com/docker/docker.
+  - vulnerability: GO-2026-4887
+    package:
+      name: github.com/docker/docker
+      location: /tools/go.mod

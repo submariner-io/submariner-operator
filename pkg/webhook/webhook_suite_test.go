@@ -16,11 +16,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha1
+package webhook_test
 
-var (
-	DefaultRepo                      = "quay.io/submariner"
-	DefaultSubmarinerOperatorVersion = "0.24.1"
-	DefaultSubmarinerVersion         = "0.24.1"
-	DefaultLighthouseVersion         = "0.24.1"
+import (
+	"flag"
+	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"github.com/submariner-io/admiral/pkg/log/kzerolog"
 )
+
+func init() {
+	flags := flag.NewFlagSet("kzerolog", flag.ExitOnError)
+	kzerolog.AddFlags(flags)
+	_ = flags.Parse([]string{"-v=3"})
+
+	kzerolog.AddFlags(nil)
+}
+
+var _ = Describe("", func() {
+	kzerolog.InitK8sLogging()
+})
+
+func TestWebhook(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Webhook Suite")
+}
