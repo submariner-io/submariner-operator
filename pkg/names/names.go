@@ -23,6 +23,7 @@ const (
 	ServiceDiscoveryCrName = "service-discovery"
 	SubmarinerCrName       = "submariner"
 	CleanupFinalizer       = "controllers.submariner.io/cleanup"
+	ClusterSAPrefix        = "cluster-"
 )
 
 /* These values are used by downstream distributions to override the component default image name. */
@@ -43,5 +44,5 @@ func AppendUninstall(name string) string {
 }
 
 func ForClusterSA(clusterID string) string {
-	return "cluster-" + clusterID
+	return ClusterSAPrefix + clusterID
 }
