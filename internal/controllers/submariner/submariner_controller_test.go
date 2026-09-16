@@ -62,6 +62,7 @@ var _ = Describe("Submariner controller tests", func() {
 	Context("Reconciliation", func() {
 		testSubmarinerResourceReconciliation()
 		testDaemonSetReconciliation()
+		testGatewayIPsecVolumeReconciliation()
 		testServiceDiscoveryReconciliation()
 		testLoadBalancerReconciliation()
 		testBrokerSecretReconciliation()
@@ -474,6 +475,55 @@ func testDaemonSetReconciliation() {
 				Expect(envMap).To(HaveKeyWithValue("HTTP_PROXY", testHTTPProxy))
 				Expect(envMap).To(HaveKeyWithValue("NO_PROXY", testNoProxy))
 			}
+		})
+	})
+}
+
+func testGatewayIPsecVolumeReconciliation() {
+	t := newTestDriver()
+
+	When("CeIPSecUseOVNCertAuthMode is set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.CeIPSecUseOVNCertAuthMode = true
+		})
+
+		Specify("the gateway DaemonSet should mount IPsec HostPath volumes", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+
+			daemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
+			assertGatewayIPsecHostPathVolumes(daemonSet, "/etc/ipsec.d", "/var/lib/ipsec/nss", "/var/run/pluto")
+		})
+	})
+
+	When("the cable driver is wireguard", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.CableDriver = "wireguard"
+		})
+
+		Specify("the gateway DaemonSet should not mount IPsec volumes", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+
+			daemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
+			assertGatewayNoIPsecVolumes(daemonSet)
+		})
+	})
+
+	When("CeIPSecUseOVNCertAuthMode and IPsec host path cable driver options are set", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.CeIPSecUseOVNCertAuthMode = true
+			t.submariner.Spec.CableDriverOptions = map[string]string{
+				"ipsecHostPath":    "/var/lib/ipsec/ipsec.d",
+				"ipsecNSSHostPath": "/custom/ipsec/nss",
+				"plutoHostPath":    "/custom/run/pluto",
+			}
+		})
+
+		Specify("the gateway should use the configured host paths", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+
+			daemonSet := t.AssertDaemonSet(ctx, names.GatewayComponent)
+			assertGatewayIPsecHostPathVolumes(daemonSet,
+				"/var/lib/ipsec/ipsec.d", "/custom/ipsec/nss", "/custom/run/pluto")
 		})
 	})
 }
