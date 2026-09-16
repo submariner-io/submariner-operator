@@ -80,7 +80,7 @@ metadata:
     createdAt: "2026-08-10 22:41:25"
     description: Creates and manages Submariner deployments.
     operatorframework.io/suggested-namespace: submariner-operator
-    operators.operatorframework.io/builder: operator-sdk-v1.41.1
+    operators.operatorframework.io/builder: operator-sdk-v1.42.3
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v4
     repository: https://github.com/submariner-io/submariner-operator
     support: Submariner
