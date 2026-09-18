@@ -9,38 +9,22 @@ ignore:
   - vulnerability: GHSA-rg2x-37c3-w2rh
     fix-state: not-fixed
     package:
-      name: github.com/docker/docker
-
-  # No fix available for these CVEs
-  - vulnerability: GHSA-x86f-5xw2-fm2r
-    fix-state: not-fixed
-    package:
-      name: github.com/docker/docker
-
-  # No fix available for these CVEs
-  - vulnerability: GHSA-vp62-88p7-qqf5
-    fix-state: not-fixed
-    package:
-      name: github.com/docker/docker
-
-  # No fix available in any released version
-  - vulnerability: GO-2026-5932
-    package:
-      name: golang.org/x/crypto
-
-  # No fix available in containerd v1.7.x line. Fix requires v2.x (breaking change).
+      name: go.etcd.io/bbolt
+  # No fix available for github.com/containerd/containerd.
   - vulnerability: GO-2026-5064
-    package:
-      name: github.com/containerd/containerd
-  - vulnerability: GO-2026-5338
-    package:
-      name: github.com/containerd/containerd
-  - vulnerability: GO-2026-5622
-    package:
-      name: github.com/containerd/containerd
-  # No fix available for github.com/docker/docker.
-  - vulnerability: GO-2026-4887
     fix-state: unknown
     package:
-      name: github.com/docker/docker
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5338
+    fix-state: unknown
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5622
+    fix-state: unknown
+    package:
+      name: github.com/containerd/containerd
       location: /tools/go.mod
