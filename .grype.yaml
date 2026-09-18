@@ -4,12 +4,6 @@ ignore:
   - vulnerability: GHSA-pxq6-2prw-chj9
     package:
       name: github.com/docker/docker
-
-  # No fix available for these CVEs
-  - vulnerability: GHSA-rg2x-37c3-w2rh
-    fix-state: not-fixed
-    package:
-      name: go.etcd.io/bbolt
   # No fix available for github.com/containerd/containerd.
   - vulnerability: GO-2026-5064
     fix-state: unknown
