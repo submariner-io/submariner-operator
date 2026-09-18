@@ -53,3 +53,21 @@ ignore:
     package:
       name: github.com/docker/docker
       location: /tools/go.mod
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5064
+    fix-state: unknown
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5338
+    fix-state: unknown
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
+  # No fix available for github.com/containerd/containerd.
+  - vulnerability: GO-2026-5622
+    fix-state: unknown
+    package:
+      name: github.com/containerd/containerd
+      location: /tools/go.mod
