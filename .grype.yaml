@@ -25,11 +25,6 @@ ignore:
       name: github.com/docker/docker
 
   # No fix available
-  - vulnerability: GO-2026-5932
-    fix-state: not-fixed
-    package:
-      name: golang.org/x/crypto
-  # No fix available
   - vulnerability: GO-2026-5064
     fix-state: unknown
     package:
@@ -52,4 +47,10 @@ ignore:
     fix-state: unknown
     package:
       name: github.com/docker/docker
+      location: /tools/go.mod
+  # No fix available
+  - vulnerability: GO-2026-5932
+    fix-state: unknown
+    package:
+      name: golang.org/x/crypto
       location: /tools/go.mod
