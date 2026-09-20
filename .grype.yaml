@@ -5,24 +5,6 @@ ignore:
     package:
       name: github.com/docker/docker
 
-  # No fix available for these CVEs
-  - vulnerability: GHSA-rg2x-37c3-w2rh
-    fix-state: not-fixed
-    package:
-      name: github.com/docker/docker
-
-  # No fix available for these CVEs
-  - vulnerability: GHSA-x86f-5xw2-fm2r
-    fix-state: not-fixed
-    package:
-      name: github.com/docker/docker
-
-  # No fix available for these CVEs
-  - vulnerability: GHSA-vp62-88p7-qqf5
-    fix-state: not-fixed
-    package:
-      name: github.com/docker/docker
-
   # No fix available in any released version
   - vulnerability: GO-2026-5932
     package:
@@ -41,6 +23,24 @@ ignore:
   # No fix available for github.com/docker/docker.
   - vulnerability: GO-2026-4887
     fix-state: unknown
+    package:
+      name: github.com/docker/docker
+      location: /tools/go.mod
+  # No fix available for these CVEs
+  - vulnerability: GHSA-rg2x-37c3-w2rh
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
+      location: /tools/go.mod
+  # No fix available for these CVEs
+  - vulnerability: GHSA-x86f-5xw2-fm2r
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/docker
+      location: /tools/go.mod
+  # No fix available in any released version
+  - vulnerability: GHSA-vp62-88p7-qqf5
+    fix-state: not-fixed
     package:
       name: github.com/docker/docker
       location: /tools/go.mod
