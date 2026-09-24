@@ -72,7 +72,11 @@ const (
 	MicroshiftDNSNamespace        = "openshift-dns"
 	MicroshiftDNSConfigMap        = "dns-default"
 	coreDNSDefaultPort            = "53"
+	lighthouseStartMarker         = "#lighthouse-start"
+	lighthouseEndMarker           = "#lighthouse-end"
 )
+
+var errUnpairedLighthouseMarkers = goerrors.New("the Corefile has an unpaired #lighthouse-start or #lighthouse-end marker")
 
 // Reconciler reconciles a ServiceDiscovery object.
 type Reconciler struct {
@@ -520,30 +524,16 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 	configMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: configMapNamespace, Name: configMapName}}
 	err := util.MustUpdate[*corev1.ConfigMap](ctx, resource.ForControllerClient(r.GeneralClient, configMap.Namespace, configMap), configMap,
 		func(existing *corev1.ConfigMap) (*corev1.ConfigMap, error) {
-			coreFile := existing.Data[Corefile]
-			if strings.Contains(coreFile, "lighthouse-start") {
-				// Assume this means we've already set the ConfigMap up, first remove existing lighthouse config
-				newCoreStr := ""
-				skip := false
+			current := existing.Data[Corefile]
 
+			coreFile, err := removeLighthouseSection(current)
+			if err != nil {
+				return nil, errors.Wrapf(err, "not updating the Corefile in ConfigMap %q in namespace %q",
+					configMapName, configMapNamespace)
+			}
+
+			if coreFile != current {
 				log.Infof("Coredns ConfigMap \"%s/%s\" has lighthouse configuration - updating it", configMapNamespace, configMapName)
-
-				for line := range strings.SplitSeq(coreFile, "\n") {
-					if strings.Contains(line, "lighthouse-start") {
-						skip = true
-					} else if strings.Contains(line, "lighthouse-end") {
-						skip = false
-						continue
-					}
-
-					if skip {
-						continue
-					}
-
-					newCoreStr = newCoreStr + line + "\n"
-				}
-
-				coreFile = newCoreStr
 			} else {
 				log.Infof("Coredns ConfigMap \"%s/%s\" does not have lighthouse configuration - adding it",
 					configMapNamespace, configMapName)
@@ -552,13 +542,13 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 			if clusterIP != "" {
 				coreDNSPort := findCoreDNSListeningPort(coreFile)
 
-				expectedCorefile := "#lighthouse-start AUTO-GENERATED SECTION. DO NOT EDIT\n"
+				expectedCorefile := lighthouseStartMarker + " AUTO-GENERATED SECTION. DO NOT EDIT\n"
 				for _, domain := range buildDomains(cr) {
 					expectedCorefile = fmt.Sprintf("%s%s:%s {\n    forward . %s\n}\n",
 						expectedCorefile, domain, coreDNSPort, clusterIP)
 				}
 
-				coreFile = expectedCorefile + "#lighthouse-end\n" + coreFile
+				coreFile = expectedCorefile + lighthouseEndMarker + "\n" + coreFile
 			}
 
 			log.Infof("Updated coredns ConfigMap \"%s/%s\": %s", configMapNamespace, configMapName, coreFile)
@@ -569,6 +559,53 @@ func (r *Reconciler) updateLighthouseConfigInConfigMap(ctx context.Context, cr *
 		})
 
 	return errors.Wrap(err, "error updating DNS ConfigMap")
+}
+
+// removeLighthouseSection returns coreFile with the auto-generated Lighthouse section removed. A marker
+// has to be the first token on its own line, so a line that merely mentions one is left alone, and a
+// marker without its pair is an error rather than a guess: everything from a lone start marker to the end
+// of the file would otherwise be dropped.
+func removeLighthouseSection(coreFile string) (string, error) {
+	lines := make([]string, 0, strings.Count(coreFile, "\n")+1)
+	inSection := false
+
+	for line := range strings.SplitSeq(coreFile, "\n") {
+		trimmed := strings.TrimSpace(line)
+
+		switch {
+		case isLighthouseMarker(trimmed, lighthouseStartMarker):
+			if inSection {
+				return "", errUnpairedLighthouseMarkers
+			}
+
+			inSection = true
+		case isLighthouseMarker(trimmed, lighthouseEndMarker):
+			if !inSection {
+				return "", errUnpairedLighthouseMarkers
+			}
+
+			inSection = false
+		case !inSection:
+			lines = append(lines, line)
+		}
+	}
+
+	if inSection {
+		return "", errUnpairedLighthouseMarkers
+	}
+
+	return strings.Join(lines, "\n"), nil
+}
+
+// isLighthouseMarker reports whether the trimmed line starts with marker as a token of its own, so that
+// a longer word beginning with the same text, such as #lighthouse-endless, is not taken for a marker.
+func isLighthouseMarker(trimmedLine, marker string) bool {
+	after, found := strings.CutPrefix(trimmedLine, marker)
+	if !found {
+		return false
+	}
+
+	return after == "" || after[0] == ' ' || after[0] == '\t'
 }
 
 func findCoreDNSListeningPort(coreFile string) string {
