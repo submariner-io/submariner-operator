@@ -36,6 +36,7 @@ import (
 
 var _ = Describe("Service discovery controller", func() {
 	Context("Reconciliation", testReconciliation)
+	Context("Corefile with an unpaired Lighthouse marker", testUnpairedLighthouseMarker)
 	Context("Deletion", func() {
 		Context("Coredns cleanup", testCoreDNSCleanup)
 		Context("Deployment cleanup", testDeploymentUninstall)
@@ -285,6 +286,23 @@ func testReconciliation() {
 			Expect(getCorefileData(t.assertConfigMap(ctx, servicediscovery.MicroshiftDNSConfigMap,
 				servicediscovery.MicroshiftDNSNamespace))).To(Equal(coreDNSCorefileData(clusterIP)))
 		})
+	})
+}
+
+func testUnpairedLighthouseMarker() {
+	t := newTestDriver()
+
+	corefile := strings.Replace(coreDNSCorefileData(clusterIP), "#lighthouse-end\n", "", 1)
+
+	BeforeEach(func() {
+		t.InitScopedClientObjs = append(t.InitScopedClientObjs, newDNSService(clusterIP))
+		t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, newCoreDNSConfigMap(corefile))
+	})
+
+	It("should not modify the Corefile", func(ctx SpecContext) {
+		t.AssertReconcileError(ctx)
+
+		Expect(getCorefileData(t.assertCoreDNSConfigMap(ctx))).To(Equal(strings.TrimSpace(corefile)))
 	})
 }
 
