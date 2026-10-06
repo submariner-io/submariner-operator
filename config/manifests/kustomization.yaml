@@ -9,6 +9,6 @@ resources:
 images:
 - name: controller
   newName: quay.io/submariner/submariner-operator
-  newTag: devel-6116295a498b
+  newTag: devel-2dfa30f99cc3
 - name: repo
   newName: quay.io/submariner

@@ -182,6 +182,14 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 		maps.Copy(ds.Spec.Template.Spec.NodeSelector, cr.Spec.NodeSelector)
 	}
 
+	if len(cr.Spec.RouteAgentNodeSelector) > 0 {
+		if ds.Spec.Template.Spec.NodeSelector == nil {
+			ds.Spec.Template.Spec.NodeSelector = make(map[string]string)
+		}
+
+		maps.Copy(ds.Spec.Template.Spec.NodeSelector, cr.Spec.RouteAgentNodeSelector)
+	}
+
 	// When intra-cluster connectivity is disabled, also restrict to gateway nodes.
 	if cr.Spec.DisableIntraClusterConnectivity {
 		if ds.Spec.Template.Spec.NodeSelector == nil {
@@ -189,6 +197,10 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 		}
 
 		ds.Spec.Template.Spec.NodeSelector["submariner.io/gateway"] = "true"
+	}
+
+	if len(cr.Spec.RouteAgentTolerations) > 0 {
+		ds.Spec.Template.Spec.Tolerations = cr.Spec.RouteAgentTolerations
 	}
 
 	return ds
