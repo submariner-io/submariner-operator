@@ -242,6 +242,10 @@ type SubmarinerSpec struct {
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 	// +optional
 	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+	// +optional
+	RouteAgentNodeSelector map[string]string `json:"routeAgentNodeSelector,omitempty"`
+	// +optional
+	RouteAgentTolerations []corev1.Toleration `json:"routeAgentTolerations,omitempty"`
 }
 
 // SubmarinerStatus defines the observed state of Submariner.

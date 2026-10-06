@@ -408,6 +408,65 @@ func testDaemonSetReconciliation() {
 			})
 	})
 
+	When("RouteAgentNodeSelector is specified", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.RouteAgentNodeSelector = map[string]string{
+				"node-role.kubernetes.io/worker": "",
+			}
+		})
+
+		Specify("the submariner route-agent DaemonSet template NodeSelector should contain the specified labels",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
+				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("node-role.kubernetes.io/worker", ""))
+			})
+	})
+
+	When("RouteAgentNodeSelector is not specified", func() {
+		Specify("the submariner route-agent DaemonSet template should have no NodeSelector",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
+				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(BeNil())
+			})
+	})
+
+	When("RouteAgentTolerations is specified", func() {
+		BeforeEach(func() {
+			t.submariner.Spec.RouteAgentTolerations = []corev1.Toleration{
+				{
+					Key:      "virtual-kubelet.io/provider",
+					Operator: corev1.TolerationOpExists,
+					Effect:   corev1.TaintEffectNoSchedule,
+				},
+			}
+		})
+
+		Specify("the submariner route-agent DaemonSet template Tolerations should use the specified tolerations",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
+				Expect(daemonSet.Spec.Template.Spec.Tolerations).To(HaveLen(1))
+				Expect(daemonSet.Spec.Template.Spec.Tolerations[0].Key).To(Equal("virtual-kubelet.io/provider"))
+				Expect(daemonSet.Spec.Template.Spec.Tolerations[0].Effect).To(Equal(corev1.TaintEffectNoSchedule))
+			})
+	})
+
+	When("RouteAgentTolerations is not specified", func() {
+		Specify("the submariner route-agent DaemonSet template should tolerate all taints",
+			func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+
+				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
+				Expect(daemonSet.Spec.Template.Spec.Tolerations).To(HaveLen(1))
+				Expect(daemonSet.Spec.Template.Spec.Tolerations[0].Operator).To(Equal(corev1.TolerationOpExists))
+			})
+	})
+
 	When("the submariner globalnet DaemonSet doesn't exist", func() {
 		It("should create it", func(ctx SpecContext) {
 			t.AssertReconcileSuccess(ctx)
