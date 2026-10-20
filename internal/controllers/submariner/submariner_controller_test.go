@@ -172,7 +172,6 @@ func testSubmarinerResourceReconciliation() {
 	})
 }
 
-//nolint:maintidx // Ignore for unit tests.
 func testDaemonSetReconciliation() {
 	t := newTestDriver()
 
