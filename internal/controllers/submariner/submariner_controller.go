@@ -67,6 +67,8 @@ type Config struct {
 	// This client is scoped to the operator namespace intended to only be used for resources created and maintained by this
 	// controller. Also it's a split client that reads objects from the cache and writes to the apiserver.
 	ScopedClient client.Client
+	// APIReader, if set, confirms deleting Submariners without using the cache.
+	APIReader client.Reader
 	// This client can be used to access any other resource not in the operator namespace.
 	GeneralClient                client.Client
 	RestConfig                   *rest.Config
@@ -297,6 +299,12 @@ func (r *Reconciler) getSubmariner(ctx context.Context, key types.NamespacedName
 	instance := &submopv1a1.Submariner{}
 
 	err := r.config.ScopedClient.Get(ctx, key, instance)
+	if err == nil && r.config.APIReader != nil && !instance.DeletionTimestamp.IsZero() {
+		// A stale finalizer can restart uninstall after the CR has been deleted.
+		instance = &submopv1a1.Submariner{}
+		err = r.config.APIReader.Get(ctx, key, instance)
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "error retrieving Submariner resource")
 	}

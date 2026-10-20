@@ -233,6 +233,7 @@ func main() {
 
 	if err = submariner.NewReconciler(&submariner.Config{
 		ScopedClient:  mgr.GetClient(),
+		APIReader:     mgr.GetAPIReader(),
 		GeneralClient: generalClient,
 		RestConfig:    mgr.GetConfig(),
 		Scheme:        mgr.GetScheme(),

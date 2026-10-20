@@ -66,6 +66,7 @@ func TestSubmariner(t *testing.T) {
 
 type testDriver struct {
 	test.Driver
+	apiReader                    controllerClient.Reader
 	submariner                   *v1alpha1.Submariner
 	clusterNetwork               *network.ClusterNetwork
 	dynClient                    *dynamicfake.FakeDynamicClient
@@ -83,6 +84,7 @@ func newTestDriver() *testDriver {
 
 	BeforeEach(func() {
 		t.BeforeEach()
+		t.apiReader = nil
 		t.submariner = newSubmariner()
 		t.InitScopedClientObjs = []controllerClient.Object{t.submariner}
 
@@ -104,6 +106,7 @@ func newTestDriver() *testDriver {
 
 		t.Controller = submarinerController.NewReconciler(&submarinerController.Config{
 			ScopedClient:                 t.ScopedClient,
+			APIReader:                    t.apiReader,
 			GeneralClient:                t.GeneralClient,
 			DynClient:                    t.dynClient,
 			Scheme:                       scheme.Scheme,

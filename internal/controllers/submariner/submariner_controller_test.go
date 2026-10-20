@@ -682,6 +682,48 @@ func testDeletion() {
 		})
 	})
 
+	Context("and the cached deletion state is stale", func() {
+		BeforeEach(func() {
+			// The API server has removed the CR, but its cached copy still has the finalizer.
+			t.apiReader = t.NewGeneralClient()
+		})
+
+		It("should not restart uninstall", func(ctx SpecContext) {
+			t.AssertReconcileSuccess(ctx)
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
+			t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.RouteAgentComponent))
+		})
+
+		When("a replacement Submariner exists with the same name", func() {
+			BeforeEach(func() {
+				replacement := t.submariner.DeepCopy()
+				replacement.DeletionTimestamp = nil
+				replacement.UID = "replacement"
+				t.InitGeneralClientObjs = append(t.InitGeneralClientObjs, replacement)
+				t.apiReader = t.NewGeneralClient()
+			})
+
+			It("should reconcile the replacement without running uninstall", func(ctx SpecContext) {
+				t.AssertReconcileSuccess(ctx)
+				t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
+				t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.RouteAgentComponent))
+			})
+		})
+
+		When("the API read fails", func() {
+			BeforeEach(func() {
+				t.apiReader = fake.NewReactingClient(t.NewGeneralClient()).AddReactor(fake.Get,
+					&v1alpha1.Submariner{}, fake.FailingReaction(nil))
+			})
+
+			It("should return the error without starting uninstall", func(ctx SpecContext) {
+				t.AssertReconcileError(ctx)
+				t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.GatewayComponent))
+				t.AssertNoDaemonSet(ctx, opnames.AppendUninstall(names.RouteAgentComponent))
+			})
+		})
+	})
+
 	Context("and some components aren't installed", func() {
 		BeforeEach(func() {
 			t.submariner.Spec.GlobalCIDR = ""
