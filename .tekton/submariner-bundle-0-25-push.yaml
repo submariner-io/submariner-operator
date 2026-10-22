@@ -25,6 +25,12 @@ spec:
     value: quay.io/redhat-user-workloads/submariner-tenant/submariner-bundle-0-25:{{revision}}
   - name: dockerfile
     value: bundle.Dockerfile.konflux
+  - name: build-platforms
+    value:
+    - linux/x86_64
+    - linux/ppc64le
+    - linux/s390x
+    - linux/arm64
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
