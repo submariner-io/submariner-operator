@@ -5,10 +5,10 @@ patches:
   target:
     group: operators.coreos.com
     kind: ClusterServiceVersion
-    name: submariner.v0.25.1
+    name: submariner.v0.25.0
     namespace: placeholder
     version: v1alpha1
 commonAnnotations:
-  createdAt: "2026-08-31 18:22:04"
+  createdAt: "2026-10-23 00:13:10"
 resources:
 - ../../bundle/manifests/submariner.clusterserviceversion.yaml
