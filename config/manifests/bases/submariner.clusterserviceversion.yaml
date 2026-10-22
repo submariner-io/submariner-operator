@@ -8,7 +8,16 @@ metadata:
     certified: "false"
     containerImage: $(SUBMARINER_OPERATOR_IMAGE)
     description: Creates and manages Submariner deployments.
+    features.operators.openshift.io/disconnected: "true"
+    features.operators.openshift.io/fips-compliant: "true"
+    features.operators.openshift.io/proxy-aware: "false"
+    features.operators.openshift.io/tls-profiles: "false"
+    features.operators.openshift.io/token-auth-aws: "false"
+    features.operators.openshift.io/token-auth-azure: "false"
+    features.operators.openshift.io/token-auth-gcp: "false"
     operatorframework.io/suggested-namespace: submariner-operator
+    operators.openshift.io/valid-subscription: '["OpenShift Platform Plus", "Red Hat
+      Advanced Cluster Management for Kubernetes"]'
     operators.operatorframework.io/builder: operator-sdk-v1.0.1
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/submariner-io/submariner-operator
