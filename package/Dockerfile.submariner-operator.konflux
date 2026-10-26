@@ -26,11 +26,11 @@ RUN bin/controller-gen crd:crdVersions=v1 paths="github.com/submariner-io/submar
 
 RUN CGO_ENABLED=1 GOARCH=${TARGETPLATFORM##*/} go build \
     -ldflags "-s -w \
-    -X main.version=v0.24.2 \
+    -X main.version=${BASE_BRANCH} \
     -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultRepo=registry.redhat.io/rhacm2 \
-    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultSubmarinerOperatorVersion=v0.24.2 \
-    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultSubmarinerVersion=v0.24.2 \
-    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultLighthouseVersion=v0.24.2 \
+    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultSubmarinerOperatorVersion=${BASE_BRANCH} \
+    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultSubmarinerVersion=${BASE_BRANCH} \
+    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultLighthouseVersion=${BASE_BRANCH} \
     -X github.com/submariner-io/submariner-operator/pkg/names.GatewayImage=submariner-gateway-rhel9 \
     -X github.com/submariner-io/submariner-operator/pkg/names.RouteAgentImage=submariner-route-agent-rhel9 \
     -X github.com/submariner-io/submariner-operator/pkg/names.GlobalnetImage=submariner-globalnet-rhel9 \
