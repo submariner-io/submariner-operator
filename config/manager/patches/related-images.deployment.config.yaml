@@ -3,42 +3,42 @@
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-operator
-    value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:0ec279a1ee120f323d6a0e4043c52266c04b3b56b5a1b6851fa7c69ec61612fe
+    value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:36f731588420cc65303c312fcb7b13d6142875504881990ca231b3a0aba11288
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-gateway
-    value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:e2d0b013e72f06f2c459cf6b0171e4a64029d4e58bc67c9f27dc5115e129a9b7
+    value: registry.redhat.io/rhacm2/submariner-gateway-rhel9@sha256:dc7846280a0a02ef85006b19e06960944bab1ed97d84fdc602fcc491562a44fb
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-routeagent
-    value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:929ffa14796638dc391b41447892444c41eb7dab33eef6576cfcb5cfc89f127b
+    value: registry.redhat.io/rhacm2/submariner-route-agent-rhel9@sha256:bb951e9e842432d15136c488c2d1ab07c29fd8f7d2f795ced7fe5aa537756c7c
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-globalnet
-    value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:7301beda32fd017dca4fe91934cc743e2498ec450f155fbec8e133cbd8092c9d
+    value: registry.redhat.io/rhacm2/submariner-globalnet-rhel9@sha256:3874d708d71039b5c06d25d0349680245cde7288e55f2e345513833f7b095d82
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-lighthouse-agent
-    value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:c4786a06e52175d53f65d4fd3e36f0f6b6af9a07b1bb6e5fe4f263218a3c475f
+    value: registry.redhat.io/rhacm2/lighthouse-agent-rhel9@sha256:a46c6969d61cff9a85825228f355da0b91f76d420b0f3fcd8b7e1d87c42cdaf5
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-lighthouse-coredns
-    value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:95d6eaa8cde08bcda4d04c855daa8c7c788a6773327c543a529ed31dda7bff28
+    value: registry.redhat.io/rhacm2/lighthouse-coredns-rhel9@sha256:81d1754a5b7a06d983ff693704b8899749516c4a2bee8ccefcb49273a9e98c31
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-nettest
-    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:eb482b608d494c88236106d315922df341f298a98a76ed6fea7ea870f40ddcc7
+    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:0df0af40edd5b653b730377f0eaa8cddc7284b29290c3439a6b949400124a6b0
 - op: add
   path: /spec/template/spec/containers/0/env/-
   value:
     name: RELATED_IMAGE_submariner-metrics-proxy
-    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:eb482b608d494c88236106d315922df341f298a98a76ed6fea7ea870f40ddcc7
+    value: registry.redhat.io/rhacm2/nettest-rhel9@sha256:0df0af40edd5b653b730377f0eaa8cddc7284b29290c3439a6b949400124a6b0
 - op: replace
   path: /spec/template/spec/containers/0/image
-  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:0ec279a1ee120f323d6a0e4043c52266c04b3b56b5a1b6851fa7c69ec61612fe
+  value: registry.redhat.io/rhacm2/submariner-rhel9-operator@sha256:36f731588420cc65303c312fcb7b13d6142875504881990ca231b3a0aba11288
