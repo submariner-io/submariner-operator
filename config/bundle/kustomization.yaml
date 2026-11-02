@@ -9,6 +9,6 @@ patches:
     namespace: placeholder
     version: v1alpha1
 commonAnnotations:
-  createdAt: "2026-11-01 21:50:24"
+  createdAt: "2026-11-03 00:00:33"
 resources:
 - ../../bundle/manifests/submariner.clusterserviceversion.yaml
