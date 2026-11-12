@@ -50,3 +50,9 @@ ignore:
     package:
       name: github.com/containerd/containerd
       location: /tools/go.mod
+  # No fix available for github.com/docker/distribution.
+  - vulnerability: GHSA-685w-q87j-wqw3
+    fix-state: not-fixed
+    package:
+      name: github.com/docker/distribution
+      location: /tools/go.mod
