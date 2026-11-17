@@ -369,7 +369,7 @@ func testDaemonSetReconciliation() {
 				t.AssertReconcileSuccess(ctx)
 
 				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
-				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("submariner.io/gateway", "true"))
+				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("submariner.io/gateway", strconv.FormatBool(true)))
 				Expect(test.EnvMapFrom(daemonSet)).To(HaveKeyWithValue("SUBMARINER_INTRAROUTINGDISABLED", strconv.FormatBool(true)))
 			})
 	})
@@ -404,7 +404,7 @@ func testDaemonSetReconciliation() {
 
 				daemonSet := t.AssertDaemonSet(ctx, names.RouteAgentComponent)
 				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("disktype", "ssd"))
-				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("submariner.io/gateway", "true"))
+				Expect(daemonSet.Spec.Template.Spec.NodeSelector).To(HaveKeyWithValue("submariner.io/gateway", strconv.FormatBool(true)))
 			})
 	})
 

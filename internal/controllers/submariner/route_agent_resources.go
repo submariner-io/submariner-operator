@@ -196,7 +196,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 			ds.Spec.Template.Spec.NodeSelector = map[string]string{}
 		}
 
-		ds.Spec.Template.Spec.NodeSelector["submariner.io/gateway"] = "true"
+		ds.Spec.Template.Spec.NodeSelector["submariner.io/gateway"] = strconv.FormatBool(true)
 	}
 
 	if len(cr.Spec.RouteAgentTolerations) > 0 {

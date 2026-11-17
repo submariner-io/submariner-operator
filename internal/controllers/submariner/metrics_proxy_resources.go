@@ -66,7 +66,7 @@ func newMetricsProxyDaemonSet(cr *v1alpha1.Submariner) *appsv1.DaemonSet {
 						*metricProxyContainer(cr, "gateway-metrics-proxy", strconv.Itoa(gatewayMetricsServicePort),
 							gatewayMetricsServerPort),
 					},
-					NodeSelector: map[string]string{"submariner.io/gateway": "true"},
+					NodeSelector: map[string]string{"submariner.io/gateway": strconv.FormatBool(true)},
 					// The MetricsProxy Pod must be able to run on any flagged node, regardless of existing taints
 					Tolerations: []corev1.Toleration{{Operator: corev1.TolerationOpExists}},
 				},

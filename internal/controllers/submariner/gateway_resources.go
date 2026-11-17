@@ -151,7 +151,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 					}},
 				},
 			},
-			NodeSelector: map[string]string{"submariner.io/gateway": "true"},
+			NodeSelector: map[string]string{"submariner.io/gateway": strconv.FormatBool(true)},
 			// Wait for the node to be ready before starting the gateway.
 			InitContainers: []corev1.Container{
 				{

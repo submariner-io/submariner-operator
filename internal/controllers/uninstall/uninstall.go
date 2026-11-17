@@ -21,6 +21,7 @@ package uninstall
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/coreos/go-semver/semver"
@@ -320,7 +321,8 @@ func (i *Info) convertPodSpecContainersToUninstall(podSpec *corev1.PodSpec) {
 	// See http://blog.itaysk.com/2017/12/26/the-single-use-daemonset-pattern-and-prepulling-images-in-kubernetes
 	// for more details.
 	podSpec.InitContainers = podSpec.Containers
-	podSpec.InitContainers[0].Env = append(podSpec.InitContainers[0].Env, corev1.EnvVar{Name: ContainerEnvVar, Value: "true"})
+	podSpec.InitContainers[0].Env = append(podSpec.InitContainers[0].Env,
+		corev1.EnvVar{Name: ContainerEnvVar, Value: strconv.FormatBool(true)})
 
 	image, pullPolicy := i.GetImageInfo(opnames.NettestImage, names.NettestComponent)
 

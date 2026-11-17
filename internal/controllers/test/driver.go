@@ -20,6 +20,7 @@ package test
 
 import (
 	"context"
+	"strconv"
 
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/admiral/pkg/resource"
@@ -168,7 +169,7 @@ func (d *Driver) AssertUninstallInitContainer(template *corev1.PodTemplateSpec, 
 	Expect(template.Spec.InitContainers[0].Image).To(Equal(image))
 
 	envMap := EnvMapFromVars(template.Spec.InitContainers[0].Env)
-	Expect(envMap).To(HaveKeyWithValue(uninstall.ContainerEnvVar, "true"))
+	Expect(envMap).To(HaveKeyWithValue(uninstall.ContainerEnvVar, strconv.FormatBool(true)))
 
 	return envMap
 }

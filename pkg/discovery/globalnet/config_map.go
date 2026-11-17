@@ -70,7 +70,7 @@ func NewGlobalnetConfigMap(globalnetEnabled bool, defaultGlobalCidrRange string,
 	var data map[string]string
 	if globalnetEnabled {
 		data = map[string]string{
-			globalnetEnabledKey:  "true",
+			globalnetEnabledKey:  strconv.FormatBool(true),
 			globalnetCidrRange:   string(cidrRange),
 			globalnetClusterSize: strconv.FormatUint(uint64(defaultGlobalClusterSize), 10),
 		}
