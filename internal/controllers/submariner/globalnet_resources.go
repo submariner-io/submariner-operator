@@ -20,6 +20,7 @@ package submariner
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-logr/logr"
 	"github.com/submariner-io/admiral/pkg/names"
@@ -111,7 +112,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 					},
 					ServiceAccountName:            names.GlobalnetComponent,
 					TerminationGracePeriodSeconds: new(int64(2)),
-					NodeSelector:                  map[string]string{"submariner.io/gateway": "true"},
+					NodeSelector:                  map[string]string{"submariner.io/gateway": strconv.FormatBool(true)},
 					HostNetwork:                   true,
 					DNSPolicy:                     corev1.DNSClusterFirstWithHostNet,
 					// The Globalnet Pod must be able to run on any flagged node, regardless of existing taints

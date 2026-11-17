@@ -235,7 +235,7 @@ func (t *testDriver) assertGlobalnetDaemonSetEnv(submariner *v1alpha1.Submariner
 }
 
 func assertGatewayNodeSelector(daemonSet *appsv1.DaemonSet) {
-	Expect(daemonSet.Spec.Template.Spec.NodeSelector["submariner.io/gateway"]).To(Equal("true"))
+	Expect(daemonSet.Spec.Template.Spec.NodeSelector["submariner.io/gateway"]).To(Equal(strconv.FormatBool(true)))
 }
 
 func (t *testDriver) withNetworkDiscovery() *v1alpha1.Submariner {
