@@ -26,11 +26,11 @@ RUN bin/controller-gen crd:crdVersions=v1 paths="github.com/submariner-io/submar
 
 RUN CGO_ENABLED=1 GOARCH=${TARGETPLATFORM##*/} go build \
     -ldflags "-s -w \
-    -X main.version=v0.24.2 \
+    -X main.version=v0.24.3 \
     -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultRepo=registry.redhat.io/rhacm2 \
-    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultSubmarinerOperatorVersion=v0.24.2 \
-    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultSubmarinerVersion=v0.24.2 \
-    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultLighthouseVersion=v0.24.2 \
+    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultSubmarinerOperatorVersion=v0.24.3 \
+    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultSubmarinerVersion=v0.24.3 \
+    -X github.com/submariner-io/submariner-operator/api/v1alpha1.DefaultLighthouseVersion=v0.24.3 \
     -X github.com/submariner-io/submariner-operator/pkg/names.GatewayImage=submariner-gateway-rhel9 \
     -X github.com/submariner-io/submariner-operator/pkg/names.RouteAgentImage=submariner-route-agent-rhel9 \
     -X github.com/submariner-io/submariner-operator/pkg/names.GlobalnetImage=submariner-globalnet-rhel9 \
@@ -63,7 +63,7 @@ USER submariner
 
 LABEL com.redhat.component="submariner-operator-container" \
       name="rhacm2/submariner-rhel9-operator" \
-      version="v0.24.2" \
+      version="v0.24.3" \
       summary="Submariner Operator" \
       description="The Submariner Operator manages the lifecycle of Submariner components." \
       io.k8s.display-name="Submariner Operator" \
