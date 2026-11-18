@@ -121,7 +121,7 @@ func assignClustersetIPs(clustersetIPInfo *Info, netconfig Config, status report
 				return "", status.Error(err, "unable to allocate clustersetip CIDR")
 			}
 
-			status.Success("Allocated clustersetip CIDR " + clustersetIPCIDR)
+			status.Success("Allocated clustersetip CIDR %s", clustersetIPCIDR)
 		}
 	} else {
 		// ClustersetIP enabled, clustersetIPCIDR specified by user
