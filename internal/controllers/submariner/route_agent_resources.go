@@ -153,7 +153,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 								}},
 								{Name: "POD_NAME", ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
-										FieldPath: "metadata.name",
+										FieldPath: metav1.ObjectNameField,
 									},
 								}},
 								{Name: "SUBMARINER_HEALTHCHECKENABLED", Value: strconv.FormatBool(healthCheckEnabled)},
