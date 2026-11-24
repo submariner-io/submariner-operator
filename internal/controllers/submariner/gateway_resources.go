@@ -30,6 +30,7 @@ import (
 	"github.com/submariner-io/submariner-operator/api/v1alpha1"
 	"github.com/submariner-io/submariner-operator/internal/controllers/apply"
 	"github.com/submariner-io/submariner-operator/internal/controllers/metrics"
+	"github.com/submariner-io/submariner-operator/internal/controllers/submariner/cabledriver"
 	"github.com/submariner-io/submariner-operator/pkg/httpproxy"
 	"github.com/submariner-io/submariner-operator/pkg/images"
 	opnames "github.com/submariner-io/submariner-operator/pkg/names"
@@ -91,22 +92,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 		healthCheckMaxPacketLossCount = cr.Spec.ConnectionHealthCheck.MaxPacketLossCount
 	}
 
-	volumeMounts := []corev1.VolumeMount{
-		{Name: "ipsecd", MountPath: "/etc/ipsec.d", ReadOnly: false},
-		{Name: "ipsecnss", MountPath: "/var/lib/ipsec/nss", ReadOnly: false},
-		{Name: "plutosocket", MountPath: "/var/run/pluto", ReadOnly: false},
-	}
-	volumes := []corev1.Volume{
-		{Name: "ipsecd", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-			Path: "/etc/ipsec.d", Type: new(corev1.HostPathDirectoryOrCreate),
-		}}},
-		{Name: "ipsecnss", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-			Path: "/var/lib/ipsec/nss", Type: new(corev1.HostPathDirectoryOrCreate),
-		}}},
-		{Name: "plutosocket", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-			Path: "/var/run/pluto", Type: new(corev1.HostPathDirectoryOrCreate),
-		}}},
-	}
+	volumeMounts, volumes := cabledriver.Volumes(cr)
 
 	if cr.Spec.BrokerK8sSecret != "" {
 		// We've got a secret, mount it where the syncer expects it
