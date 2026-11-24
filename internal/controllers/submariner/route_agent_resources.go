@@ -87,9 +87,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 					TerminationGracePeriodSeconds: new(int64(1)),
 					Volumes: []corev1.Volume{
 						// Share /run/xtables.lock with the host for iptables
-						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/run/xtables.lock",
-						}}},
+						xtablesLockVolume(),
 						// Share /run/openvswitch/db.sock and /run/openvswitch/ovnnb_db.sock with the host for OVS/OVN
 						{Name: "host-run-openvswitch", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
 							Path: "/run/openvswitch", Type: new(corev1.HostPathDirectoryOrCreate),
@@ -111,13 +109,7 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 							Image:           getImagePath(cr, opnames.RouteAgentImage, names.RouteAgentComponent),
 							ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.RouteAgentComponent]),
 							Command:         []string{"await-node-ready.sh"},
-							Env: httpproxy.AddEnvVars([]corev1.EnvVar{
-								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
-									FieldRef: &corev1.ObjectFieldSelector{
-										FieldPath: "spec.nodeName",
-									},
-								}},
-							}),
+							Env:             httpproxy.AddEnvVars([]corev1.EnvVar{envNodeNameFromCR(cr)}),
 						},
 					},
 					Containers: []corev1.Container{
@@ -134,23 +126,19 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{Name: "host-sys", MountPath: "/sys", ReadOnly: true},
-								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
+								xtablesLockVolumeMount(),
 								{Name: "host-run-openvswitch", MountPath: "/run/openvswitch"},
 								{Name: "host-run-ovn-ic", MountPath: "/run/ovn-ic"},
 							},
 							Env: httpproxy.AddEnvVars([]corev1.EnvVar{
-								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
-								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
+								envNamespaceFromCR(cr),
+								envClusterIDFromCR(cr),
 								{Name: "SUBMARINER_DEBUG", Value: strconv.FormatBool(cr.Spec.Debug)},
 								{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
 								{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
 								{Name: "SUBMARINER_GLOBALCIDR", Value: cr.Spec.GlobalCIDR},
 								{Name: "SUBMARINER_NETWORKPLUGIN", Value: cr.Status.NetworkPlugin},
-								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
-									FieldRef: &corev1.ObjectFieldSelector{
-										FieldPath: "spec.nodeName",
-									},
-								}},
+								envNodeNameFromCR(cr),
 								{Name: "POD_NAME", ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										FieldPath: metav1.ObjectNameField,
@@ -204,4 +192,20 @@ func newRouteAgentDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.Daemon
 	}
 
 	return ds
+}
+
+func envNodeNameFromCR(_ *v1alpha1.Submariner) corev1.EnvVar {
+	return corev1.EnvVar{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
+		FieldRef: &corev1.ObjectFieldSelector{
+			FieldPath: "spec.nodeName",
+		},
+	}}
+}
+
+func envNamespaceFromCR(cr *v1alpha1.Submariner) corev1.EnvVar {
+	return corev1.EnvVar{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace}
+}
+
+func envClusterIDFromCR(cr *v1alpha1.Submariner) corev1.EnvVar {
+	return corev1.EnvVar{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID}
 }

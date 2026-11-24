@@ -78,11 +78,7 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					Volumes: []corev1.Volume{
-						{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
-							Path: "/run/xtables.lock",
-						}}},
-					},
+					Volumes: []corev1.Volume{xtablesLockVolume()},
 					Containers: []corev1.Container{
 						{
 							Name:            name,
@@ -95,18 +91,12 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 								ReadOnlyRootFilesystem:   new(false),
 								RunAsNonRoot:             new(false),
 							},
-							VolumeMounts: []corev1.VolumeMount{
-								{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"},
-							},
+							VolumeMounts: []corev1.VolumeMount{xtablesLockVolumeMount()},
 							Env: httpproxy.AddEnvVars([]corev1.EnvVar{
-								{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
-								{Name: "SUBMARINER_CLUSTERID", Value: cr.Spec.ClusterID},
+								envNamespaceFromCR(cr),
+								envClusterIDFromCR(cr),
 								{Name: "SUBMARINER_METRICSPORT", Value: globalnetMetricsServerPort},
-								{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
-									FieldRef: &corev1.ObjectFieldSelector{
-										FieldPath: "spec.nodeName",
-									},
-								}},
+								envNodeNameFromCR(cr),
 							}),
 						},
 					},
@@ -121,4 +111,14 @@ func newGlobalnetDaemonSet(cr *v1alpha1.Submariner, name string) *appsv1.DaemonS
 			},
 		},
 	}
+}
+
+func xtablesLockVolume() corev1.Volume {
+	return corev1.Volume{Name: "host-run-xtables-lock", VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{
+		Path: "/run/xtables.lock",
+	}}}
+}
+
+func xtablesLockVolumeMount() corev1.VolumeMount {
+	return corev1.VolumeMount{Name: "host-run-xtables-lock", MountPath: "/run/xtables.lock"}
 }
