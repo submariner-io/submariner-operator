@@ -159,13 +159,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 					Image:           getImagePath(cr, opnames.GatewayImage, names.GatewayComponent),
 					ImagePullPolicy: images.GetPullPolicy(cr.Spec.Version, cr.Spec.ImageOverrides[names.GatewayComponent]),
 					Command:         []string{"await-node-ready.sh"},
-					Env: httpproxy.AddEnvVars([]corev1.EnvVar{
-						{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
-							FieldRef: &corev1.ObjectFieldSelector{
-								FieldPath: "spec.nodeName",
-							},
-						}},
-					}),
+					Env:             httpproxy.AddEnvVars([]corev1.EnvVar{envNodeNameFromCR(cr)}),
 				},
 			},
 			Containers: []corev1.Container{
@@ -201,7 +195,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 						},
 					},
 					Env: httpproxy.AddEnvVars([]corev1.EnvVar{
-						{Name: "SUBMARINER_NAMESPACE", Value: cr.Spec.Namespace},
+						envNamespaceFromCR(cr),
 						{Name: "SUBMARINER_CLUSTERCIDR", Value: cr.Status.ClusterCIDR},
 						{Name: "SUBMARINER_SERVICECIDR", Value: cr.Status.ServiceCIDR},
 						{Name: "SUBMARINER_GLOBALCIDR", Value: cr.Spec.GlobalCIDR},
@@ -223,11 +217,7 @@ func newGatewayPodTemplate(cr *v1alpha1.Submariner, name string, podSelectorLabe
 						{Name: "SUBMARINER_HEALTHCHECKMAXPACKETLOSSCOUNT", Value: strconv.FormatUint(uint64(healthCheckMaxPacketLossCount), 10)},
 						{Name: "SUBMARINER_METRICSPORT", Value: gatewayMetricsServerPort},
 						{Name: "SUBMARINER_HALT_ON_CERT_ERROR", Value: strconv.FormatBool(cr.Spec.HaltOnCertificateError)},
-						{Name: "NODE_NAME", ValueFrom: &corev1.EnvVarSource{
-							FieldRef: &corev1.ObjectFieldSelector{
-								FieldPath: "spec.nodeName",
-							},
-						}},
+						envNodeNameFromCR(cr),
 						{Name: "POD_NAME", ValueFrom: &corev1.EnvVarSource{
 							FieldRef: &corev1.ObjectFieldSelector{
 								FieldPath: metav1.ObjectNameField,
