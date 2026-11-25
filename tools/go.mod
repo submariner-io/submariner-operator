@@ -200,7 +200,7 @@ require (
 	github.com/stretchr/testify v1.12.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/thoas/go-funk v0.9.3 // indirect
-	github.com/ulikunitz/xz v0.5.14 // indirect
+	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/urfave/cli/v2 v2.4.0 // indirect
 	github.com/uw-labs/lichen v0.1.7 // indirect
 	github.com/vbatts/tar-split v0.12.2 // indirect
